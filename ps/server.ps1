@@ -2,7 +2,12 @@ $global:pipe = $null
 $global:pipeName = "\\.\control"
 $global:pipeStream = $null
 
-#function 
+function get-pipe-stream()
+{
+	$global:pipe = new-object system.io.pipes.namedpipeclientstream($pipeName)
+	$global:pipe.connect()
+	$global:pipeStream = new-object system.io.streamwriter($pipe)
+}
 
 function dispatch-command([string]$command, [system.net.sockets.tcpclient]$client)
 {
@@ -10,11 +15,27 @@ function dispatch-command([string]$command, [system.net.sockets.tcpclient]$clien
 	$enc = new-object system.text.asciiEncoding
 	$cmdarray = $command.split(" ")
 
-	if($cmdarray[0] -eq "test1")
+	if($cmdarray[0] -eq "ps")
 	{
-		$bytes = $enc.getbytes("odpowiedz na test1\n")
+		$a = get-process | out-string
+		$bytes = $enc.getbytes($a)
 		$ns.write($bytes, 0, $bytes.length)
 	}
+
+	if($cmdarray[0] -eq "inject")
+	{
+		& ".\p021-instrumentation-server.exe" $cmdarray[1]
+		$bytes = $enc.getbytes("Thread injected")
+		$ns.write($bytes, 0, $bytes.length)
+	}
+
+	if($cmdarray[0] -eq "getpipe")
+	{
+		get-pipe-stream
+		$bytes = $enc.getbytes("Assumed control")
+		$ns.write($bytes, 0, $bytes.length)
+	}
+
 	if($cmdarray[0] -eq "pipe")
 	{
 		$rest = $cmdarray[1]+" "+$cmdarray[2]+" "+$cmdarray[3]+" "+$cmdarray[4]
@@ -47,15 +68,8 @@ function listen-port($port)
 	$listener.stop()
 }
 
-function get-pipe-stream()
-{
-	$global:pipe = new-object system.io.pipes.namedpipeclientstream($pipeName)
-	$global:pipe.connect()
-	$global:pipeStream = new-object system.io.streamwriter($pipe)
-}
 
-"getting pipe"
-get-pipe-stream
+
 
 "got it, strating server"
 listen-port(12345)
