@@ -1,5 +1,6 @@
 $global:pipe = $null
 $global:pipeName = "\\.\control"
+$global:pipeName2 = "\\.\pipe\control"
 $global:pipeStream = $null
 
 function get-pipe-stream()
@@ -29,6 +30,42 @@ function dispatch-command([string]$command, [system.net.sockets.tcpclient]$clien
 		$ns.write($bytes, 0, $bytes.length)
 	}
 
+
+	if($cmdarray[0] -eq "testmode")
+	{
+		if($cmdarray[1] -eq "enter")
+		{
+			$bytes = $enc.getbytes("Entering test mode")
+			$ns.write($bytes, 0, $bytes.length)
+			while($true)
+			{
+				$i = $ns.read($buffer, 0, $buffer.length)
+				$command = $enc.getstring($buffer, 0, $i-1)
+				if($command -eq "testmode exit")
+				{
+					break
+				}
+				$global:pipeStream.write($command)
+				$global:pipeStream.flush()
+			}
+			$bytes = $enc.getbytes("Exiting test mode")
+			$ns.write($bytes, 0, $bytes.length)
+		}
+	}
+
+	if($cmdarray[0] -eq "checkpipe")
+	{
+		if(test-path $global:pipeName2)
+		{
+			$bytes = $enc.getbytes("Pipe exists")
+		}
+		else
+		{
+			$bytes = $enc.getbytes("Pipe does not exist")
+		}
+		$ns.write($bytes, 0, $bytes.length)
+	}
+
 	if($cmdarray[0] -eq "getpipe")
 	{
 		get-pipe-stream
@@ -38,7 +75,13 @@ function dispatch-command([string]$command, [system.net.sockets.tcpclient]$clien
 
 	if($cmdarray[0] -eq "pipe")
 	{
-		$rest = $cmdarray[1]+" "+$cmdarray[2]+" "+$cmdarray[3]+" "+$cmdarray[4]
+		$rest = ""
+		for($i = 1; $i -le $cmdarray.count; $i++)
+		{
+			$rest += $cmdarray[$i]
+		}
+		$rest = $rest.substring(0, $rest.length)
+
 		$global:pipeStream.write($rest)
 		$global:pipeStream.flush()
 	}
