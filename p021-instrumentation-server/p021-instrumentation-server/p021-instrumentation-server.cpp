@@ -110,6 +110,8 @@ typedef int (*fprintf_type)(FILE*, const char*, ...);
 typedef int (*fclose_type)(FILE*);
 typedef FILE* (*freopen_type)(const char*, const char*, FILE*);
 typedef int (*strcmp_type)(const char*, const char*);
+typedef void* (*memset_type)(void*, int, size_t);
+
 sprtype spr;
 
 fopen_type myfopen;
@@ -118,6 +120,7 @@ fclose_type myfclose;
 fclose_type myfflush;
 strcmp_type mystrcmp;
 freopen_type myfreopen;
+memset_type mymemset;
 
 char* ACADClass = "Afx:00400000:b:00010011:00000006:00210139";
 HANDLE ACADSaved = 0x0;
@@ -284,6 +287,8 @@ BOOL dispatch_command(char* cmd)
 	if(mystrcmp(cmd, "DumpAllHandles")==0) return DumpAllHandles();
 	if(mystrcmp(cmd, "AcadDumpProjects")==0) return AcadDumpProjects();
 	if(mystrcmp(cmd, "resetLog")==0) return resetLog();
+	if(mystrcmp(cmd, "quit")==0) return TRUE;
+	if(mystrcmp(cmd, "disconnect")==0) return TRUE;
 	
 	MessageBoxA(NULL, cmd, "Unknown command", MB_OK);
 	return TRUE;
@@ -320,11 +325,12 @@ void injected_start() {
 	mystrcmp = (strcmp_type)GetProcAddress(hModule, "strcmp");
 	myfreopen = (freopen_type)GetProcAddress(hModule, "freopen");
 	myfflush = (fclose_type) GetProcAddress(hModule, "fflush");
+	mymemset = (memset_type) GetProcAddress(hModule, "memset");
 
 	iPID = GetCurrentProcessId();
 	spr(PID, "%d", iPID);
 
-	MessageBoxA(NULL, "Get ready for injected code", PID, MB_OK);
+	//MessageBoxA(NULL, "Get ready for injected code", PID, MB_OK);
 	alloc = (anytype)0x50b230;
 	close = (anyanytype)0xb117d4;
 	ctor = (anytype)0x4879a0;
@@ -340,40 +346,33 @@ void injected_start() {
 	}
 	
 	pHandle = CreateNamedPipe(TEXT(PIPE_NAME), PIPE_ACCESS_DUPLEX, PIPE_TYPE_BYTE|PIPE_WAIT, PIPE_UNLIMITED_INSTANCES, PIPE_SIZE, PIPE_SIZE, 0, NULL);
-	fConnected = ConnectNamedPipe(pHandle, NULL);
 
-	/*
-	MessageBoxA(NULL, "here", PID, MB_OK);
-
-	if(fConnected)
-		MessageBoxA(NULL, "valid", PID, MB_OK);
-	else
+	mymemset(buffer, 0, PIPE_SIZE-1);
+	do
 	{
-		MessageBoxA(NULL, "invalid", PID, MB_OK);
-	}
-	*/
-	buffer[0] = '\0';
-
-	while(1)
-	{
-		fSuccess = ReadFile(pHandle, buffer, PIPE_SIZE, &bytesRead, NULL);
-		if(fSuccess)
+		mymemset(buffer, 0, PIPE_SIZE-1);
+		fConnected = ConnectNamedPipe(pHandle, NULL);
+		while(mystrcmp(buffer, "quit") && mystrcmp(buffer, "disconnect"))
 		{
-			buffer[bytesRead] = '\0';
-			if(mystrcmp(buffer, "quit")==0)
+			mymemset(buffer, 0, PIPE_SIZE-1);
+			fSuccess = ReadFile(pHandle, buffer, PIPE_SIZE, &bytesRead, NULL);
+			if(fSuccess != TRUE)
 			{
 				break;
 			}
-			dispatch_command(buffer);
+			if(fSuccess)
+			{
+				dispatch_command(buffer);
+			}
 		}
+		DisconnectNamedPipe(pHandle);
 	}
-
-	DisconnectNamedPipe(pHandle);
+	while(mystrcmp(buffer, "quit"));
 	CloseHandle(pHandle);
 	
 	myfclose(log);
 
-	MessageBoxA(NULL, "Exiting thread", PID, MB_OK);
+	//MessageBoxA(NULL, "Exiting thread", PID, MB_OK);
 	ExitThread(0);
 	mainCRTStartup();
 }
