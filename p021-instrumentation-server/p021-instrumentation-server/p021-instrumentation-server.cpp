@@ -132,6 +132,7 @@ char PID[10];
 int iPID = 0;
 FILE* log;
 HANDLE pHandle;
+char outbuffer[PIPE_SIZE];
 
 BOOL CALLBACK AcaKillCEWProc(HWND hwnd, LPARAM lparam)
 {
@@ -283,6 +284,8 @@ BOOL DumpAllHandles()
 
 BOOL dispatch_command(char* cmd)
 {
+	DWORD written = 0;
+	
 	if(mystrcmp(cmd, "showPID")==0) return showPID();
 	if(mystrcmp(cmd, "DumpAllHandles")==0) return DumpAllHandles();
 	if(mystrcmp(cmd, "AcadDumpProjects")==0) return AcadDumpProjects();
@@ -308,6 +311,7 @@ void injected_start() {
 	anyanytype close;
 	is_injected = 1;
 	DWORD bytesRead;
+	DWORD bytesWrote;
 	// uncomment next line if you want to be able to inject into further processes
 	// take_image()
 
@@ -363,6 +367,7 @@ void injected_start() {
 			if(fSuccess)
 			{
 				dispatch_command(buffer);
+				WriteFile(pHandle, "OK", strlen("OK"), &bytesWrote, 0);
 			}
 		}
 		DisconnectNamedPipe(pHandle);

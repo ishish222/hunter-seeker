@@ -2,18 +2,19 @@ $global:pipe = $null
 $global:pipeName = "\\.\control"
 $global:pipeName2 = "\\.\pipe\control"
 $global:pipeStream = $null
+$enc = new-object system.text.asciiEncoding
 
 function get-pipe-stream()
 {
 	$global:pipe = new-object system.io.pipes.namedpipeclientstream($pipeName)
 	$global:pipe.connect()
-	$global:pipeStream = new-object system.io.streamwriter($pipe)
+	$global:pipeStream = new-object system.io.bufferedstream($pipe)
 }
 
 function dispatch-command([string]$command, [system.net.sockets.tcpclient]$client)
 {
+	$recv = new-object system.byte[] 128
 	$ns = $client.getstream()
-	$enc = new-object system.text.asciiEncoding
 	$cmdarray = $command.split(" ")
 
 	if($cmdarray[0] -eq "ps")
@@ -45,7 +46,8 @@ function dispatch-command([string]$command, [system.net.sockets.tcpclient]$clien
 				{
 					break
 				}
-				$global:pipeStream.write($command)
+				$bytes = $enc.getbytes($command)
+				$global:pipeStream.write($bytes, 0, $bytes.length)
 				$global:pipeStream.flush()
 			}
 			$bytes = $enc.getbytes("Exiting test mode")
@@ -81,9 +83,14 @@ function dispatch-command([string]$command, [system.net.sockets.tcpclient]$clien
 			$rest += $cmdarray[$i]
 		}
 		$rest = $rest.substring(0, $rest.length)
+		$bytes = $enc.getbytes($rest)
+		$global:pipeStream.write($bytes, 0, $bytes.length)
+#		$global:pipeStream.flush()
 
-		$global:pipeStream.write($rest)
-		$global:pipeStream.flush()
+		$i = $global:pipeStream.read($recv, 0, 2)
+		$ans = $enc.getstring($recv, 0, $i)
+		$ans
+
 	}
 }
 
@@ -112,11 +119,10 @@ function listen-port($port)
 }
 
 
-
-
 "got it, strating server"
 listen-port(12345)
 
 "finishing"
-$pipeStream.write("quit")
+$bytes = $enc.getbytes("quit")
+$pipeStream.write($bytes, 0, $bytes.length)
 $pipeStream.flush()
