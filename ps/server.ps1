@@ -1,14 +1,26 @@
+$global:pipe = $null
+$global:pipeName = "\\.\control"
+$global:pipeStream = $null
+
+#function 
+
 function dispatch-command([string]$command, [system.net.sockets.tcpclient]$client)
 {
 	$ns = $client.getstream()
 	$enc = new-object system.text.asciiEncoding
 	$cmdarray = $command.split(" ")
+
 	if($cmdarray[0] -eq "test1")
 	{
 		$bytes = $enc.getbytes("odpowiedz na test1\n")
 		$ns.write($bytes, 0, $bytes.length)
 	}
-
+	if($cmdarray[0] -eq "pipe")
+	{
+		$rest = $cmdarray[1]+" "+$cmdarray[2]+" "+$cmdarray[3]+" "+$cmdarray[4]
+		$global:pipeStream.write($rest)
+		$global:pipeStream.flush()
+	}
 }
 
 function listen-port($port)
@@ -35,5 +47,19 @@ function listen-port($port)
 	$listener.stop()
 }
 
-"test"
+function get-pipe-stream()
+{
+	$global:pipe = new-object system.io.pipes.namedpipeclientstream($pipeName)
+	$global:pipe.connect()
+	$global:pipeStream = new-object system.io.streamwriter($pipe)
+}
+
+"getting pipe"
+get-pipe-stream
+
+"got it, strating server"
 listen-port(12345)
+
+"finishing"
+$pipeStream.write("quit")
+$pipeStream.flush()
