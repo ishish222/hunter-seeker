@@ -1,0 +1,13 @@
+#compiled stuff
+syntax: glob
+
+*.dll
+*.o
+*.so
+*.exe
+*.pdb
+*.obj
+*.sdf
+*.ilk
+*.idb
+*.ipch
