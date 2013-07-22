@@ -1,0 +1,15 @@
+.NET 4.0
+config:
+C:\WINDOWS\system32\windowspowershell\v1.0\powershell.exe.config
+
+<?xml version="1.0" encoding="utf-8"?>
+<configuration>
+	<startup>
+		<supportedRuntime version="v4.0.30319"/>
+		<supportedRuntime version="v2.0.50727"/>
+	</startup>
+</configuration>
+
++
+reg add hklm\software\microsoft\.netframework /v OnlyUseLatestCLR /t REG_DWORD /d 1
+(need to remove in order to run acad)

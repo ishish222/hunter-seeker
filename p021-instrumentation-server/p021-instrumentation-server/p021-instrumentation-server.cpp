@@ -8,6 +8,11 @@
 #define PIPE_NAME "\\\\.\\pipe\\control"
 #define PIPE_SIZE 128
 #define LOG_PATH "C:\\log.txt"
+#define MAX_TRAMPOLINE_SIZE 0x100
+//#define ADDR_OFF 0x2
+#define ADDR_OFF 0x1
+#define TRAMPOLINE_SIZE 0x6
+#define CODE_PEAMBLE_SIZE 0x1
 
 int is_injected = 0;
 // this module base. this will be properly set even in the injected process, inject() takes care of that
@@ -104,6 +109,8 @@ void start() {
 	mainCRTStartup();
 }
 
+typedef void* (*ACADopen_type)(DWORD, LPTSTR, DWORD, DWORD, DWORD, DWORD, DWORD, DWORD, DWORD);
+
 typedef int (*sprtype)(const char*, const char*, ...);
 typedef FILE* (*fopen_type)(const char*, const char*);
 typedef int (*fprintf_type)(FILE*, const char*, ...);
@@ -111,6 +118,8 @@ typedef int (*fclose_type)(FILE*);
 typedef FILE* (*freopen_type)(const char*, const char*, FILE*);
 typedef int (*strcmp_type)(const char*, const char*);
 typedef void* (*memset_type)(void*, int, size_t);
+typedef void* (*memcpy_type)(void*, void*, size_t);
+typedef void (*trampoline_type)();
 
 sprtype spr;
 
@@ -121,6 +130,8 @@ fclose_type myfflush;
 strcmp_type mystrcmp;
 freopen_type myfreopen;
 memset_type mymemset;
+memcpy_type mymemcpy;
+ACADopen_type myACADOpen;
 
 char* ACADClass = "Afx:00400000:b:00010011:00000006:00210139";
 HANDLE ACADSaved = 0x0;
@@ -133,6 +144,87 @@ int iPID = 0;
 FILE* log;
 HANDLE pHandle;
 char outbuffer[PIPE_SIZE];
+
+char code1[MAX_TRAMPOLINE_SIZE];
+char code2[MAX_TRAMPOLINE_SIZE];
+
+//char trampoline1[0x10] =	"\xb8\x00\x00\x00\x00"	/*far jmp to worker*/
+//							"\xff\x60"						/*call eax*/
+
+
+char trampoline1[0x10] =	"\x68\x00\x00\x00\x00"	/*push addr*/
+							"\xc3";					/*ret*/
+
+char preamble[0x10] =		"\x5e";					/* pop esi */
+
+DWORD retaddr1;
+DWORD retaddr2;
+
+void ACADworker1()
+{
+	MessageBoxA(NULL, "Worker1", PID, MB_OK);
+	//__debugbreak();
+
+	((trampoline_type)((PVOID)code1))();
+
+	__asm { 
+		push retaddr1
+		ret
+	}
+}
+
+void ACADworker2()
+{
+	MessageBoxA(NULL, "Worker2", PID, MB_OK);
+	((trampoline_type)((PVOID)code2))();
+
+	__asm { 
+		push retaddr2
+		ret
+	}
+}
+
+BOOL installHook(DWORD addr, DWORD size, DWORD worker, DWORD code, DWORD* retaddr)
+{
+	DWORD dwOld;
+	*retaddr = addr+size;
+
+	//	MessageBoxA(NULL, "Installing hook", PID, MB_OK);
+
+	__debugbreak();
+
+	//set up 1st trampoline
+
+	trampoline1[ADDR_OFF+0] = ((char*)&worker)[0];
+	trampoline1[ADDR_OFF+1] = ((char*)&worker)[1];
+	trampoline1[ADDR_OFF+2] = ((char*)&worker)[2];
+	trampoline1[ADDR_OFF+3] = ((char*)&worker)[3];
+
+	VirtualProtect((PVOID)addr, size, PAGE_READWRITE, &dwOld);
+	
+	mymemcpy((PVOID)(code), (PVOID)preamble, CODE_PEAMBLE_SIZE);
+	mymemcpy((PVOID)(code+CODE_PEAMBLE_SIZE), (PVOID)addr, size);
+	mymemcpy((PVOID)addr, trampoline1, 6);
+
+	VirtualProtect((PVOID)addr, size, PAGE_EXECUTE, &dwOld);
+
+	//set up 2nd trampoline
+
+	trampoline1[ADDR_OFF+0] = ((char*)retaddr)[0];
+	trampoline1[ADDR_OFF+1] = ((char*)retaddr)[1];
+	trampoline1[ADDR_OFF+2] = ((char*)retaddr)[2];
+	trampoline1[ADDR_OFF+3] = ((char*)retaddr)[3];
+
+	mymemcpy((PVOID)(code+size+CODE_PEAMBLE_SIZE), (PVOID)trampoline1, TRAMPOLINE_SIZE);
+
+	return TRUE;
+}
+
+BOOL AcadOpen(LPTSTR name)
+{
+	myACADOpen(0x01e4beb0, name, 1, 0, 1, 0, 0, 0, 0);
+	return TRUE;
+}
 
 BOOL CALLBACK AcaKillCEWProc(HWND hwnd, LPARAM lparam)
 {
@@ -290,6 +382,9 @@ BOOL dispatch_command(char* cmd)
 	if(mystrcmp(cmd, "DumpAllHandles")==0) return DumpAllHandles();
 	if(mystrcmp(cmd, "AcadDumpProjects")==0) return AcadDumpProjects();
 	if(mystrcmp(cmd, "resetLog")==0) return resetLog();
+	if(mystrcmp(cmd, "testOpen")==0) return AcadOpen(L"C:\\test.dwg");
+	if(mystrcmp(cmd, "installTestHook")==0) return installHook(0x553f10, 0x8, (DWORD)&ACADworker1, (DWORD)code1, &retaddr1);
+	if(mystrcmp(cmd, "installTestHook2")==0) return installHook(0x554315, 0x6, (DWORD)&ACADworker2, (DWORD)code2, &retaddr2);
 	if(mystrcmp(cmd, "quit")==0) return TRUE;
 	if(mystrcmp(cmd, "disconnect")==0) return TRUE;
 	
@@ -312,6 +407,7 @@ void injected_start() {
 	is_injected = 1;
 	DWORD bytesRead;
 	DWORD bytesWrote;
+	myACADOpen = (ACADopen_type)0x553f10;
 	// uncomment next line if you want to be able to inject into further processes
 	// take_image()
 
@@ -330,6 +426,8 @@ void injected_start() {
 	myfreopen = (freopen_type)GetProcAddress(hModule, "freopen");
 	myfflush = (fclose_type) GetProcAddress(hModule, "fflush");
 	mymemset = (memset_type) GetProcAddress(hModule, "memset");
+	mymemcpy = (memcpy_type) GetProcAddress(hModule, "memcpy");
+	
 
 	iPID = GetCurrentProcessId();
 	spr(PID, "%d", iPID);
