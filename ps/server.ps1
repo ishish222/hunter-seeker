@@ -4,6 +4,34 @@ $global:pipeName2 = "\\.\pipe\control"
 $global:pipeStream = $null
 $enc = new-object system.text.asciiEncoding
 
+function read-pipe($count)
+{
+	$i = $global:pipeStream.read($recv, 0, 2)
+	$ans = $enc.getstring($recv, 0, $i)
+	return $ans
+}
+
+function write-pipe($string)
+{
+	$bytes = $enc.getbytes($string)
+	$global:pipeStream.write($bytes, 0, $bytes.length)
+	$global:pipeStream.flush()
+}
+
+function read-socket($count)
+{
+	$i = $ns.read($buffer, 0, $buffer.length)
+	$ans = $enc.getstring($buffer, 0, $i-1)
+	return $ans
+}
+
+
+function write-socket($string, $ns)
+{
+	$bytes = $enc.getbytes($string)
+	$ns.write($bytes, 0, $bytes.length)
+}
+
 function get-pipe-stream()
 {
 	$global:pipe = new-object system.io.pipes.namedpipeclientstream($pipeName)
@@ -20,15 +48,13 @@ function dispatch-command([string]$command, [system.net.sockets.tcpclient]$clien
 	if($cmdarray[0] -eq "ps")
 	{
 		$a = get-process | out-string
-		$bytes = $enc.getbytes($a)
-		$ns.write($bytes, 0, $bytes.length)
+		write-socket $a $ns
 	}
 
 	if($cmdarray[0] -eq "inject")
 	{
 		& ".\p021-instrumentation-server.exe" $cmdarray[1]
-		$bytes = $enc.getbytes("Thread injected")
-		$ns.write($bytes, 0, $bytes.length)
+		write-socket "Thread injected" $ns
 	}
 
 
@@ -36,22 +62,26 @@ function dispatch-command([string]$command, [system.net.sockets.tcpclient]$clien
 	{
 		if($cmdarray[1] -eq "enter")
 		{
-			$bytes = $enc.getbytes("Entering test mode")
-			$ns.write($bytes, 0, $bytes.length)
+			write-socket "Entering testmode" $ns
 			while($true)
 			{
-				$i = $ns.read($buffer, 0, $buffer.length)
-				$command = $enc.getstring($buffer, 0, $i-1)
-				if($command -eq "testmode exit")
+				$file = read-socket
+				
+				if($file -eq "testmode exit")
 				{
 					break
 				}
-				$bytes = $enc.getbytes($command)
-				$global:pipeStream.write($bytes, 0, $bytes.length)
-				$global:pipeStream.flush()
+#				mv -force $file "C:\test.dwg"
+#				Invoke-item "C:\test.dwg"
+				Invoke-item $file
+
+				"1"
+				$ans = read-pipe 2
+				"2"
+#				$ans = $enc.getstring($recv, 0, $i)
+				write-socket $ans $ns
 			}
-			$bytes = $enc.getbytes("Exiting test mode")
-			$ns.write($bytes, 0, $bytes.length)
+			write-socket "Exiting test mode" $ns
 		}
 	}
 
@@ -59,20 +89,18 @@ function dispatch-command([string]$command, [system.net.sockets.tcpclient]$clien
 	{
 		if(test-path $global:pipeName2)
 		{
-			$bytes = $enc.getbytes("Pipe exists")
+			write-socket "Pipe exists" $ns
 		}
 		else
 		{
-			$bytes = $enc.getbytes("Pipe does not exist")
+			write-socket "Pipe doesn't exist" $ns
 		}
-		$ns.write($bytes, 0, $bytes.length)
 	}
 
 	if($cmdarray[0] -eq "getpipe")
 	{
 		get-pipe-stream
-		$bytes = $enc.getbytes("Assumed control")
-		$ns.write($bytes, 0, $bytes.length)
+		write-socket "Assumed control" $ns
 	}
 
 	if($cmdarray[0] -eq "pipe")
@@ -81,16 +109,24 @@ function dispatch-command([string]$command, [system.net.sockets.tcpclient]$clien
 		for($i = 1; $i -le $cmdarray.count; $i++)
 		{
 			$rest += $cmdarray[$i]
+			$rest += " "
 		}
+
 		$rest = $rest.substring(0, $rest.length)
-		$bytes = $enc.getbytes($rest)
-		$global:pipeStream.write($bytes, 0, $bytes.length)
-#		$global:pipeStream.flush()
 
-		$i = $global:pipeStream.read($recv, 0, 2)
-		$ans = $enc.getstring($recv, 0, $i)
-		$ans
+		write-pipe $rest
+		$ans = read-pipe 2
+	}
 
+	if($cmdarray[0] -eq "testPipe")
+	{
+		write-pipe "testPipe"
+
+		$ans = read-pipe 2
+		write-socket $ans $ns
+
+		$ans = read-pipe 2
+		write-socket $ans $ns
 	}
 }
 
