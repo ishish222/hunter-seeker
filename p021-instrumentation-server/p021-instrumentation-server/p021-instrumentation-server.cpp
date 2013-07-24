@@ -8,11 +8,14 @@
 #define PIPE_NAME "\\\\.\\pipe\\control"
 #define PIPE_SIZE 128
 #define LOG_PATH "C:\\log.txt"
+#define MUTEX_NAME "testing"
 #define MAX_TRAMPOLINE_SIZE 0x100
 //#define ADDR_OFF 0x2
 #define ADDR_OFF 0x1
 #define TRAMPOLINE_SIZE 0x6
 #define CODE_PEAMBLE_SIZE 0x1
+
+enum method {METH_ALL, METH_KILL, METH_FIND, METH_KILL_CLASS};
 
 int is_injected = 0;
 // this module base. this will be properly set even in the injected process, inject() takes care of that
@@ -122,6 +125,10 @@ typedef void* (*memcpy_type)(void*, void*, size_t);
 typedef void (*trampoline_type)();
 typedef char* (*strtok_type)(char*, char*);
 typedef wchar_t* (*wcscpy_type)(wchar_t*, wchar_t*);
+typedef char* (*strstr_type)(char*, char*);
+typedef char* (*strcpy_type)(char*, char*);
+typedef int (*atoi_type)(char*);
+typedef long int (*strtol_type)(char*, char**, int);
 
 sprtype spr;
 
@@ -135,10 +142,15 @@ memset_type mymemset;
 memcpy_type mymemcpy;
 strtok_type mystrtok;
 wcscpy_type mywcscpy;
+strstr_type mystrstr;
+strcpy_type mystrcpy;
+atoi_type myatoi;
+strtol_type mystrtol;
 ACADopen_type myACADOpen;
 
-char* ACADClass = "Afx:00400000:b:00010011:00000006:00210139";
-HANDLE ACADSaved = 0x0;
+//char* WindowClass = "Afx:00400000:b:00010011:00000006:00210139";
+char windowClass[0x100];
+HANDLE targetHandle = 0x0;
 
 char class_name[256];
 char title[256];
@@ -147,6 +159,7 @@ char PID[10];
 int iPID = 0;
 FILE* log;
 HANDLE pHandle;
+HANDLE eHandle;
 char outbuffer[PIPE_SIZE];
 
 char code1[MAX_TRAMPOLINE_SIZE];
@@ -207,13 +220,19 @@ void ACADworker1()
 void ACADworker2()
 {
 	DWORD bytesWrote;
-	
-	__debugbreak();
+	HANDLE h;
+	char lf[] = "LE\n";
+	//__debugbreak();
 		
 	//MessageBoxA(NULL, "Worker2", PID, MB_OK);
+	//h = CreateFile(TEXT(PIPE_NAME), GENERIC_READ|GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
 	//ConnectNamedPipe(pHandle, NULL);
-	WriteFile(pHandle, "LF", strlen("LF"), &bytesWrote, 0);
+	//WriteFile(pHandle, "LF\n", 3, &bytesWrote, 0);
+	//ReleaseMutex(mHandle);
+	SetEvent(eHandle);
+	//myfprintf(log, "LF\n");
 	//DisconnectNamedPipe(pHandle);
+	//CloseHandle(h);
 	((trampoline_type)((PVOID)code2))();
 
 	__asm { 
@@ -264,93 +283,51 @@ BOOL AcadOpen(LPTSTR name)
 	return TRUE;
 }
 
-BOOL CALLBACK AcaKillCEWProc(HWND hwnd, LPARAM lparam)
-{
-	GetClassNameA(hwnd, class_name, sizeof(class_name));
-	spr(my_hwnd, "%x, class: %s", hwnd, class_name);
-
-	if(!mystrcmp(class_name, ACADClass))
-	{
-		myfprintf(log, "%x - %s\n", hwnd, class_name);
-	}
-	return TRUE;
-}
-
-BOOL CALLBACK AcaCEWProc(HWND hwnd, LPARAM lparam)
-{
-	DWORD written;
-	GetClassNameA(hwnd, class_name, sizeof(class_name));
-	spr(my_hwnd, "%x, class: %s\n", hwnd, class_name);
-
-	if(!mystrcmp(class_name, ACADClass))
-	{
-		WriteFile(pHandle, my_hwnd, strlen(my_hwnd), &written, 0);
-		//myfprintf(log, "%x - %s\n", hwnd, class_name);
-	}
-	return TRUE;
-}
-
 BOOL CALLBACK AllCEWProc(HWND hwnd, LPARAM lparam)
 {
 	DWORD written;
+	DWORD param = *((DWORD*)lparam);
 
 	GetClassNameA(hwnd, class_name, sizeof(class_name));
 	spr(my_hwnd, "%x-%s", hwnd, class_name);
-//	spr(my_hwnd, "%x", hwnd);
-	//myfprintf(log, "%s - %s\n", class_name, ACADclass);
-	//myfprintf(log, "%x - %s\n", hwnd, class_name);
-/*	if(hwnd == (HWND)0xdedaeb85)
+
+	switch(param)
 	{
-		myfprintf(log, "%x - %s\n", hwnd, class_name);
+	case METH_ALL:
+		WriteFile(pHandle, my_hwnd, strlen(my_hwnd), &written, 0);
+		break;
+
+	case METH_FIND:
+		if(mystrstr(class_name, windowClass))
+		{
+			WriteFile(pHandle, my_hwnd, strlen(my_hwnd), &written, 0);
+		}
+		break;
+		
+	case METH_KILL:
+		if(hwnd == targetHandle)
+		{
+			//WriteFile(pHandle, "Killing", strlen("About to kill"), &written, 0);
+			//WriteFile(pHandle, my_hwnd, strlen(my_hwnd), &written, 0);
+			//here sending message to handle
+			SendMessage(hwnd, 0x10, 0x0, 0x0);
+		}
+		break;
+	case METH_KILL_CLASS:
+		if(mystrstr(class_name, windowClass))
+		{
+			SendMessage(hwnd, 0x10, 0x0, 0x0);
+		}
+		break;
 	}
-*/
-//	if(!mystrcmp(class_name, ACADclass))
-//	{
-		//myfprintf(log, "%x - %s\n", hwnd, class_name);
-		//if(hwnd == (HWND)0x53037c)
-		//SendMessage(hwnd, 0x10, 0x0, 0x0);
-	//}
-	//WriteFile(pHandle, my_hwnd, PIPE_SIZE, &written, NULL);
-	myfprintf(log, "%x - %s\n", hwnd, class_name);
-	WriteFile(pHandle, my_hwnd, strlen(my_hwnd), &written, 0);
-	return TRUE;
-}
-
-BOOL CALLBACK AcaKillEWProc(HWND hwnd, LPARAM lparam)
-{
-	char myPID[10];
-	DWORD imyPID;
-	my_hwnd[0]='\0';
-	class_name[0]='\0';
-	title[0]='\0';
-
-	GetWindowThreadProcessId(hwnd, &imyPID);
-	spr(myPID, "%d", imyPID);
-	if(imyPID != iPID) return TRUE;
-	EnumChildWindows(hwnd, AcaKillCEWProc, NULL);
-
-	return TRUE;
-}
-
-BOOL CALLBACK AcaEWProc(HWND hwnd, LPARAM lparam)
-{
-	char myPID[10];
-	DWORD imyPID;
-	my_hwnd[0]='\0';
-	class_name[0]='\0';
-	title[0]='\0';
-
-	GetWindowThreadProcessId(hwnd, &imyPID);
-	spr(myPID, "%d", imyPID);
-	if(imyPID != iPID) return TRUE;
-	EnumChildWindows(hwnd, AcaCEWProc, NULL);
-
+	
+	//myfprintf(log, "%x - %s\n", hwnd, class_name);
+	//WriteFile(pHandle, my_hwnd, strlen(my_hwnd), &written, 0);
 	return TRUE;
 }
 
 BOOL CALLBACK AllEWProc(HWND hwnd, LPARAM lparam)
 {
-//	int ret = 1;
 	char myPID[10];
 	DWORD imyPID;
 	my_hwnd[0]='\0';
@@ -360,30 +337,20 @@ BOOL CALLBACK AllEWProc(HWND hwnd, LPARAM lparam)
 	GetWindowThreadProcessId(hwnd, &imyPID);
 	spr(myPID, "%d", imyPID);
 	if(imyPID != iPID) return TRUE;
-	//MessageBoxA(NULL, "Matched main window", myPID, MB_OK);
-
 	GetClassNameA(hwnd, class_name, sizeof(class_name));
-//	ret = GetWindowTextA(hwnd, title, sizeof(title));
-//	if(ret == 0) title[0]='\0';
-
-//	spr(my_hwnd, "%x, class: %s, title: %s", hwnd, class_name, title);
-	//spr(my_hwnd, "%x, class: %s", hwnd, class_name);
-	//spr(my_hwnd, "%x", hwnd);
-	//MessageBoxA(NULL, my_hwnd, "HWND", MB_OK);
-	//MessageBoxA(NULL, "Enumerating children", "Get ready", MB_OK);
-	myfprintf(log, "[%x]\n", hwnd);
-	EnumChildWindows(hwnd, AllCEWProc, NULL);
+	EnumChildWindows(hwnd, AllCEWProc, lparam);
 
 	return TRUE;
 }
 
+/*
 BOOL setACADSaved(HANDLE hwnd)
 {
 	ACADSaved = hwnd;
 	MessageBoxA(NULL, "setACADSaved", "Command completed", MB_OK);
 	return TRUE;
 }
-
+*/
 BOOL resetLog()
 {
 	log = myfreopen(LOG_PATH, "w", log);
@@ -395,27 +362,6 @@ BOOL showPID()
 {
 	DWORD written;
 	WriteFile(pHandle, PID, strlen(PID), &written, 0);
-	return TRUE;
-}
-
-BOOL AcadDumpProjects()
-{
-	EnumWindows(AcaEWProc, NULL);
-	myfprintf(log, "\n\n");
-	myfflush(log);
-	MessageBoxA(NULL, "AcadDumpProjects", "Command completed", MB_OK);
-	return TRUE;
-}
-
-BOOL DumpAllHandles()
-{
-	DWORD written;
-	EnumWindows(AllEWProc, NULL);
-	myfprintf(log, "\n\n");
-	myfflush(log);
-	//MessageBoxA(NULL, "DumpAllHandles", "Command completed", MB_OK);
-	//WriteFile(pHandle, "OK", strlen("OK"), &written, 0);
-	FlushFileBuffers(pHandle);
 	return TRUE;
 }
 
@@ -434,13 +380,51 @@ BOOL dispatch_command(char* cmd)
 	}
 
 	if(mystrcmp(cmd, "showPID")==0) return showPID();
-	if(mystrcmp(cmd, "DumpAllHandles")==0) return DumpAllHandles();
-	if(mystrcmp(cmd, "AcadDumpProjects")==0) return AcadDumpProjects();
+	if(mystrcmp(cmd, "AllHandles")==0) 
+	{
+		DWORD param = METH_ALL;
+		return EnumWindows(AllEWProc, (LPARAM)&param);
+		//return DumpAllHandles();
+	}
+	if(mystrcmp(cmd, "FindHandles")==0)
+	{
+		DWORD param = METH_FIND;
+		mystrcpy(windowClass, arg1);
+		return EnumWindows(AllEWProc, (LPARAM)&param);
+	}
+	if(mystrcmp(cmd, "KillHandles")==0) 
+	{
+		DWORD param = METH_KILL;
+		//MessageBoxA(NULL, arg1, "Arg", MB_OK);
+		//targetHandle = (HANDLE)atoi(arg1);
+		targetHandle = (HANDLE)mystrtol(arg1, NULL, 16);
+		//MessageBoxA(NULL, "1", "Kill", MB_OK);
+		return EnumWindows(AllEWProc, (LPARAM)&param);
+	}
+	if(mystrcmp(cmd, "KillClass")==0) 
+	{
+		DWORD param = METH_KILL_CLASS;
+		return EnumWindows(AllEWProc, (LPARAM)&param);
+	}
+
+	if(mystrcmp(cmd, "SetTargetClass")==0) 
+	{
+		mystrcpy(windowClass, arg1);
+		return TRUE;
+	}
+	
 	if(mystrcmp(cmd, "resetLog")==0) return resetLog();
 	if(mystrcmp(cmd, "testOpen")==0) return AcadOpen(L"C:\\test.dwg");
 	if(mystrcmp(cmd, "installTestHook")==0) return installHook(0x553f10, 0x8, (DWORD)&ACADworker1, (DWORD)code1, &retaddr1);
 	if(mystrcmp(cmd, "installTestHook2")==0) return installHook(0x554315, 0x6, (DWORD)&ACADworker2, (DWORD)code2, &retaddr2);
 	if(mystrcmp(cmd, "installPath")==0) return installPath(arg1);
+	if(mystrcmp(cmd, "waitTest")==0) 
+	{
+		WriteFile(pHandle, "waiting", strlen("waiting"), &bytesWrote, 0);
+		WaitForSingleObject(eHandle, INFINITE);
+		//WriteFile(pHandle, "done", strlen("done"), &bytesWrote, 0);
+		return TRUE;
+	}
 	if(mystrcmp(cmd, "testPipe")==0) 
 	{
 		WriteFile(pHandle, "TP", strlen("TP"), &bytesWrote, 0);
@@ -450,7 +434,6 @@ BOOL dispatch_command(char* cmd)
 	if(mystrcmp(cmd, "disconnect")==0) return TRUE;
 	
 	WriteFile(pHandle, "UC", strlen("UC"), &bytesWrote, 0);
-	//MessageBoxA(NULL, cmd, "Unknown command", MB_OK);
 	return TRUE;
 }
 
@@ -491,6 +474,10 @@ void injected_start() {
 	mymemcpy = (memcpy_type) GetProcAddress(hModule, "memcpy");
 	mystrtok = (strtok_type) GetProcAddress(hModule, "strtok");
 	mywcscpy = (wcscpy_type) GetProcAddress(hModule, "wcscpy");
+	mystrstr = (strstr_type) GetProcAddress(hModule, "strstr");
+	myatoi = (atoi_type) GetProcAddress(hModule, "atoi");
+	mystrcpy = (strcpy_type) GetProcAddress(hModule, "strcpy");
+	mystrtol = (strtol_type) GetProcAddress(hModule, "strtol");
 	
 
 	iPID = GetCurrentProcessId();
@@ -499,9 +486,6 @@ void injected_start() {
 	alloc = (anytype)0x50b230;
 	close = (anyanytype)0xb117d4;
 	ctor = (anytype)0x4879a0;
-//	myObj = alloc(0x408);
-//	myObj = ctor(myObj);
-	//close();
 
 	log = myfopen(LOG_PATH, "a");
 	if(log == NULL) 
@@ -510,10 +494,14 @@ void injected_start() {
 		ExitThread(0);
 	}
 	
+	eHandle = CreateEvent(NULL, FALSE, FALSE, NULL);
+	
 	//__debugbreak();
-
-	pHandle = CreateFile(TEXT(PIPE_NAME), GENERIC_READ|GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
-	MessageBoxA(NULL, "Version 0.15", PID, MB_OK);
+	do
+	{
+		pHandle = CreateFile(TEXT(PIPE_NAME), GENERIC_READ|GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
+	}
+	while(pHandle == INVALID_HANDLE_VALUE);
 
 	mymemset(buffer, 0, PIPE_SIZE-1);
 	do
@@ -531,10 +519,7 @@ void injected_start() {
 			if(fSuccess)
 			{
 				dispatch_command(buffer);
-				//WriteFile(pHandle, "$", strlen("$"), &bytesWrote, 0);
-				//FlushFileBuffers(pHandle);
 				WriteFile(pHandle, "OK", strlen("OK"), &bytesWrote, 0);
-				//FlushFileBuffers(pHandle);
 			}
 		}
 		DisconnectNamedPipe(pHandle);
@@ -544,7 +529,6 @@ void injected_start() {
 	
 	myfclose(log);
 
-	//MessageBoxA(NULL, "Exiting thread", PID, MB_OK);
 	ExitThread(0);
 	mainCRTStartup();
 }

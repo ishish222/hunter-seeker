@@ -1,30 +1,33 @@
-$version = "ver. 0.4"
+$version = "ver. 0.5"
 
 $global:pipe = $null
 $global:pipeName = "\\.\control"
 $global:pipeName2 = "\\.\pipe\control"
 $global:pipeName3 = "control"
 $global:pipeStream = $null
-
 $global:ns = $null
 $global:nsReader = $null
 $global:nsWriter = $null
+$global:lastProc = $null
 
 $enc = new-object system.text.asciiEncoding
 
-$lf = new-object system.byte
-$lf = 0x0a
-
+function inject($mypid)
+{
+	& ".\p021-instrumentation-server.exe" $mypid
+}
 
 function set-pipe-server($name)
 {
-	"setting pipe server"
+	write-socket "setting pipe server"
 	$pipedir = [system.io.pipes.pipedirection]::inout
 	$maxinstances = 5
 	$pipemode = [system.io.pipes.pipetransmissionmode]::message
-	$global:pipeStream = new-object system.io.pipes.namedpipeserverstream($name, $pipedir, $maxinstances, $pipemode)
+	$pipeoptions = [system.io.pipes.pipeoptions]::asynchronous
+	$global:pipeStream = new-object system.io.pipes.namedpipeserverstream($name, $pipedir, $maxinstances, $pipemode, $pipeoptions)
 	$global:pipeStream.waitforconnection()
-	"got connection"
+	$global:pipeStream
+	write-socket "got connection"
 }
 
 function read-pipe($count)
@@ -59,9 +62,10 @@ function write-socket($string)
 
 function get-pipe-stream()
 {
-	$global:pipe = new-object system.io.pipes.namedpipeclientstream($pipeName)
-	$global:pipe.connect()
-	$global:pipeStream = new-object system.io.bufferedstream($pipe)
+	write-socket "Pojebalo cie"
+#	$global:pipe = new-object system.io.pipes.namedpipeclientstream($pipeName)
+#	$global:pipe.connect()
+#	$global:pipeStream = new-object system.io.bufferedstream($pipe)
 }
 
 function get-socket-streams()
@@ -88,6 +92,16 @@ function dispatch-command([string]$command, [system.net.sockets.tcpclient]$clien
 		write-socket "Thread injected"
 	}
 
+	if($cmdarray[0] -eq "testFile")
+	{
+		write-pipe "waitTest"
+		$ans = read-pipe 100
+		write-socket $ans
+		Invoke-item $cmdarray[1]
+		$ans = read-pipe 100
+		write-socket $ans
+	}
+
 
 	if($cmdarray[0] -eq "testmode")
 	{
@@ -107,9 +121,8 @@ function dispatch-command([string]$command, [system.net.sockets.tcpclient]$clien
 				Invoke-item $file
 
 				"1"
-				$ans = read-pipe 2
+				$ans = read-pipe 100
 				"2"
-#				$ans = $enc.getstring($recv, 0, $i)
 				write-socket $ans
 			}
 			write-socket "Exiting test mode"
@@ -132,6 +145,29 @@ function dispatch-command([string]$command, [system.net.sockets.tcpclient]$clien
 	{
 		get-pipe-stream
 		write-socket "Assumed control"
+	}
+
+	if($cmdarray[0] -eq "injectLast")
+	{
+		$id = $global:lastProc.id
+		inject $id
+		set-pipe-server $global:PipeName3
+		write-socket "Thread injected"
+	}
+
+
+	if($cmdarray[0] -eq "spawn")
+	{
+		$rest = ""
+		for($i = 1; $i -le $cmdarray.count; $i++)
+		{
+			$rest += $cmdarray[$i]
+			$rest += " "
+		}
+
+		$global:lastProc = [Diagnostics.Process]::Start($rest)
+		write-socket $global:lastProc.Id
+		write-socket "OK"
 	}
 
 	if($cmdarray[0] -eq "pipe")
@@ -159,10 +195,10 @@ function dispatch-command([string]$command, [system.net.sockets.tcpclient]$clien
 	{
 		write-pipe "testPipe"
 
-		$ans = read-pipe 2
+		$ans = read-pipe 100
 		write-socket $ans
 
-		$ans = read-pipe 2
+		$ans = read-pipe 100
 		write-socket $ans
 	}
 }

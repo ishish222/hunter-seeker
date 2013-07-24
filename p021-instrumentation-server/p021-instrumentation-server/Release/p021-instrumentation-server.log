@@ -1,22 +1,23 @@
-﻿Build started 2013-07-23 19:02:55.
+﻿Build started 2013-07-24 19:19:30.
 Project "C:\Documents and Settings\john\Moje dokumenty\Visual Studio 2010\Projects\p021-instrumentation-server\p021-instrumentation-server\p021-instrumentation-server.vcxproj" on node 2 (rebuild target(s)).
 _PrepareForClean:
   Deleting file "Release\p021-instrumentation-server.lastbuildstate".
 InitializeBuildStatus:
-  Creating "Release\p021-instrumentation-server.unsuccessfulbuild" because "AlwaysCreate" was specified.
+  Touching "Release\p021-instrumentation-server.unsuccessfulbuild".
 ClCompile:
   E:\Program Files\Microsoft Visual Studio 10.0\VC\bin\CL.exe /c /Zi /nologo /W3 /WX- /O2 /Oi /Oy- /GL /D WIN32 /D NDEBUG /D _CONSOLE /D _UNICODE /D UNICODE /Gm- /EHsc /MD /GS /Gy /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Release\\" /Fd"Release\vc100.pdb" /Gd /TP /analyze- /errorReport:prompt "p021-instrumentation-server.cpp"
   p021-instrumentation-server.cpp
-p021-instrumentation-server.cpp(180): warning C4101: 'bytesWrote' : unreferenced local variable
-p021-instrumentation-server.cpp(412): warning C4101: 'written' : unreferenced local variable
-p021-instrumentation-server.cpp(425): warning C4101: 'buf' : unreferenced local variable
-p021-instrumentation-server.cpp(465): warning C4101: 'myObj' : unreferenced local variable
-p021-instrumentation-server.cpp(467): warning C4101: 'any' : unreferenced local variable
-p021-instrumentation-server.cpp(630): warning C4996: 'freopen': This function or variable may be unsafe. Consider using freopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+p021-instrumentation-server.cpp(193): warning C4101: 'bytesWrote' : unreferenced local variable
+p021-instrumentation-server.cpp(223): warning C4101: 'h' : unreferenced local variable
+p021-instrumentation-server.cpp(222): warning C4101: 'bytesWrote' : unreferenced local variable
+p021-instrumentation-server.cpp(371): warning C4101: 'buf' : unreferenced local variable
+p021-instrumentation-server.cpp(448): warning C4101: 'myObj' : unreferenced local variable
+p021-instrumentation-server.cpp(450): warning C4101: 'any' : unreferenced local variable
+p021-instrumentation-server.cpp(614): warning C4996: 'freopen': This function or variable may be unsafe. Consider using freopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
           E:\Program Files\Microsoft Visual Studio 10.0\VC\include\stdio.h(249) : see declaration of 'freopen'
-p021-instrumentation-server.cpp(654): warning C4101: 'i' : unreferenced local variable
-p021-instrumentation-server.cpp(659): warning C4101: 'pi' : unreferenced local variable
-p021-instrumentation-server.cpp(651): warning C4101: 'cmdline' : unreferenced local variable
+p021-instrumentation-server.cpp(638): warning C4101: 'i' : unreferenced local variable
+p021-instrumentation-server.cpp(643): warning C4101: 'pi' : unreferenced local variable
+p021-instrumentation-server.cpp(635): warning C4101: 'cmdline' : unreferenced local variable
 Link:
   E:\Program Files\Microsoft Visual Studio 10.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"C:\Documents and Settings\john\Moje dokumenty\Visual Studio 2010\Projects\p021-instrumentation-server\Release\p021-instrumentation-server.exe" /INCREMENTAL:NO /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /ManifestFile:"Release\p021-instrumentation-server.exe.intermediate.manifest" /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /DEBUG /PDB:"C:\Documents and Settings\john\Moje dokumenty\Visual Studio 2010\Projects\p021-instrumentation-server\Release\p021-instrumentation-server.pdb" /SUBSYSTEM:CONSOLE /OPT:REF /OPT:ICF /LTCG /TLBID:1 /ENTRY:"start" /DYNAMICBASE /NXCOMPAT /IMPLIB:"C:\Documents and Settings\john\Moje dokumenty\Visual Studio 2010\Projects\p021-instrumentation-server\Release\p021-instrumentation-server.lib" /MACHINE:X86 "Release\p021-instrumentation-server.obj"
   Generating code
@@ -31,4 +32,4 @@ Done Building Project "C:\Documents and Settings\john\Moje dokumenty\Visual Stud
 
 Build succeeded.
 
-Time Elapsed 00:00:01.80
+Time Elapsed 00:00:01.55
