@@ -22,3 +22,6 @@ syntax: glob
 *.sample
 *.rrd
 
+#dirs
+origins/*
+
