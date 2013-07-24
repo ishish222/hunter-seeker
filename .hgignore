@@ -1,6 +1,7 @@
 #compiled stuff
 syntax: glob
 
+#windows
 *.dll
 *.o
 *.so
@@ -11,3 +12,13 @@ syntax: glob
 *.ilk
 *.idb
 *.ipch
+
+#linux/python
+*.pyc
+*.default.*
+*.pdf
+*.bp
+*.png
+*.sample
+*.rrd
+
