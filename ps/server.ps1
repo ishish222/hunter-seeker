@@ -116,13 +116,17 @@ function dispatch-command([string]$command, [system.net.sockets.tcpclient]$clien
 				{
 					break
 				}
-#				mv -force $file "C:\test.dwg"
-#				Invoke-item "C:\test.dwg"
-				Invoke-item $file
 
-				"1"
+				write-pipe "waitTest"
 				$ans = read-pipe 100
-				"2"
+#				write-socket $ans
+
+				Invoke-item $file
+				$ans = read-pipe 100
+#				write-socket $ans
+
+				write-pipe "KillClass"
+				$ans = read-pipe 100
 				write-socket $ans
 			}
 			write-socket "Exiting test mode"
