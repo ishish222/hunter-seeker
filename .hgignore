@@ -24,4 +24,6 @@ syntax: glob
 
 #dirs
 origins/*
+samples_shared/*
+samples_saved/*
 
