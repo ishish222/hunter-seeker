@@ -19,7 +19,6 @@ class Generator(object):
         self.mutations = mutations_
 
     def generate(self, amt=100):
-#        log_info("Started generating samples")
         os.spawnv(os.P_WAIT, "/bin/mkdir", ["mkdir", "-p", self.dest_path])
         for i in range(0, amt):
             tmp, tname = tempfile.mkstemp(suffix = self.dest_suffix, dir = self.dest_path)
@@ -30,4 +29,12 @@ class Generator(object):
             for j in range(0, self.mutations):
                 mutatorInstance.mutate()
             mutatorInstance.close()
-#        log_info("Finished generating samples")
+
+    def generate_one(self):
+        os.spawnv(os.P_WAIT, "/bin/mkdir", ["mkdir", "-p", self.dest_path])
+        tmp, tname = tempfile.mkstemp(suffix = self.dest_suffix, dir = self.dest_path)
+        L = ["cp", self.origin_path, tname]
+        os.spawnv(os.P_WAIT, "/bin/cp", L)
+        os.close(tmp)
+        self.mutator(tname).mutate()
+        return tname
