@@ -36,5 +36,6 @@ class Generator(object):
         L = ["cp", self.origin_path, tname]
         os.spawnv(os.P_WAIT, "/bin/cp", L)
         os.close(tmp)
-        self.mutator(tname).mutate()
+        for j in range(0, self.mutations):
+            self.mutator(tname).mutate()
         return tname

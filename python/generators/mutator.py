@@ -30,6 +30,7 @@ class Mutator(file):
             self.readSelector()
         else:
             self.readSize(path)
+        self.calcSizeTotal()
 
     def sortAreas(self):
         self.areas.sort()
@@ -49,7 +50,7 @@ class Mutator(file):
 
         self.sortAreas()
 #        self.printAreas()
-        self.calcSizeTotal()
+#        self.calcSizeTotal()
 
     def setSelectorPath(self, path):
         self.selectorPath = path
@@ -72,11 +73,12 @@ class Mutator(file):
     def calcSizeTotal(self):
         for area in self.areas:
             self.sizeTotal += area.size
-#       print "Total " + str(self.sizeTotal)
+#        print "Total " + str(self.sizeTotal)
 
     def pickVirtualOffset(self):
 #        random.seed()
         r = random.randint(0, self.sizeTotal)
+        print r
 #        print str(0)+" "+str(self.sizeTotal)
 #        print "v: "+str(r)
         return r
