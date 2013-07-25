@@ -26,7 +26,7 @@ fuzzbox_name = sys.argv[1]
 fuzzbox_ip = ips[fuzzbox_name]
 fuzzbox_port = 12345
 buffer_size = 1024
-my_name = "[seeker 1]"
+my_name = "[HS]"
 my_logger = logging.getLogger('MyLogger')
 my_handler = logging.handlers.SysLogHandler(address = '/dev/log')
 my_logger.setLevel(logging.DEBUG)
