@@ -27,6 +27,7 @@ def write_socket(s, data):
     s.send(data)
 
 my_generator = generator.Generator(origin_path, samples_shared_path, ".dwg", changer.Changer)
+my_generator.mutations=1
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 s.connect((fuzzbox_ip, fuzzbox_port))

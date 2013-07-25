@@ -176,6 +176,8 @@ char preamble[0x10] =		"\x5e";					/* pop esi */
 
 DWORD retaddr1;
 DWORD retaddr2;
+DWORD retaddr3;
+DWORD retaddr4;
 char path2[0x100];
 char installed_path[0x200];
 
@@ -241,6 +243,33 @@ void ACADworker2()
 	}
 }
 
+void ACADworker3()
+{
+	//MessageBoxA(NULL, "bum1", "KABOM", MB_OK);
+	__asm { 
+		pop eax
+		pop eax
+		pop eax
+		pop eax
+		push retaddr3
+		ret
+	}
+}
+
+void ACADworker4()
+{
+	//MessageBoxA(NULL, "bum2", "KABOM", MB_OK);
+	__asm { 
+		pop eax
+		pop eax
+		pop eax
+		pop eax
+		mov eax, 0x7
+		push retaddr4
+		ret
+	}
+}
+
 BOOL installHook(DWORD addr, DWORD size, DWORD worker, DWORD code, DWORD* retaddr)
 {
 	DWORD dwOld;
@@ -259,8 +288,11 @@ BOOL installHook(DWORD addr, DWORD size, DWORD worker, DWORD code, DWORD* retadd
 
 	VirtualProtect((PVOID)addr, size, PAGE_READWRITE, &dwOld);
 	
-	mymemcpy((PVOID)(code), (PVOID)preamble, CODE_PEAMBLE_SIZE);
-	mymemcpy((PVOID)(code+CODE_PEAMBLE_SIZE), (PVOID)addr, size);
+	if(code != NULL)
+	{
+		mymemcpy((PVOID)(code), (PVOID)preamble, CODE_PEAMBLE_SIZE);
+		mymemcpy((PVOID)(code+CODE_PEAMBLE_SIZE), (PVOID)addr, size);
+	}
 	mymemcpy((PVOID)addr, trampoline1, 6);
 
 	VirtualProtect((PVOID)addr, size, PAGE_EXECUTE, &dwOld);
@@ -272,8 +304,10 @@ BOOL installHook(DWORD addr, DWORD size, DWORD worker, DWORD code, DWORD* retadd
 	trampoline1[ADDR_OFF+2] = ((char*)retaddr)[2];
 	trampoline1[ADDR_OFF+3] = ((char*)retaddr)[3];
 
-	mymemcpy((PVOID)(code+size+CODE_PEAMBLE_SIZE), (PVOID)trampoline1, TRAMPOLINE_SIZE);
-
+	if(code != NULL)
+	{
+		mymemcpy((PVOID)(code+size+CODE_PEAMBLE_SIZE), (PVOID)trampoline1, TRAMPOLINE_SIZE);
+	}
 	return TRUE;
 }
 
@@ -417,6 +451,8 @@ BOOL dispatch_command(char* cmd)
 	if(mystrcmp(cmd, "testOpen")==0) return AcadOpen(L"C:\\test.dwg");
 	if(mystrcmp(cmd, "installTestHook")==0) return installHook(0x553f10, 0x8, (DWORD)&ACADworker1, (DWORD)code1, &retaddr1);
 	if(mystrcmp(cmd, "installTestHook2")==0) return installHook(0x554315, 0x6, (DWORD)&ACADworker2, (DWORD)code2, &retaddr2);
+	if(mystrcmp(cmd, "installTestHook3")==0) return installHook(0x7aabec, 0x6, (DWORD)&ACADworker3, NULL, &retaddr3);
+	if(mystrcmp(cmd, "installTestHook4")==0) return installHook(0x78a439bc, 0x6, (DWORD)&ACADworker4, NULL, &retaddr4);
 	if(mystrcmp(cmd, "installPath")==0) return installPath(arg1);
 	if(mystrcmp(cmd, "waitTest")==0) 
 	{
