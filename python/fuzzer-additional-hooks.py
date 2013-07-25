@@ -6,6 +6,9 @@ import generators.generator as generator
 import generators.changer as changer
 import socket
 import os
+import logging
+import logging.handlers
+import signal
 
 origin_path = "../origins/acad/test.dwg"
 samples_shared_path = "../samples_shared"
@@ -13,6 +16,17 @@ samples_saved = "../samples_saved"
 fuzzbox_ip = "192.168.56.103"
 fuzzbox_port = 12345
 buffer_size = 1024
+my_name = "[seeker 1]"
+my_logger = logging.getLogger('MyLogger')
+my_handler = logging.handlers.SysLogHandler(address = '/dev/log')
+my_logger.setLevel(logging.DEBUG)
+my_logger.addHandler(my_handler)
+
+def usr1handler(signum, frame):
+    report()
+
+def report():
+    my_logger.info(my_name + " " + "reporting");
 
 def prepare_fuzzbox():
     pass
@@ -26,11 +40,16 @@ def write_socket(s, data):
     print("> " + str(data))
     s.send(data)
 
+#setup fuzzer
 my_generator = generator.Generator(origin_path, samples_shared_path, ".dwg", changer.Changer)
 my_generator.mutations=1
 
+#signal.signal(signal.SIGUSR1, usr1handler)
+
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 s.connect((fuzzbox_ip, fuzzbox_port))
+
+#setup box
 
 #banner
 read_socket(s)
@@ -73,7 +92,7 @@ while(True):
     read_socket(s)
     sample_count = sample_count + 1
     os.remove(sample_path)
-    if(sample_count % 100):
+    if(sample_count % 100 == 0):
         print("Tested: " + str(sample_count))
         
 

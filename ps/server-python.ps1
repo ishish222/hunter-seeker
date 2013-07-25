@@ -9,8 +9,20 @@ $global:ns = $null
 $global:nsReader = $null
 $global:nsWriter = $null
 $global:lastProc = $null
+$global:spawnDelay = 10
 
 $enc = new-object system.text.asciiEncoding
+
+function dn4on()
+{
+	reg add hklm\software\microsoft\.netframework /v OnlyUseLatestCLR /t REG_DWORD /d 1
+
+}
+
+function dn4off()
+{
+	reg delete hklm\software\microsoft\.netframework /v OnlyUseLatestCLR /f
+}
 
 function inject($mypid)
 {
@@ -169,10 +181,14 @@ function dispatch-command([string]$command, [system.net.sockets.tcpclient]$clien
 			$rest += " "
 		}
 
+		dn4off
 		$global:lastProc = [Diagnostics.Process]::Start($rest)
+		start-sleep -seconds $global:spawnDelay
+		dn4on
 		write-socket $global:lastProc.Id
 		write-socket "OK"
 	}
+
 
 	if($cmdarray[0] -eq "pipe")
 	{

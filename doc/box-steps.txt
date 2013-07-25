@@ -12,4 +12,7 @@ C:\WINDOWS\system32\windowspowershell\v1.0\powershell.exe.config
 
 +
 reg add hklm\software\microsoft\.netframework /v OnlyUseLatestCLR /t REG_DWORD /d 1
-(need to remove in order to run acad)
+(need to remove in order to run acad, done automatically by server)
+
+add server looper to autostart
+
