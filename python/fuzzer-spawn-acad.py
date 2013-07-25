@@ -11,16 +11,19 @@ import logging.handlers
 import time
 import sys
 
-if(len(sys.argv)) < 3:
-    print("Podaj ip i nazwe boxa")
+if(len(sys.argv)) < 2:
+    print("Podaj nazwe boxa")
     quit()
+
+ips = { 
+'xpsp2-1': '192.168.56.110'
+}
 
 origin_path = "../origins/acad/test.dwg"
 samples_shared_path = "../samples_shared"
 samples_saved = "../samples_saved"
-#fuzzbox_ip = "192.168.56.101"
-fuzzbox_name = sys.argv[2]
-fuzzbox_ip = sys.argv[1]
+fuzzbox_name = sys.argv[1]
+fuzzbox_ip = ips[fuzzbox_name]
 fuzzbox_port = 12345
 buffer_size = 1024
 my_name = "[seeker 1]"
@@ -28,7 +31,7 @@ my_logger = logging.getLogger('MyLogger')
 my_handler = logging.handlers.SysLogHandler(address = '/dev/log')
 my_logger.setLevel(logging.DEBUG)
 my_logger.addHandler(my_handler)
-my_timeout = 10.0
+my_timeout = 20.0
 
 #startvm = ["VBoxManage", "startvm", "", "--type", "headless"]
 startvm = ["VBoxManage", "startvm", ""]
@@ -36,8 +39,8 @@ poweroff = ["VBoxManage", "controlvm", "", "poweroff"]
 restorecurrent = ["VBoxManage", "snapshot", "", "restorecurrent"]
 restorestart = ["VBoxManage", "snapshot", "", "restore", "[x] start"]
 
-def report():
-    my_logger.info(my_name + " " + "reporting");
+def report(string):
+    my_logger.info(my_name + " " + string);
 
 def prepare_fuzzbox():
     pass
@@ -154,6 +157,7 @@ while(True):
         continue
 
 sample_count = 0
+last_time_check = time.localtime()
 
 #actual testing
 while(True):
@@ -164,15 +168,22 @@ while(True):
         read_socket(s)
     except socket.timeout:
         print "timeout/restarting"
-        print "saving" + str(sample_file)
+        print "saving " + str(sample_path)
+        command = ["cp", sample_path, samples_saved]
+        os.spawnv(os.P_WAIT, "/bin/cp", command)
         restart()
+        connect()
         init()
         proceed()
         continue
     sample_count = sample_count + 1
     os.remove(sample_path)
     if(sample_count % 100 == 0):
-        print("Tested: " + str(sample_count))
+        current_time = time.localtime()
+        elapsed = time.mktime(current_time) - time.mktime(last_time_check)
+        report("Tested: " + str(sample_count))
+        report("100 tested in " + str(elapsed) + " seconds")
+        report("Last speed: " + str(100/elapsed) + " tps") 
         
 s.settimeout(None)
 

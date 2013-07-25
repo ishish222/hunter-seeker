@@ -78,7 +78,7 @@ class Mutator(file):
     def pickVirtualOffset(self):
 #        random.seed()
         r = random.randint(0, self.sizeTotal)
-        print r
+#        print r
 #        print str(0)+" "+str(self.sizeTotal)
 #        print "v: "+str(r)
         return r
