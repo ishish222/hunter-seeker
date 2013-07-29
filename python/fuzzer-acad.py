@@ -212,6 +212,7 @@ while(True):
         report("Tested: " + str(sample_count))
         report("100 tested in " + str(elapsed) + " seconds")
         report("Last speed: " + str(100/elapsed) + " tps") 
+        las_time_check = current_time
         
 s.settimeout(None)
 
