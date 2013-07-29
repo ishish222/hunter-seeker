@@ -14,6 +14,9 @@ import sys
 visible = True
 Testing = False
 
+class ErrorDetectedException(Exception):
+    pass
+
 if(len(sys.argv)) < 2:
     print("Podaj nazwe boxa")
     quit()
@@ -118,8 +121,8 @@ def proceed():
     read_socket(s)
     write_socket(s, "pipe installTestHook4")
     read_socket(s)
-#    write_socket(s, "pipe installTestHook5")
-#    read_socket(s)
+    write_socket(s, "pipe installTestHook5")
+    read_socket(s)
 
     #searching handles
     write_socket(s, "pipe FindHandles Afx:00400000:b:00010011:00000006")
@@ -135,6 +138,9 @@ def proceed():
     #closing windows
     write_socket(s, "pipe KillClass")
     read_socket(s)
+
+#    print("sleeping")
+#    time.sleep(3)
 
     #enter test mode
     write_socket(s, "testmode enter")
@@ -175,9 +181,12 @@ while(True):
     sample_file = os.path.basename(sample_path)
     write_socket(s, "Z:\\"+str(sample_file))
     try:
-        read_socket(s)
+        if(read_socket(s) == "OK"):
+            continue
+        else:
+             raise ErrorDetectedException
     except socket.timeout:
-        print "timeout/restarting"
+        print "timeout, saving & restarting"
         print "saving " + str(sample_path)
         command = ["cp", sample_path, samples_saved]
         os.spawnv(os.P_WAIT, "/bin/cp", command)
@@ -186,6 +195,15 @@ while(True):
         init()
         proceed()
         continue
+        break
+    except ErrorDetectedException:
+        print "error, restarting"
+        restart()
+        connect()
+        init()
+        proceed()
+        continue
+        
     sample_count = sample_count + 1
     os.remove(sample_path)
     if(sample_count % 100 == 0):
