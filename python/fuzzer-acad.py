@@ -139,8 +139,8 @@ def proceed():
     write_socket(s, "pipe KillClass")
     read_socket(s)
 
-#    print("sleeping")
-#    time.sleep(3)
+    print("sleeping")
+    time.sleep(3)
 
     #enter test mode
     write_socket(s, "testmode enter")

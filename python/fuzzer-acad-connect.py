@@ -139,8 +139,8 @@ def proceed():
     write_socket(s, "pipe KillClass")
     read_socket(s)
 
-#    print("sleeping")
-#    time.sleep(3)
+    print("sleeping")
+    time.sleep(3)
 
     #enter test mode
     write_socket(s, "testmode enter")
@@ -206,12 +206,12 @@ while(True):
         
     sample_count = sample_count + 1
     os.remove(sample_path)
-    if(sample_count % 100 == 0):
+    if(sample_count % 10 == 0):
         current_time = time.localtime()
         elapsed = time.mktime(current_time) - time.mktime(last_time_check)
         report("Tested: " + str(sample_count))
         report("100 tested in " + str(elapsed) + " seconds")
-        report("Last speed: " + str(100/elapsed) + " tps") 
+        report("Last speed: " + str(10/elapsed) + " tps") 
         last_time_check = current_time
         
 s.settimeout(None)
