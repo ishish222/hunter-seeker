@@ -146,7 +146,7 @@ my_generator = generator.Generator(origin_path, samples_shared_path, ".dwg", cha
 my_generator.mutations=1
 
 #setup box
-start()
+#start()
 connect()
 init()
 proceed()
