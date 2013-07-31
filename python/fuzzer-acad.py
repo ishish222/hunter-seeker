@@ -11,7 +11,7 @@ import logging.handlers
 import time
 import sys
 
-visible = True
+visible = False
 Testing = False
 
 class ErrorDetectedException(Exception):
@@ -22,7 +22,8 @@ if(len(sys.argv)) < 2:
     quit()
 
 ips = { 
-'xpsp2-1': '192.168.56.110'
+'xpsp2-1': '192.168.56.110',
+'fuzzbox-acad-2': '192.168.56.111'
 }
 
 origin_path = "../origins/acad/test.dwg"
@@ -182,12 +183,13 @@ while(True):
     write_socket(s, "Z:\\"+str(sample_file))
     try:
         if(read_socket(s) == "OK"):
-            continue
+            pass
         else:
              raise ErrorDetectedException
     except socket.timeout:
         print "timeout, saving & restarting"
         print "saving " + str(sample_path)
+        report("Saving suspected sample: " + str(sample_path))
         command = ["cp", sample_path, samples_saved]
         os.spawnv(os.P_WAIT, "/bin/cp", command)
         restart()
@@ -212,7 +214,7 @@ while(True):
         report("Tested: " + str(sample_count))
         report("100 tested in " + str(elapsed) + " seconds")
         report("Last speed: " + str(100/elapsed) + " tps") 
-        las_time_check = current_time
+        last_time_check = current_time
         
 s.settimeout(None)
 
