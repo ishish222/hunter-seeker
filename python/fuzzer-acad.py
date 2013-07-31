@@ -10,8 +10,9 @@ import logging
 import logging.handlers
 import time
 import sys
+import signal
 
-visible = False
+visible = True
 Testing = False
 
 class ErrorDetectedException(Exception):
@@ -26,6 +27,7 @@ ips = {
 'fuzzbox-acad-2': '192.168.56.111'
 }
 
+#Configure generator
 origin_path = "../origins/acad/test.dwg"
 samples_shared_path = "../samples_shared"
 samples_saved = "../samples_saved"
@@ -33,7 +35,7 @@ fuzzbox_name = sys.argv[1]
 fuzzbox_ip = ips[fuzzbox_name]
 fuzzbox_port = 12345
 buffer_size = 1024
-my_name = "[HS]"
+my_name = "[HS:ACAD-test]"
 my_logger = logging.getLogger('MyLogger')
 my_handler = logging.handlers.SysLogHandler(address = '/dev/log')
 my_logger.setLevel(logging.DEBUG)
@@ -64,6 +66,11 @@ def write_socket(s, data):
     print("> " + str(data))
     s.send(data)
 
+def powerofff():
+    command = poweroff
+    command[2] = fuzzbox_name
+    ret = os.spawnv(os.P_WAIT, "/opt/VirtualBox/VBoxManage", command)
+
 def revert():
     command = restorestart
     command[2] = fuzzbox_name
@@ -78,9 +85,7 @@ def start():
     time.sleep(5)
 
 def restart():
-    command = poweroff
-    command[2] = fuzzbox_name
-    ret = os.spawnv(os.P_WAIT, "/opt/VirtualBox/VBoxManage", command)
+    powerofff()
     time.sleep(3)
     start()
 
@@ -148,6 +153,14 @@ def proceed():
     read_socket(s)
     s.settimeout(my_timeout) 
 
+def sig1_handler(signum, frame):
+    report("Signaled")
+        
+def sigkill_handler(signum, frame):
+    report("Killing")
+    powerofff()
+    quit()
+        
 #setup fuzzer for acad
 my_generator = generator.Generator(origin_path, samples_shared_path, ".dwg", changer.Changer)
 my_generator.mutations=1
@@ -157,6 +170,8 @@ start()
 connect()
 init()
 proceed()
+
+signal.signal(signal.SIGINT, sigkill_handler)
 
 if(Testing):
     #restart until passes test?
@@ -183,13 +198,12 @@ while(True):
     write_socket(s, "Z:\\"+str(sample_file))
     try:
         if(read_socket(s) == "OK"):
-            pass
+            continue
         else:
              raise ErrorDetectedException
     except socket.timeout:
         print "timeout, saving & restarting"
         print "saving " + str(sample_path)
-        report("Saving suspected sample: " + str(sample_path))
         command = ["cp", sample_path, samples_saved]
         os.spawnv(os.P_WAIT, "/bin/cp", command)
         restart()

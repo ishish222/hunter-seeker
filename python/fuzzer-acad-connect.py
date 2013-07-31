@@ -10,6 +10,7 @@ import logging
 import logging.handlers
 import time
 import sys
+import signal
 
 visible = True
 Testing = False
@@ -22,9 +23,11 @@ if(len(sys.argv)) < 2:
     quit()
 
 ips = { 
-'xpsp2-1': '192.168.56.110'
+'xpsp2-1': '192.168.56.110',
+'fuzzbox-acad-2': '192.168.56.111'
 }
 
+#Configure generator
 origin_path = "../origins/acad/test.dwg"
 samples_shared_path = "../samples_shared"
 samples_saved = "../samples_saved"
@@ -32,7 +35,7 @@ fuzzbox_name = sys.argv[1]
 fuzzbox_ip = ips[fuzzbox_name]
 fuzzbox_port = 12345
 buffer_size = 1024
-my_name = "[HS]"
+my_name = "[HS:ACAD-test]"
 my_logger = logging.getLogger('MyLogger')
 my_handler = logging.handlers.SysLogHandler(address = '/dev/log')
 my_logger.setLevel(logging.DEBUG)
@@ -63,6 +66,11 @@ def write_socket(s, data):
     print("> " + str(data))
     s.send(data)
 
+def powerofff():
+    command = poweroff
+    command[2] = fuzzbox_name
+    ret = os.spawnv(os.P_WAIT, "/opt/VirtualBox/VBoxManage", command)
+
 def revert():
     command = restorestart
     command[2] = fuzzbox_name
@@ -77,9 +85,7 @@ def start():
     time.sleep(5)
 
 def restart():
-    command = poweroff
-    command[2] = fuzzbox_name
-    ret = os.spawnv(os.P_WAIT, "/opt/VirtualBox/VBoxManage", command)
+    powerofff()
     time.sleep(3)
     start()
 
@@ -147,6 +153,14 @@ def proceed():
     read_socket(s)
     s.settimeout(my_timeout) 
 
+def sig1_handler(signum, frame):
+    report("Signaled")
+        
+def sigkill_handler(signum, frame):
+    report("Killing")
+    powerofff()
+    quit()
+        
 #setup fuzzer for acad
 my_generator = generator.Generator(origin_path, samples_shared_path, ".dwg", changer.Changer)
 my_generator.mutations=1
@@ -156,6 +170,8 @@ my_generator.mutations=1
 connect()
 init()
 proceed()
+
+signal.signal(signal.SIGINT, sigkill_handler)
 
 if(Testing):
     #restart until passes test?
@@ -206,12 +222,12 @@ while(True):
         
     sample_count = sample_count + 1
     os.remove(sample_path)
-    if(sample_count % 10 == 0):
+    if(sample_count % 100 == 0):
         current_time = time.localtime()
         elapsed = time.mktime(current_time) - time.mktime(last_time_check)
         report("Tested: " + str(sample_count))
         report("100 tested in " + str(elapsed) + " seconds")
-        report("Last speed: " + str(10/elapsed) + " tps") 
+        report("Last speed: " + str(100/elapsed) + " tps") 
         last_time_check = current_time
         
 s.settimeout(None)

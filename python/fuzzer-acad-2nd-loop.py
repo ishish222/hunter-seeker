@@ -28,6 +28,7 @@ ips = {
 'fuzzbox-acad-2': '192.168.56.111'
 }
 
+#Configure generator
 origin_path = "../origins/acad/test.dwg"
 samples_shared_path = "../samples_shared"
 samples_saved = "../samples_saved"
@@ -35,7 +36,7 @@ fuzzbox_name = sys.argv[1]
 fuzzbox_ip = ips[fuzzbox_name]
 fuzzbox_port = 12345
 buffer_size = 1024
-my_name = "[HS]"
+my_name = "[HS:ACAD-test]"
 my_logger = logging.getLogger('MyLogger')
 my_handler = logging.handlers.SysLogHandler(address = '/dev/log')
 my_logger.setLevel(logging.DEBUG)
