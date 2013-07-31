@@ -25,4 +25,4 @@ syntax: glob
 #dirs
 samples_shared/*
 samples_saved/*
-
+samples_suspected/*
