@@ -11,9 +11,7 @@ import logging.handlers
 import time
 import sys
 import signal
-
-visible = True
-Testing = False
+import settings 
 
 class ErrorDetectedException(Exception):
     pass
@@ -42,7 +40,7 @@ my_logger.setLevel(logging.DEBUG)
 my_logger.addHandler(my_handler)
 my_timeout = 20.0
 
-if(visible):
+if(settings.visible):
     startvm = ["VBoxManage", "startvm", ""]
 else:
     startvm = ["VBoxManage", "startvm", "", "--type", "headless"]
@@ -173,7 +171,7 @@ proceed()
 
 signal.signal(signal.SIGINT, sigkill_handler)
 
-if(Testing):
+if(settings.testing):
     #restart until passes test?
     while(True):
         write_socket(s, "Z:\\original.dwg")
