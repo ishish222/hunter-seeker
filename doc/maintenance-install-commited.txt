@@ -1,0 +1,10 @@
+#!/bin/bash
+
+ADDR=10.8.0.6
+hg archive -t tgz /tmp/hs2-last.tar.gz
+tar zxf /tmp/hs2-last.tar.gz -C /tmp/
+scp -r /tmp/hs2-last hs1@$ADDR:/home/hs1/hs2/
+#ssh hs1@$ADDR cp -r /home/hs1/hs/hs-0.2/fuzzboxes/* /home/hs1/hs-current/fuzzboxes/
+#ssh hs1@$ADDR cp -r /home/hs1/hs/hs-0.2/origins /home/hs1/hs-current/
+#ssh hs1@$ADDR cp -r /home/hs1/config/.default.* /home/hs1/hs-current/src/
+ssh hs1@$ADDR rm /tmp/patch2

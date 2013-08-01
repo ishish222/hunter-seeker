@@ -23,6 +23,7 @@ syntax: glob
 *.rrd
 
 #dirs
+origins/*
 samples_shared/*
 samples_saved/*
 samples_suspected/*

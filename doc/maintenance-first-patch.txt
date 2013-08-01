@@ -1,0 +1,12 @@
+#!/bin/bash
+
+ADDR=10.8.0.6
+
+hg diff > /tmp/patch2
+scp /tmp/patch2 hs1@$ADDR:/tmp/patch2
+#install new
+ssh hs1@$ADDR patch2 -d /home/hs1/hs2-current/ -p1 < /tmp/patch2
+#ssh hs1@$ADDR cp -r /home/hs1/hs/hs-0.2/origins /home/hs1/hs-current/
+#ssh hs1@$ADDR cp -r /home/hs1/config/.default.* /home/hs1/hs-current/src/
+
+
