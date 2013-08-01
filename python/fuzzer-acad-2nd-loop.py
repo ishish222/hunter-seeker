@@ -45,6 +45,8 @@ else:
     startvm = ["VBoxManage", "startvm", "", "--type", "headless"]
 
 poweroff = ["VBoxManage", "controlvm", "", "poweroff"]
+pause = ["VBoxManage", "controlvm", "", "pause"]
+resume = ["VBoxManage", "controlvm", "", "resume"]
 restorecurrent = ["VBoxManage", "snapshot", "", "restorecurrent"]
 restorestart = ["VBoxManage", "snapshot", "", "restore", "[x] start"]
 
@@ -65,6 +67,16 @@ def write_socket(s, data):
 
 def powerofff():
     command = poweroff
+    command[2] = fuzzbox_name
+    ret = os.spawnv(os.P_WAIT, "/opt/VirtualBox/VBoxManage", command)
+
+def pausee():
+    command = pause
+    command[2] = fuzzbox_name
+    ret = os.spawnv(os.P_WAIT, "/opt/VirtualBox/VBoxManage", command)
+
+def resumee():
+    command = resume
     command[2] = fuzzbox_name
     ret = os.spawnv(os.P_WAIT, "/opt/VirtualBox/VBoxManage", command)
 
@@ -152,42 +164,65 @@ def proceed():
 
 def sig1_handler(signum, frame):
     report("Verifying")
+    resumee()
     for filee in os.listdir(samples_saved):
+        if(filee[len(filee)-3:] != "dwg"):
+            continue
         write_socket(s, "Y:\\"+str(filee))
         try:
             if(read_socket(s) == "OK"):
                 # not interesting
-                command = ["rm", sample_saved+"/"+filee]
+                command = ["rm", samples_saved+"/"+filee]
                 os.spawnv(os.P_WAIT, "/bin/rm", command)
                 continue
             else:
                  raise ErrorDetectedException
         except socket.timeout:
-            command = ["mv", sample_saved, samples_suspected]
+            report("Found suspect: " + filee + ", saving to: " + samples_suspected + "/" + filee)
+            command = ["mv", samples_saved+"/"+filee, samples_suspected]
             os.spawnv(os.P_WAIT, "/bin/mv", command)
             restart()
             connect()
             init()
             proceed()
             continue
+        except ErrorDetectedException:
+            # not interesting
+            command = ["rm", samples_saved+"/"+filee]
+            os.spawnv(os.P_WAIT, "/bin/rm", command)
+            restart()
+            connect()
+            init()
+            proceed()
+            continue
+    pausee()
         
 def sigkill_handler(signum, frame):
     report("Killing")
     powerofff()
+    os.unlink(pidfile)
     quit()
         
-#setup fuzzer for acad
-my_generator = generator.Generator(origin_path, samples_shared_path, ".dwg", changer.Changer)
-my_generator.mutations=1
-
 #setup box
 start()
 connect()
 init()
 proceed()
+pausee()
 
 signal.signal(signal.SIGUSR1, sig1_handler)
 signal.signal(signal.SIGINT, sigkill_handler)
+
+#Drop pidfile
+pid = str(os.getpid())
+pidfile = "/tmp/hs-2nd.pid"
+
+if os.path.isfile(pidfile):
+    report("Removing old pidfile, hope that's fine")
+    os.unlink(pidfile)
+
+file(pidfile, 'w').write(pid)
+
 ready = True
 
 report("Second loop ready")

@@ -77,7 +77,8 @@ class Mutator(file):
 
     def pickVirtualOffset(self):
 #        random.seed()
-        r = random.randint(0, self.sizeTotal)
+#        r = random.randint(0, self.sizeTotal)
+        r = self.pickRandom(0, self.sizeTotal)
 #        print r
 #        print str(0)+" "+str(self.sizeTotal)
 #        print "v: "+str(r)
@@ -87,6 +88,10 @@ class Mutator(file):
         self.offset = 0
         self += self.pickVirtualOffset()
 #       print "r: "+str(self.offset)
+
+    def pickRandom(self, from_, to_):
+        r = random.randint(from_, to_)
+        return r
 
     def appendArea(self, area):
         self.areas.append(area)

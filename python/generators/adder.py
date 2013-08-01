@@ -1,6 +1,11 @@
 from mutator import Mutator
 import random
 
+minShortAdd = 2
+maxShortAdd = 5
+minLongAdd = 10
+maxLongAdd = 255
+
 class ByteAdder(Mutator):
     def mutate(self):
         self.pickOffset()
@@ -16,7 +21,7 @@ class ShortAdder(Mutator):
         self.pickOffset()
         self.seek(self.offset, 0)
 #        random.seed()
-        len = random.randint(2,5)
+        len = random.randint(minShortAdd, maxShortAdd)
         buffer = self.read(-1)
         self.seek(self.offset, 0)
         for i in range(0,len):
@@ -29,7 +34,7 @@ class LongAdder(Mutator):
         self.pickOffset()
         self.seek(self.offset, 0)
 #        random.seed()
-        len = random.randint(10,255)
+        len = random.randint(minLongAdd, maxLongAdd)
         buffer = self.read(-1)
         self.seek(self.offset, 0)
         for i in range(0,len):

@@ -3,9 +3,12 @@
 # mailto: tomasz.salacinski@korrino.com
 
 import generators.generator as generator
-import generators.changer as changer
+#import generators.changer as changer
+import generators.adder as mutator
+#import generators.remover as mutator
 import socket
 import os
+import sys
 
 origin_path = "../origins/acad/test.dwg"
 samples_shared_path = "../samples_shared"
@@ -26,6 +29,19 @@ def write_socket(s, data):
     print("> " + str(data))
     s.send(data)
 
-my_generator = generator.Generator(origin_path, samples_shared_path, ".dwg", changer.Changer)
-my_generator.mutations = 3
-sample_path = my_generator.generate_one()
+if(len(sys.argv) < 2):
+    count = 1
+else:
+    count = int(sys.argv[1], 10)
+
+#my_generator = generator.Generator(origin_path, samples_shared_path, ".dwg", mutator.Changer)
+#my_generator = generator.Generator(origin_path, samples_shared_path, ".dwg", mutator.AreaChanger)
+my_generator = generator.Generator(origin_path, samples_shared_path, ".dwg", mutator.ByteAdder)
+#my_generator = generator.Generator(origin_path, samples_shared_path, ".dwg", mutator.ShortAdder)
+#my_generator = generator.Generator(origin_path, samples_shared_path, ".dwg", mutator.LongAdder)
+#my_generator = generator.Generator(origin_path, samples_shared_path, ".dwg", mutator.ByteRemover)
+#my_generator = generator.Generator(origin_path, samples_shared_path, ".dwg", mutator.ShortRemover)
+#my_generator = generator.Generator(origin_path, samples_shared_path, ".dwg", mutator.LongRemover)
+my_generator.mutations = 1
+for i in range(0, count):
+    sample_path = my_generator.generate_one()

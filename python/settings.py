@@ -7,4 +7,5 @@ ips = {
 'testbox-second' : '192.168.56.112'
 }
 
+second = "testbox-second"
 
