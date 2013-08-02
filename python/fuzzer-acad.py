@@ -217,11 +217,11 @@ while(True):
         
     sample_count = sample_count + 1
     os.remove(sample_path)
-    if(sample_count % 10 == 0):
+    if(sample_count % 100 == 0):
         current_time = time.localtime()
         elapsed = time.mktime(current_time) - time.mktime(last_time_check)
         report("Tested: " + str(sample_count))
-        report("10 tested in " + str(elapsed) + " seconds")
+        report("100 tested in " + str(elapsed) + " seconds")
         report("Last speed: " + str(10/elapsed) + " tps") 
         last_time_check = current_time
         
