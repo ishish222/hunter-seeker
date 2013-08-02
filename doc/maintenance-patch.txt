@@ -3,7 +3,7 @@
 ADDR=10.8.0.6
 
 #remove old if exists
-ssh hs1@$ADDR "if [ -f /tmp/patch2 ]; then patch -d /home/hs1/hs2-current/ -Rp1 < /tmp/patch && rm /tmp/patch2; fi"
+ssh hs1@$ADDR "if [ -f /tmp/patch2 ]; then patch -d /home/hs1/hs2-current/ -Rp1 < /tmp/patch2 && rm /tmp/patch2; fi"
 
 hg diff > /tmp/patch2
 scp /tmp/patch2 hs1@$ADDR:/tmp/patch2
