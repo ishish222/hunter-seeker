@@ -191,9 +191,10 @@ while(True):
     write_socket(s, "Z:\\"+str(sample_file))
     try:
         if(read_socket(s) == "OK"):
-            continue
-            command = ["rm", sample_path]
-            os.spawnv(os.P_WAIT, "/bin/rm", command)
+            pass
+#            continue
+#            command = ["rm", sample_path]
+#            os.spawnv(os.P_WAIT, "/bin/rm", command)
         else:
              raise ErrorDetectedException
     except socket.timeout:
@@ -207,8 +208,8 @@ while(True):
         proceed()
     except ErrorDetectedException:
         print "error, restarting"
-        command = ["rm", sample_path]
-        os.spawnv(os.P_WAIT, "/bin/rm", command)
+#        command = ["rm", sample_path]
+#        os.spawnv(os.P_WAIT, "/bin/rm", command)
         restart()
         connect()
         init()
