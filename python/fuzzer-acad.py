@@ -156,7 +156,7 @@ def sigkill_handler(signum, frame):
         
 #setup fuzzer for acad
 my_generator = generator.Generator(origin_path, samples_shared_path, ".dwg", changer.Changer)
-my_generator.mutations=1
+my_generator.mutations=3
 
 #setup box
 start()
@@ -192,6 +192,8 @@ while(True):
     try:
         if(read_socket(s) == "OK"):
             continue
+            command = ["rm", sample_path]
+            os.spawnv(os.P_WAIT, "/bin/rm", command)
         else:
              raise ErrorDetectedException
     except socket.timeout:
@@ -203,24 +205,23 @@ while(True):
         connect()
         init()
         proceed()
-        continue
-        break
     except ErrorDetectedException:
         print "error, restarting"
+        command = ["rm", sample_path]
+        os.spawnv(os.P_WAIT, "/bin/rm", command)
         restart()
         connect()
         init()
         proceed()
-        continue
         
     sample_count = sample_count + 1
     os.remove(sample_path)
-    if(sample_count % 100 == 0):
+    if(sample_count % 10 == 0):
         current_time = time.localtime()
         elapsed = time.mktime(current_time) - time.mktime(last_time_check)
         report("Tested: " + str(sample_count))
-        report("100 tested in " + str(elapsed) + " seconds")
-        report("Last speed: " + str(100/elapsed) + " tps") 
+        report("10 tested in " + str(elapsed) + " seconds")
+        report("Last speed: " + str(10/elapsed) + " tps") 
         last_time_check = current_time
         
 s.settimeout(None)
