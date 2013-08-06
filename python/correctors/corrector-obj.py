@@ -110,10 +110,10 @@ class DataSection(Section):
         new_sum = self.calcChecksum ^ self.mask
 
         pack = struct.pack("<i", new_sum)
-        fmap[self.offset + 0x18 + 0x0] = pack[0x0]
-        fmap[self.offset + 0x18 + 0x1] = pack[0x1]
-        fmap[self.offset + 0x18 + 0x2] = pack[0x2]
-        fmap[self.offset + 0x18 + 0x3] = pack[0x3]
+        fmap[self.offset + 0x1c + 0x0] = pack[0x0]
+        fmap[self.offset + 0x1c + 0x1] = pack[0x1]
+        fmap[self.offset + 0x1c + 0x2] = pack[0x2]
+        fmap[self.offset + 0x1c + 0x3] = pack[0x3]
         
     def decrypt(self):
         global fmap
