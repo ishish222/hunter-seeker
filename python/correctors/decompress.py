@@ -27,7 +27,8 @@ def litLength(lV, fmap):
         return lV + 0x3
 
     if(lV == 0xf0):
-        return -1
+        cCur -= 1
+        return 0
 
     if(lV == 0x0):
         total = 0xf
@@ -54,8 +55,8 @@ def twoByteOffset(fmap):
     sB = ord(fmap[cCur])
     cCur +=1
 
-    cO = (fb >> 2) | (sb << 6)
-    lV = (fb & 0x3)
+    cO = (fB >> 2) | (sB << 6)
+    lV = (fB & 0x3)
     return (cO, lV)
 
 def longCompressionOffset(fmap):
@@ -135,7 +136,7 @@ def decode_opcode(fmap):
             lC = lV
 
     if(0x40 <= opc1 <= 0xff):
-        print("0x40 <= opc1 <= 0xff")
+#        print("0x40 <= opc1 <= 0xff")
         opc2 = ord(fmap[cCur])
         cCur += 1
 
@@ -160,10 +161,10 @@ def decompress(fmap, off):
 
     cCur += 4 #magic
 
-    cSize = int(struct.unpack("<i", "".join(fmap[cCur:cCur+4]))[0])
+    dSize = int(struct.unpack("<i", "".join(fmap[cCur:cCur+4]))[0])
     cCur += 4
 
-    dSize = int(struct.unpack("<i", "".join(fmap[cCur:cCur+4]))[0])
+    cSize = int(struct.unpack("<i", "".join(fmap[cCur:cCur+4]))[0])
     cCur += 4
 
     cCur += 4 #compression type
@@ -171,8 +172,8 @@ def decompress(fmap, off):
     checksum = int(struct.unpack("<i", "".join(fmap[cCur:cCur+4]))[0])
     cCur += 4
  
-    print("cSize: " + hex(cSize))
     print("dSize: " + hex(dSize))
+    print("cSize: " + hex(cSize))
     print("checksum: " + hex(checksum))
 
     #now cCur points to compressed data
@@ -201,10 +202,10 @@ def decompress(fmap, off):
         dArr += fmap[cCur:cCur+lC]
         cCur += lC
 
-    print("Length: " + str(len(dArr)))
+    print("Length: " + str(hex(len(dArr))))
     print("Decompressed: ")
 
-    for i in range(0, cSize):
+    for i in range(0, dSize):
         print(hex(ord(dArr[i])) + "\t", end='')
         if((i+1) % 0x8 == 0):
             print("")
@@ -217,7 +218,7 @@ def extractHdrData(encData):
     for i in range(0, 0x6c):
         print(hex(ord(encData[i]) ^ key[i % len(key)]) + "\t", end='')
         decData.append(chr(ord(encData[i]) ^ key[i % len(key)]))
-        if((i+1) % 0x10 == 0):
+        if((i+1) % 0x4 == 0):
             print("")
 
     print("")
@@ -242,12 +243,20 @@ try:
     decData = extractHdrData(encData)
 
     sectionPageMapOff = int(struct.unpack("<i", "".join(decData[0x54 : 0x58]))[0]) + 0x100
+    sectionMapOff = 0x12aac0
 
-    print("Section Page Mapp offset: ")
+    print("Section Page Map offset: ")
     print(hex(sectionPageMapOff))
+    print("")
 
     decompress(fmap, sectionPageMapOff)
 
+    print("Section Map offset: ")
+    print(hex(sectionMapOff))
+    print("")
+
+#    decompress(fmap, sectionMapOff)
+    print("Not worky yet")
 
 
 except Exception as e:
