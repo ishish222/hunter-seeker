@@ -108,6 +108,10 @@ class DataSection(Section):
         global fmap
         
         new_sum = self.calcChecksum ^ self.mask
+    
+        #convert to signed
+        if(new_sum & 0x80000000):
+            new_sum = -0x100000000 + new_sum
 
         pack = struct.pack("<i", new_sum)
         fmap[self.offset + 0x1c + 0x0] = pack[0x0]
