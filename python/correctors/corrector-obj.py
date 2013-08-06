@@ -33,7 +33,6 @@ def check_d_sect():
 
     mask = 0x4164536b ^ cCur
     header ^= mask
-#    print("Header: "+ hex2(header))
     if(header == 0x4163043b):
         return True
     else:
@@ -106,8 +105,16 @@ class DataSection(Section):
         return summ & 0xffffffff
 
     def set_new_checksum(self):
-        pass
+        global fmap
+        
+        new_sum = self.calcChecksum ^ self.mask
 
+        pack = struct.pack("<i", new_sum)
+        fmap[self.offset + 0x18 + 0x0] = pack[0x0]
+        fmap[self.offset + 0x18 + 0x1] = pack[0x1]
+        fmap[self.offset + 0x18 + 0x2] = pack[0x2]
+        fmap[self.offset + 0x18 + 0x3] = pack[0x3]
+        
     def decrypt(self):
         global fmap
 
@@ -156,8 +163,8 @@ while True:
                 print("[x] Incorrect")
                 print("Current checksum: " + hex(sect.checksum))
                 print("Calculated checksum: " + hex(sect.calcChecksum))
-#                print("Updating")
-#                update_d_sect(checksum2)
+                print("Updating")
+                sect.set_new_checksum()
             cCur += sect.dSize
         else:
             if(check_s_sect()):
