@@ -67,8 +67,8 @@ class SystemSection(Section):
         
 class DataSection(Section):
     def decode(self):
-        print("Offset: " + hex(self.offset))
-        print("Type: Data")
+#        print("Offset: " + hex(self.offset))
+#        print("Type: Data")
         self.decrypt()
 #        print(self.dArr)
         self.signature = self.dArr[0x0]
@@ -164,10 +164,10 @@ while True:
             if(sect.calcChecksum == sect.checksum):
                 print("[x] Correct")
             else:
-                print("[x] Incorrect")
-                print("Current checksum: " + hex(sect.checksum))
-                print("Calculated checksum: " + hex(sect.calcChecksum))
-                print("Updating")
+                print("[x] Incorrect", end="")
+#                print("Current checksum: " + hex(sect.checksum))
+#                print("Calculated checksum: " + hex(sect.calcChecksum))
+                print(", updating")
                 sect.set_new_checksum()
             cCur += sect.dSize
         else:
@@ -179,7 +179,6 @@ while True:
                 print("Looks like final section, bye")
                 break
 #        print("Next: " + hex2(cCur))
-        print("- - - -")
     except EndOfSections as e:
         print("Finished")
         break
