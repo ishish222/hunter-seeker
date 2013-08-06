@@ -62,3 +62,6 @@ if(len(sys.argv) < 2):
     print("plik")
 
 load_file(sys.argv[1])
+print("")
+print("Done")
+
