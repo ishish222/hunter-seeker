@@ -113,6 +113,21 @@ class SystemSection(Section):
         summ2 = (sum2 << 0x10) | (sum1 & 0xffff)
         self.calcChecksum = summ2 
         return summ2
+
+    def set_new_checksum(self):
+        global fmap
+
+        new_sum = self.calcChecksum
+
+        #convert to signed
+        if(new_sum & 0x80000000):
+            new_sum = -0x100000000 + new_sum
+
+        pack = struct.pack("<i", new_sum)
+        fmap[self.offset + 0x10 + 0x0] = pack[0x0]
+        fmap[self.offset + 0x10 + 0x1] = pack[0x1]
+        fmap[self.offset + 0x10 + 0x2] = pack[0x2]
+        fmap[self.offset + 0x10 + 0x3] = pack[0x3]
         
 class DataSection(Section):
     def decode(self):
@@ -229,7 +244,9 @@ while True:
                     print("\t[x] ")
                 else:
                     print("\t[i] ", end=" ")
-                    print("- should be: " + hex(sect.calcChecksum))
+                    print("- should be: " + hex(sect.calcChecksum), end="")
+                    sect.set_new_checksum()
+                    print(" (corrected)")
                 cCur += sect.dSize 
             else:
                 print("Looks like final section, bye")
