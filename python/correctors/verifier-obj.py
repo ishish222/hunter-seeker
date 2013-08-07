@@ -119,11 +119,15 @@ class DataSection(Section):
 #        print("Offset: " + hex(self.offset))
 #        print("Type: Data")
         self.decrypt()
-#        print(self.dArr)
+
+#        for i in range(0,8):
+#            print(hex(self.dArr[i]))
+
         self.signature = self.dArr[0x0]
         self.number = self.dArr[0x1]
         self.cSize = self.dArr[0x2]
         self.dSize = self.dArr[0x3]
+        self.checksum2 = self.dArr[0x6]
         self.checksum = self.dArr[0x7]
         self.dataOffset = self.offset + 0x20
 
@@ -151,6 +155,50 @@ class DataSection(Section):
 
         summ = (sum2 << 0x10) | (sum1 & 0xffff)
         self.calcChecksum = summ & 0xffffffff
+        return summ & 0xffffffff
+
+    def calc_checksum2(self):
+        global fmap
+
+        #stage 1
+        hdr = []
+        for i in range(0, 8):
+            val = self.dArr[i]
+            if(val & 0x80000000):
+                val = -0x100000000 + val
+        
+            pack = struct.pack("<i", val)
+            hdr.append(pack[0x0])
+            hdr.append(pack[0x1])
+            hdr.append(pack[0x2])
+            hdr.append(pack[0x3])
+
+        hdr[0x18] = "\x00" 
+        hdr[0x19] = "\x00" 
+        hdr[0x1a] = "\x00" 
+        hdr[0x1b] = "\x00" 
+        
+        seed = self.checksum
+        size = 0x20
+
+        sum1 = seed & 0xffff
+        sum2 = seed >> 0x10
+
+        ptr = 0x0
+
+        while (size != 0x0):
+            chunkSize = min(0x15b0, size)
+            size -= chunkSize
+            for i in range(0, chunkSize):
+                byte = ord(struct.unpack("<c", "".join(hdr[ptr]))[0])
+                ptr += 1
+                sum1 += byte
+                sum2 += sum1
+            sum1 %= 0xfff1
+            sum2 %= 0xfff1
+
+        summ = (sum2 << 0x10) | (sum1 & 0xffff)
+        self.calcChecksum2 = summ & 0xffffffff
         return summ & 0xffffffff
 
     def set_new_checksum(self):
@@ -210,12 +258,18 @@ while True:
             sect = DataSection(cCur)
             sect.decode()
             sect.calc_checksum()
+            sect.calc_checksum2()
             print("Data section at " + hex(sect.offset) + " ", end="")
             if(sect.calcChecksum == sect.checksum):
+                print("\t[x] ", end="")
+            else:
+                print("\t[i] ", end="")
+                print("- should be: " + hex(sect.calcChecksum), end="")
+            if(sect.calcChecksum2 == sect.checksum2):
                 print("\t[x] ")
             else:
                 print("\t[i] ", end="")
-                print("- should be: " + hex(sect.calcChecksum))
+                print("- should be: " + hex(sect.calcChecksum2))
             cCur += sect.dSize
         else:
             if(check_s_sect()):
