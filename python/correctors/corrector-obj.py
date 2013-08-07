@@ -281,25 +281,25 @@ print("")
 while True:
     try:
         if(check_d_sect()):
-            sect = DataSection(cCur)
-            sect.decode()
-            sect.calc_checksum()
-            sect.calc_checksum2()
-            print("Data section at " + hex(sect.offset) + " ", end="")
-            if(sect.calcChecksum == sect.checksum):
-                print("\t[x] ", end="")
-            else:
-                print("\t[i] ", end="")
-                print("- should be: " + hex(sect.calcChecksum), end="")
-                sect.set_new_checksum()
-                print(" (corrected)", end="")
-            if(sect.calcChecksum2 == sect.checksum2):
-                print("\t[x] ")
-            else:
-                print("\t[i] ", end="")
-                print("- should be: " + hex(sect.calcChecksum2), end="")
-                sect.set_new_checksum2()
-                print(" (corrected)")
+            while True:
+                sect = DataSection(cCur)
+                sect.decode()
+                sect.calc_checksum()
+                sect.calc_checksum2()
+                print("Data section at " + hex(sect.offset) + " ", end="")
+                if(sect.calcChecksum != sect.checksum):
+                    print("\t[i] ", end="")
+                    print("- should be: " + hex(sect.calcChecksum), end="")
+                    sect.set_new_checksum()
+                    print(" (corrected)")
+                    continue
+                if(sect.calcChecksum2 != sect.checksum2):
+                    print("\t[i] ", end="")
+                    print("- should be: " + hex(sect.calcChecksum2), end="")
+                    sect.set_new_checksum2()
+                    print(" (corrected)")
+                print("here")
+                break
             cCur += sect.dSize
         else:
             if(check_s_sect()):

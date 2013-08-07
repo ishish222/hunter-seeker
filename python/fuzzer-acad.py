@@ -108,8 +108,15 @@ def init():
     # we might have some trobules here, its first read
     read_socket(s)
 
+def killLast():
+    write_socket(s, "killLast")
+    read_socket(s)
 
 def proceed():
+    #killing explorer
+    write_socket(s, "killExplorer")
+    read_socket(s)
+
     #spawning acad
     write_socket(s, "spawn C:\\Program Files\\AutoCAD 2010\\acad.exe")
     read_socket(s)
@@ -154,6 +161,8 @@ def proceed():
     read_socket(s)
     s.settimeout(my_timeout) 
 
+    return True
+
 def sig1_handler(signum, frame):
     report("Signaled")
         
@@ -170,7 +179,20 @@ my_generator.mutations=3
 start()
 connect()
 init()
-proceed()
+
+#configure fuzzed app
+while True:
+    try:
+        ret = proceed()
+        if(ret == True):
+            break
+        else:
+            killLast()
+            continue
+    except Exception as e:
+        print(e)
+        killLast()
+        continue
 
 signal.signal(signal.SIGINT, sigkill_handler)
 
@@ -216,11 +238,9 @@ while(True):
         proceed()
     except ErrorDetectedException:
         print "error, restarting"
-#        command = ["rm", sample_path]
-#        os.spawnv(os.P_WAIT, "/bin/rm", command)
-        restart()
-        connect()
-        init()
+        write_socket(s, "testmode exit")
+        read_socket(s)
+        killLast()
         proceed()
         
     sample_count = sample_count + 1

@@ -268,20 +268,24 @@ def correct_all(fmap_):
     while True:
         try:
             if(check_d_sect()):
-                sect = DataSection(cCur)
-                sect.decode()
-                sect.calc_checksum()
-                sect.calc_checksum2()
-                if(sect.calcChecksum == sect.checksum):
-                    pass
-                else:
-                    sect.set_new_checksum()
-                    print("[i] - should be: " + hex(sect.calcChecksum) +" (corrected)")
-                if(sect.calcChecksum2 == sect.checksum2):
-                    pass
-                else:
-                    sect.set_new_checksum2()
-                    print("[i] - should be: " + hex(sect.calcChecksum2) +" (corrected)")
+                while True:
+                    sect = DataSection(cCur)
+                    sect.decode()
+                    sect.calc_checksum()
+                    sect.calc_checksum2()
+                    if(sect.calcChecksum == sect.checksum):
+                        pass
+                    else:
+                        sect.set_new_checksum()
+                        print("[i] - should be: " + hex(sect.calcChecksum) +" (corrected)")
+                        continue
+                    if(sect.calcChecksum2 == sect.checksum2):
+                        pass
+                    else:
+                        sect.set_new_checksum2()
+                        print("[i] - should be: " + hex(sect.calcChecksum2) +" (corrected)")
+                        continue
+                    break
                 cCur += sect.dSize
             else:
                 if(check_s_sect()):
