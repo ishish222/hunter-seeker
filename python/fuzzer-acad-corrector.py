@@ -2,8 +2,9 @@
 # author: Tomasz Salacinski (ishish)
 # mailto: tomasz.salacinski@korrino.com
 
-import generators.generator as generator
+import generators.generatorCorrected as generator
 import generators.changer as changer
+#import correctors.correctorlib
 import socket
 import os
 import logging
