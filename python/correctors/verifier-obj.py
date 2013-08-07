@@ -44,8 +44,8 @@ class Section(object):
 
 class SystemSection(Section):
     def decode(self):
-        print("Offset: " + hex(self.offset))
-        print("Type: System")
+#        print("Offset: " + hex(self.offset))
+#        print("Type: System")
         dArr = []
 
         ptr = self.offset
@@ -60,10 +60,59 @@ class SystemSection(Section):
         self.signature = self.dArr[0x0]
         self.dSize = self.dArr[0x1]
         self.cSize = self.dArr[0x2]
+        self.checksum = self.dArr[0x4]
         self.dataOffset = self.offset + 0x14
 
     def calc_checksum(self):
-        pass
+        global fmap
+            
+        #stage 1
+
+        hdr = []
+        hdr += fmap[self.offset:self.offset+0x10]
+        hdr += ["\x00", "\x00", "\x00", "\x00"]
+        
+        seed = 0x0
+        size = 0x14
+
+        sum1 = seed & 0xffff
+        sum2 = seed >> 0x10
+
+        ptr = 0x0
+
+        while (size != 0x0):
+            chunkSize = min(0x15b0, size)
+            size -= chunkSize
+            for i in range(0, chunkSize):
+                byte = ord(struct.unpack("<c", "".join(hdr[ptr]))[0])
+                ptr += 1
+                sum1 += byte
+                sum2 += sum1
+            sum1 %= 0xfff1
+            sum2 %= 0xfff1
+
+        summ = (sum2 << 0x10) | (sum1 & 0xffff)
+
+        #stage 2
+
+        seed = summ
+        size = self.cSize
+        ptr = self.offset + 0x14
+
+        while (size != 0x0):
+            chunkSize = min(0x15b0, size)
+            size -= chunkSize
+            for i in range(0, chunkSize):
+                byte = ord(struct.unpack("<c", "".join(fmap[ptr]))[0])
+                ptr += 1
+                sum1 += byte
+                sum2 += sum1
+            sum1 %= 0xfff1
+            sum2 %= 0xfff1
+        
+        summ2 = (sum2 << 0x10) | (sum1 & 0xffff)
+        self.calcChecksum = summ2 
+        return summ2
         
 class DataSection(Section):
     def decode(self):
@@ -161,17 +210,24 @@ while True:
             sect = DataSection(cCur)
             sect.decode()
             sect.calc_checksum()
+            print("Data section at " + hex(sect.offset) + " ", end="")
             if(sect.calcChecksum == sect.checksum):
-                print("[x] Correct")
+                print("\t[x] ")
             else:
-                print("[x] Incorrect", end="")
-#                print("Current checksum: " + hex(sect.checksum))
-                print(" should be: " + hex(sect.calcChecksum))
+                print("\t[i] ", end="")
+                print("- should be: " + hex(sect.calcChecksum))
             cCur += sect.dSize
         else:
             if(check_s_sect()):
                 sect = SystemSection(cCur)
                 sect.decode()
+                sect.calc_checksum()
+                print("System section at " + hex(sect.offset) + " ", end="")
+                if(sect.calcChecksum == sect.checksum):
+                    print("\t[x] ")
+                else:
+                    print("\t[i] ", end="")
+                    print("- should be: " + hex(sect.calcChecksum))
                 cCur += sect.dSize 
             else:
                 print("Looks like final section, bye")
