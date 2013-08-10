@@ -112,6 +112,18 @@ function dispatch-command([string]$command, [system.net.sockets.tcpclient]$clien
 		write-socket $a
 	}
 
+	if($cmdarray[0] -eq "dn4off")
+	{
+        dn4off
+        write-socket "DN4OFF"
+	}
+
+	if($cmdarray[0] -eq "dn4on")
+	{
+        dn4on
+        write-socket "DN4ON"
+	}
+
 	if($cmdarray[0] -eq "inject")
 	{
 		& ".\p021-instrumentation-server.exe" $cmdarray[1]
@@ -129,6 +141,11 @@ function dispatch-command([string]$command, [system.net.sockets.tcpclient]$clien
 		write-socket $ans
 	}
 
+	if($cmdarray[0] -eq "invoke")
+	{
+		Invoke-item $cmdarray[1]
+		write-socket "Invoked"
+	}
 
 	if($cmdarray[0] -eq "testmode")
 	{
