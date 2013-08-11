@@ -16,7 +16,7 @@ samples_dir = "Z:\\"
 crashed_dir = "Z:\\crashed"
 hanged_dir = "Z:\\hanged"
 clean_dir = "Z:\\clean"
-log_file = "V:\\log-"
+log_file = "Z:\\log-"
 
 def testdir(x): 
     if(os.path.isdir(x) == False):
