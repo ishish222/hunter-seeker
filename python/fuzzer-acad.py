@@ -16,12 +16,12 @@ import settings
 class ErrorDetectedException(Exception):
     pass
 
-if(len(sys.argv)) < 2:
-    print("Podaj nazwe boxa")
+if(len(sys.argv)) < 3:
+    print("Podaj nazwe boxa i oryginal")
     quit()
 
 #Configure generator
-origin_path = "../origins/acad/test.dwg"
+origin_path = sys.argv[2]
 samples_shared_path = "../samples_shared"
 samples_saved = "../samples_saved"
 fuzzbox_name = sys.argv[1]
