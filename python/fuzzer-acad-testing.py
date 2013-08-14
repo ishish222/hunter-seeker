@@ -2,9 +2,8 @@
 # author: Tomasz Salacinski (ishish)
 # mailto: tomasz.salacinski@korrino.com
 
-import generators.generatorCorrected as generator
+import generators.generator as generator
 import generators.changer as changer
-#import correctors.correctorlib
 import socket
 import os
 import logging
@@ -138,6 +137,8 @@ def proceed():
     read_socket(s)
     write_socket(s, "pipe installTestHook5")
     read_socket(s)
+    write_socket(s, "pipe installTestHook8")
+    read_socket(s)
 
     #searching handles
     write_socket(s, "pipe FindHandles Afx:00400000:b:00010011:00000006")
@@ -177,108 +178,92 @@ my_generator = generator.Generator(origin_path, samples_shared_path, ".dwg", cha
 my_generator.mutations=3
 
 #setup box
-def looop():
-    global s
+start()
+connect()
+init()
 
-    powerofff()
-    start()
-    connect()
-    init()
-
-    while True:
-        try:
-            ret = proceed()
-            if(ret == True):
-                break
-            else:
-                write_socket(s, "testmode exit")
-                read_socket(s)
-                killLast()
-                continue
-        except Exception as e:
-            print(e)
-            write_socket(s, "testmode exit")
-            read_socket(s)
+#configure fuzzed app
+while True:
+    try:
+        ret = proceed()
+        if(ret == True):
+            break
+        else:
             killLast()
             continue
-    
-    signal.signal(signal.SIGINT, sigkill_handler)
-    
-    if(settings.testing):
-        #restart until passes test?
-        while(True):
-            write_socket(s, "Z:\\original.dwg")
-            try:
-                read_socket(s)
-                break
-            except socket.timeout:
-                print "timeout/restarting"
-                restart()
-                connect()
-                init()
-                proceed()
-                continue
-    
-    sample_count = 0
-    last_time_check = time.localtime()
-    
-    #actual testing
+    except Exception as e:
+        print(e)
+        killLast()
+        continue
+
+signal.signal(signal.SIGINT, sigkill_handler)
+
+if(settings.testing):
+    #restart until passes test?
     while(True):
-        sample_path = my_generator.generate_one()
-        sample_file = os.path.basename(sample_path)
-        write_socket(s, "Z:\\"+str(sample_file))
+        write_socket(s, "Z:\\original.dwg")
         try:
-            if(read_socket(s) == "OK"):
-                pass
-    #            continue
-    #            command = ["rm", sample_path]
-    #            os.spawnv(os.P_WAIT, "/bin/rm", command)
-            else:
-                 raise ErrorDetectedException
+            read_socket(s)
+            break
         except socket.timeout:
-            print "timeout, saving & restarting"
-            print "saving " + str(sample_path)
-            command = ["cp", sample_path, samples_saved]
-            os.spawnv(os.P_WAIT, "/bin/cp", command)
+            print "timeout/restarting"
             restart()
             connect()
             init()
             proceed()
-        except ErrorDetectedException:
-            print "error, restarting"
-            write_socket(s, "testmode exit")
-            read_socket(s)
-            killLast()
-            proceed()
-     
-        sample_count = sample_count + 1
-        os.remove(sample_path)
-        if(sample_count % 100 == 0):
-            current_time = time.localtime()
-            elapsed = time.mktime(current_time) - time.mktime(last_time_check)
-            report("Tested: " + str(sample_count))
-            report("100 tested in " + str(elapsed) + " seconds")
-            report("Last speed: " + str(10/elapsed) + " tps") 
-            last_time_check = current_time
-            
-    s.settimeout(None)
-    
-    #exit test mode
-    write_socket(s, "testmode exit")
-    read_socket(s)
-    
-    write_socket(s, "quit")
-    read_socket(s)
-    
-    s.close()
-    
-    print("Finished")
+            continue
 
-while True:
-    print("here")
+sample_count = 0
+last_time_check = time.localtime()
+
+#actual testing
+while(True):
+    sample_path = my_generator.generate_one()
+    sample_file = os.path.basename(sample_path)
+    write_socket(s, "Z:\\"+str(sample_file))
     try:
-        looop()
-    except Exception as e:
-        print(e)
-        time.sleep(3)
-        continue
+        if(read_socket(s) == "OK"):
+            pass
+#            continue
+#            command = ["rm", sample_path]
+#            os.spawnv(os.P_WAIT, "/bin/rm", command)
+        else:
+             raise ErrorDetectedException
+    except socket.timeout:
+        print "timeout, saving & restarting"
+        print "saving " + str(sample_path)
+        command = ["cp", sample_path, samples_saved]
+        os.spawnv(os.P_WAIT, "/bin/cp", command)
+        restart()
+        connect()
+        init()
+        proceed()
+    except ErrorDetectedException:
+        print "error, restarting"
+        write_socket(s, "testmode exit")
+        read_socket(s)
+        killLast()
+        proceed()
+        
+    sample_count = sample_count + 1
+    os.remove(sample_path)
+    if(sample_count % 100 == 0):
+        current_time = time.localtime()
+        elapsed = time.mktime(current_time) - time.mktime(last_time_check)
+        report("Tested: " + str(sample_count))
+        report("100 tested in " + str(elapsed) + " seconds")
+        report("Last speed: " + str(10/elapsed) + " tps") 
+        last_time_check = current_time
+        
+s.settimeout(None)
+
+#exit test mode
+write_socket(s, "testmode exit")
+read_socket(s)
+
+write_socket(s, "quit")
+read_socket(s)
+
+s.close()
+
+print("Finished")

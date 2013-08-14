@@ -53,10 +53,12 @@ def file_run(filee, dbg):
 
     status = "hanged"
     os.system("start " + samples_dir + "\\" + filee)
-    time.sleep(8)
+    logf.write("start " + samples_dir + "\\" + filee + "\n")
+    logf.flush()
+    time.sleep(3)
     if(status == "hanged"):
         print("status: hanged")
-        logf.write("status: hanged")
+        logf.write("status: hanged\n")
         dbg.terminate_process()
         os.rename(samples_dir + "\\" + filee, hanged_dir + "\\" + filee)
         
@@ -73,6 +75,7 @@ log_file += ".txt"
 status = "hang"
 
 logf = open(log_file, "w")
+logf.write("test\n")
 
 for filee in os.listdir(samples_dir):
     if(filee[-4:] != ".dwg"):
@@ -91,7 +94,7 @@ for filee in os.listdir(samples_dir):
         if imagename in name:
             try:
                 print "[*] Attaching to %s (%d)" % (name, pid)
-                logf.write("[*] Attaching to " + name + " " + str( pid))
+                logf.write("[*] Attaching to " + name + " " + str( pid) + "\n")
                 dbg.attach(pid)
             except:
                 print "[!] Problem attaching to %s" % name
