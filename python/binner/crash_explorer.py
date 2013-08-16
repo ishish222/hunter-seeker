@@ -94,18 +94,18 @@ def windows_kill(pid):
 
 class walk():
     def __init__(self, app="", imagename="", filee="", addr=0x0):
-#        global dbg
         self.app = app
         self.imagename = imagename
         self.filee = filee
         self.level = 0
         self.phase = 1
+        self.running = True
         self.dbg = pydbg()
         self.dbg.walk = self
-#        dbg = self.dbg
         self.walk_addr = addr
         self.walk_end_addr = 0x0
         self.dbg.set_callback(EXCEPTION_ACCESS_VIOLATION, handle_av)
+        self.addr_blacklist = []
         
     def attach(self):
         for (pid, name) in self.dbg.enumerate_processes():
@@ -119,6 +119,7 @@ class walk():
                     logf.write("[*] Problem attaching to " + name)
                     windows_kill(pid)
                     raise AttachFail
+        self.pid = pid
 
 
     def spawn(self):
@@ -131,48 +132,112 @@ class walk():
     
     def load_file(self):
         #load file
-        print("Loading file")
-        thread = Thread(target = file_run, args = (self.filee, self.dbg, ))
-        thread.start()
-        return self.dbg
+        try:
+            print("Loading file")
+            thread = Thread(target = file_run, args = (self.filee, self.dbg, ))
+            thread.start()
+            return self.dbg
+        except Exception as e:
+            print(e)
+
+    def install_bp(self, addr):
+        try:
+#            print("Installing bp at: " + hex(addr))
+            self.dbg.set_callback(EXCEPTION_BREAKPOINT, walk_function)
+            self.dbg.bp_set(addr, "Working bp")
+        except Exception as e:
+            print(e)
+ 
 
     def install_walk_bp(self):
-        self.dbg.set_callback(EXCEPTION_BREAKPOINT, walk_function)
-        self.dbg.bp_set(self.walk_addr, "Walked function")
+        try:
+            print("Installing walk handlers")
+            self.dbg.set_callback(EXCEPTION_BREAKPOINT, walk_function)
+#            self.dbg.set_callback(EXCEPTION_SINGLE_STEP, walk_ss_routine)
+            self.dbg.bp_set(self.walk_addr, "Walked function")
+        except Exception as e:
+            print(e)
+
+    def install_walk_end_bp(self):
+        try:
+            print("Installing walk end handler")
+#            self.dbg.set_callback(EXCEPTION_BREAKPOINT, walk_function)
+            self.dbg.bp_set(self.walk_end_addr, "Walked function finished")
+        except Exception as e:
+            print(e)
 
     def run(self):
-        self.dbg.run()
-    
+        try:
+            print("Running")
+#            thread = Thread(target = self.dbg.run)
+#            thread.start()
+            self.dbg.run()
+        except Exception as e:
+            print(e)
+
     def go_deeper(self):
         pass
 
     def detach(self):
         dbg.detach()
 
-
+    def kill(self):
+        print("Killing")
+        try:
+            self.dbg.terminate_process()
+        except Exception as e:
+            print(e)
+ 
+def walk_ss_routine(dbg):
+    ea = dbg.get_register("EIP")
+    instr = dbg.disasm(ea)
+    if(dbg.mnemonic == "call"):
+        print(hex(ea) + ": " + instr)
+    dbg.single_step(True)
+    return DBG_CONTINUE
 
 def walk_function(dbg):
-    print("hello")
     ea = dbg.get_register("EIP")
-    print(hex(ea))
-    if(ea != dbg.walk.walk_addr):
-        return DBG_CONTINUE
-    print("Hello!")
-    instr = dbg.get_instruction(dbg.get_register("EIP"))
-    print(dir(instr))
-    print(instr.opcode)
-    print(instr.length)
-    print(hex(ea))
-    print(dbg.disasm(ea))
+#    print(hex(ea))
+    for addr in dbg.walk.addr_blacklist:
+        if(ea == addr):
+            print("Blacklisted, ignoring")
+            return DBG_CONTINUE
+    if(ea == dbg.walk.walk_addr):
+        print("Reached walk start")
+        instr = dbg.get_instruction(dbg.get_register("EIP"))
+        print(dir(instr))
+        print(instr.opcode)
+        print(instr.length)
+        print(instr.op1)
+        dbg.disasm(ea)
+        print(dbg.mnemonic)
+        print(dbg.op1)
+        dbg.walk.install_bp(int(dbg.op1,16)) 
+        dbg.walk.walk_end_addr = dbg.walk.walk_addr + instr.length
+        dbg.walk.install_walk_end_bp()
+    if(ea == dbg.walk.walk_end_addr):
+        print("Reached walk end")
+        print(dbg.disasm(ea))
+        dbg.walk.running = False
+    else:
+        print(dbg.disasm(ea))
+        instr = dbg.get_instruction(dbg.get_register("EIP"))
+        dbg.walk.install_bp(ea + instr.length)
     return DBG_CONTINUE
 
 my_walk = walk(app, imagename, filee, 0x0049ac33)
+my_walk.addr_blacklist.append(0x7c90120f)
 my_walk.spawn()
 my_walk.attach()
 my_walk.install_walk_bp()
-my_walk.load_file()
+my_walk.run()
+#my_walk.load_file()
 
-cb.export_file(cb_file)
+while(my_walk.running):
+    pass
+
+my_walk.kill()
 logf.close()
 
 
