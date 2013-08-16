@@ -1,5 +1,6 @@
 #!c:\python\python.exe
 
+from __future__ import print_function
 import sys
 import struct
 import utils
@@ -10,9 +11,16 @@ import time
 import signal
 from threading import Thread
 import ctypes
+import sys
 
 from pydbg import *
 from pydbg.defines import *
+
+debug = False
+
+if(debug == True):
+    import pdb
+#    pdb.set_trace()
 
 samples_dir = "Z:\\"
 crashed_dir = "Z:\\crashed"
@@ -92,13 +100,18 @@ def windows_kill(pid):
 
 #dbg = None
 
+PHASE_WALKING=0
+PHASE_DIVING=1
+PHASE_SURFACING=2
+
 class walk():
-    def __init__(self, app="", imagename="", filee="", addr=0x0):
+    def __init__(self, app="", imagename="", filee="", addr=0x0, max_level=3):
         self.app = app
         self.imagename = imagename
         self.filee = filee
         self.level = 0
-        self.phase = 1
+        self.max_level = max_level
+        self.phase = 0
         self.running = True
         self.dbg = pydbg()
         self.dbg.walk = self
@@ -106,16 +119,18 @@ class walk():
         self.walk_end_addr = 0x0
         self.dbg.set_callback(EXCEPTION_ACCESS_VIOLATION, handle_av)
         self.addr_blacklist = []
+        self.current_ea = 0x0
+        self.delete_next_bp = False
         
     def attach(self):
         for (pid, name) in self.dbg.enumerate_processes():
             if imagename in name:
                 try:
-                    print "[*] Attaching to %s (%d)" % (name, pid)
+                    print("[*] Attaching to " + str(pid))
                     logf.write("[*] Attaching to " + name + " " + str( pid) + "\n")
                     self.dbg.attach(pid)
                 except:
-                    print "[!] Problem attaching to %s" % name
+                    print("[!] Problem attaching to " + str(pid))
                     logf.write("[*] Problem attaching to " + name)
                     windows_kill(pid)
                     raise AttachFail
@@ -143,17 +158,30 @@ class walk():
     def install_bp(self, addr):
         try:
 #            print("Installing bp at: " + hex(addr))
-            self.dbg.set_callback(EXCEPTION_BREAKPOINT, walk_function)
             self.dbg.bp_set(addr, "Working bp")
         except Exception as e:
             print(e)
  
 
+    def register_callbacks(self):
+        try:
+            print("Registering callbacks")
+            self.dbg.set_callback(EXCEPTION_BREAKPOINT, handle_bp)
+            self.dbg.set_callback(EXCEPTION_SINGLE_STEP, handle_ss)
+        except Exception as e:
+            print(e)
+       
+    def unregister_callbacks(self):
+        try:
+            print("Unregistering callbacks")
+            self.dbg.set_callback(EXCEPTION_BREAKPOINT, handle_empty)
+            self.dbg.set_callback(EXCEPTION_SINGLE_STEP, handle_empty)
+        except Exception as e:
+            print(e)
+
     def install_walk_bp(self):
         try:
             print("Installing walk handlers")
-            self.dbg.set_callback(EXCEPTION_BREAKPOINT, walk_function)
-#            self.dbg.set_callback(EXCEPTION_SINGLE_STEP, walk_ss_routine)
             self.dbg.bp_set(self.walk_addr, "Walked function")
         except Exception as e:
             print(e)
@@ -161,7 +189,6 @@ class walk():
     def install_walk_end_bp(self):
         try:
             print("Installing walk end handler")
-#            self.dbg.set_callback(EXCEPTION_BREAKPOINT, walk_function)
             self.dbg.bp_set(self.walk_end_addr, "Walked function finished")
         except Exception as e:
             print(e)
@@ -175,8 +202,37 @@ class walk():
         except Exception as e:
             print(e)
 
-    def go_deeper(self):
-        pass
+    def dive(self):
+#        self.install_bp(int(self.dbg.op1, 16))
+#        self.dbg.set_callback(EXCEPTION_SINGLE_STEP, walk_ss_routine)
+#        self.dbg.single_step(True)
+
+        self.phase = PHASE_DIVING
+        if(self.level > self.max_level): 
+#            print("Max level reached, not diving")
+            if(debug == True):
+                print("until " + hex(self.current_ea + self.current_instr.length))
+            self.install_bp(self.current_ea + self.current_instr.length)
+            self.delete_next_bp = True
+            self.dbg.single_step(False)
+        else:
+            self.dbg.single_step(True)
+            self.level += 1
+            if(debug == True):
+                print("Diving, level: " + hex(self.level))
+
+    def surface(self):
+#        self.dbg.set_callback(EXCEPTION_SINGLE_STEP, walk_ss_routine)
+#        self.dbg.single_step(True)
+        self.phase = PHASE_SURFACING
+        self.dbg.single_step(True)
+        self.level -= 1
+#        if(self.level == 1):
+#            self.running = False
+#            self.kill()
+        if(debug == True):
+            print("Surfacing, level: " + hex(self.level))
+
 
     def detach(self):
         dbg.detach()
@@ -188,53 +244,99 @@ class walk():
         except Exception as e:
             print(e)
  
-def walk_ss_routine(dbg):
-    ea = dbg.get_register("EIP")
-    instr = dbg.disasm(ea)
-    if(dbg.mnemonic == "call"):
-        print(hex(ea) + ": " + instr)
-    dbg.single_step(True)
-    return DBG_CONTINUE
+def handle_ss(dbg):
+#    ea = dbg.walk.current_ea
+#    dis = dbg.disasm(ea)
+#    print("in handle_ss at: " + hex(ea) + ": " + dis)
+#    ea = dbg.get_register("EIP")
+#    instr = dbg.disasm(ea)
+#    if(dbg.mnemonic == "call"):
+#        print(hex(ea) + ": " + instr)
+#    dbg.single_step(True)
+#    return handle_bp(dbg)
+    return handle_bp(dbg)
 
-def walk_function(dbg):
+def handle_empty(dbg):
+    pass
+
+def handle_bp(dbg):
     ea = dbg.get_register("EIP")
-#    print(hex(ea))
+    dbg.walk.current_ea = ea
+    dbg.walk.current_dis = dbg.disasm(ea)
+    dbg.walk.current_instr = dbg.get_instruction(dbg.get_register("EIP"))
+#    print("in handle_bp at: " + hex(ea) + ": " + dbg.walk.current_dis)
+
+    if(dbg.walk.delete_next_bp == True):
+        dbg.bp_del(ea)
+        dbg.walk.delete_next_bp = False
+        if(debug == True):
+            print("returned, deleting bp at: " + hex(ea))
+
+    if(dbg.mnemonic == "int3"):
+        return DBG_CONTINUE
+
     for addr in dbg.walk.addr_blacklist:
         if(ea == addr):
             print("Blacklisted, ignoring")
             return DBG_CONTINUE
+
     if(ea == dbg.walk.walk_addr):
         print("Reached walk start")
-        instr = dbg.get_instruction(dbg.get_register("EIP"))
-        print(dir(instr))
-        print(instr.opcode)
-        print(instr.length)
-        print(instr.op1)
-        dbg.disasm(ea)
-        print(dbg.mnemonic)
-        print(dbg.op1)
-        dbg.walk.install_bp(int(dbg.op1,16)) 
-        dbg.walk.walk_end_addr = dbg.walk.walk_addr + instr.length
+        print(dir(dbg.walk.current_instr))
+        print(dbg.walk.current_dis)
+
+        # handle walk end
+        dbg.walk.walk_end_addr = dbg.walk.walk_addr + dbg.walk.current_instr.length
         dbg.walk.install_walk_end_bp()
+
+        # dive
+        dbg.walk.dive()
+        print("--cut here--")
+
     if(ea == dbg.walk.walk_end_addr):
+        print("--cut here--")
         print("Reached walk end")
-        print(dbg.disasm(ea))
+        dbg.single_step(False)
+        dbg.walk.unregister_callbacks()
         dbg.walk.running = False
+        dbg.walk.kill()
+        return DBG_CONTINUE
+
     else:
-        print(dbg.disasm(ea))
-        instr = dbg.get_instruction(dbg.get_register("EIP"))
-        dbg.walk.install_bp(ea + instr.length)
+#        print("simple step")
+        if(dbg.mnemonic == "call"):
+            for i in range(0, dbg.walk.level):
+                print(" ", end="")
+            print(hex(ea) + ": " + dbg.walk.current_dis)
+
+            # for step over, necessary?
+#            dbg.walk.install_bp(ea + instr.length)
+            dbg.walk.dive()
+            return DBG_CONTINUE
+
+        if((dbg.mnemonic == "ret") or (dbg.mnemonic == "retn")):
+            dbg.walk.surface()
+            return DBG_CONTINUE
+
+        dbg.single_step(True)
+
     return DBG_CONTINUE
 
-my_walk = walk(app, imagename, filee, 0x0049ac33)
+if(len(sys.argv)>1):
+    depth = int(sys.argv[1])
+else:
+    depth = 2
+
+my_walk = walk(app, imagename, filee, 0x0049ac33, depth)
 my_walk.addr_blacklist.append(0x7c90120f)
 my_walk.spawn()
 my_walk.attach()
+my_walk.register_callbacks()
 my_walk.install_walk_bp()
 my_walk.run()
 #my_walk.load_file()
 
-while(my_walk.running):
+while(my_walk.running == True):
     pass
 
 my_walk.kill()
