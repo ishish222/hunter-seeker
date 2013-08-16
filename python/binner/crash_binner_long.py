@@ -7,9 +7,7 @@ import subprocess
 import time
 import os
 import time
-import signal
 from threading import Thread
-import ctypes
 
 from pydbg import *
 from pydbg.defines import *
@@ -57,7 +55,7 @@ def file_run(filee, dbg):
     os.system("start " + samples_dir + "\\" + filee)
     logf.write("start " + samples_dir + "\\" + filee + "\n")
     logf.flush()
-    time.sleep(3)
+    time.sleep(15)
     if(status == "hanged"):
         print("status: hanged")
         logf.write("status: hanged\n")
@@ -78,11 +76,6 @@ status = "hang"
 
 logf = open(log_file, "w")
 logf.write("test\n")
-
-def windows_kill(pid):
-    kernel32 = ctypes.windll.kernel32
-    handle = kernel32.OpenProcess(1, 0, pid)
-    return (0 != kernel32.TerminateProcess(handle, 0))
 
 for filee in os.listdir(samples_dir):
     if(filee[-4:] != ".dwg"):
@@ -106,7 +99,6 @@ for filee in os.listdir(samples_dir):
             except:
                 print "[!] Problem attaching to %s" % name
                 logf.write("[*] Problem attaching to " + name)
-#                windows_kill(pid)
                 continue
 
     #load file

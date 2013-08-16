@@ -1,0 +1,2 @@
+#!/bin/sh
+ls | while read aa; do sample=$(ls $aa | head -n 1); echo $aa/$sample; mkdir ../repr/$aa; cp $aa/$sample ../repr/$aa; done
