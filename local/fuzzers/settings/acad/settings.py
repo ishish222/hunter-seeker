@@ -30,3 +30,6 @@ ips = {
 
 second = "hs2-second"
 
+samples_shared_path = "../samples/shared"
+samples_saved = "../samples/saved"
+

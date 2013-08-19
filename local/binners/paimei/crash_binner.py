@@ -14,11 +14,11 @@ import ctypes
 from pydbg import *
 from pydbg.defines import *
 
-samples_dir = "Z:\\"
-crashed_dir = "Z:\\crashed"
-hanged_dir = "Z:\\hanged"
-clean_dir = "Z:\\clean"
-log_file = "Z:\\log-"
+samples_dir = "X:\\"
+crashed_dir = "X:\\crashed"
+hanged_dir = "X:\\hanged"
+clean_dir = "X:\\clean"
+log_file = "X:\\log-"
 
 def testdir(x): 
     if(os.path.isdir(x) == False):

@@ -192,7 +192,7 @@ write_socket(s, "dn4off")
 read_socket(s)
 
 #actual binning
-write_socket(s, "invoke V:\\crash_binner.py")
+write_socket(s, "invoke w:\\paimei\\crash_binner.py")
 read_socket(s)
 
 while True:

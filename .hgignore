@@ -29,3 +29,4 @@ samples_saved/*
 samples_suspected/*
 p021-instrumentation-server/*
 local/blob/*
+targets/*

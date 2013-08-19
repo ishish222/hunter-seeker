@@ -23,8 +23,8 @@ if(len(sys.argv)) < 3:
 
 #Configure generator
 origin_path = sys.argv[2]
-samples_shared_path = "../samples_shared"
-samples_saved = "../samples_saved"
+samples_shared_path = settings.samples_shared_path
+samples_saved = settings.samples_saved
 fuzzbox_name = sys.argv[1]
 fuzzbox_ip = settings.ips[fuzzbox_name]
 fuzzbox_port = 12345
@@ -275,7 +275,6 @@ def looop():
     print("Finished")
 
 while True:
-    print("here")
     try:
         looop()
     except Exception as e:

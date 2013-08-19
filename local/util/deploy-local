@@ -1,0 +1,20 @@
+#!/bin/sh
+
+./deploy $1
+
+LOCAL_ROOT=../
+TARGET=$1
+TARGET_HOST="hs1@10.8.0.6"
+TARGETS_DIR=../../targets/
+TARGET_DIR=$TARGETS_DIR$TARGET
+TARGET_CONFIGS_DIR=$LOCAL_ROOT/target-configs/
+DEPLOY_PATH=/home/ish/kor-pro/hs2-deploy/
+
+echo "Local deploy"
+
+DATE=$(date --iso)
+rm -rf $DEPLOY_PATH$DATE
+mkdir -p $DEPLOY_PATH$DATE
+cp -r $TARGET_DIR/* $DEPLOY_PATH$DATE/
+rm -f /home/ish/kor-pro/hs2-current-deploy
+ln -s $DEPLOY_PATH$DATE /home/ish/kor-pro/hs2-current-deploy
