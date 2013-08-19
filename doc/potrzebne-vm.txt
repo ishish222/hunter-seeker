@@ -1,0 +1,4 @@
+1. visual-dev, app-analysis, testing fuzzbox
+2. machines on target
+3. machines on local or on target
+4. app-analysis, crash viewing, branch walking, aslr viewing, experimenting

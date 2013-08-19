@@ -275,7 +275,6 @@ def looop():
     print("Finished")
 
 while True:
-    print("here")
     try:
         looop()
     except Exception as e:
