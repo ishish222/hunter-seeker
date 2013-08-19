@@ -11,6 +11,14 @@ TARGET_CONFIGS_DIR=$LOCAL_ROOT/target-configs/
 
 echo "Remote deploy"
 
+DATE=$(date --iso)
 rm -f /tmp/tmp.tgz
-tar zcf /tmp/tmp.tgz -C $TARGETS_DIR $TARGET
+PPWD=$PWD
+cd $TARGET_DIR
+tar zcf /tmp/tmp.tgz *
+cd $PPWD
 scp /tmp/tmp.tgz $TARGET_HOST:/tmp/tmp.tgz
+ssh $TARGET_HOST mkdir -p /home/hs1/hs2-deploy/$DATE
+ssh $TARGET_HOST tar zxf /tmp/tmp.tgz -C /home/hs1/hs2-deploy/$DATE
+ssh $TARGET_HOST rm -f /home/hs1/hs2-current-deploy
+ssh $TARGET_HOST ln -s /home/hs1/hs2-deploy/$DATE /home/hs1/hs2-current-deploy
