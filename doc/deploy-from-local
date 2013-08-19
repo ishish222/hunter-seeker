@@ -1,0 +1,25 @@
+na deploy skladaja sie:
+fuzzery (local/fuzzers)
+binnery (local/binners)
+
+deploy jest zorganizowany w strukture:
+root
+|
+\_server
+| \_pliczki na maszyne (exe, probki)
+\_client
+| \_fuzzery, korektory
+\_samples
+  \_shared
+  \_saved
+  \_binning
+  \_other
+
+VM powinna zostac skonfigurowana z templateu z bloba, i miec podpiete katalogi:
+Z - samples/shared
+Y - samples/saved
+X - samples/binning
+W - server
+
+miec lacznosc z hostem i odpalony server
+
