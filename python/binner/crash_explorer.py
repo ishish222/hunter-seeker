@@ -27,11 +27,18 @@ def debug_print(string):
     if(debug == True):
         print(string)
 
-def format_empty_node(ea, my_mod, dis, tmod):
-    return "<node TEXT=\"" + my_mod.szModule + str(":") + hex(int(ea & 0xffffffff)) + ": " + dis + " (" + tmod.szModule + ")" + "\"/>\n"
+def format_empty_node(ea, my_mod, dis, tmod, color = None):
+    if(color == None):
+        return "<node TEXT=\"" + my_mod.szModule + str(":") + hex(int(ea & 0xffffffff)) + ": " + dis + " (" + tmod.szModule + ")" + "\"/>\n"
+    else:
+        return "<node COLOR=\""+ color +"\" TEXT=\"" + my_mod.szModule + str(":") + hex(int(ea & 0xffffffff)) + ": " + dis + " (" + tmod.szModule + ")" + "\"/>\n"
+        
 
-def format_node(ea, my_mod, dis, tmod):
-    return "<node TEXT=\"" + my_mod.szModule + str(":") + hex(int(ea & 0xffffffff)) + ": " + dis + " (" + tmod.szModule + ")" + "\">\n"
+def format_node(ea, my_mod, dis, tmod, color = None):
+    if(color == None):
+        return "<node TEXT=\"" + my_mod.szModule + str(":") + hex(int(ea & 0xffffffff)) + ": " + dis + " (" + tmod.szModule + ")" + "\">\n"
+    else:
+        return "<node COLOR=\""+ color +"\" TEXT=\"" + my_mod.szModule + str(":") + hex(int(ea & 0xffffffff)) + ": " + dis + " (" + tmod.szModule + ")" + "\">\n"
 
 samples_dir = "Z:\\"
 crashed_dir = "Z:\\crashed"
@@ -314,20 +321,19 @@ class walk():
         target_module_name = target_module.szModule
         debug_print("[d] Target module: " + target_module_name)
                 
-        if(self.max_level > 0x0):
-            if(self.level > self.max_level): 
-                debug_print("Max level reached, not diving")
+        for mod in self.module_blacklist:
+            if(mod == target_module_name):
+                debug_print("[d] Target module blacklisted, not diving")
                 debug_print("[d] Until " + hex(self.current_ea + self.current_instr.length))
                 if(graph == True):
-                    gf.write(format_empty_node(ea, my_module, self.dbg.walk.current_dis, target_module))
+                    gf.write(format_empty_node(ea, my_module, self.dbg.walk.current_dis, target_module, "#006699"))
                 self.install_bp(self.current_ea + self.current_instr.length, handler = handle_ret)
                 self.delete_next_bp = True
                 self.dbg.single_step(False)
                 return
-        for mod in self.module_blacklist:
-            if(mod == target_module_name):
-                debug_print("[d] Target module blacklisted, not diving")
-                print("[d] Target module blacklisted, not diving")
+        if(self.max_level > 0x0):
+            if(self.level > self.max_level): 
+                debug_print("Max level reached, not diving")
                 debug_print("[d] Until " + hex(self.current_ea + self.current_instr.length))
                 if(graph == True):
                     gf.write(format_empty_node(ea, my_module, self.dbg.walk.current_dis, target_module))
