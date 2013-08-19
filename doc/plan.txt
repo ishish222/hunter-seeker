@@ -1,0 +1,57 @@
+1. projekt fuzzingu i binningu
+
+in: 
+aplikacja
+domyslna wirtualka
+konfiguracja wirtualki
+katalogi
+probki przejsciowe
+
+out:
+fuzzing & binning target:
+    client - fuzzer, binner
+    server - instrumentation server
+    poczatkowa konfiguracja fuzzingu (settings.py)
+originaly
+
+2. fuzzing
+
+in:
+domyslna wirtualka z zainstalowana aplikacja 
+fuzzing & binning target
+oryginaly
+poczatkowa konfiguracja fuzzingu
+koncowa konfiguracja fuzzingu
+koncowa konfiguracja wirtualki
+
+out:
+probki p2
+
+3. binning
+
+etap 3.1 
+
+in:
+fuzzing & binning target
+probki p2
+
+out:
+uporzadkowane probki p2, probki false-positive
+
+etap 3.2
+in:
+uporzadkowane probki p2
+
+out:
+reprezentacja zbioru p2
+katalog crashy
+
+4. research
+
+in: 
+probka p2
+info z katalogu crashy
+
+out:
+exploit
+

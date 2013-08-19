@@ -1,0 +1,16 @@
+#!/bin/sh
+
+./deploy $1
+
+LOCAL_ROOT=../
+TARGET=$1
+TARGET_HOST="hs1@10.8.0.6"
+TARGETS_DIR=../../targets/
+TARGET_DIR=$TARGETS_DIR$TARGET
+TARGET_CONFIGS_DIR=$LOCAL_ROOT/target-configs/
+
+echo "Remote deploy"
+
+rm -f /tmp/tmp.tgz
+tar zcf /tmp/tmp.tgz -C $TARGETS_DIR $TARGET
+scp /tmp/tmp.tgz $TARGET_HOST:/tmp/tmp.tgz
