@@ -27,6 +27,12 @@ def debug_print(string):
     if(debug == True):
         print(string)
 
+def format_empty_node(ea, my_mod, dis, tmod):
+    return "<node TEXT=\"" + my_mod.szModule + str(":") + hex(int(ea & 0xffffffff)) + ": " + dis + " (" + tmod.szModule + ")" + "\"/>\n"
+
+def format_node(ea, my_mod, dis, tmod):
+    return "<node TEXT=\"" + my_mod.szModule + str(":") + hex(int(ea & 0xffffffff)) + ": " + dis + " (" + tmod.szModule + ")" + "\">\n"
+
 samples_dir = "Z:\\"
 crashed_dir = "Z:\\crashed"
 hanged_dir = "Z:\\hanged"
@@ -106,36 +112,30 @@ regs = ["EAX", "EBX", "ECX", "EDX", "ESI", "EDI", "EBP", "ESP", "EIP"]
 
 def decode_op1(dbg, op1):
     my_op = op1
-#    print(op1)
     if(my_op[0] == '['):
         my_op = decode_op1(dbg, my_op[1:-1])
-#        my_op = "from mem: " + my_op
         my_op = int(struct.unpack("<i", "".join(dbg.read(my_op, 4)))[0]) & 0xffffffff
         return my_op
     for reg in regs:
         if(my_op.upper() == reg):
-#            my_op = "read from "+ reg
             my_op = dbg.get_register(reg)
             return my_op & 0xffffffff
     if(len(my_op.split("*")) >1):
         (a,b) = my_op.split("*")
         a = decode_op1(dbg, a)
         b = decode_op1(dbg, b)
-#        my_op = a +" times " +b
         my_op = a*b
         return my_op & 0xffffffff
     if(len(my_op.split("+")) >1):
         (a,b) = my_op.split("+")
         a = decode_op1(dbg, a)
         b = decode_op1(dbg, b)
-#        my_op = a + " plus " + b
         my_op = a+b
         return my_op & 0xffffffff
     if(len(my_op.split("-")) >1):
         (a,b) = my_op.split("-")
         a = decode_op1(dbg, a)
         b = decode_op1(dbg, b)
-#        my_op = a + " plus " + b
         my_op = a-b
         return my_op & 0xffffffff
     return int(my_op, 16) & 0xffffffff
@@ -149,20 +149,14 @@ def handle_empty(dbg):
 def handle_ret(dbg):
     ea = dbg.get_register("EIP")
     dbg.bp_del(ea)
-#    if(graph == True):
-#        gf.write("</node>\n")
-#    dbg.single_step(True)
-#    dbg.walk.surface()
     dbg.single_step(True)
     return DBG_CONTINUE
 
 def handle_ret_surface(dbg):
     ea = dbg.get_register("EIP")
     dbg.bp_del(ea)
-#    if(graph == True):
-#        gf.write("</node>\n")
-#    dbg.single_step(True)
     dbg.walk.surface()
+    dbg.single_step(True)
     return DBG_CONTINUE
     
 
@@ -171,14 +165,6 @@ def handle_bp(dbg):
     dbg.walk.current_ea = ea
     dbg.walk.current_dis = dbg.disasm(ea)
     dbg.walk.current_instr = dbg.get_instruction(dbg.get_register("EIP"))
-#    debug_print("in handle_bp at: " + hex(ea) + ": " + dbg.walk.current_dis)
-
-#    if(dbg.walk.delete_next_bp == True):
-#        dbg.bp_del(ea)
-#        dbg.walk.delete_next_bp = False
-#        debug_print("returned, deleting bp at: " + hex(ea))
-#        if(graph == True):
-#            gf.write("</node>\n")
 
     if(dbg.mnemonic == "int3"):
         return DBG_CONTINUE
@@ -211,7 +197,6 @@ def handle_bp(dbg):
         return DBG_CONTINUE
 
     else:
-#        print("simple step")
         if(dbg.mnemonic == "call"):
             for i in range(0, dbg.walk.level):
                 print(" ", end="")
@@ -220,12 +205,6 @@ def handle_bp(dbg):
             print(my_module.szModule + str(":") + hex(int(ea & 0xffffffff)) + ": " + dbg.walk.current_dis + " (" + target_module.szModule + ")")
             dbg.walk.dive()
             return DBG_CONTINUE
-
-#        if((dbg.mnemonic == "ret") or (dbg.mnemonic == "retn")):
-#            if(graph == True):
-#                gf.write("</node>\n")
-#            dbg.walk.surface()
-#            return DBG_CONTINUE
 
         dbg.single_step(True)
 
@@ -255,11 +234,9 @@ class walk():
             if imagename in name:
                 try:
                     print("[*] Attaching to " + str(pid))
-#                    logf.write("[*] Attaching to " + name + " " + str( pid) + "\n")
                     self.dbg.attach(pid)
                 except:
                     print("[!] Problem attaching to " + str(pid))
-#                    logf.write("[*] Problem attaching to " + name)
                     windows_kill(pid)
                     raise AttachFail
         self.pid = pid
@@ -342,7 +319,7 @@ class walk():
                 debug_print("Max level reached, not diving")
                 debug_print("[d] Until " + hex(self.current_ea + self.current_instr.length))
                 if(graph == True):
-                    gf.write("<node TEXT=\"" + my_module.szModule + str(":") + hex(int(ea & 0xffffffff)) + ": " + self.dbg.walk.current_dis + " (" + target_module.szModule + ")" + "\"/>\n")
+                    gf.write(format_empty_node(ea, my_module, self.dbg.walk.current_dis, target_module))
                 self.install_bp(self.current_ea + self.current_instr.length, handler = handle_ret)
                 self.delete_next_bp = True
                 self.dbg.single_step(False)
@@ -353,7 +330,7 @@ class walk():
                 print("[d] Target module blacklisted, not diving")
                 debug_print("[d] Until " + hex(self.current_ea + self.current_instr.length))
                 if(graph == True):
-                    gf.write("<node TEXT=\"" + my_module.szModule + str(":") + hex(int(ea & 0xffffffff)) + ": " + self.dbg.walk.current_dis + " (" + target_module.szModule + ")" + "\"/>\n")
+                    gf.write(format_empty_node(ea, my_module, self.dbg.walk.current_dis, target_module))
                 self.install_bp(self.current_ea + self.current_instr.length, handler = handle_ret)
                 self.delete_next_bp = True
                 self.dbg.single_step(False)
@@ -362,7 +339,7 @@ class walk():
         self.level += 1
         debug_print("[d] Diving, level: " + hex(self.level))
         if(graph == True):
-            gf.write("<node TEXT=\"" + my_module.szModule + str(":") + hex(int(ea & 0xffffffff)) + ": " + self.dbg.walk.current_dis + " (" + target_module.szModule + ")" + "\">\n")
+            gf.write(format_node(ea, my_module, self.dbg.walk.current_dis, target_module))
         self.install_bp(self.current_ea + self.current_instr.length, handler = handle_ret_surface)
 
     def surface(self):
@@ -414,6 +391,9 @@ my_walk.module_blacklist.append("ole32.dll")
 my_walk.module_blacklist.append("urlmon.dll")
 my_walk.module_blacklist.append("wininet.dll")
 my_walk.module_blacklist.append("ws2_32.dll")
+my_walk.module_blacklist.append("MSVCP90.dll")
+my_walk.module_blacklist.append("MSVCR90.dll")
+my_walk.module_blacklist.append("mfc90u.dll")
 
 my_walk.spawn()
 my_walk.attach()
@@ -426,6 +406,8 @@ while(my_walk.running == True):
     pass
 
 if(graph == True):
-    gf.write("</node>")
+    for i in range(0, my_walk.level):
+        gf.write("</node>\n")
+    gf.write("</node>\n")
     gf.write("</map>")
     gf.close()
