@@ -24,6 +24,9 @@ def testdir(x):
     if(os.path.isdir(x) == False):
         os.mkdir(x)
 
+import pdb
+pdb.set_trace()
+
 testdir(crashed_dir)
 testdir(hanged_dir)
 testdir(clean_dir)
@@ -45,9 +48,11 @@ def handle_av(dbg):
         binn = hex(crash_bin.last_crash.exception_address)
         logf.write("Bin: " + binn)
         testdir(crashed_dir + "\\" + binn)
+        so = open(binn + ".txt", "w")
         os.rename(samples_dir + "\\" + filee, crashed_dir + "\\" + binn + "\\" + filee)
         logf.write("status: crashed")
-        logf.write(crash_bin.crash_synopsis())
+        so.write(crash_bin.crash_synopsis())
+        so.close()
         return DBG_CONTINUE
 
 def file_run(filee, dbg):

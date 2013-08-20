@@ -138,6 +138,8 @@ def proceed():
     read_socket(s)
     write_socket(s, "pipe installTestHook5")
     read_socket(s)
+    write_socket(s, "pipe installTestMod7")
+    read_socket(s)
 
     #searching handles
     write_socket(s, "pipe FindHandles Afx:00400000:b:00010011:00000006")

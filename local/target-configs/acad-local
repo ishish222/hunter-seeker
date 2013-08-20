@@ -5,7 +5,6 @@ c:fuzzers/settings/acad-local/settings.py
 c:binners/binner-acad.py
 c:binners/binner-acad-long.py
 c:blob/res/acad/ac1024/origin10.dwg
-s:binners/bin-exporter.py
 s:binners/paimei
 s:blob/p021-instrumentation-server.exe
 s:blob/p023-standalone.exe
