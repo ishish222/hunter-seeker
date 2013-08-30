@@ -12,6 +12,8 @@ syntax: glob
 *.ilk
 *.idb
 *.ipch
+*.tlog
+
 
 #linux/python
 *.pyc
