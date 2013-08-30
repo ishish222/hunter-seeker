@@ -1,0 +1,17 @@
+c:fuzzers/acad/fuzzer-acad.py
+c:fuzzers/generators
+c:fuzzers/correctors
+c:fuzzers/settings/acad/settings.py
+c:binners/acad/binner-acad.py
+c:binners/acad/binner-acad-long.py
+c:blob/res/acad/ac1024/origin10.dwg
+s:binners/acad/paimei
+s:blob/p021-instrumentation-server.exe
+s:blob/p023-standalone.exe
+s:vm-server/powershell.exe.config
+s:vm-server/dn4on.ps1
+s:vm-server/server-python.ps1
+s:vm-server/noticeOff.ps1
+s:vm-server/looper.ps1
+s:vm-server/dn4off.ps1
+
