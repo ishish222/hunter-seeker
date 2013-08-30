@@ -296,6 +296,8 @@ function listen-port($port)
 
 [reflection.Assembly]::loadwithpartialname("system.core")
 
+reg add hkcu\software\autodesk\mc3 /v NotificationRemindOn /t REG_DWORD /d 0 /f
+
 "got it, strating server"
 listen-port(12345)
 

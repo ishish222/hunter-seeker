@@ -7,20 +7,29 @@ import subprocess
 import time
 import os
 import time
+import signal
 from threading import Thread
+import ctypes
 
 from pydbg import *
 from pydbg.defines import *
 
-samples_dir = "Z:\\"
-crashed_dir = "Z:\\crashed"
-hanged_dir = "Z:\\hanged"
-clean_dir = "Z:\\clean"
-log_file = "Z:\\log-"
+samples_dir = "X:\\"
+crashed_dir = "X:\\crashed"
+hanged_dir = "X:\\hanged"
+clean_dir = "X:\\clean"
+log_file = "X:\\log-"
 
 def testdir(x): 
     if(os.path.isdir(x) == False):
         os.mkdir(x)
+
+def testfile(x):
+    return os.path.exists(x)
+    
+
+#import pdb
+#pdb.set_trace()
 
 testdir(crashed_dir)
 testdir(hanged_dir)
@@ -43,9 +52,12 @@ def handle_av(dbg):
         binn = hex(crash_bin.last_crash.exception_address)
         logf.write("Bin: " + binn)
         testdir(crashed_dir + "\\" + binn)
+        if(not testfile(crashed_dir + "\\" + binn + "\\" + binn + ".txt")):
+            so = open(crashed_dir + "\\" + binn + "\\" + binn + ".txt", "w")
+            so.write(crash_bin.crash_synopsis())
+            so.close()
         os.rename(samples_dir + "\\" + filee, crashed_dir + "\\" + binn + "\\" + filee)
         logf.write("status: crashed")
-        logf.write(crash_bin.crash_synopsis())
         return DBG_CONTINUE
 
 def file_run(filee, dbg):
@@ -55,7 +67,7 @@ def file_run(filee, dbg):
     os.system("start " + samples_dir + "\\" + filee)
     logf.write("start " + samples_dir + "\\" + filee + "\n")
     logf.flush()
-    time.sleep(15)
+    time.sleep(12)
     if(status == "hanged"):
         print("status: hanged")
         logf.write("status: hanged\n")
@@ -76,6 +88,11 @@ status = "hang"
 
 logf = open(log_file, "w")
 logf.write("test\n")
+
+def windows_kill(pid):
+    kernel32 = ctypes.windll.kernel32
+    handle = kernel32.OpenProcess(1, 0, pid)
+    return (0 != kernel32.TerminateProcess(handle, 0))
 
 for filee in os.listdir(samples_dir):
     if(filee[-4:] != ".dwg"):
@@ -99,6 +116,7 @@ for filee in os.listdir(samples_dir):
             except:
                 print "[!] Problem attaching to %s" % name
                 logf.write("[*] Problem attaching to " + name)
+#                windows_kill(pid)
                 continue
 
     #load file

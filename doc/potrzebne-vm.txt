@@ -8,6 +8,6 @@ razem:
 1. visual-dev: xpsp2-dev
 2. app-analysis-1: xpsp2-1
 3. fuzzbox-testing: testbox-second
-4. binning: xpsp2-fuzz-assist, fuzzbox-acad-2
+4. binning: xpsp2-fuzz-assist (recover query appears), fuzzbox-acad-2
 5. app-analysis-2: xpsp2-1 [albo pierwsza albo druga analiza, nie?]
 6. crash-viewing, branch-walking: testbox-new

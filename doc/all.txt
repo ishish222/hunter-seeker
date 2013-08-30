@@ -1,0 +1,149 @@
+Na podstawie biznesplanu:
+
+1. etap 1 - wytworzenie zbioru probek m1
+
+Aby utworzyc dobrze zorganizowany zbior m1, nalezy dysponowac wydajnym i
+dobrze funkcjonujacym mutatorem. Mutator powinien zostac dopasowany do
+formatu pliku, powinien zawierac rowniez algorytmy korekcji m2, ktore
+umozliwia ominiecie barier (np. poprawianie sum kontrolnych, dekapsulacja
+przed modyfikacja i ponowana enkapsulacja). Skutecznosc mutatora mozna
+okreslic na podstawie badan prowadzonych na lokalnej stacji roboczej -
+analizujac roznice wykonania oryginalu i mutacji.
+
+In:
+oryginal
+
+Out:
+zbior m1
+
+Dopasowania:
++ okreslenie obszaru modyfikacji
++ okreslenie podstawowej struktury formatu
++ wprowadzenie dekapsulacji i enkapsulacji
++ wprowadzenie korektorow
+
+Proces badawczy:
+1.1 wersja mutatora
+1.2 testy na lokalnej maszynie
+1.3 poprawki -> 1.1
+1.4 przekazanie wersji do etapu 2
+
+2. etap 2 - wytworzenie zbioru probek p2
+
+Aby utworzyc dobrze zorganizowany zbior p2, nalezy dysponowac wydajnym i
+dokladnym fuzzerem. Nalezy okreslic kryteria (przynajmniej ich
+aproksymacje) przynaleznosci do p2. Przykladowo: probka z m1 nalezy do p2,
+jesli po otwarciu nie pojawilo sie okienko dialogowe i nie zarejestrowano
+poprawnego otwarcia m1 (aproksymacja). Fuzzer przed rozpoczeciem powinien
+uruchomic skrypty i igly przygotowujace, ktore zmodyfikuja dzialanie
+aplikacji tak, by umozliwic aproksymacje (np. informacje o poprawnym
+otwarciu, o niespelnieniu warunkow, automatyczne odpowiedzi, usuniecie
+ankiet, etc.). 
+
+In:
+zbior m1
+Out:
+zbior p2
+
+Dopasowania:
++ igly
++ operacje przygotowujace
++ elementy fuzzera
+
+Proces badawczy:
+2.1 wersja fuzzera
+2.2 testy na lokalnej maszynie
+2.3 poprawki -> 2.1
+2.4 wdrozenie zdalne wersji z zabezpieczeniem zbiorow (patrz: wdrazanie zdalne)
+
+3. etap 3 - wytworzenie zbioru probek p3
+
+Aby utworzyc dobrze zorganizowany zbior p3, nalezy dysponowac wydajnym i
+dokladnym binnerem. Nalezy okreslic kryteria przynaleznosci do p3.
+Przykladowo: p2 nalezy do p3, jesli powoduje crash aplikacji w ciagu 6
+sekund i nie wywoluje okienka dialogowego. Binner przed rozpoczeciem
+dzialania powinien uruchomic skrypty i igly przygotowujace, ktore
+zmodyfikuja dzialanie aplikacji tak, by jej zachowanie nie odbiegalo od
+standardowego zachowania w trkacie otwierania probki, np.: usunac okienka
+dialogowe dot. wersji trial, ankiet, zapytan o odzyskanie sesji, etc.
+
+Binner powinien do crashujecej probki dolaczyc jej dossier - opis crashu.
+
+In:
+zbior p2
+Out:
+zbior p3 + dossier
+
+Dopasowania:
++ igly
++ operacje przygotowujace
++ elementy binnera
+
+Proces badawczy:
+3.1 wersja binnera
+3.2 testy na lokalnej maszynie
+3.3 poprawki -> 3.1
+3.4 wdrozenie zdalne wersji z zabezpieczeniem zbiorow (patrz: wdrazanie zdalne)
+
+4. etap 4 - wytworzenie zbioru probek p4
+
+Zbior p4 tworzony jest w oparciu o oceny dossier probek p3.
+
+In:
+zbior p3
+Out:
+zbior p4
+
+5. etap 5 - wytworzenie exploitu
+
+Tworzenie exploitu polega na stworzeniu takiej modyfikacji probki, aby
+program, ktory ja otworzy wykonal okreslony kod (np. uruchomil kalkulator).
+Do przeprowadzenia tego etapu potrzebne jest okreslenie systemu docelowego
+i scharakteryzowanie jego modelu bezpieczenstwa (np. zabezpieczenia stosu,
+ASLR, DEP, poziomy integralnosci). Po wybraniu okreslonej platformy
+docelowej nalezy wybrac techniki exploitacji, ktore sie nadaja do
+wykorzystania w tym systemie i przegladajac dossier probek p4 przeprowadzic
+proby utworzenia z nich exploitow w oparciu o wybrana technike.
+
+Proby utworzenia exploitu podejmowane sa na lokalnej stacji roboczej na
+witrualnej maszynie badawczej.
+
+In:
+zbior p4
+dane dot. systemu operacyjnego
+
+Out:
+exploit
+
+6. Proces badawczy dla wybranej aplikacji.
+
+W przypadku wprowadzenia nowej aplikacji (formatu pliku) do systemu,
+dostosowanie procesu produkcyjnego odbywa sie w wyzej wymienionych
+obszarach. Szczegoly dopasowania okreslone sa w podrozdziale "Dopasowanie
+procesu". Kolejnosc wprowadzania dopasowac zalezy od ich efektywnosci,
+bardziej efektywne dopasowanie powinno zostac wprowadzone najpierw.
+
+Badania i tworzenie dopasowan odbywaja sie przy wykorzystaniu lokalnych
+maszyn. Dopasowania powinny zostac przetestowane przed wdrozeniem zdalnym. 
+
+7. Wdrazanie zdalne
+
+Przy wdrozenia zdalnym nalezy zwrocic uwage na ochrone probek p2. Do czasu
+utworzenia dobrze zorganizowanego zbioru p3, probki te powinne pozostac w
+archiwum zdalnym.
+
+Do czasu zarchiwizowania zbioru p4 nalezy bezwzglednie chronic probki p3 i
+p4! 
+
+Wdrazanie zdalne polega na wprowadzeniu i podlinkowaniu wersji z dnia
+wdrozenia. 
+
+Przed wdrozeniem nalezy zatrzymac procesy na maszynie zdalnej,
+poniewaz nie wiadomo, jak zachowaja sie w przypadku zmiany podlinkowanych
+folderow.
+
+Przed wdrozeniem zdalnym nalezy zabezpieczyc zbiory p2 i p3. Po zatrzymaniu
+procesow nalezy przeniesc katalogi z tyim zbiorami do archiwum w katalogu
+domowym.
+
+8. Inne zagadnienia

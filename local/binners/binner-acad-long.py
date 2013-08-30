@@ -42,7 +42,7 @@ else:
 
 poweroff = ["VBoxManage", "controlvm", "", "poweroff"]
 restorecurrent = ["VBoxManage", "snapshot", "", "restorecurrent"]
-restorestart = ["VBoxManage", "snapshot", "", "restore", "[x] start"]
+restorestart = ["VBoxManage", "snapshot", "", "restore", "[x] bin_start"]
 
 def report(string):
     my_logger.info("[" + my_name + ":" + fuzzbox_name + "] " + string);

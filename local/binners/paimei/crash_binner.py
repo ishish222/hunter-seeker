@@ -9,6 +9,7 @@ import os
 import time
 import signal
 from threading import Thread
+from threading import Lock
 import ctypes
 
 from pydbg import *
@@ -24,8 +25,12 @@ def testdir(x):
     if(os.path.isdir(x) == False):
         os.mkdir(x)
 
-import pdb
-pdb.set_trace()
+def testfile(x):
+    return os.path.exists(x)
+    
+
+#import pdb
+#pdb.set_trace()
 
 testdir(crashed_dir)
 testdir(hanged_dir)
@@ -33,8 +38,12 @@ testdir(clean_dir)
 
 cb = utils.crash_binning.crash_binning()
 
+l = Lock()
+
 def handle_av(dbg):
     global status
+
+    l.acquire()
 
 #    crash_bin = utils.crash_binning.crash_binning()
     crash_bin = cb
@@ -43,17 +52,22 @@ def handle_av(dbg):
     if(crash_bin.last_crash.exception_address == 0x50f8e14):
         return DBG_CONTINUE
     else:
-        status = "crashed"
-        dbg.terminate_process()
-        binn = hex(crash_bin.last_crash.exception_address)
-        logf.write("Bin: " + binn)
-        testdir(crashed_dir + "\\" + binn)
-        so = open(binn + ".txt", "w")
-        os.rename(samples_dir + "\\" + filee, crashed_dir + "\\" + binn + "\\" + filee)
-        logf.write("status: crashed")
-        so.write(crash_bin.crash_synopsis())
-        so.close()
-        return DBG_CONTINUE
+        if(testfile(samples_dir + "\\" + filee)):
+            status = "crashed"
+            dbg.terminate_process()
+            binn = hex(crash_bin.last_crash.exception_address)
+            logf.write("Bin: " + binn)
+            testdir(crashed_dir + "\\" + binn)
+            if(not testfile(crashed_dir + "\\" + binn + "\\" + binn + ".txt")):
+                so = open(crashed_dir + "\\" + binn + "\\" + binn + ".txt", "w")
+                so.write(crash_bin.crash_synopsis())
+                so.close()
+            os.rename(samples_dir + "\\" + filee, crashed_dir + "\\" + binn + "\\" + filee)
+            logf.write("status: crashed")
+
+    l.release()
+    return DBG_CONTINUE
+    
 
 def file_run(filee, dbg):
     global status
@@ -63,12 +77,15 @@ def file_run(filee, dbg):
     logf.write("start " + samples_dir + "\\" + filee + "\n")
     logf.flush()
     time.sleep(3)
+    l.acquire()
     if(status == "hanged"):
-        print("status: hanged")
-        logf.write("status: hanged\n")
-        dbg.terminate_process()
-        os.rename(samples_dir + "\\" + filee, hanged_dir + "\\" + filee)
-        
+        if(testfile(samples_dir + "\\" + filee)):
+            print("status: hanged")
+            logf.write("status: hanged\n")
+            dbg.terminate_process()
+            os.rename(samples_dir + "\\" + filee, hanged_dir + "\\" + filee)
+    l.release()
+    
 
 def debug_loop(dbg):
     dbg.debug_event_loop()
@@ -94,7 +111,7 @@ for filee in os.listdir(samples_dir):
         continue
     #spawn app & wait to load
     proc = subprocess.Popen("C:\\Program Files\\AutoCAD 2010\\acad.exe")
-    time.sleep(3)
+    time.sleep(6)
 
     #install hook
     subprocess.Popen("W:\\p023-standalone.exe " + str(proc.pid))
