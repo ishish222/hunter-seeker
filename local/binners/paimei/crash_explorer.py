@@ -28,17 +28,38 @@ def debug_print(string):
         print(string)
 
 def format_empty_node(ea, my_mod, dis, tmod, color = None):
-    if(color == None):
-        return "<node TEXT=\"" + my_mod.szModule + str(":") + hex(int(ea & 0xffffffff)) + ": " + dis + " (" + tmod.szModule + ")" + "\"/>\n"
+    if(tmod != None):
+        target_name = tmod.szModule
     else:
-        return "<node COLOR=\""+ color +"\" TEXT=\"" + my_mod.szModule + str(":") + hex(int(ea & 0xffffffff)) + ": " + dis + " (" + tmod.szModule + ")" + "\"/>\n"
+        target_name = "unknown"
+
+    if(my_mod != None):
+        my_name = my_mod.szModule
+    else:
+        my_name = "unknown"
+
+
+    if(color == None):
+        return "<node TEXT=\"" + my_name + str(":") + hex(int(ea & 0xffffffff)) + ": " + dis + " (" + target_name + ")" + "\"/>\n"
+    else:
+        return "<node COLOR=\""+ color +"\" TEXT=\"" + my_name + str(":") + hex(int(ea & 0xffffffff)) + ": " + dis + " (" + target_name + ")" + "\"/>\n"
         
 
 def format_node(ea, my_mod, dis, tmod, color = None):
-    if(color == None):
-        return "<node FOLDED=\"true\" TEXT=\"" + my_mod.szModule + str(":") + hex(int(ea & 0xffffffff)) + ": " + dis + " (" + tmod.szModule + ")" + "\">\n"
+    if(tmod != None):
+        target_name = tmod.szModule
     else:
-        return "<node FOLDED=\"true\" COLOR=\""+ color +"\" TEXT=\"" + my_mod.szModule + str(":") + hex(int(ea & 0xffffffff)) + ": " + dis + " (" + tmod.szModule + ")" + "\">\n"
+        target_name = "unknown"
+
+    if(my_mod != None):
+        my_name = my_mod.szModule
+    else:
+        my_name = "unknown"
+
+    if(color == None):
+        return "<node FOLDED=\"true\" TEXT=\"" + my_name + str(":") + hex(int(ea & 0xffffffff)) + ": " + dis + " (" + target_name + ")" + "\">\n"
+    else:
+        return "<node FOLDED=\"true\" COLOR=\""+ color +"\" TEXT=\"" + my_name + str(":") + hex(int(ea & 0xffffffff)) + ": " + dis + " (" + target_name + ")" + "\">\n"
 
 def format_empty_node_text(text, color = None):
     if(color == None):
@@ -69,7 +90,7 @@ def handle_av(dbg):
     else:
         my_module = dbg.addr_to_module(int(ea & 0xffffffff))
         if(my_module == None):
-            my_module_name = "[UKNOWN]"
+            my_module_name = "unknown"
         else:
             my_module_name = my_module.szModule
         my_dis = dbg.disasm(ea)
@@ -87,7 +108,8 @@ if(graph == True):
     gf = open(graph_file, "w")
     gf.write("<map version=\"0.8.0\">\n")
 
-app = "C:\\Program Files\\AutoCAD 2010\\acad.exe"
+#app = "C:\\Program Files\\AutoCAD 2010\\acad.exe"
+app = "C:\\Program Files\\Autodesk\\AutoCAD 2014\\acad.exe"
 imagename = "acad.exe"
 filee = "C:\\test.dwg"
 
@@ -195,9 +217,21 @@ def handle_bp(dbg):
         if(dbg.mnemonic == "call"):
             for i in range(0, dbg.walk.level):
                 print(" ", end="")
+
             my_module = my_walk.dbg.addr_to_module(int(ea & 0xffffffff))
             target_module = my_walk.dbg.addr_to_module(decode_op1(my_walk.dbg, my_walk.dbg.op1))
-            print(my_module.szModule + str(":") + hex(int(ea & 0xffffffff)) + ": " + dbg.walk.current_dis + " (" + target_module.szModule + ")")
+
+            if(target_module == None):
+                target_name = "unknown"
+            else:
+                target_name = target_module.szModule
+
+            if(my_module == None):
+                my_name = "unknown"
+            else:
+                my_name = my_module.szModule
+
+            print(my_name + str(":") + hex(int(ea & 0xffffffff)) + ": " + dbg.walk.current_dis + " (" + target_name + ")")
             dbg.walk.dive()
             return DBG_CONTINUE
 
@@ -306,7 +340,12 @@ class walk():
         ea = self.current_ea
         my_module = self.dbg.addr_to_module(int(ea & 0xffffffff))
         target_module = self.dbg.addr_to_module(decode_op1(self.dbg, self.dbg.op1))
-        target_module_name = target_module.szModule
+
+        if(target_module != None):
+            target_module_name = target_module.szModule
+        else:
+            target_module_name = "unknown"
+
         debug_print("[d] Target module: " + target_module_name)
                 
         for mod in self.module_blacklist:
@@ -359,12 +398,22 @@ class walk():
             print(e)
  
 
+addr = 0x101fe4cb
+
 if(len(sys.argv)>1):
-    depth = int(sys.argv[1])
+    addr = sys.argv[1]
+else:
+    addr = 0x101fe4cb
+
+if(len(sys.argv)>2):
+    depth = int(sys.argv[2])
 else:
     depth = 2
 
-my_walk = walk(app, imagename, filee, 0x0049ac33, depth)
+
+
+#my_walk = walk(app, imagename, filee, 0x0049ac33, depth)
+my_walk = walk(app, imagename, filee, addr, depth)
 
 #configure blacklists
 my_walk.addr_blacklist.append(0x7c90120f)
