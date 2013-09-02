@@ -1,0 +1,10 @@
+#!/bin/bash
+
+FILE=$1
+MAX_BYTES="5M"
+CWD=$PWD
+
+mkdir ./$1-split
+cd ./$1-split
+split -b $MAX_BYTES ../$1
+cd $CWD

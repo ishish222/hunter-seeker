@@ -1,5 +1,8 @@
 Z - shared
 Y - saved
-X - suspected
-W - ps
-V - python
+X - binned
+W - ps & python 
+
+snaps: 
+fuzzer: [x] start
+binner: [x] bin_start

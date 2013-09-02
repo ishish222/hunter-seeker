@@ -21,6 +21,19 @@ hanged_dir = "X:\\hanged"
 clean_dir = "X:\\clean"
 log_file = "X:\\log-"
 
+app_path={
+'acad2010' : 'C:\\Program Files\\AutoCAD 2010\\acad.exe',
+'acad2014' : 'C:\\Program Files\\Autodesk\\AutoCAD 2014\\acad.exe'
+}
+
+
+if(len(sys.argv) < 3):
+    print("App & length")
+    quit()
+
+my_path = app_path[sys.argv[1]]
+my_length = int(sys.argv[2], 10)
+
 def testdir(x): 
     if(os.path.isdir(x) == False):
         os.mkdir(x)
@@ -73,7 +86,7 @@ def file_run(filee, dbg):
     os.system("start " + samples_dir + "\\" + filee)
     logf.write("start " + samples_dir + "\\" + filee + "\n")
     logf.flush()
-    time.sleep(6)
+    time.sleep(my_length)
     l.acquire()
     if(status == "hanged"):
         if(testfile(samples_dir + "\\" + filee)):
@@ -112,7 +125,7 @@ for filee in os.listdir(samples_dir):
     if(filee[-4:] != ".dwg"):
         continue
     #spawn app & wait to load
-    proc = subprocess.Popen("C:\\Program Files\\AutoCAD 2010\\acad.exe")
+    proc = subprocess.Popen(my_path)
     time.sleep(3)
 
     #install hook

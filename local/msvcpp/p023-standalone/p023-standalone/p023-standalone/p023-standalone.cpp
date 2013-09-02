@@ -633,7 +633,7 @@ void injected_start() {
 	*/
 	//MessageBoxA(NULL, "About to install", "Hook", MB_OK);
 	//installHook(0x7aabec, 0x6, (DWORD)&ACADworker3, NULL, &retaddr3);
-	installMod(0x78a5b89f, 0x5, (DWORD)&code7);
+	//installMod(0x78a5b89f, 0x5, (DWORD)&code7);
 	//MessageBoxA(NULL, "Installed", "Hook", MB_OK);
 	myfclose(log);
 

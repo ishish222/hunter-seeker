@@ -146,4 +146,24 @@ Przed wdrozeniem zdalnym nalezy zabezpieczyc zbiory p2 i p3. Po zatrzymaniu
 procesow nalezy przeniesc katalogi z tyim zbiorami do archiwum w katalogu
 domowym.
 
-8. Inne zagadnienia
+8. Wymagane maszyny:
+
+Ogolnie:
+Maszyna do deweloperki msvcpp (xpsp2-dev1)
+
+Per aplikacja:
+Maszyna wyjsciowa (zainstalowana aplikacja, dodatki, etc.)
+lokalna maszyna do testow fuzzera i mutatora
+lokalna maszyna do testow binnera
+lokalna maszyna do testow etapu 4 i 5
+zdalne maszyny fuzzujace i binnujace
+
+9. Weryfikacja poprawnosci
+
+Podczas rozwijania narzedzi (zwlaszcza mutatorow, fuzzerow, korektorow i
+binnerow) nalezy zwrocic uwage na to, czy wyniki przez nie generowane sa
+zgodne z oczekiwanymi, tj. czy spelniaja zadane kryteria lub
+kryteria-aproksymacje. Mozna taka weryfikacje przeprowadzic rowniez
+wyrywkowo poza etapem rozwijania.
+
+

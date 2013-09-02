@@ -296,7 +296,9 @@ function listen-port($port)
 
 [reflection.Assembly]::loadwithpartialname("system.core")
 
+#ACAD preparations
 reg add hkcu\software\autodesk\mc3 /v NotificationRemindOn /t REG_DWORD /d 0 /f
+reg add "hkcu\software\autodesk\AutoCAD\R18.0\ACAD-8001:409\Profiles\Initial Setup Profile\General" /v RecoveryMode /t REG_DWORD /d 0 /f
 
 "got it, strating server"
 listen-port(12345)

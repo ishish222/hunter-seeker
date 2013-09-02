@@ -1,7 +1,7 @@
-﻿Build started 2013-08-30 16:30:28.
-Project "Z:\p023-standalone\p023-standalone\p023-standalone\p023-standalone.vcxproj" on node 2 (build target(s)).
-PrepareForBuild:
-  Creating directory "Z:\p023-standalone\p023-standalone\Release\".
+﻿Build started 2013-08-30 17:55:00.
+Project "Z:\p023-standalone\p023-standalone\p023-standalone\p023-standalone.vcxproj" on node 2 (rebuild target(s)).
+_PrepareForClean:
+  Deleting file "Release\p023-standalone.lastbuildstate".
 InitializeBuildStatus:
   Creating "Release\p023-standalone.unsuccessfulbuild" because "AlwaysCreate" was specified.
 ClCompile:
@@ -34,8 +34,8 @@ Manifest:
 FinalizeBuildStatus:
   Deleting file "Release\p023-standalone.unsuccessfulbuild".
   Touching "Release\p023-standalone.lastbuildstate".
-Done Building Project "Z:\p023-standalone\p023-standalone\p023-standalone\p023-standalone.vcxproj" (build target(s)).
+Done Building Project "Z:\p023-standalone\p023-standalone\p023-standalone\p023-standalone.vcxproj" (rebuild target(s)).
 
 Build succeeded.
 
-Time Elapsed 00:00:01.99
+Time Elapsed 00:00:03.84
