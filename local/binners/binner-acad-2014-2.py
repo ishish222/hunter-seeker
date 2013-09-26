@@ -22,8 +22,15 @@ clean_dir = "X:\\clean"
 #log_file = "X:\\log-"
 log_file = "log-"
 
-bl_instr = []
-bl_instr.append("")
+bl_instructions = []
+#too general, will miss uafs
+#bl_instructions.append("mov eax,[ecx+0x4]")
+#bl_instructions.append("mov eax,[ecx]")
+bl_modules = []
+bl_addresses = []
+bl_rvas = []
+#bl_rvas.append(("Ac1st19.dll", 0x3bd1))
+#bl_rvas.append(("AcXtrnal.DLL", 0x8cfb))
 
 app_path={
 'acad2010' : 'C:\\Program Files\\AutoCAD 2010\\acad.exe',
@@ -53,26 +60,79 @@ cb = utils.crash_binning.crash_binning()
 
 l = Lock()
 
+def disasm(dbg, e_addr):
+    try:
+        e_instr = dbg.disasm(e_addr)
+    except:
+        e_instr = "[INVALID]"
+    return e_instr
+
+def check_blacklists(dbg, e_addr):
+
+    #addresses
+    for bl_addr in bl_addresses:
+        if(e_addr == bl_addr):
+            print("Address blacklisted, won't handle")
+            return True
+
+    #modules
+    my_module = dbg.addr_to_module(e_addr)
+#    print(dir(my_module))
+    if(my_module != None):
+        my_name = my_module.szModule
+        my_addr = my_module.modBaseAddr
+    else:
+        my_name = "[INVALID]"
+        my_addr = 0x0
+
+    print("Addr: " + hex(e_addr))
+    print("Module: " + my_name)
+    print("Module base: " + hex(my_addr))
+
+    if(my_name != "[INVALID]"):
+        for bl_mod in bl_modules:
+            if(my_name == bl_mod):
+                print("Address blacklisted, won't handle")
+                return True
+
+    #check rvas
+    if(my_name != "[INVALID]"):
+        for rva in bl_rvas:
+            if(rva[0] == my_name):
+                my_off = e_addr - my_addr
+                if(my_off == rva[1]):
+                    print("RVA blacklisted, won't handle")
+                    return True
+
+    #instructions
+    e_instr = disasm(dbg, e_addr)
+    for bl_instr in bl_instructions:
+        if(e_instr == bl_instr):
+            print("Instruction blacklisted, won't handle")
+            return True
+
+    #checks finished, it's ok
+    return False
+
+
 def handle_av(dbg):
     global status
 
-#    if dbg.ignore_first_chance and dbg.dbg.u.Exception.dwFirstChance:
-#        return DBG_EXCEPTION_NOT_HANDLED
-    instr = ""
     crash_bin = cb
     crash_bin.record_crash(dbg)
-    addr = crash_bin.last_crash.exception_address
-    binn = hex(crash_bin.last_crash.exception_address)
-    print(binn)
-    print("--")
-    # wrap in try! (sometimes executes non-existent code)
-    instr = dbg.disasm(crash_bin.last_crash.exception_address)
-    print(instr)
-    if(instr == "mov eax,[ecx+0x4]"):
-        return DBG_EXCEPTION_NOT_HANDLED
-#    print(crash_bin.crash_synopsis())
+    e_addr = crash_bin.last_crash.exception_address
 
+    if(check_blacklists(dbg, e_addr)):
+        return DBG_EXCEPTION_NOT_HANDLED
+
+    print("--")
+    print(hex(e_addr))
+    print(disasm(dbg, e_addr))
+    print(crash_bin.crash_synopsis())
+
+    dbg.terminate_process()    
     return DBG_CONTINUE
+
     l.acquire()
 #    crash_bin = utils.crash_binning.crash_binning()
     crash_bin = cb
