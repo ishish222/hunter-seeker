@@ -1,0 +1,46 @@
+standard HTML5:
+ogg theora 
+H.264
+WebM
+
+formaty przegladarek:
+
+IE:
+mp3, mp4, aac, webm, m4a
+
+Chromium:
+Vorbis audio codec
+Theora video codec
+VP8 video codec
+PCM 8-bit unsigned integer
+PCM 16-bit signed integer little endian
+PCM 32-bit float little endian
+Ogg container format
+WebM container format
+WAV container format
+
+extensions:
+mp4, m4v, m4a, mp3, ogv, ogm, ogg, oga, webm, wav
+amr, avi, flac, 3gp
+
+Opera:
+webM, ogg, vp8, theora
+
+Formaty, kodeki, kontenery
+vorbis - kodek dzwieku
+ogg - kontener i rodzina kodekow
+theora - kodek
+mp3 - kodek dzwieku
+aac+ - kodek dzwieku
+wma - kodek dzwieku
+divx - kodek obrazu
+mpeg-2 - kodek obrazu
+h.264 (mpeg-4) - kodek obrazu
+webm - format (v:On2 VP8, a:vorbis, k:matroska)
+wma - kodek
+wmv - kodek
+avi - kontener
+flv - kontener
+matroska - kontener
+
+kandydaci: webm, theora
