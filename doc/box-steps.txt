@@ -1,4 +1,8 @@
 .NET 4.0
+
+check for version with:
+[Environment]::Version
+
 config:
 C:\WINDOWS\system32\windowspowershell\v1.0\powershell.exe.config
 
