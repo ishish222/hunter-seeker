@@ -14,6 +14,8 @@ import sys
 import signal
 import settings
 
+app_path = "C:\\Program Files\\Opera\\16.0.119680\\opera.exe"
+
 class ErrorDetectedException(Exception):
     pass
 
@@ -119,7 +121,7 @@ def proceed():
     read_socket(s)
 
     #spawning acad
-    write_socket(s, "spawn C:\\Program Files\\AutoCAD 2010\\acad.exe")
+    write_socket(s, "spawn " + app_path)
     read_socket(s)
 
     #inject to spawned
@@ -130,31 +132,31 @@ def proceed():
     read_socket(s)
 
     #acad hooks
-    write_socket(s, "pipe installTestHook2")
-    read_socket(s)
-    write_socket(s, "pipe installTestHook3")
-    read_socket(s)
-    write_socket(s, "pipe installTestHook4")
-    read_socket(s)
-    write_socket(s, "pipe installTestHook5")
-    read_socket(s)
-    write_socket(s, "pipe installTestMod7")
-    read_socket(s)
+#    write_socket(s, "pipe installTestHook2")
+#    read_socket(s)
+#    write_socket(s, "pipe installTestHook3")
+#    read_socket(s)
+#    write_socket(s, "pipe installTestHook4")
+#    read_socket(s)
+#    write_socket(s, "pipe installTestHook5")
+#    read_socket(s)
+#    write_socket(s, "pipe installTestMod7")
+#    read_socket(s)
 
     #searching handles
-    write_socket(s, "pipe FindHandles Afx:00400000:b:00010011:00000006")
-    target = read_socket(s)
-    target_class = target.split("-")[1]
-    read_socket(s)
-    print("Setting target: " + str(target_class))
+#    write_socket(s, "pipe FindHandles Afx:00400000:b:00010011:00000006")
+#    target = read_socket(s)
+#    target_class = target.split("-")[1]
+#    read_socket(s)
+#    print("Setting target: " + str(target_class))
     
     #assuming target class is Afx:00400000:b:00010011:00000006:0038052 / changes every spawn?
-    write_socket(s, "pipe SetTargetClass " + str(target_class))
-    read_socket(s)
+#    write_socket(s, "pipe SetTargetClass " + str(target_class))
+#    read_socket(s)
 
     #closing windows
-    write_socket(s, "pipe KillClass")
-    read_socket(s)
+#    write_socket(s, "pipe KillClass")
+#    read_socket(s)
 
     print("sleeping")
     time.sleep(3)
