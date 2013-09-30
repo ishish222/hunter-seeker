@@ -1,4 +1,4 @@
-$version = "ver. 0.5"
+$version = "ver. 1.7"
 
 $global:pipe = $null
 $global:pipeName = "\\.\control"
@@ -9,7 +9,7 @@ $global:ns = $null
 $global:nsReader = $null
 $global:nsWriter = $null
 $global:lastProc = $null
-$global:spawnDelay = 10
+$global:spawnDelay = 0
 $global:binnerPath = "W:\paimei\binner-opera-1.py"
 
 $enc = new-object system.text.asciiEncoding
@@ -32,7 +32,6 @@ function inject($mypid)
 
 function set-pipe-server($name)
 {
-	write-socket "setting pipe server"
 	$pipedir = [system.io.pipes.pipedirection]::inout
 	$maxinstances = 5
 	$pipemode = [system.io.pipes.pipetransmissionmode]::message
@@ -40,12 +39,12 @@ function set-pipe-server($name)
 	$global:pipeStream = new-object system.io.pipes.namedpipeserverstream($name, $pipedir, $maxinstances, $pipemode, $pipeoptions)
 	$global:pipeStream.waitforconnection()
 	$global:pipeStream
-	write-socket "got connection"
 }
 
 function read-pipe($count)
 {
-	$i = $global:pipeStream.read($recv, 0, $count)
+    $global:recv = new-object system.byte[] 4096
+	$i = $global:pipeStream.read($global:recv, 0, $count)
 	$ans = $enc.getstring($recv, 0, $i)
 	return $ans
 }
@@ -71,6 +70,12 @@ function write-socket($string)
 #	$global:ns.write($bytes, 0, $bytes.length)
 	$global:nsWriter.write($string)
 	$global:nsWriter.Flush()
+}
+
+function ok()
+{
+    start-sleep -m 500
+    write-socket("OK")
 }
 
 function get-pipe-stream()
@@ -104,55 +109,76 @@ function kill-explorer()
 
 function dispatch-command([string]$command, [system.net.sockets.tcpclient]$client)
 {
-	$recv = new-object system.byte[] 128
 	$cmdarray = $command.split(" ")
 
 	if($cmdarray[0] -eq "ps")
 	{
 		$a = get-process | out-string
 		write-socket $a
+        ok
 	}
 
-	if($cmdarray[0] -eq "dn4off")
+	elseif($cmdarray[0] -eq "dn4off")
 	{
         dn4off
         write-socket "DN4OFF"
+        ok
 	}
 
-	if($cmdarray[0] -eq "dn4on")
+	elseif($cmdarray[0] -eq "dn4on")
 	{
         dn4on
         write-socket "DN4ON"
+        ok
 	}
 
-	if($cmdarray[0] -eq "inject")
+	elseif($cmdarray[0] -eq "inject")
 	{
 		& ".\p021-instrumentation-server.exe" $cmdarray[1]
 		set-pipe-server $global:pipeName3
 		write-socket "Thread injected"
+        ok
 	}
 
-	if($cmdarray[0] -eq "testFile")
+	elseif($cmdarray[0] -eq "testFile")
 	{
 		write-pipe "waitTest"
 		$ans = read-pipe 100
 		write-socket $ans
+        ok
 		Invoke-item $cmdarray[1]
 		$ans = read-pipe 100
 		write-socket $ans
+        ok
 	}
 
-	if($cmdarray[0] -eq "invoke")
+	elseif($cmdarray[0] -eq "cmd")
+	{
+		$rest = ""
+		for($i = 1; $i -le $cmdarray.count; $i++)
+		{
+			$rest += $cmdarray[$i]
+			$rest += " "
+		}
+
+		cmd.exe /k $rest
+		write-socket "cmd /k " + $rest
+        ok
+	}
+
+	elseif($cmdarray[0] -eq "invoke")
 	{
 		Invoke-item $cmdarray[1]
 		write-socket "Invoked"
+        ok
 	}
 
-	if($cmdarray[0] -eq "testmode")
+	elseif($cmdarray[0] -eq "testmode")
 	{
 		if($cmdarray[1] -eq "enter")
 		{
 			write-socket "Entering testmode"
+            ok
 			while($true)
 			{
 				$file = read-socket
@@ -169,16 +195,18 @@ function dispatch-command([string]$command, [system.net.sockets.tcpclient]$clien
 				Invoke-item $file
 				$ans = read-pipe 100
 #				write-socket $ans
+                ok
 
-				write-pipe "KillClass"
-				$ans = read-pipe 100
-				write-socket $ans
+#				write-pipe "KillClass"
+#				$ans = read-pipe 100
+#				write-socket $ans
 			}
 			write-socket "Exiting test mode"
+            ok
 		}
 	}
 
-	if($cmdarray[0] -eq "checkpipe")
+	elseif($cmdarray[0] -eq "checkpipe")
 	{
 		if(test-path $global:pipeName2)
 		{
@@ -188,44 +216,51 @@ function dispatch-command([string]$command, [system.net.sockets.tcpclient]$clien
 		{
 			write-socket "Pipe doesn't exist"
 		}
+        ok
 	}
 
-	if($cmdarray[0] -eq "getpipe")
+	elseif($cmdarray[0] -eq "getpipe")
 	{
 		get-pipe-stream
 		write-socket "Assumed control"
+        ok
 	}
 
-	if($cmdarray[0] -eq "killExplorer")
+	elseif($cmdarray[0] -eq "killExplorer")
 	{
         kill-explorer
 		write-socket "Explorer's dead"
+        ok
 	}
 
-	if($cmdarray[0] -eq "killLast")
+	elseif($cmdarray[0] -eq "killLast")
 	{
 		kill-pid $global:lastProc.id
 		write-socket "Last app is dead"
+        ok
 	}
 
-	if($cmdarray[0] -eq "injectLast")
+	elseif($cmdarray[0] -eq "injectLast")
 	{
 		$id = $global:lastProc.id
 		inject $id
 		set-pipe-server $global:PipeName3
 		write-socket "Thread injected"
+        ok
 	}
 
-	if($cmdarray[0] -eq "startBinner")
+	elseif($cmdarray[0] -eq "startBinner")
 	{
         "Starting binner"
         Invoke-item $global:binnerPath
 		set-pipe-server $global:pipeName3
-        read-pipe 100
+        #cmd.exe /k $global:binnerPath
+        $ans = read-pipe 100
         write-socket "Binner started"
+        ok
     }
 
-	if($cmdarray[0] -eq "spawn")
+	elseif($cmdarray[0] -eq "spawn")
 	{
 		$rest = ""
 		for($i = 1; $i -le $cmdarray.count; $i++)
@@ -234,16 +269,17 @@ function dispatch-command([string]$command, [system.net.sockets.tcpclient]$clien
 			$rest += " "
 		}
 
-		dn4off
+		#dn4off
+        $rest
 		$global:lastProc = [Diagnostics.Process]::Start($rest)
 		start-sleep -seconds $global:spawnDelay
-		dn4on
+		#dn4on
 		write-socket $global:lastProc.Id
-		write-socket "OK"
+		ok
 	}
 
 
-	if($cmdarray[0] -eq "pipe")
+	elseif($cmdarray[0] -eq "pipe")
 	{
 		$rest = ""
 		for($i = 1; $i -le $cmdarray.count; $i++)
@@ -264,16 +300,30 @@ function dispatch-command([string]$command, [system.net.sockets.tcpclient]$clien
 		while($ans -ne "OK")
 	}
 
-	if($cmdarray[0] -eq "testPipe")
+	elseif($cmdarray[0] -eq "testPipe")
 	{
 		write-pipe "testPipe"
 
 		$ans = read-pipe 100
 		write-socket $ans
+		ok
 
 		$ans = read-pipe 100
 		write-socket $ans
+		ok
 	}
+
+    else 
+    {
+        "Piping: " + $command
+        write-pipe $command
+		do
+		{	
+			$ans = read-pipe 100
+			write-socket $ans
+		}
+		while($ans -ne "OK")
+    }
 }
 
 function listen-port($port)
@@ -291,6 +341,7 @@ function listen-port($port)
 	"connected"
 
 	write-socket $version
+    ok
 
 	while($true)
 	{
@@ -312,9 +363,11 @@ function acad-preparations()
 
 [reflection.Assembly]::loadwithpartialname("system.core")
 
-acad-preparations
+#acad-preparations
 
 "got it, strating server"
+$version
+
 listen-port(12345)
 
 "finishing"

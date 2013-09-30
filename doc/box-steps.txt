@@ -20,3 +20,5 @@ reg add hklm\software\microsoft\.netframework /v OnlyUseLatestCLR /t REG_DWORD /
 
 add server looper to autostart
 
+install pywin32 (move dlls like pywintypes.dll to Lib\site-packages\win32)
+

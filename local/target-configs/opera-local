@@ -4,10 +4,9 @@ c:fuzzers/correctors
 c:fuzzers/settings/opera-local/settings.py
 c:blob/res/theora/out.ogv
 s:binners/paimei
-c:binners/opera/binner-1.py
 s:vm-server/powershell.exe.config
 s:vm-server/dn4on.ps1
-s:vm-server/server-python.ps1
+s:vm-server/server-3.ps1
 s:vm-server/noticeOff.ps1
 s:vm-server/looper.ps1
 s:vm-server/dn4off.ps1

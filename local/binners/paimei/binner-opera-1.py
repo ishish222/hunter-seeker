@@ -11,10 +11,12 @@ import signal
 from threading import Thread
 from threading import Lock
 import ctypes
+import win32pipe, win32file
 
 from pydbg import *
 from pydbg.defines import *
 
+START_SLEEP = 2
 HC_ADDR = 0x770627e4
 HC_CODE = 0xc0000374
 
@@ -22,7 +24,7 @@ samples_dir = "X:\\"
 crashed_dir = "X:\\crashed"
 hanged_dir = "X:\\hanged"
 clean_dir = "X:\\clean"
-#log_file = "X:\\log-"
+log_file = "X:\\log-"
 log_file = "log-"
 
 bl_instructions = []
@@ -36,13 +38,17 @@ bl_rvas = []
 #bl_rvas.append(("AcXtrnal.DLL", 0x8cfb))
 
 app_path={
-'acad2010' : 'C:\\Program Files\\AutoCAD 2010\\acad.exe',
-'acad2014' : 'C:\\Program Files\\Autodesk\\AutoCAD 2014\\acad.exe'
+"acad2010"  : "C:\\Program Files\\AutoCAD 2010\\acad.exe",
+"acad2014"  : "C:\\Program Files\\Autodesk\\AutoCAD 2014\\acad.exe",
+"opera"     : "C:\\Program Files\\Opera\\16.0.1196.80\\opera.exe"
 }
 
 
-my_path = app_path["acad2014"]
+my_path = app_path["opera"]
 my_length = 15
+my_pipe = "\\\\.\\pipe\\control"
+my_pipe2 = "control"
+pipe_buff_size = 4096
 
 def testdir(x): 
     if(os.path.isdir(x) == False):
@@ -55,13 +61,30 @@ def testfile(x):
 #import pdb
 #pdb.set_trace()
 
-#testdir(crashed_dir)
-#testdir(hanged_dir)
-#testdir(clean_dir)
+testdir(crashed_dir)
+testdir(hanged_dir)
+testdir(clean_dir)
 
 cb = utils.crash_binning.crash_binning()
 
 l = Lock()
+
+def ok():
+    time.sleep(0.5)
+    writePipe("OK")
+    win32file.FlushFileBuffers(ph)
+
+def getPipe(name):
+    ph = win32file.CreateFile(name, win32file.GENERIC_READ | win32file.GENERIC_WRITE | win32pipe.PIPE_TYPE_MESSAGE, 0, None, win32file.OPEN_EXISTING, 0, None)
+    return ph
+
+def readPipe():
+    global ph
+    return win32file.ReadFile(ph, pipe_buff_size)
+
+def writePipe(data):
+    global ph
+    win32file.WriteFile(ph, data)
 
 def disasm(dbg, e_addr):
     try:
@@ -221,103 +244,150 @@ def file_run(filee, dbg):
             except Exception:
                 pass
 #            os.rename(samples_dir + "\\" + filee, hanged_dir + "\\" + filee)
-            if(testfile(samples_dir + "\\" + filee + ".bak")):
-                os.remove(samples_dir + "\\" + filee + ".bak")
+#            if(testfile(samples_dir + "\\" + filee + ".bak")):
+#                os.remove(samples_dir + "\\" + filee + ".bak")
     l.release()
     
 
 def debug_loop(dbg):
     dbg.debug_event_loop()
 
-imagename = "opera.exe"
-count = 0
-
-cb_file = samples_dir + time.strftime("%Y%m%d-%H%M%S") + ".crash"
-log_file += time.strftime("%Y%m%d-%H%M%S")
-log_file += ".txt" 
-status = "hang"
-
-#logf = open(log_file, "w")
-#logf.write("test\n")
-
 def windows_kill(pid):
     kernel32 = ctypes.windll.kernel32
     handle = kernel32.OpenProcess(1, 0, pid)
     return (0 != kernel32.TerminateProcess(handle, 0))
 
-#for filee in os.listdir(samples_dir):
-#    if(filee[-4:] != ".dwg"):
-#        continue
-    #spawn app & wait to load
-filee = sys.argv[1]
-proc = subprocess.Popen(my_path)
-time.sleep(3)
+attached=False
+imagename = "opera.exe"
+
+def attach(dbg, imagename):
+    for (pid, name) in dbg.enumerate_processes():
+        if imagename in name:
+            print(imagename + " in " + name)
+            try:
+                print "[*] Attaching to %s (%d)" % (name, pid)
+                log_write("[*] Attaching to " + name + " " + str( pid) + "\n")
+                dbg.attach(pid)
+            except:
+                print "[!] Problem attaching to %s" % name
+                log_write("[*] Problem attaching to " + name)
+    #                windows_kill(pid)
+                continue
+            break
+
+def setup_dbg(dbg):
+    dbg.set_callback(EXCEPTION_ACCESS_VIOLATION, handle_av)
+    dbg.bp_set(0x770627e4, handler=handle_bp)
+
+def check_app():
+    global dbg
+    global imagename
+
+    if(attached == True):
+        return True
+
+    dbg = pydbg()      # globally accessible pydbg instance.
+    proc = subprocess.Popen(my_path)
+    time.sleep(3)
+    attach(dbg, imagename)
+    attached = True
+
+def startLog():
+    global logStarted
+    global log_file
+    global logf
+
+    log_file += time.strftime("%Y%m%d-%H%M%S")
+    log_file += ".txt" 
+    logf = open(log_file, "w")
+    logf.write("test\n")
+    logStarted = True
+
+def stopLog():
+    global logStarted
+    global logf
+
+    logf.close()
+    logStarted = False
+
+def log_write(data):
+    global logStarted
+    global logf
+
+    if(logStarted == False):
+        return
+    logf.write(data)
+
+def spawn():
+    proc = subprocess.Popen(my_path)
 
 
-#logf.write("test2\n")
-#install hook
-#    subprocess.Popen("W:\\p023-standalone.exe " + str(proc.pid))
+def execute(cmds):
+    global dbg
 
-    #attach
-dbg = pydbg()      # globally accessible pydbg instance.
-dbg.set_callback(EXCEPTION_ACCESS_VIOLATION, handle_av)
-#dbg.bp_set("0x770627e4")
-#dbg.set_callback(EXCEPTION_BREAKPOINT, handle_bp)
-#dbg.bp_set(0x770627e4, handler=handle_bp)
-#dbg.bp_set(0x76a0f1a6, handler=handle_bp)
-#dbg.bp_set(0x70e00c31)
-#logf.write("test3\n")
-for (pid, name) in dbg.enumerate_processes():
-    if imagename in name:
-        print(imagename + " in " + name)
+    cmd = cmds[0]
+    args = " ".join(cmds[1:])
+    writePipe(cmd + " " + args)
+
+    if(cmd == "attachBinner"):
         try:
-            print "[*] Attaching to %s (%d)" % (name, pid)
-#            logf.write("[*] Attaching to " + name + " " + str( pid) + "\n")
-            dbg.attach(pid)
-        except:
-            print "[!] Problem attaching to %s" % name
-#            logf.write("[*] Problem attaching to " + name)
-#                windows_kill(pid)
+            attach(dbg, cmds[1])
+            writePipe("Attached to " + dbg.pid)
+            ok()
+        except Exception, e:
+            writePipe("Error " + e)
+            ok()
+            
+
+    if(cmd == "binTest"):
+        writePipe("Communication with binner is working")
+        time.sleep(0.5)
+        ok()
+
+def main():
+    global dbg
+    global status
+    global ph 
+    global my_pipe
+
+    count = 0
+
+#    time.sleep(START_SLEEP)
+
+    ph = getPipe(my_pipe)
+    writePipe("OK")
+
+    print("test")
+
+    try:
+        while True:
+            cmd = readPipe()
+            cmds = str.split(cmd[1])
+            execute(cmds)
+    except Exception, e:
+        print(e)
+
+    cb_file = samples_dir + time.strftime("%Y%m%d-%H%M%S") + ".crash"
+    status = "hang"
+
+
+    count = 0
+
+    for filee in os.listdir(samples_dir):
+        if(filee[-4:] != ".ogv"):
             continue
+        #spawn app & wait to load
+        check_app()
+        count += 1
 
-#time.sleep(3)
-#print("--")
-#print(hex(dbg.h_process))
-#for t in dbg.enumerate_threads():
-#    print(t)
-#print("--")
-#try:
-#    dbg.write_process_memory(0x77063846, "\xCC")
-#    instr = dbg.read_process_memory(0x77063846, 1)
-#    print(hex(ord(instr)))
-#except:
-#    print("exc")
-#print(dbg.h_thread)
-#print(pid)
-#dbg.dbg_print_all_debug_registers()
-#print("--")
-dbg.bp_set(0x770627e4, handler=handle_bp)
-#load file
-#thread = Thread(target = file_run, args = (filee, dbg, ))
-#thread.start()
+    dbg.detach()
+    dbg = None
 
-#os.system("start " + samples_dir + "\\" + filee)
-os.system("start " + filee)
-dbg.debug_event_loop()
+    print("Got " + str(count) + " crashes, exporting to: " + cb_file)
+    logf.write("Got " + str(count) + " crashes, exporting to: " + cb_file)
 
-#print(dbg.callbacks)
+    cb.export_file(cb_file)
+    logf.close()
 
-#clean
-#dbg.detach()
-#dbg = None
-
-#count += 1
-#    break
-
-#print("Got " + str(count) + " crashes, exporting to: " + cb_file)
-#logf.write("Got " + str(count) + " crashes, exporting to: " + cb_file)
-
-#cb.export_file(cb_file)
-#logf.close()
-
-
+#if __name__ == "main":
+main()

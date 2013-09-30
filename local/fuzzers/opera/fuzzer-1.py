@@ -14,7 +14,7 @@ import sys
 import signal
 import settings
 
-app_path = "C:\\Program Files\\Opera\\16.0.119680\\opera.exe"
+app_path = "C:\\Program Files\\Opera\\16.0.1196.80\\Opera.exe"
 
 class ErrorDetectedException(Exception):
     pass
@@ -30,7 +30,7 @@ samples_saved = settings.samples_saved
 fuzzbox_name = sys.argv[1]
 fuzzbox_ip = settings.ips[fuzzbox_name]
 fuzzbox_port = 12345
-buffer_size = 1024
+buffer_size = 4096
 my_name = "HS:ACAD-test"
 my_logger = logging.getLogger('MyLogger')
 my_handler = logging.handlers.SysLogHandler(address = '/dev/log')
@@ -54,9 +54,17 @@ def prepare_fuzzbox():
     pass
 
 def read_socket(s):
-    data = s.recv(buffer_size)
-    print("< " + str(data))
+    while True:
+        data = s.recv(buffer_size)
+        print("< " + str(data))
+        if(data == "OK"): 
+            break
     return data
+
+#def read_socket(s):
+#    data = s.recv(buffer_size)
+#    print("< " + str(data))
+#    return data
 
 def write_socket(s, data):
     print("> " + str(data))
@@ -105,11 +113,14 @@ def connect():
                 continue
             time.sleep(2)
             continue
+    # nie moze byc blocking ze wzgledu na rozbudowane odpowiedzi
+#    s.setblocking(1)
 
 def init():
     #banner
     # we might have some trobules here, its first read
     read_socket(s)
+    #pass
 
 def killLast():
     write_socket(s, "killLast")
@@ -124,12 +135,14 @@ def proceed():
     write_socket(s, "spawn " + app_path)
     read_socket(s)
 
+    #create conversation with binner
+
     #inject to spawned
-    write_socket(s, "injectLast")
-    read_socket(s)
-    read_socket(s)
-    read_socket(s)
-    read_socket(s)
+#    write_socket(s, "injectLast")
+#    read_socket(s)
+#    read_socket(s)
+#    read_socket(s)
+#    read_socket(s)
 
     #acad hooks
 #    write_socket(s, "pipe installTestHook2")
@@ -174,6 +187,7 @@ def sig1_handler(signum, frame):
 def sigkill_handler(signum, frame):
     report("Killing")
     powerofff()
+#    revert()
     quit()
         
 #setup fuzzer for acad
@@ -186,8 +200,32 @@ def looop():
 
     powerofff()
     start()
+    signal.signal(signal.SIGINT, sigkill_handler)
     connect()
     init()
+
+    write_socket(s, "startBinner")
+    read_socket(s)
+
+    write_socket(s, "spawn " + app_path)
+    read_socket(s)
+
+    write_socket(s, "binTest")
+    read_socket(s)
+
+    write_socket(s, "binTest")
+    read_socket(s)
+
+    write_socket(s, "ps")
+    read_socket(s)
+
+    write_socket(s, "attachBinner opera.exe")
+    read_socket(s)
+
+    while True:
+        pass
+
+    exit()
 
     while True:
         try:
@@ -206,7 +244,6 @@ def looop():
             killLast()
             continue
     
-    signal.signal(signal.SIGINT, sigkill_handler)
     
     if(settings.testing):
         #restart until passes test?
