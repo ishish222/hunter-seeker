@@ -1,0 +1,4 @@
+switch ida bp to python:
+RunPlugin(“python”, 3)
+
+"Oohhh dude! I’d have liked to know this before..." xD

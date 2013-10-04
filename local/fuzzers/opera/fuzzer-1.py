@@ -213,9 +213,6 @@ def looop():
     write_socket(s, "binTest")
     read_socket(s)
 
-    write_socket(s, "binTest")
-    read_socket(s)
-
     write_socket(s, "ps")
     read_socket(s)
 

@@ -1,6 +1,9 @@
 #!c:\python\python.exe
 
 import sys
+
+sys.path.append("w:\\paimei")
+
 import struct
 import utils
 import subprocess
@@ -16,6 +19,9 @@ import win32pipe, win32file
 from pydbg import *
 from pydbg.defines import *
 
+#from debuggee_procedure_call import *
+
+START_SLEEP = 2
 HC_ADDR = 0x770627e4
 HC_CODE = 0xc0000374
 
@@ -68,15 +74,22 @@ cb = utils.crash_binning.crash_binning()
 
 l = Lock()
 
+def ok():
+    time.sleep(0.5)
+    writePipe("OK")
+    win32file.FlushFileBuffers(ph)
+
 def getPipe(name):
-    ph = win32file.CreateFile(name, win32file.GENERIC_READ | win32file.GENERIC_WRITE, 0, None, win32file.OPEN_EXISTING, 0, None)
+    ph = win32file.CreateFile(name, win32file.GENERIC_READ | win32file.GENERIC_WRITE | win32pipe.PIPE_TYPE_MESSAGE, 0, None, win32file.OPEN_EXISTING, 0, None)
     return ph
 
-def readPipe(ph):
+def readPipe():
+    global ph
     return win32file.ReadFile(ph, pipe_buff_size)
 
-def writePipe(ph, data):
-    return win32file.WriteFile(ph, data)
+def writePipe(data):
+    global ph
+    win32file.WriteFile(ph, data)
 
 def disasm(dbg, e_addr):
     try:
@@ -258,11 +271,12 @@ def attach(dbg, imagename):
             print(imagename + " in " + name)
             try:
                 print "[*] Attaching to %s (%d)" % (name, pid)
-                logf.write("[*] Attaching to " + name + " " + str( pid) + "\n")
+                log_write("[*] Attaching to " + name + " " + str(pid) + "\n")
                 dbg.attach(pid)
-            except:
+            except Exception, e:
                 print "[!] Problem attaching to %s" % name
-                logf.write("[*] Problem attaching to " + name)
+                log_write("[*] Problem attaching to " + name)
+                log_write(e)
     #                windows_kill(pid)
                 continue
             break
@@ -310,24 +324,62 @@ def log_write(data):
         return
     logf.write(data)
 
-def execute(cmd):
-    if(cmd == "test"):
-        writePipe("Test command")
+def spawn():
+    proc = subprocess.Popen(my_path)
+
+
+def execute(cmds):
+    global dbg
+
+    cmd = cmds[0]
+    args = " ".join(cmds[1:])
+    writePipe(cmd + " " + args)
+
+    if(cmd == "attachBinner"):
+        try:
+            attach(dbg, args)
+            writePipe("Attached to " + str(dbg.pid))
+            ok()
+            #see for urself
+            #find MessageBoxA
+            print(hex(dbg.func_resolve("user32.dll", "MessageBoxA")))
+
+        except Exception, e:
+            print(e)
+            time.sleep(10)
+            writePipe("Error " + e)
+            ok()
+            
+
+    if(cmd == "binTest"):
+        writePipe("Communication with binner is working")
+        ok()
 
 def main():
     global dbg
     global status
     global ph 
     global my_pipe
+    global logStarted
+
+    logStarted = False
 
     count = 0
+    dbg = pydbg()
+#    time.sleep(START_SLEEP)
 
     ph = getPipe(my_pipe)
-    writePipe("worky")
+    writePipe("OK")
 
-    while True:
-        cmd = readPipe()
-        execute(cmd)
+    print("test")
+
+    try:
+        while True:
+            cmd = readPipe()
+            cmds = str.split(cmd[1])
+            execute(cmds)
+    except Exception, e:
+        print(e)
 
     cb_file = samples_dir + time.strftime("%Y%m%d-%H%M%S") + ".crash"
     status = "hang"
@@ -351,5 +403,5 @@ def main():
     cb.export_file(cb_file)
     logf.close()
 
-if __name__ == "main":
-    main()
+#if __name__ == "main":
+main()

@@ -10,7 +10,7 @@ $global:nsReader = $null
 $global:nsWriter = $null
 $global:lastProc = $null
 $global:spawnDelay = 0
-$global:binnerPath = "W:\paimei\binner-opera-1.py"
+$global:binnerPath = "W:\binner-opera-1.py"
 
 $enc = new-object system.text.asciiEncoding
 
