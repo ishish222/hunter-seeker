@@ -16,4 +16,9 @@ second = "testbox-second"
 
 samples_shared_path = "../samples/shared"
 samples_saved = "../samples/saved"
-
+fuzzbox_port = 12345
+app_path = "C:\\Program Files\\Opera\\16.0.1196.80\\Opera.exe"
+corrector = None
+buffer_size = 4096
+log_name = "HS:Opera"
+fuzzbox_timeout = 20.0

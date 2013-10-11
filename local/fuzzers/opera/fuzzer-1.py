@@ -14,8 +14,6 @@ import sys
 import signal
 import settings
 
-app_path = "C:\\Program Files\\Opera\\16.0.1196.80\\Opera.exe"
-
 class ErrorDetectedException(Exception):
     pass
 
@@ -29,14 +27,13 @@ samples_shared_path = settings.samples_shared_path
 samples_saved = settings.samples_saved
 fuzzbox_name = sys.argv[1]
 fuzzbox_ip = settings.ips[fuzzbox_name]
-fuzzbox_port = 12345
-buffer_size = 4096
-my_name = "HS:ACAD-test"
 my_logger = logging.getLogger('MyLogger')
 my_handler = logging.handlers.SysLogHandler(address = '/dev/log')
 my_logger.setLevel(logging.DEBUG)
 my_logger.addHandler(my_handler)
 my_timeout = 20.0
+
+BAD_ADDR_1 = 0x13518F0 # (0x400000 + 0xf518f0)
 
 if(settings.visible):
     startvm = ["VBoxManage", "startvm", ""]
@@ -48,14 +45,14 @@ restorecurrent = ["VBoxManage", "snapshot", "", "restorecurrent"]
 restorestart = ["VBoxManage", "snapshot", "", "restore", "[x] start"]
 
 def report(string):
-    my_logger.info("[" + my_name + ":" + fuzzbox_name + "] " + string);
+    my_logger.info("[" + settings.log_name + ":" + fuzzbox_name + "] " + string);
 
 def prepare_fuzzbox():
     pass
 
 def read_socket(s):
     while True:
-        data = s.recv(buffer_size)
+        data = s.recv(settings.buffer_size)
         print("< " + str(data))
         if(data == "OK"): 
             break
@@ -100,7 +97,7 @@ def connect():
     timeouts = 0
     while(True):
         try:
-            s.connect((fuzzbox_ip, fuzzbox_port))
+            s.connect((fuzzbox_ip, settings.fuzzbox_port))
             print("Connected")
             return
         except Exception:
@@ -132,7 +129,7 @@ def proceed():
     read_socket(s)
 
     #spawning acad
-    write_socket(s, "spawn " + app_path)
+    write_socket(s, "spawn " + settings.app_path)
     read_socket(s)
 
     #create conversation with binner
@@ -191,7 +188,7 @@ def sigkill_handler(signum, frame):
     quit()
         
 #setup fuzzer for acad
-my_generator = generator.Generator(origin_path, samples_shared_path, ".ogv", changer.Changer, corrector = "acadCorrector")
+my_generator = generator.Generator(origin_path, samples_shared_path, ".ogv", changer.Changer, corrector = None)
 my_generator.mutations=3
 
 #setup box
@@ -207,7 +204,7 @@ def looop():
     write_socket(s, "startBinner")
     read_socket(s)
 
-    write_socket(s, "spawn " + app_path)
+    write_socket(s, "spawn " + settings.app_path)
     read_socket(s)
 
     write_socket(s, "binTest")
@@ -222,8 +219,11 @@ def looop():
 #    write_socket(s, "installGood 0x77c00000")
 #    read_socket(s)
 
-#    write_socket(s, "installBad 0x0")
-#    read_socket(s)
+    write_socket(s, "installBad " + hex(BAD_ADDR_1))
+    read_socket(s)
+
+    write_socket(s, "go")
+    read_socket(s)
 
     sample_path = my_generator.generate_one()
     sample_file = os.path.basename(sample_path)

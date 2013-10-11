@@ -331,7 +331,8 @@ def good_handler(dbg):
     pass
 
 def bad_handler(dbg):
-    pass
+    print("reached bad point")
+    return DBG_CONTINUE
 
 def execute(cmds):
     global dbg
@@ -342,12 +343,15 @@ def execute(cmds):
     writePipe(cmd + " " + args)
 
     try:
+        if(cmd == "go"):
+            ok()
+            dbg.debug_event_loop()
 
         if(cmd == "attachBinner"):
             attach(dbg, args)
             writePipe("Attached to " + str(dbg.pid))
             ok()
-            dbg.debug_event_loop()
+            #dbg.debug_event_loop()
             #see for urself
             # todo
             #find MessageBoxA
@@ -370,6 +374,7 @@ def execute(cmds):
 
         if(cmd == "installBad"):
             writePipe("Installing bad at " + cmds[1])
+            dbg.bp_set(int(cmds[1], 16), handler = bad_handler)
             ok()
 
         if(cmd == "binTest"):

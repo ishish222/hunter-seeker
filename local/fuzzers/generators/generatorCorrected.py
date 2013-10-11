@@ -18,6 +18,8 @@ class Generator(object):
         self.mutations = mutations_
         if(corrector != None):
             correctorlib = importlib.import_module("correctors."+corrector)
+        else:
+            correctorlib = None
 
     def generate(self, amt=100):
         global correctorlib
@@ -30,10 +32,11 @@ class Generator(object):
             mutatorInstance = self.mutator(tname)
             for j in range(0, self.mutations):
                 mutatorInstance.mutate()
-            print("Correcting")
-            fmap = mmap(mutatorInstance.fileno(), 0)
-            correctorlib.correct_all(fmap)
-            fmap.close()
+            if(correctorlib != None):
+                print("Correcting")
+                fmap = mmap(mutatorInstance.fileno(), 0)
+                correctorlib.correct_all(fmap)
+                fmap.close()
             mutatorInstance.close()
 
     def generate_one(self):
@@ -46,8 +49,9 @@ class Generator(object):
         mutatorInstance = self.mutator(tname)
         for j in range(0, self.mutations):
             mutatorInstance.mutate()
-        print("Correcting")
-        fmap = mmap(mutatorInstance.fileno(), 0)
-        correctorlib.correct_all(fmap)
-        fmap.close()
+        if(correctorlib != None):
+            print("Correcting")
+            fmap = mmap(mutatorInstance.fileno(), 0)
+            correctorlib.correct_all(fmap)
+            fmap.close()
         return tname
