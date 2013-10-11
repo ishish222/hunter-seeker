@@ -3452,7 +3452,10 @@ class pydbg:
         allocated_address = kernel32.VirtualAllocEx(self.h_process, address, size, alloc_type, protection)
 
         if not allocated_address:
-            raise pdx("VirtualAllocEx(%08x, %d, %08x, %08x)" % (address, size, alloc_type, protection), True)
+            if address:
+                raise pdx("VirtualAllocEx(%08x, %d, %08x, %08x)" % (address, size, alloc_type, protection), True)
+            else:
+                raise pdx("VirtualAllocEx(NULL, %d, %08x, %08x)" % (size, alloc_type, protection), True)
 
         return allocated_address
 

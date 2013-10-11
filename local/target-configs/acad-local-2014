@@ -1,7 +1,7 @@
 c:fuzzers/acad/fuzzer-acad.py
 c:fuzzers/generators
 c:fuzzers/correctors
-c:fuzzers/settings/acad-local/settings.py
+c:fuzzers/settings/acad-local-2014/settings.py
 c:binners/binner-acad.py
 c:binners/binner-acad-long.py
 c:binners/binner-acad-2014.py

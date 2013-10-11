@@ -3,6 +3,8 @@ c:fuzzers/generators
 c:fuzzers/correctors
 c:fuzzers/settings/opera-local/settings.py
 c:blob/res/theora/out.ogv
+s:fuzzers/opera/index.html
+s:fuzzers/opera/runner.ps1
 s:binners/paimei
 s:binners/opera/binner-opera-1.py
 s:vm-server/powershell.exe.config

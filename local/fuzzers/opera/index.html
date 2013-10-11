@@ -1,0 +1,46 @@
+<html>
+<script>
+
+/*
+function loaded(e)
+{
+	alert("here");
+	alert(this.responseText);
+}
+
+function sch(e)
+{
+	alert("state " + e.target.status);
+}
+*/
+/*
+function end()
+{
+alert("in function");
+var req = new XMLHttpRequest();
+alert(req)
+if(req)
+{
+	alert("sending");
+	req.onload = loaded;
+	req.onreadystatechange = sch
+	req.onerror = function(e) {
+		alert("error " + e.target.status);
+	}
+	req.open("GET","http://192.168.56.1/test.html", false);
+	req.send();
+	req.open("GET","http://192.168.56.1/test.html", true);
+	req.send();
+	req.open("GET","http://192.168.56.1/test.html");
+	req.send();
+	alert("sent");
+}
+}
+*/
+function end()
+{
+document.location="google.pl";
+}
+</script>
+<video autoplay src="now.ogv" onended="end()"></video>
+</html>

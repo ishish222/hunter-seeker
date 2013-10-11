@@ -19,7 +19,7 @@ import win32pipe, win32file
 from pydbg import *
 from pydbg.defines import *
 
-#from debuggee_procedure_call import *
+from debuggee_procedure_call import dpc
 
 START_SLEEP = 2
 HC_ADDR = 0x770627e4
@@ -327,32 +327,61 @@ def log_write(data):
 def spawn():
     proc = subprocess.Popen(my_path)
 
+def good_handler(dbg):
+    pass
+
+def bad_handler(dbg):
+    pass
 
 def execute(cmds):
     global dbg
 
     cmd = cmds[0]
+    print(cmds)
     args = " ".join(cmds[1:])
     writePipe(cmd + " " + args)
 
-    if(cmd == "attachBinner"):
-        try:
+    try:
+
+        if(cmd == "attachBinner"):
             attach(dbg, args)
             writePipe("Attached to " + str(dbg.pid))
             ok()
+            dbg.debug_event_loop()
             #see for urself
+            # todo
             #find MessageBoxA
-            print(hex(dbg.func_resolve("user32.dll", "MessageBoxA")))
+#            mba = dbg.func_resolve("user32.dll", "MessageBoxA")
+#            print("releasing")
+#            dbg.debug_event_loop()
+#            thread = Thread(target = dbg.debug_event_loop)
+#            thread.start()
+#            print("released")
+#            dpc(mba, 0x0, "test", "test", 0x0)
+#            user32 = windll.user32
+#            user32.MessageBoxA(0x0, "test", "test", 0x0)
+#            while True:
+#                pass
 
-        except Exception, e:
-            print(e)
-            time.sleep(10)
-            writePipe("Error " + e)
-            ok()
             
+        if(cmd == "installGood"):
+            writePipe("Installing good at " + cmds[1])
+            ok()
 
-    if(cmd == "binTest"):
-        writePipe("Communication with binner is working")
+        if(cmd == "installBad"):
+            writePipe("Installing bad at " + cmds[1])
+            ok()
+
+        if(cmd == "binTest"):
+            writePipe("Communication with binner is working")
+            ok()
+        
+    except Exception, e:
+        print(e)
+            # loop so i can read it :)
+        while True:
+            pass
+        writePipe("Error " + e)
         ok()
 
 def main():

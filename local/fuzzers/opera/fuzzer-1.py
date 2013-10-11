@@ -191,7 +191,7 @@ def sigkill_handler(signum, frame):
     quit()
         
 #setup fuzzer for acad
-my_generator = generator.Generator(origin_path, samples_shared_path, ".dwg", changer.Changer)
+my_generator = generator.Generator(origin_path, samples_shared_path, ".ogv", changer.Changer, corrector = "acadCorrector")
 my_generator.mutations=3
 
 #setup box
@@ -217,6 +217,18 @@ def looop():
     read_socket(s)
 
     write_socket(s, "attachBinner opera.exe")
+    read_socket(s)
+
+#    write_socket(s, "installGood 0x77c00000")
+#    read_socket(s)
+
+#    write_socket(s, "installBad 0x0")
+#    read_socket(s)
+
+    sample_path = my_generator.generate_one()
+    sample_file = os.path.basename(sample_path)
+
+    write_socket(s, "testFile " + sample_file)
     read_socket(s)
 
     while True:

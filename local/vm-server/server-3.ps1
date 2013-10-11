@@ -142,11 +142,14 @@ function dispatch-command([string]$command, [system.net.sockets.tcpclient]$clien
 
 	elseif($cmdarray[0] -eq "testFile")
 	{
-		write-pipe "waitTest"
-		$ans = read-pipe 100
-		write-socket $ans
-        ok
-		Invoke-item $cmdarray[1]
+        $file = $cmdarray[1]
+#		write-pipe "waitTest"
+#		$ans = read-pipe 100
+#		write-socket $ans
+#       ok
+#		Invoke-item $cmdarray[1]
+        ".\runner.ps1 -item $file"
+        invoke-expression ".\runner.ps1 -item $file"
 		$ans = read-pipe 100
 		write-socket $ans
         ok

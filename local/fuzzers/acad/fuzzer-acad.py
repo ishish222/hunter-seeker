@@ -22,19 +22,15 @@ if(len(sys.argv)) < 3:
     quit()
 
 #Configure generator
+fuzzbox_name = sys.argv[1]
 origin_path = sys.argv[2]
 samples_shared_path = settings.samples_shared_path
 samples_saved = settings.samples_saved
-fuzzbox_name = sys.argv[1]
 fuzzbox_ip = settings.ips[fuzzbox_name]
-fuzzbox_port = 12345
-buffer_size = 1024
-my_name = "HS:ACAD-test"
 my_logger = logging.getLogger('MyLogger')
 my_handler = logging.handlers.SysLogHandler(address = '/dev/log')
 my_logger.setLevel(logging.DEBUG)
 my_logger.addHandler(my_handler)
-my_timeout = 20.0
 
 if(settings.visible):
     startvm = ["VBoxManage", "startvm", ""]
@@ -45,14 +41,24 @@ poweroff = ["VBoxManage", "controlvm", "", "poweroff"]
 restorecurrent = ["VBoxManage", "snapshot", "", "restorecurrent"]
 restorestart = ["VBoxManage", "snapshot", "", "restore", "[x] start"]
 
+def sig1_handler(signum, frame):
+    report("Signaled")
+        
+def sigkill_handler(signum, frame):
+    report("Killing")
+    powerofff()
+    quit()
+
+signal.signal(signal.SIGINT, sigkill_handler)
+
 def report(string):
-    my_logger.info("[" + my_name + ":" + fuzzbox_name + "] " + string);
+    my_logger.info("[" + settings.log_name + ":" + fuzzbox_name + "] " + string);
 
 def prepare_fuzzbox():
     pass
 
 def read_socket(s):
-    data = s.recv(buffer_size)
+    data = s.recv(settings.buffer_size)
     print("< " + str(data))
     return data
 
@@ -90,7 +96,7 @@ def connect():
     timeouts = 0
     while(True):
         try:
-            s.connect((fuzzbox_ip, fuzzbox_port))
+            s.connect((fuzzbox_ip, settings.fuzzbox_port))
             print("Connected")
             return
         except Exception:
@@ -119,7 +125,7 @@ def proceed():
     read_socket(s)
 
     #spawning acad
-    write_socket(s, "spawn C:\\Program Files\\AutoCAD 2010\\acad.exe")
+    write_socket(s, "spawn " + settings.app_path)
     read_socket(s)
 
     #inject to spawned
@@ -162,20 +168,12 @@ def proceed():
     #enter test mode
     write_socket(s, "testmode enter")
     read_socket(s)
-    s.settimeout(my_timeout) 
+    s.settimeout(settings.fuzzbox_timeout) 
 
     return True
 
-def sig1_handler(signum, frame):
-    report("Signaled")
-        
-def sigkill_handler(signum, frame):
-    report("Killing")
-    powerofff()
-    quit()
-        
 #setup fuzzer for acad
-my_generator = generator.Generator(origin_path, samples_shared_path, ".dwg", changer.Changer)
+my_generator = generator.Generator(origin_path, samples_shared_path, ".dwg", changer.Changer, corrector = "acadCorrector")
 my_generator.mutations=3
 
 #setup box
@@ -204,7 +202,6 @@ def looop():
             killLast()
             continue
     
-    signal.signal(signal.SIGINT, sigkill_handler)
     
     if(settings.testing):
         #restart until passes test?

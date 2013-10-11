@@ -5,6 +5,8 @@ c:fuzzers/settings/opera-local/settings.py
 c:blob/res/theora/out.ogv
 s:binners/paimei
 s:binners/opera/binner-opera-1.py
+s:fuzzers/opera/index.html
+s:fuzzers/opera/runner.ps1
 s:vm-server/powershell.exe.config
 s:vm-server/dn4on.ps1
 s:vm-server/server-3.ps1

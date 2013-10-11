@@ -72,7 +72,6 @@ def alloc (size):
 
     if not size:
         return
-
     address = dbg.virtual_alloc(None, size, MEM_COMMIT, PAGE_EXECUTE_READWRITE)
 
     # make a record of the address/size tuple in the global allocations table.
@@ -237,6 +236,7 @@ def dpc (address, *args, **kwargs):
     # XXX - freeing an address that bp_del is later trying to work on.
     if container:
         pass #free(container)
+    print(args)
 
     # allocate some space for our new instructions and update EIP to point into that new space.
     container = eip = alloc(512)
@@ -248,6 +248,7 @@ def dpc (address, *args, **kwargs):
 
     # args are pushed in reverse order, make it a list and reverse it.
     args = list(args)
+    print(args)
     args.reverse()
 
     for arg in args:
@@ -309,27 +310,27 @@ def show_all ():
 
 
 ########################################################################################################################
-if len(sys.argv) != 2:
-    sys.stderr.write("USAGE: debuggee_procedure_call.py <process name | pid>\n")
-    sys.exit(1)
-
-dbg.set_callback(EXCEPTION_BREAKPOINT,       handle_bp)
-dbg.set_callback(EXCEPTION_ACCESS_VIOLATION, handle_av)
-
-try:
-    pid          = int(sys.argv[1])
-    found_target = True
-except:
-    found_target = False
-    for (pid, proc_name) in dbg.enumerate_processes():
-        if proc_name.lower() == sys.argv[1]:
-            found_target = True
-            break
-
-print "attaching to %d" % pid
-
-if found_target:
-    dbg.attach(pid)
-    dbg.debug_event_loop()
-else:
-    sys.stderr.write("target '%s' not found.\n" % sys.argv[1])
+#if len(sys.argv) != 2:
+#    sys.stderr.write("USAGE: debuggee_procedure_call.py <process name | pid>\n")
+#    sys.exit(1)
+#
+#dbg.set_callback(EXCEPTION_BREAKPOINT,       handle_bp)
+#dbg.set_callback(EXCEPTION_ACCESS_VIOLATION, handle_av)
+#
+#try:
+#    pid          = int(sys.argv[1])
+#    found_target = True
+#except:
+#    found_target = False
+#    for (pid, proc_name) in dbg.enumerate_processes():
+#        if proc_name.lower() == sys.argv[1]:
+#            found_target = True
+#            break
+#
+#print "attaching to %d" % pid
+#
+#if found_target:
+#    dbg.attach(pid)
+#    dbg.debug_event_loop()
+#else:
+#    sys.stderr.write("target '%s' not found.\n" % sys.argv[1])

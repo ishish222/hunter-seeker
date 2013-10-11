@@ -1,4 +1,4 @@
-c:fuzzers/fuzzer-acad.py
+c:fuzzers/acad/fuzzer-acad.py
 c:fuzzers/generators
 c:fuzzers/correctors
 c:fuzzers/settings/acad/settings.py
