@@ -946,7 +946,7 @@ class pydbg:
                 signal.signal(signal.SIGINT, def_sigint_handler)
 
         # close the global process handle.
-        self.close_handle(self.h_process)
+        #self.close_handle(self.h_process)
 
 
     ####################################################################################################################

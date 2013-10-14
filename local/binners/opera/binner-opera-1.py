@@ -12,9 +12,10 @@ import os
 import time
 import signal
 from threading import Thread
+import thread
 from threading import Lock
 import ctypes
-import win32pipe, win32file
+import win32pipe, win32file, win32gui
 
 from pydbg import *
 from pydbg.defines import *
@@ -22,6 +23,7 @@ from pydbg.defines import *
 from debuggee_procedure_call import dpc
 
 START_SLEEP = 2
+WAIT_SLEEP = 4
 HC_ADDR = 0x770627e4
 HC_CODE = 0xc0000374
 
@@ -257,6 +259,24 @@ def file_run(filee, dbg):
 def debug_loop(dbg):
     dbg.debug_event_loop()
 
+def enum_handler(hwnd, lParam):
+#    if win32gui.IsWindowVisible(hwnd):
+#    writePipe(win32gui.GetWindowText(hwnd))
+#    writePipe("\n")
+#    if(win32gui.GetWindowText(hwnd).find("Opera") != -1):
+#        writePipe(win32gui.GetWindowText(hwnd))
+#        win32gui.EnumChildWindows(0, enum_child_handler, lParam)
+    writePipe(hex(hwnd) + " - " + win32gui.GetClassName(hwnd))
+    writePipe("\n")
+    win32gui.EnumChildWindows(0, enum_child_handler, lParam)
+
+def enum_child_handler(hwnd, lParam):
+#    if(win32gui.GetClassName(hwnd) == "ConsoleWindowClass"):
+#        writePipe(hex(hwnd) + " - " + win32gui.GetClassName(hwnd))
+#        writePipe("\n")
+    writePipe("\t" + hex(hwnd) + " - " + win32gui.GetClassName(hwnd))
+    writePipe("\n")
+
 def windows_kill(pid):
     kernel32 = ctypes.windll.kernel32
     handle = kernel32.OpenProcess(1, 0, pid)
@@ -331,43 +351,146 @@ def good_handler(dbg):
     pass
 
 def bad_handler(dbg):
-    print("reached bad point")
+    global status
+
+#    l.acquire()
+#    if(status == ""):
+#        status = "BH"
+    status = "BH"
+
+    print("reached BH")
     return DBG_CONTINUE
+
+def thread1_routine():
+    global Thread1Active
+
+    print(Thread1Active)
+    while (Thread1Active == True):
+        print("From thread 1")
+        time.sleep(1)
+    print("Exiting thread 1")
+
+
+def goThread_routine():
+    global dbg
+    global goThreadActive
+
+    print("releasing")
+
+    try:
+        print("1")
+        dbg.debug_event_loop()
+        print("2")
+        while (goThreadActive == True):
+            print("running")
+            time.sleep(1)
+    except Exception, e:
+        print(e)
+
+def killing_routine():
+    global dbg
+
+    print(hex(dbg.h_process))
+#    print(hex(dbg.h_thread))
+    dbg.open_process(dbg.pid)
+    print(hex(dbg.h_process))
+    time.sleep(3)
+#    dbg.terminate_process()
+    dbg.debug_set_process_kill_on_exit(True)
+    dbg.detach()
+
+
+def timer_routine():
+    time.sleep(WAIT_SLEEP)
+    return
+
+def watchThread_routine():
+    global dbg 
+    global status
+
+    timer = Thread(target = timer_routine)
+    timer.start()
+
+    while(timer.is_alive() and status == ""):
+        pass
+
+    if(status == ""):
+        status = "TO"
+
+    dbg.debugger_active = False
+    return
+
+thread1 = Thread(target = thread1_routine)
+goThread = Thread(target = goThread_routine)
 
 def execute(cmds):
     global dbg
 
     cmd = cmds[0]
-    print(cmds)
     args = " ".join(cmds[1:])
-    writePipe(cmd + " " + args)
 
     try:
-        if(cmd == "go"):
-            ok()
+        if(cmd == "waitTest"):
+            global status
+            status = ""
+
+            watchThread = Thread(target = watchThread_routine)
+            watchThread.start()
+            dbg.debugger_active = True
             dbg.debug_event_loop()
+            writePipe(status)
+            ok()
+
+        if(cmd == "listClasses"):
+            win32gui.EnumWindows(enum_handler, None)
+            ok()
+
+        if(cmd == "listTebs"):
+            for teb in dbg.tebs.keys():
+                print(teb)
+                writePipe(hex(teb))
+            ok()
+
+        if(cmd == "snapshot"):
+            dbg.suspend_all_threads()
+            dbg.process_snapshot()
+            dbg.resume_all_threads()
+            ok()
+
+        if(cmd == "restore"):
+            dbg.suspend_all_threads()
+            dbg.process_restore()
+            dbg.resume_all_threads()
+            ok()
+
+        if(cmd == "stop"):
+            global goThreadActive 
+            goThreadActive = False
+            ok()
 
         if(cmd == "attachBinner"):
             attach(dbg, args)
             writePipe("Attached to " + str(dbg.pid))
             ok()
-            #dbg.debug_event_loop()
-            #see for urself
-            # todo
-            #find MessageBoxA
-#            mba = dbg.func_resolve("user32.dll", "MessageBoxA")
-#            print("releasing")
-#            dbg.debug_event_loop()
-#            thread = Thread(target = dbg.debug_event_loop)
-#            thread.start()
-#            print("released")
-#            dpc(mba, 0x0, "test", "test", 0x0)
-#            user32 = windll.user32
-#            user32.MessageBoxA(0x0, "test", "test", 0x0)
-#            while True:
-#                pass
 
-            
+        if(cmd == "killHost"):
+            dbg.terminate_process()
+            dbg.debug_set_process_kill_on_exit(True)
+            dbg.detach()
+            ok()
+
+
+        if(cmd == "startThread1"):
+            global Thread1Active
+            Thread1Active = True
+            thread1.start()
+            ok()
+
+        if(cmd == "stopThread1"):
+            global Thread1Active
+            Thread1Active = False
+            ok()
+
         if(cmd == "installGood"):
             writePipe("Installing good at " + cmds[1])
             ok()
@@ -409,6 +532,7 @@ def main():
 
     try:
         while True:
+            print("reading pipe")
             cmd = readPipe()
             cmds = str.split(cmd[1])
             execute(cmds)

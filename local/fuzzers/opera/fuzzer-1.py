@@ -50,13 +50,31 @@ def report(string):
 def prepare_fuzzbox():
     pass
 
-def read_socket(s):
+def read_log_socket(f, s):
+    global lastResponse
     while True:
         data = s.recv(settings.buffer_size)
+        
+        f.write(data)
+        if(data == "OK"): 
+            f.write("\n")
+            f.flush()
+            break
+        else: 
+            lastResponse = data
+    return lastResponse
+
+def read_socket(s):
+    global lastResponse
+    while True:
+        data = s.recv(settings.buffer_size)
+        
         print("< " + str(data))
         if(data == "OK"): 
             break
-    return data
+        else: 
+            lastResponse = data
+    return lastResponse
 
 #def read_socket(s):
 #    data = s.recv(buffer_size)
@@ -194,6 +212,7 @@ my_generator.mutations=3
 #setup box
 def looop():
     global s
+    global lastResponse
 
     powerofff()
     start()
@@ -207,14 +226,20 @@ def looop():
     write_socket(s, "spawn " + settings.app_path)
     read_socket(s)
 
+    time.sleep(2)
+
     write_socket(s, "binTest")
     read_socket(s)
 
-    write_socket(s, "ps")
-    read_socket(s)
+#    write_socket(s, "ps")
+#    read_socket(s)
 
     write_socket(s, "attachBinner opera.exe")
     read_socket(s)
+
+#    pid = lastResponse.split()[2]
+#    print("Host PID: "+pid+"")
+
 
 #    write_socket(s, "installGood 0x77c00000")
 #    read_socket(s)
@@ -222,14 +247,21 @@ def looop():
     write_socket(s, "installBad " + hex(BAD_ADDR_1))
     read_socket(s)
 
-    write_socket(s, "go")
-    read_socket(s)
-
     sample_path = my_generator.generate_one()
     sample_file = os.path.basename(sample_path)
 
+    write_socket(s, "snapshot")
+    read_socket(s)
+
     write_socket(s, "testFile " + sample_file)
     read_socket(s)
+
+#    while(lastResponse == "BH" or lastResponse == "TO"):
+    while True:
+        sample_path = my_generator.generate_one()
+        sample_file = os.path.basename(sample_path)
+        write_socket(s, "testFile " + sample_file)
+        read_socket(s)
 
     while True:
         pass

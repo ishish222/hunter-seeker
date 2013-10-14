@@ -3,6 +3,7 @@ c:fuzzers/generators
 c:fuzzers/correctors
 c:fuzzers/settings/opera-local/settings.py
 c:blob/res/theora/out.ogv
+c:blob/res/theora/out-1.ogv
 s:fuzzers/opera/index.html
 s:fuzzers/opera/runner.ps1
 s:binners/paimei

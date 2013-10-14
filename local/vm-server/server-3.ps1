@@ -56,6 +56,16 @@ function write-pipe($string)
 	$global:pipeStream.flush()
 }
 
+function read-pipe-until-ok() 
+{
+    do
+	{	
+		$ans = read-pipe 100
+		write-socket $ans
+	}
+	while($ans -ne "OK")
+}
+
 function read-socket($count)
 {
 	$i = $global:ns.read($buffer, 0, $buffer.length)
@@ -142,17 +152,18 @@ function dispatch-command([string]$command, [system.net.sockets.tcpclient]$clien
 
 	elseif($cmdarray[0] -eq "testFile")
 	{
+        "testFile"
         $file = $cmdarray[1]
-#		write-pipe "waitTest"
+		write-pipe "waitTest"
 #		$ans = read-pipe 100
 #		write-socket $ans
 #       ok
 #		Invoke-item $cmdarray[1]
-        ".\runner.ps1 -item $file"
+#        ".\runner.ps1 -item $file"
         invoke-expression ".\runner.ps1 -item $file"
-		$ans = read-pipe 100
-		write-socket $ans
-        ok
+
+        read-pipe-until-ok
+#        ok
 	}
 
 	elseif($cmdarray[0] -eq "cmd")
@@ -243,6 +254,14 @@ function dispatch-command([string]$command, [system.net.sockets.tcpclient]$clien
         ok
 	}
 
+	elseif($cmdarray[0] -eq "kill")
+	{
+        "kill-pid " + $cmdarray[1]
+		kill-pid $cmdarray[1]
+		write-socket "Pid " + $cmdarray[1] + " is dead"
+        ok
+	}
+
 	elseif($cmdarray[0] -eq "injectLast")
 	{
 		$id = $global:lastProc.id
@@ -320,12 +339,8 @@ function dispatch-command([string]$command, [system.net.sockets.tcpclient]$clien
     {
         "Piping: " + $command
         write-pipe $command
-		do
-		{	
-			$ans = read-pipe 100
-			write-socket $ans
-		}
-		while($ans -ne "OK")
+        read-pipe-until-ok
+
     }
 }
 
