@@ -16,6 +16,7 @@ second = "testbox-second"
 
 samples_shared_path = "../samples/shared"
 samples_saved = "../samples/saved"
+samples_binned = "../samples/binned"
 fuzzbox_port = 12345
 app_path = "C:\\Program Files\\Opera\\16.0.1196.80\\Opera.exe"
 corrector = None

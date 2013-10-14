@@ -63,7 +63,7 @@ function read-pipe-until-ok()
 		$ans = read-pipe 100
 		write-socket $ans
 	}
-	while($ans -ne "OK")
+	while($ans -ne "-=OK=-")
 }
 
 function read-socket($count)
@@ -85,7 +85,7 @@ function write-socket($string)
 function ok()
 {
     start-sleep -m 500
-    write-socket("OK")
+    write-socket("-=OK=-")
 }
 
 function get-pipe-stream()
@@ -152,7 +152,6 @@ function dispatch-command([string]$command, [system.net.sockets.tcpclient]$clien
 
 	elseif($cmdarray[0] -eq "testFile")
 	{
-        "testFile"
         $file = $cmdarray[1]
 		write-pipe "waitTest"
 #		$ans = read-pipe 100

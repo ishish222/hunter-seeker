@@ -14,6 +14,7 @@ mkdir -p $TARGET_DIR/client
 mkdir -p $TARGET_DIR/samples/shared
 mkdir -p $TARGET_DIR/samples/saved
 mkdir -p $TARGET_DIR/samples/other
+mkdir -p $TARGET_DIR/samples/binned
 mkdir -p $TARGET_DIR/samples/binning/1
 mkdir -p $TARGET_DIR/samples/binning/2
 mkdir -p $TARGET_DIR/samples/binning/3

@@ -16,6 +16,7 @@ import thread
 from threading import Lock
 import ctypes
 import win32pipe, win32file, win32gui
+import random
 
 from pydbg import *
 from pydbg.defines import *
@@ -78,7 +79,7 @@ l = Lock()
 
 def ok():
     time.sleep(0.5)
-    writePipe("OK")
+    writePipe("-=OK=-")
     win32file.FlushFileBuffers(ph)
 
 def getPipe(name):
@@ -156,28 +157,36 @@ def check_blacklists(dbg, e_addr):
     return False
 
 def handle_crash(dbg, reason=""):
-    #lock
+    global status
+    global crash_bin
+    global crash_reason
 
-    l.acquire()
+#    l.acquire()
     crash_bin = cb
     crash_bin.record_crash(dbg)
 
     #create dossier
     if(reason == "hc"):
-        print("Probable crash reason: hc (crash info needs reinterpretation)")
-        print("")
+        crash_reason = "hc"
+        writePipe("Probable crash reason: hc (crash info needs reinterpretation)\n")
+        writePipe("")
     if(reason == "uaf"):
-        print("Probable crash reason: uaf")
-        print("")
+        crash_reason = "uaf"
+        writePipe("Probable crash reason: uaf\n")
+        writePipe("")
+    else:
+        crash_reason = "unk"
 
-    print(crash_bin.crash_synopsis())
+    writePipe(crash_bin.crash_synopsis())
+    status = "CR"
 
     #save sample
     #separate dirs for uafs & hcs
 
     #release
-    l.release()
-    dbg.terminate_process()    
+#    ok()
+#    l.release()
+#    dbg.terminate_process()    
     return DBG_CONTINUE
 
 
@@ -196,27 +205,6 @@ def handle_av(dbg):
         return DBG_CONTINUE
 
     handle_crash(dbg)
-    return DBG_CONTINUE
-
-#    crash_bin = utils.crash_binning.crash_binning()
-    crash_bin = cb
-    crash_bin.record_crash(dbg)
-    
-    if(testfile(samples_dir + "\\" + filee)):
-        status = "crashed"
-        dbg.terminate_process()
-        binn = hex(crash_bin.last_crash.exception_address)
-        logf.write("Bin: " + binn)
-        testdir(crashed_dir + "\\" + binn)
-        if(not testfile(crashed_dir + "\\" + binn + "\\" + binn + ".txt")):
-            so = open(crashed_dir + "\\" + binn + "\\" + binn + ".txt", "w")
-            so.write(crash_bin.crash_synopsis())
-            so.close()
-        os.rename(samples_dir + "\\" + filee, crashed_dir + "\\" + binn + "\\" + filee)
-        logf.write("status: crashed")
-        if(testfile(samples_dir + "\\" + filee + ".bak")):
-            os.remove(samples_dir + "\\" + filee + ".bak")
-    l.release()
     return DBG_CONTINUE
 
 def handle_bp(dbg):
@@ -303,7 +291,7 @@ def attach(dbg, imagename):
 
 def setup_dbg(dbg):
     dbg.set_callback(EXCEPTION_ACCESS_VIOLATION, handle_av)
-    dbg.bp_set(0x770627e4, handler=handle_bp)
+#    dbg.bp_set(0x770627e4, handler=handle_bp)
 
 def check_app():
     global dbg
@@ -358,7 +346,6 @@ def bad_handler(dbg):
 #        status = "BH"
     status = "BH"
 
-    print("reached BH")
     return DBG_CONTINUE
 
 def thread1_routine():
@@ -404,9 +391,33 @@ def timer_routine():
     time.sleep(WAIT_SLEEP)
     return
 
+def breaking_routine():
+    global dbg
+
+    time.sleep(int(WAIT_SLEEP/2))
+
+    print("breaking")
+
+    addr = int(random.random() * 0xffffffff)
+    threads =  dbg.enumerate_threads()
+    thread_num = int(random.random() * len(threads))
+    print(str(thread_num) + ": " + str(threads[thread_num]))
+    
+    thread_handle = dbg.open_thread(threads[thread_num])
+    thread_context = dbg.get_thread_context(thread_handle)
+    thread_context.Eip = addr
+    dbg.set_thread_context(thread_context, thread_handle)
+
+
 def watchThread_routine():
     global dbg 
     global status
+
+    breaking = True
+
+    if(breaking == True):
+        breaker = Thread(target = breaking_routine)
+        breaker.start()
 
     timer = Thread(target = timer_routine)
     timer.start()
@@ -419,9 +430,6 @@ def watchThread_routine():
 
     dbg.debugger_active = False
     return
-
-thread1 = Thread(target = thread1_routine)
-goThread = Thread(target = goThread_routine)
 
 def execute(cmds):
     global dbg
@@ -438,7 +446,7 @@ def execute(cmds):
             watchThread.start()
             dbg.debugger_active = True
             dbg.debug_event_loop()
-            writePipe(status)
+            writePipe("Status: " + status)
             ok()
 
         if(cmd == "listClasses"):
@@ -449,6 +457,32 @@ def execute(cmds):
             for teb in dbg.tebs.keys():
                 print(teb)
                 writePipe(hex(teb))
+            ok()
+
+
+        if(cmd == "cbEip"):
+            global crash_bin
+
+            writePipe("0x%x" % crash_bin.last_crash.exception_address)
+            ok()
+
+        if(cmd == "cbCrashSynopsis"):
+            global crash_bin
+
+            writePipe(crash_bin.crash_synopsis())
+            ok()
+
+        if(cmd == "cbReason"):
+            global crash_reason
+
+            writePipe(crash_reason)
+            ok()
+
+        if(cmd == "cbStackUnwind"):
+            global crash_bin
+
+            for call_frame in crash_bin.last_crash.stack_unwind:
+                writePipe(call_frame + "\n")
             ok()
 
         if(cmd == "snapshot"):
@@ -480,15 +514,9 @@ def execute(cmds):
             ok()
 
 
-        if(cmd == "startThread1"):
-            global Thread1Active
-            Thread1Active = True
-            thread1.start()
-            ok()
-
-        if(cmd == "stopThread1"):
-            global Thread1Active
-            Thread1Active = False
+        if(cmd == "installHandlers"):
+            setup_dbg(dbg)
+            writePipe("AV handlers in place")
             ok()
 
         if(cmd == "installGood"):
@@ -525,6 +553,7 @@ def main():
     dbg = pydbg()
 #    time.sleep(START_SLEEP)
 
+
     ph = getPipe(my_pipe)
     writePipe("OK")
 
@@ -532,7 +561,6 @@ def main():
 
     try:
         while True:
-            print("reading pipe")
             cmd = readPipe()
             cmds = str.split(cmd[1])
             execute(cmds)

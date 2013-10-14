@@ -44,6 +44,18 @@ poweroff = ["VBoxManage", "controlvm", "", "poweroff"]
 restorecurrent = ["VBoxManage", "snapshot", "", "restorecurrent"]
 restorestart = ["VBoxManage", "snapshot", "", "restore", "[x] start"]
 
+def testdir(x): 
+    if(os.path.isdir(x) == False):
+        os.mkdir(x)
+
+def testfile(x):
+    return os.path.exists(x)
+
+testdir(settings.samples_binned)
+testdir(settings.samples_binned + "/hc")
+testdir(settings.samples_binned + "/uaf")
+testdir(settings.samples_binned + "/unk")
+
 def report(string):
     my_logger.info("[" + settings.log_name + ":" + fuzzbox_name + "] " + string);
 
@@ -56,7 +68,7 @@ def read_log_socket(f, s):
         data = s.recv(settings.buffer_size)
         
         f.write(data)
-        if(data == "OK"): 
+        if(data == "-=OK=-"): 
             f.write("\n")
             f.flush()
             break
@@ -66,14 +78,25 @@ def read_log_socket(f, s):
 
 def read_socket(s):
     global lastResponse
+    global status
+    
+    status = ""
+    data = ""
+
     while True:
-        data = s.recv(settings.buffer_size)
+        data += s.recv(settings.buffer_size)
         
-        print("< " + str(data))
-        if(data == "OK"): 
+        if(data[-6:] == "-=OK=-"): 
+            lastResponse = data[:-6]
             break
-        else: 
-            lastResponse = data
+
+    off = data.find("Status: ")
+    if(off != -1):
+#        print(data[off:off+10])
+        status = data[off+8:off+10]
+    
+    print("" + str(data[:-6]))
+    print("")
     return lastResponse
 
 #def read_socket(s):
@@ -141,58 +164,34 @@ def killLast():
     write_socket(s, "killLast")
     read_socket(s)
 
-def proceed():
-    #killing explorer
+def proceed1():
     write_socket(s, "killExplorer")
     read_socket(s)
 
-    #spawning acad
+    write_socket(s, "startBinner")
+    read_socket(s)
+    
+    s.settimeout(settings.fuzzbox_timeout) 
+
+    return True
+
+def proceed2():
     write_socket(s, "spawn " + settings.app_path)
     read_socket(s)
 
-    #create conversation with binner
+    time.sleep(2)
 
-    #inject to spawned
-#    write_socket(s, "injectLast")
-#    read_socket(s)
-#    read_socket(s)
-#    read_socket(s)
-#    read_socket(s)
-
-    #acad hooks
-#    write_socket(s, "pipe installTestHook2")
-#    read_socket(s)
-#    write_socket(s, "pipe installTestHook3")
-#    read_socket(s)
-#    write_socket(s, "pipe installTestHook4")
-#    read_socket(s)
-#    write_socket(s, "pipe installTestHook5")
-#    read_socket(s)
-#    write_socket(s, "pipe installTestMod7")
-#    read_socket(s)
-
-    #searching handles
-#    write_socket(s, "pipe FindHandles Afx:00400000:b:00010011:00000006")
-#    target = read_socket(s)
-#    target_class = target.split("-")[1]
-#    read_socket(s)
-#    print("Setting target: " + str(target_class))
-    
-    #assuming target class is Afx:00400000:b:00010011:00000006:0038052 / changes every spawn?
-#    write_socket(s, "pipe SetTargetClass " + str(target_class))
-#    read_socket(s)
-
-    #closing windows
-#    write_socket(s, "pipe KillClass")
-#    read_socket(s)
-
-    print("sleeping")
-    time.sleep(3)
-
-    #enter test mode
-    write_socket(s, "testmode enter")
+    write_socket(s, "binTest")
     read_socket(s)
-    s.settimeout(my_timeout) 
+
+    write_socket(s, "attachBinner opera.exe")
+    read_socket(s)
+
+    write_socket(s, "installHandlers")
+    read_socket(s)
+
+    write_socket(s, "installBad " + hex(BAD_ADDR_1))
+    read_socket(s)
 
     return True
 
@@ -205,9 +204,76 @@ def sigkill_handler(signum, frame):
 #    revert()
     quit()
         
-#setup fuzzer for acad
+#setup fuzzer
 my_generator = generator.Generator(origin_path, samples_shared_path, ".ogv", changer.Changer, corrector = None)
 my_generator.mutations=3
+
+def handle_crashing_sample(sample_path, sample_file):
+    global s
+
+    print("Crash procedures")
+
+    lines = []
+    eip = ""
+    reason = ""
+
+    write_socket(s, "cbStackUnwind")
+    read_socket(s)
+    lines = lastResponse.split("\n")
+
+    write_socket(s, "cbEip")
+    read_socket(s)
+    eip = lastResponse
+
+    write_socket(s, "cbReason")
+    read_socket(s)
+    reason = lastResponse
+
+    path = settings.samples_binned
+
+    if(reason == "hc"):
+        path += "/hc" + "/" + eip
+        testdir(path)
+        #hc analysis
+    elif(reason == "uaf"):
+        path += "/uaf" + "/" + eip
+        testdir(path)
+    else:
+        path += "/unk" + "/" + eip
+        testdir(path)
+
+    if(testfile(path + "/dossier.txt") == False):
+        f = open(path + "/dossier.txt", "w+")
+
+        write_socket(s, "cbCrashSynopsis")
+        read_socket(s)
+        synopsis = lastResponse
+
+        f.write(synopsis)
+        f.close()
+
+        #dump signatures based on stack
+
+    f = open(path + "/" + sample_file+ ".sig1", "w+")
+    for i in range(0, min(len(lines), 5)):
+        f.write(lines[i] + "\n")
+    f.close
+
+    f = open(path + "/" + sample_file+ ".sig2", "w+")
+    if(len(lines) > 5):
+        for i in range(5, min(len(lines), 10)):
+            f.write(lines[i] + "\n")
+    f.close
+
+    f = open(path + "/" + sample_file+ ".sig3", "w+")
+    if(len(lines) > 10):
+        for i in range(10, min(len(lines), 15)):
+            f.write(lines[i] + "\n")
+    f.close
+
+    os.rename(sample_path, path + "/" + sample_file)
+    #must be removed, so that the next run wont be affected
+
 
 #setup box
 def looop():
@@ -219,141 +285,55 @@ def looop():
     signal.signal(signal.SIGINT, sigkill_handler)
     connect()
     init()
+    proceed1()
 
-    write_socket(s, "startBinner")
-    read_socket(s)
-
-    write_socket(s, "spawn " + settings.app_path)
-    read_socket(s)
-
-    time.sleep(2)
-
-    write_socket(s, "binTest")
-    read_socket(s)
-
-#    write_socket(s, "ps")
-#    read_socket(s)
-
-    write_socket(s, "attachBinner opera.exe")
-    read_socket(s)
-
-#    pid = lastResponse.split()[2]
-#    print("Host PID: "+pid+"")
-
-
-#    write_socket(s, "installGood 0x77c00000")
-#    read_socket(s)
-
-    write_socket(s, "installBad " + hex(BAD_ADDR_1))
-    read_socket(s)
-
-    sample_path = my_generator.generate_one()
-    sample_file = os.path.basename(sample_path)
-
-    write_socket(s, "snapshot")
-    read_socket(s)
-
-    write_socket(s, "testFile " + sample_file)
-    read_socket(s)
-
-#    while(lastResponse == "BH" or lastResponse == "TO"):
-    while True:
-        sample_path = my_generator.generate_one()
-        sample_file = os.path.basename(sample_path)
-        write_socket(s, "testFile " + sample_file)
-        read_socket(s)
-
-    while True:
-        pass
-
-    exit()
-
-    while True:
-        try:
-            ret = proceed()
-            if(ret == True):
-                break
-            else:
-                write_socket(s, "testmode exit")
-                read_socket(s)
-                killLast()
-                continue
-        except Exception as e:
-            print(e)
-            write_socket(s, "testmode exit")
-            read_socket(s)
-            killLast()
-            continue
-    
-    
-    if(settings.testing):
-        #restart until passes test?
-        while(True):
-            write_socket(s, "Z:\\original.dwg")
-            try:
-                read_socket(s)
-                break
-            except socket.timeout:
-                print "timeout/restarting"
-                restart()
-                connect()
-                init()
-                proceed()
-                continue
-    
     sample_count = 0
     last_time_check = time.localtime()
-    
-    #actual testing
-    while(True):
-        sample_path = my_generator.generate_one()
-        sample_file = os.path.basename(sample_path)
-        write_socket(s, "Z:\\"+str(sample_file))
+
+    #start testing
+
+    while True:
         try:
-            if(read_socket(s) == "OK"):
-                pass
-    #            continue
-    #            command = ["rm", sample_path]
-    #            os.spawnv(os.P_WAIT, "/bin/rm", command)
-            else:
-                 raise ErrorDetectedException
+            proceed2()
+
+            while(status != "CR"):
+                sample_path = my_generator.generate_one()
+                sample_file = os.path.basename(sample_path)
+                write_socket(s, "testFile " + sample_file)
+                read_socket(s)
+                if(status == "BH" or status == "TO"):
+                    os.remove(sample_path)
+
+                # keep track on sample count
+                sample_count += 1
+                if(sample_count % 100 == 0):
+                    current_time = time.localtime()
+                    elapsed = time.mktime(current_time) - time.mktime(last_time_check)
+                    report("Tested: " + str(sample_count))
+                    report("100 tested in " + str(elapsed) + " seconds")
+                    report("Last speed: " + str(10/elapsed) + " tps") 
+                    last_time_check = current_time
+            
+            handle_crashing_sample(sample_path, sample_file)
+            write_socket(s, "killHost")
+            read_socket(s)
+
         except socket.timeout:
-            print "timeout, saving & restarting"
-            print "saving " + str(sample_path)
-            command = ["cp", sample_path, samples_saved]
-            os.spawnv(os.P_WAIT, "/bin/cp", command)
+            print "socket timeout, restarting"
             restart()
             connect()
             init()
-            proceed()
-        except ErrorDetectedException:
-            print "error, restarting"
-            write_socket(s, "testmode exit")
-            read_socket(s)
-            killLast()
-            proceed()
-     
-        sample_count = sample_count + 1
-        os.remove(sample_path)
-        if(sample_count % 100 == 0):
-            current_time = time.localtime()
-            elapsed = time.mktime(current_time) - time.mktime(last_time_check)
-            report("Tested: " + str(sample_count))
-            report("100 tested in " + str(elapsed) + " seconds")
-            report("Last speed: " + str(10/elapsed) + " tps") 
-            last_time_check = current_time
-            
-    s.settimeout(None)
-    
-    #exit test mode
-    write_socket(s, "testmode exit")
-    read_socket(s)
-    
-    write_socket(s, "quit")
-    read_socket(s)
+            proceed1()
+#        except ErrorDetectedException:
+#            print "error, restarting"
+#            write_socket(s, "testmode exit")
+#            read_socket(s)
+#            killLast()
+#            proceed1()
+        
+#    s.settimeout(None)
     
     s.close()
-    
     print("Finished")
 
 while True:
