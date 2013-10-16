@@ -179,7 +179,7 @@ def proceed2():
     write_socket(s, "spawn " + settings.app_path)
     read_socket(s)
 
-    time.sleep(2)
+    time.sleep(settings.start_sleep)
 
     write_socket(s, "binTest")
     read_socket(s)
@@ -311,8 +311,15 @@ def looop():
                     elapsed = time.mktime(current_time) - time.mktime(last_time_check)
                     report("Tested: " + str(sample_count))
                     report("100 tested in " + str(elapsed) + " seconds")
-                    report("Last speed: " + str(10/elapsed) + " tps") 
+                    report("Last speed: " + str(100/elapsed) + " tps") 
                     last_time_check = current_time
+                if(sample_count % settings.restart_count == 0):
+                    report("Tested: " + str(sample_count) + ", will restart")
+                    restart()
+                    connect()
+                    init()
+                    proceed1()
+
             
             handle_crashing_sample(sample_path, sample_file)
             write_socket(s, "killHost")
@@ -337,6 +344,7 @@ def looop():
     print("Finished")
 
 while True:
+    report("Starting")
     try:
         looop()
     except Exception as e:

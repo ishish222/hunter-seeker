@@ -22,4 +22,7 @@ app_path = "C:\\Program Files\\Opera\\16.0.1196.80\\Opera.exe"
 corrector = None
 buffer_size = 4096
 log_name = "HS:Opera"
-fuzzbox_timeout = 20.0
+fuzzbox_timeout = 10.0
+start_sleep = 3
+restart_count = 1000
+

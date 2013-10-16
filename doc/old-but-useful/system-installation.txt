@@ -1,0 +1,21 @@
+Install dependencies (system-requirements.txt)
+
+create user
+add user to vboxuser group
+
+Configure Apache:
+add -D PHP5 to conf.d
+listen on default vhost on port 88487
+
+Configure phpvirtualbox:
+Update config (user, password)
+
+[scgi hack]
+
+[install & test fuzzbox]
+
+[move apache to another port]
+
+[nginx config]
+
+[hs config]

@@ -1,0 +1,80 @@
+Configuring fuzzbox entry in HS:
+
+1. Load/create config in python (my_config)
+example:
+import hs
+my_config = hs.Config.load()
+my_config
+
+2. Create fuzzbox (f)
+example:
+import fuzzbox
+f = fuzzbox.Fuzzbox(<name>) (<name> must match VBox name)
+
+4. Adjust settings
+example:
+f.step = 100
+f.generator.mutations = 2
+f.generator.origin_path = '/home/ish/projects/2012-08-02-korrino/implementation-1/origins/test.flv'
+
+dst_path
+
+5. Register fuzzbox
+example:
+my_config.register_fuzzbox(f)
+
+9. Save config
+example:
+hs.Config.save(my_config)
+
+Configuring fuzzbox machine:
+
+1. Install guest additions 
+
+2. Install PowerShell (for tools in PS)
+
+3. Install analyzed application & adjust instrumentation (customize tools)
+
+4. Create folders for samples & tools
+example:
+mkdir -p <f.saved_dir>
+mkdir -p <f.generated_dir>
+mkdir -p <f.tools_dir>
+
+5. Copy approporiate tools & _adjust_id_ (!)
+example:
+cp -r <my_config.main_dir>src/tools/* <f.tools_dir>
+
+8. Configure permissive settings:
+PS: set-executionpolicy unrestricted
+[merge registry information]
+
+[test oracle]
+
+6. Configure approporiate samples folders
+example:
+share path in my_config.fuzzboxes['xpsp2-fuzzbox2'].saved_dir as saved for machine 'xpsp2-fuzzbox2'
+share path in my_config.fuzzboxes['xpsp2-fuzzbox2'].generator.dest_path as samples for machine 'xpsp2-fuzzbox2'
+
+7. Configure networking
+example:
+Configure host-only if which connects to Nginx component
+
+8. Configure permissive settings:
+PS: set-executionpolicy unrestricted
+
+replace drWatson:
+HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\AeDebug
+Auto=1
+#Debugger="C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe" -File "\\vboxsrv\tools\debug2.ps1" -ppp %ld
+copy powershell.exe to system32 & run registry update:
+Debugger=powershell.exe -File "\\vboxsrv\tools\debug2.ps1" -ppp %ld
+
+5. Do additional machine configuration (e.g. immutable disks, load disk into tmpfs, etc.)
+
+6. Save machine state with delayed looper execution
+example:
+PS: $(start-sleep -seconds 1 | out-host; $?) -and $(\\vboxsrv\tools\looper.ps1 | out-host; $?)
+
+
+6. Test

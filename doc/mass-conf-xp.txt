@@ -1,0 +1,29 @@
+for i in {01..06}; do cp clean/ready-1.vdi hs2-$i.vdi; done
+for i in {01..06}; do VBoxManage internalcommands sethduuid hs2-$i.vdi; done
+for i in {01..06}; do VBoxManage createvm --name "hs2-$i"; done
+for i in {01..06}; do VBoxManage registervm "/home/hs1/VirtualBox VMs/hs2-$i/hs2-$i.vbox"; done
+
+for i in {01..06}; 
+do
+    VBoxManage sharedfolder add hs2-$i --name shared --hostpath /home/hs1/hs2-current-deploy/samples/shared;
+    VBoxManage sharedfolder add hs2-$i --name binned --hostpath /home/hs1/hs2-current-deploy/samples/binned; 
+    VBoxManage sharedfolder add hs2-$i --name saved --hostpath /home/hs1/hs2-current-deploy/samples/saved; 
+    VBoxManage sharedfolder add hs2-$i --name server --hostpath /home/hs1/hs2-current-deploy/server; 
+done;
+
+for i in {01..06}; 
+do
+    VBoxManage modifyvm hs2-$i --nic1 hostonly --nictype1 Am79C973 --hostonlyadapter1 vboxnet0; 
+    VBoxManage modifyvm hs2-$i --memory 1024; 
+    VBoxManage modifyvm hs2-$i --vrde on; 
+    VBoxManage modifyvm hs2-$i --vrdeport 4000-4100; 
+    VBoxManage modifyvm hs2-$i --hwvirtex on; 
+done;
+
+
+for i in {01..06}; 
+do
+    VBoxManage storagectl hs2-$i --name "IDE Controller" --add ide --controller PIIX3; 
+    VBoxManage storageattach hs2-$i --storagectl "IDE Controller" --port 0 --device 0 --type hdd --medium /home/hs1/machines/hs2-$i.vdi; 
+done;
+

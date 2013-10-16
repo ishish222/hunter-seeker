@@ -1,0 +1,7 @@
+Test for code coverage: 
+- how many different instructions are executed during sample execution?
+- how many instructions are executed during sample execution? (loops included)
+- how many instructions parse the sample (taint analysis)
+
+Test original samples.
+Test generated samples based on original sample.

@@ -21,3 +21,8 @@ reg add hklm\software\microsoft\.netframework /v OnlyUseLatestCLR /t REG_DWORD /
 install pywin32 (move dlls like pywintypes.dll to Lib\site-packages\win32)
 
 create default launcher for samples
+
+set opera as launcher!
+in ps: set-executionpolicy bypass
+turn off fw!
+

@@ -1,0 +1,139 @@
+Loading metrics:
+from metrics import *
+M = Metrics(None, None)
+M.add_all()
+M.start_monitor()
+
+--
+
+Loading metrics with config & stats:
+from config.config import Config
+from reports.stats import Stats
+from metrics import *
+my_config = Config.load()
+my_stats = Stats.load()
+my_metrics = Metrics(my_config, my_stats)
+my_metrics
+
+
+--
+
+Viewing stats:
+
+from reports.stats import *
+s = Stats.load()
+fs = s.fuzzbox_stats
+
+--
+
+Adding fuzzbox:
+
+python
+from config.config import Config
+c = Config.load()
+c.fuzzboxes
+
+from fuzzbox import Fuzzbox
+from generators.generator import *
+from generators.changer import *
+
+new_fuzzbox = Fuzzbox()
+new_fuzzbox.machine_string = "win7-fuzzbox1"
+new_fuzzbox.generator = Generator(c.origins_dir + "test1.orig", c.samples_dir + new_fuzzbox.machine_string, ".sample", Changer)
+new_fuzzbox.my_saved_dir = c.saved_dir + "win7-fuzzbox1"
+
+c.register_fuzzbox(new_fuzzbox)
+c.fuzzboxes
+Config.save(c)
+
+--
+
+Fuzzbox operations:
+
+Server start(python, from server import *, main)
+Activate registered fuzzboxes (SIGUSR1)
+fuzzbox starts (Fuzzbox.start())
+fuzzbox sends ready
+server uses fuzzbox specific generator to generate initial samples
+loop:
+    fuzzbox consumes samples & sends report
+    server uses fuzzbox specific generator to generate samples
+    server adds report to fuzzbox report database
+Deactivate registered fuzzboxes (SIGUSR2)
+fuzzbox stops
+config is being saved
+
+--
+
+Fuzzbox startup (server-side):
+start virtual machine from saved state
+
+Fuzzbox startup (client-side):
+Looper reads own id (env var)
+Looper sends ready and reads answer (runner script & parameters, saved dir)
+loop:
+    Looper loops runner until consumed all samples
+    Looper sends report & reads answer (runner script & parameters, saved dir)
+
+Runner runs samples & saves if error, deletes if no error
+
+Fuzzbox stop (server-side):
+stop virtual machine & revert state
+
+Fuzzbox stop (client-side):
+nothing
+
+--
+
+Fuzzbox setup:
+
+shared folders
+connection with SCGI serwer
+delayed looper spawn
+proper snapshot
+
+settings:
+
+env settings:
+    fuzzbox_id = [id]
+    looper = "\\vboxsrv\tools\looper.ps1"
+    feeder = "\\vboxsrv\tools\feeder.ps1"
+
+apps:    
+    PS permissive
+    IE permissive
+    IE notabs
+
+registry entries:
+    disable UI:         HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\Windows Error Reporting\DontShowUI = 1
+    enable debugger:    HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\AeDebug\Auto = 1
+    debugger script:    HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\AeDebug\Debugger = C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe" -File "\\vboxsrv\tools\debug2.ps1" -ppp %ld
+
+--
+
+Test setup:
+- choose application
+- choose instrumentation
+- configure fuzzboxes
+ + machines: 
+    shared folders, 
+    immutable disks, 
+    connection, 
+    delayed execution, 
+    execution-policy,
+    ie: allow all, disable tabs, disable automatic recovery, disable all for intranet (fixes COM connections)
+ + fuzzbox description: 
+    generator, 
+    origins, 
+    samples, 
+    machine string
+- start server
+- start fuzz
+- stop fuzz
+
+--
+
+Fuzzbox shutdown:
+first poweroff machines
+then ctrl-c to server
+clean samples dirs

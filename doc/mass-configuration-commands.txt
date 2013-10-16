@@ -1,0 +1,142 @@
+for i in {01..23}; do /opt/VirtualBox/VBoxManage createvm --name xpsp3-$i --ostype WindowsXP --register; done
+for i in {01..23}; do /opt/VirtualBox/VBoxManage modifyvm xpsp3-$i --memory 512; done
+for i in {01..23}; do /opt/VirtualBox/VBoxManage storagectl xpsp3-$i --name "IDE Controller" --add ide --controller PIIX3 ; done
+for i in {01..23}; do /opt/VirtualBox/VBoxManage storageattach xpsp3-$i --storagectl "IDE Controller" --port 0 --device 0 --type hdd --medium xpsp3-$i.vdi; done
+for i in {01..23}; do /opt/VirtualBox/VBoxManage modifyvm xpsp3-$i --nic1 hostonly; done
+for i in {01..23}; do /opt/VirtualBox/VBoxManage modifyvm xpsp3-$i --hostonlyadapter1 vboxnet0; done
+for i in {01..23}; do /opt/VirtualBox/VBoxManage snapshot xpsp3-$i take "[x] started" --pause; done
+for i in {01..23}; do /opt/VirtualBox/VBoxManage controlvm xpsp3-$i savestate; done
+
+for i in {01..23}; do echo mkdir /home/hs1/hs-current/fuzzboxes/xpsp3-$i; done
+for i in {01..23}; do 
+ mkdir -p /home/hs1/hs-current/fuzzboxes/xpsp3-$i/samples; 
+ mkdir -p /home/hs1/hs-current/fuzzboxes/xpsp3-$i/saved; 
+ mkdir -p /home/hs1/hs-current/fuzzboxes/xpsp3-$i/tools; 
+done
+for i in {01..23}; do /opt/VirtualBox/VBoxManage controlvm xpsp3-$i acpipowerbutton; done
+
+for i in {01..10}; do /opt/VirtualBox/VBoxManage controlvm xpsp3-$i poweroff; done
+for i in {01..10}; do /opt/VirtualBox/VBoxManage snapshot xpsp3-$i restore "[x] start"; done
+
+for i in {01..23}; do /opt/VirtualBox/VBoxManage controlvm xpsp3-$i poweroff; done
+for i in {01..23}; do /opt/VirtualBox/VBoxManage snapshot xpsp3-$i restore "[x] start"; done
+for i in {01..23}; do /opt/VirtualBox/VBoxManage startvm xpsp3-$i --type headless; sleep 10;  done
+
+for i in {01..10}; do wget http://127.0.0.1/cgi/index?action=initialize_box\&id=xpsp3-$i -O - ; sleep 25;  done
+for i in {01..23}; do wget http://127.0.0.1/cgi/index?action=initialize_box\&id=xpsp3-$i -O - ; sleep 15;  done
+
+for i in {01..23}; do /opt/VirtualBox/VBoxManage sharedfolder add xpsp3-$i --name tools --hostpath /home/hs1/hs-current/fuzzboxes/xpsp3-$i/tools; done 
+for i in {01..23}; do /opt/VirtualBox/VBoxManage sharedfolder add xpsp3-$i --name samples --hostpath /home/hs1/hs-current/fuzzboxes/xpsp3-$i/samples; done 
+for i in {01..23}; do /opt/VirtualBox/VBoxManage sharedfolder add xpsp3-$i --name saved --hostpath /home/hs1/hs-current/fuzzboxes/xpsp3-$i/saved; done 
+
+for i in {01..23}; do cp /home/hs1/hs-current/src/tools/tools-xpsp2/* /home/hs1/hs-current/fuzzboxes/xpsp3-$i/tools; done
+
+for i in {01..23}; do sed -i.bp s/id\ -value\ 0/id\ -value\ \"xpsp3-$i\"/ xpsp3-$i/tools/settings.ps1; done
+cd ../fuzzboxes; for i in {01..23}; do sed -i.bp s/id\ -value\ 0/id\ -value\ \"xpsp3-$i\"/ xpsp3-$i/tools/settings.ps1; done; cd ../src
+for i in {01..23}; do mv xpsp3-$i/tools/settings.ps1.bp xpsp3-$i/tools/settings.ps1; done
+
+for i in {01..23}; do /opt/VirtualBox/VBoxManage metrics setup xpsp3-$i; done
+for i in {01..23}; do /opt/VirtualBox/VBoxManage metrics enable xpsp3-$i; done
+for i in {01..23}; do /opt/VirtualBox/VBoxManage metrics disable xpsp3-$i; done
+
+rm fuzzboxes/xpsp3-*/samples/*
+
+watch -n 1 "for i in {01..23}; do ls xpsp3-$i/saved; done"
+
+additional: how to configure rdp?
+
+python creating new config:
+#import hs
+#c = hs.Config("/home/hs1/hs-current/")
+#hs.Config.save(c)
+
+import config.config
+c = config.config.Config("/home/hs1/hs-current/")
+config.config.Config.save(c)
+
+#reload
+import hs
+import fuzzbox
+
+
+numbers_list = []
+
+for i in range(1,10):
+    numbers_list.append("0"+str(i))
+
+for i in range(10,24):
+    numbers_list.append(str(i))
+
+fbox_list = ["xpsp3-"+i for i in numbers_list]
+fbox_list
+
+fboxes = [fuzzbox.Fuzzbox(fbox_name) for fbox_name in fbox_list]
+fboxes
+
+for fbox in fboxes:
+    hs.my_config.register_fuzzbox(fbox)
+
+hs.my_config.fuzzboxes['xpsp3-01'].port = 10001
+hs.my_config.fuzzboxes['xpsp3-02'].port = 10002
+hs.my_config.fuzzboxes['xpsp3-03'].port = 10003
+hs.my_config.fuzzboxes['xpsp3-04'].port = 10004
+hs.my_config.fuzzboxes['xpsp3-05'].port = 10005
+hs.my_config.fuzzboxes['xpsp3-06'].port = 10006
+hs.my_config.fuzzboxes['xpsp3-07'].port = 10007
+hs.my_config.fuzzboxes['xpsp3-08'].port = 10008
+hs.my_config.fuzzboxes['xpsp3-09'].port = 10009
+hs.my_config.fuzzboxes['xpsp3-10'].port = 10010
+hs.my_config.fuzzboxes['xpsp3-11'].port = 10011
+hs.my_config.fuzzboxes['xpsp3-12'].port = 10012
+hs.my_config.fuzzboxes['xpsp3-13'].port = 10013
+hs.my_config.fuzzboxes['xpsp3-14'].port = 10014
+hs.my_config.fuzzboxes['xpsp3-15'].port = 10015
+hs.my_config.fuzzboxes['xpsp3-16'].port = 10016
+hs.my_config.fuzzboxes['xpsp3-17'].port = 10017
+hs.my_config.fuzzboxes['xpsp3-18'].port = 10018
+hs.my_config.fuzzboxes['xpsp3-19'].port = 10019
+hs.my_config.fuzzboxes['xpsp3-20'].port = 10020
+hs.my_config.fuzzboxes['xpsp3-21'].port = 10021
+hs.my_config.fuzzboxes['xpsp3-22'].port = 10022
+hs.my_config.fuzzboxes['xpsp3-23'].port = 10023
+
+for fbox in hs.my_config.fuzzboxes.values():
+    fbox.step = 1000
+    fbox.initial_step = 500
+    fbox.initial_timeout = 10
+    fbox.generator.mutations = 5
+    fbox.generator.origin_path = '/home/hs1/hs-current/origins/test.swf'
+
+hs.Config.save(hs.my_config)
+
+
+#new rearrangement:
+
+import config.config
+import fuzzbox
+c = config.config.Config("/home/hs1/hs-current/")
+numbers_list = []
+for i in range(1,10):
+    numbers_list.append("0"+str(i))
+
+for i in range(10,24):
+    numbers_list.append(str(i))
+
+fbox_list = ["xpsp3-"+i for i in numbers_list]
+fbox_list
+fboxes = [fuzzbox.Fuzzbox(fbox_name, c) for fbox_name in fbox_list]
+fboxes
+for fbox in fboxes:
+    c.register_fuzzbox(fbox)
+
+config.config.Config.save(c)
+
+#changing settings
+
+import config.config
+
+for fbox in config.my_config.fuzzboxes.values():
+    fbox.current_step = 5000
+
+config.config.Config.save(config.my_config)
+

@@ -1,0 +1,60 @@
+main server:
+
+shared dir:     $FUZZ_PATH/shared
+samples dir:    $FUZZ_SHARED_PATH/samples
+saved dir:      $FUZZ_SHARED_PATH/saved
+config dir:     $FUZZ_PATH/config
+#stats dir:      $FUZZ_PATH/stats //stats kept in config
+generators dir: $FUZZ_PATH/generators
+
+--
+
+config: 
+
+one global file (global.conf), containing:
+registered generators with ids
+registered fuzzboxes with ids
+
+one file per fuzzbox, named by id, containing:
+generator id
+parameters for instrumentation (app path)
+special instrumentation extensions
+step value (after how many tests should fuzzbox report?)
+gen_step value (after how many tests should generator provide more samples?)
+gen_amt value (how many samples should the generator provide?)
+
+--
+
+samples:
+
+shared: one directory per fuzzbox, containing samples
+saved: one directory per fuzzbox, containing samples
+
+--
+
+instrumentation:
+1. for generic app (Adobe Reader)
+2. COM-based (Adobe Reader)
+
+snippets:
+
+--cut here--
+$wc = new-object net.webclient
+$cont = $wc.DownloadString(url)
+--cut here--
+
+
+--
+
+modules/ technologies:
+pickle - serializing config & stats
+scgi - communication with fuzzboxes
+tmpfs - sharing samples
+nginx - http server
+
+--
+
+schedule:
+1. scgi server
+2. 
+

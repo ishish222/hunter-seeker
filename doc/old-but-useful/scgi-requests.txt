@@ -1,0 +1,13 @@
+wget http://127.0.0.1/cgi/index?action=start_monitor -O -
+wget http://127.0.0.1/cgi/index?action=stop_monitor -O -
+wget http://127.0.0.1/cgi/index?action=list_monitor -O -
+wget http://127.0.0.1/cgi/index?action=check_monitor -O -
+wget http://127.0.0.1/cgi/index?action=monitor_add_box\&id=xpsp3-01 -O -
+wget http://127.0.0.1/cgi/index?action=monitor_remove_box\&id=xpsp3-01 -O -
+
+
+
+wget http://127.0.0.1/cgi/index?action=initialize_box\&id=xpsp3-01 -O -
+wget http://127.0.0.1/cgi/index?action=shutdown_box\&id=xpsp3-01 -O -
+
+

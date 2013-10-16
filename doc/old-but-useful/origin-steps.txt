@@ -1,0 +1,16 @@
+1. barriers - compression, checksums?
+1.1. file format specification
+1.2. code analysis
+1.3. mutated samples coverage
+
+2. coverage tests - select best or complementary
+
+3. oracle tests - test for true positives
+
+4. generation - mutations
+4.1. additions
+4.2. removals
+4.3. modifications
+
+5. daily and weekly tests
+

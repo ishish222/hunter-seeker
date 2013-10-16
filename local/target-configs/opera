@@ -1,7 +1,7 @@
 c:fuzzers/opera/fuzzer-1.py
 c:fuzzers/generators
 c:fuzzers/correctors
-c:fuzzers/settings/opera-local/settings.py
+c:fuzzers/settings/opera/settings.py
 c:blob/res/theora/out.ogv
 c:blob/res/theora/out-1.ogv
 s:binners/paimei

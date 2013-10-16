@@ -1,0 +1,18 @@
+for i in {01..06}; do cp clean/win7-ready-1.vdi win7-hs2-$i.vdi; done
+for i in {01..06}; do VBoxManage internalcommands sethduuid win7-hs2-$i.vdi; done
+for i in {01..06}; do VBoxManage createvm --name "win7-hs2-$i"; done
+for i in {01..06}; do VBoxManage registervm "/home/hs1/VirtualBox VMs/win7-hs2-$i/win7-hs2-$i.vbox"; done
+
+for i in {01..06}; do VBoxManage sharedfolder add win7-hs2-$i --name samples_shared --hostpath /home/hs1/hs2-current-deploy/samples/shared; done
+for i in {01..06}; do VBoxManage sharedfolder add win7-hs2-$i --name samples_binned --hostpath /home/hs1/hs2-current-deploy/samples/binned; done
+for i in {01..06}; do VBoxManage sharedfolder add win7-hs2-$i --name samples_saved --hostpath /home/hs1/hs2-current-deploy/samples/saved; done
+for i in {01..06}; do VBoxManage sharedfolder add win7-hs2-$i --name server --hostpath /home/hs1/hs2-current-deploy/server; done
+
+for i in {01..06}; do VBoxManage modifyvm win7-hs2-$i --nic1 hostonly --nictype1 82540EM --hostonlyadapter1 vboxnet0; done 
+for i in {01..06}; do VBoxManage modifyvm win7-hs2-$i --memory 2048; done 
+for i in {01..06}; do VBoxManage modifyvm win7-hs2-$i --vrde on; done 
+for i in {01..06}; do VBoxManage modifyvm win7-hs2-$i --vrdeport 4000-4100; done 
+for i in {01..06}; do VBoxManage modifyvm win7-hs2-$i --hwvirtex on; done 
+
+for i in {01..06}; do VBoxManage storagectl win7-hs2-$i --name "SATA Controller" --add sata; done
+for i in {01..06}; do VBoxManage storageattach win7-hs2-$i --storagectl "SATA Controller" --port 0 --type hdd --medium /home/hs1/machines/win7-hs2-$i.vdi; done

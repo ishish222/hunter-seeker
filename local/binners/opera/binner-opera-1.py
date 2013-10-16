@@ -23,8 +23,8 @@ from pydbg.defines import *
 
 from debuggee_procedure_call import dpc
 
-START_SLEEP = 2
-WAIT_SLEEP = 4
+START_SLEEP = 8
+WAIT_SLEEP = 3
 HC_ADDR = 0x770627e4
 HC_CODE = 0xc0000374
 
@@ -413,7 +413,7 @@ def watchThread_routine():
     global dbg 
     global status
 
-    breaking = True
+    breaking = False
 
     if(breaking == True):
         breaker = Thread(target = breaking_routine)

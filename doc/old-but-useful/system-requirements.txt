@@ -1,0 +1,21 @@
+HS:
+python-2.7
+django-1.4.5
+USE="vboxwebsrv" virtualbox-4.1.24
+phpvirtualbox-4.1.11
+nginx-1.4.1 (with wscgi support)
+rrdtool-1.4.7
+syslog-ng-3.2.5
+
+Python modules:
+scgi-1.4
+
+XP SP2 fuzzbox:
+fuzzbox-template.vdi
+WIC
+Windows Installer 3.1
+.NET 2.0
+PowerShell
+
+Recommended:
+openvpn-2.3.1

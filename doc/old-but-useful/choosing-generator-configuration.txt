@@ -1,0 +1,24 @@
+1. Choose a sample and record coverage
+[see: coverage-tests-procedure.txt, the result is initial coverage]
+
+2. Configure generator & generate 3 mutated samples
+python:
+import hs
+import generators.generator
+g = generators.generator.Generator()
+import generators.changer
+g.mutator = generators.changer.Changer
+g.origin_path = "/home/ish/projects/2012-08-02-korrino/samples-generator-tests/prepared/main.swf"
+g.dest_path = "/home/ish/projects/2012-08-02-korrino/samples-generator-tests/main.swf-changer-2/"
+g.dest_suffix = ".sample"
+g.mutations = 2
+g.generate(3)
+
+3. Record mutated coverage
+
+4. Repeat steps 2 & 3 several times
+
+5. Choose configuration with best coverage or:
+
+6. Detect and overcome coverage barriers
+

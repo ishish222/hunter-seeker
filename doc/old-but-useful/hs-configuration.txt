@@ -1,0 +1,24 @@
+1. Backup old config & stats
+example:
+mv .default.conf ../config/`date --iso`.conf
+mv .default.stats ../config/`date --iso`.stats
+
+2. Create/load config in python
+example:
+import hs
+c = hs.Config()
+
+3. Configure parameters
+example:
+c.samples_init_count = 200
+
+4. Save config
+example:
+hs.Config.save(c)
+
+5. Create new stats:
+import hs
+s = hs.Stats()
+hs.Stats.save(s)
+
+After configuring HS I suggest configuring fuzzboxes

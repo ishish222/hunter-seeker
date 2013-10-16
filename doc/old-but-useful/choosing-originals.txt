@@ -1,0 +1,16 @@
+1. Download samples
+Make list of links, e.g. list-to-download.txt
+$ cat list-to-download.txt | while read aa; do wget $aa; done
+
+2. Check for bad types
+file *.swf | grep -v Flash
+rm
+
+3. Decompress
+file *.swf | grep compressed | cut -d':' -f1 | while read aa; do java -cp . SWFDecompress $aa; done
+
+4. Analyze coverage
+[see: coverage-tests-procedure.txt]
+[result file: e.g. IEXPLORE.EXE.3.eips.uniq.flash]
+
+5. Select prepared with large or complementary coverage

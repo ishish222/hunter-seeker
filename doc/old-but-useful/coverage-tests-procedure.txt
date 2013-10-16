@@ -1,0 +1,33 @@
+ss
+[copy samples to secondary disk:]
+mount -o loop,offset=32256 /mnt/gentoo32/home/ish/temu-img/secondary.raw /mnt/gentoo32/mnt/secondary/
+[copy files]
+
+chroot /mnt/gentoo32/ /bin/bash 
+su ish
+[prepare qemu img in ../../temu-img/ (install appropriate plugins & applications)]
+[check or prepare tracecap config in: /etc/bitblaze/tracecap/]
+
+[mkdir for traces:]
+cd /home/ish/temu-traces
+mkdir `date --iso`
+
+cd /home/ish/temu-1.0/tracecap
+./temu -hda ../../temu-img/xpsp2-3-w-flash.qcow2 -hdb ../../temu-img/secondary.raw -no-kqemu -vnc :0 -monitor stdio
+load_plugin tracecap.so 
+enable_emulation 
+tracebyname <process name> <created-trace-dir>/<name>
+[run application with sample as its parameter]
+[should print Tracing <app>]
+trace_stop 
+
+[examining results:]
+[reading instructions:]
+vine/bin/trace_reader -intel -trace  temu-trace/2013-06-26/IEXPLORE.EXE.3
+vine/bin/trace_reader -intel -trace temu-trace/2013-06-26/IEXPLORE.EXE.3 -eip > temu-trace/2013-06-26/IEXPLORE.EXE.3.state.eips
+~/vine/bin/trace_reader -intel -trace IEXPLORE.EXE.1 -eip > IEXPLORE.EXE.1.eips
+cd temu-trace/2013-06-26/
+cat IEXPLORE.EXE.1.eips | sort | uniq > IEXPLORE.EXE.1.eips.uniq
+
+[troubleshooting:]
+
