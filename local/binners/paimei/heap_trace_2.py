@@ -64,9 +64,9 @@ def dll_load_handler (dbg):
 
         hooks.add(dbg, addrRtlCreateHeap,     6, None, RtlCreateHeap)
         hooks.add(dbg, addrRtlDestroyHeap,    1, None, RtlDestroyHeap)
-#        hooks.add(dbg, addrRtlAllocateHeap,   3, None, RtlAllocateHeap)
-#        hooks.add(dbg, addrRtlFreeHeap,       3, None, RtlFreeHeap)
-#        hooks.add(dbg, addrRtlReAllocateHeap, 4, None, RtlReAllocateHeap)
+        hooks.add(dbg, addrRtlAllocateHeap,   3, None, RtlAllocateHeap)
+        hooks.add(dbg, addrRtlFreeHeap,       3, None, RtlFreeHeap)
+        hooks.add(dbg, addrRtlReAllocateHeap, 4, None, RtlReAllocateHeap)
 
         log("rtl heap manipulation routines successfully hooked")
 
