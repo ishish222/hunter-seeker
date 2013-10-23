@@ -6,3 +6,4 @@ args += (['-monitor', 'stdio'])
 args += (['-enable-kvm'])
 
 snap = "test"
+
