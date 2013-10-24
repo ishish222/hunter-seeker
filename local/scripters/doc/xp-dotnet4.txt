@@ -1,0 +1,3 @@
+Windows Installer 3.1   - 01_WindowsInstaller-KB893803-v2-x86.exe
+WIC                     - 02_wic_x86_enu.exe
+.NET4                   - 03_dotnetFx40_Full_x86_x64.exe

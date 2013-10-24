@@ -4,38 +4,60 @@ from subprocess import Popen, PIPE
 from optparse import OptionParser
 import importlib
 import time
+from sys import argv
 
-parser = OptionParser()
-parser.add_option("-c", "--config", dest="config", help="Machine configuration FILE", metavar="FILE")
-parser.add_option("-s", "--script", dest="script", help="Execute SCRIPT", metavar="SCRIPT")
+def load_option(opt):
+    global options
+    global config
 
-(options, args) = parser.parse_args()
+    ret = None
 
-conf = importlib.import_module("configs."+options.config)
-scriptmod = importlib.import_module("scripts."+options.script)
-script = scriptmod.script
+    if(config.has_key(opt) == True):
+        ret = config[opt]
+    if(options.has_key(opt) == True):
+        ret = options[opt]
+    return ret
 
-print("Loading config: " + conf.name)
+options = {}
+
+for i in range(0, len(argv)-2, 2):
+    options[argv[i+1][1:]] = argv[i+2]
+
+config = importlib.import_module("configs."+options["config"])
+config = config.config
+scriptlist = options["script"].split(",")
 
 qemuargs = ['qemu-system-i386']
-qemuargs += conf.args
+for maj_arg in ["hda", "hdb", "cdrom", "m"]:
+    arg = load_option(maj_arg)
+    if(arg is not None):
+        qemuargs.append("-"+maj_arg)
+        qemuargs.append(arg)
+
+qemuargs += config["other_args"]
+
+print "Script list: " + str(scriptlist)
 print "Qemu args: " + str(qemuargs)
 
 p = Popen(qemuargs, stdout=PIPE, stdin=PIPE)
 
 print(p.stdout.readline())
 time.sleep(1)
-print("loadvm " + conf.snap)
-p.stdin.write("loadvm " + conf.snap + "\n")
-#p.stdout.read()
-time.sleep(40)
-print "Executing keysched"
+if(config.has_key("snap")):
+    print("loadvm " + config["snap"])
+    p.stdin.write("loadvm " + config["snap"] + "\n")
+    #p.stdout.read()
+    time.sleep(50)
 
-script.run(p)
+print "Executing scripts"
 
-print("Schedule completed")
+for sc in scriptlist:
+    print("[Executing: " + sc + "]")
+    scriptmod = importlib.import_module("scripts."+sc)
+    script = scriptmod.script
+    print("[ETA: " + script.eta_str + "]")
+    script.run(p)
+    print("[Executing: " + sc + " finished]")
 
-while True:
-    pass
+print("Executing scripts completed")
 
-# p = Popen(['grep', 'f'], stdout=PIPE, stdin=PIPE, stderr=STDOUT)
