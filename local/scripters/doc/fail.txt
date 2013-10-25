@@ -1,0 +1,12 @@
+loadvm fails:
+
+probable causes:
+wrong RAM size
+different hardware (check nic settings)
+other parameters
+
+and: you can always run from boot (but new devices might need to be detected and installed)
+
+installation fails:
+With -no-kvm 3,4 slowdown
+

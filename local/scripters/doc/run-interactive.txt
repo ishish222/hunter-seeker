@@ -1,0 +1,2 @@
+python - <args>
+from generic import *

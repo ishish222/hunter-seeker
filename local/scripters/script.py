@@ -1,4 +1,5 @@
 import time
+#from generic import slowdown
 
 class ScriptException(Exception):
     pass
@@ -9,11 +10,18 @@ class Script:
         self.steps = list()
         self.schedule = list()
         self.eta_str = "unknown"
+        self.slowdown = 1
+
+    def delay(self, to):
+        eto = to * self.slowdown
+        print("sleeping " + str(eto) + " seconds")
+        time.sleep(eto)
 
     def reg_script(self, script):
         self.prev_list += script
 
-    def run(self, pipe):
+    def run(self, pipe, slowdown=1):
+        self.slowdown = slowdown
         for script in self.prev_list:
             script.run(pipe)
         self.run_self(pipe)
@@ -27,8 +35,7 @@ class Script:
                     if(k[1:].find("sleep") == 0):
                     #sleep request
                         secs = int(k[7:], 10)
-                        print("sleeping " + str(secs) + " seconds")
-                        time.sleep(secs)
+                        self.delay(secs)
                         continue
 
                     if(k[1:].find("load") == 0):

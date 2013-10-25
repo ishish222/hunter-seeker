@@ -10,38 +10,6 @@ script.eta_str = "15 min"
 
 cmds = list()
 
-#01_WindowsInstaller-KB893803-v2-x86.exe
-cmds += ["_comment 01_WindowsInstaller-KB893803-v2-x86.exe"]
-cmds += ["down", "up"]
-cmds += ["ret", "_sleep 20"]
-#confirm & wait for unpacking
-cmds += ["left", "ret", "_sleep 30"]
-#1st screen
-cmds += ["ret"]
-#agree
-cmds += ["tab", "right", "tab", "tab", "tab", "ret"]
-#wait until install finishes
-cmds += ["_sleep 60"]
-#do not restart
-cmds += ["spc", "ret"]
-
-#02_wic_x86_enu.exe
-cmds += ["_comment 02_wic_x86_enu.exe"]
-#reset pos
-cmds += ["up", "up", "up", "up", "up", "up", "up", "up", "up"]
-cmds += ["down"]
-cmds += ["ret", "_sleep 20"]
-#confirm & wait for unpacking
-cmds += ["left", "ret", "_sleep 30"]
-#1st screen
-cmds += ["ret"]
-#agree
-cmds += ["tab", "right", "tab", "tab", "tab", "ret"]
-#wait until install finishes
-cmds += ["_sleep 120"]
-#do not restart
-cmds += ["ret"]
-
 #03_dotnetFx40_Full_x86_x64.exe
 cmds += ["_comment 03_dotnetFx40_Full_x86_x64.exe"]
 cmds += ["up", "up", "up", "up", "up", "up", "up", "up", "up"]
@@ -52,7 +20,7 @@ cmds += ["left", "ret", "_sleep 180"]
 #agree
 cmds += ["tab", "tab", "tab", "spc", "ret"]
 #wait looong
-cmds += ["_sleep 600"]
+cmds += ["_sleep 900"]
 #finished
 cmds += ["tab", "ret"]
 

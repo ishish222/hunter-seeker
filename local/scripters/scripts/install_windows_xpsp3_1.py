@@ -15,7 +15,10 @@ cmds += ["_comment Installing Windows XP (1)", "_sleep 40"]
 cmds += ["c", "ret", "ret"]
 
 #format filesystem, copying files, sleep length may vary on disk size!!!
-cmds += ["ret", "_sleep 90"]
+#cmds += ["ret", "_sleep 180"]
+
+#quick format
+cmds += ["up", "up","ret", "_sleep 80"]
 
 #rebooting, copying more files
 cmds += ["_sleep 180"]

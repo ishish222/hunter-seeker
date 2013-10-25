@@ -4,18 +4,19 @@
 
 config = {}
 
-config["name"] = "Installer config"
+config["name"] = "Windows installer config"
 config["shared_folder"] = "/home/ish/vbox_share_ro/"
 config["m"] = "4G"
-#config["snap"] = "clean"
-config["snap"] = None
+#config["snap"] = "4Gclean"
 
-other_args = ['-enable-kvm']
+other_args = []
+other_args += ['-no-kvm']
 other_args += (['-net', 'nic,model=rtl8139'])
 other_args += (['-net', 'user,restrict=y,smb=' + config["shared_folder"]])
-other_args += (['-net', 'nic,model=rtl8139'])
-other_args += (['-net', 'tap,ifname=tap1,script=no,downscript=no'])
+#other_args += (['-net', 'nic,model=rtl8139'])
+#other_args += (['-net', 'tap,ifname=tap1,script=no,downscript=no'])
 other_args += (['-monitor', 'stdio'])
+other_args += (['-boot', 'order=dc'])
 
 config["other_args"] = other_args
 

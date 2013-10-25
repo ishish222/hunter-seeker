@@ -6,6 +6,8 @@ import importlib
 import time
 from sys import argv
 
+global slowdown
+
 def load_option(opt):
     global options
     global config
@@ -17,6 +19,24 @@ def load_option(opt):
     if(options.has_key(opt) == True):
         ret = options[opt]
     return ret
+
+def runscript(sc, slowdown=1):
+    print("[Executing: " + sc + "]")
+    scriptmod = importlib.import_module("scripts."+sc)
+    script = scriptmod.script
+    print("[ETA: " + script.eta_str + "]")
+    script.run(p, slowdown)
+    print("[Executing: " + sc + " finished]")
+
+def runscripts(sclist, slowdown=1):
+    for sc in sclist:
+        runscript(sc, slowdown)
+
+def rs(a, sl=1):
+    runscript(a, sl)
+
+def rss(a, sl=1):
+    runscripts(a, sl)
 
 options = {}
 
@@ -45,6 +65,13 @@ print(p.stdout.readline())
 #Give qemu just a sec :)
 time.sleep(3)
 
+slowdown = load_option("slowdown")
+
+if(slowdown is None):
+    slowdown = 1
+else: 
+    slowdown = int(slowdown, 10)
+
 if(config.has_key("snap") and config["snap"] is not None):
     print("loadvm " + config["snap"])
     p.stdin.write("loadvm " + config["snap"] + "\n")
@@ -55,12 +82,7 @@ if(config.has_key("snap") and config["snap"] is not None):
 print "Executing scripts"
 
 for sc in scriptlist:
-    print("[Executing: " + sc + "]")
-    scriptmod = importlib.import_module("scripts."+sc)
-    script = scriptmod.script
-    print("[ETA: " + script.eta_str + "]")
-    script.run(p)
-    print("[Executing: " + sc + " finished]")
+    runscript(sc, slowdown)
 
 print("Executing scripts completed")
 

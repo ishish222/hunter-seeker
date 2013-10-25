@@ -32,8 +32,7 @@ cmds += ["_screendump stage3.jpg"]
 cmds += ["_delete stage2", "_sleep 120"]
 cmds += ["_save stage3", "_sleep 120"]
 
-#Installer start
-cmds += ["_comment Installing Windows XP finished"]
+cmds += ["_comment Installing Windows XP (3) finished"]
 
 script.steps.append(cmds)
 script.schedule += [(0, 1, 1)]
