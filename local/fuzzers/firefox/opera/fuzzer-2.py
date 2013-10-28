@@ -57,8 +57,6 @@ if(options.hdb is not None):
     qemu_args += ['-hdb', options.machines + "/" + options.hdb]
 qemu_args += ['-net', 'nic,model=rtl8139', '-net', 'user,restrict=n,smb=' + settings.qemu_shared_folder + ',hostfwd=tcp:127.0.0.1:' + str(options.fuzzbox_port) + '-:12345']
 qemu_args += ['-net', 'nic,model=rtl8139']
-if(options.visible == False):
-    qemu_args += ['-vnc', settings.machines[fuzzbox_name]['vnc']]
 qemu_args += settings.qemu_additional
 
 my_logger = logging.getLogger('MyLogger')
@@ -208,13 +206,12 @@ def killLast():
 def proceed1():
     # executed during each fuzzbox start
     settings.specific_preperations_1(options)
-    rss(settings.scripts_1, m)
+
     rss(["dotnet_server_spawn"], m)
 
 def proceed2():
     # executed during each guest system restart
     settings.specific_preperations_2(options)
-    rss(settings.scripts_2, m)
 
     write_socket(s, "killExplorer")
     read_socket(s)
@@ -228,7 +225,6 @@ def proceed2():
 
 def proceed3():
     settings.specific_preperations_3(options)
-    rss(settings.scripts_3, m)
 
     write_socket(s, "spawn " + settings.app_path)
     read_socket(s)

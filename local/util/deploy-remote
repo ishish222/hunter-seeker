@@ -20,5 +20,5 @@ cd $PPWD
 scp /tmp/tmp.tgz $TARGET_HOST:/tmp/tmp.tgz
 ssh $TARGET_HOST mkdir -p /home/hs1/hs2-deploy/$TARGET/$DATE
 ssh $TARGET_HOST tar zxf /tmp/tmp.tgz -C /home/hs1/hs2-deploy/$TARGET/$DATE
-ssh $TARGET_HOST rm -f /home/hs1/hs2-current-deploy
-ssh $TARGET_HOST ln -s /home/hs1/hs2-deploy/$TARGET/$DATE /home/hs1/hs2-current-deploy
+ssh $TARGET_HOST rm -f /home/hs1/hs2-current-deploy/$TARGET
+ssh $TARGET_HOST ln -s /home/hs1/hs2-deploy/$TARGET/$DATE /home/hs1/hs2-current-deploy/$TARGET

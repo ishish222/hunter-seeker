@@ -1,77 +1,54 @@
 visible = False
 testing = False
 
-ips = { 
-'hs2-1':'127.0.0.1',
-'hs2-2':'192.168.56.102',
-'hs2-3':'192.168.56.103',
-'hs2-4':'192.168.56.104',
-'hs2-5':'192.168.56.105',
-'hs2-6':'192.168.56.106',
-'hs2-7':'192.168.56.107',
-'hs2-8':'192.168.56.108',
-'hs2-9':'192.168.56.109',
-'hs2-10':'192.168.56.110',
-'hs2-11':'192.168.56.111',
-'hs2-12':'192.168.56.112',
-'hs2-13':'192.168.56.113',
-'hs2-14':'192.168.56.114',
-'hs2-15':'192.168.56.115',
-'hs2-16':'192.168.56.116',
-'hs2-17':'192.168.56.117',
-'hs2-18':'192.168.56.118',
-'hs2-19':'192.168.56.119',
-'hs2-20':'192.168.56.120',
-'hs2-21':'192.168.56.121',
-'hs2-22':'192.168.56.122',
-'hs2-23':'192.168.56.123',
-'win7-hs2-01':'192.168.56.141',
-'win7-hs2-02':'192.168.56.142',
-'win7-hs2-03':'192.168.56.143',
-'win7-hs2-04':'192.168.56.144',
-'win7-hs2-05':'192.168.56.145',
-'win7-hs2-06':'192.168.56.146',
-'win7-hs2-07':'192.168.56.147',
-'win7-hs2-08':'192.168.56.148',
-'win7-hs2-09':'192.168.56.149',
-'win7-hs2-10':'192.168.56.150',
-'win7-hs2-11':'192.168.56.151',
-'win7-hs2-12':'192.168.56.152',
-'win7-hs2-13':'192.168.56.153',
-'win7-hs2-14':'192.168.56.154',
-'win7-hs2-15':'192.168.56.155',
-'win7-hs2-16':'192.168.56.156',
-'win7-hs2-17':'192.168.56.157',
-'win7-hs2-18':'192.168.56.158',
-'win7-hs2-19':'192.168.56.159'
+machines = {
+    'hs2-01': {'disk' : 'hs2-01.qcow2', 'ip' : '127.0.0.1', 'port' : 12301, 'vnc' : ':1'},
+    'hs2-02': {'disk' : 'hs2-02.qcow2', 'ip' : '127.0.0.1', 'port' : 12302, 'vnc' : ':2'},
+    'hs2-03': {'disk' : 'hs2-03.qcow2', 'ip' : '127.0.0.1', 'port' : 12303, 'vnc' : ':3'},
+    'hs2-04': {'disk' : 'hs2-04.qcow2', 'ip' : '127.0.0.1', 'port' : 12304, 'vnc' : ':4'},
+    'hs2-05': {'disk' : 'hs2-05.qcow2', 'ip' : '127.0.0.1', 'port' : 12305, 'vnc' : ':5'},
+    'hs2-06': {'disk' : 'hs2-06.qcow2', 'ip' : '127.0.0.1', 'port' : 12306, 'vnc' : ':6'},
+    'hs2-07': {'disk' : 'hs2-07.qcow2', 'ip' : '127.0.0.1', 'port' : 12307, 'vnc' : ':7'},
+    'hs2-08': {'disk' : 'hs2-08.qcow2', 'ip' : '127.0.0.1', 'port' : 12308, 'vnc' : ':8'},
+    'hs2-09': {'disk' : 'hs2-09.qcow2', 'ip' : '127.0.0.1', 'port' : 12309, 'vnc' : ':9'},
+    'hs2-10': {'disk' : 'hs2-10.qcow2', 'ip' : '127.0.0.1', 'port' : 12310, 'vnc' : ':10'},
+    'hs2-11': {'disk' : 'hs2-11.qcow2', 'ip' : '127.0.0.1', 'port' : 12311, 'vnc' : ':11'},
+    'hs2-12': {'disk' : 'hs2-12.qcow2', 'ip' : '127.0.0.1', 'port' : 12312, 'vnc' : ':12'}
 }
 
-ports = { 
-'hs2-1':12345
-}
-fuzzbox_port = 12345
-
-second = "hs2-second"
-
+bad_addrs = [0x13518F0]
 samples_shared_path = "../samples/shared"
 samples_saved = "../samples/saved"
 samples_binned = "../samples/binned"
 app_path = "C:\\Program Files\\Opera\\16.0.1196.80\\Opera.exe"
+app_module = "opera.exe"
 corrector = None
 buffer_size = 4096
 log_name = "HS:Opera"
 fuzzbox_timeout = 10.0
 start_sleep = 3
-revert_sleep = 60
+revert_sleep = 40
 restart_count = 1000
+closing_plugin_name = "close_sample_opera"
 
 qemu_machines = "/home/ish/machines/qemu"
 qemu_m = "4G"
-qemu_shared_folder = "/home/ish/projects/2012-08-02-korrino/hs2-current-deploy"
+qemu_shared_folder = "/home/hs1/hs2-current-deploy/opera"
 qemu_additional =  ['-enable-kvm']
-qemu_additional += ['-net', 'nic,model=rtl8139']
-qemu_additional += ['-net', 'user,restrict=n,smb=' + qemu_shared_folder+",hostfwd=tcp:127.0.0.1:12345-:"+str(fuzzbox_port)]
-qemu_additional += ['-net', 'nic,model=rtl8139']
-#qemu_additional += ['-net', 'tap,ifname=tap1,script=no,downscript=no']
 qemu_additional += ['-monitor', 'stdio']
 
+def specific_preperations_1(options):
+    from shutil import copyfile
+    copyfile(options.shared_folder + "/server/index2.html", options.samples_shared + "/index.html")
+
+scripts_1 = []
+
+def specific_preperations_2(options):
+    pass
+
+scripts_2 = []
+
+def specific_preperations_3(options):
+    pass
+
+scripts_3 = []

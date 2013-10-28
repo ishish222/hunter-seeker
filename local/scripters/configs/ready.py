@@ -13,7 +13,7 @@ config["port"] = "12345"
 
 other_args = ['-enable-kvm']
 other_args += (['-net', 'nic,model=rtl8139'])
-other_args += (['-net', 'user,restrict=y,smb=' + config["shared_folder"] +",hostfwd=tcp:127.0.0.1:12345-:"+config["port"]])
+other_args += (['-net', 'user,restrict=y,smb=' + config["shared_folder"]])
 other_args += (['-net', 'nic,model=rtl8139'])
 #other_args += (['-net', 'tap,ifname=tap1,script=no,downscript=no])
 other_args += (['-monitor', 'stdio'])

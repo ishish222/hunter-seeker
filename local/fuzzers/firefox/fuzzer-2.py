@@ -57,8 +57,6 @@ if(options.hdb is not None):
     qemu_args += ['-hdb', options.machines + "/" + options.hdb]
 qemu_args += ['-net', 'nic,model=rtl8139', '-net', 'user,restrict=n,smb=' + settings.qemu_shared_folder + ',hostfwd=tcp:127.0.0.1:' + str(options.fuzzbox_port) + '-:12345']
 qemu_args += ['-net', 'nic,model=rtl8139']
-if(options.visible == False):
-    qemu_args += ['-vnc', settings.machines[fuzzbox_name]['vnc']]
 qemu_args += settings.qemu_additional
 
 my_logger = logging.getLogger('MyLogger')
