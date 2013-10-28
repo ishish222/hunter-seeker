@@ -1,5 +1,29 @@
 import time
+import importlib
 #from generic import slowdown
+
+def runscriptq(sc, p, slowdown=1):
+    scriptmod = importlib.import_module("scripts."+sc)
+    script = scriptmod.script
+    script.run(p, slowdown)
+
+def runscript(sc, p, slowdown=1):
+    print("[Executing: " + sc + "]")
+    scriptmod = importlib.import_module("scripts."+sc)
+    script = scriptmod.script
+    print("[ETA: " + script.eta_str + "]")
+    script.run(p, slowdown)
+    print("[Executing: " + sc + " finished]")
+
+def runscripts(sclist, p, slowdown=1):
+    for sc in sclist:
+        runscript(sc, p, slowdown)
+
+def rs(a, p, sl=1):
+    runscript(a, p, sl)
+
+def rss(a, p, sl=1):
+    runscripts(a, p, sl)
 
 class ScriptException(Exception):
     pass
@@ -65,6 +89,14 @@ class Script:
                     if(k[1:].find("quit") == 0):
                         pipe.stdin.write("quit\n")
 
+                if(k == "*"):
+                    k = "asterisk"
+                if(k == "_"):
+                    k = "shift-minus"
+                if(k == "-"):
+                    k = "minus"
+                if(k == " "):
+                    k = "spc"
                 if(k == "\\"):
                     k = "backslash"
                 if(k == "/"):

@@ -8,6 +8,8 @@ cmds = list()
 cmds += ["_comment 04_python-2.6.msi"]
 
 #select 
+cmds += ["f5"]
+dmds += ["up", "up", "up", "up", "up", "up", "up", "up", "up", "up", "up", "up"]
 cmds += ["down", "down", "down", "ret", "_sleep 60"]
 
 #confirm
@@ -23,7 +25,7 @@ cmds += ["ret", "_sleep 2"]
 cmds += ["tab", "tab", "ret", "_sleep 2"]
 
 #waiting for install to finish
-cmds += ["_sleep 180"]
+cmds += ["_sleep 240"]
 
 #finish
 cmds += ["ret", "_sleep 5"]

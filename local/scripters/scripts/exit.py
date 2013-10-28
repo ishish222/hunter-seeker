@@ -4,8 +4,9 @@ script = Script()
 
 cmds = list()
 
-cmds += ["_load clean", "_sleep 60"]
-cmds += ["_comment Clean state loaded"]
+cmds += ["_comment Exiting shell"]
+cmds += "exit"
+cmds += ["ret"]
 
 script.steps.append(cmds)
 script.schedule += [(0, 0.1, 1)]

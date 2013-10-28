@@ -44,3 +44,13 @@ flv - kontener
 matroska - kontener
 
 kandydaci: webm, theora
+
+
+sets:
+[set-1]:
+Opera 16
+Firefox 24
+Flash ? (ActiveX & standalone)
+Adobe Reader 11
+Foobar 2000 1.2.9
+

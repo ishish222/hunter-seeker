@@ -16,7 +16,8 @@ import sys
 import signal
 import settings
 sys.path += ["./scripters"]
-import script
+#import script
+from script import rs, rss, runscriptq
 
 class ErrorDetectedException(Exception):
     pass
@@ -33,7 +34,7 @@ parser.add_option("-M", "--machines",       dest="machines", help="Machines path
 parser.add_option("-a", "--hda",            dest="hda", help="First disk")
 parser.add_option("-b", "--hdb",            dest="hdb", help="Second disk")
 parser.add_option("-c", "--cdrom",          dest="cdrom", help="CD")
-parser.add_option("-m", "--m",              dest="m", help="Amount of memory", default=settings.qemu_m)
+parser.add_option("-m", "--m",              dest="qemu_m", help="Amount of memory", default=settings.qemu_m)
 parser.add_option("-S", "--scripts",        dest="scripts", help="Scripts to start with")
 parser.add_option("-o", "--origin",         dest="origin", help="Original file")
 parser.add_option("-s", "--shared",         dest="shared_folder", help="Folder for shared applications", default=settings.qemu_shared_folder)
@@ -54,7 +55,8 @@ if(options.fuzzbox_ip is None):
     options.fuzzbox_ip = settings.ips[fuzzbox_name]
 
 #qemu settings
-qemu_args = ['qemu-system-i386']
+qemu_args =  ['qemu-system-i386']
+qemu_args += ['-m', options.qemu_m]
 qemu_args += ['-hda', options.machines + "/" + options.hda]
 if(options.hdb is not None):
     qemu_args += ['-hdb', options.machines + "/" + options.hdb]
@@ -132,32 +134,43 @@ def write_socket(s, data):
     print("> " + str(data))
     s.send(data)
 
-def write_monitor(m, data):
+def write_monitor(data):
+    global m
     if(m == None):
         print("Monitor not ready")
         return
     print("m> " + str(data))
-    m.write(data + "\n")
+    m.stdin.write(data + "\n")
 
 def powerofff():
+    print("Powering off")
     global m
-    m.write("quit\n")
+    write_monitor("quit\n")
     m = None
 
 def revert():
+    print("Reverting")
     global m
-    m.write("loadvm ready\n")
-    time.sleep(settings.revert_sleep)
+    #rs("load_ready", m)
+    rs("load_ready_quick", m)
 
 def start():
+    print("Starting")
     global m
-    m = Popen(qemuargs, stdout=PIPE, stdin=PIPE)
+    print qemu_args
+    m = Popen(qemu_args, stdout=PIPE, stdin=PIPE)
+    time.sleep(3)
     revert()
 
 def restart():
     powerofff()
     time.sleep(3)
     start()
+    proceed1()
+
+def close_sample():
+    global m
+    runscriptq("close_sample_opera", m)
 
 def connect():
     global s
@@ -193,7 +206,9 @@ def killLast():
     read_socket(s)
 
 def proceed1():
-    pass
+#    rss(["run", "powershell"], m)
+#    time.sleep(20)
+    rss(["dotnet_server_spawn"], m)
     #todo: spawn dotnet server
 
 def proceed2():
@@ -312,15 +327,14 @@ def looop():
     global s
     global lastResponse
 
-    powerofff()
     start()
-    exit()
-
-    proceed1()
     signal.signal(signal.SIGINT, sigkill_handler)
+    proceed1()
+
     connect()
+
     init()
-    proceed2()
+#    proceed2()
 
     sample_count = 0
     last_time_check = time.localtime()
@@ -330,6 +344,7 @@ def looop():
     while True:
         try:
             proceed2()
+            proceed3()
 
             while(status != "CR"):
                 sample_path = my_generator.generate_one()
@@ -337,6 +352,7 @@ def looop():
                 write_socket(s, "testFile " + sample_file)
                 read_socket(s)
                 if(status == "BH" or status == "TO"):
+                    close_sample()
                     os.remove(sample_path)
 
                 # keep track on sample count

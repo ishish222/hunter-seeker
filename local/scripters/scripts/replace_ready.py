@@ -4,8 +4,9 @@ script = Script()
 
 cmds = list()
 
-cmds += ["_load clean", "_sleep 60"]
-cmds += ["_comment Clean state loaded"]
+cmds += ["_delete ready", "_sleep 120"]
+cmds += ["_save ready", "_sleep 120"]
+cmds += ["_comment ready state replaced"]
 
 script.steps.append(cmds)
 script.schedule += [(0, 0.1, 1)]

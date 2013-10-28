@@ -2,7 +2,7 @@ visible = False
 testing = False
 
 ips = { 
-'hs2-1':'192.168.56.101',
+'hs2-1':'127.0.0.1',
 'hs2-2':'192.168.56.102',
 'hs2-3':'192.168.56.103',
 'hs2-4':'192.168.56.104',
@@ -46,12 +46,16 @@ ips = {
 'win7-hs2-19':'192.168.56.159'
 }
 
+ports = { 
+'hs2-1':12345
+}
+fuzzbox_port = 12345
+
 second = "hs2-second"
 
 samples_shared_path = "../samples/shared"
 samples_saved = "../samples/saved"
 samples_binned = "../samples/binned"
-fuzzbox_port = 12345
 app_path = "C:\\Program Files\\Opera\\16.0.1196.80\\Opera.exe"
 corrector = None
 buffer_size = 4096
@@ -63,11 +67,11 @@ restart_count = 1000
 
 qemu_machines = "/home/ish/machines/qemu"
 qemu_m = "4G"
-qemu_shared_folder = "/home/ish/vbox_share_ro/"
+qemu_shared_folder = "/home/ish/projects/2012-08-02-korrino/hs2-current-deploy"
 qemu_additional =  ['-enable-kvm']
 qemu_additional += ['-net', 'nic,model=rtl8139']
-qemu_additional += ['-net', 'user,restrict=y,smb=' + qemu_shared_folder]
+qemu_additional += ['-net', 'user,restrict=n,smb=' + qemu_shared_folder+",hostfwd=tcp:127.0.0.1:12345-:"+str(fuzzbox_port)]
 qemu_additional += ['-net', 'nic,model=rtl8139']
-qemu_additional += ['-net', 'tap,ifname=tap1,script=no,downscript=no']
+#qemu_additional += ['-net', 'tap,ifname=tap1,script=no,downscript=no']
 qemu_additional += ['-monitor', 'stdio']
 

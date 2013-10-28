@@ -2,7 +2,7 @@
 
 import sys
 
-sys.path.append("w:\\paimei")
+sys.path.append("z:\\server\\paimei")
 
 import struct
 import utils
@@ -28,11 +28,11 @@ WAIT_SLEEP = 3
 HC_ADDR = 0x770627e4
 HC_CODE = 0xc0000374
 
-samples_dir = "X:\\"
-crashed_dir = "X:\\crashed"
-hanged_dir = "X:\\hanged"
-clean_dir = "X:\\clean"
-log_file = "X:\\log-"
+samples_dir = "z:\\samples"
+crashed_dir = samples_dir + "\\crashed"
+hanged_dir = samples_dir + "\\hanged"
+clean_dir = samples_dir + "\\clean"
+log_file = samples_dir + "\\log-"
 log_file = "log-"
 
 bl_instructions = []

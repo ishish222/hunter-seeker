@@ -10,7 +10,8 @@ $global:nsReader = $null
 $global:nsWriter = $null
 $global:lastProc = $null
 $global:spawnDelay = 0
-$global:binnerPath = "W:\binner-opera-1.py"
+$global:serverPath = "z:\server\"
+$global:binnerPath = $global:serverPath+"binner-opera-1.py"
 
 $enc = new-object system.text.asciiEncoding
 
@@ -158,8 +159,11 @@ function dispatch-command([string]$command, [system.net.sockets.tcpclient]$clien
 #		write-socket $ans
 #       ok
 #		Invoke-item $cmdarray[1]
-#        ".\runner.ps1 -item $file"
-        invoke-expression ".\runner.ps1 -item $file"
+#        "\runner.ps1 -item $file"
+#        $expression = $global:serverPath+"runner.ps1 -item $file"
+        $expression = ".\runner2.ps1 -item $file"
+        $expression
+        invoke-expression $expression
 
         read-pipe-until-ok
 #        ok

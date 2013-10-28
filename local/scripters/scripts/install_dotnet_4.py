@@ -12,6 +12,7 @@ cmds = list()
 
 #03_dotnetFx40_Full_x86_x64.exe
 cmds += ["_comment 03_dotnetFx40_Full_x86_x64.exe"]
+cmds += ["f5"]
 cmds += ["up", "up", "up", "up", "up", "up", "up", "up", "up"]
 cmds += ["down", "down"]
 cmds += ["ret", "_sleep 20"]
@@ -20,7 +21,7 @@ cmds += ["left", "ret", "_sleep 180"]
 #agree
 cmds += ["tab", "tab", "tab", "spc", "ret"]
 #wait looong
-cmds += ["_sleep 900"]
+cmds += ["_sleep 720"]
 #finished
 cmds += ["tab", "ret"]
 
