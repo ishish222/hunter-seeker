@@ -1,0 +1,6 @@
+analytic,local,restricted:
+qemu-system-i386 -hda xp-analytic.qcow2 -m 4G -monitor stdio -net nic,model=rtl8139 -net user,restrict=y,smb=/home/ish/projects/2012-08-02-korrino/hs2-current-deploy/ -net nic,model=rtl8139 -enable-kvm
+
+installing,remote,restrincted:
+qemu-system-i386 -hda /home/hs1/machines/qemu/xpsp2.qcow2 -m 4G -enable-kvm -net nic,model=rtl8139 -net user,restrict=y,smb=/home/hs1/shared_rw -monitor stdio -vnc :0
+

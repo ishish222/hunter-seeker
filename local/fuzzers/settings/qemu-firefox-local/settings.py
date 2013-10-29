@@ -20,6 +20,7 @@ start_sleep = 3
 revert_sleep = 40
 restart_count = 1000
 closing_plugin_name = "close_sample_opera"
+revert_script = "load_ready"
 
 qemu_machines = "/home/ish/machines/qemu"
 qemu_m = "4G"

@@ -10,7 +10,7 @@ script.eta_str = "15 min"
 cmds = list()
 
 cmds += ["_comment Configuring Windows XP (4)"]
-cmds += ["_load stage3", "_sleep 60"]
+#cmds += ["_load stage3", "_sleep 60"]
 
 #layout (& possibly res)
 cmds += ["esc", "alt-tab", "menu", "up", "ret"]
@@ -70,10 +70,10 @@ cmds += ["alt-f4"]
 
 #finalize
 cmds += ["_screendump stage4.jpg"]
-cmds += ["_delete stage3", "_sleep 60"]
-cmds += ["_save clean", "_sleep 60"]
+#cmds += ["_delete stage3", "_sleep 60"]
+#cmds += ["_save clean", "_sleep 60"]
 cmds += ["_comment Configuring Windows XP (4) finished"]
-cmds += ["_quit"]
+#cmds += ["_quit"]
 
 #Installer start
 

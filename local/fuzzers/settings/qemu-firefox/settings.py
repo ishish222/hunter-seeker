@@ -2,8 +2,18 @@ visible = False
 testing = False
 
 machines = {
-    'hs2-1': {'disk' : 'hs2-1.qcow2', 'ip' : '127.0.0.1', 'port' : 12345},
-    'hs2-2': {'disk' : 'hs2-2.qcow2', 'ip' : '127.0.0.1', 'port' : 12346}
+    'hs2-01': {'disk' : 'hs2-01.qcow2', 'ip' : '127.0.0.1', 'port' : 12301, 'vnc' : ':1'},
+    'hs2-02': {'disk' : 'hs2-02.qcow2', 'ip' : '127.0.0.1', 'port' : 12302, 'vnc' : ':2'},
+    'hs2-03': {'disk' : 'hs2-03.qcow2', 'ip' : '127.0.0.1', 'port' : 12303, 'vnc' : ':3'},
+    'hs2-04': {'disk' : 'hs2-04.qcow2', 'ip' : '127.0.0.1', 'port' : 12304, 'vnc' : ':4'},
+    'hs2-05': {'disk' : 'hs2-05.qcow2', 'ip' : '127.0.0.1', 'port' : 12305, 'vnc' : ':5'},
+    'hs2-06': {'disk' : 'hs2-06.qcow2', 'ip' : '127.0.0.1', 'port' : 12306, 'vnc' : ':6'},
+    'hs2-07': {'disk' : 'hs2-07.qcow2', 'ip' : '127.0.0.1', 'port' : 12307, 'vnc' : ':7'},
+    'hs2-08': {'disk' : 'hs2-08.qcow2', 'ip' : '127.0.0.1', 'port' : 12308, 'vnc' : ':8'},
+    'hs2-09': {'disk' : 'hs2-09.qcow2', 'ip' : '127.0.0.1', 'port' : 12309, 'vnc' : ':9'},
+    'hs2-10': {'disk' : 'hs2-10.qcow2', 'ip' : '127.0.0.1', 'port' : 12310, 'vnc' : ':10'},
+    'hs2-11': {'disk' : 'hs2-11.qcow2', 'ip' : '127.0.0.1', 'port' : 12311, 'vnc' : ':11'},
+    'hs2-12': {'disk' : 'hs2-12.qcow2', 'ip' : '127.0.0.1', 'port' : 12312, 'vnc' : ':12'}
 }
 
 bad_addrs = []
@@ -20,6 +30,7 @@ start_sleep = 3
 revert_sleep = 40
 restart_count = 1000
 closing_plugin_name = "close_sample_opera"
+revert_script = "load_ready"
 
 qemu_machines = "/home/ish/machines/qemu"
 qemu_m = "4G"

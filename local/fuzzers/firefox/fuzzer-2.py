@@ -150,7 +150,7 @@ def revert():
     print("Reverting")
     global m
     #rs("load_ready", m)
-    rs("load_ready_quick", m)
+    rs(settings.revert_script, m)
 
 def start():
     print("Starting")

@@ -24,7 +24,7 @@ cmds += ["up", "up","ret", "_sleep 80"]
 cmds += ["_sleep 180"]
 
 cmds += ["_screendump stage1.jpg"]
-cmds += ["_save stage1", "_sleep 60"]
+#cmds += ["_save stage1", "_sleep 60"]
 cmds += ["_comment Installing Windows XP (1) finished"]
 
 script.steps.append(cmds)

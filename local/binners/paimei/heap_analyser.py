@@ -62,11 +62,11 @@ def dll_load_handler (dbg):
             print(hex(addrRtlReAllocateHeap))
 
 
-        hooks.add(dbg, addrRtlCreateHeap,     6, my_exit, RtlCreateHeap)
-        hooks.add(dbg, addrRtlDestroyHeap,    1, my_exit, RtlDestroyHeap)
-        hooks.add(dbg, addrRtlAllocateHeap,   3, my_exit, RtlAllocateHeap)
-        hooks.add(dbg, addrRtlFreeHeap,       3, my_exit, RtlFreeHeap)
-        hooks.add(dbg, addrRtlReAllocateHeap, 4, my_exit, RtlReAllocateHeap)
+        hooks.add(dbg, addrRtlCreateHeap,     6, None, RtlCreateHeap)
+        hooks.add(dbg, addrRtlDestroyHeap,    1, None, RtlDestroyHeap)
+        hooks.add(dbg, addrRtlAllocateHeap,   3, None, RtlAllocateHeap)
+        hooks.add(dbg, addrRtlFreeHeap,       3, None, RtlFreeHeap)
+        hooks.add(dbg, addrRtlReAllocateHeap, 4, None, RtlReAllocateHeap)
 
         log("rtl heap manipulation routines successfully hooked")
 
@@ -190,12 +190,6 @@ def log(line):
         logf.write(line + "\n")
     else:
         print(line)
-
-def my_entry(dbg, args):
-    log("entering: ")
-
-def my_exit(dbg, args, ret):
-    log("exiting")
 
 def RtlCreateHeap (dbg, args, ret):
     global graph

@@ -4,13 +4,14 @@
 
 # TODO - need to add race condition testing and hook de-activation testing.
 
+import sys
+sys.path.append("paimei")
 from pydbg import *
 from pydbg.defines import *
 
 import pgraph
 import utils
 
-import sys
 import getopt
 
 USAGE = "USAGE: heap_trace.py <-p|--pid PID> | <-l|--load filename>"                \
@@ -38,6 +39,8 @@ def access_violation (dbg):
 def dll_load_handler (dbg):
     global hooks
 
+    addrss = {}
+
     try:
         last_dll = dbg.get_system_dll(-1)
     except:
@@ -61,12 +64,11 @@ def dll_load_handler (dbg):
         if(addrRtlReAllocateHeap != None):
             print(hex(addrRtlReAllocateHeap))
 
-
-        hooks.add(dbg, addrRtlCreateHeap,     6, my_exit, RtlCreateHeap)
-        hooks.add(dbg, addrRtlDestroyHeap,    1, my_exit, RtlDestroyHeap)
-        hooks.add(dbg, addrRtlAllocateHeap,   3, my_exit, RtlAllocateHeap)
-        hooks.add(dbg, addrRtlFreeHeap,       3, my_exit, RtlFreeHeap)
-        hooks.add(dbg, addrRtlReAllocateHeap, 4, my_exit, RtlReAllocateHeap)
+        hooks.add(dbg, addrRtlCreateHeap,     6, RtlCreateHeapEntry, RtlCreateHeapExit)
+        hooks.add(dbg, addrRtlDestroyHeap,    1, RtlDestroyHeapEntry, RtlDestroyHeapExit)
+        hooks.add(dbg, addrRtlAllocateHeap,   3, RtlAllocateHeapEntry, RtlAllocateHeapExit)
+        hooks.add(dbg, addrRtlFreeHeap,       3, RtlFreeHeapEntry, RtlFreeHeapExit)
+        hooks.add(dbg, addrRtlReAllocateHeap, 4, RtlReAllocateHeapEntry, RtlReAllocateHeapExit)
 
         log("rtl heap manipulation routines successfully hooked")
 
@@ -191,60 +193,104 @@ def log(line):
     else:
         print(line)
 
-def my_entry(dbg, args):
-    log("entering: ")
-
-def my_exit(dbg, args, ret):
-    log("exiting")
-
-def RtlCreateHeap (dbg, args, ret):
+def RtlCreateHeapEntry (dbg, args):
     global graph
-    log("%08x: RtlCreateHeap(%08x, %08x, %08x, %08x, %08x, %08x) == %08x" % (dbg.context.Eip, args[0], args[1], args[2], args[3], args[4], args[5], ret))
+    log("%08x: RtlCreateHeap(%08x, %08x, %08x, %08x, %08x, %08x)" % (dbg.context.Eip, args[0], args[1], args[2], args[3], args[4], args[5]))
 
-def RtlDestroyHeap (dbg, args, ret):
+def RtlDestroyHeapEntry (dbg, args):
     global graph
-    log("%08x: RtlDestroyteHeap(%08x) == %08x" % (dbg.context.Eip, args[0], ret))
+    log("%08x: RtlDestroyteHeap(%08x)" % (dbg.context.Eip, args[0]))
 
-def RtlAllocateHeap (dbg, args, ret):
+def RtlAllocateHeapEntry (dbg, args):
     global graph
 
     # heap id, flags, size
-    log("[%04d] %08x: RtlAllocateHeap(%08x, %08x, %d) == %08x" % (len(graph.nodes), dbg.context.Eip, args[0], args[1], args[2], ret))
+    log("[%04d] %08x: RtlAllocateHeap(%08x, %08x, %d)" % (len(graph.nodes), dbg.context.Eip, args[0], args[1], args[2]))
 
-    monitor_add(dbg, ret, args[2])
+#    monitor_add(dbg, ret, args[2])
 
-    graph_connect(dbg, ret, args[2])
-    graph_update(dbg.context.Eip)
+#    graph_connect(dbg, ret, args[2])
+#    graph_update(dbg.context.Eip)
 
 
-def RtlFreeHeap (dbg, args, ret):
+def RtlFreeHeapEntry (dbg, args):
     global graph
 
     # heap id, flags, address
-    log("[%04d] %08x: RtlFreeHeap(%08x, %08x, %08x) == %08x" % (len(graph.nodes), dbg.context.Eip, args[0], args[1], args[2], ret))
-    log("%d bytes outstanding" % outstanding_bytes())
+    log("[%04d] %08x: RtlFreeHeap(%08x, %08x, %08x)" % (len(graph.nodes), dbg.context.Eip, args[0], args[1], args[2]))
+#    log("%d bytes outstanding" % outstanding_bytes())
 
-    monitor_remove(dbg, args[2])
+#    monitor_remove(dbg, args[2])
 
-    for edge in graph.edges_to(args[2]):
-        graph.del_edge(edge.id)
+#    for edge in graph.edges_to(args[2]):
+#        graph.del_edge(edge.id)
 
-    graph.del_node(args[2])
-    graph_update(args[2], True)
+#    graph.del_node(args[2])
+#    graph_update(args[2], True)
 
 
-def RtlReAllocateHeap (dbg, args, ret):
+def RtlReAllocateHeapEntry (dbg, args):
     global graph
 
     # heap id, flags, address, new size
-    log("[%04d] %08x: RtlReAllocateHeap(%08x, %08x, %08x, %d) == %08x" % (len(graph.nodes), dbg.context.Eip, args[0], args[1], args[2], args[3], ret))
+    log("[%04d] %08x: RtlReAllocateHeap(%08x, %08x, %08x, %d)" % (len(graph.nodes), dbg.context.Eip, args[0], args[1], args[2], args[3]))
 
-    monitor_remove(dbg, args[2])
-    monitor_add(dbg, ret, args[3])
+#    monitor_remove(dbg, args[2])
+#    monitor_add(dbg, ret, args[3])
 
-    graph.del_node(args[2])
-    graph_connect(dbg, ret, args[3], realloc=True)
-    graph_update(dbg.context.Eip)
+#    graph.del_node(args[2])
+#    graph_connect(dbg, ret, args[3], realloc=True)
+#    graph_update(dbg.context.Eip)
+
+
+def RtlCreateHeapExit (dbg, args, ret):
+    global graph
+    log("== %08x" % (ret))
+
+def RtlDestroyHeapExit (dbg, args, ret):
+    global graph
+    log("== %08x" % (ret))
+
+def RtlAllocateHeapExit (dbg, args, ret):
+    global graph
+
+    # heap id, flags, size
+    log("== %08x" % (ret))
+
+#    monitor_add(dbg, ret, args[2])
+
+#    graph_connect(dbg, ret, args[2])
+#    graph_update(dbg.context.Eip)
+
+
+def RtlFreeHeapExit (dbg, args, ret):
+    global graph
+
+    # heap id, flags, address
+    log("== %08x" % (ret))
+#    log("%d bytes outstanding" % outstanding_bytes())
+
+#    monitor_remove(dbg, args[2])
+
+#    for edge in graph.edges_to(args[2]):
+#        graph.del_edge(edge.id)
+
+#    graph.del_node(args[2])
+#    graph_update(args[2], True)
+
+
+def RtlReAllocateHeapExit (dbg, args, ret):
+    global graph
+
+    # heap id, flags, address, new size
+    log("== %08x" % (ret))
+
+#    monitor_remove(dbg, args[2])
+#    monitor_add(dbg, ret, args[3])
+
+#    graph.del_node(args[2])
+#    graph_connect(dbg, ret, args[3], realloc=True)
+#    graph_update(dbg.context.Eip)
 
 
 # parse command line options.
