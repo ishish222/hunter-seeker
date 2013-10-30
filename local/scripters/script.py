@@ -43,6 +43,7 @@ def write_monitor(pipe, data):
 #    print("m> " + str(data[:-1]))
     pipe.stdin.write(data + "\n")
     read_monitor(pipe)
+    read_monitor(pipe)
 
 class Script:
     def __init__(self):

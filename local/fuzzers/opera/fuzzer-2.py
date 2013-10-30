@@ -36,7 +36,8 @@ parser.add_option("-v", "--samples-saved",  dest="samples_saved", help="Folder f
 parser.add_option("-B", "--samples-binned", dest="samples_binned", help="Folder for binned samples", default=settings.samples_binned)
 parser.add_option("-i", "--fuzzbox_ip",     dest="fuzzbox_ip", help="Force fuzzbox ip (normally based on hda)")
 parser.add_option("-p", "--fuzzbox_port",   dest="fuzzbox_port", help="Force fuzzbox port (normally based on hda)")
-parser.add_option("-V", "--Visible",        dest="visible", help="Should box be visible?", action="store_true", default=settings.visible)
+parser.add_option("-V", "--visible",        dest="visible", help="Should box be visible?", action="store_true", default=settings.visible)
+parser.add_option("-l", "--slowdown",       dest="slowdown", help="Slowdown (default is 1)", default=settings.slowdown)
 
 (options, args) = parser.parse_args()
 
@@ -157,7 +158,7 @@ def revert():
     print("Reverting")
     global m
     #rs("load_ready", m)
-    rs(settings.revert_script, m)
+    rs(settings.revert_script, m, options.slowdown)
 
 def start():
     print("Starting")
@@ -219,13 +220,13 @@ def killLast():
 def proceed1():
     # executed during each fuzzbox start
     settings.specific_preperations_1(options)
-    rss(settings.scripts_1, m)
-    rss(["dotnet_server_spawn"], m)
+    rss(settings.scripts_1, m, options.slowdown)
+    rss(["dotnet_server_spawn"], m, options.slowdown)
 
 def proceed2():
     # executed during each guest system restart
     settings.specific_preperations_2(options)
-    rss(settings.scripts_2, m)
+    rss(settings.scripts_2, m, options.slowdown)
 
     write_socket(s, "killExplorer")
     read_socket(s)
@@ -238,7 +239,7 @@ def proceed2():
 
 def proceed3():
     settings.specific_preperations_3(options)
-    rss(settings.scripts_3, m)
+    rss(settings.scripts_3, m, options.slowdown)
 
     write_socket(s, "spawn " + settings.app_path)
     read_socket(s)
