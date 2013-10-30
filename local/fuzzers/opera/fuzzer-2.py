@@ -356,14 +356,15 @@ def looop():
             while(status != "CR"):
                 sample_path = my_generator.generate_one()
                 sample_file = os.path.basename(sample_path)
-                sample_dir = os.path.dirname(sample_path)
-                os.rename(sample_path, sample_dir + "/now.ogv")
-                sample_file = "now.ogv"
-                write_socket(s, "testFile " + sample_file)
+                test_path = settings.prepare_sample(sample_path)
+                test_file = os.path.basename(test_path)
+                write_socket(s, "testFile " + test_file)
                 read_socket(s)
                 if(status == "BH" or status == "TO"):
                     close_sample()
-                    os.remove(sample_dir + "/now.ogv")
+                    os.remove(sample_path)
+                    if(test_path != sample_path):
+                        os.remove(test_path)
 
                 # keep track on sample count
                 sample_count += 1
@@ -383,6 +384,8 @@ def looop():
 
             
             handle_crashing_sample(sample_path, sample_file)
+            if(test_path != sample_path):
+                os.remove(test_path)
             write_socket(s, "killHost")
             read_socket(s)
 
@@ -393,8 +396,9 @@ def looop():
             connect()
             init()
             proceed1()
-        except Exception:
+        except Exception, e:
             print "Unknown error, restarting"
+            print e
             report("Unknown error after " + str(sample_count) + " samples")
             restart()
             connect()

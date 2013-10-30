@@ -39,11 +39,39 @@ qemu_additional =  ['-enable-kvm']
 qemu_additional += ['-monitor', 'stdio']
 
 def specific_preperations_1(options):
-    from shutil import copyfile
-    copyfile(options.shared_folder + "/server/index2.html", options.samples_shared + "/index.html")
+#    from shutil import copyfile
+#    copyfile(options.shared_folder + "/server/index2.html", options.samples_shared + "/index.html")
+    pass
+
+scripts_1 = []
 
 def specific_preperations_2(options):
     pass
 
+scripts_2 = []
+
 def specific_preperations_3(options):
     pass
+
+scripts_3 = []
+
+from os import path
+
+def prepare_sample(sample_path):
+    file_path = sample_path + ".html"
+    sample_file = path.basename(sample_path)
+    f = open(file_path, "w")
+    text = """
+<html>
+<script>
+function end()
+{{
+document.location="http://google.pl";
+}}
+</script>
+<video autoplay src="{0}" onended="end()"></video>
+</html>
+""".format(sample_file)
+    f.write(text)
+    f.close
+    return file_path
