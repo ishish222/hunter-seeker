@@ -17,7 +17,7 @@ import signal
 import settings
 sys.path += ["./scripters"]
 #import script
-from script import rs, rss, runscriptq
+from script import rs, rss, runscriptq, write_monitor
 
 class ErrorDetectedException(Exception):
     pass
@@ -130,16 +130,16 @@ def read_socket(s):
 #    return data
 
 def write_socket(s, data):
-    print("> " + str(data))
+    print("> " + str(data[:-1]))
     s.send(data)
 
-def write_monitor(data):
-    global m
-    if(m == None):
-        print("Monitor not ready")
-        return
-    print("m> " + str(data))
-    m.stdin.write(data + "\n")
+#def write_monitor(data):
+#    global m
+#    if(m == None):
+#        print("Monitor not ready")
+#        return
+#    print("m> " + str(data))
+#    m.stdin.write(data + "\n")
 
 #def read_monitor():
 #    global m

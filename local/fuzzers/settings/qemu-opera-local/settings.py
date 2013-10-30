@@ -29,8 +29,9 @@ qemu_additional =  ['-enable-kvm']
 qemu_additional += ['-monitor', 'stdio']
 
 def specific_preperations_1(options):
-    from shutil import copyfile
-    copyfile(options.shared_folder + "/server/index2.html", options.samples_shared + "/index.html")
+#    from shutil import copyfile
+#    copyfile(options.shared_folder + "/server/index2.html", options.samples_shared + "/index.html")
+    pass
 
 scripts_1 = []
 
