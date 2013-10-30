@@ -40,7 +40,7 @@ def write_monitor(pipe, data):
     if(pipe == None):
         print("Monitor not ready")
         return
-    print("m> " + str(data[:-1]))
+#    print("m> " + str(data[:-1]))
     pipe.stdin.write(data + "\n")
     read_monitor(pipe)
 

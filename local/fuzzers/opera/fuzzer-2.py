@@ -130,7 +130,7 @@ def read_socket(s):
 #    return data
 
 def write_socket(s, data):
-    print("> " + str(data[:-1]))
+    print("> " + str(data))
     s.send(data)
 
 #def write_monitor(data):
