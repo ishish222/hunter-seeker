@@ -175,13 +175,19 @@ def close_sample():
 def connect():
     global s
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.settimeout(settings.fuzzbox_timeout) 
 
     timeouts = 0
     while(True):
         try:
             s.connect((options.fuzzbox_ip, options.fuzzbox_port))
+            print("Trying to connect")
+            init()
             print("Connected")
             return
+        except socket.timeout:
+            print("Socket timeout, restarting")
+            restart()
         except Exception:
             print("No route to host, waiting")
             timeouts += 1
@@ -222,7 +228,6 @@ def proceed2():
     write_socket(s, "startBinner")
     read_socket(s)
     
-    s.settimeout(settings.fuzzbox_timeout) 
 
     return True
 
@@ -341,8 +346,6 @@ def looop():
 
     connect()
 
-    init()
-
     sample_count = 0
     last_time_check = time.localtime()
 
@@ -379,7 +382,6 @@ def looop():
                     report("Tested: " + str(sample_count) + ", will restart")
                     restart()
                     connect()
-                    init()
                     proceed1()
 
             
@@ -394,11 +396,9 @@ def looop():
             report("Socket timeout after " + str(sample_count) + " samples")
             restart()
             connect()
-            init()
             proceed1()
         except Exception, e:
             print "Unknown error, restarting"
-            print e
             report("Unknown error after " + str(sample_count) + " samples")
             restart()
             connect()

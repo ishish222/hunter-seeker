@@ -30,11 +30,11 @@ start_sleep = 3
 revert_sleep = 40
 restart_count = 1000
 closing_plugin_name = "close_sample_opera"
-revert_script = "load_ready"
+revert_script = "load_ready_6"
 
 qemu_machines = "/home/hs1/machines/qemu"
 qemu_m = "4G"
-qemu_shared_folder = "/home/hs1/hs2-current-deploy/opera"
+qemu_shared_folder = "/home/hs1/hs2-current-deploy/qemu-opera"
 qemu_additional =  ['-enable-kvm']
 qemu_additional += ['-monitor', 'stdio']
 

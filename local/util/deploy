@@ -15,15 +15,6 @@ mkdir -p $TARGET_DIR/samples/shared
 mkdir -p $TARGET_DIR/samples/saved
 mkdir -p $TARGET_DIR/samples/other
 mkdir -p $TARGET_DIR/samples/binned
-mkdir -p $TARGET_DIR/samples/binning/1
-mkdir -p $TARGET_DIR/samples/binning/2
-mkdir -p $TARGET_DIR/samples/binning/3
-mkdir -p $TARGET_DIR/samples/binning/4
-mkdir -p $TARGET_DIR/samples/binning/5
-mkdir -p $TARGET_DIR/samples/binning/6
-mkdir -p $TARGET_DIR/samples/binning/7
-mkdir -p $TARGET_DIR/samples/binning/8
-mkdir -p $TARGET_DIR/samples/binning/9
 
 echo "server"
 cat $TARGET_CONFIGS_DIR$TARGET | grep s: | cut -d":" -f2 |

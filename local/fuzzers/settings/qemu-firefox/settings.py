@@ -34,7 +34,7 @@ revert_script = "load_ready"
 
 qemu_machines = "/home/ish/machines/qemu"
 qemu_m = "4G"
-qemu_shared_folder = "/home/ish/projects/2012-08-02-korrino/hs2-current-deploy"
+qemu_shared_folder = "/home/hs1/hs2-current-deploy/qemu-firefox"
 qemu_additional =  ['-enable-kvm']
 qemu_additional += ['-monitor', 'stdio']
 
