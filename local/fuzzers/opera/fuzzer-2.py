@@ -141,6 +141,11 @@ def write_monitor(data):
     print("m> " + str(data))
     m.stdin.write(data + "\n")
 
+#def read_monitor():
+#    global m
+#    data = m.stdout.read()
+#    print("m< " + str(data))
+
 def powerofff():
     print("Powering off")
     global m

@@ -1,4 +1,4 @@
-visible = False
+visible = True
 testing = False
 
 machines = {

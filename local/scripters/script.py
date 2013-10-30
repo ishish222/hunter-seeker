@@ -28,6 +28,14 @@ def rss(a, p, sl=1):
 class ScriptException(Exception):
     pass
 
+def mon_read(pipe):
+    data = ''
+    while(True):
+        data += pipe.stdout.read(1)
+        if(data[-6:] == "(qemu)"): 
+            pipe.stdout.flush()
+            break
+
 class Script:
     def __init__(self):
         self.prev_list = list()
@@ -66,7 +74,8 @@ class Script:
                         tag = k[6:]
                         print("loading state with tag: " + tag)
                         pipe.stdin.write("loadvm " + tag + "\n")
-
+                        mon_read(pipe)
+                        print("done")
                     if(k[1:].find("save") == 0):
                         tag = k[6:]
                         print("saving state with tag: " + tag)
