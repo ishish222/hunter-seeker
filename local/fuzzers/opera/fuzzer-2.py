@@ -62,6 +62,7 @@ if(options.visible == False):
     qemu_args += ['-vnc', settings.machines[fuzzbox_name]['vnc']]
 qemu_args += settings.qemu_additional
 
+my_slowdown = float(options.slowdown)
 my_logger = logging.getLogger('MyLogger')
 my_handler = logging.handlers.SysLogHandler(address = '/dev/log')
 my_logger.setLevel(logging.DEBUG)
@@ -181,7 +182,7 @@ def close_sample():
 def connect():
     global s
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.settimeout(settings.fuzzbox_timeout) 
+    s.settimeout(settings.fuzzbox_timeout * my_slowdown) 
 
     timeouts = 0
     while(True):
@@ -220,13 +221,13 @@ def killLast():
 def proceed1():
     # executed during each fuzzbox start
     settings.specific_preperations_1(options)
-    rss(settings.scripts_1, m, options.slowdown)
-    rss(["dotnet_server_spawn"], m, options.slowdown)
+    rss(settings.scripts_1, m, my_slowdown)
+    rss(["dotnet_server_spawn"], m, my_slowdown)
 
 def proceed2():
     # executed during each guest system restart
     settings.specific_preperations_2(options)
-    rss(settings.scripts_2, m, options.slowdown)
+    rss(settings.scripts_2, m, my_slowdown)
 
     write_socket(s, "killExplorer")
     read_socket(s)
@@ -239,7 +240,7 @@ def proceed2():
 
 def proceed3():
     settings.specific_preperations_3(options)
-    rss(settings.scripts_3, m, options.slowdown)
+    rss(settings.scripts_3, m, my_slowdown)
 
     write_socket(s, "spawn " + settings.app_path)
     read_socket(s)
@@ -258,6 +259,9 @@ def proceed3():
     for bad_addr in settings.bad_addrs:
         write_socket(s, "installBad " + hex(bad_addr))
         read_socket(s)
+
+    settings.specific_preperations_4(options)
+    rss(settings.scripts_4, m, my_slowdown)
 
     return True
 
@@ -405,6 +409,7 @@ def looop():
             proceed1()
         except Exception, e:
             print "Unknown error, restarting"
+            print e
             report("Unknown error after " + str(sample_count) + " samples")
             restart()
             connect()

@@ -4,3 +4,5 @@ qemu-system-i386 -hda xp-analytic.qcow2 -m 4G -monitor stdio -net nic,model=rtl8
 installing,remote,restrincted:
 qemu-system-i386 -hda /home/hs1/machines/qemu/xpsp2.qcow2 -m 4G -enable-kvm -net nic,model=rtl8139 -net user,restrict=y,smb=/home/hs1/shared_rw -monitor stdio -vnc :0
 
+games:
+qemu-system-i386 -hda /home/ish/machines/qemu/games.qcow2 -m 4G -monitor stdio -net nic,model=rtl8139 -net user,restrict=n,smb=/home/ish/vbox_share_ro/ -net nic,model=rtl8139 -enable-kvm

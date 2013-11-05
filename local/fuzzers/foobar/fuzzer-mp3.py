@@ -260,10 +260,6 @@ def proceed3():
         write_socket(s, "installBad " + hex(bad_addr))
         read_socket(s)
 
-    for bad_rva in settings.bad_rvas:
-        write_socket(s, "installBadOff " + bad_rva[0] + " " + hex(bad_rva[1]))
-        read_socket(s)
-
     settings.specific_preperations_4(options)
     rss(settings.scripts_4, m, my_slowdown)
 
@@ -279,7 +275,7 @@ def sigkill_handler(signum, frame):
     quit()
         
 #setup fuzzer
-my_generator = generator.Generator(options.origin, options.samples_shared, ".ogv", changer.Changer, corrector = None)
+my_generator = generator.Generator(options.origin, options.samples_shared, ".mp3", changer.Changer, corrector = None)
 my_generator.mutations=3
 
 def handle_crashing_sample(sample_path, sample_file):
@@ -377,7 +373,7 @@ def looop():
                 test_file = os.path.basename(test_path)
                 write_socket(s, "testFile " + test_file)
                 read_socket(s)
-                if(status == "MA" or status == "TO"):
+                if(status == "BH" or status == "TO"):
                     close_sample()
                     os.remove(sample_path)
                     if(test_path != sample_path):

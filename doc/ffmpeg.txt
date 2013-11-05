@@ -1,0 +1,1 @@
+ffmpeg -ss 00:01:23 -i file.ogv -t 00:00:10 -c copy out.ogv

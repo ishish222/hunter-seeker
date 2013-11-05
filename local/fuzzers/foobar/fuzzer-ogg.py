@@ -17,7 +17,7 @@ import signal
 import settings
 sys.path += ["./scripters"]
 #import script
-from script import rs, rss, runscriptq
+from script import rs, rss, runscriptq, write_monitor
 
 class ErrorDetectedException(Exception):
     pass
@@ -36,7 +36,8 @@ parser.add_option("-v", "--samples-saved",  dest="samples_saved", help="Folder f
 parser.add_option("-B", "--samples-binned", dest="samples_binned", help="Folder for binned samples", default=settings.samples_binned)
 parser.add_option("-i", "--fuzzbox_ip",     dest="fuzzbox_ip", help="Force fuzzbox ip (normally based on hda)")
 parser.add_option("-p", "--fuzzbox_port",   dest="fuzzbox_port", help="Force fuzzbox port (normally based on hda)")
-parser.add_option("-V", "--Visible",        dest="visible", help="Should box be visible?", action="store_true", default=settings.visible)
+parser.add_option("-V", "--visible",        dest="visible", help="Should box be visible?", action="store_true", default=settings.visible)
+parser.add_option("-l", "--slowdown",       dest="slowdown", help="Slowdown (default is 1)", default=settings.slowdown)
 
 (options, args) = parser.parse_args()
 
@@ -57,8 +58,11 @@ if(options.hdb is not None):
     qemu_args += ['-hdb', options.machines + "/" + options.hdb]
 qemu_args += ['-net', 'nic,model=rtl8139', '-net', 'user,restrict=n,smb=' + settings.qemu_shared_folder + ',hostfwd=tcp:127.0.0.1:' + str(options.fuzzbox_port) + '-:12345']
 qemu_args += ['-net', 'nic,model=rtl8139']
+if(options.visible == False):
+    qemu_args += ['-vnc', settings.machines[fuzzbox_name]['vnc']]
 qemu_args += settings.qemu_additional
 
+my_slowdown = float(options.slowdown)
 my_logger = logging.getLogger('MyLogger')
 my_handler = logging.handlers.SysLogHandler(address = '/dev/log')
 my_logger.setLevel(logging.DEBUG)
@@ -131,13 +135,18 @@ def write_socket(s, data):
     print("> " + str(data))
     s.send(data)
 
-def write_monitor(data):
-    global m
-    if(m == None):
-        print("Monitor not ready")
-        return
-    print("m> " + str(data))
-    m.stdin.write(data + "\n")
+#def write_monitor(data):
+#    global m
+#    if(m == None):
+#        print("Monitor not ready")
+#        return
+#    print("m> " + str(data))
+#    m.stdin.write(data + "\n")
+
+#def read_monitor():
+#    global m
+#    data = m.stdout.read()
+#    print("m< " + str(data))
 
 def powerofff():
     print("Powering off")
@@ -150,7 +159,7 @@ def revert():
     print("Reverting")
     global m
     #rs("load_ready", m)
-    rs("load_ready_quick", m)
+    rs(settings.revert_script, m, options.slowdown)
 
 def start():
     print("Starting")
@@ -173,13 +182,19 @@ def close_sample():
 def connect():
     global s
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.settimeout(settings.fuzzbox_timeout * my_slowdown) 
 
     timeouts = 0
     while(True):
         try:
             s.connect((options.fuzzbox_ip, options.fuzzbox_port))
+            print("Trying to connect")
+            init()
             print("Connected")
             return
+        except socket.timeout:
+            print("Socket timeout, restarting")
+            restart()
         except Exception:
             print("No route to host, waiting")
             timeouts += 1
@@ -206,12 +221,13 @@ def killLast():
 def proceed1():
     # executed during each fuzzbox start
     settings.specific_preperations_1(options)
-
-    rss(["dotnet_server_spawn"], m)
+    rss(settings.scripts_1, m, my_slowdown)
+    rss(["dotnet_server_spawn"], m, my_slowdown)
 
 def proceed2():
     # executed during each guest system restart
     settings.specific_preperations_2(options)
+    rss(settings.scripts_2, m, my_slowdown)
 
     write_socket(s, "killExplorer")
     read_socket(s)
@@ -219,12 +235,12 @@ def proceed2():
     write_socket(s, "startBinner")
     read_socket(s)
     
-    s.settimeout(settings.fuzzbox_timeout) 
 
     return True
 
 def proceed3():
     settings.specific_preperations_3(options)
+    rss(settings.scripts_3, m, my_slowdown)
 
     write_socket(s, "spawn " + settings.app_path)
     read_socket(s)
@@ -244,6 +260,9 @@ def proceed3():
         write_socket(s, "installBad " + hex(bad_addr))
         read_socket(s)
 
+    settings.specific_preperations_4(options)
+    rss(settings.scripts_4, m, my_slowdown)
+
     return True
 
 def sig1_handler(signum, frame):
@@ -256,7 +275,7 @@ def sigkill_handler(signum, frame):
     quit()
         
 #setup fuzzer
-my_generator = generator.Generator(options.origin, options.samples_shared, ".ogv", changer.Changer, corrector = None)
+my_generator = generator.Generator(options.origin, options.samples_shared, ".ogg", changer.Changer, corrector = None)
 my_generator.mutations=3
 
 def handle_crashing_sample(sample_path, sample_file):
@@ -337,8 +356,6 @@ def looop():
 
     connect()
 
-    init()
-
     sample_count = 0
     last_time_check = time.localtime()
 
@@ -352,14 +369,15 @@ def looop():
             while(status != "CR"):
                 sample_path = my_generator.generate_one()
                 sample_file = os.path.basename(sample_path)
-                sample_dir = os.path.dirname(sample_path)
-                os.rename(sample_path, sample_dir + "/now.ogv")
-                sample_file = "now.ogv"
-                write_socket(s, "testFile " + sample_file)
+                test_path = settings.prepare_sample(sample_path)
+                test_file = os.path.basename(test_path)
+                write_socket(s, "testFile " + test_file)
                 read_socket(s)
                 if(status == "BH" or status == "TO"):
                     close_sample()
-                    os.remove(sample_dir + "/now.ogv")
+                    os.remove(sample_path)
+                    if(test_path != sample_path):
+                        os.remove(test_path)
 
                 # keep track on sample count
                 sample_count += 1
@@ -374,11 +392,12 @@ def looop():
                     report("Tested: " + str(sample_count) + ", will restart")
                     restart()
                     connect()
-                    init()
                     proceed1()
 
             
             handle_crashing_sample(sample_path, sample_file)
+            if(test_path != sample_path):
+                os.remove(test_path)
             write_socket(s, "killHost")
             read_socket(s)
 
@@ -387,10 +406,10 @@ def looop():
             report("Socket timeout after " + str(sample_count) + " samples")
             restart()
             connect()
-            init()
             proceed1()
-        except Exception:
+        except Exception, e:
             print "Unknown error, restarting"
+            print e
             report("Unknown error after " + str(sample_count) + " samples")
             restart()
             connect()

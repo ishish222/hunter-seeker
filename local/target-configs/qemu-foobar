@@ -1,10 +1,13 @@
-c:fuzzers/firefox/fuzzer-2.py
+c:fuzzers/foobar/fuzzer-ogg.py
+c:fuzzers/foobar/fuzzer-mp3.py
 c:fuzzers/generators
 c:fuzzers/correctors
-c:settings/qemu-firefox/settings.py
+c:settings/qemu-foobar/settings.py
 c:scripters
-c:blob/res/theora/out.ogv
-c:blob/res/theora/out-1.ogv
+c:blob/res/ogg/01-1.ogg
+c:blob/res/ogg/02-1.ogg
+c:blob/res/mp3/02-1.mp3
+c:blob/res/mp3/03-1.mp3
 s:paimei
 s:settings/qemu-firefox-local/binSettings.py
 s:binners/binner-generic.py
@@ -12,7 +15,5 @@ s:fuzzers/opera/index2.html
 s:fuzzers/opera/runner2.ps1
 s:vm-server/powershell.exe.config
 s:vm-server/config_1.ps1
-s:vm-server/dn4on.ps1
 s:vm-server/server.ps1
-s:vm-server/dn4off.ps1
 

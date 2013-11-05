@@ -1,26 +1,27 @@
-visible = False
+visible = True
 testing = False
 
 machines = {
-    'hs2-1': {'disk' : 'hs2-1.qcow2', 'ip' : '127.0.0.1', 'port' : 12345},
-    'hs2-2': {'disk' : 'hs2-2.qcow2', 'ip' : '127.0.0.1', 'port' : 12346}
+    'hs2-1': {'disk' : 'hs2-1.qcow2', 'ip' : '127.0.0.1', 'port' : 12345, 'vnc': ':11'},
+    'hs2-2': {'disk' : 'hs2-2.qcow2', 'ip' : '127.0.0.1', 'port' : 12346, 'vnc': ':12'}
 }
 
-bad_addrs = []
+bad_addrs = [0x13518F0]
 samples_shared_path = "../samples/shared"
 samples_saved = "../samples/saved"
 samples_binned = "../samples/binned"
-app_path = "C:\\Program Files\\Mozilla Firefox\\firefox.exe"
-app_module = "firefox.exe"
+app_path = "C:\\Program Files\\Opera\\16.0.1196.80\\Opera.exe"
+app_module = "opera.exe"
 corrector = None
 buffer_size = 4096
-log_name = "HS:Firefox"
+log_name = "HS:Opera"
 fuzzbox_timeout = 10.0
 start_sleep = 3
 revert_sleep = 40
 restart_count = 1000
 closing_plugin_name = "close_sample_opera"
 revert_script = "load_ready"
+slowdown = 1.5
 
 qemu_machines = "/home/ish/machines/qemu"
 qemu_m = "4G"
@@ -44,6 +45,11 @@ def specific_preperations_3(options):
     pass
 
 scripts_3 = []
+
+def specific_preperations_4(options):
+    pass
+
+scripts_4 = []
 
 from os import path
 

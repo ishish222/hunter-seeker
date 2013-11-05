@@ -54,7 +54,7 @@ class Script:
         self.slowdown = 1
 
     def delay(self, to):
-        eto = to * self.slowdown
+        eto = float(to) * float(self.slowdown)
         print("sleeping " + str(eto) + " seconds")
         time.sleep(eto)
 
