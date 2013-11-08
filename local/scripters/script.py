@@ -1,6 +1,6 @@
 import time
 import importlib
-#from generic import slowdown
+from subprocess import call
 
 def runscriptq(sc, p, slowdown=1):
     scriptmod = importlib.import_module("scripts."+sc)
@@ -101,6 +101,12 @@ class Script:
                         sd = k[12:]
                         print("screendump to file " + sd)
                         write_monitor(pipe, "screendump " + sd + "\n")
+                        continue
+
+                    if(k[1:].find("syscmd") == 0):
+                        cmd = k[8:]
+                        print("[syscmd: %s]" % cmd)
+                        call(cmd.split(" "))
                         continue
 
                     if(k[1:].find("comment") == 0):

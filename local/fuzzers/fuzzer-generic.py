@@ -254,6 +254,9 @@ def proceed3():
     write_socket(s, "setupMarkers")
     read_socket(s)
 
+    write_socket(s, "installHandlers")
+    read_socket(s)
+
     if(options.slowdown != settings.slowdown):
         write_socket(s, "setupSlowdown {0}".format(options.slowdown))
         read_socket(s)
@@ -432,6 +435,7 @@ def looop():
 
             
             handle_crashing_sample(sample_path, sample_file)
+            report("CR")
             if(test_path != sample_path):
                 os.remove(test_path)
             write_socket(s, "killHost")

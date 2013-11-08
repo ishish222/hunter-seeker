@@ -2,7 +2,7 @@ import generators.changer as changer
 
 visible = True
 testing = False
-breaking = False
+breaking = True
 
 machines = {
     'hs2-1': {'disk' : 'hs2-1.qcow2', 'ip' : '127.0.0.1', 'port' : 12345},
@@ -44,7 +44,7 @@ def specific_preperations_1(options):
 #    copyfile(options.shared_folder + "/server/index2.html", options.samples_shared + "/index.html")
     pass
 
-scripts_1 = []
+scripts_1 = ["beep"]
 
 def specific_preperations_2(options):
     pass

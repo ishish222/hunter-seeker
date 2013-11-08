@@ -19,19 +19,14 @@ import ctypes
 import win32pipe, win32file, win32gui
 import random
 import settings
-
 from pydbg import *
 from pydbg.defines import *
-
 from debuggee_procedure_call import dpc
 
-global lock
-lock = Lock()
-
-START_SLEEP = 8
-WAIT_SLEEP = settings.wait_sleep
-HC_ADDR = 0x770627e4
-HC_CODE = 0xc0000374
+test_lock = Lock()
+preparation_lock = Lock()
+attached=False
+imagename = "opera.exe"
 
 samples_dir = "z:\\samples"
 crashed_dir = samples_dir + "\\crashed"
@@ -161,71 +156,46 @@ def check_blacklists(dbg, e_addr):
     #checks finished, it's ok
     return False
 
-def handle_crash(dbg, reason=""):
-    global status
+def handle_crash(dbg):
     global crash_bin
     global crash_reason
 
-#    l.acquire()
-    crash_bin = cb
-    crash_bin.record_crash(dbg)
+    print("4")
+    e_addr = crash_bin.last_crash.exception_address
 
     #create dossier
-    if(reason == "hc"):
-        crash_reason = "hc"
-        writePipe("Probable crash reason: hc (crash info needs reinterpretation)\n")
-        writePipe("")
-    if(reason == "uaf"):
+#    if(reason == "hc"):
+#        crash_reason = "hc"
+#        writePipe("Probable crash reason: hc (crash info needs reinterpretation)\n")
+#        writePipe("")
+    if((disasm(dbg, e_addr) == "[INVALID]") or (get_module(dbg, e_addr) == "[INVALID]")):
         crash_reason = "uaf"
         writePipe("Probable crash reason: uaf\n")
         writePipe("")
     else:
         crash_reason = "unk"
 
+    print("5")
     writePipe(crash_bin.crash_synopsis())
-    status = "CR"
 
-    #save sample
-    #separate dirs for uafs & hcs
-
-    #release
-#    ok()
-#    l.release()
-#    dbg.terminate_process()    
     return DBG_CONTINUE
 
 
 def handle_av(dbg):
+    print("avThread")
     global status
-
+    global crash_bin
+    
+    test_lock.acquire()
+    print("test locked by AV")
     crash_bin = cb
     crash_bin.record_crash(dbg)
     e_addr = crash_bin.last_crash.exception_address
-
-    if(check_blacklists(dbg, e_addr)):
-        return DBG_EXCEPTION_NOT_HANDLED
-
-    if((disasm(dbg, e_addr) == "[INVALID]") or (get_module(dbg, e_addr) == "[INVALID]")):
-        handle_crash(dbg, "uaf")
-        return DBG_CONTINUE
-
-    handle_crash(dbg)
+    if(check_blacklists(dbg, e_addr) == False):
+        status = "CR"
+    test_lock.release()
     return DBG_CONTINUE
 
-def handle_bp(dbg):
-    b_addr = dbg.get_register("EIP")
-
-    #heap addr?
-    if(b_addr == HC_ADDR):
-        esp = dbg.get_register("ESP")
-        dw = dbg.read_process_memory(esp + 0x4, 4)
-        code = struct.unpack("<I", dw)[0]
-        if(code == HC_CODE):
-            handle_crash(dbg, "hc")
-            return DBG_CONTINUE
-
-    return DBG_EXCEPTION_NOT_HANDLED
-    
 def file_run(filee, dbg):
     global status
 
@@ -275,9 +245,6 @@ def windows_kill(pid):
     handle = kernel32.OpenProcess(1, 0, pid)
     return (0 != kernel32.TerminateProcess(handle, 0))
 
-attached=False
-imagename = "opera.exe"
-
 def attach(dbg, imagename):
     for (pid, name) in dbg.enumerate_processes():
         if imagename in name:
@@ -296,7 +263,6 @@ def attach(dbg, imagename):
 
 def setup_dbg(dbg):
     dbg.set_callback(EXCEPTION_ACCESS_VIOLATION, handle_av)
-#    dbg.bp_set(0x770627e4, handler=handle_bp)
 
 def check_app():
     global dbg
@@ -348,17 +314,22 @@ global counters
 counters = {}
 
 def bad_handler(dbg):
+    print("badThread")
     global status
     global counters
-
-#    writePipe("Pass count: %x\n" % dbg.breakpoints[dbg.exception_address].pass_count)
-#    writePipe("Hit count: %x\n" % counters[dbg.exception_address])
+    writePipe("Pass count: %x\n" % dbg.breakpoints[dbg.exception_address].pass_count)
+    writePipe("Hit count: %x\n" % counters[dbg.exception_address])
  
     if(dbg.breakpoints[dbg.exception_address].pass_count > counters[dbg.exception_address]):
         counters[dbg.exception_address] += 1
-#        writePipe("New hit count: %x\n" % counters[dbg.exception_address])
+        writePipe("New hit count: %x\n" % counters[dbg.exception_address])
     else:
-        status = "MA"
+        if(status != "CR"):
+            test_lock.acquire()
+            print("test locked by MA")
+            if(status == ""):
+                status = "MA"
+            test_lock.release()
     return DBG_CONTINUE
 
 def timer_routine(to):
@@ -366,24 +337,28 @@ def timer_routine(to):
     return
 
 def breaking_routine(to):
+    print("breakingThread")
     global dbg
 
     time.sleep(int(to * settings.slowdown /2))
 
     print("breaking")
-
-    addr = int(random.random() * 0xffffffff)
-    threads =  dbg.enumerate_threads()
-    thread_num = int(random.random() * len(threads))
-    print(str(thread_num) + ": " + str(threads[thread_num]))
+    try:
+        addr = int(random.random() * 0xffffffff)
+        threads =  dbg.enumerate_threads()
+        thread_num = int(random.random() * len(threads))
+        print(str(thread_num) + ": " + str(threads[thread_num]))
     
-    thread_handle = dbg.open_thread(threads[thread_num])
-    thread_context = dbg.get_thread_context(thread_handle)
-    thread_context.Eip = addr
-    dbg.set_thread_context(thread_context, thread_handle)
+        thread_handle = dbg.open_thread(threads[thread_num])
+        thread_context = dbg.get_thread_context(thread_handle)
+        thread_context.Eip = addr
+        dbg.set_thread_context(thread_context, thread_handle)
+    except Exception:
+        pass
 
 
 def watchThread_routine(to):
+    print("watchThread")
     global dbg 
     global status
 
@@ -397,9 +372,11 @@ def watchThread_routine(to):
     while(timer.is_alive() and status == ""):
         pass
 
-    if(status == ""):
+    if(status != "CR" and status != "MA"):
+        test_lock.acquire()
+        print("test locked by TO")
         status = "TO"
-
+        test_lock.release()
     dbg.debugger_active = False
     return
 
@@ -418,16 +395,25 @@ def resolve_rvas(dbg, rvas):
 
 def attach_markers(dbg):
     global counters
+
+    preparation_lock.acquire()
+    print("preparation locked")
     for ma_addr in settings.ma_addrs:
 #        writePipe("Installing bad at {0}\n".format(hex(ma_addr)))
         dbg.bp_set(ma_addr[0], handler = bad_handler)
         dbg.breakpoints[ma_addr[0]].pass_count = ma_addr[1]
         counters[ma_addr[0]] = 0
+    preparation_lock.release()
+    print("preparation released")
 
 def remove_markers(dbg):
+    preparation_lock.acquire()
+    print("preparation locked")
     for ma_addr in settings.ma_addrs:
 #        writePipe("Removing bad at {0}\n".format(hex(ma_addr)))
         dbg.bp_del(ma_addr[0])
+    preparation_lock.release()
+    print("preparation released")
 
 def check_markers(dbg):
     for ma_addr in settings.ma_addrs:
@@ -445,172 +431,169 @@ def execute(cmds):
     cmd = cmds[0]
     args = " ".join(cmds[1:])
 
-    try:
-        if(cmd == "settle"):
-            global status
-            status = ""
+#    try:
+    if(cmd == "settle"):
+        global status
+        status = ""
 
-            watchThread = Thread(target = watchThread_routine, args=(float(cmds[1]),))
-            watchThread.start()
-            dbg.debugger_active = True
-            dbg.debug_event_loop()
-            ok()
-
-        if(cmd == "waitTest"):
-            global status
-            status = ""
-
-            attach_markers(dbg)
-            watchThread = Thread(target = watchThread_routine, args=(settings.wait_sleep * settings.slowdown, ))
-            watchThread.start()
-            dbg.debugger_active = True
-            dbg.debug_event_loop()
-            writePipe("Status: " + status)
-            remove_markers(dbg)
-            ok()
-
-        if(cmd == "listClasses"):
-            win32gui.EnumWindows(enum_handler, None)
-            ok()
-
-        if(cmd == "listTebs"):
-            for teb in dbg.tebs.keys():
-                print(teb)
-                writePipe(hex(teb))
-            ok()
-
-
-        if(cmd == "cbEip"):
-            global crash_bin
-
-            writePipe("0x%x" % crash_bin.last_crash.exception_address)
-            ok()
-
-        if(cmd == "cbCrashSynopsis"):
-            global crash_bin
-
-            writePipe(crash_bin.crash_synopsis())
-            ok()
-
-        if(cmd == "cbReason"):
-            global crash_reason
-
-            writePipe(crash_reason)
-            ok()
-
-        if(cmd == "cbStackUnwind"):
-            global crash_bin
-
-            for call_frame in crash_bin.last_crash.stack_unwind:
-                writePipe(call_frame + "\n")
-            ok()
-
-        if(cmd == "snapshot"):
-            dbg.suspend_all_threads()
-            dbg.process_snapshot()
-            dbg.resume_all_threads()
-            ok()
-
-        if(cmd == "restore"):
-            dbg.suspend_all_threads()
-            dbg.process_restore()
-            dbg.resume_all_threads()
-            ok()
-
-        if(cmd == "stop"):
-            global goThreadActive 
-            goThreadActive = False
-            ok()
-
-        if(cmd == "attachBinner"):
-            attach(dbg, args)
-            writePipe("Attached to " + str(dbg.pid))
-            ok()
-
-        if(cmd == "killHost"):
-            dbg.terminate_process()
-            dbg.debug_set_process_kill_on_exit(True)
-            dbg.detach()
-            ok()
-
-
-        if(cmd == "installHandlers"):
-            setup_dbg(dbg)
-            writePipe("AV handlers in place")
-            ok()
-
-        if(cmd == "installGood"):
-            writePipe("Installing good at " + cmds[1])
-            ok()
-
-        if(cmd == "installMarkerAddrs"):
-            for ma_addr in settings.ma_addrs:
-                writePipe("Installing bad at " + cmds[1])
-                dbg.bp_set(ma_addr, handler = bad_handler)
-            ok()
-
-        if(cmd == "installBad"):
-            writePipe("Installing bad at " + cmds[1])
-            dbg.bp_set(int(cmds[1], 16), handler = bad_handler)
-            ok()
-
-        if(cmd == "checkBad"):
-            if(dbg.bp_is_ours(int(cmds[1], 16))):
-                db = dbg.read_process_memory(int(cmds[1], 16), 1)
-                byte = struct.unpack("<B", db)[0]
-                writePipe("Marker working at " + cmds[1] + "\n")
-                writePipe("Byte: %x\n" % byte)
-            else:
-                writePipe("Marker not working at " + cmds[1] + "\n")
-            ok()
-
-        if(cmd == "checkBadOff"):
-            mod_addr = 0x0
-            for mod in dbg.enumerate_modules():
-                if(mod[0] == cmds[1]):
-                    mod_addr = mod[1]
-            if(mod_addr == 0x0):
-                raise Exception
-            off = int(cmds[2], 16)
-
-            if(dbg.bp_is_ours(mod_addr+off) == True):
-                db = dbg.read_process_memory(mod_addr+off, 1)
-                byte = struct.unpack("<B", db)[0]
-                writePipe("Marker working at " + cmds[1] + "\n")
-                writePipe("Byte: %x\n" % byte)
-                writePipe("Marker working at " + cmds[1] + " +" + cmds[2]+ "\n")
-            else:
-                writePipe("Marker not working at " + cmds[1] + " +" + cmds[2]+ "\n")
-            ok()
-
-        if(cmd == "setupSlowdown"):
-            writePipe("Setting slowdown to: {0}\n".format(cmds[1]))
-            settings.slowdown = float(cmds[1])
-            ok()
-
-        if(cmd == "setupMarkers"):
-            writePipe("Setting up markers\n")
-            settings.ma_addrs += resolve_rvas(dbg, settings.ma_rvas)
-            writePipe("Marker list: {0}\n".format(settings.ma_addrs))
-            ok()
-
-        if(cmd == "binTest"):
-            writePipe("Communication with binner is working")
-            ok()
-        
-        if(cmd == "release"):
-            writePipe("Releasing")
-            ok()
-            dbg.debugger_active = True
-            dbg.debug_event_loop()
-
-    except Exception, e:
-        print(e)
-            # loop so i can read it :)
-        while True:
-            pass
-        writePipe("Error " + e)
+        watchThread = Thread(target = watchThread_routine, args=(float(cmds[1]),))
+        watchThread.start()
+        dbg.debugger_active = True
+        dbg.debug_event_loop()
         ok()
+
+    if(cmd == "waitTest"):
+        global status
+
+        status = ""
+        attach_markers(dbg)
+        watchThread = Thread(target = watchThread_routine, args=(settings.wait_sleep * settings.slowdown, ))
+        watchThread.start()
+        dbg.debugger_active = True
+        dbg.debug_event_loop()
+        writePipe("Status: " + status)
+        if(status == "CR"):
+            handle_crash(dbg)
+        remove_markers(dbg)
+        ok()
+
+    if(cmd == "listClasses"):
+        win32gui.EnumWindows(enum_handler, None)
+        ok()
+
+    if(cmd == "listTebs"):
+        for teb in dbg.tebs.keys():
+            print(teb)
+            writePipe(hex(teb))
+        ok()
+
+
+    if(cmd == "cbEip"):
+        global crash_bin
+
+        writePipe("0x%x" % crash_bin.last_crash.exception_address)
+        ok()
+
+    if(cmd == "cbCrashSynopsis"):
+        global crash_bin
+
+        writePipe(crash_bin.crash_synopsis())
+        ok()
+
+    if(cmd == "cbReason"):
+        global crash_reason
+
+        writePipe(crash_reason)
+        ok()
+
+    if(cmd == "cbStackUnwind"):
+        global crash_bin
+
+        for call_frame in crash_bin.last_crash.stack_unwind:
+            writePipe(call_frame + "\n")
+        ok()
+
+    if(cmd == "snapshot"):
+        dbg.suspend_all_threads()
+        dbg.process_snapshot()
+        dbg.resume_all_threads()
+        ok()
+
+    if(cmd == "restore"):
+        dbg.suspend_all_threads()
+        dbg.process_restore()
+        dbg.resume_all_threads()
+        ok()
+
+    if(cmd == "stop"):
+        global goThreadActive 
+        goThreadActive = False
+        ok()
+
+    if(cmd == "attachBinner"):
+        attach(dbg, args)
+        writePipe("Attached to " + str(dbg.pid))
+        ok()
+
+    if(cmd == "killHost"):
+        dbg.terminate_process()
+        dbg.debug_set_process_kill_on_exit(True)
+        dbg.detach()
+        ok()
+        exit()
+
+    if(cmd == "installHandlers"):
+        setup_dbg(dbg)
+        writePipe("AV handlers in place")
+        ok()
+
+    if(cmd == "installGood"):
+        writePipe("Installing good at " + cmds[1])
+        ok()
+
+    if(cmd == "installMarkerAddrs"):
+        for ma_addr in settings.ma_addrs:
+            writePipe("Installing bad at " + cmds[1])
+            dbg.bp_set(ma_addr, handler = bad_handler)
+        ok()
+
+    if(cmd == "installBad"):
+        writePipe("Installing bad at " + cmds[1])
+        dbg.bp_set(int(cmds[1], 16), handler = bad_handler)
+        ok()
+
+    if(cmd == "checkBad"):
+        if(dbg.bp_is_ours(int(cmds[1], 16))):
+            db = dbg.read_process_memory(int(cmds[1], 16), 1)
+            byte = struct.unpack("<B", db)[0]
+            writePipe("Marker working at " + cmds[1] + "\n")
+            writePipe("Byte: %x\n" % byte)
+        else:
+            writePipe("Marker not working at " + cmds[1] + "\n")
+        ok()
+
+    if(cmd == "checkBadOff"):
+        mod_addr = 0x0
+        for mod in dbg.enumerate_modules():
+            if(mod[0] == cmds[1]):
+                mod_addr = mod[1]
+        if(mod_addr == 0x0):
+            raise Exception
+        off = int(cmds[2], 16)
+
+        if(dbg.bp_is_ours(mod_addr+off) == True):
+            db = dbg.read_process_memory(mod_addr+off, 1)
+            byte = struct.unpack("<B", db)[0]
+            writePipe("Marker working at " + cmds[1] + "\n")
+            writePipe("Byte: %x\n" % byte)
+            writePipe("Marker working at " + cmds[1] + " +" + cmds[2]+ "\n")
+        else:
+            writePipe("Marker not working at " + cmds[1] + " +" + cmds[2]+ "\n")
+        ok()
+
+    if(cmd == "setupSlowdown"):
+        writePipe("Setting slowdown to: {0}\n".format(cmds[1]))
+        settings.slowdown = float(cmds[1])
+        ok()
+
+    if(cmd == "setupMarkers"):
+        writePipe("Setting up markers\n")
+        settings.ma_addrs += resolve_rvas(dbg, settings.ma_rvas)
+        writePipe("Marker list: {0}\n".format(settings.ma_addrs))
+        ok()
+
+    if(cmd == "binTest"):
+        writePipe("Communication with binner is working")
+        ok()
+    
+    if(cmd == "release"):
+        writePipe("Releasing")
+        ok()
+        dbg.debugger_active = True
+        dbg.debug_event_loop()
+
+#    except Exception, e:
+#        ok()
 
 def main():
     global dbg
@@ -623,43 +606,42 @@ def main():
 
     count = 0
     dbg = pydbg()
-#    time.sleep(START_SLEEP)
-
 
     ph = getPipe(my_pipe)
     writePipe("OK")
 
-    print("test")
+    while True:
+        cmd = readPipe()
+        cmds = str.split(cmd[1])
+        execute(cmds)
 
-    try:
-        while True:
-            cmd = readPipe()
-            cmds = str.split(cmd[1])
-            execute(cmds)
-    except Exception, e:
-        print(e)
+#    try:
+#        while True:
+#            cmd = readPipe()
+#            cmds = str.split(cmd[1])
+#            execute(cmds)
+#    except Exception, e:
+#        print(e)
 
-    cb_file = samples_dir + time.strftime("%Y%m%d-%H%M%S") + ".crash"
-    status = "hang"
+#    cb_file = samples_dir + time.strftime("%Y%m%d-%H%M%S") + ".crash"
+#    status = "hang"
+#    count = 0
 
+#    for filee in os.listdir(samples_dir):
+#        if(filee[-4:] != ".ogv"):
+#            continue
+#        #spawn app & wait to load
+#        check_app()
+#        count += 1
 
-    count = 0
+#    dbg.detach()
+#    dbg = None
 
-    for filee in os.listdir(samples_dir):
-        if(filee[-4:] != ".ogv"):
-            continue
-        #spawn app & wait to load
-        check_app()
-        count += 1
+#    print("Got " + str(count) + " crashes, exporting to: " + cb_file)
+#    logf.write("Got " + str(count) + " crashes, exporting to: " + cb_file)
 
-    dbg.detach()
-    dbg = None
-
-    print("Got " + str(count) + " crashes, exporting to: " + cb_file)
-    logf.write("Got " + str(count) + " crashes, exporting to: " + cb_file)
-
-    cb.export_file(cb_file)
-    logf.close()
+#    cb.export_file(cb_file)
+#    logf.close()
 
 #if __name__ == "main":
 main()

@@ -1,3 +1,48 @@
 InsERT S.A.: http://www.insert.com.pl/index.html
-    Programy:
+Programy:
+Subiekt GT: http://www.insert.com.pl/programy_dla_firm/sprzedaz/subiekt_gt/opis.html
+Gestor GT
+Sello
+Rachmistrz GT
+Gratyfikant GT
+oscGT
+mobilny Subiekt
+Subiekt Sprint - system sprzedaży
+
+--
+BIPROGEO: http://www.biprogeo.com.pl/produkty-wlasne.dhtml
+
+--
+CadSol
+http://www.cadsol.pl/nasze-rozwiazania/catia-v5
+
+--
+Huzar Software
+http://www.huzar.pl/index.php?x=programy
+Istnieje możliwość przetestowania programu WinSAD. Zainteresowanych prosimy o kontakt.
+
+--
+Infortes
+http://infortes.pl/oferta/oprogramowanie/rozwiazania-autorskie/infortes-mes/
+
+--
+MAPI Jadlospis
+http://www.mapi.com.pl/
+
+--
+MCM Software
+http://www.mcm.pl/programy_win.php
+
+--
+myConsult
+http://myconsult.com.pl/pl/systemy_erp_comarch/19/
+
+--
+NetCRM
+http://www.netcrm.pl/oferta/
+
+--
+QuestPOL
+http://www.questpol.com.pl/cadcam.php
+
 
