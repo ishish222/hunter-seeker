@@ -55,7 +55,7 @@ class Script:
 
     def delay(self, to):
         eto = float(to) * float(self.slowdown)
-        print("sleeping " + str(eto) + " seconds")
+        #print("sleeping " + str(eto) + " seconds")
         time.sleep(eto)
 
     def reg_script(self, script):

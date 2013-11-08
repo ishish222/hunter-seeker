@@ -14,8 +14,9 @@ import logging.handlers
 import time
 import sys
 import signal
-import settings
 sys.path += ["./scripters"]
+sys.path += ["../settings"]
+import settings
 #import script
 from script import rs, rss, runscriptq, write_monitor
 
@@ -253,16 +254,20 @@ def proceed3():
     write_socket(s, "attachBinner " + settings.app_module)
     read_socket(s)
 
-    write_socket(s, "installHandlers")
+    write_socket(s, "setupMarkers")
     read_socket(s)
 
-    for bad_addr in settings.bad_addrs:
-        write_socket(s, "installBad " + hex(bad_addr))
+    if(options.slowdown != settings.slowdown):
+        write_socket(s, "setupSlowdown {0}".format(options.slowdown))
         read_socket(s)
 
-    for bad_rva in settings.bad_rvas:
-        write_socket(s, "installBadOff " + bad_rva[0] + " " + hex(bad_rva[1]))
-        read_socket(s)
+#    for bad_addr in settings.bad_addrs:
+#        write_socket(s, "installBad " + hex(bad_addr))
+#        read_socket(s)
+
+#    for bad_rva in settings.bad_rvas:
+#        write_socket(s, "installBadOff " + bad_rva[0] + " " + hex(bad_rva[1]))
+#        read_socket(s)
 
     settings.specific_preperations_4(options)
     rss(settings.scripts_4, m, my_slowdown)
@@ -349,6 +354,20 @@ def handle_crashing_sample(sample_path, sample_file):
     #must be removed, so that the next run wont be affected
 
 
+def settle():
+    global s 
+
+#    for bad_addr in settings.bad_addrs:
+#        write_socket(s, "checkBad " + hex(bad_addr))
+#        read_socket(s)
+
+#    for bad_rva in settings.bad_rvas:
+#        write_socket(s, "checkBadOff " + bad_rva[0] + " " + hex(bad_rva[1]))
+#        read_socket(s)
+
+    write_socket(s, "settle " + str(settings.settle_sleep * settings.slowdown))
+    read_socket(s)
+
 #setup box
 def looop():
     global s
@@ -361,6 +380,8 @@ def looop():
     connect()
 
     sample_count = 0
+    to_count = 0
+    ma_count = 0
     last_time_check = time.localtime()
 
     #start testing
@@ -382,6 +403,17 @@ def looop():
                     os.remove(sample_path)
                     if(test_path != sample_path):
                         os.remove(test_path)
+                    if(status == "MA"):
+#                        settle()
+                        ma_count += 1
+                        to_count = 0
+                    if(status == "TO"):
+                        to_count += 1
+                        if(to_count % 3 == 0):
+                            report("3x TO, settling")
+                            to_count = 0
+                            settle()
+
 
                 # keep track on sample count
                 sample_count += 1
@@ -390,7 +422,10 @@ def looop():
                     elapsed = time.mktime(current_time) - time.mktime(last_time_check)
                     report("Tested: " + str(sample_count))
                     report("100 tested in " + str(elapsed) + " seconds")
-                    report("Last speed: " + str(100/elapsed) + " tps") 
+                    report("Last speed: " + str(100/elapsed) + " tps")
+                    report("MA count: " + str(ma_count))
+                    to_count = 0
+                    ma_count = 0
                     last_time_check = current_time
                 if(sample_count % settings.restart_count == 0):
                     report("Tested: " + str(sample_count) + ", will restart")

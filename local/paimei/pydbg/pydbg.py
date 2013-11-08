@@ -554,6 +554,7 @@ class pydbg:
 
         # ensure a breakpoint doesn't already exist at the target address.
         if not self.breakpoints.has_key(address):
+#        if True:
             try:
                 # save the original byte at the requested breakpoint address.
                 original_byte = self.read_process_memory(address, 1)

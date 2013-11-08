@@ -1,5 +1,6 @@
 visible = False
 testing = False
+breaking = False
 
 machines = {
     'hs2-13': {'disk' : 'hs2-13.qcow2', 'ip' : '127.0.0.1', 'port' : 12313, 'vnc' : ':13'},
@@ -10,8 +11,9 @@ machines = {
     'hs2-18': {'disk' : 'hs2-18.qcow2', 'ip' : '127.0.0.1', 'port' : 12318, 'vnc' : ':18'}
 }
 
-bad_addrs = []
-bad_rvas = []
+ma_addrs = []
+ma_rvas = []
+
 samples_shared_path = "../samples/shared"
 samples_saved = "../samples/saved"
 samples_binned = "../samples/binned"
@@ -20,13 +22,16 @@ app_module = "foobar2000.exe"
 corrector = None
 buffer_size = 4096
 log_name = "HS:Foobar2000"
-fuzzbox_timeout = 50.0
+wait_sleep = 15
+fuzzbox_timeout = wait_sleep*4
 start_sleep = 3
 revert_sleep = 40
+settle_sleep = 3
 restart_count = 100000
 closing_plugin_name = "nop"
-revert_script = "load_ready_6"
+revert_script = "load_ready"
 slowdown = 2
+
 
 qemu_machines = "/home/hs1/machines/qemu"
 qemu_m = "4G"

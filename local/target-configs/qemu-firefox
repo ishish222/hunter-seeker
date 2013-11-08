@@ -1,12 +1,11 @@
 c:fuzzers/firefox/fuzzer-2.py
 c:fuzzers/generators
 c:fuzzers/correctors
-c:settings/qemu-firefox/settings.py
 c:scripters
 c:blob/res/theora/out.ogv
 c:blob/res/theora/out-1.ogv
 s:paimei
-s:settings/qemu-firefox-local/binSettings.py
+t:settings/qemu-firefox/settings.py
 s:binners/binner-generic.py
 s:fuzzers/opera/index2.html
 s:fuzzers/opera/runner2.ps1

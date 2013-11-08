@@ -11,6 +11,7 @@ rm -rf $TARGET_DIR
 
 mkdir -p $TARGET_DIR/server
 mkdir -p $TARGET_DIR/client
+mkdir -p $TARGET_DIR/settings
 mkdir -p $TARGET_DIR/samples/shared
 mkdir -p $TARGET_DIR/samples/saved
 mkdir -p $TARGET_DIR/samples/other
@@ -32,6 +33,15 @@ do
     target_line=$(basename $line)
     echo "cp -r $LOCAL_ROOT$line $TARGET_DIR/client/$target_line"
     cp -r $LOCAL_ROOT$line $TARGET_DIR/client/$target_line
+done
+
+echo "settings"
+cat $TARGET_CONFIGS_DIR$TARGET | grep t: | cut -d":" -f2 |
+while read line;
+do
+    target_line=$(basename $line)
+    echo "cp -r $LOCAL_ROOT$line $TARGET_DIR/settings/$target_line"
+    cp -r $LOCAL_ROOT$line $TARGET_DIR/settings/$target_line
 done
 
 echo "Finished deploying"

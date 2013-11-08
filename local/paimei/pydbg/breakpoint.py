@@ -32,6 +32,8 @@ class breakpoint:
     description   = None
     restore       = None
     handler       = None
+    pass_count    = 0
+    hit_count     = 0
 
     ####################################################################################################################
     def __init__ (self, address=None, original_byte=None, description="", restore=True, handler=None):

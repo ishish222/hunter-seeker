@@ -1,5 +1,6 @@
 visible = False
 testing = False
+breaking = False
 
 machines = {
     'hs2-01': {'disk' : 'hs2-01.qcow2', 'ip' : '127.0.0.1', 'port' : 12301, 'vnc' : ':1'},
@@ -16,8 +17,8 @@ machines = {
     'hs2-12': {'disk' : 'hs2-12.qcow2', 'ip' : '127.0.0.1', 'port' : 12312, 'vnc' : ':12'}
 }
 
-bad_addrs = []
-bad_rvas = [("xul.dll", 0x5fdb0)]
+ma_addrs = []
+ma_rvas = [("xul.dll", 0x5fdb0, 0)]
 
 samples_shared_path = "../samples/shared"
 samples_saved = "../samples/saved"
@@ -27,10 +28,12 @@ app_module = "firefox.exe"
 corrector = None
 buffer_size = 4096
 log_name = "HS:Firefox"
-fuzzbox_timeout = 50.0
+wait_sleep = 15
+fuzzbox_timeout = wait_sleep *4
 start_sleep = 3
 revert_sleep = 40
-restart_count = 1000
+settle_sleep = 3
+restart_count = 100000
 closing_plugin_name = "close_sample_opera"
 revert_script = "load_ready"
 slowdown = 2.0

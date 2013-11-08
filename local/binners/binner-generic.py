@@ -3,6 +3,7 @@
 import sys
 
 sys.path.append("z:\\server\\paimei")
+sys.path.append("z:\\settings")
 
 import struct
 import utils
@@ -17,15 +18,18 @@ from threading import Lock
 import ctypes
 import win32pipe, win32file, win32gui
 import random
-import binSettings
+import settings
 
 from pydbg import *
 from pydbg.defines import *
 
 from debuggee_procedure_call import dpc
 
+global lock
+lock = Lock()
+
 START_SLEEP = 8
-WAIT_SLEEP = binSettings.wait_sleep
+WAIT_SLEEP = settings.wait_sleep
 HC_ADDR = 0x770627e4
 HC_CODE = 0xc0000374
 
@@ -229,7 +233,7 @@ def file_run(filee, dbg):
     os.system("start " + samples_dir + "\\" + filee)
     logf.write("start " + samples_dir + "\\" + filee + "\n")
     logf.flush()
-    time.sleep(my_length)
+    time.sleep(my_length * settings.slowdown)
     l.acquire()
     if(status == "hanged"):
         if(testfile(samples_dir + "\\" + filee)):
@@ -339,63 +343,32 @@ def spawn():
 def good_handler(dbg):
     pass
 
+
+global counters
+counters = {}
+
 def bad_handler(dbg):
     global status
+    global counters
 
-#    l.acquire()
-#    if(status == ""):
-#        status = "BH"
-    status = "MA"
-
+#    writePipe("Pass count: %x\n" % dbg.breakpoints[dbg.exception_address].pass_count)
+#    writePipe("Hit count: %x\n" % counters[dbg.exception_address])
+ 
+    if(dbg.breakpoints[dbg.exception_address].pass_count > counters[dbg.exception_address]):
+        counters[dbg.exception_address] += 1
+#        writePipe("New hit count: %x\n" % counters[dbg.exception_address])
+    else:
+        status = "MA"
     return DBG_CONTINUE
 
-def thread1_routine():
-    global Thread1Active
-
-    print(Thread1Active)
-    while (Thread1Active == True):
-        print("From thread 1")
-        time.sleep(1)
-    print("Exiting thread 1")
-
-
-def goThread_routine():
-    global dbg
-    global goThreadActive
-
-    print("releasing")
-
-    try:
-        print("1")
-        dbg.debug_event_loop()
-        print("2")
-        while (goThreadActive == True):
-            print("running")
-            time.sleep(1)
-    except Exception, e:
-        print(e)
-
-def killing_routine():
-    global dbg
-
-    print(hex(dbg.h_process))
-#    print(hex(dbg.h_thread))
-    dbg.open_process(dbg.pid)
-    print(hex(dbg.h_process))
-    time.sleep(3)
-#    dbg.terminate_process()
-    dbg.debug_set_process_kill_on_exit(True)
-    dbg.detach()
-
-
-def timer_routine():
-    time.sleep(WAIT_SLEEP)
+def timer_routine(to):
+    time.sleep(to * settings.slowdown)
     return
 
-def breaking_routine():
+def breaking_routine(to):
     global dbg
 
-    time.sleep(int(WAIT_SLEEP/2))
+    time.sleep(int(to * settings.slowdown /2))
 
     print("breaking")
 
@@ -410,17 +383,15 @@ def breaking_routine():
     dbg.set_thread_context(thread_context, thread_handle)
 
 
-def watchThread_routine():
+def watchThread_routine(to):
     global dbg 
     global status
 
-    breaking = False
-
-    if(breaking == True):
-        breaker = Thread(target = breaking_routine)
+    if(settings.breaking == True):
+        breaker = Thread(target = breaking_routine, args=(to,))
         breaker.start()
 
-    timer = Thread(target = timer_routine)
+    timer = Thread(target = timer_routine, args=(to,))
     timer.start()
 
     while(timer.is_alive() and status == ""):
@@ -432,6 +403,42 @@ def watchThread_routine():
     dbg.debugger_active = False
     return
 
+def resolve_rvas(dbg, rvas):
+    for ma_rva in settings.ma_rvas:
+        writePipe("Resolving RVA at {0} + {1}\n".format(ma_rva[0], hex(ma_rva[1])))
+        mod_addr = 0x0
+        for mod in dbg.enumerate_modules():
+            if(mod[0] == ma_rva[0]):
+                mod_addr = mod[1]
+        if(mod_addr == 0x0):
+            raise Exception
+        off = ma_rva[1]
+        writePipe("Found at {0}\n".format(hex(mod_addr+off)))
+        yield (mod_addr+off, ma_rva[2])
+
+def attach_markers(dbg):
+    global counters
+    for ma_addr in settings.ma_addrs:
+#        writePipe("Installing bad at {0}\n".format(hex(ma_addr)))
+        dbg.bp_set(ma_addr[0], handler = bad_handler)
+        dbg.breakpoints[ma_addr[0]].pass_count = ma_addr[1]
+        counters[ma_addr[0]] = 0
+
+def remove_markers(dbg):
+    for ma_addr in settings.ma_addrs:
+#        writePipe("Removing bad at {0}\n".format(hex(ma_addr)))
+        dbg.bp_del(ma_addr[0])
+
+def check_markers(dbg):
+    for ma_addr in settings.ma_addrs:
+        if(dbg.bp_is_ours(ma_addr)):
+            db = dbg.read_process_memory(ma_addr, 1)
+            byte = struct.unpack("<B", db)[0]
+            writePipe("Marker working at " + str(hex(ma_addr)) + "\n")
+            writePipe("Byte: %x\n" % byte)
+        else:
+            writePipe("Marker not working at " + str(hex(ma_addr)) + "\n")
+
 def execute(cmds):
     global dbg
 
@@ -439,15 +446,27 @@ def execute(cmds):
     args = " ".join(cmds[1:])
 
     try:
+        if(cmd == "settle"):
+            global status
+            status = ""
+
+            watchThread = Thread(target = watchThread_routine, args=(float(cmds[1]),))
+            watchThread.start()
+            dbg.debugger_active = True
+            dbg.debug_event_loop()
+            ok()
+
         if(cmd == "waitTest"):
             global status
             status = ""
 
-            watchThread = Thread(target = watchThread_routine)
+            attach_markers(dbg)
+            watchThread = Thread(target = watchThread_routine, args=(settings.wait_sleep * settings.slowdown, ))
             watchThread.start()
             dbg.debugger_active = True
             dbg.debug_event_loop()
             writePipe("Status: " + status)
+            remove_markers(dbg)
             ok()
 
         if(cmd == "listClasses"):
@@ -524,13 +543,28 @@ def execute(cmds):
             writePipe("Installing good at " + cmds[1])
             ok()
 
+        if(cmd == "installMarkerAddrs"):
+            for ma_addr in settings.ma_addrs:
+                writePipe("Installing bad at " + cmds[1])
+                dbg.bp_set(ma_addr, handler = bad_handler)
+            ok()
+
         if(cmd == "installBad"):
             writePipe("Installing bad at " + cmds[1])
             dbg.bp_set(int(cmds[1], 16), handler = bad_handler)
             ok()
 
-        if(cmd == "installBadOff"):
-            writePipe("Installing bad at " + cmds[1] + " +" + cmds[2])
+        if(cmd == "checkBad"):
+            if(dbg.bp_is_ours(int(cmds[1], 16))):
+                db = dbg.read_process_memory(int(cmds[1], 16), 1)
+                byte = struct.unpack("<B", db)[0]
+                writePipe("Marker working at " + cmds[1] + "\n")
+                writePipe("Byte: %x\n" % byte)
+            else:
+                writePipe("Marker not working at " + cmds[1] + "\n")
+            ok()
+
+        if(cmd == "checkBadOff"):
             mod_addr = 0x0
             for mod in dbg.enumerate_modules():
                 if(mod[0] == cmds[1]):
@@ -539,7 +573,25 @@ def execute(cmds):
                 raise Exception
             off = int(cmds[2], 16)
 
-            dbg.bp_set(mod_addr+off, handler = bad_handler)
+            if(dbg.bp_is_ours(mod_addr+off) == True):
+                db = dbg.read_process_memory(mod_addr+off, 1)
+                byte = struct.unpack("<B", db)[0]
+                writePipe("Marker working at " + cmds[1] + "\n")
+                writePipe("Byte: %x\n" % byte)
+                writePipe("Marker working at " + cmds[1] + " +" + cmds[2]+ "\n")
+            else:
+                writePipe("Marker not working at " + cmds[1] + " +" + cmds[2]+ "\n")
+            ok()
+
+        if(cmd == "setupSlowdown"):
+            writePipe("Setting slowdown to: {0}\n".format(cmds[1]))
+            settings.slowdown = float(cmds[1])
+            ok()
+
+        if(cmd == "setupMarkers"):
+            writePipe("Setting up markers\n")
+            settings.ma_addrs += resolve_rvas(dbg, settings.ma_rvas)
+            writePipe("Marker list: {0}\n".format(settings.ma_addrs))
             ok()
 
         if(cmd == "binTest"):

@@ -39,6 +39,8 @@ parser.add_option("-i", "--fuzzbox_ip",     dest="fuzzbox_ip", help="Force fuzzb
 parser.add_option("-p", "--fuzzbox_port",   dest="fuzzbox_port", help="Force fuzzbox port (normally based on hda)")
 parser.add_option("-V", "--visible",        dest="visible", help="Should box be visible?", action="store_true", default=settings.visible)
 parser.add_option("-l", "--slowdown",       dest="slowdown", help="Slowdown (default is 1)", default=settings.slowdown)
+parser.add_option("-e", "--extension",      dest="extension", help="Extension of generated sample", default=settings.extension)
+parser.add_option("-n", "--mutation-number", dest="mutations", help="Number of mutations to perform", default=settings.mutations)
 
 (options, args) = parser.parse_args()
 
@@ -284,8 +286,8 @@ def sigkill_handler(signum, frame):
     quit()
         
 #setup fuzzer
-my_generator = generator.Generator(options.origin, options.samples_shared, ".mp3", changer.Changer, corrector = None)
-my_generator.mutations=3
+my_generator = generator.Generator(options.origin, options.samples_shared, options.extension, changer.Changer, corrector = None)
+my_generator.mutations=options.mutations
 
 def handle_crashing_sample(sample_path, sample_file):
     global s
