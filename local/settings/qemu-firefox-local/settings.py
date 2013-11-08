@@ -1,3 +1,5 @@
+import generators.changer as changer
+
 visible = True
 testing = False
 breaking = False
@@ -29,6 +31,7 @@ revert_script = "load_ready"
 slowdown = 1
 extension = ".ogv"
 mutations = 3
+mutator = changer.Changer
 
 qemu_machines = "/home/ish/machines/qemu"
 qemu_m = "4G"

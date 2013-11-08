@@ -11,7 +11,7 @@ rm -rf $TARGET_DIR
 
 mkdir -p $TARGET_DIR/server
 mkdir -p $TARGET_DIR/client
-mkdir -p $TARGET_DIR/settings
+mkdir -p $TARGET_DIR/common
 mkdir -p $TARGET_DIR/samples/shared
 mkdir -p $TARGET_DIR/samples/saved
 mkdir -p $TARGET_DIR/samples/other
@@ -41,7 +41,7 @@ while read line;
 do
     target_line=$(basename $line)
     echo "cp -r $LOCAL_ROOT$line $TARGET_DIR/settings/$target_line"
-    cp -r $LOCAL_ROOT$line $TARGET_DIR/settings/$target_line
+    cp -r $LOCAL_ROOT$line $TARGET_DIR/common/$target_line
 done
 
 echo "Finished deploying"

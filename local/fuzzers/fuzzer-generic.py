@@ -2,8 +2,6 @@
 # author: Tomasz Salacinski (ishish)
 # mailto: tomasz.salacinski@korrino.com
 
-import generators.generatorCorrected as generator
-import generators.changer as changer
 from optparse import OptionParser
 from subprocess import Popen, PIPE
 #import correctors.correctorlib
@@ -15,9 +13,9 @@ import time
 import sys
 import signal
 sys.path += ["./scripters"]
-sys.path += ["../settings"]
+sys.path += ["../common"]
+import generators.generatorCorrected as generator
 import settings
-#import script
 from script import rs, rss, runscriptq, write_monitor
 
 class ErrorDetectedException(Exception):
@@ -286,7 +284,7 @@ def sigkill_handler(signum, frame):
     quit()
         
 #setup fuzzer
-my_generator = generator.Generator(options.origin, options.samples_shared, options.extension, changer.Changer, corrector = None)
+my_generator = generator.Generator(options.origin, options.samples_shared, options.extension, settings.mutator, corrector = None)
 my_generator.mutations=options.mutations
 
 def handle_crashing_sample(sample_path, sample_file):

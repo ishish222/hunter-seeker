@@ -3,7 +3,7 @@
 import sys
 
 sys.path.append("z:\\server\\paimei")
-sys.path.append("z:\\settings")
+sys.path.append("z:\\common")
 
 import struct
 import utils
