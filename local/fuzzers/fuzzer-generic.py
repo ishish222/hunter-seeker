@@ -4,7 +4,6 @@
 
 from optparse import OptionParser
 from subprocess import Popen, PIPE
-#import correctors.correctorlib
 import socket
 import os
 import logging
@@ -235,8 +234,6 @@ def proceed2():
 
     write_socket(s, "startBinner")
     read_socket(s)
-    
-
     return True
 
 def proceed3():

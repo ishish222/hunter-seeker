@@ -1,0 +1,15 @@
+c:fuzzers/fuzzer-generic.py
+c:scripters
+c:blob/res/acad/ac1024/origin10.dwg
+t:fuzzers/generators
+t:fuzzers/correctors
+t:settings/qemu-acad-local/settings.py
+s:binners/binner-generic.py
+s:paimei
+s:vm-server/powershell.exe.config
+s:vm-server/dn4on.ps1
+s:vm-server/server.ps1
+s:vm-server/noticeOff.ps1
+s:vm-server/runner2.ps1
+s:vm-server/dn4off.ps1
+
