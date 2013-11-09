@@ -1,3 +1,5 @@
+import generators.changer as changer
+
 visible = False
 testing = False
 breaking = False
@@ -37,6 +39,9 @@ restart_count = 100000
 closing_plugin_name = "close_sample_opera"
 revert_script = "load_ready"
 slowdown = 2.0
+extension = ".ogv"
+mutations = 3
+mutator = changer.Changer
 
 qemu_machines = "/home/hs1/machines/qemu"
 qemu_m = "4G"

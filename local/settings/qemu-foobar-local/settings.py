@@ -1,6 +1,8 @@
+import generators.changer as changer
+
 visible = True
 testing = False
-breaking = True
+breaking = False
 
 machines = {
     'hs2-1': {'disk' : 'hs2-1.qcow2', 'ip' : '127.0.0.1', 'port' : 12313, 'vnc' : ':13'},
@@ -31,6 +33,10 @@ restart_count = 100000
 closing_plugin_name = "nop"
 revert_script = "load_ready"
 slowdown = 2
+extension = ".ogg"
+mutations = 3
+mutator = changer.Changer
+
 
 qemu_machines = "/home/ish/machines/qemu"
 qemu_m = "4G"
@@ -43,7 +49,7 @@ def specific_preperations_1(options):
 #    copyfile(options.shared_folder + "/server/index2.html", options.samples_shared + "/index.html")
     pass
 
-scripts_1 = []
+scripts_1 = ["beep", "foobar_mouse_1"]
 
 def specific_preperations_2(options):
     pass
@@ -58,7 +64,7 @@ scripts_3 = []
 def specific_preperations_4(options):
     pass
 
-scripts_4 = ["alttab"]
+scripts_4 = ["lclick"]
 
 #from os import path
 

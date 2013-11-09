@@ -1,7 +1,4 @@
-c:fuzzers/foobar/fuzzer-ogg.py
-c:fuzzers/foobar/fuzzer-mp3.py
-c:fuzzers/generators
-c:fuzzers/correctors
+c:fuzzers/fuzzer-generic.py
 c:scripters
 c:blob/res/ogg/01-1.ogg
 c:blob/res/ogg/02-1.ogg
@@ -9,6 +6,8 @@ c:blob/res/ogg/03-1.ogg
 c:blob/res/mp3/02-1.mp3
 c:blob/res/mp3/03-1.mp3
 t:settings/qemu-foobar-local/settings.py
+t:fuzzers/generators
+t:fuzzers/correctors
 s:paimei
 s:binners/binner-generic.py
 s:fuzzers/opera/runner2.ps1

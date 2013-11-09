@@ -45,7 +45,7 @@ qemu_additional += ['-monitor', 'stdio']
 def specific_preperations_1(options):
     pass
 
-scripts_1 = []
+scripts_1 = ["beep"]
 
 def specific_preperations_2(options):
     pass

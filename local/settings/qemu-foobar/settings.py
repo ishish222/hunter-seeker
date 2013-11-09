@@ -1,3 +1,5 @@
+import generators.changer as changer
+
 visible = False
 testing = False
 breaking = False
@@ -12,7 +14,7 @@ machines = {
 }
 
 ma_addrs = []
-ma_rvas = []
+ma_rvas = [("foobar2000.exe", 0x7b9fb, 0)]
 
 samples_shared_path = "../samples/shared"
 samples_saved = "../samples/saved"
@@ -31,7 +33,9 @@ restart_count = 100000
 closing_plugin_name = "nop"
 revert_script = "load_ready"
 slowdown = 2
-
+extension = ".ogv"
+mutations = 3
+mutator = changer.Changer
 
 qemu_machines = "/home/hs1/machines/qemu"
 qemu_m = "4G"
@@ -44,7 +48,7 @@ def specific_preperations_1(options):
 #    copyfile(options.shared_folder + "/server/index2.html", options.samples_shared + "/index.html")
     pass
 
-scripts_1 = []
+scripts_1 = ["foobar_mouse_1"]
 
 def specific_preperations_2(options):
     pass
@@ -59,7 +63,7 @@ scripts_3 = []
 def specific_preperations_4(options):
     pass
 
-scripts_4 = []
+scripts_4 = ["lclick"]
 
 #from os import path
 

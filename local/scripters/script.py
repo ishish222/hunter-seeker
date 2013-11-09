@@ -97,6 +97,18 @@ class Script:
                         write_monitor(pipe, "delvm " + tag + "\n")
                         continue
 
+                    if(k[1:].find("mousemv") == 0):
+                        (dx,dy) = k[9:].split(",")
+                        print("moving mouse by {0},{1}".format(dx, dy))
+                        write_monitor(pipe, "mouse_move {0} {1}\n".format(dx, dy))
+                        continue
+
+                    if(k[1:].find("mousebt") == 0):
+                        bt = k[9:]
+                        print("Changing mouse button state ({0})".format(bt))
+                        write_monitor(pipe, "mouse_button {0}\n".format(bt))
+                        continue
+
                     if(k[1:].find("screendump") == 0):
                         sd = k[12:]
                         print("screendump to file " + sd)

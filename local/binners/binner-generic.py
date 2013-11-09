@@ -317,8 +317,8 @@ def bad_handler(dbg):
     print("badThread")
     global status
     global counters
-    writePipe("Pass count: %x\n" % dbg.breakpoints[dbg.exception_address].pass_count)
-    writePipe("Hit count: %x\n" % counters[dbg.exception_address])
+#    writePipe("Pass count: %x\n" % dbg.breakpoints[dbg.exception_address].pass_count)
+#    writePipe("Hit count: %x\n" % counters[dbg.exception_address])
  
     if(dbg.breakpoints[dbg.exception_address].pass_count > counters[dbg.exception_address]):
         counters[dbg.exception_address] += 1
