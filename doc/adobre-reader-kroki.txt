@@ -1,9 +1,15 @@
-1. Przygotowac maszyne (stan ready) [x]
-2. Znalezc oryginaly
-3. Znalezc markery (poczatkowy i koncowy)
-4. Przeprowadzic analize pokrycia kodu, wybrac oryginaly i generatory
-5. Opracowac runner i skrypt zamykajacy (ctrl-w)
-6. Utworzyc plik konfiguracyjny
-7. Przetestowac proces fuzzowania
-8. Zoptymalizowac proces fuzzowania
-9. Wyznaczyc harmonogram
+Legenda:
+k - operacja krotka
+d - operacja dluga
+x - skonczone
+
+1. Przygotowac maszyne (stan ready) [kx]
+2. Znalezc oryginaly [k]
+3. Znalezc markery (poczatkowy i koncowy) [k]
+4. Przeprowadzic zebranie sladu i analize pokrycia kodu, wybrac oryginaly i generatory [d]
+5. Opracowac runner i skrypt zamykajacy (ctrl-w) [k]
+6. Utworzyc plik konfiguracyjny [k]
+7. Przetestowac proces fuzzowania [d]
+8. Zoptymalizowac proces fuzzowania [k]
+9. Wyznaczyc harmonogram [k]
+10. Przeprowadzic testy [d]

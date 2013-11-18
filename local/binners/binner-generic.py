@@ -33,7 +33,7 @@ crashed_dir = samples_dir + "\\crashed"
 hanged_dir = samples_dir + "\\hanged"
 clean_dir = samples_dir + "\\clean"
 log_file = samples_dir + "\\log-"
-log_file = "log-"
+#log_file = "log-"
 
 module_blacklist = []
 module_blacklist.append("ntdll.dll")
@@ -331,6 +331,7 @@ def startLog(log_file):
 
     log_file += time.strftime("%Y%m%d-%H%M%S")
     log_file += ".txt" 
+    print("log: " + log_file)
     logf = open(log_file, "w")
     logf.write("test\n")
     logStarted = True
@@ -396,7 +397,7 @@ def bp_handler(dbg):
     dbg.bp_del(dbg.exception_address)
     thread = dbg.dbg.dwThreadId
     thread_handle  = dbg.open_thread(thread)
-    log_write("[%x] %s 0x%x\n" % (thread, dbg.addr_to_module(ea).szModule, ea)) 
+    log_write("[%x] %s 0x%x\n" % (thread, get_module(dbg, ea), ea)) 
     dbg.single_step(True, thread_handle)
     dbg.close_handle(thread_handle)
     return DBG_CONTINUE
@@ -404,7 +405,7 @@ def bp_handler(dbg):
 def instr_handler(dbg):
     ea = dbg.exception_address
     thread = dbg.dbg.dwThreadId
-    log_write("[%x] %s 0x%x\n" % (thread, dbg.addr_to_module(ea).szModule, ea)) 
+    log_write("[%x] %s 0x%x\n" % (thread, get_module(dbg, ea), ea)) 
 #    print("1")
 #    log("%x" % ea) #+thread
 #    print("%s" % ea)
@@ -414,19 +415,20 @@ def instr_handler(dbg):
     blacklisted = False
     if(dbg.mnemonic == "call"):
 #        print("got call")
-        target_module = dbg.addr_to_module(decode_op1(dbg, dbg.op1))
+#        target_module = dbg.addr_to_module(decode_op1(dbg, dbg.op1))
         
-        if(target_module == None):
-            target_name = "unknown"
-        else:
-            target_name = target_module.szModule
+#        if(target_module == None):
+#            target_name = "unknown"
+#        else:
+#            target_name = target_module.szModule
+        target_name = get_module(dbg, decode_op1(dbg, dbg.op1))
         log_write("got call to: {0}".format(target_name))
 #        print("3")
 
         for mod in module_blacklist:
             if(mod.upper() == target_name.upper()):
 #                print("4")
-                log_write("Skipping call to: {0}, will resume trace at: {1}".format(target_name, hex(ea + dbg.get_instruction(ea).length)))
+                log_write(", skipping, will resume trace at: {1}".format(target_name, hex(ea + dbg.get_instruction(ea).length)))
 #                print("skipping call to: %s" % target_name.upper())
                 dbg.bp_set(ea + dbg.get_instruction(ea).length, handler = bp_handler)
                 dbg.single_step(False, thread_handle)
@@ -445,7 +447,7 @@ def st_handler(dbg):
     writePipe("reached start marker\n")
     ea = dbg.exception_address
     thread = dbg.dbg.dwThreadId
-    print("[%x] %s 0x%x\n" % (thread, dbg.addr_to_module(ea).szModule, ea)) 
+    print("[%x] %s 0x%x\n" % (thread, get_module(dbg, ea), ea)) 
     log_write("--- reached start marker ---")
     global status
     global counters
@@ -493,7 +495,7 @@ def end_handler(dbg):
     preparation_lock.acquire()
     ea = dbg.exception_address
     thread = dbg.dbg.dwThreadId
-    print("[%x] %s 0x%x\n" % (thread, dbg.addr_to_module(ea).szModule, ea)) 
+    print("[%x] %s 0x%x\n" % (thread, get_module(dbg, ea), ea)) 
     for thread_id in dbg.enumerate_threads():
         print("Stop tracking [%x]: " % thread_id)
         thread_handle  = dbg.open_thread(thread_id)

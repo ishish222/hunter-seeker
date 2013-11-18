@@ -268,9 +268,6 @@ def proceed3():
     write_socket(s, "installHandlers")
     read_socket(s)
 
-    write_socket(s, "logStart c:\\log-")
-    read_socket(s)
-
     if(options.slowdown != settings.slowdown):
         write_socket(s, "setupSlowdown {0}".format(options.slowdown))
         read_socket(s)
@@ -404,6 +401,9 @@ def looop():
                 sample_path = options.samples_shared + "/" + sample_file
                 test_path = settings.prepare_sample(sample_path)
                 test_file = os.path.basename(test_path)
+
+                write_socket(s, "logStart z:\\log-" + test_file + "-")
+                read_socket(s)
                 write_socket(s, "observeFile " + test_file)
                 read_socket(s)
                 #copy traces and associate with sample
@@ -425,6 +425,8 @@ def looop():
                     report("10 tested in " + str(elapsed) + " seconds")
                     report("Last speed: " + str(10/elapsed) + " tps")
                     last_time_check = current_time
+                write_socket(s, "logStop")
+                read_socket(s)
 
 
         except socket.timeout:

@@ -13,8 +13,8 @@ DEPLOY_PATH=/home/ish/kor-pro/hs2-deploy/
 echo "Local deploy"
 
 DATE=$(date --iso)
-rm -rf $DEPLOY_PATH$DATE
-mkdir -p $DEPLOY_PATH$DATE
-cp -r $TARGET_DIR/* $DEPLOY_PATH$DATE/
-rm -f /home/ish/kor-pro/hs2-current-deploy
-ln -s $DEPLOY_PATH$DATE /home/ish/kor-pro/hs2-current-deploy
+rm -rf $DEPLOY_PATH$TARGET/$DATE
+mkdir -p $DEPLOY_PATH$TARGET/$DATE
+cp -r $TARGET_DIR/* $DEPLOY_PATH$TARGET/$DATE/
+rm -f /home/ish/kor-pro/hs2-current-deploy/$TARGET
+ln -s $DEPLOY_PATH$TARGET/$DATE /home/ish/kor-pro/hs2-current-deploy/$TARGET
