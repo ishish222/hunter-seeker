@@ -1,0 +1,9 @@
+1. Przygotowac maszyne (stan ready) [x]
+2. Znalezc oryginaly
+3. Znalezc markery (poczatkowy i koncowy)
+4. Przeprowadzic analize pokrycia kodu, wybrac oryginaly i generatory
+5. Opracowac runner i skrypt zamykajacy (ctrl-w)
+6. Utworzyc plik konfiguracyjny
+7. Przetestowac proces fuzzowania
+8. Zoptymalizowac proces fuzzowania
+9. Wyznaczyc harmonogram

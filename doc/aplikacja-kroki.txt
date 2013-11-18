@@ -1,0 +1,7 @@
+1. Przygotowac maszyne (stan ready)
+2. Znalezc oryginaly, przeprowadzic analize skazen
+3. Opracowac runner i znalezc markery
+4. Utworzyc plik konfiguracyjny
+5. Przetestowac proces fuzzowania
+6. Zoptymalizowac proces fuzzowania
+7. Wyznaczyc harmonogram

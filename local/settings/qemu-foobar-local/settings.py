@@ -33,7 +33,7 @@ restart_count = 100000
 closing_plugin_name = "nop"
 revert_script = "load_ready"
 slowdown = 2
-extension = ".ogg"
+extension = "ogg"
 mutations = 3
 mutator = changer.Changer
 

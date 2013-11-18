@@ -1,0 +1,36 @@
+[Microsoft]
+
+Songsmith
+AutoCollage
+Visual Studio
+Office
+Project Standard
+Visio
+Outlook
+
+--
+[Adobe]
+
+Photoshop
+Illustrator
+InDesign
+Muse
+Lightroom
+After Effects
+EchoSign
+FormsCentral
+Dreamweaver
+
+--
+[Autodesk]
+
+3DSMax
+AutoCAD
+DWG
+Design Review
+Revit
+... spooro
+
+[Symantec]
+
+

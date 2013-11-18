@@ -1,4 +1,5 @@
 c:fuzzers/fuzzer-generic.py
+c:observer/observer.py
 c:scripters
 c:blob/res/theora/out.ogv
 c:blob/res/theora/out-1.ogv

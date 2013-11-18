@@ -1,0 +1,14 @@
+Supported formats:
+    MP3, MP4, AAC, CD Audio, WMA, Vorbis, Opus, FLAC, WavPack, WAV, AIFF, Musepack, Speex, AU, SND (src: http://www.foobar2000.org/)
+https://developer.mozilla.org/en-US/docs/HTML/Supported_media_formats
+Machine ready?:
+    True 
+
+Detected markers:
+    ("foobar2000.exe", 0x7b9fb, 0) - Displaying "Playback stopped"
+
+Performed coverage test:
+    False
+
+Verified generators:
+    Changer

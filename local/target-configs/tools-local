@@ -1,3 +1,4 @@
 s:tools/heap_trace_2.py
+s:tools/eip_tracer.py
 s:tools/heap_observer.py
-s:binners/paimei
+s:paimei

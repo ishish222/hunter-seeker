@@ -16,6 +16,10 @@ sys.path += ["../common"]
 import generators.generatorCorrected as generator
 import settings
 from script import rs, rss, runscriptq, write_monitor
+from os import listdir
+from glob import glob
+from shutil import copyfile
+from datetime import datetime
 
 class ErrorDetectedException(Exception):
     pass
@@ -38,6 +42,8 @@ parser.add_option("-V", "--visible",        dest="visible", help="Should box be 
 parser.add_option("-l", "--slowdown",       dest="slowdown", help="Slowdown (default is 1)", default=settings.slowdown)
 parser.add_option("-e", "--extension",      dest="extension", help="Extension of generated sample", default=settings.extension)
 parser.add_option("-n", "--mutation-number", dest="mutations", help="Number of mutations to perform", default=settings.mutations)
+parser.add_option("-D", "--orig-samples-dir", dest="samples_orig", help="Path to original samples", default="")
+#parser.add_option("-D", "--orig-samples-dir", dest="samples_orig", help="Path to original samples", default=settings.samples_original)
 
 (options, args) = parser.parse_args()
 
@@ -103,6 +109,10 @@ def read_log_socket(f, s):
             lastResponse = data
     return lastResponse
 
+def timestamp():
+    d=datetime.now()
+    return d.strftime("%Y-%m-%d %H:%M:%S:%f")
+
 def read_socket(s):
     global lastResponse
     global status
@@ -122,6 +132,7 @@ def read_socket(s):
 #        print(data[off:off+10])
         status = data[off+8:off+10]
     
+    print(timestamp())
     print("" + str(data[:-6]))
     print("")
     return lastResponse
@@ -132,7 +143,7 @@ def read_socket(s):
 #    return data
 
 def write_socket(s, data):
-    print("> " + str(data))
+    print(timestamp() + "> " + str(data))
     s.send(data)
 
 #def write_monitor(data):
@@ -168,12 +179,12 @@ def start():
     m = Popen(qemu_args, stdout=PIPE, stdin=PIPE)
     time.sleep(3)
     revert()
+    proceed1()
 
 def restart():
     powerofff()
     time.sleep(3)
     start()
-    proceed1()
 
 def close_sample():
     global m
@@ -182,7 +193,7 @@ def close_sample():
 def connect():
     global s
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.settimeout(settings.fuzzbox_timeout * my_slowdown) 
+#    s.settimeout(settings.fuzzbox_timeout * my_slowdown)  #no timout in observer
 
     timeouts = 0
     while(True):
@@ -257,6 +268,9 @@ def proceed3():
     write_socket(s, "installHandlers")
     read_socket(s)
 
+    write_socket(s, "logStart c:\\log-")
+    read_socket(s)
+
     if(options.slowdown != settings.slowdown):
         write_socket(s, "setupSlowdown {0}".format(options.slowdown))
         read_socket(s)
@@ -283,10 +297,6 @@ def sigkill_handler(signum, frame):
 #    revert()
     quit()
         
-#setup fuzzer
-my_generator = generator.Generator(options.origin, options.samples_shared, "."+options.extension, settings.mutator, corrector = None)
-my_generator.mutations=options.mutations
-
 def handle_crashing_sample(sample_path, sample_file):
     global s
 
@@ -375,13 +385,10 @@ def looop():
 
     start()
     signal.signal(signal.SIGINT, sigkill_handler)
-    proceed1()
 
     connect()
 
     sample_count = 0
-    to_count = 0
-    ma_count = 0
     last_time_check = time.localtime()
 
     #start testing
@@ -391,70 +398,48 @@ def looop():
             proceed2()
             proceed3()
 
-            while(status != "CR"):
-                sample_path = my_generator.generate_one()
+            for sample_path in glob(options.samples_orig + "/*." + options.extension):
                 sample_file = os.path.basename(sample_path)
+                copyfile(sample_path, options.samples_shared + "/" + sample_file)
+                sample_path = options.samples_shared + "/" + sample_file
                 test_path = settings.prepare_sample(sample_path)
                 test_file = os.path.basename(test_path)
-                write_socket(s, "testFile " + test_file)
+                write_socket(s, "observeFile " + test_file)
                 read_socket(s)
-                if(status == "MA" or status == "TO"):
-                    close_sample()
-                    os.remove(sample_path)
+                #copy traces and associate with sample
+
+                if(status == "CR" ):
+                    handle_crashing_sample(sample_path, sample_file)
+                    report("CR")
                     if(test_path != sample_path):
                         os.remove(test_path)
-                    if(status == "MA"):
-#                        settle()
-                        ma_count += 1
-                        to_count = 0
-                    if(status == "TO"):
-                        to_count += 1
-                        if(to_count % 3 == 0):
-                            report("3x TO, settling")
-                            to_count = 0
-                            settle()
-
+                    write_socket(s, "killHost")
+                    read_socket(s)
 
                 # keep track on sample count
                 sample_count += 1
-                if(sample_count % 100 == 0):
+                if(sample_count % 10 == 0):
                     current_time = time.localtime()
                     elapsed = time.mktime(current_time) - time.mktime(last_time_check)
-                    report("Tested: " + str(sample_count))
-                    report("100 tested in " + str(elapsed) + " seconds")
-                    report("Last speed: " + str(100/elapsed) + " tps")
-                    report("MA count: " + str(ma_count))
-                    to_count = 0
-                    ma_count = 0
+                    report("Observed: " + str(sample_count))
+                    report("10 tested in " + str(elapsed) + " seconds")
+                    report("Last speed: " + str(10/elapsed) + " tps")
                     last_time_check = current_time
-                if(sample_count % settings.restart_count == 0):
-                    report("Tested: " + str(sample_count) + ", will restart")
-                    restart()
-                    connect()
-                    proceed1()
 
-            
-            handle_crashing_sample(sample_path, sample_file)
-            report("CR")
-            if(test_path != sample_path):
-                os.remove(test_path)
-            write_socket(s, "killHost")
-            read_socket(s)
 
         except socket.timeout:
             print "socket timeout, restarting"
             report("Socket timeout after " + str(sample_count) + " samples")
             restart()
             connect()
-            proceed1()
+#            init()
         except Exception, e:
             print "Unknown error, restarting"
             print e
             report("Unknown error after " + str(sample_count) + " samples")
             restart()
             connect()
-            init()
-            proceed1()
+#            init()
 
         
 #    s.settimeout(None)

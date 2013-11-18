@@ -168,6 +168,17 @@ function dispatch-command([string]$command, [system.net.sockets.tcpclient]$clien
         read-pipe-until-ok
 #        ok
 	}
+	elseif($cmdarray[0] -eq "observeFile")
+	{
+        $file = $cmdarray[1]
+		write-pipe "observe"
+        $expression = ".\runner2.ps1 -item $file"
+        $expression
+        invoke-expression $expression
+
+        read-pipe-until-ok
+#        ok
+	}
 
 	elseif($cmdarray[0] -eq "cmd")
 	{

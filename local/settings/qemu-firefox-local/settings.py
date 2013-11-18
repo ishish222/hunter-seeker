@@ -9,6 +9,10 @@ machines = {
     'hs2-2': {'disk' : 'hs2-2.qcow2', 'ip' : '127.0.0.1', 'port' : 12346}
 }
 
+ma_st_addrs = []
+ma_st_rvas = [("xul.dll", 0x56d20, 0)]
+ma_end_addrs = []
+ma_end_rvas = [("xul.dll", 0x5fdb0, 0)]
 ma_addrs = []
 ma_rvas = [("xul.dll", 0x5fdb0, 0)]
 
@@ -29,7 +33,7 @@ restart_count = 100000
 closing_plugin_name = "close_sample_opera"
 revert_script = "load_ready"
 slowdown = 1
-extension = ".ogv"
+extension = "ogv"
 mutations = 3
 mutator = changer.Changer
 

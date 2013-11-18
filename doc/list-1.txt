@@ -1,0 +1,205 @@
+Drodzy inwestorzy :)
+
+1. Korrino
+
+W kwestii dzialalnosci gospodarczej w Niemczech, oto, co ustalilem:
+
+Wybor formy prawnej.
+Dla prowadzenia dzialalnosci w Niemczech nalezy wybrac jedna z nastepujacych form prawnych:
+- Dzialalnosc na wlasny rachunek (Einzelunternehmer)
+- Spolka cywilna (Gesellschaft buergerlichen Recht - GbR)
+- Spolka jawna (Offene Handelsgesselschaft - OHG)
+- Spolka komandytowa (Kommanditgesselschaft - KG)
+- Spolka z ograniczona odpowiedzialnoscia (Gesselschaft mit beschraenkter Haftung - GmbH, min. kapital 25.000 eur)
+- Spolka akcyjna (Aktiengesselschaft - AG, min. kapital 50 000 eur)
+
+Stac nas na ta:
+Einzelunternehmer (dzialalnosc na wlasny rachunek)
+Przedsiebiorca jest wlascicielem i upowaznionym do kierowania, jego odpowiedzialnosc jest osobista i nieograniczona.
+
+Wg [1]: 
+Ta forma - działalność gospodarcza osoby fizycznej na własny ra-
+chunek - występuje często w związku z prowadzeniem działalności
+gospodarczej w ograniczonym wymiarze. Może być prowadzona
+jedynie pod własnym imieniem i nazwiskiem. W tym przypadku
+możliwe jest4 dokonanie wpisu działalności do rejestru handlowego
+pod pojęciem „zarejestrowanego kupca” (niem. eingetragener Kauf-
+mann). Wówczas do nazwy przedsiębiorstwa musi być dodany skrót
+„e.K” lub „e.Kfr” lub podobne jednoznaczne określenie.
+Za prowadzeniem działalności w tej formie przemawia fakt, że do
+jej podjęcia nie jest wymagany żaden kapitał. Nieskomplikowane
+są też formalności prowadzące do utworzenia tego rodzaju firmy.
+Zdecydowaną wadą jest obarczenie właściciela całym ryzykiem
+finansowym przedsięwzięcia, który za długi i zobowiązania odpo-
+wiada osobiście całym swoim majątkiem. Z tego powodu w obro-
+cie gospodarczym w Niemczech wykraczającym poza określone
+ramy, odradza się tę formę działalności.
+Prowadzenie działalności gospodarczej w tej formie wymaga, po-
+dobnie jak w przypadku przedstawicielstwa i oddziału, zgłoszenia
+w odpowiednim urzędzie ds. gospodarki.
+
+Okreslenie kosztow.
+
+Do kosztow przedsiebiorstwa naleza:
+- skladki
+- koszty prowadzenia ksiegowosci
+- koszty lokalu
+- koszty rachunku
+- koszty rejestracji
+
+Z tych kosztow w naszym przypadku odpadaja koszty lokalu. 
+
+Jesli chodzi o skladki, to ustawowo wymagane jest ubezpieczenie zdrowotne i opiekuncze (na podst. kodeksu SGB V). Ubezpieczyc mozna sie w publicznej kasie lub w prywatnej [2]. Prywatnie ciocia powiedziala ze mozna juz od 100 EUR miesiecznie, w necie pisze, ze nawet od 60, ale moze jej chodzilo ze razem z Pflegeversicherung.
+
+Innym rodzajem skladek sa skladki czlonkowskie jednej z dwoch izb, do ktorych musi nalezec przedsiebiorstwo: izby przemysłowo-handlowej (niem. Industrie- und Handelskammer, skr. IHK), albo izby rzemieślniczej (niem. Handwerkskammer, niem. HWK). Z tego co pamietam, przy malych obrotach nie trzeba placic skladek, ale jestem w trakcie dowiadywania sie. 
+
+Koszty prowadzenie ksiegowosci to w przypadku malej firmy (niekonieczne prowadzenie pelnej) wychodzi z tego co pamietam ciocia mowila, ze placi sie jedynie za bilans roczny, chociaz w ostatniej rozmowie nie wspomniala o tym, ale dowiem sie dokladnie.
+
+Koszty prowadzenia rachunku bankowego - jestem w trakcie dowiadywania sie.
+
+Koszty rejestracji osoby fizycznej w urzedzie ds. gospodarki - 26 eur, wymeldowanie - bezplatnie.
+
+Podatki
+
+Progi podatkowe wygladaja nastepujaco:
+
+Einkommensteuer (pod. dochodowy) 14 - 42% (42% dla dochodu > 52.800 euro, 4.400 euro / mc)
+
+    do 8 000 euro - 0% podatku,
+    8.000 do 13.000 euro - 14 % podatku,
+    13.000 do 52.000 euro – 24 % podatku,
+    52.000 do 250.000 euro – 42% podatku,
+    powyżej 250.000 euro – 45 % podatku. 
+
+--
+
+Kilka przeliczen bez skladek dla firmy 1os w Niemczech:
+
+Przyklad bez skladek 1:
+sprzedalem 3 luki po 750$ = 7020 PLN = 1642 EUR 
+koszty: 600 EUR
+dochod: 1042 EUR
+
+pd: 250 EUR
+
+netto:      1392 EUR = 5832 PLN
+inwestor:   464 EUR = 1944 PLN
+zostaje:    928 EUR = 3888 PLN
+--
+
+Przyklad bez skladek 2:
+sprzedalem 3 luki po 1250$ = 11700 PLN = 2737 EUR
+koszty: 600 EUR
+dochod: 2137 EUR
+
+pd: 513 EUR
+
+netto:      2224 EUR = 9318 PLN
+inwestor:   741 EUR = 3104 PLN
+zostaje:    1483 EUR = 6213 PLN
+
+--
+
+Przyklad bez skladek 3:
+sprzedalem 6 luk po 2000$ = 37440 PLN = 8760 EUR
+koszty: 1500 EUR
+dochod: 7260 EUR
+
+pd: 3050 EUR
+
+netto:      5710 EUR = 23924 PLN
+inwestor:   1903 EUR = 7973 PLN
+zostaje:    3807 EUR = 15951 PLN
+
+-- 
+
+Przyklad bez skladek 4:
+
+sprzedalem 3 luki po 2000$ = 18720 PLN = 4380 EUR
+koszty: 1000 EUR
+dochod: 3380 EUR
+
+pd: 811 EUR
+
+netto:      3569 EUR = 14954 PLN
+inwestor:   1190 EUR = 4986 PLN
+dochod:     2379 EUR = 9968 PLN
+
+Wychodzi, ze najlepiej zarabiac max. 6000$ / miesiac.
+
+Jestem w trakcie dowiadywania sie o VAT (Umsatzsteuer) i Gewerbensteuer.
+
+Jesli chodzi o dofinansowanie, znalazlem taka strone [3], jestem w trakcie dowiadywania sie.
+
+2. Fuzzer
+
+W Listopadzie wymienilem jeden z glownych skladnikow mojej aplikacji - srodowiska wirtualizacji - z VirtualBox na Qemu. Proces jest skonczony, wszystko dobrze dziala. Dzieki Qemu udalo mi sie opracowac dosc pomyslowy sposob przygotowywania aplikacji do testow i zakanczania pojedynczego testu. Robilem porzadki w kodzie, opracowalem system dostosowania zestawu do wybranej aplikacji (teraz nalezy tylko w jednym pliku manifestu wymienic potrzebne pliki i dostosowac plik konfiguracyjny, pozniej skrypt automatycznie laduje wszystko na serwer). Poprawilem bledy zwiazane z przetwarzeniem wspolbieznym (kiedy kilka watkow wykonuje sie wspolbieznie, czyli w tym samym czasie, przez dlugi czas, czasami nawzajem sobie przeszkadzaja. Trzeba bylo wyznaczyc te sytuacje i rozgraniczyc w nich watki). 
+
+3. Narzedza
+
+Do przygotowania wydajnych testow i opracowania exploitow dla znalezionych luk potrzebuje kilku narzedzi. 
+
+Przed testami - analiza pokrycia kodu (N1) . Myslalem, ze dysponuje dobrym narzedziem, ktore dostepne jest w Internecie, ale w praktyce przy duzych aplikacjach okazalo sie zbyt wolne. Koncze opracowywac wlasne narzedzie.
+
+Po testach:
+
+Analiza skazen - (N2) do tego nie znalazlem do tej pory dobrych rozwiazan, wszystko jest koszmarnie wolne.
+
+Analiza sterty - (N3) napisalem wlasne narzedzia, dzialaja bez zarzutu.
+
+Analiza drzewa wykonania kodu - (N4) napisalem wlasne narzedzia, dzialaja bez zarzutu.
+
+4. ACAD
+
+Jesli chodzi o luki ACADa, to troche mnie zatrzymalo przerabianie fuzzera. Ale mam juz chyba zestaw, ktory bedzie dzialal, zaczne sie tym zajmowac po opracowanie oferty dla Somicon (patrz 6.). Zestaw, jesli zadziala, pozwoli mi posegregowac bledy i wybrac najlepszych kandydatow do pisania exploitow. 
+
+5. Inne aplikacje
+
+Utworzylem i rozwijam liste producentow oprogramowania i produktow, ktore dobrze nadawalyby sie do fuzzowania. Zanim opracuje zestawy, musze dokonczyc Narzedzie do analizy pokrycia kodu (N1), zeby dobrze wybrac zbior oryginalow. Lista na chwile obecna wyglada tak:
+
+[Microsoft]
+
+Songsmith
+AutoCollage
+Visual Studio
+Office
+Project Standard
+Visio
+Outlook
+
+--
+[Adobe]
+
+Photoshop
+Illustrator
+InDesign
+Muse
+Lightroom
+After Effects
+EchoSign
+FormsCentral
+Dreamweaver
+
+--
+[Autodesk]
+
+3DSMax
+AutoCAD
+DWG
+Design Review
+Revit
+... spooro
+
+6. Somicon
+
+Dwoch kolegow z WAT chce zalozyc firme, ktora bedzie posredniczyla w dostarczaniu uslug bezpieczenstwa i zaproponowali wspolprace dwoch firm. Proponuja, ze beda znajdowac klientow na moje produkty. Zastanawiam sie, jak zaproponowac im podzial zyskow, czy ma to byc udzial procentowy w wynegocjowanej stawce, czy jakies sztywne ceny. Troche ich nakieruje na to, co dokladnie mamy do sprzedania i bede wrzucal na fuzzer zlecenia, ktore znajda w Polsce, a samodzielnie nadal bede realizowal programy akwizycji luk dla duzych amerykanskich firm.
+
+Poza tym ucze sie niemieckiego :)
+
+Hmmm, byc moze jeszcze o czyms zapomnialem, ale jesli tak, to dopisze w nastepnym mailu.
+
+1. 8_krokow_w_Berlinie.pdf
+2. http://www.deutsche-sozialversicherung.de/
+3. http://www.foerderland.de/finanzen/foerderung/gruendungszuschuss/
+
+Tomek.

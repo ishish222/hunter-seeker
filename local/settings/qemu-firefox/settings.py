@@ -20,6 +20,8 @@ machines = {
 }
 
 ma_addrs = []
+ma_st_addrs = []
+ma_end_addrs = []
 ma_rvas = [("xul.dll", 0x5fdb0, 0)]
 
 samples_shared_path = "../samples/shared"
@@ -30,7 +32,7 @@ app_module = "firefox.exe"
 corrector = None
 buffer_size = 4096
 log_name = "HS:Firefox"
-wait_sleep = 15
+wait_sleep = 10
 fuzzbox_timeout = wait_sleep *4
 start_sleep = 3
 revert_sleep = 40
@@ -39,7 +41,7 @@ restart_count = 100000
 closing_plugin_name = "close_sample_opera"
 revert_script = "load_ready"
 slowdown = 2.0
-extension = ".ogv"
+extension = "ogv"
 mutations = 3
 mutator = changer.Changer
 

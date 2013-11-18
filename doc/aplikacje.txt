@@ -26,6 +26,9 @@ amr, avi, flac, 3gp
 Opera:
 webM, ogg, vp8, theora
 
+Firefox:
+webM, Ogg Theora Vorbis, Ogg Opus, MP4 H.264, 
+
 Formaty, kodeki, kontenery
 vorbis - kodek dzwieku
 ogg - kontener i rodzina kodekow
