@@ -245,9 +245,6 @@ def proceed2():
 
     write_socket(s, "startBinner")
     read_socket(s)
-
-    write_socket(s, "startBinner")
-    read_socket(s)
     return True
 
 def proceed3():
