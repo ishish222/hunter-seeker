@@ -1,0 +1,2 @@
+resave machine state
+use tmpfs partitions

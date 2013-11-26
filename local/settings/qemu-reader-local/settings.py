@@ -29,7 +29,7 @@ buffer_size = 4096
 log_name = "HS:Reader"
 wait_sleep = 15
 fuzzbox_timeout = wait_sleep*4
-start_sleep = 60
+start_sleep = 30
 revert_sleep = 40
 settle_sleep = 3
 restart_count = 100000
@@ -52,6 +52,12 @@ def specific_preperations_1(options):
     pass
 
 scripts_1 = ["beep"]
+
+def marker_test(dbg):
+    print("Marker test")
+
+st_marker_handler = marker_test
+end_marker_handler = marker_test
 
 def specific_preperations_2(options):
     pass

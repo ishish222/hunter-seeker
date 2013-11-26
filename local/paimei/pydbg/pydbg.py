@@ -54,7 +54,7 @@ from memory_snapshot_context import *
 from pdx                     import *
 from system_dll              import *
 
-class pydbg:
+class pydbg(object):
     '''
     This class implements standard low leven functionality including:
         - The load() / attach() routines.
@@ -142,8 +142,8 @@ class pydbg:
         self.op3                      = None      # pydasm decoded 3rd operand, propagated by self.disasm()
 
         # control debug/error logging.
-        self._log = lambda msg: None #sys.stderr.write("PDBG_LOG> " + msg + "\n")
-        self._err = lambda msg: sys.stderr.write("PDBG_ERR> " + msg + "\n")
+#        self._log = lambda msg: None #sys.stderr.write("PDBG_LOG> " + msg + "\n")
+#        self._err = lambda msg: sys.stderr.write("PDBG_ERR> " + msg + "\n")
 
         # determine the system page size.
         system_info = SYSTEM_INFO()
@@ -156,8 +156,96 @@ class pydbg:
 
         self._log("system page size is %d" % self.page_size)
 
-
     ####################################################################################################################
+
+    def __getstate__(self):
+        state = []
+        state.append((self._restore_breakpoint,
+        self._guarded_pages,
+        self._guards_active,
+        self.page_size,
+        self.pid,
+        self.h_process,
+        self.h_thread,
+        self.debugger_active,
+        self.follow_forks,
+        self.client_server,
+        self.callbacks,
+        self.system_dlls,
+        self.dirty,
+        self.system_break,
+        self.peb,
+        self.tebs,
+        self.context,
+        self.dbg,
+        self.exception_address,
+        self.write_violation,
+        self.violation_address,
+        self.exception_code,
+        self.breakpoints,
+        self.memory_breakpoints,
+        self.hardware_breakpoints,
+        self.memory_snapshot_blocks,
+        self.memory_snapshot_contexts,
+        self.first_breakpoint,
+        self.memory_breakpoint_hit,
+        self.hardware_breakpoint_hit,
+        self.instruction,
+        self.mnemonic,
+        self.op1,
+        self.op2,
+        self.op3,
+        self.page_size,
+        self.system_break))
+        return state
+
+    def __setstate__(self, state):
+        (self._restore_breakpoint,
+        self._guarded_pages,
+        self._guards_active,
+        self.page_size,
+        self.pid,
+        self.h_process,
+        self.h_thread,
+        self.debugger_active,
+        self.follow_forks,
+        self.client_server,
+        self.callbacks,
+        self.system_dlls,
+        self.dirty,
+        self.system_break,
+        self.peb,
+        self.tebs,
+        self.context,
+        self.dbg,
+        self.exception_address,
+        self.write_violation,
+        self.violation_address,
+        self.exception_code,
+        self.breakpoints,
+        self.memory_breakpoints,
+        self.hardware_breakpoints,
+        self.memory_snapshot_blocks,
+        self.memory_snapshot_contexts,
+        self.first_breakpoint,
+        self.memory_breakpoint_hit,
+        self.hardware_breakpoint_hit,
+        self.instruction,
+        self.mnemonic,
+        self.op1,
+        self.op2,
+        self.op3,
+        self.page_size,
+        self.system_break) = state.pop()
+
+    #pickable replacements for lambda
+    def _log(self, msg):
+        #sys.stderr.write("PDBG_LOG> " + msg + "\n")
+        pass
+
+    def _err(self, msg): 
+        sys.stderr.write("PDBG_ERR> " + msg + "\n")
+
     def addr_to_dll (self, address):
         '''
         Return the system DLL that contains the address specified.

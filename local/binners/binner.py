@@ -4,11 +4,30 @@ sys.path.append("z:\\server\\paimei")
 sys.path.append("z:\\common")
 
 import settings
-from threading import Lock
+from threading import Thread
+from multiprocessing import Lock, Process
 from pydbg import *
 from functions import *
 from subprocess import Popen
 import utils
+import win32pipe, win32file
+import time
+
+### functions
+# unable to move cause settings module is not visible
+
+def defined(name):
+    if(name in globals()):
+        return True
+    if(name in locals()):
+        return True
+    if(name in vars()):
+        return True
+    names = name.split(".")
+    if(len(names)>1):
+        if(names[1] in dir(globals()[names[0]])):
+            return True
+    return False
 
 ### default blacklists
 
@@ -122,7 +141,7 @@ def observer_instr_handler(dbg):
 
 def observer_st_handler(dbg):
     dbg.preparation_lock.acquire()
-    writePipe("reached start marker\n")
+    dbg.binner.writePipe("reached start marker\n")
     ea = dbg.exception_address
     thread = dbg.dbg.dwThreadId
     print("[%x] %s 0x%x\n" % (thread, get_module(dbg, ea), ea)) 
@@ -156,13 +175,13 @@ def observer_st_handler(dbg):
 #        dbg.debug_event_loop()
 #        attach_end_markers(dbg)
     dbg.attach_end_markers(dbg)
-    dbg.remove_start_markers(dbg)
+    dbg.remove_st_markers(dbg)
     dbg.preparation_lock.release()
     print("here1")
     return DBG_CONTINUE
 
 def observer_end_handler(dbg):
-    writePipe("reached end marker\n")
+    dbg.binner.writePipe("reached end marker\n")
     print("reached end marker")
     dbg.preparation_lock.acquire()
     ea = dbg.exception_address
@@ -182,7 +201,8 @@ def observer_end_handler(dbg):
         #start observing all threads
 
     log_write("--- reached end marker ---")
-    writePipe("Status: ME")
+    #TODO u have to move it!
+    dbg.binner.writePipe("Status: ME")
     dbg.remove_end_markers(dbg)
     dbg.preparation_lock.release()
     dbg.debugger_active = False
@@ -193,10 +213,35 @@ def test_handler(dbg):
     print("[!0x%x]" % dbg.exception_address)
     return DBG_CONTINUE
 
+### thread routines
+
+def debug_loop_routine(dbg):
+    dlog("Entering debugger routine")
+    dbg.binner.active = True
+    dbg.debugger_active = True
+    dbg.debug_event_loop()
+    dbg.binner.active = False
+    dlog("Leaving debugger routine")
+
+### debugger subprocess routine
+
+def debugger_routine(conn):
+
+    try:
+        conn.send("OK")
+        dbg = debugger()
+
+        while True:
+            cmd = conn.recv()
+            if(cmd == "exit"):
+                break
+            dbg.execute(cmd)
+
 ### debugger class
 
 class debugger(pydbg):
     def __init__(self):
+        pydbg.__init__(self)
         self.binner = None
         self.preparation_lock = Lock()
 
@@ -223,16 +268,58 @@ class debugger(pydbg):
     
         self.counters = {}
 
+#    def __getstate__(self):
+#        state = super(debugger,self).__getstate__()
+#        state.append((self.binner,
+#        self.preparation_lock,
+#        self.bl_modules,
+#        self.bl_instructions,
+#        self.bl_addresses,
+#        self.bl_rvas,
+#        self.markers,
+#        self.st_markers,
+#        self.end_markers,
+#        self.react_markers,
+#        self.marker_handler,
+#        self.st_marker_handler,
+#        self.end_marker_handler,
+#        self.react_marker_handlers,
+#        self.av_handler,
+#        self.counters))
+#        return state
+
+#    def __setstate__(self, state):
+#        (self.binner,
+#        self.preparation_lock,
+#        self.bl_modules,
+#        self.bl_instructions,
+#        self.bl_addresses,
+#        self.bl_rvas,
+#        self.markers,
+#        self.st_markers,
+#        self.end_markers,
+#        self.react_markers,
+#        self.marker_handler,
+#        self.st_marker_handler,
+#        self.end_marker_handler,
+#        self.react_marker_handlers,
+#        self.av_handler,
+#        self.counters) = state.pop()
+#        super(debugger,self).__setstate__(state)
+
     def stop(self):
         self.debugger_active = False
 
     def start(self):
-        self.debugger_active = True
-        self.debug_event_loop()
+#        Thread(target = debug_loop_routine, args = (self,)).start()
+        dlog("About to spawn Process")
+        Process(target = debug_loop_routine, args = (self,)).start()
+#        self.debugger_active = True
+#        self.debug_event_loop()
 
     def list_tebs(self):
         for teb in self.tebs.keys():
-            writePipe(hex(teb))
+            yield hex(teb)
 
     def addr_to_module_name(self, e_addr):
         my_module = self.addr_to_module(e_addr)
@@ -390,11 +477,14 @@ class debugger(pydbg):
 ### binner class
 
 class binner(object):
-    def __init__(self):
+    def __init__(self, ph):
+#        self.ph = None
+        self.ph = ph
         self.test_lock = Lock()
         self.debuggers = {}                 # dictionary of debuggers for processes
         self.debuggers['init'] = debugger()  # initial debugger for enumerating processes
-        crash_bin = utils.crash_binning.crash_binning()
+        self.crash_bin = utils.crash_binning.crash_binning()
+        self.active = False
 
         #blacklists
         if(defined("settings.bl_modules")):
@@ -466,9 +556,9 @@ class binner(object):
 
         if(defined("settings.react_marker_handlers")):
             dlog("Loading REACT marker handlers")
-            self.react_marker_handler = settings.react_marker_handlers
+            self.react_marker_handlers = settings.react_marker_handlers
         else:
-            self.react_marker_handler = []
+            self.react_marker_handlers = []
 
         #directories
         dlog("Reading directories")
@@ -481,22 +571,95 @@ class binner(object):
         self.clean_dir = samples_dir + "\\clean"
         self.log_file = samples_dir + "\\log-"
 
+#        self.debuggers,
+#        self.crash_bin,
+    def __getstate__(self):
+        return (self.test_lock,
+        self.active,
+        self.bl_modules,
+        self.bl_instructions,
+        self.bl_addresses,
+        self.bl_rvas,
+        self.markers,
+        self.st_markers,
+        self.end_markers,
+        self.react_markers,
+        self.marker_handler,
+        self.st_marker_handler,
+        self.end_marker_handler,
+        self.react_marker_handlers,
+        self.samples_dir,
+        self.crashed_dir,
+        self.hanged_dir,
+        self.clean_dir,
+        self.log_file)
+
+#        self.debuggers,
+#        self.crash_bin,
+    def __setstate__(self, state):
+        (self.test_lock,
+        self.active,
+        self.bl_modules,
+        self.bl_instructions,
+        self.bl_addresses,
+        self.bl_rvas,
+        self.markers,
+        self.st_markers,
+        self.end_markers,
+        self.react_markers,
+        self.marker_handler,
+        self.st_marker_handler,
+        self.end_marker_handler,
+        self.react_marker_handlers,
+        self.samples_dir,
+        self.crashed_dir,
+        self.hanged_dir,
+        self.clean_dir,
+        self.log_file) = state
+
+    def writePipe(self, data):
+        win32file.WriteFile(self.ph, data)
+
+    def ok(self):
+        time.sleep(0.1)
+        self.writePipe("-=OK=-")
+        win32file.FlushFileBuffers(self.ph)
+
+    def loop_debuggers(self):
+        dlog("Looping debuggers")
+        self.start_debuggers()
+        #wait for event in any debugger
+        while(self.active == True):
+            pass
+        self.stop_debuggers()
+
     def stop_debuggers(self):
-        for (pid, dbg) in self.debuggers:
-            dbg.stop()
+        for pid in self.debuggers:
+            if(pid == 'init'):
+                continue
+            dlog("Stopping: %s" % pid)
+            self.debuggers[pid].stop()
 
     def start_debuggers(self):
-        for (pid, dbg) in self.debuggers:
-            dbg.start()
+        for pid in self.debuggers:
+            if(pid == 'init'):
+                continue
+            dlog("Starting: %s" % pid)
+            self.debuggers[pid].start()
 
     def list_tebs(self):
-        for (pid, dbg) in self.debuggers:
-            writePipe("PID: " + pid)
-            dbg.list_tebs()
+        for pid in self.debuggers:
+            if(pid == 'init'):
+                continue
+            dlog("Listing TEBs for %s" % pid)
+            yield self.debuggers[pid].list_tebs()
 
     def terminate_processes(self):
-        for (pid, dbg) in self.debuggers:
-            dbg.terminate_process()
+        for pid in self.debuggers:
+            if(pid == 'init'):
+                continue
+            dlog("Terminating %s" % pid)
+            self.debuggers[pid].terminate_process()
 
 
     def spawn(self, path):
@@ -537,16 +700,16 @@ class binner(object):
 
     def resolve_rvas(self, rvas):
         for ma_rva in rvas:
-        writePipe("Resolving RVA at {0} + {1}\n".format(ma_rva[0], hex(ma_rva[1])))
-        mod_addr = 0x0
-        for mod in self.debuggers['init'].enumerate_modules():
-            if(mod[0] == ma_rva[0]):
-                mod_addr = mod[1]
-        if(mod_addr == 0x0):
-            raise Exception
-        off = ma_rva[1]
-        writePipe("Found at {0}\n".format(hex(mod_addr+off)))
-        yield (mod_addr+off, ma_rva[2])
+            writePipe("Resolving RVA at {0} + {1}\n".format(ma_rva[0], hex(ma_rva[1])))
+            mod_addr = 0x0
+            for mod in self.debuggers['init'].enumerate_modules():
+                if(mod[0] == ma_rva[0]):
+                    mod_addr = mod[1]
+            if(mod_addr == 0x0):
+                raise Exception
+            off = ma_rva[1]
+            #writePipe("Found at {0}\n".format(hex(mod_addr+off)))
+            yield (mod_addr+off, ma_rva[2])
 
     def configure_markers(self):
         #addrss
@@ -576,48 +739,72 @@ class binner(object):
             self.react_marker_handlers = settings.react_marker_handlers
 
     def attach_all_markers(self):
-        attach_markers()
-        attach_st_markers()
-        attach_end_markers()
-        attach_react_markers()
+        self.attach_markers()
+        self.attach_st_markers()
+        self.attach_end_markers()
+        self.attach_react_markers()
 
     def attach_markers(self):
-        for dbg in self.debuggers:
-            dbg.attach_markers()
+        for pid in self.debuggers:
+            if(pid == 'init'):
+                continue
+            dlog("Attaching markers in %s" % pid)
+            self.debuggers[pid].attach_markers()
 
     def attach_st_markers(self):
-        for dbg in self.debuggers:
-            dbg.attach_st_markers()
+        for pid in self.debuggers:
+            if(pid == 'init'):
+                continue
+            dlog("Attaching ST markers in %s" % pid)
+            self.debuggers[pid].attach_st_markers()
 
     def attach_end_markers(self):
-        for dbg in self.debuggers:
-            dbg.attach_end_markers()
+        for pid in self.debuggers:
+            if(pid == 'init'):
+                continue
+            dlog("Attaching END markers in %s" % pid)
+            self.debuggers[pid].attach_end_markers()
 
     def attach_react_markers(self):
-        for dbg in self.debuggers:
-            dbg.attach_react_markers()
+        for pid in self.debuggers:
+            if(pid == 'init'):
+                continue
+            dlog("Attaching REACT markers in %s" % pid)
+            self.debuggers[pid].attach_react_markers()
 
     def detach_all_markers(self):
-        detach_markers()
-        detach_st_markers()
-        detach_end_markers()
-        detach_react_markers()
+        self.detach_markers()
+        self.detach_st_markers()
+        self.detach_end_markers()
+        self.detach_react_markers()
 
     def detach_markers(self):
-        for dbg in self.debuggers:
-            dbg.attach_markers()
+        for pid in self.debuggers:
+            if(pid == 'init'):
+                continue
+            dlog("Detaching markers in %s" % pid)
+            self.debuggers[pid].detach_markers()
 
     def detach_st_markers(self):
-        for dbg in self.debuggers:
-            dbg.attach_st_markers()
+        for pid in self.debuggers:
+            if(pid == 'init'):
+                continue
+            dlog("Detaching ST markers in %s" % pid)
+            self.debuggers[pid].detach_st_markers()
 
     def detach_end_markers(self):
-        for dbg in self.debuggers:
-            dbg.attach_end_markers()
+        for pid in self.debuggers:
+            if(pid == 'init'):
+                continue
+            dlog("Detaching END markers in %s" % pid)
+            self.debuggers[pid].detach_end_markers()
 
     def detach_react_markers(self):
-        for dbg in self.debuggers:
-            dbg.attach_react_markers()
+        for pid in self.debuggers:
+            if(pid == 'init'):
+                continue
+            dlog("Detaching REACT markers in %s" % pid)
+            self.debuggers[pid].detach_react_markers()
 
 
 

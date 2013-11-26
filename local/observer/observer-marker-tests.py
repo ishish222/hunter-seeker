@@ -193,7 +193,7 @@ def close_sample():
 def connect():
     global s
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-#    s.settimeout(settings.fuzzbox_timeout * my_slowdown)  #no timout in observer
+    s.settimeout(settings.fuzzbox_timeout * my_slowdown)  
 
     timeouts = 0
     while(True):
@@ -202,6 +202,7 @@ def connect():
             print("Trying to connect")
             init()
             print("Connected")
+            s.settimeout(None)  #no timout after established connection in observer
             return
         except socket.timeout:
             print("Socket timeout, restarting")
@@ -382,7 +383,7 @@ def looop():
 
     start()
     signal.signal(signal.SIGINT, sigkill_handler)
-
+    time.sleep(1)
     connect()
 
     sample_count = 0
@@ -404,7 +405,7 @@ def looop():
 
                 write_socket(s, "logStart z:\\log-" + test_file + "-")
                 read_socket(s)
-                write_socket(s, "observeFileMarkers " + test_file)
+                write_socket(s, "testMarkers " + test_file)
                 read_socket(s)
                 #copy traces and associate with sample
 
