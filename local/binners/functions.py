@@ -1,3 +1,5 @@
+from multiprocessing import Lock
+
 def defined(name):
     if(name in globals()):
         return True
@@ -11,8 +13,12 @@ def defined(name):
             return True
     return False
 
+log_lock = Lock()
+
 def dlog(text, level=0):
+    log_lock.acquire()
     print(text)
+    log_lock.release()
 
 regs = ["EAX", "EBX", "ECX", "EDX", "ESI", "EDI", "EBP", "ESP", "EIP"]
 

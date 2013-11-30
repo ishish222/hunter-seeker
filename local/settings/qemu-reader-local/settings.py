@@ -1,5 +1,7 @@
 import generators.changer as changer
 
+DBG_CONTINUE = 0x00010002
+
 visible = True
 testing = False
 breaking = True
@@ -12,12 +14,15 @@ machines = {
 
 ff = True
 
+ma_addrs = []
+ma_rvas = []
 ma_st_addrs = []
 ma_st_rvas = [("AcroRd32.exe", 0x4cae0, 0)]
 ma_end_addrs = []
-ma_end_rvas = [("user32.dll", 0x18fe9, 5)]
-ma_addrs = []
-ma_rvas = [("user32.dll", 0x18fe9, 5)]
+#ma_end_rvas = [("user32.dll", 0x18fe9, 5)]
+ma_end_rvas = [("user32.dll", 0x18fe9, 0)]
+ma_react_addrs = []
+ma_react_rvas = []
 
 samples_shared_path = "../samples/shared"
 samples_saved = "../samples/saved"
@@ -53,11 +58,16 @@ def specific_preperations_1(options):
 
 scripts_1 = ["beep"]
 
-def marker_test(dbg):
-    print("Marker test")
+def st_marker_test(dbg):
+    dbg.binner.send("[%d] ST marker test" % dbg.pid)
+    return DBG_CONTINUE
 
-st_marker_handler = marker_test
-end_marker_handler = marker_test
+def end_marker_test(dbg):
+    dbg.binner.send("[%d] END marker test" % dbg.pid)
+    return DBG_CONTINUE
+
+st_marker_handler = st_marker_test
+end_marker_handler = end_marker_test
 
 def specific_preperations_2(options):
     pass

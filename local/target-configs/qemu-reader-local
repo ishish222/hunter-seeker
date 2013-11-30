@@ -12,6 +12,7 @@ t:settings/qemu-reader-local/settings.py
 s:paimei
 s:binners/binner-generic.py
 s:binners/binner.py
+s:binners/debugger.py
 s:binners/functions.py
 s:runners/qemu-standard/runner2.ps1
 s:vm-server/powershell.exe.config

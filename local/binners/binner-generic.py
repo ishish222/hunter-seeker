@@ -4,6 +4,7 @@ sys.path.append("z:\\server\\paimei")
 sys.path.append("z:\\common")
 
 import win32pipe, win32file, win32gui
+import time
 import binner
 import settings
 from functions import *
@@ -113,8 +114,23 @@ def execute(cmds):
 
         elif(cmd == "testMarkers"):
             dlog("In testMarkers")
-            main_binner.attach_st_markers()
-            main_binner.loop_debuggers()
+            main_binner.start_debuggers()
+#            time.sleep(5)
+#            main_binner.stop_debuggers()
+#            time.sleep(5)
+#            main_binner.start_debuggers()
+#            time.sleep(5)
+#            main_binner.stop_debuggers()
+#            time.sleep(5)
+#            main_binner.start_debuggers()
+            time.sleep(50)
+            main_binner.stop_debuggers()
+            time.sleep(50)
+#            main_binner.attach_st_markers()
+#            main_binner.loop_debuggers()
+            # ST reached
+#            main_binner.attach_end_markers()
+#            main_binner.loop_debuggers()
             #waiting, end marker handler will ok()
 
         # TODO: sprawdz ktore logi gdzie maja isc
@@ -201,10 +217,10 @@ def execute(cmds):
 #            settings.ma_st_addrs += resolve_rvas(dbg, settings.ma_st_rvas)
 #            settings.ma_end_addrs += resolve_rvas(dbg, settings.ma_end_rvas)
             # will do automatically on process attach
-            main_binner.writePipe("Marker list: {0}\n".format(main_binner.markers))
-            main_binner.writePipe("ST marker list: {0}\n".format(main_binner.st_markers))
-            main_binner.writePipe("END marker list: {0}\n".format(main_binner.end_markers))
-            main_binner.writePipe("REACT marker list: {0}\n".format(main_binner.end_markers))
+#            main_binner.writePipe("Marker list: {0}\n".format(main_binner.markers))
+#            main_binner.writePipe("ST marker list: {0}\n".format(main_binner.st_markers))
+#            main_binner.writePipe("END marker list: {0}\n".format(main_binner.end_markers))
+#            main_binner.writePipe("REACT marker list: {0}\n".format(main_binner.end_markers))
             main_binner.ok()
 
         elif(cmd == "binTest"):
@@ -225,7 +241,7 @@ def execute(cmds):
 
 ### main loop
 
-def main():
+def binner_routine():
     global ph
     global main_binner
 
@@ -242,7 +258,7 @@ def main():
 
 if __name__ == '__main__':
     try:
-        main()
+        binner_routine()
     except Exception, e:
         print(e)
         while True:
