@@ -19,8 +19,7 @@ ma_rvas = []
 ma_st_addrs = []
 ma_st_rvas = [("AcroRd32.exe", 0x4cae0, 0)]
 ma_end_addrs = []
-#ma_end_rvas = [("user32.dll", 0x18fe9, 5)]
-ma_end_rvas = [("user32.dll", 0x18fe9, 0)]
+ma_end_rvas = [("user32.dll", 0x18fe9, 5)]
 ma_react_addrs = []
 ma_react_rvas = []
 
@@ -34,7 +33,7 @@ buffer_size = 4096
 log_name = "HS:Reader"
 wait_sleep = 15
 fuzzbox_timeout = wait_sleep*4
-start_sleep = 30
+start_sleep = 10
 revert_sleep = 40
 settle_sleep = 3
 restart_count = 100000
@@ -59,13 +58,13 @@ def specific_preperations_1(options):
 scripts_1 = ["beep"]
 
 def st_marker_test(dbg):
-    dbg.dlog("ST marker test" % dbg.pid)
+    dbg.dlog("ST marker test")
     dbg.ok()
 
     return DBG_CONTINUE
 
 def end_marker_test(dbg):
-    dbg.dlog("END marker test" % dbg.pid)
+    dbg.dlog("END marker test")
     dbg.ok()
     return DBG_CONTINUE
 

@@ -14,6 +14,7 @@ import utils
 import win32pipe, win32file
 import time
 from select import select
+import socket
 
 ### functions
 # unable to move cause settings module is not visible
@@ -224,7 +225,8 @@ def test_handler(dbg):
 def readline(stream):
     data = ""
     while True:
-        c = stream.read(1)
+#        c = stream.read(1)
+        c = stream.recv(1)
         if(c == "\n"):
             return data
         data += c
@@ -235,7 +237,8 @@ def comm_routine(dbg):
     try:
         while True:
 #            dbg.dlog("Waiting for command")
-            cmd = readline(sys.stdin)
+#            cmd = readline(sys.stdin)
+            cmd = readline(dbg.binner)
             dbg.dlog("Received: %s" % cmd)
             if(cmd == "exit"):
                 break
@@ -249,12 +252,15 @@ def comm_routine(dbg):
 def debugger_routine():
     global l
     l = Lock()
-    dbg = debugger()
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.connect(("127.0.0.1", 12347))
+    dbg = debugger(s)
     dbg.dlog("Spawned & constructed")
     dbg.ok()
     dbg.dlog("Will accept attach now")
     dbg.ok()
-    cmd = readline(sys.stdin)
+#    cmd = readline(sys.stdin)
+    cmd = readline(dbg.binner)
     dbg.execute(cmd)
     dbg.ok()
     Thread(target=comm_routine, args=(dbg,)).start()
@@ -272,7 +278,7 @@ def debugger_routine():
 ### debugger class
 class debugger(pydbg):
 
-    def __init__(self, binner=None):
+    def __init__(self, binner):
         pydbg.__init__(self)
         self.binner = binner
         self.preparation_lock = Lock()
@@ -299,7 +305,8 @@ class debugger(pydbg):
         dlog("[%d] %s" % (self.pid, data))
 
     def ok(self):
-        print("=[OK]=")
+#        print("=[OK]=")
+        self.binner.send("=[OK]=")
 
     def execute(self, cmds):
         args = cmds.split(" ")
@@ -333,8 +340,8 @@ class debugger(pydbg):
             self.dlog("ST markers attached")
 
         if(cmd == "attach_end_markers"):
-            print("1")
-            self.dlog("1")
+#            print("1")
+#            self.dlog("1")
             self.attach_end_markers()
             self.dlog("END markers attached")
 
@@ -718,5 +725,6 @@ if __name__ == '__main__':
         debugger_routine()
     except Exception, e:
         print(e)
+        print("=[OK]=")
         while True:
             pass

@@ -114,25 +114,14 @@ def execute(cmds):
 
         elif(cmd == "testMarkers"):
             dlog("In testMarkers")
-            dlog("Attaching")
             main_binner.attach_st_markers()
-#            main_binner.start_debuggers()
-            dlog("Starting")
             main_binner.loop_debuggers()
-#            time.sleep(5)
-#            main_binner.stop_debuggers()
-#            time.sleep(5)
-#            main_binner.start_debuggers()
-#            time.sleep(5)
-#            main_binner.stop_debuggers()
-#            time.sleep(5)
-#            main_binner.start_debuggers()
-#            time.sleep(50)
-#            time.sleep(50)
-#            main_binner.loop_debuggers()
-            # ST reached
-#            main_binner.attach_end_markers()
-#            main_binner.loop_debuggers()
+            main_binner.detach_st_markers()
+            main_binner.attach_end_markers()
+            main_binner.loop_debuggers()
+            main_binner.loop_debuggers()
+            main_binner.loop_debuggers()
+            main_binner.loop_debuggers()
             #waiting, end marker handler will ok()
 
         # TODO: sprawdz ktore logi gdzie maja isc
