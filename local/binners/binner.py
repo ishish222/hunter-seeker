@@ -4,7 +4,7 @@ sys.path.append("z:\\server\\paimei")
 sys.path.append("z:\\common")
 
 import settings
-from threading import Thread
+from threading import Thread, Event
 from multiprocessing import Lock, Process, Pipe
 from subprocess import Popen, PIPE
 from pydbg import *
@@ -53,6 +53,10 @@ class binner(object):
         self.init_dbg = pydbg()
         self.crash_bin = utils.crash_binning.crash_binning()
         self.active = False
+
+        self.dbg_event = Event()
+        self.dbg_output = None
+        self.dbg_line = ""
 
 #    def __getstate__(self):
 #        return (self.test_lock,
@@ -117,17 +121,39 @@ class binner(object):
         for pid in self.debuggers:
             self.write_debugger(self.debuggers[str(pid)], cmd)
             self.ddlog(self.read_debugger(self.debuggers[str(pid)]))
-            self.ddlog(self.read_debugger(self.debuggers[str(pid)]))
+#            self.ddlog(self.read_debugger(self.debuggers[str(pid)]))
         self.dlog("Sent: %s" % cmd)
 
+    def poll_debugger(self, dbg):
+        #self.dbg_line = dbg.stdout.readline()
+        self.dbg_line = self.read_debugger(dbg)
+        self.dbg_output = dbg
+        self.dbg_event.set()
+
     def poll_debuggers(self):
-        readable = self.debuggers.values()
-        ready = False
-        while not ready:
-            for dbg in readable:
-                ready = dbg.poll(0.5)
-                if(ready == True):
-                    return dbg
+#        readable = [dbg.stdout for dbg in self.debuggers.values()]
+        self.dbg_output = None
+        self.dbg_line = ""
+
+#        readable = self.debuggers.values()
+        threads = [Thread(target = self.poll_debugger, args=(dbg, )) for dbg in self.debuggers.values()]
+        for t in threads:
+            t.start()
+        self.dbg_event.wait()
+        for t in threads:
+            t._Thread__stop()
+        return self.dbg_output
+#        ready = False
+#        while not ready:
+#            for dbg in readable:
+#                ready = dbg.poll(0.5)
+#                if(ready == True):
+#                    return dbg
+#        ready, _, _ = select(readable, [], []) 
+#        return ready[0]
+#        ready = self.fds.poll()
+#        return ready[0][0]
+#        pass
                 
     def read_debugger(self, dbg):
         data = ""
@@ -145,8 +171,11 @@ class binner(object):
     def loop_debuggers(self):
         dlog("Looping debuggers")
         self.start_debuggers()
-        self.dlog(self.read_debugger(self.poll_debuggers()))
+        cur_dbg = self.poll_debuggers()
+        dlog("%d" % cur_dbg.pid)
+        self.dlog(self.dbg_line)
         self.stop_debuggers()
+#        self.dlog(self.read_debugger(cur_dbg))
 
     def stop_debuggers(self):
         self.send_command("stop")
@@ -190,6 +219,9 @@ class binner(object):
         self.ddlog(self.read_debugger(self.debuggers[str(pid)]))
         self.dlog("3")
 
+#        self.fds.register(self.debuggers[str(pid)].stdout)
+        print(type(self.debuggers[str(pid)].stdout))
+
     def enumerate_processes(self):
         return self.init_dbg.enumerate_processes()
 
@@ -203,17 +235,21 @@ class binner(object):
         self.send_command("attach_markers")
 
     def attach_st_markers(self):
-        for pid in self.debuggers:
-            dlog("Attaching ST markers in %s" % pid)
-            self.debuggers[pid].send("attach_st_markers")
+#        for pid in self.debuggers:
+#            dlog("Attaching ST markers in %s" % pid)
+         dlog("Attaching ST markers")
+         self.send_command("attach_st_markers")
 
     def attach_end_markers(self):
-        self.send_command("attach_end_markers")
+#        for pid in self.debuggers:
+#            dlog("Attaching END markers in %s" % pid)
+         dlog("Attaching END markers")
+         self.send_command("attach_end_markers")
 
     def attach_react_markers(self):
         for pid in self.debuggers:
             dlog("Attaching REACT markers in %s" % pid)
-            self.debuggers[pid].send("attach_react_markers")
+            self.send_command("attach_react_markers")
 
     def detach_all_markers(self):
         self.detach_markers()

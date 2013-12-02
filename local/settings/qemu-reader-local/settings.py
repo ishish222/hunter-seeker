@@ -59,11 +59,14 @@ def specific_preperations_1(options):
 scripts_1 = ["beep"]
 
 def st_marker_test(dbg):
-    dbg.binner.send("[%d] ST marker test" % dbg.pid)
+    dbg.dlog("ST marker test" % dbg.pid)
+    dbg.ok()
+
     return DBG_CONTINUE
 
 def end_marker_test(dbg):
-    dbg.binner.send("[%d] END marker test" % dbg.pid)
+    dbg.dlog("END marker test" % dbg.pid)
+    dbg.ok()
     return DBG_CONTINUE
 
 st_marker_handler = st_marker_test
