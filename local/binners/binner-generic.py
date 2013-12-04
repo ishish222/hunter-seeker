@@ -90,13 +90,16 @@ def execute(cmds):
             main_binner.stop_debuggers()
             main_binner.attach_st_markers()
             invoke(args)
+
+            # test is about to start, expecting ST
             while(main_binner.status != "ST"):
                 main_binner.loop_debuggers() # wait for test start, should add timeout?
-            # test started, switch markers
+
+            # test has started, expecting MA, TO, CR, SR
             main_binner.detach_st_markers()
             main_binner.attach_react_markers()
             main_binner.attach_end_markers()
-#            main_binner.loop_debuggers(settings.wait_sleep * settings.slowdown)
+
             while True:
                 main_binner.loop_debuggers()
                 if(main_binner.status == "MA"):
@@ -109,24 +112,42 @@ def execute(cmds):
                     break
                 if(main_binner.status == "SR"):
                     main_binner.dlog("Requested script: %s" % main_binner.reqScript)
-#                    main_binner.writePipe("Status: %s\n" % main_binner.status)
-#                    main_binner.writePipe("Script: %s\n" % main_binner.reqScript)
+                    main_binner.writePipe("Status: %s\n" % main_binner.status)
+                    main_binner.writePipe("Script: %s\n" % main_binner.reqScript)
                     main_binner.ok()
-            main_binner.stop_debuggers()
+                    # need ack
+                    main_binner.readPipe()
+
+            # test has ended, expecting RD, SR
             main_binner.detach_end_markers()
-            dlog("About to send status")
+            main_binner.attach_rd_markers()
             main_binner.writePipe("Status: %s" % main_binner.status)
-            dlog("Sent status")
             main_binner.ok()
-            dlog("Sent OK")
-            #will wait for RD from marker
-            time.sleep(10.0)
-            main_binner.start_debuggers()
-            dlog("About to send RD")
-            main_binner.writePipe("Status: RD")
-            dlog("Send RD")
+            # need ack
+            main_binner.readPipe()
+
+            while True:
+                main_binner.loop_debuggers()
+                if(main_binner.status == "RD"):
+                    break
+                if(main_binner.status == "SR"):
+                    main_binner.dlog("Requested script: %s" % main_binner.reqScript)
+                    main_binner.writePipe("Status: %s\n" % main_binner.status)
+                    main_binner.writePipe("Script: %s\n" % main_binner.reqScript)
+                    main_binner.ok()
+                    # need ack
+                    main_binner.readPipe()
+
+            main_binner.detach_rd_markers()
+            main_binner.writePipe("Status: %s" % main_binner.status)
             main_binner.ok()
-            dlog("Send RDOK")
+            # app is ready for next test
+#            main_binner.start_debuggers()
+#            dlog("About to send RD")
+#            main_binner.writePipe("Status: RD")
+#            dlog("Send RD")
+#            main_binner.ok()
+#            dlog("Send RDOK")
 
         elif(cmd == "observe"):
             dlog("In observe")

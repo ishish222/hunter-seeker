@@ -26,7 +26,8 @@ def react1(dbg):
     dbg.dlog("Got RE 1")
     dbg.dlog("Got RE 1")
     dbg.dlog("Got RE 1")
-    dbg.reqScript("beep")
+    dbg.start(0.1)
+    dbg.reqScript("space")
     dbg.ok()
     return DBG_CONTINUE
 
@@ -37,7 +38,10 @@ ma_st_rvas = [("AcroRd32.exe", 0x4cae0, 0)]
 ma_end_addrs = []
 ma_end_rvas = [("user32.dll", 0x18fe9, 7)]
 ma_react_addrs = []
-ma_react_rvas = [("AcroRd32.dll", 0x3664da, (0, react1, ["beep"]))]
+#ma_react_rvas = [("AcroRd32.dll", 0x3664da, (0, react1, ["space"]))]
+ma_react_rvas = [("AcroRd32.dll", 0x3664df, (0, react1, ["space"]))]
+ma_rd_addrs = []
+ma_rd_rvas = [("user32.dll", 0x18fe9, 2)]
 
 samples_shared_path = "../samples/shared"
 samples_saved = "../samples/saved"
@@ -71,8 +75,8 @@ def specific_preperations_1(options):
 #    copyfile(options.shared_folder + "/server/index2.html", options.samples_shared + "/index.html")
     pass
 
-scripts_1 = ["beep"]
-log_level = 2
+scripts_1 = ["beep2"]
+log_level = 0
 
 def st_marker_test(dbg):
     dbg.counters[dbg.exception_address] = (dbg.counters[dbg.exception_address][PASS_COUNT], dbg.counters[dbg.exception_address][HIT_COUNT]+1)

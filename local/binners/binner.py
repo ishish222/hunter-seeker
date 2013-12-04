@@ -56,50 +56,6 @@ class binner(object):
         self.main_socket.bind(("127.0.0.1", 12347))
         self.main_socket.listen(3)
 
-#    def __getstate__(self):
-#        return (self.test_lock,
-#        self.active,
-#        self.bl_modules,
-#        self.bl_instructions,
-#        self.bl_addresses,
-#        self.bl_rvas,
-#        self.markers,
-#        self.st_markers,
-#        self.end_markers,
-#        self.react_markers,
-#        self.marker_handler,
-#        self.st_marker_handler,
-#        self.end_marker_handler,
-#        self.react_marker_handlers,
-#        self.samples_dir,
-#        self.crashed_dir,
-#        self.hanged_dir,
-#        self.clean_dir,
-#        self.log_file)
-#
-##        self.debuggers,
-##        self.crash_bin,
-#    def __setstate__(self, state):
-#        (self.test_lock,
-#        self.active,
-#        self.bl_modules,
-#        self.bl_instructions,
-#        self.bl_addresses,
-#        self.bl_rvas,
-#        self.markers,
-#        self.st_markers,
-#        self.end_markers,
-#        self.react_markers,
-#        self.marker_handler,
-#        self.st_marker_handler,
-#        self.end_marker_handler,
-#        self.react_marker_handlers,
-#        self.samples_dir,
-#        self.crashed_dir,
-#        self.hanged_dir,
-#        self.clean_dir,
-#        self.log_file) = state
-
     def dlog(self, data, level=0):
         dlog("[binner] %s" % data, level)
 
@@ -107,9 +63,16 @@ class binner(object):
         dlog("%s" % data, level)
 
     def writePipe(self, data):
-#        win32file.WriteFile(self.ph, data)
         self.ph.send(data)
 
+    def readPipe(self):
+        data = ""
+        while True:
+            data += self.ph.recv(1)
+            
+            if(data[-6:] == "-=OK=-"): 
+                break
+        return data[:-6]
 
     def ok(self):
         time.sleep(0.1)
@@ -151,8 +114,8 @@ class binner(object):
             self.status = data[statusOff+8:statusOff+8+2]
             if(self.status == "SR"):
                 scOff = data.find("Script: ")
-                lineEnd = data[scOff:].find("\n")
-                self.reqScript = data[scOff:lineEnd]
+                lineEnd = data[scOff+8:].find("\n")
+                self.reqScript = data[scOff+8:scOff+8+lineEnd]
                 self.dlog(self.reqScript)
                 self.dlog("Taken from data offsets: %d, %d" % (scOff, lineEnd))
         self.dlog("Parsed data: %s" % data, 2)
@@ -163,6 +126,7 @@ class binner(object):
 
     def loop_debuggers(self, to = None):
         self.dlog("Waiting for debug event")
+        self.status = ""
         self.start_debuggers()
         ready_dbg_sockets = self.poll_debuggers(to)
         for dbg in ready_dbg_sockets:
@@ -222,56 +186,54 @@ class binner(object):
         self.attach_st_markers()
         self.attach_end_markers()
         self.attach_react_markers()
+        self.attach_rd_markers()
 
     def attach_markers(self):
+        dlog("Attaching markers")
         self.send_command("attach_markers")
-#        self.read_debuggers()
 
     def attach_st_markers(self):
-#        for pid in self.debuggers:
-#            dlog("Attaching ST markers in %s" % pid)
         dlog("Attaching ST markers")
         self.send_command("attach_st_markers")
-#        self.read_debuggers()
 
     def attach_end_markers(self):
-#        for pid in self.debuggers:
-#            dlog("Attaching END markers in %s" % pid)
         dlog("Attaching END markers")
         self.send_command("attach_end_markers")
-#        self.read_debuggers()
 
     def attach_react_markers(self):
-#        for pid in self.debuggers:
         dlog("Attaching REACT markers")
         self.send_command("attach_react_markers")
-#        self.read_debuggers()
+        
+    def attach_rd_markers(self):
+        dlog("Attaching RD markers")
+        self.send_command("attach_rd_markers")
         
     def detach_all_markers(self):
         self.detach_markers()
         self.detach_st_markers()
         self.detach_end_markers()
         self.detach_react_markers()
+        self.detach_rd_markers()
 
     def detach_markers(self):
         dlog("Detaching markers")
         self.send_command("detach_markers")
-#        self.read_debuggers()
 
     def detach_st_markers(self):
         dlog("Detaching ST markers")
         self.send_command("detach_st_markers")
-#        self.read_debuggers()
 
     def detach_end_markers(self):
         dlog("Detaching END markers")
         self.send_command("detach_end_markers")
-#        self.read_debuggers()
 
     def detach_react_markers(self):
         dlog("Detaching REACT markers")
         self.send_command("detach_react_markers")
-#        self.read_debuggers()
+
+    def detach_rd_markers(self):
+        dlog("Detaching RD markers")
+        self.send_command("detach_rd_markers")
 
 
 

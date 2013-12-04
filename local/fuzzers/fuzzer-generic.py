@@ -143,8 +143,8 @@ def read_socket(s):
         if(status == "SR"):
             print("Data: %s" % data)
             scOff = data.find("Script: ")
-            lineEnd = data[scOff:].find("\n")
-            reqScript = data[scOff:lineEnd]
+            lineEnd = data[scOff+8:].find("\n")
+            reqScript = data[scOff+8:scOff+8+lineEnd]
     
     print(timestamp())
     print("" + str(data[:-6]))
@@ -373,6 +373,7 @@ def settle():
 # setup box & perform procedures
 def looop():
     global s
+    global m
     global lastResponse
     global reqScript
     global status
@@ -400,9 +401,9 @@ def looop():
                 read_socket(s)
                 print("Received")
                 if(status == "SR"):
-                    print("SR")
-                    print(reqScript)
-                    #execute
+                    rs("beep3", m, my_slowdown)
+                    rs(reqScript, m, my_slowdown)
+                    write_socket(s, "")
                     continue
                 if(status == "RD"):
                     sample_path = my_generator.generate_one()
@@ -442,6 +443,7 @@ def looop():
                         restart()
                         connect()
                     proceed5()
+                    write_socket(s, "")
                     continue
             
             handle_crashing_sample(sample_path, sample_file)

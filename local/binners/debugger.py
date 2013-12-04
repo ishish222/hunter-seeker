@@ -113,6 +113,19 @@ def default_end_handler(dbg):
 
     return DBG_CONTINUE
 
+def default_rd_handler(dbg):
+    # increment hit count
+    dbg.counters[dbg.exception_address] = (dbg.counters[dbg.exception_address][PASS_COUNT], dbg.counters[dbg.exception_address][HIT_COUNT]+1)
+    dbg.dlog("Current hit no: %d, pass count: %d" % (dbg.counters[dbg.exception_address][HIT_COUNT], dbg.counters[dbg.exception_address][PASS_COUNT]), 1)
+
+    #check hits
+    if(dbg.counters[dbg.exception_address][HIT_COUNT] > dbg.counters[dbg.exception_address][PASS_COUNT]):
+        dbg.dlog("RD marker reached")
+        dbg.signal_rd()
+        dbg.ok()
+
+    return DBG_CONTINUE
+
 def default_av_handler(dbg):
     dlog("avThread")
     
@@ -327,6 +340,7 @@ class debugger(pydbg):
         self.st_marker_handler = phony_handler
         self.end_marker_handler = phony_handler
         self.react_marker_handlers = {}
+        self.rd_marker_handler = phony_handler
         self.av_handler = default_av_handler
         self.counters = {}
 
@@ -334,27 +348,31 @@ class debugger(pydbg):
         dlog("[%d] %s" % (self.pid, data), level)
 
     def signal_ma(self):
-        self.dlog("Sending: Status: MA")
+        self.dlog("to binner: Status: MA")
         self.binner.send("Status: MA")
 
     def signal_rd(self):
-        self.dlog("Sending: Status: RD")
+        self.dlog("to binner: Status: RD")
         self.binner.send("Status: RD")
 
     def signal_rs(self):
-        self.dlog("Sending: Status: RS")
+        self.dlog("to binner: Status: RS")
         self.binner.send("Status: RS")
 
     def signal_st(self):
-        self.dlog("Sending: Status: ST")
+        self.dlog("to binner: Status: ST")
+        self.binner.send("Status: ST")
+
+    def signal_st(self):
+        self.dlog("to binner: Status: ST")
         self.binner.send("Status: ST")
 
     def ok(self):
-        self.dlog("Sending: =[OK]=")
+        self.dlog("to binner: =[OK]=")
         self.binner.send("=[OK]=")
 
     def reqScript(self, script):
-        self.dlog("Sending: Status: SR\nScript: %s\n" % script)
+        self.dlog("to binner: Status: SR\nScript: %s\n" % script)
         self.binner.send("Status: SR\nScript: %s\n" % script)
 
     def execute(self, cmds):
@@ -396,6 +414,10 @@ class debugger(pydbg):
             self.attach_react_markers()
             self.dlog("REACT markers attached", 1)
 
+        if(cmd == "attach_rd_markers"):
+            self.attach_rd_markers()
+            self.dlog("RD markers attached", 1)
+
         if(cmd == "detach_markers"):
             self.detach_markers()
             self.dlog("markers detached", 1)
@@ -411,6 +433,10 @@ class debugger(pydbg):
         if(cmd == "detach_react_markers"):
             self.detach_react_markers()
             self.dlog("RECT markers detached", 1)
+
+        if(cmd == "detach_rd_markers"):
+            self.detach_rd_markers()
+            self.dlog("RD markers detached", 1)
 
     def read_config(self):
         #blacklists
@@ -462,6 +488,12 @@ class debugger(pydbg):
         else:
             self.react_markers = []
 
+        if(defined("settings.ma_rd_addrs")):
+            self.dlog("RD markers found", 1)
+            self.rd_markers = settings.ma_rd_addrs
+        else:
+            self.rd_markers = []
+
         #rvas
         self.dlog("Loading RVAs")
         if(defined("settings.ma_rvas")):
@@ -476,6 +508,9 @@ class debugger(pydbg):
         if(defined("settings.ma_react_rvas")):
             self.dlog("REACT RVAs found", 1)
             self.react_markers += self.resolve_rvas(settings.ma_react_rvas)
+        if(defined("settings.ma_rd_rvas")):
+            self.dlog("RD RVAs found", 1)
+            self.rd_markers += self.resolve_rvas(settings.ma_rd_rvas)
 
         #handlers
         self.dlog("Loading handlers")
@@ -503,6 +538,12 @@ class debugger(pydbg):
         else:
             self.react_marker_handlers = {}
         
+        if(defined("settings.rd_marker_handlers")):
+            self.dlog("RD marker handlers found", 1)
+            self.rd_marker_handler = settings.rd_marker_handler
+        else:
+            self.rd_marker_handler = default_rd_handler
+        
         #directories
         self.dlog("Reading directories")
         if(defined("settings.samples_dir")):
@@ -520,45 +561,7 @@ class debugger(pydbg):
         self.dlog("ST markers: %s" % self.st_markers)
         self.dlog("END markers: %s" % self.end_markers)
         self.dlog("REACT markers: %s" % self.react_markers)
-
-#    def __getstate__(self):
-#        state = super(debugger,self).__getstate__()
-#        state.append((self.binner,
-#        self.preparation_lock,
-#        self.bl_modules,
-#        self.bl_instructions,
-#        self.bl_addresses,
-#        self.bl_rvas,
-#        self.markers,
-#        self.st_markers,
-#        self.end_markers,
-#        self.react_markers,
-#        self.marker_handler,
-#        self.st_marker_handler,
-#        self.end_marker_handler,
-#        self.react_marker_handlers,
-#        self.av_handler,
-#        self.counters))
-#        return state
-
-#    def __setstate__(self, state):
-#        (self.binner,
-#        self.preparation_lock,
-#        self.bl_modules,
-#        self.bl_instructions,
-#        self.bl_addresses,
-#        self.bl_rvas,
-#        self.markers,
-#        self.st_markers,
-#        self.end_markers,
-#        self.react_markers,
-#        self.marker_handler,
-#        self.st_marker_handler,
-#        self.end_marker_handler,
-#        self.react_marker_handlers,
-#        self.av_handler,
-#        self.counters) = state.pop()
-#        super(debugger,self).__setstate__(state)
+        self.dlog("RD markers: %s" % self.rd_markers)
 
     def stop(self):
         if(self.debugger_active == True):
@@ -724,6 +727,20 @@ class debugger(pydbg):
         self.preparation_lock.release()
         self.dlog("preparation released", 1)
 
+    def attach_rd_markers(self):
+        self.preparation_lock.acquire()
+        self.dlog("preparation locked", 1)
+
+        for ma_addr in self.rd_markers:
+            self.dlog("0x%x: %s" % (ma_addr[0], self.rd_marker_handler))
+            self.bp_set(ma_addr[0], handler = self.rd_marker_handler)
+            self.breakpoints[ma_addr[0]].pass_count = ma_addr[1]
+            self.dlog("Pass count: %d" % self.breakpoints[ma_addr[0]].pass_count)
+            self.counters[ma_addr[0]] = (ma_addr[1], 0)
+
+        self.preparation_lock.release()
+        self.dlog("preparation released", 1)
+
     def detach_markers(self):
         self.preparation_lock.acquire()
         self.dlog("preparation locked", 1)
@@ -759,6 +776,16 @@ class debugger(pydbg):
         self.dlog("preparation locked", 1)
 
         for ma_addr in self.react_markers:
+            self.bp_del(ma_addr[0])
+
+        self.preparation_lock.release()
+        self.dlog("preparation released", 1)
+
+    def detach_rd_markers(self):
+        self.preparation_lock.acquire()
+        self.dlog("preparation locked", 1)
+
+        for ma_addr in self.rd_markers:
             self.bp_del(ma_addr[0])
 
         self.preparation_lock.release()
