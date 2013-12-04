@@ -8,22 +8,31 @@ import time
 import binner
 import settings
 from functions import *
+#from socket import socket, AF_INET, SOCK_STREAM
+import socket
+from subprocess import call, Popen
 
 PIPE_NAME = "\\\\.\\pipe\\control"
 PIPE_BUFF_SIZE = 4096
 
 def getPipe(name):
-    dlog("In getPipe")
+    dlog("In getPipe", 1)
     ph = win32file.CreateFile(name, win32file.GENERIC_READ | win32file.GENERIC_WRITE | win32pipe.PIPE_TYPE_MESSAGE, 0, None, win32file.OPEN_EXISTING, 0, None)
     return ph
 
 def readPipe():
     global ph
-    return win32file.ReadFile(ph, PIPE_BUFF_SIZE)
+    data = ""
+    while True:
+        data += ph.recv(1)
+        
+        if(data[-6:] == "-=OK=-"): 
+            break
+    return data[:-6]
 
 def writePipe(data):
     global ph
-    win32file.WriteFile(ph, data)
+    ph.send(data + "-=OK=-")
 
 ### TODO: trzeba dopracowac!
 
@@ -52,30 +61,11 @@ def handle_crash():
 
     return DBG_CONTINUE
 
-
-def watchThread_routine(to):
-    dlog("watchThread")
-    global main_binner
-
-    if(settings.breaking == True):
-        breaker = Thread(target = breaking_routine, args=(to,))
-        breaker.start()
-
-    timer = Thread(target = timer_routine, args=(to,))
-    timer.start()
-
-    while(timer.is_alive() and status == ""):
-        pass
-
-    if(main_binner.status != "CR" and main_binner.status != "MA"):
-        main_binner.test_lock.acquire()
-        dlog("test locked by TO")
-        main_binner.status = "TO"
-        main_binner.test_lock.release()
-    main_binner.stop_debuggers()
-    return
-
 ### binner commands
+
+def invoke(f):
+    print("powershell -command \"& { invoke-expression z:\\samples\\shared\\%s }\"" % f)
+    Popen("powershell -command \"& { invoke-expression z:\\samples\\shared\\%s }\"" % f)
 
 def execute(cmds):
     global main_binner
@@ -93,18 +83,50 @@ def execute(cmds):
             main_binner.start_debuggers()
             main_binner.ok()
 
-        elif(cmd == "waitTest"):
+
+        elif(cmd == "testFile"):
+            dlog("In waitTest", 1)
             main_binner.status = ""
-            main_binner.attach_markers()
-            watchThread = Thread(target = watchThread_routine, args=(settings.wait_sleep * settings.slowdown, ))
-            watchThread.start()
-            main_binner.start_debuggers()
-            # waiting until stop occurs
-            main_binner.writePipe("Status: " + main_binner.status)
-            if(status == "CR"):
-                handle_crash()
-            main_binner.remove_markers()
+            main_binner.stop_debuggers()
+            main_binner.attach_st_markers()
+            invoke(args)
+            while(main_binner.status != "ST"):
+                main_binner.loop_debuggers() # wait for test start, should add timeout?
+            # test started, switch markers
+            main_binner.detach_st_markers()
+            main_binner.attach_react_markers()
+            main_binner.attach_end_markers()
+#            main_binner.loop_debuggers(settings.wait_sleep * settings.slowdown)
+            while True:
+                main_binner.loop_debuggers()
+                if(main_binner.status == "MA"):
+                    break
+                if(main_binner.status == ""):
+                    main_binner.status = "TO" # TO is overriden by all
+                    break
+                if(main_binner.status == "CR"):
+                    handle_crash()
+                    break
+                if(main_binner.status == "SR"):
+                    main_binner.dlog("Requested script: %s" % main_binner.reqScript)
+#                    main_binner.writePipe("Status: %s\n" % main_binner.status)
+#                    main_binner.writePipe("Script: %s\n" % main_binner.reqScript)
+                    main_binner.ok()
+            main_binner.stop_debuggers()
+            main_binner.detach_end_markers()
+            dlog("About to send status")
+            main_binner.writePipe("Status: %s" % main_binner.status)
+            dlog("Sent status")
             main_binner.ok()
+            dlog("Sent OK")
+            #will wait for RD from marker
+            time.sleep(10.0)
+            main_binner.start_debuggers()
+            dlog("About to send RD")
+            main_binner.writePipe("Status: RD")
+            dlog("Send RD")
+            main_binner.ok()
+            dlog("Send RDOK")
 
         elif(cmd == "observe"):
             dlog("In observe")
@@ -112,17 +134,38 @@ def execute(cmds):
             main_binner.loop_debuggers()
             #waiting, end marker handler will ok()
 
-        elif(cmd == "testMarkers"):
-            dlog("In testMarkers")
+        elif(cmd == "testReactMarkers"):
+            dlog("In testReactMarkers", 1)
+            main_binner.stop_debuggers()
+            main_binner.attach_end_markers()
+            main_binner.attach_react_markers()
+            while(main_binner.status != "MA"):
+                main_binner.loop_debuggers()
+                if(main_binner.status == "SR"):
+                    main_binner.writePipe("Status: SR\n Script: %s\n" % main_binner.reqScript)
+                    main_binner.ok()
+                # react
+            main_binner.detach_react_markers()
+            main_binner.ok()
+
+        elif(cmd == "testStEndMarkers"):
+            dlog("In testStEndMarkers", 1)
+            main_binner.stop_debuggers()
+            # ST markers
             main_binner.attach_st_markers()
             main_binner.loop_debuggers()
+            main_binner.writePipe("Verified ST marker\n")
+            #main_binner.ok()
             main_binner.detach_st_markers()
+            # END markers
             main_binner.attach_end_markers()
             main_binner.loop_debuggers()
-            main_binner.loop_debuggers()
-            main_binner.loop_debuggers()
-            main_binner.loop_debuggers()
-            #waiting, end marker handler will ok()
+            main_binner.writePipe("Verified END marker\n")
+            #main_binner.ok()
+            main_binner.detach_end_markers()
+            # test finished
+            main_binner.start_debuggers()
+            main_binner.ok()
 
         # TODO: sprawdz ktore logi gdzie maja isc
         elif(cmd == "logStart"):
@@ -219,6 +262,26 @@ def execute(cmds):
             main_binner.writePipe("Communication with binner is working")
             main_binner.ok()
         
+        elif(cmd == "checkReady"):
+            main_binner.writePipe("Status: RD")
+            main_binner.ok()
+
+        elif(cmd == "spawn"):
+            print("Spawning: %s" % args)
+            Popen(args)
+            main_binner.writePipe("OK")
+            main_binner.ok()
+
+        elif(cmd == "startBinner"):
+            main_binner.writePipe("OK")
+            main_binner.ok()
+
+        elif(cmd == "killExplorer"):
+            print("Killing explorer")
+            call("taskkill /F /IM explorer.exe")
+            main_binner.writePipe("OK")
+            main_binner.ok()
+
         elif(cmd == "release"):
             main_binner.writePipe("Releasing")
             main_binner.ok()
@@ -236,15 +299,35 @@ def binner_routine():
     global ph
     global main_binner
 
-    dlog("In main")
+    dlog("In main", 1)
+    logo = """
+ __                      .__               
+|  | ____________________|__| ____   ____  
+|  |/ /  _ \_  __ \_  __ \  |/    \ /  _ \ 
+|    <  <_> )  | \/|  | \/  |   |  (  <_> )
+|__|_ \____/|__|   |__|  |__|___|  /\____/ 
+     \/                          \/        
+Hunter-Seeker
+"""
+    dlog(logo)
+
     # binner will self-configure based on settings
-    ph = getPipe(PIPE_NAME)
+    #ph = getPipe(PIPE_NAME)
+
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.bind(("0.0.0.0", 12345))
+    s.listen(3)
+    dlog("Waiting for connection", 1)
+    ph, addr = s.accept()
+    dlog("Got connection", 1)
+    ph.send("python binner")
+
     main_binner = binner.binner(ph)
     main_binner.ok()
 
     while True:
         cmd = readPipe()
-        cmds = str.split(cmd[1])
+        cmds = cmd.split(" ")
         execute(cmds)
 
 if __name__ == '__main__':

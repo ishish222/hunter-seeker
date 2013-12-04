@@ -1,10 +1,12 @@
 import generators.changer as changer
 
 DBG_CONTINUE = 0x00010002
+HIT_COUNT = 1
+PASS_COUNT = 0
 
 visible = True
 testing = False
-breaking = True
+breaking = False
 debug = True
 
 machines = {
@@ -14,14 +16,28 @@ machines = {
 
 ff = True
 
+def react1(dbg):
+    dbg.dlog("Got RE 1")
+    dbg.dlog("Got RE 1")
+    dbg.dlog("Got RE 1")
+    dbg.dlog("Got RE 1")
+    dbg.dlog("Got RE 1")
+    dbg.dlog("Got RE 1")
+    dbg.dlog("Got RE 1")
+    dbg.dlog("Got RE 1")
+    dbg.dlog("Got RE 1")
+    dbg.reqScript("beep")
+    dbg.ok()
+    return DBG_CONTINUE
+
 ma_addrs = []
 ma_rvas = []
 ma_st_addrs = []
 ma_st_rvas = [("AcroRd32.exe", 0x4cae0, 0)]
 ma_end_addrs = []
-ma_end_rvas = [("user32.dll", 0x18fe9, 5)]
+ma_end_rvas = [("user32.dll", 0x18fe9, 7)]
 ma_react_addrs = []
-ma_react_rvas = []
+ma_react_rvas = [("AcroRd32.dll", 0x3664da, (0, react1, ["beep"]))]
 
 samples_shared_path = "../samples/shared"
 samples_saved = "../samples/saved"
@@ -56,20 +72,28 @@ def specific_preperations_1(options):
     pass
 
 scripts_1 = ["beep"]
+log_level = 2
 
 def st_marker_test(dbg):
-    dbg.dlog("ST marker test")
-    dbg.ok()
+    dbg.counters[dbg.exception_address] = (dbg.counters[dbg.exception_address][PASS_COUNT], dbg.counters[dbg.exception_address][HIT_COUNT]+1)
+    dbg.dlog("Current hit no: %d, pass count: %d" % (dbg.counters[dbg.exception_address][HIT_COUNT], dbg.counters[dbg.exception_address][PASS_COUNT]), 1)
 
+    if(dbg.counters[dbg.exception_address][HIT_COUNT] > dbg.counters[dbg.exception_address][PASS_COUNT]):
+        dbg.dlog("ST marker test")
+        dbg.ok()
     return DBG_CONTINUE
 
 def end_marker_test(dbg):
-    dbg.dlog("END marker test")
-    dbg.ok()
+    dbg.counters[dbg.exception_address] = (dbg.counters[dbg.exception_address][PASS_COUNT], dbg.counters[dbg.exception_address][HIT_COUNT]+1)
+    dbg.dlog("Current hit no: %d, pass count: %d" % (dbg.counters[dbg.exception_address][HIT_COUNT], dbg.counters[dbg.exception_address][PASS_COUNT]), 1)
+
+    if(dbg.counters[dbg.exception_address][HIT_COUNT] > dbg.counters[dbg.exception_address][PASS_COUNT]):
+        dbg.dlog("END marker test")
+        dbg.ok()
     return DBG_CONTINUE
 
-st_marker_handler = st_marker_test
-end_marker_handler = end_marker_test
+#st_marker_handler = st_marker_test
+#end_marker_handler = end_marker_test
 
 def specific_preperations_2(options):
     pass
@@ -86,7 +110,12 @@ def specific_preperations_4(options):
 
 scripts_4 = ["alttab"]
 
-from os import path
+from time import sleep
+
+def specific_preperations_5(options):
+    sleep(0.5)
+
+scripts_5 = ["space", "close_sample_reader"]
 
 def prepare_sample(sample_path):
     return sample_path

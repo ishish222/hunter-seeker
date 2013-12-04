@@ -136,6 +136,13 @@ function dispatch-command([string]$command, [system.net.sockets.tcpclient]$clien
         ok
 	}
 
+    #need to elaborate on this one
+	elseif($cmdarray[0] -eq "checkReady")
+	{
+        write-socket "Status: RD"
+        ok
+	}
+
 	elseif($cmdarray[0] -eq "dn4on")
 	{
         dn4on
@@ -168,10 +175,23 @@ function dispatch-command([string]$command, [system.net.sockets.tcpclient]$clien
         read-pipe-until-ok
 #        ok
 	}
-	elseif($cmdarray[0] -eq "testMarkers")
+
+	elseif($cmdarray[0] -eq "testReactMarkers")
 	{
         $file = $cmdarray[1]
-		write-pipe "testMarkers"
+		write-pipe "testReactMarkers"
+        $expression = ".\runner2.ps1 -item $file"
+        $expression
+        invoke-expression $expression
+
+        read-pipe-until-ok
+#        ok
+	}
+
+	elseif($cmdarray[0] -eq "testStEndMarkers")
+	{
+        $file = $cmdarray[1]
+		write-pipe "testStEndMarkers"
         $expression = ".\runner2.ps1 -item $file"
         $expression
         invoke-expression $expression

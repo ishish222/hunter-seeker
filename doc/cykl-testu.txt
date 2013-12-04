@@ -1,0 +1,7 @@
+Aplikacja w trakcie testu moze przyjac nastepujace stany:
+
+gotowa: RD
+test trwa: ST
+test zakonczony: MA
+nastapilo oczekiwane zdarzenie: RE
+test trwa zbyt dlugo: TO

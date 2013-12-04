@@ -1,4 +1,5 @@
 from multiprocessing import Lock
+import settings
 
 def defined(name):
     if(name in globals()):
@@ -15,7 +16,14 @@ def defined(name):
 
 log_lock = Lock()
 
+if(defined("settings.log_level") == True):
+    log_level = settings.log_level
+else:
+    log_level = 0
+
 def dlog(text, level=0):
+    if(level > log_level):
+        return
     log_lock.acquire()
     print(text)
     log_lock.release()

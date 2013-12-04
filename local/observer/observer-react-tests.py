@@ -21,6 +21,19 @@ from glob import glob
 from shutil import copyfile
 from datetime import datetime
 
+def defined(name):
+    if(name in globals()):
+        return True
+    if(name in locals()):
+        return True
+    if(name in vars()):
+        return True
+    names = name.split(".")
+    if(len(names)>1):
+        if(names[1] in dir(globals()[names[0]])):
+            return True
+    return False
+
 class ErrorDetectedException(Exception):
     pass
 
@@ -74,8 +87,6 @@ my_handler = logging.handlers.SysLogHandler(address = '/dev/log')
 my_logger.setLevel(logging.DEBUG)
 my_logger.addHandler(my_handler)
 my_timeout = 20.0
-
-BAD_ADDR_1 = 0x13518F0 # (0x400000 + 0xf518f0)
 
 def testdir(x): 
     if(os.path.isdir(x) == False):
@@ -137,33 +148,14 @@ def read_socket(s):
     print("")
     return lastResponse
 
-#def read_socket(s):
-#    data = s.recv(buffer_size)
-#    print("< " + str(data))
-#    return data
-
 def write_socket(s, data):
     print(timestamp() + "> " + str(data))
     s.send(data)
-
-#def write_monitor(data):
-#    global m
-#    if(m == None):
-#        print("Monitor not ready")
-#        return
-#    print("m> " + str(data))
-#    m.stdin.write(data + "\n")
-
-#def read_monitor():
-#    global m
-#    data = m.stdout.read()
-#    print("m< " + str(data))
 
 def powerofff():
     print("Powering off")
     global m
     m.send_signal(signal.SIGKILL)
-#    write_monitor("quit\n")
     m = None
 
 def revert():
@@ -186,6 +178,7 @@ def restart():
     time.sleep(3)
     start()
 
+#moved to proceed5
 def close_sample():
     global m
     runscriptq(settings.closing_plugin_name, m)
@@ -193,7 +186,7 @@ def close_sample():
 def connect():
     global s
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-#    s.settimeout(settings.fuzzbox_timeout * my_slowdown)  #no timout in observer
+    s.settimeout(settings.fuzzbox_timeout * my_slowdown)  
 
     timeouts = 0
     while(True):
@@ -202,6 +195,7 @@ def connect():
             print("Trying to connect")
             init()
             print("Connected")
+            s.settimeout(None)  #no timout after established connection in observer
             return
         except socket.timeout:
             print("Socket timeout, restarting")
@@ -223,7 +217,6 @@ def init():
     #banner
     # we might have some trobules here, its first read
     read_socket(s)
-    #pass
 
 def killLast():
     write_socket(s, "killLast")
@@ -231,19 +224,20 @@ def killLast():
 
 def proceed1():
     # executed during each fuzzbox start
-    settings.specific_preperations_1(options)
-    rss(settings.scripts_1, m, my_slowdown)
+    if(defined("settings.specific_preperations_1")):
+        settings.specific_preperations_1(options)
+    if(defined("settings.scripts_1")):
+        rss(settings.scripts_1, m, my_slowdown)
     rss(["dotnet_server_spawn"], m, my_slowdown)
 
 def proceed2():
     # executed during each guest system restart
-    settings.specific_preperations_2(options)
-    rss(settings.scripts_2, m, my_slowdown)
+    if(defined("settings.specific_preperations_2")):
+        settings.specific_preperations_2(options)
+    if(defined("settings.scripts_2")):
+        rss(settings.scripts_2, m, my_slowdown)
 
     write_socket(s, "killExplorer")
-    read_socket(s)
-
-    write_socket(s, "startPipeServer")
     read_socket(s)
 
     write_socket(s, "startBinner")
@@ -251,8 +245,10 @@ def proceed2():
     return True
 
 def proceed3():
-    settings.specific_preperations_3(options)
-    rss(settings.scripts_3, m, my_slowdown)
+    if(defined("settings.specific_preperations_3")):
+        settings.specific_preperations_3(options)
+    if(defined("settings.scripts_3")):
+        rss(settings.scripts_3, m, my_slowdown)
 
     write_socket(s, "spawn " + settings.app_path)
     read_socket(s)
@@ -275,18 +271,17 @@ def proceed3():
         write_socket(s, "setupSlowdown {0}".format(options.slowdown))
         read_socket(s)
 
-#    for bad_addr in settings.bad_addrs:
-#        write_socket(s, "installBad " + hex(bad_addr))
-#        read_socket(s)
-
-#    for bad_rva in settings.bad_rvas:
-#        write_socket(s, "installBadOff " + bad_rva[0] + " " + hex(bad_rva[1]))
-#        read_socket(s)
-
-    settings.specific_preperations_4(options)
-    rss(settings.scripts_4, m, my_slowdown)
-
+    if(defined("settings.specific_preperations_4")):
+        settings.specific_preperations_4(options)
+    if(defined("settings.scripts_4")):
+        rss(settings.scripts_4, m, my_slowdown)
     return True
+
+def proceed5():
+    if(defined("settings.specific_preperations_5")):
+        settings.specific_preperations_5(options)
+    if(defined("settings.scripts_5")):
+        rss(settings.scripts_5, m, my_slowdown)
 
 def sig1_handler(signum, frame):
     report("Signaled")
@@ -294,11 +289,10 @@ def sig1_handler(signum, frame):
 def sigkill_handler(signum, frame):
     report("Killing")
     powerofff()
-#    revert()
     quit()
         
 def handle_crashing_sample(sample_path, sample_file):
-    global s
+    global s, m
 
     print("Crash procedures")
 
@@ -366,91 +360,96 @@ def handle_crashing_sample(sample_path, sample_file):
 
 def settle():
     global s 
-
-#    for bad_addr in settings.bad_addrs:
-#        write_socket(s, "checkBad " + hex(bad_addr))
-#        read_socket(s)
-
-#    for bad_rva in settings.bad_rvas:
-#        write_socket(s, "checkBadOff " + bad_rva[0] + " " + hex(bad_rva[1]))
-#        read_socket(s)
-
     write_socket(s, "settle " + str(settings.settle_sleep * settings.slowdown))
     read_socket(s)
 
-#setup box
+# setup fuzzer
+my_generator = generator.Generator(options.origin, options.samples_shared, "."+options.extension, settings.mutator, corrector = None)
+my_generator.mutations=int(options.mutations)
+
+# setup box & perform procedures
 def looop():
     global s
     global lastResponse
 
     start()
     signal.signal(signal.SIGINT, sigkill_handler)
-
+    time.sleep(1)
     connect()
 
     sample_count = 0
     last_time_check = time.localtime()
 
-    #start testing
 
     while True:
         try:
             proceed2()
             proceed3()
 
-            for sample_path in glob(options.samples_orig + "/*." + options.extension):
+            while(status != "CR"):
+                sample_path = my_generator.generate_one()
                 sample_file = os.path.basename(sample_path)
-                copyfile(sample_path, options.samples_shared + "/" + sample_file)
-                sample_path = options.samples_shared + "/" + sample_file
                 test_path = settings.prepare_sample(sample_path)
                 test_file = os.path.basename(test_path)
-
-                write_socket(s, "logStart z:\\log-" + test_file + "-")
+                write_socket(s, "testReactMarkers " + test_file)
                 read_socket(s)
-                write_socket(s, "observeFileMarkers " + test_file)
-                read_socket(s)
-                #copy traces and associate with sample
-
-                if(status == "CR" ):
-                    handle_crashing_sample(sample_path, sample_file)
-                    report("CR")
+                if(status == "MA" or status == "TO"):
+                    close_sample()
+                    os.remove(sample_path)
                     if(test_path != sample_path):
                         os.remove(test_path)
-                    write_socket(s, "killHost")
-                    read_socket(s)
+                    if(status == "MA"):
+#                        settle()
+                        ma_count += 1
+                        to_count = 0
+                    if(status == "TO"):
+                        to_count += 1
+                        if(to_count % 3 == 0):
+                            report("3x TO, settling")
+                            to_count = 0
+                            settle()
+
 
                 # keep track on sample count
                 sample_count += 1
-                if(sample_count % 10 == 0):
+                if(sample_count % 100 == 0):
                     current_time = time.localtime()
                     elapsed = time.mktime(current_time) - time.mktime(last_time_check)
-                    report("Observed: " + str(sample_count))
-                    report("10 tested in " + str(elapsed) + " seconds")
-                    report("Last speed: " + str(10/elapsed) + " tps")
+                    report("Tested: " + str(sample_count))
+                    report("100 tested in " + str(elapsed) + " seconds")
+                    report("Last speed: " + str(100/elapsed) + " tps")
+                    report("MA count: " + str(ma_count))
+                    to_count = 0
+                    ma_count = 0
                     last_time_check = current_time
-                write_socket(s, "logStop")
-                read_socket(s)
-
+                if(sample_count % settings.restart_count == 0):
+                    report("Tested: " + str(sample_count) + ", will restart")
+                    restart()
+                    connect()
+            
+            handle_crashing_sample(sample_path, sample_file)
+            report("CR")
+            if(test_path != sample_path):
+                os.remove(test_path)
+            write_socket(s, "killHost")
+            read_socket(s)
 
         except socket.timeout:
             print "socket timeout, restarting"
             report("Socket timeout after " + str(sample_count) + " samples")
             restart()
             connect()
-#            init()
         except Exception, e:
             print "Unknown error, restarting"
             print e
             report("Unknown error after " + str(sample_count) + " samples")
             restart()
             connect()
-#            init()
 
-        
-#    s.settimeout(None)
-    
     s.close()
+    powerofff()
     print("Finished")
+    exit()
 
 while True:
     report("Starting")

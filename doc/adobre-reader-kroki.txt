@@ -4,12 +4,15 @@ d - operacja dluga
 x - skonczone
 
 1. Przygotowac maszyne (stan ready) [kx]
-2. Znalezc oryginaly [k]
-3. Znalezc markery (poczatkowy i koncowy) [k]
-4. Przeprowadzic zebranie sladu i analize pokrycia kodu, wybrac oryginaly i generatory [d]
-5. Opracowac runner i skrypt zamykajacy (ctrl-w) [k]
-6. Utworzyc plik konfiguracyjny [k]
-7. Przetestowac proces fuzzowania [d]
-8. Zoptymalizowac proces fuzzowania [k]
-9. Wyznaczyc harmonogram [k]
-10. Przeprowadzic testy [d]
+2. Znalezc oryginaly [kx]
+3. Znalezc markery (poczatkowy i koncowy) [kx]
+4. Przeprowadzic testy markerow i handlerow (czy testy koncza sie wtedy, kiedy powinny, czy reakcje sa poprawne, kilka razy) [kx]
+[todo] 5. Przeprowadzic zebranie sladu i analize pokrycia kodu, wybrac oryginaly i generatory [d]
+6. Opracowac runner i skrypt zamykajacy (ctrl-w) [kx]
+7. Utworzyc plik konfiguracyjny [k]
+8. Przetestowac proces fuzzowania (reakcje na AV, MA, TO) [d]
+9. Zoptymalizowac proces fuzzowania [k]
+10. Wyznaczyc harmonogram [k]
+11. Przeprowadzic testy [d]
+
+

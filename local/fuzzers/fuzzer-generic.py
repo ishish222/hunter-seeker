@@ -16,6 +16,20 @@ sys.path += ["../common"]
 import generators.generatorCorrected as generator
 import settings
 from script import rs, rss, runscriptq, write_monitor
+from datetime import datetime
+
+def defined(name):
+    if(name in globals()):
+        return True
+    if(name in locals()):
+        return True
+    if(name in vars()):
+        return True
+    names = name.split(".")
+    if(len(names)>1):
+        if(names[1] in dir(globals()[names[0]])):
+            return True
+    return False
 
 class ErrorDetectedException(Exception):
     pass
@@ -69,8 +83,6 @@ my_logger.setLevel(logging.DEBUG)
 my_logger.addHandler(my_handler)
 my_timeout = 20.0
 
-BAD_ADDR_1 = 0x13518F0 # (0x400000 + 0xf518f0)
-
 def testdir(x): 
     if(os.path.isdir(x) == False):
         os.mkdir(x)
@@ -103,9 +115,14 @@ def read_log_socket(f, s):
             lastResponse = data
     return lastResponse
 
+def timestamp():
+    d=datetime.now()
+    return d.strftime("%Y-%m-%d %H:%M:%S:%f")
+
 def read_socket(s):
     global lastResponse
     global status
+    global reqScript
     
     status = ""
     data = ""
@@ -117,64 +134,54 @@ def read_socket(s):
             lastResponse = data[:-6]
             break
 
+    # find status
     off = data.find("Status: ")
     if(off != -1):
-#        print(data[off:off+10])
         status = data[off+8:off+10]
+
+        #if RE find react addrs
+        if(status == "SR"):
+            print("Data: %s" % data)
+            scOff = data.find("Script: ")
+            lineEnd = data[scOff:].find("\n")
+            reqScript = data[scOff:lineEnd]
     
+    print(timestamp())
     print("" + str(data[:-6]))
     print("")
     return lastResponse
 
-#def read_socket(s):
-#    data = s.recv(buffer_size)
-#    print("< " + str(data))
-#    return data
-
 def write_socket(s, data):
-    print("> " + str(data))
-    s.send(data)
-
-#def write_monitor(data):
-#    global m
-#    if(m == None):
-#        print("Monitor not ready")
-#        return
-#    print("m> " + str(data))
-#    m.stdin.write(data + "\n")
-
-#def read_monitor():
-#    global m
-#    data = m.stdout.read()
-#    print("m< " + str(data))
+    print(timestamp() + "> " + str(data))
+    s.send(data + "-=OK=-")
 
 def powerofff():
-    print("Powering off")
+    print("[Powering off]")
     global m
     m.send_signal(signal.SIGKILL)
-#    write_monitor("quit\n")
     m = None
 
 def revert():
-    print("Reverting")
+    print("[Reverting]")
     global m
     #rs("load_ready", m)
     rs(settings.revert_script, m, options.slowdown)
 
 def start():
-    print("Starting")
+    print("[Starting]")
     global m
-    print qemu_args
+#    print qemu_args
     m = Popen(qemu_args, stdout=PIPE, stdin=PIPE)
     time.sleep(3)
     revert()
+    proceed1()
 
 def restart():
     powerofff()
     time.sleep(3)
     start()
-    proceed1()
 
+#moved to proceed5
 def close_sample():
     global m
     runscriptq(settings.closing_plugin_name, m)
@@ -182,7 +189,7 @@ def close_sample():
 def connect():
     global s
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.settimeout(settings.fuzzbox_timeout * my_slowdown) 
+    #s.settimeout(settings.fuzzbox_timeout * my_slowdown) 
 
     timeouts = 0
     while(True):
@@ -212,7 +219,6 @@ def init():
     #banner
     # we might have some trobules here, its first read
     read_socket(s)
-    #pass
 
 def killLast():
     write_socket(s, "killLast")
@@ -220,14 +226,18 @@ def killLast():
 
 def proceed1():
     # executed during each fuzzbox start
-    settings.specific_preperations_1(options)
-    rss(settings.scripts_1, m, my_slowdown)
-    rss(["dotnet_server_spawn"], m, my_slowdown)
+    if(defined("settings.specific_preperations_1")):
+        settings.specific_preperations_1(options)
+    if(defined("settings.scripts_1")):
+        rss(settings.scripts_1, m, my_slowdown)
+    rss(["python_server_spawn"], m, my_slowdown)
 
 def proceed2():
     # executed during each guest system restart
-    settings.specific_preperations_2(options)
-    rss(settings.scripts_2, m, my_slowdown)
+    if(defined("settings.specific_preperations_2")):
+        settings.specific_preperations_2(options)
+    if(defined("settings.scripts_2")):
+        rss(settings.scripts_2, m, my_slowdown)
 
     write_socket(s, "killExplorer")
     read_socket(s)
@@ -237,8 +247,10 @@ def proceed2():
     return True
 
 def proceed3():
-    settings.specific_preperations_3(options)
-    rss(settings.scripts_3, m, my_slowdown)
+    if(defined("settings.specific_preperations_3")):
+        settings.specific_preperations_3(options)
+    if(defined("settings.scripts_3")):
+        rss(settings.scripts_3, m, my_slowdown)
 
     write_socket(s, "spawn " + settings.app_path)
     read_socket(s)
@@ -261,18 +273,17 @@ def proceed3():
         write_socket(s, "setupSlowdown {0}".format(options.slowdown))
         read_socket(s)
 
-#    for bad_addr in settings.bad_addrs:
-#        write_socket(s, "installBad " + hex(bad_addr))
-#        read_socket(s)
-
-#    for bad_rva in settings.bad_rvas:
-#        write_socket(s, "installBadOff " + bad_rva[0] + " " + hex(bad_rva[1]))
-#        read_socket(s)
-
-    settings.specific_preperations_4(options)
-    rss(settings.scripts_4, m, my_slowdown)
-
+    if(defined("settings.specific_preperations_4")):
+        settings.specific_preperations_4(options)
+    if(defined("settings.scripts_4")):
+        rss(settings.scripts_4, m, my_slowdown)
     return True
+
+def proceed5():
+    if(defined("settings.specific_preperations_5")):
+        settings.specific_preperations_5(options)
+    if(defined("settings.scripts_5")):
+        rss(settings.scripts_5, m, my_slowdown)
 
 def sig1_handler(signum, frame):
     report("Signaled")
@@ -280,12 +291,11 @@ def sig1_handler(signum, frame):
 def sigkill_handler(signum, frame):
     report("Killing")
     powerofff()
-#    revert()
     quit()
         
-#setup fuzzer
+# setup fuzzer
 my_generator = generator.Generator(options.origin, options.samples_shared, "."+options.extension, settings.mutator, corrector = None)
-my_generator.mutations=options.mutations
+my_generator.mutations=int(options.mutations)
 
 def handle_crashing_sample(sample_path, sample_file):
     global s
@@ -357,26 +367,20 @@ def handle_crashing_sample(sample_path, sample_file):
 def settle():
     global s 
 
-#    for bad_addr in settings.bad_addrs:
-#        write_socket(s, "checkBad " + hex(bad_addr))
-#        read_socket(s)
-
-#    for bad_rva in settings.bad_rvas:
-#        write_socket(s, "checkBadOff " + bad_rva[0] + " " + hex(bad_rva[1]))
-#        read_socket(s)
-
     write_socket(s, "settle " + str(settings.settle_sleep * settings.slowdown))
     read_socket(s)
 
-#setup box
+# setup box & perform procedures
 def looop():
     global s
     global lastResponse
+    global reqScript
+    global status
+    status = "RD"
 
     start()
     signal.signal(signal.SIGINT, sigkill_handler)
-    proceed1()
-
+    time.sleep(1)
     connect()
 
     sample_count = 0
@@ -384,27 +388,34 @@ def looop():
     ma_count = 0
     last_time_check = time.localtime()
 
-    #start testing
-
     while True:
         try:
             proceed2()
             proceed3()
 
+            write_socket(s, "checkReady")
+
             while(status != "CR"):
-                sample_path = my_generator.generate_one()
-                sample_file = os.path.basename(sample_path)
-                test_path = settings.prepare_sample(sample_path)
-                test_file = os.path.basename(test_path)
-                write_socket(s, "testFile " + test_file)
+                print("Receiving")
                 read_socket(s)
+                print("Received")
+                if(status == "SR"):
+                    print("SR")
+                    print(reqScript)
+                    #execute
+                    continue
+                if(status == "RD"):
+                    sample_path = my_generator.generate_one()
+                    sample_file = os.path.basename(sample_path)
+                    test_path = settings.prepare_sample(sample_path)
+                    test_file = os.path.basename(test_path)
+                    write_socket(s, "testFile " + test_file)
+                    continue
                 if(status == "MA" or status == "TO"):
-                    close_sample()
                     os.remove(sample_path)
                     if(test_path != sample_path):
                         os.remove(test_path)
                     if(status == "MA"):
-#                        settle()
                         ma_count += 1
                         to_count = 0
                     if(status == "TO"):
@@ -414,25 +425,24 @@ def looop():
                             to_count = 0
                             settle()
 
-
-                # keep track on sample count
-                sample_count += 1
-                if(sample_count % 100 == 0):
-                    current_time = time.localtime()
-                    elapsed = time.mktime(current_time) - time.mktime(last_time_check)
-                    report("Tested: " + str(sample_count))
-                    report("100 tested in " + str(elapsed) + " seconds")
-                    report("Last speed: " + str(100/elapsed) + " tps")
-                    report("MA count: " + str(ma_count))
-                    to_count = 0
-                    ma_count = 0
-                    last_time_check = current_time
-                if(sample_count % settings.restart_count == 0):
-                    report("Tested: " + str(sample_count) + ", will restart")
-                    restart()
-                    connect()
-                    proceed1()
-
+                    # MA or TO, keep track on sample count
+                    sample_count += 1
+                    if(sample_count % 100 == 0):
+                        current_time = time.localtime()
+                        elapsed = time.mktime(current_time) - time.mktime(last_time_check)
+                        report("Tested: " + str(sample_count))
+                        report("100 tested in " + str(elapsed) + " seconds")
+                        report("Last speed: " + str(100/elapsed) + " tps")
+                        report("MA count: " + str(ma_count))
+                        to_count = 0
+                        ma_count = 0
+                        last_time_check = current_time
+                    if(sample_count % settings.restart_count == 0):
+                        report("Tested: " + str(sample_count) + ", will restart")
+                        restart()
+                        connect()
+                    proceed5()
+                    continue
             
             handle_crashing_sample(sample_path, sample_file)
             report("CR")
@@ -446,21 +456,28 @@ def looop():
             report("Socket timeout after " + str(sample_count) + " samples")
             restart()
             connect()
-            proceed1()
         except Exception, e:
             print "Unknown error, restarting"
             print e
             report("Unknown error after " + str(sample_count) + " samples")
             restart()
             connect()
-            init()
-            proceed1()
 
-        
-#    s.settimeout(None)
-    
     s.close()
+    powerofff()
     print("Finished")
+    exit()
+
+logo = """
+ __                      .__               
+|  | ____________________|__| ____   ____  
+|  |/ /  _ \_  __ \_  __ \  |/    \ /  _ \ 
+|    <  <_> )  | \/|  | \/  |   |  (  <_> )
+|__|_ \____/|__|   |__|  |__|___|  /\____/ 
+     \/                          \/        
+Operator
+"""
+print(logo)
 
 while True:
     report("Starting")

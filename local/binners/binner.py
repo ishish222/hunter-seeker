@@ -20,9 +20,6 @@ import socket
 ### functions
 # unable to move cause settings module is not visible
 
-class BreakpointException(Exception):
-    pass
-
 def defined(name):
     if(name in globals()):
         return True
@@ -35,16 +32,6 @@ def defined(name):
         if(names[1] in dir(globals()[names[0]])):
             return True
     return False
-
-### thread routines
-
-def debug_loop_routine(dbg):
-    dlog("Entering debugger routine")
-    dbg.binner.active = True
-    dbg.debugger_active = True
-    dbg.debug_event_loop()
-    dbg.binner.active = False
-    dlog("Leaving debugger routine")
 
 ### binner class
 
@@ -62,7 +49,9 @@ class binner(object):
         self.dbg_event = Event()
         self.dbg_output = None
         self.dbg_line = ""
-        
+       
+        self.status = "" 
+        self.reqScript = ""
         self.main_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.main_socket.bind(("127.0.0.1", 12347))
         self.main_socket.listen(3)
@@ -111,63 +100,40 @@ class binner(object):
 #        self.clean_dir,
 #        self.log_file) = state
 
-    def dlog(self, data):
-        dlog("[binner] %s" % data)
+    def dlog(self, data, level=0):
+        dlog("[binner] %s" % data, level)
 
-    def ddlog(self, data):
-        dlog("%s" % data)
+    def ddlog(self, data, level=0):
+        dlog("%s" % data, level)
 
     def writePipe(self, data):
-        win32file.WriteFile(self.ph, data)
+#        win32file.WriteFile(self.ph, data)
+        self.ph.send(data)
+
 
     def ok(self):
         time.sleep(0.1)
         self.writePipe("-=OK=-")
-        win32file.FlushFileBuffers(self.ph)
+#        win32file.FlushFileBuffers(self.ph)
 
     def send_command(self, cmd):
-        self.dlog("Sending: %s" % cmd)
+        self.dlog("Sending: %s" % cmd, 1)
         for pid in self.debuggers:
+#            self.sockets[str(pid)].flush()
             self.write_debugger(self.sockets[str(pid)], cmd)
             self.ddlog(self.read_debugger(self.sockets[str(pid)]))
 #            self.ddlog(self.read_debugger(self.debuggers[str(pid)]))
-        self.dlog("Sent: %s" % cmd)
+        self.dlog("Sent: %s" % cmd, 1)
+        self.dlog("- - - - - - - - - -", 1)
 
-    def socket_forwarder(self, f, s):
-        while True:
-            s.send(f.readline())
-
-    def poll_debugger(self, dbg):
-        #self.dbg_line = dbg.stdout.readline()
-        self.dbg_line = self.read_debugger(dbg)
-        self.dbg_output = dbg
-        self.dbg_event.set()
-
-    def poll_debuggers(self):
-#        readable = [dbg.stdout for dbg in self.debuggers.values()]
-#        self.dbg_output = None
-#        self.dbg_line = ""
-
-#        readable = self.debuggers.values()
-#        threads = [Thread(target = self.poll_debugger, args=(dbg, )) for dbg in self.debuggers.values()]
-#        for t in threads:
-#            t.start()
-#        self.dbg_event.wait()
-#        for t in threads:
-#            try:
-#                dlog("terminating polling thread")
-#                t.terminate()
-#                dlog("terminating ok")
-#            except Exception, e:
-#                dlog(e)
-#                continue
-#        dlog("g")
-#        for dbg in self.debuggers.values():
-#            dbg.stdin.flush()
-#            dbg.stdout.flush()
-#        return self.dbg_output
-        readable = self.sockets.values()
-        ready, _, _ = select(readable, [], [])
+    def poll_debuggers(self, to = None):
+        if(to != None):
+            self.dlog("TO = %d seconds" % to, 1)
+            readable = self.sockets.values()
+            ready, _, _ = select(readable, [], [], to)
+        else:
+            readable = self.sockets.values()
+            ready, _, _ = select(readable, [], [])
         return ready
 
     def read_debuggers(self):
@@ -177,28 +143,34 @@ class binner(object):
     def read_debugger(self, dbg_socket):
         data = ""
         while True:
-#            line = dbg.stdout.readline()
-#            line += self.sockets[str(pid)].recv(1)
             data += dbg_socket.recv(1)
-#            print(line)
             if(data[-6:] == "=[OK]="):
                 break
+        statusOff = data.find("Status: ")
+        if(statusOff > -1):
+            self.status = data[statusOff+8:statusOff+8+2]
+            if(self.status == "SR"):
+                scOff = data.find("Script: ")
+                lineEnd = data[scOff:].find("\n")
+                self.reqScript = data[scOff:lineEnd]
+                self.dlog(self.reqScript)
+                self.dlog("Taken from data offsets: %d, %d" % (scOff, lineEnd))
+        self.dlog("Parsed data: %s" % data, 2)
         return data[:-6]
 
     def write_debugger(self, dbg_socket, data):
-#        return dbg.stdin.write(data + "\n")
         return dbg_socket.send(data + "\n")
 
-    def loop_debuggers(self):
-        dlog("Looping debuggers")
+    def loop_debuggers(self, to = None):
+        self.dlog("Waiting for debug event")
         self.start_debuggers()
-        ready_dbg_sockets = self.poll_debuggers()
-#        dlog("%d" % cur_dbg.pid)
+        ready_dbg_sockets = self.poll_debuggers(to)
         for dbg in ready_dbg_sockets:
             self.ddlog(self.read_debugger(dbg))
         self.stop_debuggers()
-#        self.dlog(self.read_debugger(cur_dbg))
-
+#        for dbg in self.sockets.values():
+#            dbg.flush()
+            
     def stop_debuggers(self):
         self.send_command("stop")
 
