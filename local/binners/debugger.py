@@ -89,10 +89,10 @@ def phony_handler(dbg):
 def default_st_handler(dbg):
     # increment hit count
     dbg.counters[dbg.exception_address] = (dbg.counters[dbg.exception_address][PASS_COUNT], dbg.counters[dbg.exception_address][HIT_COUNT]+1)
-    dbg.dlog("Current hit no: %d, pass count: %d" % (dbg.counters[dbg.exception_address][HIT_COUNT], dbg.counters[dbg.exception_address][PASS_COUNT]), 1)
+#    dbg.dlog("Current hit no: %d, pass count: %d" % (dbg.counters[dbg.exception_address][HIT_COUNT], dbg.counters[dbg.exception_address][PASS_COUNT]), 1)
 
     #check hits
-    if(dbg.counters[dbg.exception_address][HIT_COUNT] > dbg.counters[dbg.exception_address][PASS_COUNT]):
+    if(dbg.counters[dbg.exception_address][HIT_COUNT] == dbg.counters[dbg.exception_address][PASS_COUNT]+1):
         dbg.dlog("ST marker reached")
         dbg.signal_st()
         dbg.ok()
@@ -103,10 +103,10 @@ def default_st_handler(dbg):
 def default_end_handler(dbg):
     # increment hit count
     dbg.counters[dbg.exception_address] = (dbg.counters[dbg.exception_address][PASS_COUNT], dbg.counters[dbg.exception_address][HIT_COUNT]+1)
-    dbg.dlog("Current hit no: %d, pass count: %d" % (dbg.counters[dbg.exception_address][HIT_COUNT], dbg.counters[dbg.exception_address][PASS_COUNT]), 1)
+#    dbg.dlog("Current hit no: %d, pass count: %d" % (dbg.counters[dbg.exception_address][HIT_COUNT], dbg.counters[dbg.exception_address][PASS_COUNT]), 1)
 
     #check hits
-    if(dbg.counters[dbg.exception_address][HIT_COUNT] > dbg.counters[dbg.exception_address][PASS_COUNT]):
+    if(dbg.counters[dbg.exception_address][HIT_COUNT] == dbg.counters[dbg.exception_address][PASS_COUNT]+1):
         dbg.dlog("END marker reached")
         dbg.signal_ma()
         dbg.ok()
@@ -116,10 +116,10 @@ def default_end_handler(dbg):
 def default_rd_handler(dbg):
     # increment hit count
     dbg.counters[dbg.exception_address] = (dbg.counters[dbg.exception_address][PASS_COUNT], dbg.counters[dbg.exception_address][HIT_COUNT]+1)
-    dbg.dlog("Current hit no: %d, pass count: %d" % (dbg.counters[dbg.exception_address][HIT_COUNT], dbg.counters[dbg.exception_address][PASS_COUNT]), 1)
+#    dbg.dlog("Current hit no: %d, pass count: %d" % (dbg.counters[dbg.exception_address][HIT_COUNT], dbg.counters[dbg.exception_address][PASS_COUNT]), 1)
 
     #check hits
-    if(dbg.counters[dbg.exception_address][HIT_COUNT] > dbg.counters[dbg.exception_address][PASS_COUNT]):
+    if(dbg.counters[dbg.exception_address][HIT_COUNT] == dbg.counters[dbg.exception_address][PASS_COUNT]+1):
         dbg.dlog("RD marker reached")
         dbg.signal_rd()
         dbg.ok()
@@ -301,7 +301,6 @@ def debugger_routine():
     dbg.ok()
     dbg.dlog("Will accept attach now")
     dbg.ok()
-#    cmd = readline(sys.stdin)
     cmd = readline(dbg.binner)
     dbg.execute(cmd)
     dbg.ok()
@@ -311,10 +310,7 @@ def debugger_routine():
     time.sleep(5)
     while True:
         l.acquire()
-#        dbg.dlog("Entering loop")
-#        dbg.ok()
         dbg.debug_event_loop()
-#        dbg.dlog("Exiting loop")
         l.release()
 
 ### debugger class
@@ -348,31 +344,26 @@ class debugger(pydbg):
         dlog("[%d] %s" % (self.pid, data), level)
 
     def signal_ma(self):
-        self.dlog("to binner: Status: MA")
+        self.dlog("to binner: Status: MA", 2)
         self.binner.send("Status: MA")
 
     def signal_rd(self):
-        self.dlog("to binner: Status: RD")
+        self.dlog("to binner: Status: RD", 2)
         self.binner.send("Status: RD")
 
     def signal_rs(self):
-        self.dlog("to binner: Status: RS")
+        self.dlog("to binner: Status: RS", 2)
         self.binner.send("Status: RS")
 
     def signal_st(self):
-        self.dlog("to binner: Status: ST")
-        self.binner.send("Status: ST")
-
-    def signal_st(self):
-        self.dlog("to binner: Status: ST")
+        self.dlog("to binner: Status: ST", 2)
         self.binner.send("Status: ST")
 
     def ok(self):
-        self.dlog("to binner: =[OK]=")
         self.binner.send("=[OK]=")
 
     def reqScript(self, script):
-        self.dlog("to binner: Status: SR\nScript: %s\n" % script)
+        self.dlog("to binner: Status: SR\nScript: %s\n" % script, 2)
         self.binner.send("Status: SR\nScript: %s\n" % script)
 
     def execute(self, cmds):
@@ -392,11 +383,11 @@ class debugger(pydbg):
                 self.start(float(args[1]))
             else:
                 self.start()
-            self.dlog("Started")
+            self.dlog("Started", 1)
 
         if(cmd == "stop"):
             self.stop()
-            self.dlog("Stopped")
+            self.dlog("Stopped", 1)
 
         if(cmd == "attach_markers"):
             self.attach_markers()
@@ -675,121 +666,101 @@ class debugger(pydbg):
 
     def attach_markers(self):
         self.preparation_lock.acquire()
-        self.dlog("preparation locked", 1)
 
         for ma_addr in self.markers:
-            self.dlog("0x%x: %s" % (ma_addr[0], self.marker_handler))
+#            self.dlog("0x%x: %s" % (ma_addr[0], self.marker_handler))
             self.bp_set(ma_addr[0], handler = self.marker_handler)
             self.breakpoints[ma_addr[0]].pass_count = ma_addr[1]
             self.counters[ma_addr[0]] = 0
 
         self.preparation_lock.release()
-        self.dlog("preparation released", 1)
 
     def attach_st_markers(self):
         self.preparation_lock.acquire()
-        self.dlog("preparation locked", 1)
 
         for ma_addr in self.st_markers:
-            self.dlog("0x%x: %s" % (ma_addr[0], self.st_marker_handler))
+#            self.dlog("0x%x: %s" % (ma_addr[0], self.st_marker_handler))
             self.bp_set(ma_addr[0], handler = self.st_marker_handler)
             self.breakpoints[ma_addr[0]].pass_count = ma_addr[1]
             self.counters[ma_addr[0]] = (ma_addr[1], 0)
 
         self.preparation_lock.release()
-        self.dlog("preparation released", 1)
 
     def attach_end_markers(self):
         self.preparation_lock.acquire()
-        self.dlog("preparation locked", 1)
 
         for ma_addr in self.end_markers:
-            self.dlog("0x%x: %s" % (ma_addr[0], self.end_marker_handler))
+#            self.dlog("0x%x: %s" % (ma_addr[0], self.end_marker_handler))
             self.bp_set(ma_addr[0], handler = self.end_marker_handler)
             self.breakpoints[ma_addr[0]].pass_count = ma_addr[1]
-            self.dlog("Pass count: %d" % self.breakpoints[ma_addr[0]].pass_count)
+#            self.dlog("Pass count: %d" % self.breakpoints[ma_addr[0]].pass_count)
             self.counters[ma_addr[0]] = (ma_addr[1], 0)
 
         self.preparation_lock.release()
-        self.dlog("preparation released", 1)
 
     def attach_react_markers(self):
         self.preparation_lock.acquire()
-        self.dlog("preparation locked", 1)
 
         for ma_addr in self.react_markers:
             reaction = ma_addr[1]
-            self.dlog("0x%x: function: %s scripts: %s" % (ma_addr[0], reaction[1], reaction[2]))
+#            self.dlog("0x%x: function: %s scripts: %s" % (ma_addr[0], reaction[1], reaction[2]))
             self.bp_set(ma_addr[0], handler = reaction[1])
             self.breakpoints[ma_addr[0]].pass_count = reaction[0]
             self.counters[ma_addr[0]] = 0
 
         self.preparation_lock.release()
-        self.dlog("preparation released", 1)
 
     def attach_rd_markers(self):
         self.preparation_lock.acquire()
-        self.dlog("preparation locked", 1)
 
         for ma_addr in self.rd_markers:
-            self.dlog("0x%x: %s" % (ma_addr[0], self.rd_marker_handler))
+#            self.dlog("0x%x: %s" % (ma_addr[0], self.rd_marker_handler))
             self.bp_set(ma_addr[0], handler = self.rd_marker_handler)
             self.breakpoints[ma_addr[0]].pass_count = ma_addr[1]
-            self.dlog("Pass count: %d" % self.breakpoints[ma_addr[0]].pass_count)
+#            self.dlog("Pass count: %d" % self.breakpoints[ma_addr[0]].pass_count)
             self.counters[ma_addr[0]] = (ma_addr[1], 0)
 
         self.preparation_lock.release()
-        self.dlog("preparation released", 1)
 
     def detach_markers(self):
         self.preparation_lock.acquire()
-        self.dlog("preparation locked", 1)
 
         for ma_addr in self.markers:
             self.bp_del(ma_addr[0])
 
         self.preparation_lock.release()
-        self.dlog("preparation released", 1)
 
     def detach_st_markers(self):
         self.preparation_lock.acquire()
-        self.dlog("preparation locked", 1)
 
         for ma_addr in self.st_markers:
             self.bp_del(ma_addr[0])
 
         self.preparation_lock.release()
-        self.dlog("preparation released", 1)
 
     def detach_end_markers(self):
         self.preparation_lock.acquire()
-        self.dlog("preparation locked", 1)
 
         for ma_addr in self.end_markers:
             self.bp_del(ma_addr[0])
 
         self.preparation_lock.release()
-        self.dlog("preparation released", 1)
 
     def detach_react_markers(self):
         self.preparation_lock.acquire()
-        self.dlog("preparation locked", 1)
 
         for ma_addr in self.react_markers:
             self.bp_del(ma_addr[0])
 
         self.preparation_lock.release()
-        self.dlog("preparation released", 1)
 
     def detach_rd_markers(self):
         self.preparation_lock.acquire()
-        self.dlog("preparation locked", 1)
 
         for ma_addr in self.rd_markers:
             self.bp_del(ma_addr[0])
 
         self.preparation_lock.release()
-        self.dlog("preparation released", 1)
 
     def break_things(self):
         self.dlog("Breaking stuff")

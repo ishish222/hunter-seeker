@@ -17,17 +17,8 @@ machines = {
 ff = True
 
 def react1(dbg):
-    dbg.dlog("Got RE 1")
-    dbg.dlog("Got RE 1")
-    dbg.dlog("Got RE 1")
-    dbg.dlog("Got RE 1")
-    dbg.dlog("Got RE 1")
-    dbg.dlog("Got RE 1")
-    dbg.dlog("Got RE 1")
-    dbg.dlog("Got RE 1")
-    dbg.dlog("Got RE 1")
-    dbg.start(0.1)
-    dbg.reqScript("space")
+    dbg.dlog("SR marker reached")
+    dbg.reqScript("enter")
     dbg.ok()
     return DBG_CONTINUE
 
@@ -76,13 +67,13 @@ def specific_preperations_1(options):
     pass
 
 scripts_1 = ["beep2"]
-log_level = 0
+log_level = 1
 
 def st_marker_test(dbg):
     dbg.counters[dbg.exception_address] = (dbg.counters[dbg.exception_address][PASS_COUNT], dbg.counters[dbg.exception_address][HIT_COUNT]+1)
     dbg.dlog("Current hit no: %d, pass count: %d" % (dbg.counters[dbg.exception_address][HIT_COUNT], dbg.counters[dbg.exception_address][PASS_COUNT]), 1)
 
-    if(dbg.counters[dbg.exception_address][HIT_COUNT] > dbg.counters[dbg.exception_address][PASS_COUNT]):
+    if(dbg.counters[dbg.exception_address][HIT_COUNT] == dbg.counters[dbg.exception_address][PASS_COUNT]+1):
         dbg.dlog("ST marker test")
         dbg.ok()
     return DBG_CONTINUE
@@ -91,7 +82,7 @@ def end_marker_test(dbg):
     dbg.counters[dbg.exception_address] = (dbg.counters[dbg.exception_address][PASS_COUNT], dbg.counters[dbg.exception_address][HIT_COUNT]+1)
     dbg.dlog("Current hit no: %d, pass count: %d" % (dbg.counters[dbg.exception_address][HIT_COUNT], dbg.counters[dbg.exception_address][PASS_COUNT]), 1)
 
-    if(dbg.counters[dbg.exception_address][HIT_COUNT] > dbg.counters[dbg.exception_address][PASS_COUNT]):
+    if(dbg.counters[dbg.exception_address][HIT_COUNT] == dbg.counters[dbg.exception_address][PASS_COUNT]+1):
         dbg.dlog("END marker test")
         dbg.ok()
     return DBG_CONTINUE
@@ -112,14 +103,14 @@ scripts_3 = []
 def specific_preperations_4(options):
     pass
 
-scripts_4 = ["alttab"]
+scripts_4 = []
 
 from time import sleep
 
 def specific_preperations_5(options):
-    sleep(0.5)
+    pass
 
-scripts_5 = ["space", "close_sample_reader"]
+scripts_5 = ["enter", "close_sample_reader"]
 
 def prepare_sample(sample_path):
     return sample_path

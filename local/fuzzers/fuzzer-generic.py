@@ -139,13 +139,6 @@ def read_socket(s):
     if(off != -1):
         status = data[off+8:off+10]
 
-        #if RE find react addrs
-        if(status == "SR"):
-            print("Data: %s" % data)
-            scOff = data.find("Script: ")
-            lineEnd = data[scOff+8:].find("\n")
-            reqScript = data[scOff+8:scOff+8+lineEnd]
-    
     print(timestamp())
     print("" + str(data[:-6]))
     print("")
@@ -370,6 +363,24 @@ def settle():
     write_socket(s, "settle " + str(settings.settle_sleep * settings.slowdown))
     read_socket(s)
 
+def register_script():
+    global lastResponse
+    global reqScript
+
+    scOff = lastResponse.find("Script: ")
+    lineEnd = lastResponse[scOff+8:].find("\n")
+    reqScript = lastResponse[scOff+8:scOff+8+lineEnd]
+    print("Registered script: %s" % reqScript)
+
+
+def execute_script():
+    global reqScript
+
+    if(reqScript != ""):
+        rs(reqScript, m, my_slowdown)
+        print("Executed script")
+        reqScript = ""
+
 # setup box & perform procedures
 def looop():
     global s
@@ -377,6 +388,8 @@ def looop():
     global lastResponse
     global reqScript
     global status
+
+    reqScript = ""
     status = "RD"
 
     start()
@@ -397,12 +410,14 @@ def looop():
             write_socket(s, "checkReady")
 
             while(status != "CR"):
-                print("Receiving")
                 read_socket(s)
-                print("Received")
+                execute_script()
                 if(status == "SR"):
-                    rs("beep3", m, my_slowdown)
-                    rs(reqScript, m, my_slowdown)
+                    # react to SR
+                    register_script()
+                    execute_script()
+#                    print("Did script work?")
+#                    time.sleep(5)
                     write_socket(s, "")
                     continue
                 if(status == "RD"):
@@ -413,6 +428,10 @@ def looop():
                     write_socket(s, "testFile " + test_file)
                     continue
                 if(status == "MA" or status == "TO"):
+                    # react to test end
+                    proceed5()
+                    write_socket(s, "")
+
                     os.remove(sample_path)
                     if(test_path != sample_path):
                         os.remove(test_path)
@@ -442,8 +461,6 @@ def looop():
                         report("Tested: " + str(sample_count) + ", will restart")
                         restart()
                         connect()
-                    proceed5()
-                    write_socket(s, "")
                     continue
             
             handle_crashing_sample(sample_path, sample_file)
@@ -483,9 +500,4 @@ print(logo)
 
 while True:
     report("Starting")
-    try:
-        looop()
-    except Exception as e:
-        print(e)
-        time.sleep(3)
-        continue
+    looop()

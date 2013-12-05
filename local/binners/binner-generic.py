@@ -63,9 +63,9 @@ def handle_crash():
 
 ### binner commands
 
-def invoke(f):
-    print("powershell -command \"& { invoke-expression z:\\samples\\shared\\%s }\"" % f)
-    Popen("powershell -command \"& { invoke-expression z:\\samples\\shared\\%s }\"" % f)
+def verify():
+    dlog("Please verify process")
+    time.sleep(5)
 
 def execute(cmds):
     global main_binner
@@ -86,68 +86,92 @@ def execute(cmds):
 
         elif(cmd == "testFile"):
             dlog("In waitTest", 1)
-            main_binner.status = ""
+#            verify()
             main_binner.stop_debuggers()
             main_binner.attach_st_markers()
-            invoke(args)
 
+#            verify()
+            status = ""
             # test is about to start, expecting ST
-            while(main_binner.status != "ST"):
-                main_binner.loop_debuggers() # wait for test start, should add timeout?
+            while(status != "ST"):
+                main_binner.loop_debuggers(invocation = "powershell -command \"& { invoke-expression z:\\samples\\shared\\%s }\"" % args) 
+                while(not main_binner.status.empty()):
+                    status = main_binner.status.get()[1]
+                    if(status == "ST"):
+                        break
+                    if(status == "SR"):
+                        main_binner.dlog("Requested script: %s" % main_binner.reqScript)
+                        main_binner.writePipe("Status: %s\n" % status)
+                        main_binner.writePipe("Script: %s\n" % main_binner.reqScript)
+                        main_binner.ok()
+                        # time for reaction to SR
+                        main_binner.start_debuggers()
+                        main_binner.readPipe()
+                        main_binner.stop_debuggers()
+
+#            verify()
 
             # test has started, expecting MA, TO, CR, SR
             main_binner.detach_st_markers()
-            main_binner.attach_react_markers()
             main_binner.attach_end_markers()
 
-            while True:
+#            verify()
+            status = ""
+            while(status == "SR" or status == ""):
                 main_binner.loop_debuggers()
-                if(main_binner.status == "MA"):
-                    break
-                if(main_binner.status == ""):
-                    main_binner.status = "TO" # TO is overriden by all
-                    break
-                if(main_binner.status == "CR"):
-                    handle_crash()
-                    break
-                if(main_binner.status == "SR"):
-                    main_binner.dlog("Requested script: %s" % main_binner.reqScript)
-                    main_binner.writePipe("Status: %s\n" % main_binner.status)
-                    main_binner.writePipe("Script: %s\n" % main_binner.reqScript)
-                    main_binner.ok()
-                    # need ack
-                    main_binner.readPipe()
+                # process status queue:
+                while(not main_binner.status.empty()):
+                    status = main_binner.status.get()[1]
+                    if(status == "MA"):
+                        break
+                    if(status == ""):
+                        status = "TO" # TO is overriden by all
+                        break
+                    if(status == "CR"):
+                        handle_crash()
+                        break
+                    if(status == "SR"):
+                        main_binner.dlog("Requested script: %s" % main_binner.reqScript)
+                        main_binner.writePipe("Status: %s\n" % status)
+                        main_binner.writePipe("Script: %s\n" % main_binner.reqScript)
+                        main_binner.ok()
+                        # time for reaction to SR
+                        main_binner.start_debuggers()
+                        main_binner.readPipe()
+                        main_binner.stop_debuggers()
 
+#            verify()
             # test has ended, expecting RD, SR
             main_binner.detach_end_markers()
             main_binner.attach_rd_markers()
-            main_binner.writePipe("Status: %s" % main_binner.status)
+            main_binner.writePipe("Status: %s" % status)
             main_binner.ok()
-            # need ack
+            # time for reaction to test end
+            main_binner.start_debuggers()
             main_binner.readPipe()
+            main_binner.stop_debuggers()
 
-            while True:
+#            verify()
+            status = ""
+            while(status == "SR" or status == ""):
                 main_binner.loop_debuggers()
-                if(main_binner.status == "RD"):
-                    break
-                if(main_binner.status == "SR"):
-                    main_binner.dlog("Requested script: %s" % main_binner.reqScript)
-                    main_binner.writePipe("Status: %s\n" % main_binner.status)
-                    main_binner.writePipe("Script: %s\n" % main_binner.reqScript)
-                    main_binner.ok()
-                    # need ack
-                    main_binner.readPipe()
+                while(not main_binner.status.empty()):
+                    status = main_binner.status.get()[1]
+                    if(status == "RD"):
+                        break
+                    if(status == "SR"):
+                        main_binner.dlog("Requested script: %s" % main_binner.reqScript)
+                        main_binner.writePipe("Status: %s\n" % status)
+                        main_binner.writePipe("Script: %s\n" % main_binner.reqScript)
+                        main_binner.ok()
+                        # time for reaction to SR
+                        main_binner.start_debuggers()
+                        main_binner.readPipe()
+                        main_binner.stop_debuggers()
 
             main_binner.detach_rd_markers()
-            main_binner.writePipe("Status: %s" % main_binner.status)
+            main_binner.writePipe("Status: %s" % status)
             main_binner.ok()
-            # app is ready for next test
-#            main_binner.start_debuggers()
-#            dlog("About to send RD")
-#            main_binner.writePipe("Status: RD")
-#            dlog("Send RD")
-#            main_binner.ok()
-#            dlog("Send RDOK")
 
         elif(cmd == "observe"):
             dlog("In observe")
@@ -240,6 +264,7 @@ def execute(cmds):
 #                        log_write(e)
                     continue
 
+            main_binner.attach_react_markers()
             main_binner.writePipe("Attached to " + str(args))
             main_binner.ok()
 
