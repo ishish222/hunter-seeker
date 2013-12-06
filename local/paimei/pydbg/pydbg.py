@@ -1332,6 +1332,40 @@ class pydbg(object):
         return module_list
 
 
+    #####################################################################################################################
+    def enumerate_modules_w_size (self):
+        '''
+        Using the CreateToolhelp32Snapshot() API enumerate and return the list of module name / base address tuples that
+        belong to the debuggee
+
+        @see: iterate_modules()
+
+        @rtype:  List
+        @return: List of module name / base address tuples.
+        '''
+
+        self._log("enumerate_modules()")
+
+        module      = MODULEENTRY32()
+        module_list = []
+        snapshot    = kernel32.CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, self.pid)
+
+        if snapshot == INVALID_HANDLE_VALUE:
+            raise pdx("CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, %d" % self.pid, True)
+
+        # we *must* set the size of the structure prior to using it, otherwise Module32First() will fail.
+        module.dwSize = sizeof(module)
+
+        found_mod = kernel32.Module32First(snapshot, byref(module))
+
+        while found_mod:
+            module_list.append((module.szModule, module.modBaseAddr, module.dwSize))
+            found_mod = kernel32.Module32Next(snapshot, byref(module))
+
+        self.close_handle(snapshot)
+        return module_list
+
+
     ####################################################################################################################
     def enumerate_processes (self):
         '''

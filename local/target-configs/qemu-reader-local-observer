@@ -5,7 +5,7 @@ c:blob/res/pdf/analyzed/1086625a01d849baafe36df18897b299.pdf
 c:blob/res/pdf/analyzed/d03b8a87f20c35047a1b42e7b35006dd.pdf
 t:fuzzers/generators
 t:fuzzers/correctors
-t:settings/qemu-reader-local/settings.py
+t:settings/qemu-reader-local-observer/settings.py
 s:paimei
 s:binners/binner-generic.py
 s:binners/binner.py

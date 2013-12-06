@@ -205,7 +205,8 @@ def execute(cmds):
         elif(cmd == "observe"):
             dlog("In observe")
             main_binner.attach_st_markers()
-            main_binner.loop_debuggers()
+            main_binner.attach_end_markers()
+            main_binner.loop_debuggers(invocation = "powershell -command \"& { invoke-expression z:\\samples\\shared\\%s }\"" % args)
             #waiting, end marker handler will ok()
 
         elif(cmd == "testReactMarkers"):
@@ -246,10 +247,13 @@ def execute(cmds):
             global log_file
             log_file += time.strftime("%Y%m%d-%H%M%S")
 
-            if(len(cmds) > 1):
-                startLog(cmds[1])
-            else:
-                startLog(log_file)
+#            if(len(cmds) > 1):
+#                startLog(cmds[1])
+#            else:
+#                startLog(log_file)
+            print("here1")
+            startLog()
+            print("here2")
             main_binner.start_log(log_file)
             main_binner.ok()
 
@@ -411,9 +415,4 @@ Hunter-Seeker
         execute(cmds)
 
 if __name__ == '__main__':
-    try:
-        binner_routine()
-    except Exception, e:
-        print(e)
-        while True:
-            pass
+    binner_routine()

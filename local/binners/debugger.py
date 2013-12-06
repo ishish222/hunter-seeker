@@ -16,6 +16,7 @@ import time
 from select import select
 import socket
 from random import random
+import struct
 
 ### functions
 # unable to move cause settings module is not visible
@@ -88,12 +89,7 @@ def phony_handler(dbg):
     return DBG_CONTINUE
 
 def default_st_handler(dbg):
-    # increment hit count
-    dbg.counters[dbg.exception_address] = (dbg.counters[dbg.exception_address][PASS_COUNT], dbg.counters[dbg.exception_address][HIT_COUNT]+1)
-#    dbg.dlog("Current hit no: %d, pass count: %d" % (dbg.counters[dbg.exception_address][HIT_COUNT], dbg.counters[dbg.exception_address][PASS_COUNT]), 1)
-
-    #check hits
-    if(dbg.counters[dbg.exception_address][HIT_COUNT] == dbg.counters[dbg.exception_address][PASS_COUNT]+1):
+    if(dbg.check_counters(dbg.exception_address)):
         dbg.dlog("ST marker reached")
         dbg.signal_st()
         dbg.ok()
@@ -102,12 +98,7 @@ def default_st_handler(dbg):
 
 
 def default_end_handler(dbg):
-    # increment hit count
-    dbg.counters[dbg.exception_address] = (dbg.counters[dbg.exception_address][PASS_COUNT], dbg.counters[dbg.exception_address][HIT_COUNT]+1)
-#    dbg.dlog("Current hit no: %d, pass count: %d" % (dbg.counters[dbg.exception_address][HIT_COUNT], dbg.counters[dbg.exception_address][PASS_COUNT]), 1)
-
-    #check hits
-    if(dbg.counters[dbg.exception_address][HIT_COUNT] == dbg.counters[dbg.exception_address][PASS_COUNT]+1):
+    if(dbg.check_counters(dbg.exception_address)):
         dbg.dlog("END marker reached")
         dbg.signal_ma()
         dbg.ok()
@@ -115,12 +106,7 @@ def default_end_handler(dbg):
     return DBG_CONTINUE
 
 def default_rd_handler(dbg):
-    # increment hit count
-    dbg.counters[dbg.exception_address] = (dbg.counters[dbg.exception_address][PASS_COUNT], dbg.counters[dbg.exception_address][HIT_COUNT]+1)
-#    dbg.dlog("Current hit no: %d, pass count: %d" % (dbg.counters[dbg.exception_address][HIT_COUNT], dbg.counters[dbg.exception_address][PASS_COUNT]), 1)
-
-    #check hits
-    if(dbg.counters[dbg.exception_address][HIT_COUNT] == dbg.counters[dbg.exception_address][PASS_COUNT]+1):
+    if(dbg.check_counters(dbg.exception_address)):
         dbg.dlog("RD marker reached")
         dbg.signal_rd()
         dbg.ok()
@@ -257,12 +243,12 @@ class debugger(pydbg):
             self.dlog("config read", 1)
 
         if(cmd == "attach"):
-            self.attach(int(args[1]))
-            self.dlog("attached to %d" % int(args[1]))
+            self.attach(int(args))
+            self.dlog("attached to %d" % int(args))
 
         if(cmd == "start"):
-            if(len(args) > 1):
-                self.start(float(args[1]))
+            if(len(cmds) > 1):
+                self.start(float(args))
             else:
                 self.start()
             self.dlog("Started", 1)
@@ -314,6 +300,12 @@ class debugger(pydbg):
         if(cmd == "detach_rd_markers"):
             self.detach_rd_markers()
             self.dlog("RD markers detached", 1)
+
+        if(cmd == "set_callback"):
+            self.set_callback(cmds[1:])
+
+        if(cmd == "track_all_threads"):
+            self.track_all_threads()
 
         if(cmd == "start_log"):
             self.start_log(args)
@@ -512,7 +504,7 @@ class debugger(pydbg):
         my_module = self.addr_to_module(e_addr)
         if(my_module != None):
             my_name = my_module.szModule
-            my_addr = module_name.modBaseAddr
+            my_addr = my_module.modBaseAddr
         else:
             my_name = "[INVALID]"
             my_addr = 0x0
@@ -525,13 +517,44 @@ class debugger(pydbg):
             e_instr = "[INVALID]"
         return e_instr
 
+    def decode_op1(self, op1):
+        my_op = op1
+        if(my_op[0] == '['):
+            my_op = self.decode_op1(my_op[1:-1])
+            my_op = int(struct.unpack("<i", "".join(self.read(my_op, 4)))[0]) & 0xffffffff
+            return my_op
+        for reg in regs:
+            if(my_op.upper() == reg):
+                my_op = self.get_register(reg)
+                return my_op & 0xffffffff
+        if(len(my_op.split("+")) >1):
+            (a,b) = my_op.split("+")
+            a = self.decode_op1(self, a)
+            b = self.decode_op1(self, b)
+            my_op = a+b
+            return my_op & 0xffffffff
+        if(len(my_op.split("-")) >1):
+            (a,b) = my_op.split("-")
+            a = self.decode_op1(self, a)
+            b = self.decode_op1(self, b)
+            my_op = a-b
+            return my_op & 0xffffffff
+        if(len(my_op.split("*")) >1):
+            (a,b) = my_op.split("*")
+            a = self.decode_op1(self, a)
+            b = self.decode_op1(self, b)
+            my_op = a*b
+            return my_op & 0xffffffff
+        return int(my_op, 16) & 0xffffffff
+
     def check_blacklists(self, e_addr):
 
         #addresses
-        for bl_addr in bl_addresses:
-            if(e_addr == bl_addr):
-                self.dlog("Address blacklisted, won't handle")
-                return True
+        if(len(self.bl_addresses) > 0):
+            for bl_addr in self.bl_addresses:
+                if(e_addr == bl_addr):
+                    self.dlog("Address blacklisted, won't handle")
+                    return True
 
         #modules
         (mod_name, mod_addr) = self.addr_to_module_name_and_baseaddr(e_addr)
@@ -539,27 +562,30 @@ class debugger(pydbg):
 #        dlog("Module: " + my_name)
 #        dlog("Module base: " + hex(my_addr))
 
-        if(module_name != "[INVALID]"):
-            for bl_mod in bl_modules:
-                if(my_name == bl_mod):
-                    self.dlog("Address blacklisted, won't handle")
-                    return True
-    
-        #check rvas
-        if(my_name != "[INVALID]"):
-            for rva in bl_rvas:
-                if(rva[0] == my_name):
-                    my_off = e_addr - my_addr
-                    if(my_off == rva[1]):
-                        self.dlog("RVA blacklisted, won't handle")
+        if(mod_name != "[INVALID]"):
+            if(len(self.bl_modules) > 0):
+                for bl_mod in self.bl_modules:
+                    if(mod_name == bl_mod):
+                        self.dlog("Address blacklisted, won't handle")
                         return True
     
+        #check rvas
+        if(mod_name != "[INVALID]"):
+            if(len(self.bl_rvas) > 0):
+                for rva in self.bl_rvas:
+                    if(rva[0] == mod_name):
+                        my_off = e_addr - mod_addr
+                        if(my_off == rva[1]):
+                            self.dlog("RVA blacklisted, won't handle")
+                            return True
+    
         #instructions
-        e_instr = self.safe_disasm(e_addr)
-        for bl_instr in bl_instructions:
-            if(e_instr == bl_instr):
-                self.dlog("Instruction blacklisted, won't handle")
-                return True
+        if(len(self.bl_instructions) > 0):
+            e_instr = self.safe_disasm(e_addr)
+            for bl_instr in self.bl_instructions:
+                if(e_instr == bl_instr):
+                    self.dlog("Instruction blacklisted, won't handle")
+                    return True
     
         #checks finished, it's ok
         return False
@@ -700,6 +726,24 @@ class debugger(pydbg):
         thread_context = self.get_thread_context(thread_handle)
         thread_context.Eip = addr
         self.set_thread_context(thread_context, thread_handle)
+
+    def check_counters(self, ea):
+        self.counters[ea] = (self.counters[ea][PASS_COUNT], self.counters[ea][HIT_COUNT]+1)
+        self.dlog("Current hit no: %d, pass count: %d" % (self.counters[ea][HIT_COUNT], self.counters[ea][PASS_COUNT]), 1)
+    
+        if(self.counters[ea][HIT_COUNT] == self.counters[ea][PASS_COUNT]+1):
+            return True
+        else:
+            return False
+
+    def track_all_threads(self):
+        for thread_id in self.enumerate_threads():
+            self.write_log("Tracking [%x] " % thread_id)
+            thread_handle  = self.open_thread(thread_id)
+            if(thread_handle == self.h_thread):
+                continue
+            self.single_step(True, thread_handle)
+            self.close_handle(thread_handle)
 
     def start_log(self, name):
         self.logStarted = True

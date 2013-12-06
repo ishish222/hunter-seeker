@@ -150,7 +150,7 @@ def read_socket(s):
 
 def write_socket(s, data):
     print(timestamp() + "> " + str(data))
-    s.send(data)
+    s.send(data + "-=OK=-")
 
 def powerofff():
     print("Powering off")
@@ -228,7 +228,7 @@ def proceed1():
         settings.specific_preperations_1(options)
     if(defined("settings.scripts_1")):
         rss(settings.scripts_1, m, my_slowdown)
-    rss(["dotnet_server_spawn"], m, my_slowdown)
+    rss(["python_server_spawn"], m, my_slowdown)
 
 def proceed2():
     # executed during each guest system restart
@@ -392,7 +392,7 @@ def looop():
             # start log
             write_socket(s, "logStart z:\\log-" + test_file + "-")
             read_socket(s)
-            write_socket(s, "testStEndMarkers " + test_file)
+            write_socket(s, "observe " + test_file)
             read_socket(s)
             proceed5()
 

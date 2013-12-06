@@ -1,12 +1,14 @@
 import generators.changer as changer
 
+EXCEPTION_SINGLE_STEP = 0x80000004
+EXCEPTION_BREAKPOINT = 0x80000003
 DBG_CONTINUE = 0x00010002
 HIT_COUNT = 1
 PASS_COUNT = 0
 
 visible = True
 testing = False
-breaking = True
+breaking = False
 debug = True
 
 machines = {
@@ -57,7 +59,7 @@ mutator = changer.Changer
 
 qemu_machines = "/home/ish/machines/qemu"
 qemu_m = "4G"
-qemu_shared_folder = "/home/ish/projects/2012-08-02-korrino/hs2-current-deploy/qemu-reader-local"
+qemu_shared_folder = "/home/ish/projects/2012-08-02-korrino/hs2-current-deploy/qemu-reader-local-observer"
 qemu_additional =  ['-enable-kvm']
 qemu_additional += ['-monitor', 'stdio']
 
@@ -69,21 +71,12 @@ def specific_preperations_1(options):
 scripts_1 = ["beep2"]
 log_level = 1
 
-def check_counters(ea):
-    dbg.counters[ea] = (dbg.counters[ea][PASS_COUNT], dbg.counters[ea][HIT_COUNT]+1)
-    dbg.dlog("Current hit no: %d, pass count: %d" % (dbg.counters[ea][HIT_COUNT], dbg.counters[ea][PASS_COUNT]), 1)
-
-    if(dbg.counters[ea][HIT_COUNT] == dbg.counters[ea][PASS_COUNT]+1):
-        return True
-    else:
-        return False
-
 def observer_bp_handler(dbg):
     ea = dbg.exception_address
     dbg.bp_del(dbg.exception_address)
     thread = dbg.dbg.dwThreadId
     thread_handle  = dbg.open_thread(thread)
-    dbg.log_write("[%x] %s 0x%x\n" % (thread, get_module(dbg, ea), ea)) 
+    dbg.write_log("[%x] %s 0x%x" % (thread, dbg.addr_to_module_name(ea), ea)) 
     dbg.single_step(True, thread_handle)
     dbg.close_handle(thread_handle)
     return DBG_CONTINUE
@@ -91,57 +84,61 @@ def observer_bp_handler(dbg):
 def observer_instr_handler(dbg):
     ea = dbg.exception_address
     thread = dbg.dbg.dwThreadId
-    dbg.log_write("[%x] %s 0x%x\n" % (thread, get_module(dbg, ea), ea)) 
+    dbg.write_log("[%x] %s 0x%x" % (thread, dbg.addr_to_module_name(ea), ea)) 
     dbg.safe_disasm(ea)
     thread_handle  = dbg.open_thread(thread)
-    blacklisted = False
-    if(dbg.check_blacklist(ea)):
-        if(dbg.mnemonic == "call"):
-            target_ea = decode_op1(dbg, dbg.op1)
-            dbg.log_write("got call to: 0x%x" % ea)
-            if(not dbg.check_blacklist(ea)):
-                log_write(", skipping, will resume trace at: 0x%x" % (ea + dbg.get_instruction(ea).length))
-                dbg.bp_set(ea + dbg.get_instruction(ea).length, handler = observer_bp_handler)
-                dbg.single_step(False, thread_handle)
-            else:
-                dbg.single_step(True, thread_handle)
+#    if(dbg.check_blacklists(ea)): # its allowed to ret from banned
+    if(dbg.mnemonic == "call"):
+        target_ea = dbg.decode_op1(dbg.op1)
+        dbg.write_log("got call to: 0x%x" % ea)
+        if(dbg.check_blacklists(ea)):
+            dbg.write_log(", skipping, will resume trace at: 0x%x" % (ea + dbg.get_instruction(ea).length))
+            dbg.bp_set(ea + dbg.get_instruction(ea).length, handler = observer_bp_handler)
+            dbg.single_step(False, thread_handle)
+            return DBG_CONTINUE
+    dbg.single_step(True, thread_handle)
     dbg.close_handle(thread_handle)
     return DBG_CONTINUE
 
 def observer_st_marker(dbg):
-    if(check_counters(dbg.exception_address)):
+    if(dbg.check_counters(dbg.exception_address)):
         dbg.preparation_lock.acquire()
-        dbg.binner.dlog("reached observer ST marker")
+        dbg.dlog("reached observer ST marker")
         ea = dbg.exception_address
         thread = dbg.dbg.dwThreadId
-        dbg.log_write("[%x] %s 0x%x\n" % (thread, get_module(dbg, ea), ea)) 
-        dbg.log_write("--- reached ST marker ---")
+        dbg.write_log("[%x] %s 0x%x\n" % (thread, dbg.addr_to_module_name(ea), ea)) 
+        dbg.write_log("--- reached ST marker ---")
+
+        dbg.write_log("Modules map:\n") 
+
+        for mod in dbg.enumerate_modules_w_size():
+            dbg.write_log("%s 0x%x 0x%x" % (mod[0], mod[1], mod[2]))
 
         dbg.set_callback(EXCEPTION_BREAKPOINT, observer_bp_handler)
         dbg.set_callback(EXCEPTION_SINGLE_STEP, observer_instr_handler)
 
         for thread_id in dbg.enumerate_threads():
-            dbg.dlog("Tracking [%x]: " % thread_id)
+            dbg.write_log("Tracking [%x] " % thread_id)
             thread_handle  = dbg.open_thread(thread_id)
             if(thread_handle == dbg.h_thread):
                 continue
             dbg.single_step(True, thread_handle)
             dbg.close_handle(thread_handle)
-        dbg.attach_end_markers(dbg)
-        dbg.detach_st_markers(dbg)
+        dbg.dlog("Done with threads")
         dbg.preparation_lock.release()
+        dbg.dlog("About to sontinue single stepped")
     return DBG_CONTINUE
 
 def observer_end_marker(dbg):
-    if(check_counters(dbg.exception_address)):
+    if(dbg.check_counters(dbg.exception_address)):
         dbg.preparation_lock.acquire()
         dbg.dlog("reached observer END marker")
         ea = dbg.exception_address
         thread = dbg.dbg.dwThreadId
-        dbg.log_write("[%x] %s 0x%x\n" % (thread, get_module(dbg, ea), ea)) 
-        dbg.log_write("--- reached END marker ---")
+        dbg.write_log("[%x] %s 0x%x\n" % (thread, dbg.addr_to_module_name(ea), ea)) 
+        dbg.write_log("--- reached END marker ---")
         for thread_id in dbg.enumerate_threads():
-            dbg.dlog("Stop tracking [%x]: " % thread_id)
+            dbg.dlog("Stop tracking [%x] " % thread_id)
             thread_handle  = dbg.open_thread(thread_id)
             if(thread_handle == dbg.h_thread):
                 continue
