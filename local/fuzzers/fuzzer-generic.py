@@ -96,7 +96,7 @@ testdir(settings.samples_binned + "/uaf")
 testdir(settings.samples_binned + "/unk")
 
 def report(string):
-    my_logger.info("[" + settings.log_name + ":" + fuzzbox_name + "] " + string);
+    my_logger.info("[" + settings.log_name + ":" + fuzzbox_name + "] " + string)
 
 def prepare_fuzzbox():
     pass
@@ -118,6 +118,10 @@ def read_log_socket(f, s):
 def timestamp():
     d=datetime.now()
     return d.strftime("%Y-%m-%d %H:%M:%S:%f")
+
+def timestamp2():
+    d=datetime.now()
+    return d.strftime("%Y-%m-%d %H:%M")
 
 def read_socket(s):
     global lastResponse
@@ -372,13 +376,12 @@ def register_script():
     reqScript = lastResponse[scOff+8:scOff+8+lineEnd]
     print("Registered script: %s" % reqScript)
 
-
 def execute_script():
     global reqScript
 
     if(reqScript != ""):
+        print("Detected predefined conditions, triggering reaction scripts")
         rs(reqScript, m, my_slowdown)
-        print("Executed script")
         reqScript = ""
 
 # setup box & perform procedures
@@ -388,6 +391,8 @@ def looop():
     global lastResponse
     global reqScript
     global status
+
+    log = open("./log-%s-%s" % (timestamp2(), options.origin), "w")
 
     reqScript = ""
     status = "RD"
@@ -416,8 +421,6 @@ def looop():
                     # react to SR
                     register_script()
                     execute_script()
-#                    print("Did script work?")
-#                    time.sleep(5)
                     write_socket(s, "")
                     continue
                 if(status == "RD"):
@@ -426,11 +429,15 @@ def looop():
                     test_path = settings.prepare_sample(sample_path)
                     test_file = os.path.basename(test_path)
                     write_socket(s, "testFile " + test_file)
+                    log.write("%s: " % test_file)
+                    log.flush()
                     continue
                 if(status == "MA" or status == "TO"):
                     # react to test end
                     proceed5()
                     write_socket(s, "")
+                    log.write("[%s] \n" % status)
+                    log.flush()
 
                     os.remove(sample_path)
                     if(test_path != sample_path):
@@ -464,6 +471,8 @@ def looop():
                     continue
             
             handle_crashing_sample(sample_path, sample_file)
+            log.write("[%s], registered, binned\n" % status)
+            log.flush()
             report("CR")
             if(test_path != sample_path):
                 os.remove(test_path)
@@ -482,6 +491,7 @@ def looop():
             restart()
             connect()
 
+    log.close()
     s.close()
     powerofff()
     print("Finished")

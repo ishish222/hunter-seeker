@@ -15,6 +15,11 @@ from subprocess import call, Popen
 PIPE_NAME = "\\\\.\\pipe\\control"
 PIPE_BUFF_SIZE = 4096
 
+if(defined("settings.log_file")):
+    log_file = settings.log_file
+else:
+    log_file = "z:\\samples\\log-"
+
 def getPipe(name):
     dlog("In getPipe", 1)
     ph = win32file.CreateFile(name, win32file.GENERIC_READ | win32file.GENERIC_WRITE | win32pipe.PIPE_TYPE_MESSAGE, 0, None, win32file.OPEN_EXISTING, 0, None)
@@ -61,12 +66,36 @@ def handle_crash():
 
     return DBG_CONTINUE
 
-### binner commands
+def startLog():
+    global logStarted
+    global log_file
+    global logf
+
+    log_file += ".txt" 
+    logf = open(log_file, "w")
+    logf.write("test\n")
+    logStarted = True
+
+def stopLog():
+    global logStarted
+    global logf
+
+    logf.close()
+    logStarted = False
+
+def log_write(data):
+    global logStarted
+    global logf
+
+    if(logStarted == False):
+        return
+    logf.write(data)
 
 def verify():
     dlog("Please verify process")
     time.sleep(5)
 
+### binner commands
 def execute(cmds):
     global main_binner
 
@@ -214,16 +243,20 @@ def execute(cmds):
 
         # TODO: sprawdz ktore logi gdzie maja isc
         elif(cmd == "logStart"):
-#            global log_file
-#            if(len(cmds) > 1):
-#                startLog(cmds[1])
-#            else:
-#                startLog(log_file)
+            global log_file
+            log_file += time.strftime("%Y%m%d-%H%M%S")
+
+            if(len(cmds) > 1):
+                startLog(cmds[1])
+            else:
+                startLog(log_file)
+            main_binner.start_log(log_file)
             main_binner.ok()
 
         # TODO: sprawdz ktore logi gdzie maja isc
         elif(cmd == "logStop"):
-#            stopLog()
+            stopLog()
+            main_binner.stop_log()
             main_binner.ok()
     
         elif(cmd == "listTebs"):
@@ -265,6 +298,7 @@ def execute(cmds):
                     continue
 
             main_binner.attach_react_markers()
+            main_binner.attach_av_handler()
             main_binner.writePipe("Attached to " + str(args))
             main_binner.ok()
 
@@ -355,7 +389,7 @@ def binner_routine():
      \/                          \/        
 Hunter-Seeker
 """
-    dlog(logo)
+    print(logo)
 
     # binner will self-configure based on settings
     #ph = getPipe(PIPE_NAME)

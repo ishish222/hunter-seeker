@@ -139,8 +139,8 @@ class binner(object):
             self.loop_debuggers_iteration(to)
 
     def loop_debuggers_iteration(self, to = None, invocation = None):
-        self.dlog("Realeaseing loop_lock", 1)
         self.loop_lock.release()
+        self.dlog("[UNLOCK] Debug section", 1)
         self.dlog("Waiting for debug event")
         self.start_debuggers()
         if(invocation != None):
@@ -148,16 +148,15 @@ class binner(object):
             Popen(invocation)
         ready_dbg_sockets = self.poll_debuggers(to)
         self.stop_debuggers()
-        self.dlog("Acquiring loop_lock", 1)
         self.loop_lock.acquire()
+        self.dlog("[LOCK] Debug section", 1)
         for dbg in ready_dbg_sockets:
             self.ddlog(self.read_debugger(dbg))
-        self.dlog("Status queue content (%d items):" % self.status.qsize())
-        for i in range(0, self.status.qsize()):
-            temp = self.status.get()
-            print(temp)
-            self.status.put(temp)
-        self.dlog("------------------")
+#        self.dlog("Status queue content (%d items):" % self.status.qsize())
+#        for i in range(0, self.status.qsize()):
+#            temp = self.status.get()
+#            print(temp)
+#            self.status.put(temp)
             
     def stop_debuggers(self):
         self.send_command("stop")
@@ -183,12 +182,6 @@ class binner(object):
         return proc
 
     def attach(self, pid):
-        #self.debuggers[str(pid)], child = Pipe()
-        #debugger()
-
-        #Process(target = debugger_routine, args=(child,)).start()
-#        self.debuggers[str(pid)] = Popen([sys.executable, "z:\\server\\debugger.py"], shell=False, stdin=PIPE)
-#        self.debuggers[str(pid)] = Popen([sys.executable, "-u", "z:\\server\\debugger.py"], shell=False, stdin=PIPE, stdout=PIPE)
         self.debuggers[str(pid)] = Popen([sys.executable, "-u", "z:\\server\\debugger.py"], shell=True)
         self.sockets[str(pid)], addr = self.main_socket.accept()
         self.dlog("Got connection")
@@ -196,7 +189,6 @@ class binner(object):
         self.ddlog(self.read_debugger(self.sockets[str(pid)]))
 
         self.write_debugger(self.sockets[str(pid)], "attach %s" % pid)
-#        self.ddlog(self.read_debugger(self.debuggers[str(pid)]))
         self.ddlog(self.read_debugger(self.sockets[str(pid)]))
         
         self.write_debugger(self.sockets[str(pid)], "read_config")
@@ -211,6 +203,10 @@ class binner(object):
         self.attach_end_markers()
         self.attach_react_markers()
         self.attach_rd_markers()
+
+    def attach_av_handler(self):
+        self.dlog("Attaching AV handlers")
+        self.send_command("attach_av_handler")
 
     def attach_markers(self):
         self.dlog("Attaching markers")
@@ -259,5 +255,14 @@ class binner(object):
         self.dlog("Detaching RD markers")
         self.send_command("detach_rd_markers")
 
+    def start_log(self, name):
+        self.dlog("Starting log")
+        self.send_command("start_log %s" % name)
 
+    def log_write(self, text):
+        self.send_command("log_write %s" % text)
+
+    def stop_log(self):
+        self.dlog("Stopping log")
+        self.send_command("stop_log")
 

@@ -22,6 +22,8 @@ else:
     log_level = 0
 
 def dlog(text, level=0):
+    if(log_level <0):
+        return
     if(level > log_level):
         return
     log_lock.acquire()

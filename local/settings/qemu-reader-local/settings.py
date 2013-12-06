@@ -6,7 +6,7 @@ PASS_COUNT = 0
 
 visible = True
 testing = False
-breaking = False
+breaking = True
 debug = True
 
 machines = {
@@ -18,7 +18,7 @@ ff = True
 
 def react1(dbg):
     dbg.dlog("SR marker reached")
-    dbg.reqScript("enter")
+    dbg.reqScript("enter3")
     dbg.ok()
     return DBG_CONTINUE
 
@@ -69,20 +69,23 @@ def specific_preperations_1(options):
 scripts_1 = ["beep2"]
 log_level = 1
 
-def st_marker_test(dbg):
-    dbg.counters[dbg.exception_address] = (dbg.counters[dbg.exception_address][PASS_COUNT], dbg.counters[dbg.exception_address][HIT_COUNT]+1)
-    dbg.dlog("Current hit no: %d, pass count: %d" % (dbg.counters[dbg.exception_address][HIT_COUNT], dbg.counters[dbg.exception_address][PASS_COUNT]), 1)
+def check_counters(ea):
+    dbg.counters[ea] = (dbg.counters[ea][PASS_COUNT], dbg.counters[ea][HIT_COUNT]+1)
+    dbg.dlog("Current hit no: %d, pass count: %d" % (dbg.counters[ea][HIT_COUNT], dbg.counters[ea][PASS_COUNT]), 1)
 
-    if(dbg.counters[dbg.exception_address][HIT_COUNT] == dbg.counters[dbg.exception_address][PASS_COUNT]+1):
+    if(dbg.counters[ea][HIT_COUNT] == dbg.counters[ea][PASS_COUNT]+1):
+        return True
+    else:
+        return False
+
+def st_marker_test(dbg):
+    if(check_counters(dbg.exception_address)):
         dbg.dlog("ST marker test")
         dbg.ok()
     return DBG_CONTINUE
 
 def end_marker_test(dbg):
-    dbg.counters[dbg.exception_address] = (dbg.counters[dbg.exception_address][PASS_COUNT], dbg.counters[dbg.exception_address][HIT_COUNT]+1)
-    dbg.dlog("Current hit no: %d, pass count: %d" % (dbg.counters[dbg.exception_address][HIT_COUNT], dbg.counters[dbg.exception_address][PASS_COUNT]), 1)
-
-    if(dbg.counters[dbg.exception_address][HIT_COUNT] == dbg.counters[dbg.exception_address][PASS_COUNT]+1):
+    if(check_counters(dbg.exception_address)):
         dbg.dlog("END marker test")
         dbg.ok()
     return DBG_CONTINUE
@@ -110,7 +113,7 @@ from time import sleep
 def specific_preperations_5(options):
     pass
 
-scripts_5 = ["enter", "close_sample_reader"]
+scripts_5 = ["enter3", "close_sample_reader"]
 
 def prepare_sample(sample_path):
     return sample_path
