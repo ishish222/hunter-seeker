@@ -42,29 +42,31 @@ def writePipe(data):
 ### TODO: trzeba dopracowac!
 
 def handle_crash():
-    global main_binner
-    global crash_bin
-    global crash_reason
+#    global main_binner
+#    global crash_bin
+#    global crash_reason
 
-    print("4")
-    e_addr = main_binner.crash_bin.last_crash.exception_address
+#    e_addr = main_binner.crash_bin.last_crash.exception_address
 
     #create dossier
 #    if(reason == "hc"):
 #        crash_reason = "hc"
 #        writePipe("Probable crash reason: hc (crash info needs reinterpretation)\n")
 #        writePipe("")
-    if((disasm(dbg, e_addr) == "[INVALID]") or (get_module(dbg, e_addr) == "[INVALID]")):
-        crash_reason = "uaf"
-        main_binner.writePipe("Probable crash reason: uaf\n")
-        main_binner.writePipe("")
-    else:
-        crash_reason = "unk"
-
-    print("5")
-    main_binner.writePipe(crash_bin.crash_synopsis())
-
-    return DBG_CONTINUE
+#    if((disasm(dbg, e_addr) == "[INVALID]") or (get_module(dbg, e_addr) == "[INVALID]")):
+#        crash_reason = "uaf"
+#        main_binner.writePipe("Probable crash reason: uaf\n")
+#        main_binner.writePipe("")
+#    else:
+#        crash_reason = "unk"
+#
+#    print("5")
+#    main_binner.writePipe(crash_bin.crash_synopsis())
+#    main_binner.get_synopsis()
+#    data = 
+#
+#    return DBG_CONTINUE
+    return
 
 def startLog():
     global logStarted
@@ -175,6 +177,8 @@ def execute(cmds):
             main_binner.attach_rd_markers()
             main_binner.writePipe("Status: %s" % status)
             main_binner.ok()
+            if(status == "CR"):
+                return
             # time for reaction to test end
             main_binner.start_debuggers()
             main_binner.readPipe()
@@ -204,10 +208,17 @@ def execute(cmds):
 
         elif(cmd == "observe"):
             dlog("In observe")
+            main_binner.stop_debuggers()
             main_binner.attach_st_markers()
             main_binner.attach_end_markers()
             main_binner.loop_debuggers(invocation = "powershell -command \"& { invoke-expression z:\\samples\\shared\\%s }\"" % args)
-            #waiting, end marker handler will ok()
+            # waiting for ST
+            main_binner.attach_bp_handler()
+            main_binner.attach_ss_handler()
+            main_binner.track_all_threads()
+            main_binner.loop_debuggers()
+            #waiting for END
+            main_binner.stop_tracking_all_threads()
 
         elif(cmd == "testReactMarkers"):
             dlog("In testReactMarkers", 1)
@@ -225,7 +236,7 @@ def execute(cmds):
 
         elif(cmd == "testStEndMarkers"):
             dlog("In testStEndMarkers", 1)
-            main_binner.stop_debuggers()
+#            main_binner.stop_debuggers()
             # ST markers
             main_binner.attach_st_markers()
             main_binner.loop_debuggers()
@@ -242,6 +253,11 @@ def execute(cmds):
             main_binner.start_debuggers()
             main_binner.ok()
 
+        elif(cmd == "getSynopsis"):
+            dlog("In getSynopsis", 1)
+            main_binner.get_synopsis()
+            main_binner.ok()
+
         # TODO: sprawdz ktore logi gdzie maja isc
         elif(cmd == "logStart"):
             global log_file
@@ -251,9 +267,7 @@ def execute(cmds):
 #                startLog(cmds[1])
 #            else:
 #                startLog(log_file)
-            print("here1")
             startLog()
-            print("here2")
             main_binner.start_log(log_file)
             main_binner.ok()
 
@@ -301,8 +315,6 @@ def execute(cmds):
 #                        log_write(e)
                     continue
 
-            main_binner.attach_react_markers()
-            main_binner.attach_av_handler()
             main_binner.writePipe("Attached to " + str(args))
             main_binner.ok()
 
@@ -312,9 +324,8 @@ def execute(cmds):
             exit()
     
         elif(cmd == "installHandlers"):
-#            setup_dbg(dbg)
-#            main_binner.writePipe("AV handlers in place")
-            # will do automatically on process attach
+            main_binner.attach_react_markers()
+            main_binner.attach_av_handler()
             main_binner.ok()
 
         elif(cmd == "installMarkerAddrs"):

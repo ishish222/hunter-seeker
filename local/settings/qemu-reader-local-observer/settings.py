@@ -110,23 +110,17 @@ def observer_st_marker(dbg):
         dbg.write_log("--- reached ST marker ---")
 
         dbg.write_log("Modules map:\n") 
-
         for mod in dbg.enumerate_modules_w_size():
             dbg.write_log("%s 0x%x 0x%x" % (mod[0], mod[1], mod[2]))
 
-        dbg.set_callback(EXCEPTION_BREAKPOINT, observer_bp_handler)
-        dbg.set_callback(EXCEPTION_SINGLE_STEP, observer_instr_handler)
+        dbg.write_log("Threads:\n") 
+        for thread in dbg.enumerate_threads():
+            dbg.write_log("Tracking [%x] " % thread)
+            dbg.tracked_threads.append(thread)
 
-        for thread_id in dbg.enumerate_threads():
-            dbg.write_log("Tracking [%x] " % thread_id)
-            thread_handle  = dbg.open_thread(thread_id)
-            if(thread_handle == dbg.h_thread):
-                continue
-            dbg.single_step(True, thread_handle)
-            dbg.close_handle(thread_handle)
-        dbg.dlog("Done with threads")
         dbg.preparation_lock.release()
-        dbg.dlog("About to sontinue single stepped")
+        dbg.signal_st()
+        dbg.ok()
     return DBG_CONTINUE
 
 def observer_end_marker(dbg):
@@ -137,19 +131,14 @@ def observer_end_marker(dbg):
         thread = dbg.dbg.dwThreadId
         dbg.write_log("[%x] %s 0x%x\n" % (thread, dbg.addr_to_module_name(ea), ea)) 
         dbg.write_log("--- reached END marker ---")
-        for thread_id in dbg.enumerate_threads():
-            dbg.dlog("Stop tracking [%x] " % thread_id)
-            thread_handle  = dbg.open_thread(thread_id)
-            if(thread_handle == dbg.h_thread):
-                continue
-            dbg.single_step(False, thread_handle)
-            dbg.close_handle(thread_handle)
         dbg.signal_ma()
         dbg.ok()
     return DBG_CONTINUE
 
 st_marker_handler = observer_st_marker
 end_marker_handler = observer_end_marker
+bp_handler = observer_bp_handler
+ss_handler = observer_instr_handler
 
 def specific_preperations_2(options):
     pass

@@ -26,7 +26,7 @@ import sys
 import zlib
 import cPickle
 
-class __crash_bin_struct__:
+class __crash_bin_struct__(object):
     exception_module    = None
     exception_address   = 0
     write_violation     = 0
@@ -41,7 +41,7 @@ class __crash_bin_struct__:
     extra               = None
 
 
-class crash_binning:
+class crash_binning(object):
     '''
     @todo: Add MySQL import/export.
     '''
@@ -185,6 +185,19 @@ class crash_binning:
 
 
     ####################################################################################################################
+    def export_string (self):
+        last_crash = self.last_crash
+        pydbg      = self.pydbg
+
+        self.last_crash = self.pydbg = None
+        data = zlib.compress(cPickle.dumps(self, protocol=2))
+
+        self.last_crash = last_crash
+        self.pydbg      = pydbg
+
+        return data
+
+    ####################################################################################################################
     def export_file (self, file_name):
         '''
         Dump the entire object structure to disk.
@@ -213,6 +226,13 @@ class crash_binning:
 
         return self
 
+
+    ####################################################################################################################
+    def import_string (self, string):
+        tmp = cPickle.loads(zlib.decompress(string))
+        self.bins = tmp.bins
+
+        return self
 
     ####################################################################################################################
     def import_file (self, file_name):

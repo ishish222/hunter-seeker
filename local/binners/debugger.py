@@ -113,10 +113,24 @@ def default_rd_handler(dbg):
 
     return DBG_CONTINUE
 
+def default_bp_handler(dbg):
+    dlog("EXCEPTION_BREAKPOINT")
+
+    dbg.signal_ex()
+    dbg.ok()
+    return DBG_CONTINUE
+    
+def default_ss_handler(dbg):
+    dlog("EXCEPTION_SINGLE_STEP")
+
+    dbg.signal_ex()
+    dbg.ok()
+    return DBG_CONTINUE
+    
 def default_av_handler(dbg):
     dlog("avThread")
 
-    dbg.crash_bin.record_crash(self)
+    dbg.crash_bin.record_crash(dbg)
     dbg.signal_cr()
     dbg.ok()
     return DBG_CONTINUE
@@ -201,10 +215,17 @@ class debugger(pydbg):
         self.react_marker_handlers = {}
         self.rd_marker_handler = phony_handler
         self.av_handler = default_av_handler
+        self.bp_handler = default_bp_handler
+        self.ss_handler = default_ss_handler
         self.counters = {}
+        self.tracked_threads = []
 
     def dlog(self, data, level=0):
         dlog("[%d] %s" % (self.pid, data), level)
+
+    def signal_st(self):
+        self.dlog("to binner: Status: ST", 2)
+        self.binner.send("Status: ST")
 
     def signal_ma(self):
         self.dlog("to binner: Status: MA", 2)
@@ -218,13 +239,13 @@ class debugger(pydbg):
         self.dlog("to binner: Status: RS", 2)
         self.binner.send("Status: RS")
 
-    def signal_st(self):
-        self.dlog("to binner: Status: ST", 2)
-        self.binner.send("Status: ST")
-
-    def signal_st(self):
+    def signal_cr(self):
         self.dlog("to binner: Status: CR", 2)
         self.binner.send("Status: CR")
+
+    def signal_ex(self):
+        self.dlog("to binner: Status: EX", 2)
+        self.binner.send("Status: EX")
 
     def ok(self):
         self.binner.send("=[OK]=")
@@ -256,6 +277,14 @@ class debugger(pydbg):
         if(cmd == "stop"):
             self.stop()
             self.dlog("Stopped", 1)
+
+        if(cmd == "attach_bp_handler"):
+            self.attach_bp_handler()
+            self.dlog("BP handler attached", 1)
+
+        if(cmd == "attach_ss_handler"):
+            self.attach_ss_handler()
+            self.dlog("SS handler attached", 1)
 
         if(cmd == "attach_av_handler"):
             self.attach_av_handler()
@@ -302,10 +331,13 @@ class debugger(pydbg):
             self.dlog("RD markers detached", 1)
 
         if(cmd == "set_callback"):
-            self.set_callback(cmds[1:])
+            self.set_callback(cmds[1], cmds[2])
 
         if(cmd == "track_all_threads"):
             self.track_all_threads()
+
+        if(cmd == "stop_tracking_all_threads"):
+            self.stop_tracking_all_threads()
 
         if(cmd == "start_log"):
             self.start_log(args)
@@ -419,6 +451,18 @@ class debugger(pydbg):
         else:
             self.rd_marker_handler = default_rd_handler
         
+        if(defined("settings.bp_handler")):
+            self.dlog("BP handler found", 1)
+            self.bp_handler = settings.bp_handler
+        else:
+            self.bp_handler = default_bp_handler
+        
+        if(defined("settings.ss_handler")):
+            self.dlog("SS handler found", 1)
+            self.ss_handler = settings.ss_handler
+        else:
+            self.ss_handler = default_ss_handler
+        
         if(defined("settings.av_handler")):
             self.dlog("AV handler found", 1)
             self.av_handler = settings.av_handler
@@ -529,20 +573,20 @@ class debugger(pydbg):
                 return my_op & 0xffffffff
         if(len(my_op.split("+")) >1):
             (a,b) = my_op.split("+")
-            a = self.decode_op1(self, a)
-            b = self.decode_op1(self, b)
+            a = self.decode_op1(a)
+            b = self.decode_op1(b)
             my_op = a+b
             return my_op & 0xffffffff
         if(len(my_op.split("-")) >1):
             (a,b) = my_op.split("-")
-            a = self.decode_op1(self, a)
-            b = self.decode_op1(self, b)
+            a = self.decode_op1(a)
+            b = self.decode_op1(b)
             my_op = a-b
             return my_op & 0xffffffff
         if(len(my_op.split("*")) >1):
             (a,b) = my_op.split("*")
-            a = self.decode_op1(self, a)
-            b = self.decode_op1(self, b)
+            a = self.decode_op1(a)
+            b = self.decode_op1(b)
             my_op = a*b
             return my_op & 0xffffffff
         return int(my_op, 16) & 0xffffffff
@@ -553,7 +597,7 @@ class debugger(pydbg):
         if(len(self.bl_addresses) > 0):
             for bl_addr in self.bl_addresses:
                 if(e_addr == bl_addr):
-                    self.dlog("Address blacklisted, won't handle")
+                    self.dlog("Address blacklisted, won't handle", 2)
                     return True
 
         #modules
@@ -566,7 +610,7 @@ class debugger(pydbg):
             if(len(self.bl_modules) > 0):
                 for bl_mod in self.bl_modules:
                     if(mod_name == bl_mod):
-                        self.dlog("Address blacklisted, won't handle")
+                        self.dlog("Address blacklisted, won't handle", 2)
                         return True
     
         #check rvas
@@ -576,7 +620,7 @@ class debugger(pydbg):
                     if(rva[0] == mod_name):
                         my_off = e_addr - mod_addr
                         if(my_off == rva[1]):
-                            self.dlog("RVA blacklisted, won't handle")
+                            self.dlog("RVA blacklisted, won't handle", 2)
                             return True
     
         #instructions
@@ -584,11 +628,19 @@ class debugger(pydbg):
             e_instr = self.safe_disasm(e_addr)
             for bl_instr in self.bl_instructions:
                 if(e_instr == bl_instr):
-                    self.dlog("Instruction blacklisted, won't handle")
+                    self.dlog("Instruction blacklisted, won't handle", 2)
                     return True
     
         #checks finished, it's ok
         return False
+
+    def attach_bp_handler(self):
+        self.set_callback(EXCEPTION_BREAKPOINT, self.bp_handler)
+        self.dlog("AV handler installed", 1)
+
+    def attach_ss_handler(self):
+        self.set_callback(EXCEPTION_SINGLE_STEP, self.ss_handler)
+        self.dlog("AV handler installed", 1)
 
     def attach_av_handler(self):
         self.set_callback(EXCEPTION_ACCESS_VIOLATION, self.av_handler)
@@ -737,12 +789,20 @@ class debugger(pydbg):
             return False
 
     def track_all_threads(self):
-        for thread_id in self.enumerate_threads():
-            self.write_log("Tracking [%x] " % thread_id)
+        for thread_id in self.tracked_threads:
             thread_handle  = self.open_thread(thread_id)
             if(thread_handle == self.h_thread):
                 continue
             self.single_step(True, thread_handle)
+            self.close_handle(thread_handle)
+
+    def stop_tracking_all_threads(self):
+        for thread_id in self.tracked_threads:
+            self.dlog("Stop tracking [%x] " % thread_id)
+            thread_handle  = self.open_thread(thread_id)
+            if(thread_handle == self.h_thread):
+                continue
+            self.single_step(False, thread_handle)
             self.close_handle(thread_handle)
 
     def start_log(self, name):

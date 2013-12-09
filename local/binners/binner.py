@@ -48,6 +48,7 @@ class binner(object):
         self.init_dbg = pydbg()
         self.crash_bin = utils.crash_binning.crash_binning()
         self.active = False
+        self.last_crashed = None
 
         self.dbg_event = Event()
         self.dbg_output = None
@@ -120,6 +121,9 @@ class binner(object):
                 scOff = data.find("Script: ")
                 lineEnd = data[scOff+8:].find("\n")
                 self.reqScript = data[scOff+8:scOff+8+lineEnd]
+            elif(status == "CR"):
+                self.last_crashed = dbg_socket
+                self.status.put((0, status))
             elif(status == "TO"):
                 self.status.put((1, status))
             elif(status == "MA"):
@@ -157,6 +161,8 @@ class binner(object):
 #            temp = self.status.get()
 #            print(temp)
 #            self.status.put(temp)
+
+    
             
     def stop_debuggers(self):
         self.send_command("stop")
@@ -208,6 +214,14 @@ class binner(object):
         self.dlog("Attaching AV handlers")
         self.send_command("attach_av_handler")
 
+    def attach_bp_handler(self):
+        self.dlog("Attaching BP handlers")
+        self.send_command("attach_bp_handler")
+
+    def attach_ss_handler(self):
+        self.dlog("Attaching SS handlers")
+        self.send_command("attach_ss_handler")
+
     def attach_markers(self):
         self.dlog("Attaching markers")
         self.send_command("attach_markers")
@@ -255,6 +269,18 @@ class binner(object):
         self.dlog("Detaching RD markers")
         self.send_command("detach_rd_markers")
 
+    def track_all_threads(self):
+        self.dlog("Tracking all threads")
+        self.send_command("track_all_threads")
+
+    def stop_tracking_all_threads(self):
+        self.dlog("Stopping tracking all threads")
+        self.send_command("stop_tracking_all_threads")
+
+    def set_callback(self, callback):
+        self.dlog("Setting callback: %s" % callback)
+        self.send_command("set_callback %s" % callback)
+
     def start_log(self, name):
         self.dlog("Starting log")
         self.send_command("start_log %s" % name)
@@ -266,3 +292,9 @@ class binner(object):
         self.dlog("Stopping log")
         self.send_command("stop_log")
 
+    def get_synopsis(self):
+        self.dlog("Retrieveing synopsis")
+        self.last_crashed
+        self.write_debugger(self.last_crashed, "get_synopsis")
+#        data = self.read_debugger(self.last_crashed)
+        self.writePipe(self.read_debugger(self.last_crashed))
