@@ -109,15 +109,6 @@ def observer_st_marker(dbg):
         dbg.write_log("[%x] %s 0x%x\n" % (thread, dbg.addr_to_module_name(ea), ea)) 
         dbg.write_log("--- reached ST marker ---")
 
-        dbg.write_log("Modules map:\n") 
-        for mod in dbg.enumerate_modules_w_size():
-            dbg.write_log("%s 0x%x 0x%x" % (mod[0], mod[1], mod[2]))
-
-        dbg.write_log("Threads:\n") 
-        for thread in dbg.enumerate_threads():
-            dbg.write_log("Tracking [%x] " % thread)
-            dbg.tracked_threads.append(thread)
-
         dbg.preparation_lock.release()
         dbg.signal_st()
         dbg.ok()

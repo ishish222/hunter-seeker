@@ -123,7 +123,7 @@ def execute(cmds):
 
 #            verify()
             status = ""
-            # test is about to start, expecting ST
+            # test is about to start, expecting ST, CR
             while(status != "ST"):
                 main_binner.loop_debuggers(invocation = "powershell -command \"& { invoke-expression z:\\samples\\shared\\%s }\"" % args) 
                 while(not main_binner.status.empty()):
@@ -139,6 +139,12 @@ def execute(cmds):
                         main_binner.start_debuggers()
                         main_binner.readPipe()
                         main_binner.stop_debuggers()
+                    if(status == "CR"):
+                        dlog("CRASH!!!!!!!!!!!!!!!!")
+                        handle_crash()
+                        main_binner.writePipe("Status: %s" % status)
+                        main_binner.ok()
+                        return
 
 #            verify()
 
@@ -158,9 +164,6 @@ def execute(cmds):
                     if(status == ""):
                         status = "TO" # TO is overriden by all
                         break
-                    if(status == "CR"):
-                        handle_crash()
-                        break
                     if(status == "SR"):
                         main_binner.dlog("Requested script: %s" % main_binner.reqScript)
                         main_binner.writePipe("Status: %s\n" % status)
@@ -170,20 +173,24 @@ def execute(cmds):
                         main_binner.start_debuggers()
                         main_binner.readPipe()
                         main_binner.stop_debuggers()
+                    if(status == "CR"):
+                        dlog("CRASH!!!!!!!!!!!!!!!!")
+                        handle_crash()
+                        main_binner.writePipe("Status: %s" % status)
+                        main_binner.ok()
+                        return
 
 #            verify()
-            # test has ended, expecting RD, SR
-            main_binner.detach_end_markers()
-            main_binner.attach_rd_markers()
             main_binner.writePipe("Status: %s" % status)
             main_binner.ok()
-            if(status == "CR"):
-                return
             # time for reaction to test end
+            main_binner.detach_end_markers()
+            main_binner.attach_rd_markers()
             main_binner.start_debuggers()
             main_binner.readPipe()
             main_binner.stop_debuggers()
 
+            # test has ended, expecting RD, SR
 #            verify()
             status = ""
             while(status == "SR" or status == ""):
@@ -201,6 +208,12 @@ def execute(cmds):
                         main_binner.start_debuggers()
                         main_binner.readPipe()
                         main_binner.stop_debuggers()
+                    if(status == "CR"):
+                        dlog("CRASH!!!!!!!!!!!!!!!!")
+                        handle_crash()
+                        main_binner.writePipe("Status: %s" % status)
+                        main_binner.ok()
+                        return
 
             main_binner.detach_rd_markers()
             main_binner.writePipe("Status: %s" % status)
@@ -215,7 +228,10 @@ def execute(cmds):
             # waiting for ST
             main_binner.attach_bp_handler()
             main_binner.attach_ss_handler()
+            main_binner.dump_modules()
+            main_binner.dump_threads()
             main_binner.track_all_threads()
+            main_binner.start_tracking_all_threads()
             main_binner.loop_debuggers()
             #waiting for END
             main_binner.stop_tracking_all_threads()

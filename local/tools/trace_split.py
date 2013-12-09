@@ -24,54 +24,10 @@ def testdir2(x):
         os.rename(x, "%s-old" %x)
     os.mkdir(x)
 
-length = 0x1000
-height = 100
-
-def routine(fname):
-    global t_files
-    global worky 
-
-    print("Received: %s" % fname)
-    pic_fname = fname[:-6] + "-trace.jpg"
-    l_fname = fname[:-6] + "-legend.jpg"
-
-    color = [int(random()*255)-100 for i in range(0,3)]
-
-    length = 0x1000
-    height = 100
-
-    legend = Image.new('RGBA', (100, 20), (color[0], color[1], color[2], 0)) 
-    ldraw = ImageDraw.Draw(legend) 
-    ldraw.text((10, 5), fname, fill = (255,255,255,0))
-    legend.save(l_fname, "JPEG")
-
-    im = Image.new('RGBA', (length, height), (255, 255, 255, 0)) 
-
-    draw = ImageDraw.Draw(im) 
-
-    f = t_files[fname]
-
-    line_count = 0
-
-    while(worky == True):
-        line = f.readline()
-        if(line == ""):
-            time.sleep(5.0)
-            continue
-        try:
-            scaled = int(int(line, 16) * length / 0x80000000)
-        except Exception:
-            print("Got exception")
-            continue
-        draw.line((scaled, 0, scaled, height), fill=(color[0], color[1], color[2]), width=1)
-        line_count += 1
-
-        if(line_count % 50000 == 0):
-            im.save(pic_fname, "JPEG")
-#        call(["/usr/bin/firefox", "./test.jpg"])
-#        im.show()
-    f.close()
-    exit()
+#length = 0x1000
+#height = 100
+width = 100
+height = 0x1000
 
 def generate_page(pid):
     content = "<div>"
@@ -81,7 +37,7 @@ def generate_page(pid):
     #print(legends)
     #print(imgs)
     for (legend, img) in zip(sorted(legends), sorted(imgs)):
-        content += "<div><img src=\"%s\"></img></div> <div><img src =\"%s\" height=10%% width=100%%></img></div><br>" % (legend, img)
+        content += "<div><img src=\"%s\"></img></div> <div><img src =\"%s\" height=100%% width=5%%></img></div><br>" % (legend, img)
     content += "</div>"
     f = open(pid + ".html", "w")
 
@@ -92,7 +48,7 @@ def generate_page(pid):
 setInterval(function() 
 {
     location.reload();
-}, 1000);
+}, 10000);
 </script>
 <body bgcolor="#002020">
 <center><font color="#ffffff" size=14>
@@ -110,6 +66,7 @@ def splitting(pid):
     print("Starting trace analysis")
     global t_files
     global worky
+    global modules
 
     while True:
         try:
@@ -131,8 +88,16 @@ def splitting(pid):
             print("Creating new trace file: %s" % fname)
             n_filee = open(fname, "w")
             n_pic_fname = fname[:-6] + "-trace.jpg"
-            n_im = Image.new('RGBA', (length, height), (255, 255, 255, 0)) 
+            n_im = Image.new('RGBA', (width, height), (255, 255, 255, 0)) 
             n_draw = ImageDraw.Draw(n_im)
+
+            #draw modules
+            for module in modules:
+                scaled = int(int(module[1], 16) * height / 0x80000000)
+                print("%s at 0x%x" % (module[0], scaled))
+                n_draw.line((0, scaled, width, scaled), fill=(0, 0, 0), width=1)
+                n_draw.text((0, scaled), module[0], fill=(0, 0, 0))
+
             n_color = [int(random()*255)-100 for i in range(0,3)]
             n_l_count = 0
             # create legend
@@ -148,7 +113,7 @@ def splitting(pid):
             generate_page(pid)
 
         try:
-            scaled = int(int(addr, 16) * length / 0x80000000)
+            scaled = int(int(addr, 16) * height / 0x80000000)
         except Exception:
             print("Got exception")
             continue
@@ -157,7 +122,7 @@ def splitting(pid):
 #        print(pic_fname + "-" + hex(scaled))
         filee.write(addr)
         filee.flush()
-        draw.line((scaled, 0, scaled, height), fill=(color[0], color[1], color[2]), width=3)
+        draw.line((0, scaled, width, scaled), fill=(color[0], color[1], color[2]), width=3)
 
         l_count += 1
         if(l_count % 50000 == 0):
@@ -165,6 +130,25 @@ def splitting(pid):
 
         t_files[fname] = (filee, pic_fname, im, draw, l_fname, color, l_count)
 #        time.sleep(3)
+
+def read_modules():
+    mods = []
+    while True:
+        line = sys.stdin.readline()
+
+        if(line[:12] == "Modules map:"):
+            break
+
+    while True:
+        line = sys.stdin.readline()
+
+        if(line[:2] == "--"):
+            break
+        elements = line.split(" ")
+        if(len(elements) <3):
+            continue
+        mods.append((elements[0], elements[1], elements[2]))
+    return mods
 
 def main():
     if(len(sys.argv)<2):
@@ -174,6 +158,9 @@ def main():
     global j_files
     global line_count
     global worky
+    global modules
+
+    print("1")
 
     t_files = {}
     j_files = {}
@@ -184,11 +171,18 @@ def main():
     testdir2("./%s" % pid)
 
     signal(SIGINT, kill_handle)
+    print("2")
+
+    modules = read_modules()
+    print(modules)
 
     #split
-    Thread(target=splitting, args=(pid, )).start()
+#    Thread(target=splitting, args=(pid, )).start()
+    print("3")
+    splitting(pid)
 
     while True:
-        time.sleep(60)
+        pass
+#        time.sleep(60)
 
 main()

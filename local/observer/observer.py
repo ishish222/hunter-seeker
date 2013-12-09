@@ -300,20 +300,24 @@ def handle_crashing_sample(sample_path, sample_file):
     eip = ""
     reason = ""
 
-    write_socket(s, "cbStackUnwind")
+#    write_socket(s, "cbStackUnwind")
+#    read_socket(s)
+#    lines = lastResponse.split("\n")
+
+#    write_socket(s, "cbEip")
+#    read_socket(s)
+#    eip = lastResponse
+
+#    write_socket(s, "cbReason")
+#    read_socket(s)
+#    reason = lastResponse
+
+#    path = options.samples_binned
+
+    write_socket(s, "getSynopsis")
     read_socket(s)
-    lines = lastResponse.split("\n")
 
-    write_socket(s, "cbEip")
-    read_socket(s)
-    eip = lastResponse
-
-    write_socket(s, "cbReason")
-    read_socket(s)
-    reason = lastResponse
-
-    path = options.samples_binned
-
+    return
     if(reason == "hc"):
         path += "/hc" + "/" + eip
         testdir(path)

@@ -333,8 +333,17 @@ class debugger(pydbg):
         if(cmd == "set_callback"):
             self.set_callback(cmds[1], cmds[2])
 
+        if(cmd == "dump_modules"):
+            self.dump_modules()
+
+        if(cmd == "dump_threads"):
+            self.dump_threads()
+
         if(cmd == "track_all_threads"):
             self.track_all_threads()
+
+        if(cmd == "start_tracking_all_threads"):
+            self.start_tracking_all_threads()
 
         if(cmd == "stop_tracking_all_threads"):
             self.stop_tracking_all_threads()
@@ -344,6 +353,9 @@ class debugger(pydbg):
 
         if(cmd == "stop_log"):
             self.stop_log()
+
+        if(cmd == "get_synopsis"):
+            self.get_synopsis()
 
     def read_config(self):
         #blacklists
@@ -788,7 +800,24 @@ class debugger(pydbg):
         else:
             return False
 
+    def dump_modules(self):
+        self.write_log("Modules map:") 
+        for mod in self.enumerate_modules_w_size():
+            self.write_log("%s 0x%x 0x%x" % (mod[0], mod[1], mod[2]))
+        self.write_log("--")
+
+    def dump_threads(self):
+        self.write_log("Threads:") 
+        for thread in self.enumerate_threads():
+            self.write_log("Tracking [%x] " % thread)
+            self.tracked_threads.append(thread)
+        self.write_log("--")
+
     def track_all_threads(self):
+        for thread in self.enumerate_threads():
+            self.tracked_threads.append(thread)
+
+    def start_tracking_all_threads(self):
         for thread_id in self.tracked_threads:
             thread_handle  = self.open_thread(thread_id)
             if(thread_handle == self.h_thread):
@@ -816,6 +845,10 @@ class debugger(pydbg):
 
     def stop_log(self):
         self.log.close()
+
+    def get_synopsis(self):
+        self.binner.send(self.crash_bin.export_string())
+        self.ok() 
 
 if __name__ == '__main__':
     debugger_routine()

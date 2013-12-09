@@ -273,6 +273,18 @@ class binner(object):
         self.dlog("Tracking all threads")
         self.send_command("track_all_threads")
 
+    def dump_modules(self):
+        self.dlog("Dumping modules")
+        self.send_command("dump_modules")
+
+    def dump_threads(self):
+        self.dlog("Dumping threads")
+        self.send_command("dump_threads")
+
+    def start_tracking_all_threads(self):
+        self.dlog("Start tracking all threads")
+        self.send_command("start_tracking_all_threads")
+
     def stop_tracking_all_threads(self):
         self.dlog("Stopping tracking all threads")
         self.send_command("stop_tracking_all_threads")

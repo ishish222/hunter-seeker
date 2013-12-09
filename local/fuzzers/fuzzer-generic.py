@@ -17,6 +17,7 @@ import generators.generatorCorrected as generator
 import settings
 from script import rs, rss, runscriptq, write_monitor
 from datetime import datetime
+from linux_crash_binning import crash_binning
 
 def defined(name):
     if(name in globals()):
@@ -297,25 +298,33 @@ my_generator.mutations=int(options.mutations)
 def handle_crashing_sample(sample_path, sample_file):
     global s
 
+    cb = utils.crash_binning.crash_binning()
+
     print("Crash procedures")
 
     lines = []
     eip = ""
     reason = ""
 
-    write_socket(s, "cbStackUnwind")
-    read_socket(s)
-    lines = lastResponse.split("\n")
+#    write_socket(s, "cbStackUnwind")
+#    read_socket(s)
+#    lines = lastResponse.split("\n")
 
-    write_socket(s, "cbEip")
-    read_socket(s)
-    eip = lastResponse
+#    write_socket(s, "cbEip")
+#    read_socket(s)
+#    eip = lastResponse
 
-    write_socket(s, "cbReason")
-    read_socket(s)
-    reason = lastResponse
+#    write_socket(s, "cbReason")
+#    read_socket(s)
+#    reason = lastResponse
 
-    path = options.samples_binned
+#    path = options.samples_binned
+
+    write_socket(s, "getSynopsis")
+    read_socket(s)
+    cb.import_string(lastResponse)
+    print(cb.last_crash_synopsis())
+    return
 
     if(reason == "hc"):
         path += "/hc" + "/" + eip
