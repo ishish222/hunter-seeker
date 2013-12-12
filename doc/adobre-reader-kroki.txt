@@ -9,7 +9,7 @@ x - skonczone
 4. Przeprowadzic testy markerow i handlerow (czy testy koncza sie wtedy, kiedy powinny, czy reakcje sa poprawne, kilka razy) [kx]
 [todo] 5. Przeprowadzic zebranie sladu i analize pokrycia kodu, wybrac oryginaly i generatory [d]
 6. Opracowac runner i skrypt zamykajacy (ctrl-w) [kx]
-7. Utworzyc plik konfiguracyjny [k]
+7. Utworzyc plik konfiguracyjny [kx]
 8. Przetestowac proces fuzzowania (reakcje na AV (rand breaking), MA, TO), dodatkowe reakcje [d]
 9. Zoptymalizowac proces fuzzowania [k]
 10. Wyznaczyc harmonogram [k]

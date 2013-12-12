@@ -1,7 +1,7 @@
 import sys
 
-sys.path.append("z:\\server\\paimei")
-sys.path.append("z:\\common")
+sys.path.append("\\\\10.0.2.4\\server\\paimei")
+sys.path.append("\\\\10.0.2.4\\common")
 
 from Queue import PriorityQueue
 import settings
@@ -308,5 +308,9 @@ class binner(object):
         self.dlog("Retrieveing synopsis")
         self.last_crashed
         self.write_debugger(self.last_crashed, "get_synopsis")
-#        data = self.read_debugger(self.last_crashed)
-        self.writePipe(self.read_debugger(self.last_crashed))
+        data = self.read_debugger(self.last_crashed)
+        while(data.find("CONTEXT DUMP") == -1):
+            data = self.read_debugger(self.last_crashed)
+        print(data)
+        self.writePipe(data)
+        self.ok()

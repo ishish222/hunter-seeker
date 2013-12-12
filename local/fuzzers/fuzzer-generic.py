@@ -71,7 +71,9 @@ qemu_args += ['-m', options.qemu_m]
 qemu_args += ['-hda', options.machines + "/" + options.hda]
 if(options.hdb is not None):
     qemu_args += ['-hdb', options.machines + "/" + options.hdb]
-qemu_args += ['-net', 'nic,model=rtl8139', '-net', 'user,restrict=n,smb=' + settings.qemu_shared_folder + ',hostfwd=tcp:127.0.0.1:' + str(options.fuzzbox_port) + '-:12345']
+#qemu_args += ['-net', 'nic,model=rtl8139', '-net', 'user,restrict=n,smb=' + settings.qemu_shared_folder + ',hostfwd=tcp:127.0.0.1:' + str(options.fuzzbox_port) + '-:12345']
+qemu_args += ['-net', 'nic,model=rtl8139', '-net', 'user,restrict=n,smb=' + settings.qemu_shared_folder + ',guestfwd=tcp:10.0.2.100:12345-tcp:127.0.0.1:' + str(options.fuzzbox_port)]
+#qemu_args += ['-net', 'nic,model=rtl8139', '-net', 'user,restrict=n,smb=' + settings.qemu_shared_folder + ',guestfwd=tcp:127.0.0.1:' + str(options.fuzzbox_port) + '-tcp:10.0.0.1:12345']
 qemu_args += ['-net', 'nic,model=rtl8139']
 if(options.visible == False):
     qemu_args += ['-vnc', settings.machines[fuzzbox_name]['vnc']]
@@ -149,6 +151,30 @@ def read_socket(s):
     print("")
     return lastResponse
 
+def read_socket_q(s):
+    global lastResponse
+    global status
+    global reqScript
+    
+    status = ""
+    data = ""
+
+    while True:
+        data += s.recv(settings.buffer_size)
+        
+        if(data[-6:] == "-=OK=-"): 
+            lastResponse = data[:-6]
+            break
+
+    # find status
+    off = data.find("Status: ")
+    if(off != -1):
+        status = data[off+8:off+10]
+
+    print(timestamp())
+    print("OK")
+    return lastResponse
+
 def write_socket(s, data):
     print(timestamp() + "> " + str(data))
     s.send(data + "-=OK=-")
@@ -184,38 +210,95 @@ def close_sample():
     global m
     runscriptq(settings.closing_plugin_name, m)
 
+def prepare_con():
+    global ss
+    ss = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    ss.settimeout(20.0)
+    ss.bind(("127.0.0.1", options.fuzzbox_port))
+    ss.listen(3)
+
+def accept_con():
+    global ss
+    global s
+
+#    ss = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+#    ss.settimeout(20.0)
+#    ss.bind(("127.0.0.1", options.fuzzbox_port))
+#    ss.listen(3)
+#    print("Waiting for connection")
+#    ss.accept()
+#    print("Dropping 1st, waiting for connection")
+    s, addr = ss.accept()
+    print("Trying to read data")
+    init()
+    print("Connected")
+    return
+
 def connect():
     global s
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    #s.settimeout(settings.fuzzbox_timeout * my_slowdown) 
+    global lastResponse
 
-    timeouts = 0
-    while(True):
+    lastResponse = ""
+
+    attempts = 0
+    while(lastResponse == ""):
         try:
-            s.connect((options.fuzzbox_ip, options.fuzzbox_port))
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            s.setblocking(0)
+            s.settimeout(10.0)
             print("Trying to connect")
+            s.connect((options.fuzzbox_ip, options.fuzzbox_port))
+            print("Trying to read data")
             init()
             print("Connected")
+            s.setblocking(1)
+            s.settimeout(settings.fuzzbox_timeout * my_slowdown) 
+            return
+        except Exception, e:
+            print("Error")
+            print(e)
+            time.sleep(10)
+            attempts += 1
+            if(attempts > 9):
+                print("Unable to connect, restarting")
+                restart()
+                attempts = 0
+                continue
+"""
+    while(True):
+        try:
+            s.setblocking(0)
+            while(len(lastResponse) == 0):
+                print("Trying to connect")
+                s.connect((options.fuzzbox_ip, options.fuzzbox_port))
+                init()
+                print("TO")
+                time.sleep(5)
+            print("Connected")
+            s.setblocking(1)
             return
         except socket.timeout:
             print("Socket timeout, restarting")
             restart()
-        except Exception:
+        except Exception, e:
+            print(e)
             print("No route to host, waiting")
             timeouts += 1
-            if(timeouts > 3):
+            if(timeouts > 9):
                 print("Unable to connect, restarting")
                 restart()
                 timeouts = 0
                 continue
-            time.sleep(2)
+            time.sleep(10)
             continue
     # nie moze byc blocking ze wzgledu na rozbudowane odpowiedzi
 #    s.setblocking(1)
+"""
 
 def init():
     #banner
     # we might have some trobules here, its first read
+    print("Initializing")
     read_socket(s)
 
 def killLast():
@@ -298,7 +381,7 @@ my_generator.mutations=int(options.mutations)
 def handle_crashing_sample(sample_path, sample_file):
     global s
 
-    cb = utils.crash_binning.crash_binning()
+    cb = crash_binning()
 
     print("Crash procedures")
 
@@ -322,8 +405,8 @@ def handle_crashing_sample(sample_path, sample_file):
 
     write_socket(s, "getSynopsis")
     read_socket(s)
-    cb.import_string(lastResponse)
-    print(cb.last_crash_synopsis())
+#    cb.import_string(lastResponse)
+    print(lastResponse)
     return
 
     if(reason == "hc"):
@@ -406,10 +489,12 @@ def looop():
     reqScript = ""
     status = "RD"
 
+    prepare_con()
     start()
     signal.signal(signal.SIGINT, sigkill_handler)
     time.sleep(1)
-    connect()
+#    connect()
+    accept_con()
 
     sample_count = 0
     to_count = 0

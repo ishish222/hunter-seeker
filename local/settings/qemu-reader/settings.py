@@ -4,9 +4,9 @@ DBG_CONTINUE = 0x00010002
 HIT_COUNT = 1
 PASS_COUNT = 0
 
-visible = True
+visible = False
 testing = False
-breaking = True
+breaking = False
 debug = True
 
 machines = {
@@ -58,14 +58,14 @@ settle_sleep = 3
 restart_count = 100000
 closing_plugin_name = "close_sample_opera"
 revert_script = "load_ready"
-slowdown = 1
+slowdown = 1.5
 extension = "pdf"
 mutations = 3
 mutator = changer.Changer
 
 qemu_machines = "/home/hs1/machines/qemu"
 qemu_m = "4G"
-qemu_shared_folder = "/home/hs1/hs2-current-deploy/qemu-firefox"
+qemu_shared_folder = "/home/hs1/hs2-current-deploy/qemu-reader"
 qemu_additional =  ['-enable-kvm']
 qemu_additional += ['-monitor', 'stdio']
 
@@ -74,7 +74,7 @@ def specific_preperations_1(options):
 #    copyfile(options.shared_folder + "/server/index2.html", options.samples_shared + "/index.html")
     pass
 
-scripts_1 = ["beep2"]
+scripts_1 = []
 log_level = 1
 
 def check_counters(ea):

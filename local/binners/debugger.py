@@ -777,7 +777,7 @@ class debugger(pydbg):
         self.dlog("[UNLOCK] Preparation section", 1)
 
     def break_things(self):
-        if(random() < 0.90):
+        if(random() > 0.05):
             return
         self.dlog("Breaking random stuff", 1)
 
@@ -847,7 +847,9 @@ class debugger(pydbg):
         self.log.close()
 
     def get_synopsis(self):
-        self.binner.send(self.crash_bin.export_string())
+#        self.binner.send(self.crash_bin.export_string())
+#        print(self.crash_bin.crash_synopsis())
+        self.binner.send(self.crash_bin.crash_synopsis())
         self.ok() 
 
 if __name__ == '__main__':

@@ -1,0 +1,3 @@
+as a guest target socket you need to specify the one inside detected networks
+it's possible that internet explorer performs host discovery before connecting
+on linux wget works fine (test rules with linux.img)

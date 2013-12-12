@@ -1,7 +1,7 @@
 import sys
 
-sys.path.append("z:\\server\\paimei")
-sys.path.append("z:\\common")
+sys.path.append("\\\\10.0.2.4\\qemu\\server\\paimei")
+sys.path.append("\\\\10.0.2.4\\qemu\\common")
 
 import win32pipe, win32file, win32gui
 import time
@@ -18,7 +18,7 @@ PIPE_BUFF_SIZE = 4096
 if(defined("settings.log_file")):
     log_file = settings.log_file
 else:
-    log_file = "z:\\samples\\log-"
+    log_file = "\\\\10.0.2.4\\qemu\\samples\\log-"
 
 def getPipe(name):
     dlog("In getPipe", 1)
@@ -140,7 +140,7 @@ def execute(cmds):
                         main_binner.readPipe()
                         main_binner.stop_debuggers()
                     if(status == "CR"):
-                        dlog("CRASH!!!!!!!!!!!!!!!!")
+                        main_binner.stop_debuggers()
                         handle_crash()
                         main_binner.writePipe("Status: %s" % status)
                         main_binner.ok()
@@ -174,7 +174,7 @@ def execute(cmds):
                         main_binner.readPipe()
                         main_binner.stop_debuggers()
                     if(status == "CR"):
-                        dlog("CRASH!!!!!!!!!!!!!!!!")
+                        main_binner.stop_debuggers()
                         handle_crash()
                         main_binner.writePipe("Status: %s" % status)
                         main_binner.ok()
@@ -209,7 +209,7 @@ def execute(cmds):
                         main_binner.readPipe()
                         main_binner.stop_debuggers()
                     if(status == "CR"):
-                        dlog("CRASH!!!!!!!!!!!!!!!!")
+                        main_binner.stop_debuggers()
                         handle_crash()
                         main_binner.writePipe("Status: %s" % status)
                         main_binner.ok()
@@ -425,11 +425,12 @@ Hunter-Seeker
     # binner will self-configure based on settings
     #ph = getPipe(PIPE_NAME)
 
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.bind(("0.0.0.0", 12345))
-    s.listen(3)
-    dlog("Waiting for connection", 1)
-    ph, addr = s.accept()
+    ph = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+#    s.bind(("0.0.0.0", 12345))
+#    s.listen(3)
+    dlog("Trying to connect...", 1)
+    ph.connect(("10.0.2.100", 12345))
+#    ph, addr = s.accept()
     dlog("Got connection", 1)
     ph.send("python binner")
 

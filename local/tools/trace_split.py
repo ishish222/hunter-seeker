@@ -30,15 +30,24 @@ width = 100
 height = 0x1000
 
 def generate_page(pid):
-    content = "<div>"
+    content = "<table>"
 
     legends = [l for l in glob("%s/*-legend.jpg" % pid)]
     imgs = [i for i in glob("%s/*-trace.jpg" % pid)]
     #print(legends)
     #print(imgs)
-    for (legend, img) in zip(sorted(legends), sorted(imgs)):
-        content += "<div><img src=\"%s\"></img></div> <div><img src =\"%s\" height=100%% width=5%%></img></div><br>" % (legend, img)
-    content += "</div>"
+#    for (legend, img) in zip(sorted(legends), sorted(imgs)):
+#        content += "<div width =300><div><img src=\"%s\"></img></div><br><div><img src =\"%s\" height=100%% width=5%%></img></div></div>" % (legend, img)
+    content += "<tr>"
+    for legend in sorted(legends):
+        content += "<td><img src=\"%s\"></td>" % legend
+
+    content += "</tr><tr>"
+    for img in sorted(imgs):
+        content += "<td><img src=\"%s\"></td>" % img
+    content += "</td>"
+
+    content += "</table>"
     f = open(pid + ".html", "w")
 
     f.write("""
@@ -94,7 +103,6 @@ def splitting(pid):
             #draw modules
             for module in modules:
                 scaled = int(int(module[1], 16) * height / 0x80000000)
-                print("%s at 0x%x" % (module[0], scaled))
                 n_draw.line((0, scaled, width, scaled), fill=(0, 0, 0), width=1)
                 n_draw.text((0, scaled), module[0], fill=(0, 0, 0))
 
@@ -125,7 +133,7 @@ def splitting(pid):
         draw.line((0, scaled, width, scaled), fill=(color[0], color[1], color[2]), width=3)
 
         l_count += 1
-        if(l_count % 50000 == 0):
+        if(l_count % 500 == 0):
             im.save(pic_fname, "JPEG")
 
         t_files[fname] = (filee, pic_fname, im, draw, l_fname, color, l_count)
@@ -160,8 +168,6 @@ def main():
     global worky
     global modules
 
-    print("1")
-
     t_files = {}
     j_files = {}
     worky = True
@@ -171,14 +177,11 @@ def main():
     testdir2("./%s" % pid)
 
     signal(SIGINT, kill_handle)
-    print("2")
 
     modules = read_modules()
-    print(modules)
 
     #split
 #    Thread(target=splitting, args=(pid, )).start()
-    print("3")
     splitting(pid)
 
     while True:

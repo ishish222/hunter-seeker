@@ -119,7 +119,8 @@ class crash_binning(object):
         pydbg      = self.pydbg
 
         self.last_crash = self.pydbg = None
-        data = zlib.compress(cPickle.dumps(self, protocol=2))
+#        data = zlib.compress(cPickle.dumps(self, protocol=2))
+        data = cPickle.dumps(self, protocol=2)
 
         self.last_crash = last_crash
         self.pydbg      = pydbg
@@ -158,7 +159,8 @@ class crash_binning(object):
 
     ####################################################################################################################
     def import_string (self, string):
-        tmp = cPickle.loads(zlib.decompress(string))
+#        tmp = cPickle.loads(zlib.decompress(string))
+        tmp = cPickle.loads(string)
         self.bins = tmp.bins
 
         return self
