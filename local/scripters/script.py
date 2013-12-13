@@ -36,6 +36,13 @@ def read_monitor(pipe):
             pipe.stdout.flush()
             break
 
+def write_monitor_only(pipe, data):
+    if(pipe == None):
+        print("Monitor not ready")
+        return
+#    print("m> " + str(data[:-1]))
+    pipe.stdin.write(data + "\n")
+
 def write_monitor(pipe, data):
     if(pipe == None):
         print("Monitor not ready")
@@ -127,7 +134,7 @@ class Script:
                         continue
 
                     if(k[1:].find("quit") == 0):
-                        write_monitor(pipe, "quit\n")
+                        write_monitor_only(pipe, "quit\n")
                         continue
 
                 if(k == "*"):

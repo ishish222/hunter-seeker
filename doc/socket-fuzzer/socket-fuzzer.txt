@@ -1,0 +1,31 @@
+Jest komplementarny do file-format fuzzera, mozliwe, ze powinna istniec mozliwosc uzywania ich jednoczesnie.
+
+Przypadki zastosowania:
+1. Badamy aplikacje typu klient, ktora laczy sie do zdalnego serwera
+np. bittorrent, InternetExplorer, etc.
+2. Badamy aplikacje typu serwer, ktora przyjmuje polaczenia od klientow
+np. IIS, Oracle 10g, nginx+wordpress etc.
+
+Najprawdopodobniej zaistnieje potrzeba opracowania fuzzera jako maszyny stanowej. Bedzie to wymagane w przypadku webaplikacji, ktore same czesto sa maszynami stanowymi. Dlatego mozliwe, ze zaistnieje potrzeba wprowadzenia webaplikacji w konkretny stan zanim bedzie mogl odbyc sie test.
+
+Przed odbyciem testu aplikacja musi znajdowac sie w konkretnym stanie (stanie testowym). Przejscie do innego stanu zakonczone sukcesem mozliwe jest poprzez osiagniecie markera lub otrzymanie odpowiedzi w sockecie. Fuzzer dysponuje scenariuszami (ciagami przejsc pomiedzy stanami i testem), ktore maja za zadanie przeprowadzic konkretny test. Scenariusz jest losowany za kazdym testem. 
+
+W trakcie testu generator musi skonstruowac dobra probke. Moze zrobic to na dwa sposoby. Wygenerowac ja od nowa (np. na podstawie gramatyki) albo zmutowac istniejaca.
+W przypadku tworzenia moze posluzyc sie gramatyka do kontrukcji probki o losowej dlugosci i elementach. Tworzenie jest lepsze przy danych o malej entropii.
+W przypadku mutacji fuzzer pobiera oryginal probki i dokonuje w nim mutacji. Mutowanie jest lepsze w przypadku danych o duzej entropii.
+Wygodne byloby posiadanie kompilatora, ktory bylby w stanie zmieniac poziom entropii i umozliwilby mutowanie danych o poczatkowo niskiej entropii.
+
+Proces tworzenia wsparcia dla skazonych danych z socketa:
+1. Generator probek konstruujacy
+2. Fuzzer
+
+Ad.1.: 
+Generator probek konstruujacy ma zestaw elementow i reguly (macierz przejsc) (w settings?)
+Losuje dlugosc sciezki pomiedzy minimalna i maksymalna dlugoscia
+Przechodzi w losowy sposob po drzewie stanow (korzystajac z macierzy) i konstruuje probke
+
+Ad.2.: Fuzzer ma zestaw scenariuszy (wektorow) testu, z ktorych losuje jeden
+Wektor ten zawiera procedury przejsc pomiedzy stanami, ktore fuzzer realizuje w odpowiedniej kolejnosci
+Po wykonaniu scenariusza generuje probke i wykonuje test
+
+

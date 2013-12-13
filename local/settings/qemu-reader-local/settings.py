@@ -6,7 +6,7 @@ PASS_COUNT = 0
 
 visible = True
 testing = False
-breaking = True
+breaking = False
 debug = True
 
 machines = {
@@ -18,7 +18,7 @@ ff = True
 
 def react1(dbg):
     dbg.dlog("SR marker reached")
-    dbg.reqScript("enter3")
+    dbg.reqScript("enter")
     dbg.ok()
     return DBG_CONTINUE
 
@@ -29,10 +29,11 @@ ma_st_rvas = [("AcroRd32.exe", 0x4cae0, 0)]
 ma_end_addrs = []
 ma_end_rvas = [("user32.dll", 0x18fe9, 7)]
 ma_react_addrs = []
-#ma_react_rvas = [("AcroRd32.dll", 0x3664da, (0, react1, ["space"]))]
-ma_react_rvas = [("AcroRd32.dll", 0x3664df, (0, react1, ["space"]))]
+ma_react_rvas = [("AcroRd32.dll", 0x3664da, (0, react1, ["space"]))]
+#ma_react_rvas = [("AcroRd32.dll", 0x3664df, (0, react1, ["space"]))]
 ma_rd_addrs = []
 ma_rd_rvas = [("user32.dll", 0x18fe9, 2)]
+#ma_rd_rvas = [("user32.dll", 0x18fe9, 1)]
 
 samples_shared_path = "../samples/shared"
 samples_saved = "../samples/saved"
@@ -67,7 +68,7 @@ def specific_preperations_1(options):
     pass
 
 scripts_1 = ["beep2"]
-log_level = 1
+log_level = 4
 
 def check_counters(ea):
     dbg.counters[ea] = (dbg.counters[ea][PASS_COUNT], dbg.counters[ea][HIT_COUNT]+1)

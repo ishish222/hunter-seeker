@@ -3,5 +3,25 @@ Aplikacja w trakcie testu moze przyjac nastepujace stany:
 gotowa: RD
 test trwa: ST
 test zakonczony: MA
-nastapilo oczekiwane zdarzenie: RE
+nastapilo oczekiwane zdarzenie i potrzebna jest reakcja: SR
 test trwa zbyt dlugo: TO
+aplikacja sie wywalila: CR
+
+Fuzzing obserwuje sie sledzac przechodzenie aplikacji w te stany pomiedzy soba. Mozliwe przejscia:
+
+RD->ST,SR
+ST->MA,SR,TO
+SR->SR,ST,MA,RD,TO
+MA->RD,SR
+TO->RD,SR
+
+Jesli test sie zatrzyma, z reguly stanie sie to w trakcie przejscia. Nalezy
+rozpoznac przejscie, przy ktorym to nastapilo na podstawie analizy logow i
+obserwacji recznej.
+
+
+Znane bugi:
+RD->ST->SR->SR-><brak przejscia do MA lub TO> (2)
+Mozliwe powody: stan MA lub TO zostal "przegapiony" w trakcie obslugi SR
+
+Wyscig pomiedzy skryptem reagujacym na MA, a zdarzeniem SR, ktore je blokuje

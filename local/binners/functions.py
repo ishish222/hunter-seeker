@@ -1,4 +1,5 @@
 from multiprocessing import Lock
+from datetime import datetime
 import settings
 
 def defined(name):
@@ -21,13 +22,23 @@ if(defined("settings.log_level") == True):
 else:
     log_level = 0
 
+if(defined("settings.debug") == True):
+    if(settings.debug == True):
+        last_log_file = open("z:\\server\\last_log.txt", "w")
+
+def timestamp():
+    d=datetime.now()
+    return d.strftime("%Y-%m-%d %H:%M:%S:%f")
+
 def dlog(text, level=0):
     if(log_level <0):
         return
     if(level > log_level):
         return
     log_lock.acquire()
-    print(text)
+    last_log_file.write("%s\n" % text)
+    last_log_file.flush()
+#    print(text)
     log_lock.release()
 
 regs = ["EAX", "EBX", "ECX", "EDX", "ESI", "EDI", "EBP", "ESP", "EIP"]
