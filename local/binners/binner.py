@@ -63,7 +63,7 @@ class binner(object):
         if(defined("settings.debug") == True):
             if(settings.debug == True):
                 self.debug = True
-                self.last_log_file = open("z:\\server\\binner-last_log.txt", "w")
+                self.last_log_file = open("z:\\logs\\binner-last_log.txt", "w")
 
         if(defined("settings.log_level") == True):
             self.log_level = settings.log_level

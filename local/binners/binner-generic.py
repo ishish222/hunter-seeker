@@ -18,10 +18,10 @@ PIPE_BUFF_SIZE = 4096
 if(defined("settings.log_file")):
     log_file = settings.log_file
 else:
-    log_file = "\\\\10.0.2.4\\qemu\\samples\\log-"
+    log_file = "z:\\logs\\log-"
 
 def getPipe(name):
-    dlog("In getPipe", 2)
+    log_write("In getPipe", 2)
     ph = win32file.CreateFile(name, win32file.GENERIC_READ | win32file.GENERIC_WRITE | win32pipe.PIPE_TYPE_MESSAGE, 0, None, win32file.OPEN_EXISTING, 0, None)
     return ph
 
@@ -68,12 +68,12 @@ def handle_crash():
 #    return DBG_CONTINUE
     return
 
-def startLog():
+def startLog(name):
     global logStarted
     global log_file
     global logf
 
-    log_file += ".txt" 
+    log_file = "%s.txt" % name
     logf = open(log_file, "w")
     logf.write("test\n")
     logStarted = True
@@ -94,7 +94,7 @@ def log_write(data):
     logf.write(data)
 
 def verify():
-    dlog("Please verify process")
+    log_write("Please verify process")
     time.sleep(5)
 
 def process_status_queue():
@@ -193,7 +193,7 @@ def execute(cmds):
             main_binner.ok()
 
         elif(cmd == "observe"):
-            dlog("In observe")
+            log_write("In observe")
             main_binner.stop_debuggers()
             main_binner.attach_st_markers()
             main_binner.attach_end_markers()
@@ -210,54 +210,55 @@ def execute(cmds):
             main_binner.stop_tracking_all_threads()
 
         elif(cmd == "testReactMarkers"):
-            dlog("In testReactMarkers", 2)
-            main_binner.stop_debuggers()
+            log_write("In testReactMarkers", 2)
             main_binner.attach_end_markers()
             main_binner.attach_react_markers()
             while(main_binner.status != "MA"):
                 main_binner.loop_debuggers()
-                if(main_binner.status == "SR"):
+                status = main_binner.status.get()[1]
+                if(status == "SR"):
                     main_binner.writePipe("Status: SR\n Script: %s\n" % main_binner.reqScript)
                     main_binner.ok()
+                    log_write("Verified SR marker")
                 # react
             main_binner.detach_react_markers()
+            main_binner.detach_end_markers()
             main_binner.ok()
 
         elif(cmd == "testStEndMarkers"):
-            dlog("In testStEndMarkers", 2)
-#            main_binner.stop_debuggers()
+            log_write("In testStEndMarkers", 2)
             # ST markers
             main_binner.attach_st_markers()
-            main_binner.loop_debuggers()
+            main_binner.loop_debuggers(invocation = "powershell -command \"& { invoke-expression z:\\samples\\shared\\%s }\"" % args)
             main_binner.writePipe("Verified ST marker\n")
+            log_write("Verified ST marker")
             #main_binner.ok()
             main_binner.detach_st_markers()
             # END markers
             main_binner.attach_end_markers()
             main_binner.loop_debuggers()
             main_binner.writePipe("Verified END marker\n")
+            log_write("Verified END marker")
             #main_binner.ok()
             main_binner.detach_end_markers()
             # test finished
-            main_binner.start_debuggers()
             main_binner.ok()
 
         elif(cmd == "getSynopsis"):
-            dlog("In getSynopsis", 2)
+            log_write("In getSynopsis", 2)
             main_binner.get_synopsis()
             main_binner.ok()
 
         # TODO: sprawdz ktore logi gdzie maja isc
         elif(cmd == "logStart"):
             global log_file
-            log_file += time.strftime("%Y%m%d-%H%M%S")
 
 #            if(len(cmds) > 1):
 #                startLog(cmds[1])
 #            else:
 #                startLog(log_file)
-            startLog()
-            main_binner.start_log(log_file)
+            startLog(args)
+#            main_binner.start_log("%s" % (args))
             main_binner.ok()
 
         # TODO: sprawdz ktore logi gdzie maja isc
@@ -342,7 +343,7 @@ def execute(cmds):
             main_binner.ok()
 
         elif(cmd == "binTest"):
-            dlog("binTest")
+            log_write("binTest")
             main_binner.writePipe("Communication with binner is working")
             main_binner.ok()
         
@@ -383,7 +384,7 @@ def binner_routine():
     global ph
     global main_binner
 
-    dlog("In main", 2)
+    log_write("In main", 2)
     logo = """
  __                      .__               
 |  | ____________________|__| ____   ____  

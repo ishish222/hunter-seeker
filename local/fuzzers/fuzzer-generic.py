@@ -46,7 +46,7 @@ def fuzzing_routine():
 
     while True:
 #        try:
-        while True:
+        if(True):
             proceed2(options)
             proceed3(options)
 

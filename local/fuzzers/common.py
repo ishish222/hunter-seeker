@@ -59,6 +59,8 @@ def get_options():
     parser.add_option("-l", "--slowdown",       dest="slowdown", help="Slowdown (default is 1)", default=settings.slowdown)
     parser.add_option("-e", "--extension",      dest="extension", help="Extension of generated sample", default=settings.extension)
     parser.add_option("-n", "--mutation-number", dest="mutations", help="Number of mutations to perform", default=settings.mutations)
+    parser.add_option("-D", "--orig-samples-dir", dest="samples_orig", help="Path to original samples", default="")
+
 
     (options, args) = parser.parse_args()
 
@@ -85,6 +87,8 @@ def get_options():
     if(options.visible == False):
         qemu_args += ['-vnc', settings.machines[fuzzbox_name]['vnc']]
     qemu_args += settings.qemu_additional
+
+    testdir(settings.qemu_shared_folder + "/logs")
     
     options.qemu_args = qemu_args
     options.slowdown = float(options.slowdown)

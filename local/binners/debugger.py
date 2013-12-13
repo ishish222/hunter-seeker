@@ -283,7 +283,7 @@ class debugger(pydbg):
             if(defined("settings.debug") == True):
                 if(settings.debug == True):
                     self.debug = True
-                    self.last_log_file = open("z:\\server\\debugger-%s-last_log.txt" % self.pid, "w")
+                    self.last_log_file = open("z:\\logs\\debugger-%s-last_log.txt" % self.pid, "w")
 
             self.dlog("attached to %d" % int(args))
 

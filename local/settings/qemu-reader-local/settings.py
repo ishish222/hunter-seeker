@@ -38,6 +38,7 @@ ma_rd_rvas = [("user32.dll", 0x18fe9, 2)]
 samples_shared_path = "../samples/shared"
 samples_saved = "../samples/saved"
 samples_binned = "../samples/binned"
+log_path = "../logs"
 app_path = "C:\\Program Files\\Adobe\\Reader 11.0\\Reader\\AcroRd32.exe"
 app_module = "AcroRd32.exe"
 corrector = None
