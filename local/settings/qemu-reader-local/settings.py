@@ -19,7 +19,6 @@ ff = True
 def react1(dbg):
     dbg.dlog("SR marker reached")
     dbg.reqScript("enter")
-    dbg.ok()
     return DBG_CONTINUE
 
 ma_addrs = []
@@ -44,7 +43,7 @@ app_module = "AcroRd32.exe"
 corrector = None
 buffer_size = 4096
 log_name = "HS:Reader"
-wait_sleep = 15
+wait_sleep = 20
 fuzzbox_timeout = wait_sleep*4
 start_sleep = 10
 revert_sleep = 40
@@ -83,13 +82,13 @@ def check_counters(ea):
 def st_marker_test(dbg):
     if(check_counters(dbg.exception_address)):
         dbg.dlog("ST marker test")
-        dbg.ok()
+        dbg.signal_st()
     return DBG_CONTINUE
 
 def end_marker_test(dbg):
     if(check_counters(dbg.exception_address)):
         dbg.dlog("END marker test")
-        dbg.ok()
+        dbg.signal_end()
     return DBG_CONTINUE
 
 #st_marker_handler = st_marker_test

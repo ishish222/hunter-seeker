@@ -24,7 +24,7 @@ from shutil import copyfile
 
 def observing_routine():
     options = get_options()
-    log = open("../logs/log-%s-%s" % (timestamp2(), "observation"), "w")
+    log = open("../logs/log-%s-%s" % (timestamp(), "observer"), "w", 0)
     create_sample_dirs(options)
     report("Starting marker observer")
     print("Generic marker observer")
@@ -60,11 +60,24 @@ def observing_routine():
             # start log
             write_socket(s, "logStart z:\\logs\\log-%s" % test_file)
             read_socket(s)
-            log.write("testStEndMarkers %s" % test_file)
-            write_socket(s, "testStEndMarkers %s" % test_file)
-            read_socket(s)
-            proceed5(options)
-            log.write("testStEndMarkers %s succesful" % test_file)
+            log.write("%s %s" % (options.obs_command, test_file))
+            write_socket(s, "%s %s" % (options.obs_command, test_file))
+
+            # need loop
+            while(status != "CR"):
+                (lastResponse, status, reqScript) = read_socket(s)
+                if(status == "SR"):
+                    execute_script(options, reqScript)
+                    write_socket(s, "")
+                    continue
+                if(status == "RD"):
+                    break
+                if(status == "MA" or status == "TO"):
+                    # react to test end
+                    proceed5(options)
+                    write_socket(s, "")
+                    log.write("%s %s succesful" % (options.obs_command, test_file))
+                    log.flush()
 
             # handle crash
             if(status == "CR" ):
@@ -74,7 +87,7 @@ def observing_routine():
                     os.remove(test_path)
                 write_socket(s, "killHost")
                 read_socket(s)
-                log.write("testStEndMarkers %s unsuccesful" % test_file)
+                log.write("%s %s unsuccesful" % (options.obs_command, test_file))
 
             # keep track on sample count
             sample_count += 1
@@ -106,11 +119,12 @@ def observing_routine():
 #            accept_con(ss)
 #            s = options.s
 
-    log.close()
-    s.close()
-    powerofff(options)
-    print("Finished")
-    exit()
+#    log.close()
+#    s.close()
+#    powerofff(options)
+#    print("Finished")
+#    exit()
+    sigkill_handler(None, None)
 
 #main
 observing_routine()

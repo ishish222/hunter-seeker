@@ -60,6 +60,8 @@ def get_options():
     parser.add_option("-e", "--extension",      dest="extension", help="Extension of generated sample", default=settings.extension)
     parser.add_option("-n", "--mutation-number", dest="mutations", help="Number of mutations to perform", default=settings.mutations)
     parser.add_option("-D", "--orig-samples-dir", dest="samples_orig", help="Path to original samples", default="")
+    parser.add_option("-P", "--sample",         dest="sample", help="Path to sample", default="")
+    parser.add_option("-C", "--command",        dest="obs_command", help="Observer command", default="testStEndMarkers")
 
 
     (options, args) = parser.parse_args()
@@ -143,7 +145,7 @@ def timestamp():
 
 def timestamp2():
     d=datetime.now()
-    return d.strftime("%Y-%m-%d %H:%M")
+    return d.strftime("%Y-%m-%d-%H-%M")
 
 def read_socket(s):
 #    global lastResponse
@@ -166,6 +168,10 @@ def read_socket(s):
     off = data.find("Status: ")
     if(off != -1):
         status = data[off+8:off+10]
+        if(status == "SR"):
+            scOff = data.find("Script: ")
+            lineEnd = data[scOff+8:].find("\n")
+            reqScript = data[scOff+8:scOff+8+lineEnd]
 
     print(timestamp())
     print("" + str(data[:-6]))
@@ -191,6 +197,10 @@ def read_socket_q(s):
     off = data.find("Status: ")
     if(off != -1):
         status = data[off+8:off+10]
+        if(status == "SR"):
+            scOff = data.find("Script: ")
+            lineEnd = data[scOff+8:].find("\n")
+            reqScript = data[scOff+8:scOff+8+lineEnd]
 
     print(timestamp())
     print("OK")

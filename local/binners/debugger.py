@@ -85,14 +85,12 @@ def defined(name):
 
 def phony_handler(dbg):
     dbg.dlog("Phony handler!!")
-    dbg.ok()
     return DBG_CONTINUE
 
 def default_st_handler(dbg):
     if(dbg.check_counters(dbg.exception_address)):
         dbg.dlog("ST marker reached")
         dbg.signal_st()
-        dbg.ok()
 
     return DBG_CONTINUE
 
@@ -101,7 +99,6 @@ def default_end_handler(dbg):
     if(dbg.check_counters(dbg.exception_address)):
         dbg.dlog("END marker reached")
         dbg.signal_ma()
-        dbg.ok()
 
     return DBG_CONTINUE
 
@@ -109,7 +106,6 @@ def default_rd_handler(dbg):
     if(dbg.check_counters(dbg.exception_address)):
         dbg.dlog("RD marker reached")
         dbg.signal_rd()
-        dbg.ok()
 
     return DBG_CONTINUE
 
@@ -117,14 +113,12 @@ def default_bp_handler(dbg):
     dlog("EXCEPTION_BREAKPOINT")
 
     dbg.signal_ex()
-    dbg.ok()
     return DBG_CONTINUE
     
 def default_ss_handler(dbg):
     dlog("EXCEPTION_SINGLE_STEP")
 
     dbg.signal_ex()
-    dbg.ok()
     return DBG_CONTINUE
     
 def default_av_handler(dbg):
@@ -132,7 +126,6 @@ def default_av_handler(dbg):
 
     dbg.crash_bin.record_crash(dbg)
     dbg.signal_cr()
-    dbg.ok()
     return DBG_CONTINUE
     
     dbg.binner.test_lock.acquire()
@@ -180,7 +173,7 @@ def debugger_routine():
     dbg.ok()
     cmd = readline(dbg.binner)
     dbg.execute(cmd)
-    dbg.ok()
+#    dbg.ok()
     Thread(target=comm_routine, args=(dbg,)).start()
 
     # dbg in main thread, all commands in additional threads
@@ -225,42 +218,56 @@ class debugger(pydbg):
         else:
             self.log_level = 0
 
-        # will switch after attach
-        self.debug = False
+        if(defined("settings.debug") == True):
+            if(settings.debug == True):
+                self.debug = True
+                self.last_log_file = open("z:\\logs\\init_log.txt", "w", 0)
+        else:
+            self.debug = False
+            self.last_log_file = None
 
     def dlog(self, data, level=0):
 #        dlog("[binner] %s" % data, level)
+#        print("in dlog")
         if(self.debug == True):
             if(self.log_level <0):
                 return
             if(level > self.log_level):
                 return
 #            self.last_log_file.write("[%d] %s\n" % (self.pid, data))
+#            print("logging")
             self.last_log_file.write("[%s] %s\n" % (timestamp(), data))
+#        print("leaving dlog")
 
     def signal_st(self):
         self.dlog("Signaled: ST", 1)
         self.binner.send("Status: ST")
+        self.ok()
 
     def signal_ma(self):
         self.dlog("Signaled: MA", 1)
         self.binner.send("Status: MA")
+        self.ok()
 
     def signal_rd(self):
         self.dlog("Signaled: RD", 1)
         self.binner.send("Status: RD")
+        self.ok()
 
     def signal_rs(self):
         self.dlog("Signaled: RS", 1)
         self.binner.send("Status: RS")
+        self.ok()
 
     def signal_cr(self):
         self.dlog("Signaled: CR", 1)
         self.binner.send("Status: CR")
+        self.ok()
 
     def signal_ex(self):
         self.dlog("Signaled: EX", 1)
         self.binner.send("Status: EX")
+        self.ok()
 
     def ok(self):
         self.binner.send("=[OK]=")
@@ -268,6 +275,7 @@ class debugger(pydbg):
     def reqScript(self, script):
         self.dlog("Signaled: SR", 1)
         self.binner.send("Status: SR\nScript: %s\n" % script)
+        self.ok()
 
     def execute(self, cmd):
         cmds = cmd.split(" ")
@@ -280,12 +288,7 @@ class debugger(pydbg):
 
         if(cmd == "attach"):
             self.attach(int(args))
-            if(defined("settings.debug") == True):
-                if(settings.debug == True):
-                    self.debug = True
-                    self.last_log_file = open("z:\\logs\\debugger-%s-last_log.txt" % self.pid, "w")
-
-            self.dlog("attached to %d" % int(args))
+#            print("attached to %d" % int(args))
 
         if(cmd == "start"):
             if(len(cmds) > 1):
@@ -373,6 +376,9 @@ class debugger(pydbg):
 
         if(cmd == "stop_log"):
             self.stop_log()
+
+        if(cmd == "terminate"):
+            self.terminate_process()
 
         if(cmd == "get_synopsis"):
             self.get_synopsis()
@@ -855,17 +861,23 @@ class debugger(pydbg):
             self.close_handle(thread_handle)
 
     def start_log(self, name):
+        print("starting log")
+        self.debug = True
         self.logStarted = True
-        self.log_file = "%s-%d" % (name, self.pid)
-        self.log = open(self.log_file, "w")
+        if(self.last_log_file != None):
+            self.last_log_file.close()
+        self.last_log_file = open("%s-%d.txt" % (name, self.pid), "w", 0)
 
     def write_log(self, data):
         self.log.write("%s\n" % data)
         self.log.flush()
 
     def stop_log(self):
-        self.log.close()
-
+        if(self.last_log_file != None):
+            self.last_log_file.close()
+            self.last_log_file = None
+        self.debug = False
+    
     def get_synopsis(self):
 #        self.binner.send(self.crash_bin.export_string())
 #        print(self.crash_bin.crash_synopsis())

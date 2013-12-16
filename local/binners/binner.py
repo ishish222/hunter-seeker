@@ -1,11 +1,11 @@
 import sys
 
-sys.path.append("\\\\10.0.2.4\\server\\paimei")
-sys.path.append("\\\\10.0.2.4\\common")
+sys.path.append("z:\\server\\paimei")
+sys.path.append("z:\\common")
 
 from Queue import PriorityQueue
 import settings
-from threading import Event
+from threading import Event, Thread
 from multiprocessing import Lock, Process, Pipe
 from subprocess import Popen, PIPE
 from pydbg import *
@@ -60,16 +60,18 @@ class binner(object):
         self.main_socket.bind(("127.0.0.1", 12347))
         self.main_socket.listen(3)
 
-        if(defined("settings.debug") == True):
-            if(settings.debug == True):
-                self.debug = True
-                self.last_log_file = open("z:\\logs\\binner-last_log.txt", "w")
-
         if(defined("settings.log_level") == True):
             self.log_level = settings.log_level
         else:
             self.log_level = 0
 
+        if(defined("settings.debug") == True):
+            if(settings.debug == True):
+                self.debug = True
+                self.last_log_file = open("z:\\logs\\init_log.txt", "w", 0)
+        else:
+            self.debug = False
+            self.last_log_file = None
 
     def dlog(self, data, level=0):
 #        dlog("[binner] %s" % data, level)
@@ -81,7 +83,8 @@ class binner(object):
             self.last_log_file.write("[%s] %s\n" % (timestamp(), data))
 
     def ddlog(self, data, level=0):
-        dlog("%s" % data, level)
+        #pass to regular log facility
+        self.dlog("%s" % data, level)
 
     def writePipe(self, data):
         self.ph.send(data)
@@ -171,6 +174,16 @@ class binner(object):
         while(self.status.qsize() == 0):
             self.loop_debuggers_iteration(to)
 
+    def race1(self, event):
+        self.poll_debuggers()
+        event.set()
+
+    def race2(self, to, event):
+        time.sleep(to)
+        self.status.put((1, "TO"))
+        self.dlog("Received: TO", 1)
+        event.set()
+
     # start and break on event
     def loop_debuggers_iteration(self, to = None, invocation = None):
         if(to == None):
@@ -182,13 +195,17 @@ class binner(object):
             self.poll_debuggers()
             self.stop_debuggers("Detected readiness")
         else:
+            event = Event()
             # will wait for timeout
             self.start_debuggers("Loop interation")
             if(invocation != None):
                 self.dlog("Invoking: %s" % invocation)
                 Popen(invocation)
-            time.sleep(to)
-            self.stop_debuggers("Detected readiness")
+            # Create race
+            Thread(target=self.race1, args=(event,)).start()
+            Thread(target=self.race2, args=(to,event)).start()
+            event.wait()
+            self.stop_debuggers("Race finished")
 
     # start, collect events, but ignore them 
     def stop_debuggers(self, reason="unknown"):
@@ -221,9 +238,7 @@ class binner(object):
             yield self.debuggers[pid].list_tebs()
 
     def terminate_processes(self):
-        for pid in self.debuggers:
-            dlog("Terminating %s" % pid)
-            self.debuggers[pid].terminate_process()
+         self.send_command("terminate")
 
     def spawn(self, path):
         proc = subprocess.Popen(path)
@@ -236,11 +251,10 @@ class binner(object):
         self.ddlog(self.read_debugger(self.sockets[str(pid)]))
         self.ddlog(self.read_debugger(self.sockets[str(pid)]))
 
+        print("Sending attach")
         self.write_debugger(self.sockets[str(pid)], "attach %s" % pid)
-#        self.ddlog(self.read_debugger(self.sockets[str(pid)]))
-        
+        print("Sending read config")
         self.write_debugger(self.sockets[str(pid)], "read_config")
-#        self.ddlog(self.read_debugger(self.sockets[str(pid)]))
 
     def enumerate_processes(self):
         return self.init_dbg.enumerate_processes()
@@ -336,7 +350,11 @@ class binner(object):
         self.send_command("set_callback %s" % callback)
 
     def start_log(self, name):
-        self.dlog("Starting log")
+        self.debug = True
+        print("Binner starting log")
+        if(self.last_log_file != None):
+            self.last_log_file.close()
+        self.last_log_file = open("%s-binner.txt" % name, "w")
         self.send_command("start_log %s" % name)
 
     def log_write(self, text):
@@ -344,6 +362,11 @@ class binner(object):
 
     def stop_log(self):
         self.dlog("Stopping log")
+        if(self.last_log_file != None):
+            self.last_log_file.close()
+            self.last_log_file = None
+        self.debug = False
+
         self.send_command("stop_log")
 
     def get_synopsis(self):

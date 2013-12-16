@@ -15,8 +15,6 @@ def defined(name):
             return True
     return False
 
-log_lock = Lock()
-
 if(defined("settings.log_level") == True):
     log_level = settings.log_level
 else:
@@ -29,17 +27,6 @@ if(defined("settings.debug") == True):
 def timestamp():
     d=datetime.now()
     return d.strftime("%Y-%m-%d %H:%M:%S:%f")
-
-def dlog(text, level=0):
-    if(log_level <0):
-        return
-    if(level > log_level):
-        return
-    log_lock.acquire()
-    last_log_file.write("%s\n" % text)
-    last_log_file.flush()
-#    print(text)
-    log_lock.release()
 
 regs = ["EAX", "EBX", "ECX", "EDX", "ESI", "EDI", "EBP", "ESP", "EIP"]
 

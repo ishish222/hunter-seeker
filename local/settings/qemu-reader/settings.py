@@ -27,7 +27,6 @@ machines = {
 def react1(dbg):
     dbg.dlog("SR marker reached")
     dbg.reqScript("enter3")
-    dbg.ok()
     return DBG_CONTINUE
 
 ma_addrs = []
@@ -89,13 +88,13 @@ def check_counters(ea):
 def st_marker_test(dbg):
     if(check_counters(dbg.exception_address)):
         dbg.dlog("ST marker test")
-        dbg.ok()
+        dbg.signal_st()
     return DBG_CONTINUE
 
 def end_marker_test(dbg):
     if(check_counters(dbg.exception_address)):
         dbg.dlog("END marker test")
-        dbg.ok()
+        dbg.signal_ma()
     return DBG_CONTINUE
 
 #st_marker_handler = st_marker_test

@@ -1,7 +1,7 @@
 import sys
 
-sys.path.append("\\\\10.0.2.4\\qemu\\server\\paimei")
-sys.path.append("\\\\10.0.2.4\\qemu\\common")
+sys.path.append("z:\\server\\paimei")
+sys.path.append("z:\\common")
 
 import win32pipe, win32file, win32gui
 import time
@@ -21,7 +21,7 @@ else:
     log_file = "z:\\logs\\log-"
 
 def getPipe(name):
-    log_write("In getPipe", 2)
+    dlog("In getPipe", 2)
     ph = win32file.CreateFile(name, win32file.GENERIC_READ | win32file.GENERIC_WRITE | win32pipe.PIPE_TYPE_MESSAGE, 0, None, win32file.OPEN_EXISTING, 0, None)
     return ph
 
@@ -68,13 +68,15 @@ def handle_crash():
 #    return DBG_CONTINUE
     return
 
+logStarted = False
+
 def startLog(name):
     global logStarted
     global log_file
     global logf
 
     log_file = "%s.txt" % name
-    logf = open(log_file, "w")
+    logf = open(log_file, "w", 0)
     logf.write("test\n")
     logStarted = True
 
@@ -85,19 +87,24 @@ def stopLog():
     logf.close()
     logStarted = False
 
-def log_write(data):
+def dlog(data, level=0):
     global logStarted
     global logf
+
+    if(log_level <0):
+        return
+    if(level > log_level):
+        return
 
     if(logStarted == False):
         return
     logf.write(data)
 
 def verify():
-    log_write("Please verify process")
+    dlog("Please verify process")
     time.sleep(5)
 
-def process_status_queue():
+def process_status_queue(satisfactory):
     global main_binner
     global status
 
@@ -109,16 +116,7 @@ def process_status_queue():
         status = item[1]
         main_binner.dlog("Processing %s" % status)
         if(status == ""):
-            continue
-        elif(status == "ST"):
-            return True
-        elif(status == "MA"):
-            return True
-        elif(status == "RD"):
-            return True
-        elif(status == ""):
             status = "TO" # TO is overriden by all
-            return True
         elif(status == "SR"):
             main_binner.dlog("Requested script: %s" % item[2])
             main_binner.writePipe("Status: %s\n" % status)
@@ -135,6 +133,7 @@ def process_status_queue():
             handle_crash()
             main_binner.writePipe("Status: %s" % status)
             main_binner.ok()
+        if(status in satisfactory):
             return True
     return False
 
@@ -161,18 +160,16 @@ def execute(cmds):
         elif(cmd == "testFile"):
             main_binner.attach_st_markers()
 
-            while True:
-                if(process_status_queue() == True):
-                    break
-                main_binner.loop_debuggers(invocation = "powershell -command \"& { invoke-expression z:\\samples\\shared\\%s }\"" % args) 
+            main_binner.loop_debuggers(invocation = "powershell -command \"& { invoke-expression z:\\samples\\shared\\%s }\"" % args)
+            while(process_status_queue(["ST"]) != True):
+                main_binner.loop_debuggers()
 
             main_binner.detach_st_markers()
             main_binner.attach_end_markers()
 
-            while True:
-                if(process_status_queue() == True):
-                    break
-                main_binner.loop_debuggers()
+            main_binner.loop_debuggers(settings.wait_sleep)
+            while(process_status_queue(["MA", "CR", "TO"]) != True):
+                main_binner.loop_debuggers(settings.wait_sleep)
 
             main_binner.writePipe("Status: %s" % status)
             main_binner.ok()
@@ -183,17 +180,16 @@ def execute(cmds):
             main_binner.readPipe()
             main_binner.stop_debuggers("Closing execution finished")
 
-            while True:
-                if(process_status_queue() == True):
-                    break
-                main_binner.loop_debuggers()
+            main_binner.loop_debuggers(settings.wait_sleep)
+            while(process_status_queue(["RD"]) != True):
+                main_binner.loop_debuggers(settings.wait_sleep)
 
             main_binner.detach_rd_markers()
             main_binner.writePipe("Status: %s" % status)
             main_binner.ok()
 
         elif(cmd == "observe"):
-            log_write("In observe")
+            dlog("In observe")
             main_binner.stop_debuggers()
             main_binner.attach_st_markers()
             main_binner.attach_end_markers()
@@ -210,42 +206,61 @@ def execute(cmds):
             main_binner.stop_tracking_all_threads()
 
         elif(cmd == "testReactMarkers"):
-            log_write("In testReactMarkers", 2)
+            dlog("In testReactMarkers", 2)
+            main_binner.attach_st_markers()
+            main_binner.loop_debuggers(invocation = "powershell -command \"& { invoke-expression z:\\samples\\shared\\%s }\"" % args)
+            main_binner.detach_st_markers()
             main_binner.attach_end_markers()
             main_binner.attach_react_markers()
-            while(main_binner.status != "MA"):
+            status == ""
+            while(status != "MA"):
                 main_binner.loop_debuggers()
                 status = main_binner.status.get()[1]
                 if(status == "SR"):
                     main_binner.writePipe("Status: SR\n Script: %s\n" % main_binner.reqScript)
                     main_binner.ok()
-                    log_write("Verified SR marker")
+                    dlog("Verified SR marker")
                 # react
             main_binner.detach_react_markers()
             main_binner.detach_end_markers()
             main_binner.ok()
 
         elif(cmd == "testStEndMarkers"):
-            log_write("In testStEndMarkers", 2)
+            dlog("In testStEndMarkers", 2)
+
             # ST markers
             main_binner.attach_st_markers()
             main_binner.loop_debuggers(invocation = "powershell -command \"& { invoke-expression z:\\samples\\shared\\%s }\"" % args)
-            main_binner.writePipe("Verified ST marker\n")
-            log_write("Verified ST marker")
-            #main_binner.ok()
+            while(process_status_queue(["ST"]) != True):
+                main_binner.loop_debuggers()
+#            main_binner.writePipe("Verified ST marker\n")
+            dlog("Verified ST marker")
+            main_binner.writePipe("Status: %s" % status)
+            main_binner.ok()
             main_binner.detach_st_markers()
+
             # END markers
             main_binner.attach_end_markers()
-            main_binner.loop_debuggers()
-            main_binner.writePipe("Verified END marker\n")
-            log_write("Verified END marker")
-            #main_binner.ok()
-            main_binner.detach_end_markers()
-            # test finished
+            main_binner.loop_debuggers(settings.wait_sleep)
+            while(process_status_queue(["MA", "CR", "TO"]) != True):
+                main_binner.loop_debuggers(settings.wait_sleep)
+            dlog("Verified END marker")
+            main_binner.writePipe("Status: %s" % status)
             main_binner.ok()
+            main_binner.detach_end_markers()
+
+
+            main_binner.attach_rd_markers()
+            main_binner.loop_debuggers()
+            while(process_status_queue(["RD"]) != True):
+                main_binner.loop_debuggers()
+            main_binner.writePipe("Status: %s" % status)
+            main_binner.ok()
+            dlog("Verified RD marker")
+            main_binner.detach_rd_markers()
 
         elif(cmd == "getSynopsis"):
-            log_write("In getSynopsis", 2)
+            dlog("In getSynopsis", 2)
             main_binner.get_synopsis()
             main_binner.ok()
 
@@ -258,7 +273,7 @@ def execute(cmds):
 #            else:
 #                startLog(log_file)
             startLog(args)
-#            main_binner.start_log("%s" % (args))
+            main_binner.start_log("%s" % (args))
             main_binner.ok()
 
         # TODO: sprawdz ktore logi gdzie maja isc
@@ -293,16 +308,13 @@ def execute(cmds):
             imagename = args
             for (pid, name) in main_binner.enumerate_processes():
                 if imagename in name:
-                    try:
-                        dlog("[*] Attaching to %s (%d)" % (name, pid))
-#                        log_write("[*] Attaching to " + name + " " + str(pid) + "\n")
+#                    try:
+                    if True:
+                        main_binner.dlog("[*] Attaching to %s (%d)" % (name, pid))
                         main_binner.attach(pid)
-                        #break
-                    except Exception, e:
-                        dlog("[!] Problem attaching to %s" % name)
-                        dlog(e)
-#                        log_write("[*] Problem attaching to " + name)
-#                        log_write(e)
+#                    except Exception, e:
+#                        dlog("[!] Problem attaching to %s" % name)
+#                        dlog(e)
                     continue
 
             main_binner.writePipe("Attached to " + str(args))
@@ -343,7 +355,7 @@ def execute(cmds):
             main_binner.ok()
 
         elif(cmd == "binTest"):
-            log_write("binTest")
+            dlog("binTest")
             main_binner.writePipe("Communication with binner is working")
             main_binner.ok()
         
@@ -384,7 +396,7 @@ def binner_routine():
     global ph
     global main_binner
 
-    log_write("In main", 2)
+    dlog("In main", 2)
     logo = """
  __                      .__               
 |  | ____________________|__| ____   ____  
