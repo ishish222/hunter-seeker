@@ -4,7 +4,7 @@ sys.path.append("z:\\server\\paimei")
 sys.path.append("z:\\common")
 
 import settings
-from threading import Thread, Lock
+from threading import Thread, Lock, ThreadError
 from multiprocessing import Process, Pipe
 from pydbg import *
 from pydbg.defines import *
@@ -91,7 +91,6 @@ def default_st_handler(dbg):
     if(dbg.check_counters(dbg.exception_address)):
         dbg.dlog("ST marker reached")
         dbg.signal_st()
-
     return DBG_CONTINUE
 
 
@@ -99,14 +98,12 @@ def default_end_handler(dbg):
     if(dbg.check_counters(dbg.exception_address)):
         dbg.dlog("END marker reached")
         dbg.signal_ma()
-
     return DBG_CONTINUE
 
 def default_rd_handler(dbg):
     if(dbg.check_counters(dbg.exception_address)):
         dbg.dlog("RD marker reached")
         dbg.signal_rd()
-
     return DBG_CONTINUE
 
 def default_bp_handler(dbg):
@@ -122,21 +119,30 @@ def default_ss_handler(dbg):
     return DBG_CONTINUE
     
 def default_av_handler(dbg):
-    dlog("avThread")
+    dbg.dlog("avThread")
 
     dbg.crash_bin.record_crash(dbg)
+    print("CR")
+#    dbg.detach_st_markers()
+#    dbg.detach_end_markers()
+#    dbg.detach_rd_markers()
+#    dbg.detach_react_markers()
+#    dbg.detach_markers()
+#    dbg.detach_bp_handler()
+#    dbg.detach_av_handler()
+#    dbg.detach_ss_handler()
+    dbg.detach_av_handler()
+#    dbg.terminate_process(method = "exitprocess")
+    dbg.schedule_termination = True
+    dbg.get_synopsis()
     dbg.signal_cr()
+#    dbg.detach()
+#    exit()
+
+    # wait to die?
+#    return DBG_EXCEPTION_NOT_HANDLED
     return DBG_CONTINUE
     
-    dbg.binner.test_lock.acquire()
-    dlog("test locked by AV")
-    dbg.binner.crash_bin.record_crash(dbg)
-    e_addr = dbg.binner.crash_bin.last_crash.exception_address
-    if(cbg.check_blacklists(e_addr) == False):
-        dbg.binner.status = "CR"
-    dbg.binner.test_lock.release()
-    return DBG_CONTINUE
-
 ### main routines
 
 def readline(stream):
@@ -148,14 +154,12 @@ def readline(stream):
         data += c
 
 def comm_routine(dbg):
+    global running
     try:
         while True:
             cmd = readline(dbg.binner)
             dbg.dlog("Received: %s" % cmd, 2)
-            if(cmd == "exit"):
-                break
             dbg.execute(cmd)
-#            dbg.ok()
     except Exception, e:
         dbg.dlog("Got exception in debugger_routine")
         dbg.dlog(e)
@@ -163,25 +167,48 @@ def comm_routine(dbg):
 
 def debugger_routine():
     global l
+    global running
+    running = True
     l = Lock()
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.connect(("127.0.0.1", 12347))
     dbg = debugger(s)
     dbg.dlog("Spawned & constructed", 2)
-    dbg.ok()
+#    dbg.ok()
     dbg.dlog("Will accept attach now")
-    dbg.ok()
+#    dbg.ok()
     cmd = readline(dbg.binner)
     dbg.execute(cmd)
 #    dbg.ok()
-    Thread(target=comm_routine, args=(dbg,)).start()
+    ct = Thread(target=comm_routine, args=(dbg,))
+    ct.start()
 
     # dbg in main thread, all commands in additional threads
     time.sleep(5)
     while True:
         l.acquire()
         dbg.debug_event_loop()
-        l.release()
+        try:
+            l.release()
+        except Exception:
+            pass
+        if(dbg.schedule_termination == True):
+            break
+
+    ct.terminate()
+
+    #waiting for permission
+    dbg.dlog("Waiting for permission")
+    readline(dbg.binner)
+
+    try:
+        self.dlog("Terminating")
+        dbg.terminate_process()
+    except AssertionError:
+        pass
+    except Exception:
+        pass
+    dbg.dlog("Leaving")
 
 ### debugger class
 class debugger(pydbg):
@@ -212,6 +239,8 @@ class debugger(pydbg):
         self.ss_handler = default_ss_handler
         self.counters = {}
         self.tracked_threads = []
+        self.last_state = ""
+        self.schedule_termination = False
 
         if(defined("settings.log_level") == True):
             self.log_level = settings.log_level
@@ -221,7 +250,7 @@ class debugger(pydbg):
         if(defined("settings.debug") == True):
             if(settings.debug == True):
                 self.debug = True
-                self.last_log_file = open("z:\\logs\\init_log.txt", "w", 0)
+                self.last_log_file = open("z:\\logs\\init_log.txt", "a", 0)
         else:
             self.debug = False
             self.last_log_file = None
@@ -241,31 +270,37 @@ class debugger(pydbg):
 
     def signal_st(self):
         self.dlog("Signaled: ST", 1)
+        self.last_state = "ST"
         self.binner.send("Status: ST")
         self.ok()
 
     def signal_ma(self):
         self.dlog("Signaled: MA", 1)
+        self.last_state = "MA"
         self.binner.send("Status: MA")
         self.ok()
 
     def signal_rd(self):
         self.dlog("Signaled: RD", 1)
+        self.last_state = "RD"
         self.binner.send("Status: RD")
         self.ok()
 
     def signal_rs(self):
         self.dlog("Signaled: RS", 1)
+        self.last_state = "RS"
         self.binner.send("Status: RS")
         self.ok()
 
     def signal_cr(self):
         self.dlog("Signaled: CR", 1)
+        self.last_state = "CR"
         self.binner.send("Status: CR")
         self.ok()
 
     def signal_ex(self):
         self.dlog("Signaled: EX", 1)
+        self.last_state = "EX"
         self.binner.send("Status: EX")
         self.ok()
 
@@ -287,7 +322,9 @@ class debugger(pydbg):
             self.dlog("config read", 2)
 
         if(cmd == "attach"):
+            self.dlog("About to attach to %s" % args)
             self.attach(int(args))
+            self.dlog("Attached to %s" % args)
 #            print("attached to %d" % int(args))
 
         if(cmd == "start"):
@@ -377,8 +414,24 @@ class debugger(pydbg):
         if(cmd == "stop_log"):
             self.stop_log()
 
-        if(cmd == "terminate"):
-            self.terminate_process()
+        if(cmd == "detach"):
+            self.dlog("About to detach")
+            self.detach()
+
+        if(cmd == "prepare_terminate"):
+#            self.dlog("About to start")
+#            self.start()
+            self.dlog("Preparing to terminate")
+            # might've been terminated by AV handler
+            #self.dlog("h_thread: %d" % self.h_thread)
+            #self.detach()
+            self.schedule_termination = True
+#            self.terminate_process(method = "exitprocess")
+            self.start()
+            self.stop()
+#                self.terminate_process()
+#            self.dlog("About to exit")
+#            exit()
 
         if(cmd == "get_synopsis"):
             self.get_synopsis()
@@ -527,6 +580,14 @@ class debugger(pydbg):
         self.dlog("RD markers: %s" % self.rd_markers)
 
     def stop(self):
+        self.dlog("Trying to stop")
+        if(self.debugger_active == True):
+            self.debugger_active = False
+            l.acquire()
+        self.dlog("Stopped")
+
+    def stop_force(self):
+        self.dlog("Trying to stop forced")
         if(self.debugger_active == True):
             self.debugger_active = False
             l.acquire()
@@ -537,7 +598,7 @@ class debugger(pydbg):
         if(to != None):
             Thread(target=self.stopping_routine, args=(to,)).start()
         if(settings.breaking == True):
-            Thread(target=self.break_things, args=()).start()
+            self.break_things()
         if(self.debugger_active == False):
             self.debugger_active = True
             l.release()
@@ -674,15 +735,28 @@ class debugger(pydbg):
 
     def attach_bp_handler(self):
         self.set_callback(EXCEPTION_BREAKPOINT, self.bp_handler)
-        self.dlog("AV handler installed", 2)
+        self.dlog("BP handler installed", 2)
 
     def attach_ss_handler(self):
         self.set_callback(EXCEPTION_SINGLE_STEP, self.ss_handler)
-        self.dlog("AV handler installed", 2)
+        self.dlog("SS handler installed", 2)
 
     def attach_av_handler(self):
         self.set_callback(EXCEPTION_ACCESS_VIOLATION, self.av_handler)
         self.dlog("AV handler installed", 2)
+
+    def detach_bp_handler(self):
+        self.set_callback(EXCEPTION_BREAKPOINT, self.exception_handler_breakpoint)
+        self.dlog("BP handler uninstalled", 2)
+
+    def detach_ss_handler(self):
+        self.set_callback(EXCEPTION_SINGLE_STEP, self.exception_handler_single_step)
+        self.dlog("SS handler uninstalled", 2)
+
+    def detach_av_handler(self):
+        self.dlog("detaching AV handler")
+        self.callbacks.pop(EXCEPTION_ACCESS_VIOLATION)
+        self.dlog("AV handler uninstalled", 2)
 
     def attach_markers(self):
         self.preparation_lock.acquire()
@@ -803,9 +877,11 @@ class debugger(pydbg):
         self.dlog("[UNLOCK] Preparation section", 2)
 
     def break_things(self):
+        # break 1 in 20:
         if(random() > 0.05):
             return
         self.dlog("Breaking random stuff", 2)
+        print("Breaking random stuff")
 
         addr = int(random() * 0xffffffff)
         threads =  self.enumerate_threads()
@@ -866,7 +942,7 @@ class debugger(pydbg):
         self.logStarted = True
         if(self.last_log_file != None):
             self.last_log_file.close()
-        self.last_log_file = open("%s-%d.txt" % (name, self.pid), "w", 0)
+        self.last_log_file = open("%s-%d.txt" % (name, self.pid), "a", 0)
 
     def write_log(self, data):
         self.log.write("%s\n" % data)
@@ -882,7 +958,9 @@ class debugger(pydbg):
 #        self.binner.send(self.crash_bin.export_string())
 #        print(self.crash_bin.crash_synopsis())
         self.binner.send(self.crash_bin.crash_synopsis())
-        self.ok() 
+#        self.ok() 
 
 if __name__ == '__main__':
     debugger_routine()
+    print("Leaving")
+    exit(0)

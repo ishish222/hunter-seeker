@@ -5,13 +5,12 @@ sys.path.append("z:\\common")
 
 from Queue import PriorityQueue
 import settings
-from threading import Event, Thread
+from threading import Event
 from multiprocessing import Lock, Process, Pipe
 from subprocess import Popen, PIPE
 from pydbg import *
 from pydbg.defines import *
 from functions import *
-from subprocess import Popen
 import utils
 import win32pipe, win32file
 import time
@@ -44,11 +43,14 @@ class binner(object):
         self.loop_lock = Lock()
         self.loop_lock.acquire()
         self.debuggers = {}                 # dictionary of debuggers for processes
+        self.debuggers_free = {}                 # dictionary of debuggers for processes
+        self.dbg_free_count = 0
         self.sockets = {}
         self.init_dbg = pydbg()
         self.crash_bin = utils.crash_binning.crash_binning()
         self.active = False
-        self.last_crashed = None
+        self.sockets_crashed = []
+        self.race_lock = Lock()
 
         self.dbg_event = Event()
         self.dbg_output = None
@@ -59,6 +61,8 @@ class binner(object):
         self.main_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.main_socket.bind(("127.0.0.1", 12347))
         self.main_socket.listen(3)
+        self.last_data = ""
+        self.used_pids = []
 
         if(defined("settings.log_level") == True):
             self.log_level = settings.log_level
@@ -68,7 +72,7 @@ class binner(object):
         if(defined("settings.debug") == True):
             if(settings.debug == True):
                 self.debug = True
-                self.last_log_file = open("z:\\logs\\init_log.txt", "w", 0)
+                self.last_log_file = open("z:\\logs\\init_log.txt", "a", 0)
         else:
             self.debug = False
             self.last_log_file = None
@@ -106,12 +110,14 @@ class binner(object):
     def send_command(self, cmd):
         self.dlog("Sending: %s" % cmd, 3)
         for pid in self.debuggers:
-#            self.sockets[str(pid)].flush()
-            self.write_debugger(self.sockets[str(pid)], cmd)
-#            self.ddlog(self.read_debugger(self.sockets[str(pid)]))
-            # no read ?
-#            self.read_debugger(self.sockets[str(pid)])
-#            self.ddlog(self.read_debugger(self.debuggers[str(pid)]))
+            if(self.sockets[str(pid)] in self.sockets_crashed):
+                self.dlog("Skipping...")
+                continue
+            try:
+                self.write_debugger(self.sockets[str(pid)], cmd)
+            except Exception:
+                print("Failed to send data to debugger")
+                self.dlog("Failed to send data to debugger")
         self.dlog("Sent: %s" % cmd, 3)
         self.dlog("- - - - - - - - - -", 3)
 
@@ -133,39 +139,50 @@ class binner(object):
     def read_debugger(self, dbg_socket):
         data = ""
         while True:
-            data += dbg_socket.recv(1)
-            if(data[-6:] == "=[OK]="):
-                break
-        statusOff = data.find("Status: ")
-        if(statusOff > -1):
-            status = data[statusOff+8:statusOff+8+2]
-            if(status == "SR"):
-                scOff = data.find("Script: ")
-                lineEnd = data[scOff+8:].find("\n")
-                self.reqScript = data[scOff+8:scOff+8+lineEnd]
-                self.status.put((0, status, self.reqScript))
-                self.dlog("Received: SR", 1)
-            elif(status == "CR"):
-                self.last_crashed = dbg_socket
-                self.status.put((0, status))
-                self.dlog("Received: CR", 1)
-            elif(status == "TO"):
-                self.status.put((1, status))
-                self.dlog("Received: TO", 1)
-            elif(status == "MA"):
-                self.status.put((1, status))
-                self.dlog("Received: MA", 1)
-            elif(status == "RD"):
-                self.status.put((1, status))
-                self.dlog("Received: RD", 1)
-            elif(status == "ST"):
-                self.status.put((1, status))
-                self.dlog("Received: ST", 1)
-        self.dlog("Received data: \n%s" % data, 3)
+            r, _, _ = select((dbg_socket, ), [], [], 0)
+            if(r == []): break
+            while True:
+                data += dbg_socket.recv(1)
+                if(data[-6:] == "=[OK]="):
+                    # got complete chunk
+                    statusOff = data.find("Status: ")
+                    if(statusOff > -1):
+                        status = data[statusOff+8:statusOff+8+2]
+                        if(status == "SR"):
+                            scOff = data.find("Script: ")
+                            lineEnd = data[scOff+8:].find("\n")
+                            self.reqScript = data[scOff+8:scOff+8+lineEnd]
+                            self.status.put((1, status, self.reqScript))
+                            self.dlog("Received: SR", 1)
+                        elif(status == "CR"):
+                            self.sockets_crashed.append(dbg_socket)
+                            self.status.put((0, status))
+                            self.dlog("Received: CR", 1)
+                        elif(status == "TO"):
+                            self.status.put((2, status))
+                            self.dlog("Received: TO", 1)
+                        elif(status == "MA"):
+                            self.status.put((2, status))
+                            self.dlog("Received: MA", 1)
+                        elif(status == "RD"):
+                            self.status.put((2, status))
+                            self.dlog("Received: RD", 1)
+                        elif(status == "ST"):
+                            self.status.put((2, status))
+                            self.dlog("Received: ST", 1)
+                    self.last_data = data[:-6]
+                    self.dlog("Received data: \n%s" % data, 3)
+                    data = ""
+                    break
+        # only last element
         return data[:-6]
 
     def write_debugger(self, dbg_socket, data):
-        return dbg_socket.send(data + "\n")
+        try:
+            dbg_socket.send(data + "\n")
+        except IOError:
+            return
+        return
 
     def loop_debuggers(self, to = None, invocation = None):
         self.loop_debuggers_iteration(to, invocation)
@@ -176,13 +193,21 @@ class binner(object):
 
     def race1(self, event):
         self.poll_debuggers()
-        event.set()
+        self.race_lock.acquire()
+        if(not event.is_set()): 
+            event.set()
+        else:
+            self.race_lock.release()
 
     def race2(self, to, event):
         time.sleep(to)
-        self.status.put((1, "TO"))
-        self.dlog("Received: TO", 1)
-        event.set()
+        self.race_lock.acquire()
+        if(not event.is_set()): 
+            self.status.put((1, "TO"))
+            self.dlog("Received: TO", 1)
+            event.set()
+        else:
+            self.race_lock.release()
 
     # start and break on event
     def loop_debuggers_iteration(self, to = None, invocation = None):
@@ -196,15 +221,19 @@ class binner(object):
             self.stop_debuggers("Detected readiness")
         else:
             event = Event()
+            event.clear()
             # will wait for timeout
             self.start_debuggers("Loop interation")
             if(invocation != None):
                 self.dlog("Invoking: %s" % invocation)
                 Popen(invocation)
             # Create race
-            Thread(target=self.race1, args=(event,)).start()
-            Thread(target=self.race2, args=(to,event)).start()
+            T1 = Thread(target=self.race1, args=(event,))
+            T2 = Thread(target=self.race2, args=(to,event))
+            T1.start()
+            T2.start()
             event.wait()
+            self.race_lock.release()
             self.stop_debuggers("Race finished")
 
     # start, collect events, but ignore them 
@@ -237,27 +266,78 @@ class binner(object):
             dlog("Listing TEBs for %s" % pid)
             yield self.debuggers[pid].list_tebs()
 
+    def detach_all(self):
+        self.send_command("detach")
+        while(len(self.debuggers) > 0):
+            dbg = self.debuggers.popitem()
+            self.debuggers_free[dbg[0]] = dbg[1]
+            self.dbg_free_count += 1
+
+    def clear_status_queue(self):
+        for i in range(0, self.status.qsize()):
+            self.status.get()
+
     def terminate_processes(self):
-         self.send_command("terminate")
+        self.send_command("prepare_terminate")
+        cmd = "terminate"
+        self.dlog("Sending: %s" % cmd, 3)
+        for pid in self.debuggers:
+            try:
+                self.write_debugger(self.sockets[str(pid)], cmd)
+            except Exception:
+                print("Failed to send data to debugger")
+                self.dlog("Failed to send data to debugger")
+        self.dlog("Sent: %s" % cmd, 3)
+        self.dlog("- - - - - - - - - -", 3)
+
+#        self.detach_all()
+#        self.proc.terminate()
+        #self.start_debuggers()
+#        self.send_command("terminate")
+        self.clear_status_queue()
+#        for dbg in self.debuggers.values():
+#            dbg.terminate()
+        # no mem leak?
+#        self.debuggers = {}
+        #self.proc.terminate()
+
+        #for debugger in self.debuggers.values():
+        #    debugger.terminate()
 
     def spawn(self, path):
-        proc = subprocess.Popen(path)
-        return proc
+        self.proc = Popen(path)
 
     def attach(self, pid):
-        self.debuggers[str(pid)] = Popen([sys.executable, "-u", "z:\\server\\debugger.py"], shell=True)
-        self.sockets[str(pid)], addr = self.main_socket.accept()
-        self.dlog("Got connection")
-        self.ddlog(self.read_debugger(self.sockets[str(pid)]))
-        self.ddlog(self.read_debugger(self.sockets[str(pid)]))
+        if(pid in self.used_pids):
+            return
+
+        if(self.dbg_free_count > 0):
+            my_dbg = self.debuggers_free.popitem()
+            self.debuggers[my_dbg[0]] = my_dbg[1]
+            self.dbg_free_count -= 1
+        else:
+            print("Spawning dbg")
+            pid = str(pid)
+            self.debuggers[pid] = Popen([sys.executable, "-u", "z:\\server\\debugger.py"], shell=True)
+            self.sockets[pid], addr = self.main_socket.accept()
+            self.dlog("Got connection")
+            my_dbg = (pid, self.debuggers[pid])
+
+#        self.ddlog(self.read_debugger(self.sockets[str(pid)]))
+#        self.ddlog(self.read_debugger(self.sockets[str(pid)]))
 
         print("Sending attach")
-        self.write_debugger(self.sockets[str(pid)], "attach %s" % pid)
+        self.write_debugger(self.sockets[my_dbg[0]], "attach %s" % pid)
         print("Sending read config")
-        self.write_debugger(self.sockets[str(pid)], "read_config")
+        self.write_debugger(self.sockets[my_dbg[0]], "read_config")
+
+        self.used_pids.append(pid)
 
     def enumerate_processes(self):
         return self.init_dbg.enumerate_processes()
+
+    def enumerate_processes_custom(self):
+        return self.init_dbg.enumerate_processes_custom()
 
     def attach_all_markers(self):
         self.attach_markers()
@@ -354,7 +434,7 @@ class binner(object):
         print("Binner starting log")
         if(self.last_log_file != None):
             self.last_log_file.close()
-        self.last_log_file = open("%s-binner.txt" % name, "w")
+        self.last_log_file = open("%s-binner.txt" % name, "a")
         self.send_command("start_log %s" % name)
 
     def log_write(self, text):
@@ -374,8 +454,9 @@ class binner(object):
         self.last_crashed
         self.write_debugger(self.last_crashed, "get_synopsis")
         data = self.read_debugger(self.last_crashed)
-        while(data.find("CONTEXT DUMP") == -1):
+        while(data.find("CONTEXT") < 0):
+            print(data)
             data = self.read_debugger(self.last_crashed)
-        print(data)
+        self.dlog("Got it")
         self.writePipe(data)
         self.ok()

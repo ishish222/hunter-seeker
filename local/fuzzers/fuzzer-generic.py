@@ -21,7 +21,7 @@ from common import *
 
 def fuzzing_routine():
     options = get_options()
-    log = open("./log-%s-%s" % (timestamp2(), options.origin), "w")
+    log = open("./log-%s-%s" % (timestamp2(), options.origin), "a")
     create_sample_dirs(options)
     report("Starting fuzzer")
     print("Generic fuzzer")
@@ -43,12 +43,19 @@ def fuzzing_routine():
 
     my_generator = generator.Generator(options.origin, options.samples_shared, "."+options.extension, options.settings.mutator, corrector = None)
     my_generator.mutations=int(options.mutations)
+    
+    proceed2(options)
 
     while True:
 #        try:
         if(True):
-            proceed2(options)
             proceed3(options)
+            write_socket(s, "ps")
+            read_socket(s)
+            time.sleep(10)
+
+            write_socket(s, "logStart z:\\logs\\log-%s-%s.txt" % (options.fuzzbox_name, timestamp2()))
+            read_socket(s)
 
             write_socket(s, "checkReady")
 
@@ -59,6 +66,7 @@ def fuzzing_routine():
                 if(status == "SR"):
                     # react to SR
 #                    register_script()
+                    time.sleep(0.2)
                     execute_script(options, reqScript)
                     write_socket(s, "")
                     continue
@@ -110,15 +118,26 @@ def fuzzing_routine():
                         accept_con(ss)
                         s = options.s
                     continue
-            
-            handle_crashing_sample(sample_path, sample_file)
+           
+            write_socket(s, "getSynopsis")
+            dossier, _, _ = read_socket(s)
+            handle_crashing_sample(dossier, sample_path, sample_file)
             log.write("[%s], registered, binned\n" % status)
             log.flush()
             report("CR")
             if(test_path != sample_path):
                 os.remove(test_path)
+            write_socket(s, "ps")
+            read_socket(s)
             write_socket(s, "killHost")
             read_socket(s)
+            write_socket(s, "kill dwwin.exe")
+            read_socket(s)
+            write_socket(s, "kill %s" % options.settings.app_module)
+            read_socket(s)
+            write_socket(s, "ps")
+            read_socket(s)
+            time.sleep(10)
 
 #        except socket.timeout:
 #            print "socket timeout, restarting"

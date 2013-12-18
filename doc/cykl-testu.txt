@@ -25,3 +25,72 @@ RD->ST->SR->SR-><brak przejscia do MA lub TO> (2)
 Mozliwe powody: stan MA lub TO zostal "przegapiony" w trakcie obslugi SR
 
 Wyscig pomiedzy skryptem reagujacym na MA, a zdarzeniem SR, ktore je blokuje
+
+--
+
+Czasami zapominam o przetworzeniu zebranych sygnalow przez zwolnieniem
+aplikacji. Zawsze przed zwolnieniem aplikacji upewnij sie, ze kolejka
+zdarzen jest pusta!
+
+Czy moze dbac o to, zeby kolejka musiala byc pusta? Bo co jestli
+przetworzymy zdarzenie przed oczekiwaniem na nie? Np. ST w przetwarzaniu
+przed inwokacja?
+
+--
+
+Malowanie ogolne nie jest dobre jako marker z tego wzgledu, ze przy
+powstawaniu sytuacji wyjatkowych (co przy fuzzowanie jest czeste),
+sekwencje malowania roznia sie miedzy soba (malowane sa komunikaty o
+wyjatkowych sytuacjach). Nalezy znalezc konkretna metode malowania danego
+okna (1 hit).
+
+Jak ja znalezc? Nalezy zaczac od analizy zdefiniowanej procedury rysowania
+okienka. Aplikacja tworzy okienka konkretnej klasy, ktora musi zostac
+zarejestrowana. Klasa ta posiada procedure rysowania, ktora znajduje sie
+najprawdopodobniej w userlandzie... To jest jedna z drog.
+
+Jednak po przeanalizowaniu probki, ktora nie uderza w adresy ma,
+stwierdzam, ze jednak sekwencja jest zgodna z oczekiwana. Musimy przegapiac
+kjakies uderzenia.
+
+To jest nadal anomalia, ale problem czesciowo eliminuje timeout, ktory,
+jesli zadziala dobrze i bedzie odpowiednio dobrany, odsieje dobre probki.
+
+--
+
+Timeout dobierac indywidualnie dla probki, za posrednictwem przelacznika.
+
+--
+
+Czemu okno aplikacji sie zamyka? Czy to mozliwe, ze to nieobsluzone AV? A
+moze przedwczesne ctrl-w?
+
+--
+
+Apropos przeciekajacych sygnalow: byc moze istotne jest okno pomiedzy
+zgloszeniem sygnalu a zatrzymaniem debuggerow? Nalezy je wyeliminowac.
+
+--
+
+Przy zamykaniu badanej aplikacji po zcrashowaniuw niektorych przypadkach
+system nie moze jej zabic. Najprawdopodobniej dlatego, ze jest zatrzymany
+jej debugger. Przypadki, w ktorych sie to dzieje: CR po RD. Probuje
+wprowadzic sztuczny CR po ST, ale byc moze trzeba wziac pod uwage, ze CR
+nastapi po RD. No ale CR po MA powoduje, ze aplikacja zamyka sie poprawnie
+:<
+
+--
+
+Jesli napotkasz bledy uchwytu przy wydawaniu polecen debuggerowi, sprawdz,
+czy wydajesz je z odpowiedniego watka (tago, ktory sie podlaczyl)
+
+--
+
+Przed zakonczeniem dzialania proces, ktory zglasza CR musi zaczekac na
+pozwolenie zakonczenia, zeby nie zerwac polaczenia, dopoki sygnal nie
+zostanie poprawnie przetworzony. W tym celu czeka na pozwolenie. W tym
+czasie wszelkie komendy wydawane sa z pominieciem tego procesu i maja na
+celu przygotowanie innych procesow do zakonczenia. W wypadku gotowosci
+wszystkich zostaje wydana ostatnia komenda.
+
+

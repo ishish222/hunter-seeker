@@ -6,7 +6,7 @@ PASS_COUNT = 0
 
 visible = True
 testing = False
-breaking = False
+breaking = True
 debug = True
 
 machines = {
@@ -19,6 +19,7 @@ ff = True
 def react1(dbg):
     dbg.dlog("SR marker reached")
     dbg.reqScript("enter")
+    print("SR")
     return DBG_CONTINUE
 
 ma_addrs = []
@@ -27,6 +28,7 @@ ma_st_addrs = []
 ma_st_rvas = [("AcroRd32.exe", 0x4cae0, 0)]
 ma_end_addrs = []
 ma_end_rvas = [("user32.dll", 0x18fe9, 7)]
+#ma_end_rvas = [("user32.dll", 0x18fe9, 6)]
 ma_react_addrs = []
 ma_react_rvas = [("AcroRd32.dll", 0x3664da, (0, react1, ["space"]))]
 #ma_react_rvas = [("AcroRd32.dll", 0x3664df, (0, react1, ["space"]))]
@@ -43,7 +45,7 @@ app_module = "AcroRd32.exe"
 corrector = None
 buffer_size = 4096
 log_name = "HS:Reader"
-wait_sleep = 20
+wait_sleep = 5
 fuzzbox_timeout = wait_sleep*4
 start_sleep = 10
 revert_sleep = 40

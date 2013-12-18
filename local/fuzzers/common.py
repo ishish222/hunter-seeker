@@ -62,6 +62,7 @@ def get_options():
     parser.add_option("-D", "--orig-samples-dir", dest="samples_orig", help="Path to original samples", default="")
     parser.add_option("-P", "--sample",         dest="sample", help="Path to sample", default="")
     parser.add_option("-C", "--command",        dest="obs_command", help="Observer command", default="testStEndMarkers")
+    parser.add_option("-L", "--timeout",        dest="wait_sleep", help="Timeout for state transitions", default=settings.wait_sleep)
 
 
     (options, args) = parser.parse_args()
@@ -87,7 +88,7 @@ def get_options():
 
     qemu_args += ['-net', 'nic,model=rtl8139']
     if(options.visible == False):
-        qemu_args += ['-vnc', settings.machines[fuzzbox_name]['vnc']]
+        qemu_args += ['-vnc', settings.machines[options.fuzzbox_name]['vnc']]
     qemu_args += settings.qemu_additional
 
     testdir(settings.qemu_shared_folder + "/logs")
@@ -145,7 +146,7 @@ def timestamp():
 
 def timestamp2():
     d=datetime.now()
-    return d.strftime("%Y-%m-%d-%H-%M")
+    return d.strftime("%Y-%m-%d-%H-%M-%S-%f")
 
 def read_socket(s):
 #    global lastResponse
@@ -266,7 +267,7 @@ def proceed1(options):
     rss(["python_server_spawn"], options.m, options.slowdown)
 
 def proceed2(options):
-    # executed during each guest system restart
+    # executed during each OS start
     if(defined("settings.specific_preperations_2")):
         options.settings.specific_preperations_2(options)
     if(defined("settings.scripts_2")):
@@ -300,11 +301,18 @@ def proceed3(options):
     write_socket(s, "attachBinner " + options.settings.app_module)
     read_socket(s)
 
+    write_socket(s, "ps")
+    read_socket(s)
+
     write_socket(s, "setupMarkers")
     read_socket(s)
 
     write_socket(s, "installHandlers")
     read_socket(s)
+
+    if(options.wait_sleep != options.settings.wait_sleep):
+        write_socket(s, "setupWaitSleep {0}".format(options.wait_sleep))
+        read_socket(s)
 
     if(options.slowdown != options.settings.slowdown):
         write_socket(s, "setupSlowdown {0}".format(options.slowdown))
@@ -342,16 +350,18 @@ def sigkill_handler(signum, frame):
     report("Killing")
     quit()
 
-def handle_crashing_sample(sample_path, sample_file):
-    global s
-
-    cb = crash_binning()
+def handle_crashing_sample(dossier, sample_path, sample_file):
 
     print("Crash procedures")
 
-    lines = []
-    eip = ""
-    reason = ""
+#    os.rename(sample_path, settings.samples_saved + "/" + sample_file)
+    df = open(settings.samples_saved + "/" + sample_file + ".dossier", "a")
+    df.write(dossier)
+    df.close()
+
+    suOff = dossier.find("stack unwind:")
+    suEnd = dossier[suOff:].find("\n\n")
+    print("SU:\n%s" % dossier[suOff:suOff+suEnd])
 
 #    write_socket(s, "cbStackUnwind")
 #    read_socket(s)
@@ -367,10 +377,6 @@ def handle_crashing_sample(sample_path, sample_file):
 
 #    path = options.samples_binned
 
-    write_socket(s, "getSynopsis")
-    read_socket(s)
-#    cb.import_string(lastResponse)
-    print(lastResponse)
     return
 
     if(reason == "hc"):
@@ -385,7 +391,7 @@ def handle_crashing_sample(sample_path, sample_file):
         testdir(path)
 
     if(testfile(path + "/dossier.txt") == False):
-        f = open(path + "/dossier.txt", "w+")
+        f = open(path + "/dossier.txt", "a")
 
         write_socket(s, "cbCrashSynopsis")
         read_socket(s)
@@ -396,7 +402,7 @@ def handle_crashing_sample(sample_path, sample_file):
 
         #dump signatures based on stack
 
-    f = open(path + "/" + sample_file+ ".sig1", "w+")
+    f = open(path + "/" + sample_file+ ".sig1", "a")
     for i in range(0, min(len(lines), 5)):
         f.write(lines[i] + "\n")
     f.close
@@ -418,8 +424,9 @@ def handle_crashing_sample(sample_path, sample_file):
 
 
 def settle(options):
-    write_socket(options.s, "settle " + str(options.settings.settle_sleep * options.settings.slowdown))
-    read_socket(options.s)
+#    write_socket(options.s, "settle " + str(options.settings.settle_sleep * options.settings.slowdown))
+#    read_socket(options.s)
+    pass
 
 def register_script():
     global lastResponse

@@ -1409,6 +1409,48 @@ class pydbg(object):
 
 
     ####################################################################################################################
+    def enumerate_processes_custom (self):
+        '''
+        Using the CreateToolhelp32Snapshot() API enumerate all system processes returning a list of pid / process name
+        tuples.
+
+        @see: iterate_processes()
+
+        @rtype:  List
+        @return: List of pid / process name tuples.
+
+        Example::
+
+            for (pid, name) in pydbg.enumerate_processes():
+                if name == "test.exe":
+                    break
+
+            pydbg.attach(pid)
+        '''
+
+        self._log("enumerate_processes_custom()")
+
+        pe           = PROCESSENTRY32()
+        process_list = []
+        snapshot     = kernel32.CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0)
+
+        if snapshot == INVALID_HANDLE_VALUE:
+            raise pdx("CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0", True)
+
+        # we *must* set the size of the structure prior to using it, otherwise Process32First() will fail.
+        pe.dwSize = sizeof(PROCESSENTRY32)
+
+        found_proc = kernel32.Process32First(snapshot, byref(pe))
+
+        while found_proc:
+            process_list.append((pe.th32ParentProcessID, pe.th32ProcessID, pe.szExeFile))
+            found_proc = kernel32.Process32Next(snapshot, byref(pe))
+
+        self.close_handle(snapshot)
+        return process_list
+
+
+    ####################################################################################################################
     def enumerate_threads (self):
         '''
         Using the CreateToolhelp32Snapshot() API enumerate all system threads returning a list of thread IDs that

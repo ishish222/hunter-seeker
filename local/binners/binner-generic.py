@@ -76,7 +76,7 @@ def startLog(name):
     global logf
 
     log_file = "%s.txt" % name
-    logf = open(log_file, "w", 0)
+    logf = open(log_file, "a", 0)
     logf.write("test\n")
     logStarted = True
 
@@ -104,7 +104,38 @@ def verify():
     dlog("Please verify process")
     time.sleep(5)
 
-def process_status_queue(satisfactory):
+def process_reactions():
+    global main_binner
+    global status
+
+    status = ""
+    for i in range(0, main_binner.status.qsize()):
+#    while(not main_binner.status.empty()):
+        main_binner.dlog("Queue size before get: %d" % main_binner.status.qsize())
+        item = main_binner.status.get()
+        main_binner.dlog("Queue size after get : %d" % main_binner.status.qsize())
+        status = item[1]
+        main_binner.dlog("Processing %s" % status)
+#        if(status == ""):
+#            status = "TO" # TO is overriden by all
+        if(status == "SR"):
+            main_binner.dlog("Requested script: %s" % item[2])
+            main_binner.writePipe("Status: %s\n" % status)
+            main_binner.writePipe("Script: %s\n" % item[2])
+            main_binner.ok()
+            # time for reaction to SR
+            main_binner.start_debuggers("Script execution")
+            main_binner.readPipe()
+            main_binner.stop_debuggers("Script execution finished")
+            main_binner.dlog("Queue size after script: %d" % main_binner.status.qsize())
+            continue
+        else:
+            # put in back!
+            main_binner.status.put(item)
+            continue
+
+
+def process_status_queue(satisfactory = None):
     global main_binner
     global status
 
@@ -115,9 +146,9 @@ def process_status_queue(satisfactory):
         main_binner.dlog("Queue size after get : %d" % main_binner.status.qsize())
         status = item[1]
         main_binner.dlog("Processing %s" % status)
-        if(status == ""):
-            status = "TO" # TO is overriden by all
-        elif(status == "SR"):
+#        if(status == ""):
+#            status = "TO" # TO is overriden by all
+        if(status == "SR"):
             main_binner.dlog("Requested script: %s" % item[2])
             main_binner.writePipe("Status: %s\n" % status)
             main_binner.writePipe("Script: %s\n" % item[2])
@@ -129,12 +160,14 @@ def process_status_queue(satisfactory):
             main_binner.dlog("Queue size after script: %d" % main_binner.status.qsize())
             continue
         elif(status == "CR"):
-            main_binner.stop_debuggers()
-            handle_crash()
             main_binner.writePipe("Status: %s" % status)
             main_binner.ok()
-        if(status in satisfactory):
-            return True
+#            print(main_binner.last_data)
+            #main_binner.stop_debuggers()
+            #handle_crash()
+        if(satisfactory != None):
+            if(status in satisfactory):
+                return True
     return False
 
 
@@ -160,19 +193,36 @@ def execute(cmds):
         elif(cmd == "testFile"):
             main_binner.attach_st_markers()
 
+#            process_status_queue()
+            #process_reactions()
             main_binner.loop_debuggers(invocation = "powershell -command \"& { invoke-expression z:\\samples\\shared\\%s }\"" % args)
-            while(process_status_queue(["ST"]) != True):
+            while(process_status_queue(["ST", "CR", "TO"]) != True):
                 main_binner.loop_debuggers()
+            if(status == "TO"):
+                print("ST TO")
+                return
+            if(status == "CR"):
+                print("CRrrrrrrrrrr")
+                return
+
+            main_binner.writePipe("Status: %s" % status)
+            main_binner.ok()
 
             main_binner.detach_st_markers()
             main_binner.attach_end_markers()
 
-            main_binner.loop_debuggers(settings.wait_sleep)
+#            process_status_queue()
+#            main_binner.loop_debuggers(settings.wait_sleep)
+            #process_reactions()
             while(process_status_queue(["MA", "CR", "TO"]) != True):
                 main_binner.loop_debuggers(settings.wait_sleep)
+            if(status == "CR"):
+                print("CRrrrrrrrrrr")
+                return
 
             main_binner.writePipe("Status: %s" % status)
             main_binner.ok()
+
             main_binner.detach_end_markers()
             main_binner.attach_rd_markers()
             # time for reaction to test end
@@ -180,13 +230,20 @@ def execute(cmds):
             main_binner.readPipe()
             main_binner.stop_debuggers("Closing execution finished")
 
-            main_binner.loop_debuggers(settings.wait_sleep)
-            while(process_status_queue(["RD"]) != True):
-                main_binner.loop_debuggers(settings.wait_sleep)
+#            main_binner.loop_debuggers()
+            #process_reactions()
+            while(process_status_queue(["RD", "CR", "TO"]) != True):
+                main_binner.loop_debuggers()
+            if(status == "TO"):
+                print("RD TO")
+                return
+            if(status == "CR"):
+                print("CRrrrrrrrrrr")
+                return
 
-            main_binner.detach_rd_markers()
             main_binner.writePipe("Status: %s" % status)
             main_binner.ok()
+            main_binner.detach_rd_markers()
 
         elif(cmd == "observe"):
             dlog("In observe")
@@ -261,8 +318,10 @@ def execute(cmds):
 
         elif(cmd == "getSynopsis"):
             dlog("In getSynopsis", 2)
-            main_binner.get_synopsis()
+            main_binner.writePipe(main_binner.last_data)
             main_binner.ok()
+#            main_binner.get_synopsis()
+#            main_binner.ok()
 
         # TODO: sprawdz ktore logi gdzie maja isc
         elif(cmd == "logStart"):
@@ -282,6 +341,11 @@ def execute(cmds):
             main_binner.stop_log()
             main_binner.ok()
     
+        elif(cmd == "ps"):
+            for (ppid, pid, name) in main_binner.enumerate_processes_custom():
+                main_binner.writePipe("0x%x 0x%x %s\n" % (ppid, pid, name))
+            main_binner.ok()
+
         elif(cmd == "listTebs"):
             main_binner.list_tebs()
             main_binner.ok()
@@ -323,7 +387,6 @@ def execute(cmds):
         elif(cmd == "killHost"):
             main_binner.terminate_processes()
             main_binner.ok()
-            exit()
     
         elif(cmd == "installHandlers"):
             main_binner.attach_react_markers()
@@ -337,6 +400,11 @@ def execute(cmds):
             # will do automatically on process attach
             main_binner.ok()
 
+        elif(cmd == "setupWaitSleep"):
+            main_binner.writePipe("Setting wait sleep to: {0}\n".format(cmds[1]))
+            settings.wait_sleep = float(cmds[1])
+            main_binner.ok()
+    
         elif(cmd == "setupSlowdown"):
             main_binner.writePipe("Setting slowdown to: {0}\n".format(cmds[1]))
             settings.slowdown = float(cmds[1])
@@ -365,11 +433,17 @@ def execute(cmds):
 
         elif(cmd == "spawn"):
             print("Spawning: %s" % args)
-            Popen(args)
+            main_binner.spawn(args)
             main_binner.writePipe("OK")
             main_binner.ok()
 
         elif(cmd == "startBinner"):
+            main_binner.writePipe("OK")
+            main_binner.ok()
+
+        elif(cmd == "kill"):
+            print("Killing %s" % args)
+            call("taskkill /F /IM %s" % args)
             main_binner.writePipe("OK")
             main_binner.ok()
 
