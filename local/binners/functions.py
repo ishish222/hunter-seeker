@@ -22,7 +22,7 @@ else:
 
 if(defined("settings.debug") == True):
     if(settings.debug == True):
-        last_log_file = open("z:\\server\\last_log.txt", "w")
+        last_log_file = open("e:\\logs\\last_log.txt", "a")
 
 def timestamp():
     d=datetime.now()

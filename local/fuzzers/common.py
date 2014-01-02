@@ -63,6 +63,7 @@ def get_options():
     parser.add_option("-P", "--sample",         dest="sample", help="Path to sample", default="")
     parser.add_option("-C", "--command",        dest="obs_command", help="Observer command", default="testStEndMarkers")
     parser.add_option("-L", "--timeout",        dest="wait_sleep", help="Timeout for state transitions", default=settings.wait_sleep)
+    parser.add_option("-O", "--count",          dest="samples_count", help="Amount of samples in single run", default=10)
 
 
     (options, args) = parser.parse_args()
@@ -78,15 +79,21 @@ def get_options():
     #qemu settings
     qemu_args =  ['qemu-system-i386']
     qemu_args += ['-m', options.qemu_m]
-    qemu_args += ['-hda', options.machines + "/" + options.hda]
+    qemu_args += ['-drive', 'file=' + options.machines + '/' + options.hda + ',if=virtio']
     if(options.hdb is not None):
-        qemu_args += ['-hdb', options.machines + "/" + options.hdb]
+        qemu_args += ['-drive', 'file=', './' + options.hdb, ',if=vitrio']
+
+    if(options.cdrom is not None):
+        qemu_args += ['-cdrom', options.cdrom]
 
     #qemu_args += ['-net', 'nic,model=rtl8139', '-net', 'user,restrict=n,smb=' + settings.qemu_shared_folder + ',hostfwd=tcp:127.0.0.1:' + str(options.fuzzbox_port) + '-:12345']
-    qemu_args += ['-net', 'nic,model=rtl8139', '-net', 'user,restrict=n,smb=' + settings.qemu_shared_folder + ',guestfwd=tcp:10.0.2.100:12345-tcp:127.0.0.1:' + str(options.fuzzbox_port)]
+    qemu_args += ['-net', 'nic,model=virtio', '-net', 'user,restrict=n,guestfwd=tcp:10.0.2.100:12345-tcp:127.0.0.1:' + str(options.fuzzbox_port)]
+    #qemu_args += ['-net', 'nic,model=virtio', '-net', 'user,restrict=n,smb=' + settings.qemu_shared_folder + ',guestfwd=tcp:10.0.2.100:12345-tcp:127.0.0.1:' + str(options.fuzzbox_port)]
+    #qemu_args += ['-net', 'nic,model=rtl8139', '-net', 'user,restrict=n,smb=' + settings.qemu_shared_folder + ',guestfwd=tcp:10.0.2.100:12345-tcp:127.0.0.1:' + str(options.fuzzbox_port)]
     #qemu_args += ['-net', 'nic,model=rtl8139', '-net', 'user,restrict=n,smb=' + settings.qemu_shared_folder + ',guestfwd=tcp:127.0.0.1:' + str(options.fuzzbox_port) + '-tcp:10.0.0.1:12345']
 
-    qemu_args += ['-net', 'nic,model=rtl8139']
+    #qemu_args += ['-net', 'nic,model=rtl8139']
+    qemu_args += ['-net', 'nic,model=virtio']
     if(options.visible == False):
         qemu_args += ['-vnc', settings.machines[options.fuzzbox_name]['vnc']]
     qemu_args += settings.qemu_additional
@@ -95,6 +102,7 @@ def get_options():
     
     options.qemu_args = qemu_args
     options.slowdown = float(options.slowdown)
+    options.samples_count = int(options.samples_count)
     options.logger = logging.getLogger('MyLogger')
     options.handler = logging.handlers.SysLogHandler(address = '/dev/log')
     options.logger.setLevel(logging.DEBUG)
@@ -219,11 +227,11 @@ def powerofff(options):
 def revert(options):
     print("[Reverting]")
     #rs("load_ready", m)
-    rs(options.settings.revert_script, options.m, options.slowdown)
+    rss(options.settings.revert_scripts, options.m, options.slowdown)
 
 def start(options):
-    print("[Starting]")
-#    print qemu_args
+    print("[%s] Starting" % timestamp())
+    print options.qemu_args
     m = Popen(options.qemu_args, stdout=PIPE, stdin=PIPE)
     time.sleep(3)
     options.m = m
@@ -264,7 +272,6 @@ def proceed1(options):
         options.settings.specific_preperations_1(options)
     if(defined("settings.scripts_1")):
         rss(options.settings.scripts_1, options.m, options.slowdown)
-    rss(["python_server_spawn"], options.m, options.slowdown)
 
 def proceed2(options):
     # executed during each OS start
@@ -275,8 +282,8 @@ def proceed2(options):
 
     s = options.s
 
-    write_socket(s, "killExplorer")
-    read_socket(s)
+#    write_socket(s, "killExplorer")
+#    read_socket(s)
 
     write_socket(s, "startBinner")
     read_socket(s)

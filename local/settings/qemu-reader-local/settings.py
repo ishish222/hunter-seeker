@@ -4,14 +4,14 @@ DBG_CONTINUE = 0x00010002
 HIT_COUNT = 1
 PASS_COUNT = 0
 
-visible = True
+visible = False
 testing = False
-breaking = True
-debug = True
+breaking = False
+debug = False
 
 machines = {
-    'hs2-1': {'disk' : 'hs2-1.qcow2', 'ip' : '127.0.0.1', 'port' : 12345},
-    'hs2-2': {'disk' : 'hs2-2.qcow2', 'ip' : '127.0.0.1', 'port' : 12346}
+    'hs2-1': {'disk' : 'hs2-1.qcow2', 'ip' : '127.0.0.1', 'port' : 12345, 'vnc' : '192.168.66.10:0,secur3e'},
+    'hs2-2': {'disk' : 'hs2-2.qcow2', 'ip' : '127.0.0.1', 'port' : 12346, 'vnc' : '1'}
 }
 
 ff = True
@@ -39,6 +39,7 @@ ma_rd_rvas = [("user32.dll", 0x18fe9, 2)]
 samples_shared_path = "../samples/shared"
 samples_saved = "../samples/saved"
 samples_binned = "../samples/binned"
+samples_original = "d:\\samples\\original"
 log_path = "../logs"
 app_path = "C:\\Program Files\\Adobe\\Reader 11.0\\Reader\\AcroRd32.exe"
 app_module = "AcroRd32.exe"
@@ -52,7 +53,8 @@ revert_sleep = 40
 settle_sleep = 3
 restart_count = 100000
 closing_plugin_name = "close_sample_opera"
-revert_script = "load_ready"
+#revert_scripts = ["m_readline", "load_ready"]
+revert_scripts = ["load_ready"]
 slowdown = 1
 extension = "pdf"
 mutations = 3
@@ -69,7 +71,7 @@ def specific_preperations_1(options):
 #    copyfile(options.shared_folder + "/server/index2.html", options.samples_shared + "/index.html")
     pass
 
-scripts_1 = ["beep2"]
+scripts_1 = ["beep2", "python_server_spawn_cdrom"]
 log_level = 4
 
 def check_counters(ea):

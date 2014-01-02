@@ -56,7 +56,7 @@ revert_sleep = 40
 settle_sleep = 3
 restart_count = 100000
 closing_plugin_name = "close_sample_opera"
-revert_script = "load_ready"
+revert_scripts = ["load_ready"]
 slowdown = 1.5
 extension = "pdf"
 mutations = 3
@@ -73,7 +73,7 @@ def specific_preperations_1(options):
 #    copyfile(options.shared_folder + "/server/index2.html", options.samples_shared + "/index.html")
     pass
 
-scripts_1 = []
+scripts_1 = ["python_server_spawn_cdrom"]
 log_level = 1
 
 def check_counters(ea):

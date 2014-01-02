@@ -16,6 +16,7 @@ mkdir -p $TARGET_DIR/samples/shared
 mkdir -p $TARGET_DIR/samples/saved
 mkdir -p $TARGET_DIR/samples/other
 mkdir -p $TARGET_DIR/samples/binned
+mkdir -p $TARGET_DIR/samples/original
 
 echo "server"
 cat $TARGET_CONFIGS_DIR$TARGET | grep s: | cut -d":" -f2 |
@@ -43,5 +44,18 @@ do
     echo "cp -r $LOCAL_ROOT$line $TARGET_DIR/settings/$target_line"
     cp -r $LOCAL_ROOT$line $TARGET_DIR/common/$target_line
 done
+
+echo "original samples"
+cat $TARGET_CONFIGS_DIR$TARGET | grep o: | cut -d":" -f2 |
+while read line;
+do
+    target_line=$(basename $line)
+    echo "cp -r $LOCAL_ROOT$line $TARGET_DIR/samples/original/$target_line"
+    cp -r $LOCAL_ROOT$line $TARGET_DIR/samples/original/$target_line
+done
+
+echo "Generating server iso"
+
+mkisofs -J -exclude-list exclusion-list -V server -r $TARGET_DIR > $TARGET_DIR/server.iso
 
 echo "Finished deploying"

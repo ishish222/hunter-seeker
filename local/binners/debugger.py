@@ -1,7 +1,7 @@
 import sys
 
-sys.path.append("z:\\server\\paimei")
-sys.path.append("z:\\common")
+sys.path.append("d:\\server\\paimei")
+sys.path.append("d:\\common")
 
 import settings
 from threading import Thread, Lock, ThreadError
@@ -241,6 +241,8 @@ class debugger(pydbg):
         self.tracked_threads = []
         self.last_state = ""
         self.schedule_termination = False
+        self.debug = False
+        self.last_log_file = None
 
         if(defined("settings.log_level") == True):
             self.log_level = settings.log_level
@@ -250,7 +252,7 @@ class debugger(pydbg):
         if(defined("settings.debug") == True):
             if(settings.debug == True):
                 self.debug = True
-                self.last_log_file = open("z:\\logs\\init_log.txt", "a", 0)
+                self.last_log_file = open("e:\\logs\\init_log.txt", "a", 0)
         else:
             self.debug = False
             self.last_log_file = None
@@ -566,7 +568,7 @@ class debugger(pydbg):
             self.dlog("samples dir found", 2)
             self.samples_dir = settings.samples_dir
         else:
-            self.samples_dir = samples_dir = "z:\\samples"
+            self.samples_dir = samples_dir = "d:\\samples"
         self.crashed_dir = samples_dir + "\\crashed"
         self.hanged_dir = samples_dir + "\\hanged"
         self.clean_dir = samples_dir + "\\clean"
@@ -955,8 +957,6 @@ class debugger(pydbg):
         self.debug = False
     
     def get_synopsis(self):
-#        self.binner.send(self.crash_bin.export_string())
-#        print(self.crash_bin.crash_synopsis())
         self.binner.send(self.crash_bin.crash_synopsis())
 #        self.ok() 
 

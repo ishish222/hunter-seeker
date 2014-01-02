@@ -1,0 +1,34 @@
+Kod testu:
+
+<kod generatora>.<kod aplikacji>
+
+Generatory:
+
+1. literka: algorytm
+w tej chwili:
+A - adder
+R - remover
+C - changer
+
+2. literka(opcja): podalgorytm
+w tej chwili:
+s - short
+l - long
+
+3. srednik
+
+4. liczba: liczba mutacji
+
+Aplikacje:
+Adobe Reader: ar
+Foobar: fo
+Firefox: ff
+
+Oryginaly:
+cztery pierwsze znaki sumy md5
+
+Przykladowe kody:
+
+C-3.ar.06d1
+AS-2.ar.1086
+RL-4.fo.d03b

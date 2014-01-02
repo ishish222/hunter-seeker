@@ -18,3 +18,6 @@ mkdir -p $DEPLOY_PATH$TARGET/$DATE
 cp -r $TARGET_DIR/* $DEPLOY_PATH$TARGET/$DATE/
 rm -f /home/ish/kor-pro/hs2-current-deploy/$TARGET
 ln -s $DEPLOY_PATH$TARGET/$DATE /home/ish/kor-pro/hs2-current-deploy/$TARGET
+
+echo "Copying secondary disk template"
+cp ../../../blob/raw-imgs/1/secondary.raw /home/ish/kor-pro/hs2-current-deploy/$TARGET

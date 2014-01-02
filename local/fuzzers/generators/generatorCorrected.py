@@ -22,6 +22,7 @@ class Generator(object):
             correctorlib = None
 
     def generate(self, amt=100):
+        samples_list = []
         global correctorlib
         os.spawnv(os.P_WAIT, "/bin/mkdir", ["mkdir", "-p", self.dest_path])
         for i in range(0, amt):
@@ -38,6 +39,8 @@ class Generator(object):
                 correctorlib.correct_all(fmap)
                 fmap.close()
             mutatorInstance.close()
+            samples_list.append(tname)
+        return samples_list
 
     def generate_one(self):
         global correctorlib

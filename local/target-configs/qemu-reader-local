@@ -4,9 +4,9 @@ c:observer/observer-marker-tests.py
 c:observer/observer-react-tests.py
 c:paimei/utils/linux_crash_binning.py
 c:scripters
-c:blob/res/pdf/analyzed/06d1e4d05f1bbf243e9f99b38e429d46.pdf
-c:blob/res/pdf/analyzed/1086625a01d849baafe36df18897b299.pdf
-c:blob/res/pdf/analyzed/d03b8a87f20c35047a1b42e7b35006dd.pdf
+c:../../blob/res/pdf/analyzed/06d1e4d05f1bbf243e9f99b38e429d46.pdf
+c:../../blob/res/pdf/analyzed/1086625a01d849baafe36df18897b299.pdf
+c:../../blob/res/pdf/analyzed/d03b8a87f20c35047a1b42e7b35006dd.pdf
 t:fuzzers/generators
 t:fuzzers/correctors
 t:fuzzers/common.py

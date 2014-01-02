@@ -1,7 +1,7 @@
 import sys
 
-sys.path.append("z:\\server\\paimei")
-sys.path.append("z:\\common")
+sys.path.append("d:\\server\\paimei")
+sys.path.append("d:\\common")
 
 from Queue import PriorityQueue
 import settings
@@ -51,6 +51,8 @@ class binner(object):
         self.active = False
         self.sockets_crashed = []
         self.race_lock = Lock()
+        self.debug = False
+        self.last_log_file = None
 
         self.dbg_event = Event()
         self.dbg_output = None
@@ -72,7 +74,7 @@ class binner(object):
         if(defined("settings.debug") == True):
             if(settings.debug == True):
                 self.debug = True
-                self.last_log_file = open("z:\\logs\\init_log.txt", "a", 0)
+                self.last_log_file = open("e:\\logs\\init_log.txt", "a", 0)
         else:
             self.debug = False
             self.last_log_file = None
@@ -318,7 +320,7 @@ class binner(object):
         else:
             print("Spawning dbg")
             pid = str(pid)
-            self.debuggers[pid] = Popen([sys.executable, "-u", "z:\\server\\debugger.py"], shell=True)
+            self.debuggers[pid] = Popen([sys.executable, "-u", "d:\\server\\debugger.py"], shell=True)
             self.sockets[pid], addr = self.main_socket.accept()
             self.dlog("Got connection")
             my_dbg = (pid, self.debuggers[pid])

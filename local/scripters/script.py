@@ -35,6 +35,7 @@ def read_monitor(pipe):
         if(data[-6:] == "(qemu)"): 
             pipe.stdout.flush()
             break
+    return data[:-6]
 
 def write_monitor_only(pipe, data):
     if(pipe == None):
@@ -43,14 +44,26 @@ def write_monitor_only(pipe, data):
 #    print("m> " + str(data[:-1]))
     pipe.stdin.write(data + "\n")
 
+def write_monitor_2(pipe, data):
+    if(pipe == None):
+        print("Monitor not ready")
+        return
+    pipe.stdin.write(data + "\n")
+    ret = read_monitor(pipe)
+#    print(ret)
+    return ret
+
 def write_monitor(pipe, data):
     if(pipe == None):
         print("Monitor not ready")
         return
 #    print("m> " + str(data[:-1]))
     pipe.stdin.write(data + "\n")
-    read_monitor(pipe)
-    read_monitor(pipe)
+    ret = read_monitor(pipe)
+#    print(ret)
+    ret = read_monitor(pipe)
+#    print(ret)
+    return ret
 
 class Script:
     def __init__(self):
@@ -137,6 +150,10 @@ class Script:
                         write_monitor_only(pipe, "quit\n")
                         continue
 
+                    if(k[1:].find("readline") == 0):
+                        read_monitor(pipe)
+                        continue
+
                 if(k == "*"):
                     k = "asterisk"
                 if(k == "_"):
@@ -151,6 +168,8 @@ class Script:
                     k = "slash"
                 if(k == "."):
                     k = "dot"
+                if(k == ":"):
+                    k = "shift-semicolon"
 #                print("sendkey " + k)
                 write_monitor(pipe, "sendkey " + k + "\n")
                 time.sleep(interval)

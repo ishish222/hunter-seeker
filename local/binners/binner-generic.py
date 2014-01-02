@@ -1,7 +1,7 @@
 import sys
 
-sys.path.append("z:\\server\\paimei")
-sys.path.append("z:\\common")
+sys.path.append("d:\\server\\paimei")
+sys.path.append("d:\\common")
 
 import win32pipe, win32file, win32gui
 import time
@@ -18,7 +18,7 @@ PIPE_BUFF_SIZE = 4096
 if(defined("settings.log_file")):
     log_file = settings.log_file
 else:
-    log_file = "z:\\logs\\log-"
+    log_file = "e:\\logs\\log-"
 
 def getPipe(name):
     dlog("In getPipe", 2)
@@ -195,7 +195,7 @@ def execute(cmds):
 
 #            process_status_queue()
             #process_reactions()
-            main_binner.loop_debuggers(invocation = "powershell -command \"& { invoke-expression z:\\samples\\shared\\%s }\"" % args)
+            main_binner.loop_debuggers(invocation = "powershell -command \"& { invoke-expression e:\\samples\\shared\\%s }\"" % args)
             while(process_status_queue(["ST", "CR", "TO"]) != True):
                 main_binner.loop_debuggers()
             if(status == "TO"):
@@ -250,7 +250,7 @@ def execute(cmds):
             main_binner.stop_debuggers()
             main_binner.attach_st_markers()
             main_binner.attach_end_markers()
-            main_binner.loop_debuggers(invocation = "powershell -command \"& { invoke-expression z:\\samples\\shared\\%s }\"" % args)
+            main_binner.loop_debuggers(invocation = "powershell -command \"& { invoke-expression d:\\samples\\shared\\%s }\"" % args)
             # waiting for ST
             main_binner.attach_bp_handler()
             main_binner.attach_ss_handler()
@@ -265,7 +265,7 @@ def execute(cmds):
         elif(cmd == "testReactMarkers"):
             dlog("In testReactMarkers", 2)
             main_binner.attach_st_markers()
-            main_binner.loop_debuggers(invocation = "powershell -command \"& { invoke-expression z:\\samples\\shared\\%s }\"" % args)
+            main_binner.loop_debuggers(invocation = "powershell -command \"& { invoke-expression d:\\samples\\shared\\%s }\"" % args)
             main_binner.detach_st_markers()
             main_binner.attach_end_markers()
             main_binner.attach_react_markers()
@@ -287,7 +287,7 @@ def execute(cmds):
 
             # ST markers
             main_binner.attach_st_markers()
-            main_binner.loop_debuggers(invocation = "powershell -command \"& { invoke-expression z:\\samples\\shared\\%s }\"" % args)
+            main_binner.loop_debuggers(invocation = "powershell -command \"& { invoke-expression d:\\samples\\shared\\%s }\"" % args)
             while(process_status_queue(["ST"]) != True):
                 main_binner.loop_debuggers()
 #            main_binner.writePipe("Verified ST marker\n")
