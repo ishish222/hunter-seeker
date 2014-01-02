@@ -107,7 +107,6 @@ def get_options():
     options.handler = logging.handlers.SysLogHandler(address = '/dev/log')
     options.logger.setLevel(logging.DEBUG)
     options.logger.addHandler(options.handler)
-    options.timeout = 20.0
 
     #thats right bitches
     options.settings = settings
@@ -245,15 +244,26 @@ def restart(options):
 
 def prepare_con():
     ss = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    ss.settimeout(20.0)
     ss.bind(("127.0.0.1", options.fuzzbox_port))
     ss.listen(3)
     return ss
 
 def accept_con(ss):
+    dt = socket.getdefaulttimeout()
+    socket.setdefaulttimeout(5)
+    
     options.s, addr = ss.accept()
-    init(options.s)
+
+    while True:
+        try:
+            init(options.s)
+            break
+        except socket.timeout:
+            print("Accpet timed out, repeating proceed1")
+            proceed1(options)
+            continue
     print("Connected")
+    socket.setdefaulttimeout(dt)
     return options.s
 
 def init(s):

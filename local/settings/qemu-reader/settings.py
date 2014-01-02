@@ -51,7 +51,7 @@ buffer_size = 4096
 log_name = "HS:Reader"
 wait_sleep = 15
 fuzzbox_timeout = wait_sleep*4
-start_sleep = 10
+start_sleep = 5
 revert_sleep = 40
 settle_sleep = 3
 restart_count = 100000
@@ -69,11 +69,9 @@ qemu_additional =  ['-enable-kvm']
 qemu_additional += ['-monitor', 'stdio']
 
 def specific_preperations_1(options):
-#    from shutil import copyfile
-#    copyfile(options.shared_folder + "/server/index2.html", options.samples_shared + "/index.html")
     pass
 
-scripts_1 = ["python_server_spawn_cdrom"]
+scripts_1 = ["python_server_spawn_e"]
 log_level = 1
 
 def check_counters(ea):

@@ -94,7 +94,7 @@ def killHost(options):
 
 def fuzzing_routine():
     options = get_options()
-    log = open("./log-%s-%s" % (timestamp2(), options.origin), "a")
+    log = open("./log-%s-%s-%s" % (options.fuzzbox_name, timestamp2(), options.origin), "a")
     create_sample_dirs(options)
     report("Starting fuzzer")
     print("[%s] Generic fuzzer" % timestamp())
@@ -117,10 +117,11 @@ def fuzzing_routine():
         print("[%s] Started" % timestamp())
         mount_cdrom(options, options.cdrom)
         slot = pci_mount(options, options.tmp_disk_img)
-        time.sleep(5)
+        time.sleep(10)
         proceed1(options)
         accept_con(options.ss)
         s = options.s
+        s.settimeout(options.settings.fuzzbox_timeout)
 
         sample_count = 0
         to_count = 0
@@ -213,20 +214,22 @@ def fuzzing_routine():
                 time.sleep(10)
 
             except IndexError:
-                print("Samples exhausted")
+                print("Samples exhausted, restarting")
+                report("Samples exhausted, restarting")
                 write_socket(s, "logStop")
                 del_mountpoint(options)
                 print("Restarting")
                 powerofff(options)
                 continue
 
-#        except socket.timeout:
-#            print "socket timeout, restarting"
-#            report("Socket timeout after " + str(sample_count) + " samples")
-#            restart(options)
-#            proceed1(options)
-#            accept_con(ss)
-#            s = options.s
+            except socket.timeout:
+                print("Socket timeout, restarting")
+                report("Socket timeout, restarting")
+                write_socket(s, "logStop")
+                del_mountpoint(options)
+                powerofff(options)
+                continue
+
 #        except Exception, e:
 #            print "Unknown error, restarting"
 #            print e
