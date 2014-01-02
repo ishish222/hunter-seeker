@@ -1,7 +1,7 @@
 import sys
 
-sys.path.append("d:\\server\\paimei")
-sys.path.append("d:\\common")
+sys.path.append("e:\\server\\paimei")
+sys.path.append("e:\\common")
 
 import win32pipe, win32file, win32gui
 import time

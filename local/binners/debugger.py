@@ -1,7 +1,7 @@
 import sys
 
-sys.path.append("d:\\server\\paimei")
-sys.path.append("d:\\common")
+sys.path.append("e:\\server\\paimei")
+sys.path.append("e:\\common")
 
 import settings
 from threading import Thread, Lock, ThreadError
@@ -568,7 +568,7 @@ class debugger(pydbg):
             self.dlog("samples dir found", 2)
             self.samples_dir = settings.samples_dir
         else:
-            self.samples_dir = samples_dir = "d:\\samples"
+            self.samples_dir = samples_dir = "e:\\samples"
         self.crashed_dir = samples_dir + "\\crashed"
         self.hanged_dir = samples_dir + "\\hanged"
         self.clean_dir = samples_dir + "\\clean"

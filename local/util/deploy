@@ -54,8 +54,4 @@ do
     cp -r $LOCAL_ROOT$line $TARGET_DIR/samples/original/$target_line
 done
 
-echo "Generating server iso"
-
-mkisofs -J -exclude-list exclusion-list -V server -r $TARGET_DIR > $TARGET_DIR/server.iso
-
 echo "Finished deploying"

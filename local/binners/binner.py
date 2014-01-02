@@ -1,7 +1,7 @@
 import sys
 
-sys.path.append("d:\\server\\paimei")
-sys.path.append("d:\\common")
+sys.path.append("e:\\server\\paimei")
+sys.path.append("e:\\common")
 
 from Queue import PriorityQueue
 import settings
@@ -320,7 +320,7 @@ class binner(object):
         else:
             print("Spawning dbg")
             pid = str(pid)
-            self.debuggers[pid] = Popen([sys.executable, "-u", "d:\\server\\debugger.py"], shell=True)
+            self.debuggers[pid] = Popen([sys.executable, "-u", "e:\\server\\debugger.py"], shell=True)
             self.sockets[pid], addr = self.main_socket.accept()
             self.dlog("Got connection")
             my_dbg = (pid, self.debuggers[pid])

@@ -67,11 +67,10 @@ qemu_additional =  ['-enable-kvm']
 qemu_additional += ['-monitor', 'stdio']
 
 def specific_preperations_1(options):
-#    from shutil import copyfile
-#    copyfile(options.shared_folder + "/server/index2.html", options.samples_shared + "/index.html")
+#    options.m.stdin.write("change ide1-cd0 ../server.iso\n")
     pass
 
-scripts_1 = ["beep2", "python_server_spawn_cdrom"]
+scripts_1 = ["beep2", "python_server_spawn_e"]
 log_level = 4
 
 def check_counters(ea):
@@ -99,6 +98,7 @@ def end_marker_test(dbg):
 #end_marker_handler = end_marker_test
 
 def specific_preperations_2(options):
+#    options.m.stdin.write("eject ide1-cd0\n")
     pass
 
 scripts_2 = []
@@ -117,6 +117,8 @@ from time import sleep
 
 def specific_preperations_5(options):
     pass
+
+#wtf
 
 scripts_5 = ["enter3", "close_sample_reader"]
 

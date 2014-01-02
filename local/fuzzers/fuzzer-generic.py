@@ -63,6 +63,11 @@ def generate(options):
         samples_list = my_generator.generate(options.samples_count)
     except Exception, e:
         print(e)
+
+    # copy server files
+    os.spawnv(os.P_WAIT, "/bin/cp", ["cp", "-r", "../server", options.tmp_mountpoint])
+    os.spawnv(os.P_WAIT, "/bin/cp", ["cp", "-r", "../common", options.tmp_mountpoint])
+
     umount_drive(options)
     print("Generated samples")
     return samples_list
@@ -105,13 +110,14 @@ def fuzzing_routine():
     while True:
         create_drive(options)
         samples_list = generate(options)
-        log.write("[%s]" % options.tmp_disk_img)
+        log.write("[%s]\n" % options.tmp_disk_img)
         log.flush()
         print("Spawning fuzz for batch: %s" % options.tmp_disk_img)
         start(options)
         print("[%s] Started" % timestamp())
         mount_cdrom(options, options.cdrom)
         slot = pci_mount(options, options.tmp_disk_img)
+        time.sleep(5)
         proceed1(options)
         accept_con(options.ss)
         s = options.s
