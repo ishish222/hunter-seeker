@@ -10,7 +10,7 @@ breaking = False
 debug = False
 
 machines = {
-    'hs2-1': {'disk' : 'hs2-1.qcow2', 'ip' : '127.0.0.1', 'port' : 12345, 'vnc' : '192.168.66.10:0,secur3e'},
+    'hs2-1': {'disk' : 'hs2-1.qcow2', 'tap' : 'tap0', 'ip' : '192.168.1.101', 'server_ip' : '192.168.1.1', 'server_port' : 12345, 'vnc' : '192.168.66.10:0,secur3e'},
     'hs2-2': {'disk' : 'hs2-2.qcow2', 'ip' : '127.0.0.1', 'port' : 12346, 'vnc' : '1'}
 }
 
@@ -61,16 +61,15 @@ mutations = 3
 mutator = changer.Changer
 
 qemu_machines = "/home/ish/machines/qemu"
-qemu_m = "4G"
+qemu_m = "1G"
 qemu_shared_folder = "/home/ish/projects/2012-08-02-korrino/hs2-current-deploy/qemu-reader-local"
 qemu_additional =  ['-enable-kvm']
 qemu_additional += ['-monitor', 'stdio']
 
 def specific_preperations_1(options):
-#    options.m.stdin.write("change ide1-cd0 ../server.iso\n")
     pass
 
-scripts_1 = ["beep2", "python_server_spawn_e"]
+scripts_1 = ["beep2"]
 log_level = 4
 
 def check_counters(ea):

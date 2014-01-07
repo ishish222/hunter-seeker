@@ -10,18 +10,20 @@ breaking = False
 debug = True
 
 machines = {
-    'hs2-01': {'disk' : 'hs2-01.qcow2', 'ip' : '127.0.0.1', 'port' : 12301, 'vnc' : ':1'},
-    'hs2-02': {'disk' : 'hs2-02.qcow2', 'ip' : '127.0.0.1', 'port' : 12302, 'vnc' : ':2'},
-    'hs2-03': {'disk' : 'hs2-03.qcow2', 'ip' : '127.0.0.1', 'port' : 12303, 'vnc' : ':3'},
-    'hs2-04': {'disk' : 'hs2-04.qcow2', 'ip' : '127.0.0.1', 'port' : 12304, 'vnc' : ':4'},
-    'hs2-05': {'disk' : 'hs2-05.qcow2', 'ip' : '127.0.0.1', 'port' : 12305, 'vnc' : ':5'},
-    'hs2-06': {'disk' : 'hs2-06.qcow2', 'ip' : '127.0.0.1', 'port' : 12306, 'vnc' : ':6'},
-    'hs2-07': {'disk' : 'hs2-07.qcow2', 'ip' : '127.0.0.1', 'port' : 12307, 'vnc' : ':7'},
-    'hs2-08': {'disk' : 'hs2-08.qcow2', 'ip' : '127.0.0.1', 'port' : 12308, 'vnc' : ':8'},
-    'hs2-09': {'disk' : 'hs2-09.qcow2', 'ip' : '127.0.0.1', 'port' : 12309, 'vnc' : ':9'},
-    'hs2-10': {'disk' : 'hs2-10.qcow2', 'ip' : '127.0.0.1', 'port' : 12310, 'vnc' : ':10'},
-    'hs2-11': {'disk' : 'hs2-11.qcow2', 'ip' : '127.0.0.1', 'port' : 12311, 'vnc' : ':11'},
-    'hs2-12': {'disk' : 'hs2-12.qcow2', 'ip' : '127.0.0.1', 'port' : 12312, 'vnc' : ':12'}
+    'hs2-01': {'disk' : 'hs2-01.qcow2', 'tap' : 'tap1', 'ip' : '192.168.1.101', 'mac' : '00:00:00:00:00:01', 'server_ip' : '192.168.1.1', 'server_port' : 12301, 'vnc' : ':1'},
+    'hs2-02': {'disk' : 'hs2-02.qcow2', 'tap' : 'tap2', 'ip' : '192.168.1.102', 'mac' : '00:00:00:00:00:02', 'server_ip' : '192.168.1.1', 'server_port' : 12302, 'vnc' : ':2'},
+    'hs2-03': {'disk' : 'hs2-03.qcow2', 'tap' : 'tap3', 'ip' : '192.168.1.103', 'mac' : '00:00:00:00:00:03', 'server_ip' : '192.168.1.1', 'server_port' : 12303, 'vnc' : ':3'},
+    'hs2-04': {'disk' : 'hs2-04.qcow2', 'tap' : 'tap4', 'ip' : '192.168.1.104', 'mac' : '00:00:00:00:00:04', 'server_ip' : '192.168.1.1', 'server_port' : 12304, 'vnc' : ':4'},
+    'hs2-05': {'disk' : 'hs2-05.qcow2', 'tap' : 'tap5', 'ip' : '192.168.1.105', 'mac' : '00:00:00:00:00:05', 'server_ip' : '192.168.1.1', 'server_port' : 12305, 'vnc' : ':5'},
+    'hs2-06': {'disk' : 'hs2-06.qcow2', 'tap' : 'tap6', 'ip' : '192.168.1.106', 'mac' : '00:00:00:00:00:06', 'server_ip' : '192.168.1.1', 'server_port' : 12306, 'vnc' : ':6'},
+    'hs2-07': {'disk' : 'hs2-07.qcow2', 'tap' : 'tap7', 'ip' : '192.168.1.107', 'mac' : '00:00:00:00:00:07', 'server_ip' : '192.168.1.1', 'server_port' : 12307, 'vnc' : ':7'},
+    'hs2-08': {'disk' : 'hs2-08.qcow2', 'tap' : 'tap8', 'ip' : '192.168.1.108', 'mac' : '00:00:00:00:00:08', 'server_ip' : '192.168.1.1', 'server_port' : 12308, 'vnc' : ':8'},
+    'hs2-09': {'disk' : 'hs2-09.qcow2', 'tap' : 'tap9', 'ip' : '192.168.1.109', 'mac' : '00:00:00:00:00:09', 'server_ip' : '192.168.1.1', 'server_port' : 12309, 'vnc' : ':9'},
+    'hs2-10': {'disk' : 'hs2-10.qcow2', 'tap' : 'tap10', 'ip' : '192.168.1.110', 'mac' : '00:00:00:00:00:0a', 'server_ip' : '192.168.1.1', 'server_port' : 12310, 'vnc' : ':10'},
+    'hs2-11': {'disk' : 'hs2-11.qcow2', 'tap' : 'tap11', 'ip' : '192.168.1.111', 'mac' : '00:00:00:00:00:0b', 'server_ip' : '192.168.1.1', 'server_port' : 12311, 'vnc' : ':11'},
+    'hs2-12': {'disk' : 'hs2-12.qcow2', 'tap' : 'tap12', 'ip' : '192.168.1.112', 'mac' : '00:00:00:00:00:0c', 'server_ip' : '192.168.1.1', 'server_port' : 12312, 'vnc' : ':12'},
+    'hs2-13': {'disk' : 'hs2-13.qcow2', 'tap' : 'tap13', 'ip' : '192.168.1.113', 'mac' : '00:00:00:00:00:0d', 'server_ip' : '192.168.1.1', 'server_port' : 12313, 'vnc' : ':13'},
+    'hs2-14': {'disk' : 'hs2-14.qcow2', 'tap' : 'tap14', 'ip' : '192.168.1.114', 'mac' : '00:00:00:00:00:0e', 'server_ip' : '192.168.1.1', 'server_port' : 12314, 'vnc' : ':14'},
 }
 
 def react1(dbg):
@@ -63,15 +65,18 @@ mutations = 3
 mutator = changer.Changer
 
 qemu_machines = "/home/hs1/machines/qemu"
-qemu_m = "4G"
+qemu_m = "1G"
 qemu_shared_folder = "/home/hs1/hs2-current-deploy/qemu-reader"
-qemu_additional =  ['-enable-kvm']
+qemu_additional =  ['-enable-kvm', '-cpu', 'host']
 qemu_additional += ['-monitor', 'stdio']
 
-def specific_preperations_1(options):
-    pass
+def specific_preperations_1(options, args=None):
+    from sys import path
+    path.append("../client")
+    from script import rs
+    rs("python_server_spawn_args", options.m, args=args)
 
-scripts_1 = ["python_server_spawn_e"]
+scripts_1 = []
 log_level = 1
 
 def check_counters(ea):
@@ -98,17 +103,17 @@ def end_marker_test(dbg):
 #st_marker_handler = st_marker_test
 #end_marker_handler = end_marker_test
 
-def specific_preperations_2(options):
+def specific_preperations_2(options, args=None):
     pass
 
 scripts_2 = []
 
-def specific_preperations_3(options):
+def specific_preperations_3(options, args=None):
     pass
 
 scripts_3 = []
 
-def specific_preperations_4(options):
+def specific_preperations_4(options, args=None):
     pass
 
 scripts_4 = []

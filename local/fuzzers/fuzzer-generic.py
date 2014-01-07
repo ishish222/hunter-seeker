@@ -92,7 +92,16 @@ def killHost(options):
     write_socket(s, "ps")
     read_socket(s)
 
+signaled = False
+
+def sig1_handler(signum, frame):
+    global signaled
+    report("Signaled")
+    signaled = True
+
 def fuzzing_routine():
+    global signaled
+    signaled = False
     options = get_options()
     log = open("./log-%s-%s-%s" % (options.fuzzbox_name, timestamp2(), options.origin), "a")
     create_sample_dirs(options)
@@ -103,8 +112,11 @@ def fuzzing_routine():
     status = "RD"
 
     signal.signal(signal.SIGINT, sigkill_handler)
+#    signal.signal(signal.SIGUSR1, sig1_handler)
 
     options.ss = prepare_con()
+
+    metric_res = 10
 
     # restart fuzzer on samples exhaustion, socket timout, etc. 
     while True:
@@ -115,13 +127,16 @@ def fuzzing_routine():
         print("Spawning fuzz for batch: %s" % options.tmp_disk_img)
         start(options)
         print("[%s] Started" % timestamp())
-        mount_cdrom(options, options.cdrom)
+        #mount_cdrom(options, options.cdrom)
         slot = pci_mount(options, options.tmp_disk_img)
-        time.sleep(10)
+#        rs("ipconfig_set_ip_2", options.m, args=[options.fuzzbox_ip, options.server_ip])
+        # it takes so fucking long
+#        time.sleep(10)
+#        os.spawnv(os.P_WAIT, "/bin/ping", ["ping", options.fuzzbox_ip, "-c1"])
         proceed1(options)
         accept_con(options.ss)
         s = options.s
-        s.settimeout(options.settings.fuzzbox_timeout)
+#        s.settimeout(options.settings.wait_sleep * 8)
 
         sample_count = 0
         to_count = 0
@@ -134,14 +149,14 @@ def fuzzing_routine():
         if(True):
 
             proceed3(options)
-            write_socket(s, "ps")
-            read_socket(s)
-            time.sleep(10)
 
             write_socket(s, "logStart e:\\logs\\log-%s-%s.txt" % (options.fuzzbox_name, timestamp2()))
             read_socket(s)
 
             write_socket(s, "checkReady")
+
+#            while(not signaled):
+#                pass
 
             status = ""
             try:
@@ -184,12 +199,12 @@ def fuzzing_routine():
     
                         # MA or TO, keep track on sample count
                         sample_count += 1
-                        if(sample_count % 100 == 0):
+                        if(sample_count % metric_res == 0):
                             current_time = time.localtime()
                             elapsed = time.mktime(current_time) - time.mktime(last_time_check)
                             report("Tested: " + str(sample_count))
-                            report("100 tested in " + str(elapsed) + " seconds")
-                            report("Last speed: " + str(100/elapsed) + " tps")
+                            report(str(metric_res) + " tested in " + str(elapsed) + " seconds")
+                            report("Last speed: " + str(metric_res/elapsed) + " tps")
                             report("MA count: " + str(ma_count))
                             to_count = 0
                             ma_count = 0
@@ -246,4 +261,6 @@ def fuzzing_routine():
     exit()
 
 #main
+#import profile
+#profile.run('fuzzing_routine()')
 fuzzing_routine()

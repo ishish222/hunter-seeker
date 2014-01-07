@@ -466,7 +466,7 @@ def execute(cmds):
 
 ### main loop
 
-def binner_routine():
+def binner_routine(ip, port):
     global ph
     global main_binner
 
@@ -489,7 +489,7 @@ Hunter-Seeker
 #    s.bind(("0.0.0.0", 12345))
 #    s.listen(3)
     dlog("Trying to connect...", 2)
-    ph.connect(("10.0.2.100", 12345))
+    ph.connect((ip, port))
 #    ph, addr = s.accept()
     dlog("Got connection", 2)
     ph.send("python binner")
@@ -503,4 +503,5 @@ Hunter-Seeker
         execute(cmds)
 
 if __name__ == '__main__':
-    binner_routine()
+    binner_routine(sys.argv[1], int(sys.argv[2]))
+

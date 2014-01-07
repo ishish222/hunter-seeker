@@ -53,8 +53,9 @@ def get_options():
     parser.add_option("-d", "--samples-shared", dest="samples_shared", help="Folder for shared samples", default=settings.samples_shared_path)
     parser.add_option("-v", "--samples-saved",  dest="samples_saved", help="Folder for saved samples", default=settings.samples_saved)
     parser.add_option("-B", "--samples-binned", dest="samples_binned", help="Folder for binned samples", default=settings.samples_binned)
-    parser.add_option("-i", "--fuzzbox_ip",     dest="fuzzbox_ip", help="Force fuzzbox ip (normally based on hda)")
-    parser.add_option("-p", "--fuzzbox_port",   dest="fuzzbox_port", help="Force fuzzbox port (normally based on hda)")
+    parser.add_option("-i", "--ip",             dest="fuzzbox_ip", help="Force fuzzbox ip (normally based on hda)")
+    parser.add_option("-E", "--server_ip",      dest="server_ip", help="Force server ip (normally based on hda)")
+    parser.add_option("-p", "--server_port",    dest="server_port", help="Force server port (normally based on hda)")
     parser.add_option("-V", "--visible",        dest="visible", help="Should box be visible?", action="store_true", default=settings.visible)
     parser.add_option("-l", "--slowdown",       dest="slowdown", help="Slowdown (default is 1)", default=settings.slowdown)
     parser.add_option("-e", "--extension",      dest="extension", help="Extension of generated sample", default=settings.extension)
@@ -64,6 +65,7 @@ def get_options():
     parser.add_option("-C", "--command",        dest="obs_command", help="Observer command", default="testStEndMarkers")
     parser.add_option("-L", "--timeout",        dest="wait_sleep", help="Timeout for state transitions", default=settings.wait_sleep)
     parser.add_option("-O", "--count",          dest="samples_count", help="Amount of samples in single run", default=10)
+    parser.add_option("-T", "--tap",            dest="tap", help="Tap interface", default="tap0")
 
 
     (options, args) = parser.parse_args()
@@ -71,29 +73,30 @@ def get_options():
     options.fuzzbox_name = sys.argv[1]
     if(options.hda is None):
         options.hda = settings.machines[options.fuzzbox_name]['disk']
-    if(options.fuzzbox_ip is None):
-        options.fuzzbox_ip = settings.machines[options.fuzzbox_name]['ip'] 
-    if(options.fuzzbox_port is None):
-        options.fuzzbox_port = settings.machines[options.fuzzbox_name]['port'] 
+    options.fuzzbox_ip = settings.machines[options.fuzzbox_name]['ip'] 
+    options.server_ip = settings.machines[options.fuzzbox_name]['server_ip'] 
+    options.server_port = settings.machines[options.fuzzbox_name]['server_port'] 
+    options.tap = settings.machines[options.fuzzbox_name]['tap']
+    options.mac = settings.machines[options.fuzzbox_name]['mac']
 
     #qemu settings
     qemu_args =  ['qemu-system-i386']
     qemu_args += ['-m', options.qemu_m]
-    qemu_args += ['-drive', 'file=' + options.machines + '/' + options.hda + ',if=virtio']
+    qemu_args += ['-drive', 'file=' + options.machines + '/' + options.hda + ',cache=none,if=virtio']
     if(options.hdb is not None):
-        qemu_args += ['-drive', 'file=', './' + options.hdb, ',if=vitrio']
+        qemu_args += ['-drive', 'file=', './' + options.hdb, ',cache=none,if=vitrio']
 
     if(options.cdrom is not None):
         qemu_args += ['-cdrom', options.cdrom]
 
     #qemu_args += ['-net', 'nic,model=rtl8139', '-net', 'user,restrict=n,smb=' + settings.qemu_shared_folder + ',hostfwd=tcp:127.0.0.1:' + str(options.fuzzbox_port) + '-:12345']
-    qemu_args += ['-net', 'nic,model=virtio', '-net', 'user,restrict=n,guestfwd=tcp:10.0.2.100:12345-tcp:127.0.0.1:' + str(options.fuzzbox_port)]
+    qemu_args += ['-net', 'nic,model=virtio', '-net', 'tap,ifname='+options.tap+',script=no,downscript=no']
     #qemu_args += ['-net', 'nic,model=virtio', '-net', 'user,restrict=n,smb=' + settings.qemu_shared_folder + ',guestfwd=tcp:10.0.2.100:12345-tcp:127.0.0.1:' + str(options.fuzzbox_port)]
     #qemu_args += ['-net', 'nic,model=rtl8139', '-net', 'user,restrict=n,smb=' + settings.qemu_shared_folder + ',guestfwd=tcp:10.0.2.100:12345-tcp:127.0.0.1:' + str(options.fuzzbox_port)]
     #qemu_args += ['-net', 'nic,model=rtl8139', '-net', 'user,restrict=n,smb=' + settings.qemu_shared_folder + ',guestfwd=tcp:127.0.0.1:' + str(options.fuzzbox_port) + '-tcp:10.0.0.1:12345']
 
     #qemu_args += ['-net', 'nic,model=rtl8139']
-    qemu_args += ['-net', 'nic,model=virtio']
+#    qemu_args += ['-net', 'nic,model=virtio']
     if(options.visible == False):
         qemu_args += ['-vnc', settings.machines[options.fuzzbox_name]['vnc']]
     qemu_args += settings.qemu_additional
@@ -107,6 +110,8 @@ def get_options():
     options.handler = logging.handlers.SysLogHandler(address = '/dev/log')
     options.logger.setLevel(logging.DEBUG)
     options.logger.addHandler(options.handler)
+    options.wait_sleep = float(options.wait_sleep)
+    options.fuzzbox_timeout = float(options.wait_sleep*20)
 
     #thats right bitches
     options.settings = settings
@@ -235,6 +240,8 @@ def start(options):
     time.sleep(3)
     options.m = m
     revert(options)
+#    time.sleep(60)
+#    rs("open_cmd", options.m)
     return m
 
 def restart(options):
@@ -244,26 +251,34 @@ def restart(options):
 
 def prepare_con():
     ss = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    ss.bind(("127.0.0.1", options.fuzzbox_port))
+    ss.bind((options.server_ip, options.server_port))
     ss.listen(3)
     return ss
 
 def accept_con(ss):
     dt = socket.getdefaulttimeout()
-    socket.setdefaulttimeout(5)
-    
-    options.s, addr = ss.accept()
+    socket.setdefaulttimeout(35)
+    dtss = ss.gettimeout()
+    ss.settimeout(35)
 
     while True:
         try:
+            print("Waiting for accept")
+            options.s, addr = ss.accept()
+            print("Waiting for init")
             init(options.s)
             break
         except socket.timeout:
-            print("Accpet timed out, repeating proceed1")
+            print("Accpet timed out, pinging repeating proceed1")
             proceed1(options)
+#            os.spawnv(os.P_WAIT, "/bin/ping", ["ping", options.fuzzbox_ip, "-c1"])
             continue
+
     print("Connected")
     socket.setdefaulttimeout(dt)
+    ss.settimeout(options.fuzzbox_timeout)
+    print("Socket timeout set to: %f" % options.fuzzbox_timeout)
+    options.s.settimeout(options.fuzzbox_timeout)
     return options.s
 
 def init(s):
@@ -279,7 +294,7 @@ def killLast(s):
 def proceed1(options):
     # executed during each fuzzbox start
     if(defined("settings.specific_preperations_1")):
-        options.settings.specific_preperations_1(options)
+        options.settings.specific_preperations_1(options, [options.server_ip, str(options.server_port)])
     if(defined("settings.scripts_1")):
         rss(options.settings.scripts_1, options.m, options.slowdown)
 
@@ -318,9 +333,6 @@ def proceed3(options):
     write_socket(s, "attachBinner " + options.settings.app_module)
     read_socket(s)
 
-    write_socket(s, "ps")
-    read_socket(s)
-
     write_socket(s, "setupMarkers")
     read_socket(s)
 
@@ -356,12 +368,18 @@ def sigkill_handler(signum, frame):
     powerofff(options)
 
     try:
-        print("Shutting down sockets")
-        options.s.shutdown(socket.SHUT_RDWR)
-        options.s.close()
+        print("Shutting down ss")
         options.ss.shutdown(socket.SHUT_RDWR)
         options.ss.close()
     except Exception:
+        print("Error shutting down ss")
+        pass
+    try:
+        print("Shutting down s")
+        options.s.shutdown(socket.SHUT_RDWR)
+        options.s.close()
+    except Exception:
+        print("Error shutting down s")
         pass
 
     report("Killing")

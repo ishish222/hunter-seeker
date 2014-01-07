@@ -2,28 +2,28 @@ import time
 import importlib
 from subprocess import call
 
-def runscriptq(sc, p, slowdown=1):
+def runscriptq(sc, p, slowdown=1, args=None):
     scriptmod = importlib.import_module("scripts."+sc)
     script = scriptmod.script
-    script.run(p, slowdown)
+    script.run(p, slowdown, args)
 
-def runscript(sc, p, slowdown=1):
+def runscript(sc, p, slowdown=1, args=None):
     print("[Executing: " + sc + "]")
     scriptmod = importlib.import_module("scripts."+sc)
     script = scriptmod.script
     print("[ETA: " + script.eta_str + "]")
-    script.run(p, slowdown)
+    script.run(p, slowdown, args)
     print("[Executing: " + sc + " finished]")
 
-def runscripts(sclist, p, slowdown=1):
+def runscripts(sclist, p, slowdown=1, args=None):
     for sc in sclist:
-        runscript(sc, p, slowdown)
+        runscript(sc, p, slowdown, args)
 
-def rs(a, p, sl=1):
-    runscript(a, p, sl)
+def rs(a, p, sl=1, args=None):
+    runscript(a, p, sl, args)
 
-def rss(a, p, sl=1):
-    runscripts(a, p, sl)
+def rss(a, p, sl=1, args=None):
+    runscripts(a, p, sl, args)
 
 class ScriptException(Exception):
     pass
@@ -65,6 +65,29 @@ def write_monitor(pipe, data):
 #    print(ret)
     return ret
 
+def translate(k):
+    if(k == "*"):
+        k = "asterisk"
+    if(k == "_"):
+        k = "shift-minus"
+    if(k == "-"):
+        k = "minus"
+    if(k == " "):
+        k = "spc"
+    if(k == "\""):
+        k = "shift-apostrophe"
+    if(k == "\\"):
+        k = "backslash"
+    if(k == "/"):
+        k = "slash"
+    if(k == "."):
+        k = "dot"
+    if(k == "="):
+        k = "equal"
+    if(k == ":"):
+        k = "shift-semicolon"
+    return k
+
 class Script:
     def __init__(self):
         self.prev_list = list()
@@ -81,13 +104,13 @@ class Script:
     def reg_script(self, script):
         self.prev_list += script
 
-    def run(self, pipe, slowdown=1):
+    def run(self, pipe, slowdown=1, args=None):
         self.slowdown = slowdown
         for script in self.prev_list:
-            script.run(pipe)
-        self.run_self(pipe)
+            script.run(pipe, args)
+        self.run_self(pipe, args)
 
-    def run_self(self, pipe):
+    def run_self(self, pipe, args=None):
         for (steps_idx, interval, timeout) in self.schedule:
             for k in self.steps[steps_idx]:
                 if(k[0] == "_"):
@@ -154,23 +177,21 @@ class Script:
                         read_monitor(pipe)
                         continue
 
-                if(k == "*"):
-                    k = "asterisk"
-                if(k == "_"):
-                    k = "shift-minus"
-                if(k == "-"):
-                    k = "minus"
-                if(k == " "):
-                    k = "spc"
-                if(k == "\\"):
-                    k = "backslash"
-                if(k == "/"):
-                    k = "slash"
-                if(k == "."):
-                    k = "dot"
-                if(k == ":"):
-                    k = "shift-semicolon"
-#                print("sendkey " + k)
+                    if(k[1:].find("arg0") == 0):
+                        if(args != None):
+                            for l in args[0]:
+                                l = translate(l)
+                                write_monitor(pipe, "sendkey " + l + "\n")
+                        continue
+
+                    if(k[1:].find("arg1") == 0):
+                        if(args != None):
+                            for l in args[1]:
+                                l = translate(l)
+                                write_monitor(pipe, "sendkey " + l + "\n")
+                        continue
+
+                k = translate(k)
                 write_monitor(pipe, "sendkey " + k + "\n")
                 time.sleep(interval)
             time.sleep(timeout)
