@@ -121,14 +121,8 @@ def fuzzing_routine():
 
     metric_res = options.metric_res
 
-    sample_count = 0
-    to_count = 0
-    ma_count = 0
-    last_time_check = time.localtime()
-
     # restart fuzzer on samples exhaustion, socket timout, etc. 
     while True:
-        print("Current stats (SA/MA/TO): %d/%d/%d" % (sample_count, ma_count, to_count))
         create_drive(options)
         samples_list = generate(options)
         log.write("[%s]\n" % options.tmp_disk_img)
@@ -147,6 +141,10 @@ def fuzzing_routine():
         s = options.s
 #        s.settimeout(options.settings.wait_sleep * 8)
 
+        sample_count = 0
+        to_count = 0
+        ma_count = 0
+        last_time_check = time.localtime()
 
         proceed2(options)
 
@@ -158,6 +156,7 @@ def fuzzing_routine():
             write_socket(s, "logStart e:\\logs\\log-%s-%s.txt" % (options.fuzzbox_name, timestamp2()))
             read_socket(s)
 
+            report("Ready")
             write_socket(s, "checkReady")
 
 #            while(not signaled):
@@ -177,13 +176,15 @@ def fuzzing_routine():
                         write_socket(s, "")
                         continue
                     if(status == "RD"):
-                        sample_path = samples_list.pop()
-                        sample_file = os.path.basename(sample_path)
-                        test_path = options.settings.prepare_sample(sample_path)
-                        test_file = os.path.basename(test_path)
-                        write_socket(s, "testFile " + test_file)
-                        log.write("%s: " % test_file)
-                        log.flush()
+#                        sample_path = samples_list.pop()
+#                        sample_file = os.path.basename(sample_path)
+#                        test_path = options.settings.prepare_sample(sample_path)
+#                        test_file = os.path.basename(test_path)
+#                        write_socket(s, "testFile " + test_file)
+                        s.settimeout(None)
+                        write_socket(s, "testAll")
+#                        log.write("%s: " % test_file)
+#                        log.flush()
                         continue
                     if(status == "MA" or status == "TO"):
                         # react to test end

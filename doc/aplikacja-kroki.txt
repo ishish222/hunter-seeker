@@ -1,7 +1,28 @@
-1. Przygotowac maszyne (stan ready)
-2. Znalezc oryginaly, przeprowadzic analize skazen
-3. Opracowac runner i znalezc markery
-4. Utworzyc plik konfiguracyjny
-5. Przetestowac proces fuzzowania
-6. Zoptymalizowac proces fuzzowania
-7. Wyznaczyc harmonogram
+Legenda:
+k - operacja krotka
+d - operacja dluga
+x - skonczone
+n - nieskonczone
+
+[kx] 1. Przygotowac maszyne (stan ready)
+    - adres IP i MAC
+    - zainstalowana aplikacja
+    - zainstalowane opr. wspomagajace (sterowniki virtio)
+[kx] 2. Znalezc oryginaly
+[kx] 3. Znalezc markery (poczatkowy, koncowy i gotowosci)
+[kx] 4. Przeprowadzic testy markerow i handlerow (czy testy koncza sie wtedy, kiedy powinny, czy reakcje sa poprawne, kilka razy)
+[dn][todo] 5. Przeprowadzic zebranie sladu i analize pokrycia kodu, wybrac oryginaly i generatory
+[kx] 6. Opracowac runner i skrypt zamykajacy (ctrl-w)
+[kx] 7. Utworzyc plik konfiguracyjny 
+[dx] 8. Przetestowac proces fuzzowania (reakcje na AV (rand breaking), MA, TO), dodatkowe reakcje
+    - wyznaczyc optymalne MA (odsetek MA z dluuugim timoutem dla konkretnej probki)
+    - wyznaczyc optymalne TO (najmniejsza liczba sekund, przy ktorej fuzzbox osiaga odsetek MA zblizony do wyznaczonego krok wczesniej, dla konkretnej probki)
+    - wyznaczyc SO, liczbe boxow, rdzeni (metoda prob i bledow)
+    - sprawdzic poprawnosc wynikow testowych (zgodnosc rzeczywistej reakcji z zaobserwowana)
+    - sprawdzic reakcje na crash
+[kx] 9. Zoptymalizowac proces fuzzowania
+    - wszystko co da sie jeszze zrobic
+[kx] 10. Wstawic do harmonogramu
+[dx] 11. Przeprowadzic testy
+
+

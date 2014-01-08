@@ -1,0 +1,18 @@
+mp4/aac
+playlists
+he-aac (made by itunes)
+flac
+wav
+aiff
+ogg
+mp3
+m4r
+alac
+webm
+wma
+Speex
+wavpack
+musepack
+au
+snd
+cd audio

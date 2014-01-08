@@ -11,6 +11,8 @@ from functions import *
 #from socket import socket, AF_INET, SOCK_STREAM
 import socket
 from subprocess import call, Popen
+from glob import glob
+
 
 PIPE_NAME = "\\\\.\\pipe\\control"
 PIPE_BUFF_SIZE = 4096
@@ -189,6 +191,57 @@ def execute(cmds):
             main_binner.start_debuggers()
             main_binner.ok()
 
+
+        elif(cmd == "testAll"):
+            for sample in glob("e:\\samples\\shared\\*.*"):
+                main_binner.attach_st_markers()
+                main_binner.loop_debuggers(invocation = "powershell -command \"& { invoke-expression %s }\"" % sample)
+                while(process_status_queue(["ST", "CR", "TO"]) != True):
+                    main_binner.loop_debuggers()
+                if(status == "TO"):
+                    print("ST TO")
+                    continue
+                if(status == "CR"):
+                    print("CRrrrrrrrrrr")
+                    break
+    
+                print("Status: %s" % status)
+    
+                main_binner.detach_st_markers()
+                main_binner.attach_end_markers()
+    
+    #            process_status_queue()
+    #            main_binner.loop_debuggers(settings.wait_sleep)
+                #process_reactions()
+                while(process_status_queue(["MA", "CR", "TO"]) != True):
+                    main_binner.loop_debuggers(settings.wait_sleep)
+                if(status == "CR"):
+                    print("CRrrrrrrrrrr")
+                    break
+    
+                print("Status: %s" % status)
+
+                main_binner.detach_end_markers()
+                main_binner.attach_rd_markers()
+                # time for reaction to test end
+                main_binner.start_debuggers("Closing execution")
+                main_binner.readPipe()
+                main_binner.stop_debuggers("Closing execution finished")
+    
+    #            main_binner.loop_debuggers()
+                #process_reactions()
+                while(process_status_queue(["RD", "CR", "TO"]) != True):
+                    main_binner.loop_debuggers()
+                if(status == "TO"):
+                    print("RD TO")
+                    continue
+                if(status == "CR"):
+                    print("CRrrrrrrrrrr")
+                    break
+    
+            main_binner.writePipe("Done")
+            main_binner.ok()
+            main_binner.detach_rd_markers()
 
         elif(cmd == "testFile"):
             main_binner.attach_st_markers()

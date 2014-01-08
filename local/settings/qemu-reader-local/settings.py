@@ -10,7 +10,7 @@ breaking = False
 debug = False
 
 machines = {
-    'hs2-1': {'disk' : 'hs2-1.qcow2', 'tap' : 'tap0', 'ip' : '192.168.1.101', 'server_ip' : '192.168.1.1', 'server_port' : 12345, 'vnc' : '192.168.66.10:0,secur3e'},
+    'hs2-1': {'disk' : 'hs2-1.qcow2', 'tap' : 'tap1', 'ip' : '192.168.1.101', 'mac' : '00:00:00:00:00:01', 'server_ip' : '192.168.1.1', 'server_port' : 12301, 'vnc' : ':1'},
     'hs2-2': {'disk' : 'hs2-2.qcow2', 'ip' : '127.0.0.1', 'port' : 12346, 'vnc' : '1'}
 }
 
@@ -59,17 +59,24 @@ slowdown = 1
 extension = "pdf"
 mutations = 3
 mutator = changer.Changer
+metric_res = 10
+save_disks = False
+to_mult_factor = 30
+
 
 qemu_machines = "/home/ish/machines/qemu"
-qemu_m = "1G"
+qemu_m = "3G"
 qemu_shared_folder = "/home/ish/projects/2012-08-02-korrino/hs2-current-deploy/qemu-reader-local"
-qemu_additional =  ['-enable-kvm']
+qemu_additional =  ['-enable-kvm', '-smp', '2']
 qemu_additional += ['-monitor', 'stdio']
 
-def specific_preperations_1(options):
-    pass
+def specific_preperations_1(options, args=None):
+    from sys import path
+    path.append("../client")
+    from script import rs
+    rs("python_server_spawn_args", options.m, args=args)
 
-scripts_1 = ["beep2"]
+scripts_1 = []
 log_level = 4
 
 def check_counters(ea):
@@ -96,25 +103,25 @@ def end_marker_test(dbg):
 #st_marker_handler = st_marker_test
 #end_marker_handler = end_marker_test
 
-def specific_preperations_2(options):
+def specific_preperations_2(options, args=None):
 #    options.m.stdin.write("eject ide1-cd0\n")
     pass
 
 scripts_2 = []
 
-def specific_preperations_3(options):
+def specific_preperations_3(options, args=None):
     pass
 
 scripts_3 = []
 
-def specific_preperations_4(options):
+def specific_preperations_4(options, args=None):
     pass
 
 scripts_4 = []
 
 from time import sleep
 
-def specific_preperations_5(options):
+def specific_preperations_5(options, args=None):
     pass
 
 #wtf

@@ -1,4 +1,5 @@
 c:fuzzers/fuzzer-generic.py
+c:fuzzers/fuzzer-generic-internal.py
 c:observer/observer.py
 c:observer/observer-marker-tests.py
 c:observer/observer-react-tests.py

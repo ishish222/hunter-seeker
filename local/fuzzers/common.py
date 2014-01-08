@@ -66,6 +66,9 @@ def get_options():
     parser.add_option("-L", "--timeout",        dest="wait_sleep", help="Timeout for state transitions", default=settings.wait_sleep)
     parser.add_option("-O", "--count",          dest="samples_count", help="Amount of samples in single run", default=10)
     parser.add_option("-T", "--tap",            dest="tap", help="Tap interface", default="tap0")
+    parser.add_option("-r", "--metric-res",     dest="metric_res", help="Metrics resolution", default=settings.metric_res)
+    parser.add_option("-A", "--save-disks",     action="store_true", dest="save_disks", help="Save disks even if they don't contain crashing", default=settings.save_disks)
+    parser.add_option("-t", "--to-mult-factor", dest="to_mult_factor", help="Factor for calculating SO timeout based on TO (SO=TO*factor)", default=settings.to_mult_factor)
 
 
     (options, args) = parser.parse_args()
@@ -89,14 +92,9 @@ def get_options():
     if(options.cdrom is not None):
         qemu_args += ['-cdrom', options.cdrom]
 
-    #qemu_args += ['-net', 'nic,model=rtl8139', '-net', 'user,restrict=n,smb=' + settings.qemu_shared_folder + ',hostfwd=tcp:127.0.0.1:' + str(options.fuzzbox_port) + '-:12345']
     qemu_args += ['-net', 'nic,model=virtio', '-net', 'tap,ifname='+options.tap+',script=no,downscript=no']
-    #qemu_args += ['-net', 'nic,model=virtio', '-net', 'user,restrict=n,smb=' + settings.qemu_shared_folder + ',guestfwd=tcp:10.0.2.100:12345-tcp:127.0.0.1:' + str(options.fuzzbox_port)]
-    #qemu_args += ['-net', 'nic,model=rtl8139', '-net', 'user,restrict=n,smb=' + settings.qemu_shared_folder + ',guestfwd=tcp:10.0.2.100:12345-tcp:127.0.0.1:' + str(options.fuzzbox_port)]
-    #qemu_args += ['-net', 'nic,model=rtl8139', '-net', 'user,restrict=n,smb=' + settings.qemu_shared_folder + ',guestfwd=tcp:127.0.0.1:' + str(options.fuzzbox_port) + '-tcp:10.0.0.1:12345']
+#    qemu_args += ['-net', 'nic,model=rtl8139', '-net', 'tap,ifname='+options.tap+',script=no,downscript=no']
 
-    #qemu_args += ['-net', 'nic,model=rtl8139']
-#    qemu_args += ['-net', 'nic,model=virtio']
     if(options.visible == False):
         qemu_args += ['-vnc', settings.machines[options.fuzzbox_name]['vnc']]
     qemu_args += settings.qemu_additional
@@ -111,7 +109,8 @@ def get_options():
     options.logger.setLevel(logging.DEBUG)
     options.logger.addHandler(options.handler)
     options.wait_sleep = float(options.wait_sleep)
-    options.fuzzbox_timeout = float(options.wait_sleep*20)
+    options.to_mult_factor = float(options.to_mult_factor)
+    options.fuzzbox_timeout = float(options.wait_sleep*options.to_mult_factor)
 
     #thats right bitches
     options.settings = settings
@@ -307,8 +306,8 @@ def proceed2(options):
 
     s = options.s
 
-#    write_socket(s, "killExplorer")
-#    read_socket(s)
+    write_socket(s, "killExplorer")
+    read_socket(s)
 
     write_socket(s, "startBinner")
     read_socket(s)
