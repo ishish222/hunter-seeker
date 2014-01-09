@@ -23,7 +23,7 @@ else:
     log_file = "e:\\logs\\log-"
 
 def getPipe(name):
-    dlog("In getPipe", 2)
+#    dlog("In getPipe", 2)
     ph = win32file.CreateFile(name, win32file.GENERIC_READ | win32file.GENERIC_WRITE | win32pipe.PIPE_TYPE_MESSAGE, 0, None, win32file.OPEN_EXISTING, 0, None)
     return ph
 
@@ -103,7 +103,7 @@ def dlog(data, level=0):
     logf.write(data)
 
 def verify():
-    dlog("Please verify process")
+#    dlog("Please verify process")
     time.sleep(5)
 
 def process_reactions():
@@ -113,15 +113,15 @@ def process_reactions():
     status = ""
     for i in range(0, main_binner.status.qsize()):
 #    while(not main_binner.status.empty()):
-        main_binner.dlog("Queue size before get: %d" % main_binner.status.qsize())
+#        main_binner.dlog("Queue size before get: %d" % main_binner.status.qsize())
         item = main_binner.status.get()
-        main_binner.dlog("Queue size after get : %d" % main_binner.status.qsize())
+#        main_binner.dlog("Queue size after get : %d" % main_binner.status.qsize())
         status = item[1]
-        main_binner.dlog("Processing %s" % status)
+#        main_binner.dlog("Processing %s" % status)
 #        if(status == ""):
 #            status = "TO" # TO is overriden by all
         if(status == "SR"):
-            main_binner.dlog("Requested script: %s" % item[2])
+#            main_binner.dlog("Requested script: %s" % item[2])
             main_binner.writePipe("Status: %s\n" % status)
             main_binner.writePipe("Script: %s\n" % item[2])
             main_binner.ok()
@@ -129,7 +129,7 @@ def process_reactions():
             main_binner.start_debuggers("Script execution")
             main_binner.readPipe()
             main_binner.stop_debuggers("Script execution finished")
-            main_binner.dlog("Queue size after script: %d" % main_binner.status.qsize())
+#            main_binner.dlog("Queue size after script: %d" % main_binner.status.qsize())
             continue
         else:
             # put in back!
@@ -143,15 +143,15 @@ def process_status_queue(satisfactory = None):
 
     status = ""
     while(not main_binner.status.empty()):
-        main_binner.dlog("Queue size before get: %d" % main_binner.status.qsize())
+#        main_binner.dlog("Queue size before get: %d" % main_binner.status.qsize())
         item = main_binner.status.get()
-        main_binner.dlog("Queue size after get : %d" % main_binner.status.qsize())
+#        main_binner.dlog("Queue size after get : %d" % main_binner.status.qsize())
         status = item[1]
-        main_binner.dlog("Processing %s" % status)
+#        main_binner.dlog("Processing %s" % status)
 #        if(status == ""):
 #            status = "TO" # TO is overriden by all
         if(status == "SR"):
-            main_binner.dlog("Requested script: %s" % item[2])
+#            main_binner.dlog("Requested script: %s" % item[2])
             main_binner.writePipe("Status: %s\n" % status)
             main_binner.writePipe("Script: %s\n" % item[2])
             main_binner.ok()
@@ -159,7 +159,7 @@ def process_status_queue(satisfactory = None):
             main_binner.start_debuggers("Script execution")
             main_binner.readPipe()
             main_binner.stop_debuggers("Script execution finished")
-            main_binner.dlog("Queue size after script: %d" % main_binner.status.qsize())
+#            main_binner.dlog("Queue size after script: %d" % main_binner.status.qsize())
             continue
         elif(status == "CR"):
             main_binner.writePipe("Status: %s" % status)
@@ -299,7 +299,7 @@ def execute(cmds):
             main_binner.detach_rd_markers()
 
         elif(cmd == "observe"):
-            dlog("In observe")
+#            dlog("In observe")
             main_binner.stop_debuggers()
             main_binner.attach_st_markers()
             main_binner.attach_end_markers()
@@ -316,7 +316,7 @@ def execute(cmds):
             main_binner.stop_tracking_all_threads()
 
         elif(cmd == "testReactMarkers"):
-            dlog("In testReactMarkers", 2)
+#            dlog("In testReactMarkers", 2)
             main_binner.attach_st_markers()
             main_binner.loop_debuggers(invocation = "powershell -command \"& { invoke-expression d:\\samples\\shared\\%s }\"" % args)
             main_binner.detach_st_markers()
@@ -329,14 +329,14 @@ def execute(cmds):
                 if(status == "SR"):
                     main_binner.writePipe("Status: SR\n Script: %s\n" % main_binner.reqScript)
                     main_binner.ok()
-                    dlog("Verified SR marker")
+#                    dlog("Verified SR marker")
                 # react
             main_binner.detach_react_markers()
             main_binner.detach_end_markers()
             main_binner.ok()
 
         elif(cmd == "testStEndMarkers"):
-            dlog("In testStEndMarkers", 2)
+#            dlog("In testStEndMarkers", 2)
 
             # ST markers
             main_binner.attach_st_markers()
@@ -344,7 +344,7 @@ def execute(cmds):
             while(process_status_queue(["ST"]) != True):
                 main_binner.loop_debuggers()
 #            main_binner.writePipe("Verified ST marker\n")
-            dlog("Verified ST marker")
+#            dlog("Verified ST marker")
             main_binner.writePipe("Status: %s" % status)
             main_binner.ok()
             main_binner.detach_st_markers()
@@ -354,7 +354,7 @@ def execute(cmds):
             main_binner.loop_debuggers(settings.wait_sleep)
             while(process_status_queue(["MA", "CR", "TO"]) != True):
                 main_binner.loop_debuggers(settings.wait_sleep)
-            dlog("Verified END marker")
+#            dlog("Verified END marker")
             main_binner.writePipe("Status: %s" % status)
             main_binner.ok()
             main_binner.detach_end_markers()
@@ -366,11 +366,11 @@ def execute(cmds):
                 main_binner.loop_debuggers()
             main_binner.writePipe("Status: %s" % status)
             main_binner.ok()
-            dlog("Verified RD marker")
+#            dlog("Verified RD marker")
             main_binner.detach_rd_markers()
 
         elif(cmd == "getSynopsis"):
-            dlog("In getSynopsis", 2)
+#            dlog("In getSynopsis", 2)
             main_binner.writePipe(main_binner.last_data)
             main_binner.ok()
 #            main_binner.get_synopsis()
@@ -427,7 +427,7 @@ def execute(cmds):
                 if imagename in name:
 #                    try:
                     if True:
-                        main_binner.dlog("[*] Attaching to %s (%d)" % (name, pid))
+#                        main_binner.dlog("[*] Attaching to %s (%d)" % (name, pid))
                         main_binner.attach(pid)
 #                    except Exception, e:
 #                        dlog("[!] Problem attaching to %s" % name)
@@ -476,7 +476,7 @@ def execute(cmds):
             main_binner.ok()
 
         elif(cmd == "binTest"):
-            dlog("binTest")
+#            dlog("binTest")
             main_binner.writePipe("Communication with binner is working")
             main_binner.ok()
         
@@ -523,7 +523,7 @@ def binner_routine():
     global ph
     global main_binner
 
-    dlog("In main", 2)
+#    dlog("In main", 2)
     logo = """
  __                      .__               
 |  | ____________________|__| ____   ____  
@@ -541,10 +541,10 @@ Hunter-Seeker
     ph = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 #    s.bind(("0.0.0.0", 12345))
 #    s.listen(3)
-    dlog("Trying to connect...", 2)
+#    dlog("Trying to connect...", 2)
     ph.connect(("10.0.2.100", 12345))
 #    ph, addr = s.accept()
-    dlog("Got connection", 2)
+#    dlog("Got connection", 2)
     ph.send("python binner")
 
     main_binner = binner.binner(ph)

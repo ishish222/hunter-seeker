@@ -110,33 +110,34 @@ class binner(object):
 #        win32file.FlushFileBuffers(self.ph)
 
     def send_command(self, cmd):
-        self.dlog("Sending: %s" % cmd, 3)
+#        self.dlog("Sending: %s" % cmd, 3)
         for pid in self.debuggers:
             if(self.sockets[str(pid)] in self.sockets_crashed):
-                self.dlog("Skipping...")
+#                self.dlog("Skipping...")
                 continue
             try:
                 self.write_debugger(self.sockets[str(pid)], cmd)
             except Exception:
                 print("Failed to send data to debugger")
-                self.dlog("Failed to send data to debugger")
-        self.dlog("Sent: %s" % cmd, 3)
-        self.dlog("- - - - - - - - - -", 3)
+#                self.dlog("Failed to send data to debugger")
+#        self.dlog("Sent: %s" % cmd, 3)
+#        self.dlog("- - - - - - - - - -", 3)
 
     def poll_debuggers(self, to = None):
         if(to != None):
-            self.dlog("TO = %d seconds" % to, 3)
+#            self.dlog("TO = %d seconds" % to, 3)
             readable = self.sockets.values()
             ready, _, _ = select(readable, [], [], to)
         else:
-            self.dlog("Polling until readable", 2)
+#            self.dlog("Polling until readable", 2)
             readable = self.sockets.values()
             ready, _, _ = select(readable, [], [])
         return ready
 
     def read_debuggers(self):
         for dbg in self.debuggers.values():
-            self.dlog(self.read_debugger(dbg))
+#            self.dlog(self.read_debugger(dbg))
+            self.read_debugger(dbg)
 
     def read_debugger(self, dbg_socket):
         data = ""
@@ -155,25 +156,25 @@ class binner(object):
                             lineEnd = data[scOff+8:].find("\n")
                             self.reqScript = data[scOff+8:scOff+8+lineEnd]
                             self.status.put((1, status, self.reqScript))
-                            self.dlog("Received: SR", 1)
+#                            self.dlog("Received: SR", 1)
                         elif(status == "CR"):
                             self.sockets_crashed.append(dbg_socket)
                             self.status.put((0, status))
-                            self.dlog("Received: CR", 1)
+#                            self.dlog("Received: CR", 1)
                         elif(status == "TO"):
                             self.status.put((2, status))
-                            self.dlog("Received: TO", 1)
+#                            self.dlog("Received: TO", 1)
                         elif(status == "MA"):
                             self.status.put((2, status))
-                            self.dlog("Received: MA", 1)
+#                            self.dlog("Received: MA", 1)
                         elif(status == "RD"):
                             self.status.put((2, status))
-                            self.dlog("Received: RD", 1)
+#                            self.dlog("Received: RD", 1)
                         elif(status == "ST"):
                             self.status.put((2, status))
-                            self.dlog("Received: ST", 1)
+#                            self.dlog("Received: ST", 1)
                     self.last_data = data[:-6]
-                    self.dlog("Received data: \n%s" % data, 3)
+#                    self.dlog("Received data: \n%s" % data, 3)
                     data = ""
                     break
         # only last element
@@ -206,7 +207,7 @@ class binner(object):
         self.race_lock.acquire()
         if(not event.is_set()): 
             self.status.put((1, "TO"))
-            self.dlog("Received: TO", 1)
+#            self.dlog("Received: TO", 1)
             event.set()
         else:
             self.race_lock.release()
@@ -217,7 +218,7 @@ class binner(object):
             # will wait for signal
             self.start_debuggers("Loop interation")
             if(invocation != None):
-                self.dlog("Invoking: %s" % invocation)
+#                self.dlog("Invoking: %s" % invocation)
                 Popen(invocation)
             self.poll_debuggers()
             self.stop_debuggers("Detected readiness")
@@ -227,7 +228,7 @@ class binner(object):
             # will wait for timeout
             self.start_debuggers("Loop interation")
             if(invocation != None):
-                self.dlog("Invoking: %s" % invocation)
+#                self.dlog("Invoking: %s" % invocation)
                 Popen(invocation)
             # Create race
             T1 = Thread(target=self.race1, args=(event,))
@@ -242,22 +243,22 @@ class binner(object):
     def stop_debuggers(self, reason="unknown"):
         self.send_command("stop")
         self.loop_lock.acquire()
-        self.dlog("[LOCK] Debug section", 2)
-        self.dlog("Reason: %s" % reason, 2)
+#        self.dlog("[LOCK] Debug section", 2)
+#        self.dlog("Reason: %s" % reason, 2)
         ready_dbg_sockets = self.poll_debuggers(0.0)
         for dbg in ready_dbg_sockets:
             self.read_debugger(dbg)
-        self.dlog("Status queue content (%d items):" % self.status.qsize())
+#        self.dlog("Status queue content (%d items):" % self.status.qsize())
         for i in range(0, self.status.qsize()):
             temp = self.status.get()
-            self.dlog(temp, 2)
+#            self.dlog(temp, 2)
             self.status.put(temp)
 
     def start_debuggers(self, reason="unknown", to=None):
         self.loop_lock.release()
-        self.dlog("[UNLOCK] Debug section", 2)
-        self.dlog("Waiting for debug event")
-        self.dlog("Reason: %s" % reason)
+#        self.dlog("[UNLOCK] Debug section", 2)
+#        self.dlog("Waiting for debug event")
+#        self.dlog("Reason: %s" % reason)
         if(to != None):
             self.send_command("start %f" % to)
         else:
@@ -265,7 +266,7 @@ class binner(object):
 
     def list_tebs(self):
         for pid in self.debuggers:
-            dlog("Listing TEBs for %s" % pid)
+#            dlog("Listing TEBs for %s" % pid)
             yield self.debuggers[pid].list_tebs()
 
     def detach_all(self):
@@ -282,15 +283,15 @@ class binner(object):
     def terminate_processes(self):
         self.send_command("prepare_terminate")
         cmd = "terminate"
-        self.dlog("Sending: %s" % cmd, 3)
+#        self.dlog("Sending: %s" % cmd, 3)
         for pid in self.debuggers:
             try:
                 self.write_debugger(self.sockets[str(pid)], cmd)
             except Exception:
                 print("Failed to send data to debugger")
-                self.dlog("Failed to send data to debugger")
-        self.dlog("Sent: %s" % cmd, 3)
-        self.dlog("- - - - - - - - - -", 3)
+#                self.dlog("Failed to send data to debugger")
+#        self.dlog("Sent: %s" % cmd, 3)
+#        self.dlog("- - - - - - - - - -", 3)
 
 #        self.detach_all()
 #        self.proc.terminate()
@@ -322,7 +323,7 @@ class binner(object):
             pid = str(pid)
             self.debuggers[pid] = Popen([sys.executable, "-u", "e:\\server\\debugger.py"], shell=True)
             self.sockets[pid], addr = self.main_socket.accept()
-            self.dlog("Got connection")
+#            self.dlog("Got connection")
             my_dbg = (pid, self.debuggers[pid])
 
 #        self.ddlog(self.read_debugger(self.sockets[str(pid)]))
@@ -349,35 +350,35 @@ class binner(object):
         self.attach_rd_markers()
 
     def attach_av_handler(self):
-        self.dlog("Attaching AV handlers")
+#        self.dlog("Attaching AV handlers")
         self.send_command("attach_av_handler")
 
     def attach_bp_handler(self):
-        self.dlog("Attaching BP handlers")
+#        self.dlog("Attaching BP handlers")
         self.send_command("attach_bp_handler")
 
     def attach_ss_handler(self):
-        self.dlog("Attaching SS handlers")
+#        self.dlog("Attaching SS handlers")
         self.send_command("attach_ss_handler")
 
     def attach_markers(self):
-        self.dlog("Attaching markers")
+#        self.dlog("Attaching markers")
         self.send_command("attach_markers")
 
     def attach_st_markers(self):
-        self.dlog("Attaching ST markers")
+#        self.dlog("Attaching ST markers")
         self.send_command("attach_st_markers")
 
     def attach_end_markers(self):
-        self.dlog("Attaching END markers")
+#        self.dlog("Attaching END markers")
         self.send_command("attach_end_markers")
 
     def attach_react_markers(self):
-        self.dlog("Attaching REACT markers")
+#        self.dlog("Attaching REACT markers")
         self.send_command("attach_react_markers")
         
     def attach_rd_markers(self):
-        self.dlog("Attaching RD markers")
+#        self.dlog("Attaching RD markers")
         self.send_command("attach_rd_markers")
         
     def detach_all_markers(self):
@@ -388,51 +389,51 @@ class binner(object):
         self.detach_rd_markers()
 
     def detach_markers(self):
-        self.dlog("Detaching markers")
+#        self.dlog("Detaching markers")
         self.send_command("detach_markers")
 
     def detach_st_markers(self):
-        self.dlog("Detaching ST markers")
+#        self.dlog("Detaching ST markers")
         self.send_command("detach_st_markers")
 
     def detach_end_markers(self):
-        self.dlog("Detaching END markers")
+#        self.dlog("Detaching END markers")
         self.send_command("detach_end_markers")
 
     def detach_react_markers(self):
-        self.dlog("Detaching REACT markers")
+#        self.dlog("Detaching REACT markers")
         self.send_command("detach_react_markers")
 
     def detach_rd_markers(self):
-        self.dlog("Detaching RD markers")
+#        self.dlog("Detaching RD markers")
         self.send_command("detach_rd_markers")
 
     def track_all_threads(self):
-        self.dlog("Tracking all threads")
+#        self.dlog("Tracking all threads")
         self.send_command("track_all_threads")
 
     def dump_modules(self):
-        self.dlog("Dumping modules")
+#        self.dlog("Dumping modules")
         self.send_command("dump_modules")
 
     def dump_threads(self):
-        self.dlog("Dumping threads")
+#        self.dlog("Dumping threads")
         self.send_command("dump_threads")
 
     def start_tracking_all_threads(self):
-        self.dlog("Start tracking all threads")
+#        self.dlog("Start tracking all threads")
         self.send_command("start_tracking_all_threads")
 
     def stop_tracking_all_threads(self):
-        self.dlog("Stopping tracking all threads")
+#        self.dlog("Stopping tracking all threads")
         self.send_command("stop_tracking_all_threads")
 
     def set_callback(self, callback):
-        self.dlog("Setting callback: %s" % callback)
+#        self.dlog("Setting callback: %s" % callback)
         self.send_command("set_callback %s" % callback)
 
     def start_log(self, name):
-        self.debug = True
+#        self.debug = True
         print("Binner starting log")
         if(self.last_log_file != None):
             self.last_log_file.close()
@@ -443,7 +444,7 @@ class binner(object):
         self.send_command("log_write %s" % text)
 
     def stop_log(self):
-        self.dlog("Stopping log")
+#        self.dlog("Stopping log")
         if(self.last_log_file != None):
             self.last_log_file.close()
             self.last_log_file = None
@@ -452,13 +453,13 @@ class binner(object):
         self.send_command("stop_log")
 
     def get_synopsis(self):
-        self.dlog("Retrieveing synopsis")
+#        self.dlog("Retrieveing synopsis")
         self.last_crashed
         self.write_debugger(self.last_crashed, "get_synopsis")
         data = self.read_debugger(self.last_crashed)
         while(data.find("CONTEXT") < 0):
             print(data)
             data = self.read_debugger(self.last_crashed)
-        self.dlog("Got it")
+#        self.dlog("Got it")
         self.writePipe(data)
         self.ok()
