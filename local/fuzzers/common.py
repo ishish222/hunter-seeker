@@ -53,9 +53,11 @@ def get_options():
     parser.add_option("-d", "--samples-shared", dest="samples_shared", help="Folder for shared samples", default=settings.samples_shared_path)
     parser.add_option("-v", "--samples-saved",  dest="samples_saved", help="Folder for saved samples", default=settings.samples_saved)
     parser.add_option("-B", "--samples-binned", dest="samples_binned", help="Folder for binned samples", default=settings.samples_binned)
-    parser.add_option("-i", "--ip",             dest="fuzzbox_ip", help="Force fuzzbox ip (normally based on hda)")
-    parser.add_option("-E", "--server_ip",      dest="server_ip", help="Force server ip (normally based on hda)")
-    parser.add_option("-p", "--server_port",    dest="server_port", help="Force server port (normally based on hda)")
+#    parser.add_option("-i", "--ip",             dest="fuzzbox_ip", help="Force fuzzbox ip (normally based on hda)")
+#    parser.add_option("-E", "--server_ip",      dest="server_ip", help="Force server ip (normally based on hda)")
+#    parser.add_option("-p", "--server_port",    dest="server_port", help="Force server port (normally based on hda)")
+    parser.add_option("-i", "--fuzzbox_ip",     dest="fuzzbox_ip", help="Force fuzzbox ip (normally based on hda)")
+    parser.add_option("-p", "--fuzzbox_port",   dest="fuzzbox_port", help="Force fuzzbox port (normally based on hda)")
     parser.add_option("-V", "--visible",        dest="visible", help="Should box be visible?", action="store_true", default=settings.visible)
     parser.add_option("-l", "--slowdown",       dest="slowdown", help="Slowdown (default is 1)", default=settings.slowdown)
     parser.add_option("-e", "--extension",      dest="extension", help="Extension of generated sample", default=settings.extension)
@@ -68,7 +70,10 @@ def get_options():
     parser.add_option("-T", "--tap",            dest="tap", help="Tap interface", default="tap0")
     parser.add_option("-r", "--metric-res",     dest="metric_res", help="Metrics resolution", default=settings.metric_res)
     parser.add_option("-A", "--save-disks",     action="store_true", dest="save_disks", help="Save disks even if they don't contain crashing", default=settings.save_disks)
+    parser.add_option("-N", "--vnc",            action="store_true", dest="vnc", help="Use VNC", default=settings.vnc)
     parser.add_option("-t", "--to-mult-factor", dest="to_mult_factor", help="Factor for calculating SO timeout based on TO (SO=TO*factor)", default=settings.to_mult_factor)
+    parser.add_option("-w", "--boot-wait", dest="boot_wait", help="How long does this system boot", default=settings.boot_wait)
+    parser.add_option("-W", "--shutdown-wait", dest="shutdown_wait", help="How long does this system shutdown", default=settings.shutdown_wait)
 
 
     (options, args) = parser.parse_args()
@@ -76,11 +81,17 @@ def get_options():
     options.fuzzbox_name = sys.argv[1]
     if(options.hda is None):
         options.hda = settings.machines[options.fuzzbox_name]['disk']
-    options.fuzzbox_ip = settings.machines[options.fuzzbox_name]['ip'] 
-    options.server_ip = settings.machines[options.fuzzbox_name]['server_ip'] 
-    options.server_port = settings.machines[options.fuzzbox_name]['server_port'] 
-    options.tap = settings.machines[options.fuzzbox_name]['tap']
-    options.mac = settings.machines[options.fuzzbox_name]['mac']
+    if(options.fuzzbox_ip is None):
+        options.fuzzbox_ip = settings.machines[options.fuzzbox_name]['ip'] 
+    if(options.fuzzbox_port is None):
+        options.fuzzbox_port = settings.machines[options.fuzzbox_name]['port'] 
+
+#    options.fuzzbox_ip = settings.machines[options.fuzzbox_name]['ip'] 
+#    options.server_ip = settings.machines[options.fuzzbox_name]['server_ip'] 
+#    options.server_port = settings.machines[options.fuzzbox_name]['server_port'] 
+    
+#    options.tap = settings.machines[options.fuzzbox_name]['tap']
+#    options.mac = settings.machines[options.fuzzbox_name]['mac']
 
     #qemu settings
     qemu_args =  ['qemu-system-i386']
@@ -92,10 +103,11 @@ def get_options():
     if(options.cdrom is not None):
         qemu_args += ['-cdrom', options.cdrom]
 
-    qemu_args += ['-net', 'nic,model=virtio', '-net', 'tap,ifname='+options.tap+',script=no,downscript=no']
+#    qemu_args += ['-net', 'nic,model=virtio', '-net', 'tap,ifname='+options.tap+',script=no,downscript=no']
+    qemu_args += ['-net', 'nic,model=virtio', '-net', 'user,restrict=n,guestfwd=tcp:10.0.2.100:12345-tcp:127.0.0.1:' + str(options.fuzzbox_port)]
 #    qemu_args += ['-net', 'nic,model=rtl8139', '-net', 'tap,ifname='+options.tap+',script=no,downscript=no']
 
-    if(options.visible == False):
+    if(options.visible == False and options.vnc == True):
         qemu_args += ['-vnc', settings.machines[options.fuzzbox_name]['vnc']]
     qemu_args += settings.qemu_additional
 
@@ -109,6 +121,8 @@ def get_options():
     options.logger.setLevel(logging.DEBUG)
     options.logger.addHandler(options.handler)
     options.wait_sleep = float(options.wait_sleep)
+    options.boot_wait = float(options.boot_wait)
+    options.shutdown_wait = float(options.shutdown_wait)
     options.to_mult_factor = float(options.to_mult_factor)
     options.fuzzbox_timeout = float(options.wait_sleep*options.to_mult_factor)
 
@@ -223,9 +237,24 @@ def write_socket(s, data):
     s.send(data + "-=OK=-")
 
 def powerofff(options):
+#    try:
+#        print("Shutting down ss")
+#        options.ss.shutdown(socket.SHUT_RDWR)
+#        options.ss.close()
+#    except Exception:
+#        print("Error shutting down ss")
+#        pass
+    try:
+        print("Shutting down s")
+        options.s.shutdown(socket.SHUT_RDWR)
+        options.s.close()
+    except Exception:
+        print("Error shutting down s")
+        pass
     print("[Powering off]")
-    rs("quit", options.m)
+    rs("powerdown", options.m)
     options.m = None
+    time.sleep(options.shutdown_wait)
 
 def revert(options):
     print("[Reverting]")
@@ -238,7 +267,7 @@ def start(options):
     m = Popen(options.qemu_args, stdout=PIPE, stdin=PIPE)
     time.sleep(3)
     options.m = m
-    revert(options)
+#    revert(options)
 #    time.sleep(60)
 #    rs("open_cmd", options.m)
     return m
@@ -250,15 +279,16 @@ def restart(options):
 
 def prepare_con():
     ss = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    ss.bind((options.server_ip, options.server_port))
+#    ss.bind((options.server_ip, options.server_port))
+    ss.bind(("127.0.0.1", options.fuzzbox_port))
     ss.listen(3)
     return ss
 
 def accept_con(ss):
     dt = socket.getdefaulttimeout()
-    socket.setdefaulttimeout(35)
+    socket.setdefaulttimeout(80)
     dtss = ss.gettimeout()
-    ss.settimeout(35)
+    ss.settimeout(80)
 
     while True:
         try:
@@ -268,7 +298,8 @@ def accept_con(ss):
             init(options.s)
             break
         except socket.timeout:
-            print("Accpet timed out, pinging repeating proceed1")
+            print("Accpet timed out, raising")
+#            raise socket.timeout
             proceed1(options)
 #            os.spawnv(os.P_WAIT, "/bin/ping", ["ping", options.fuzzbox_ip, "-c1"])
             continue
@@ -293,7 +324,7 @@ def killLast(s):
 def proceed1(options):
     # executed during each fuzzbox start
     if(defined("settings.specific_preperations_1")):
-        options.settings.specific_preperations_1(options, [options.server_ip, str(options.server_port)])
+        options.settings.specific_preperations_1(options)
     if(defined("settings.scripts_1")):
         rss(options.settings.scripts_1, options.m, options.slowdown)
 
@@ -365,21 +396,6 @@ def sigkill_handler(signum, frame):
     global options
 
     powerofff(options)
-
-    try:
-        print("Shutting down ss")
-        options.ss.shutdown(socket.SHUT_RDWR)
-        options.ss.close()
-    except Exception:
-        print("Error shutting down ss")
-        pass
-    try:
-        print("Shutting down s")
-        options.s.shutdown(socket.SHUT_RDWR)
-        options.s.close()
-    except Exception:
-        print("Error shutting down s")
-        pass
 
     report("Killing")
     quit()

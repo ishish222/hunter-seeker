@@ -137,13 +137,28 @@ def fuzzing_routine():
         start(options)
         print("[%s] Started" % timestamp())
         #mount_cdrom(options, options.cdrom)
-        slot = pci_mount(options, options.tmp_disk_img)
+        slot = pci_mount(options, options.tmp_disk_img) #hotplug should be completed during bootup
 #        rs("ipconfig_set_ip_2", options.m, args=[options.fuzzbox_ip, options.server_ip])
         # it takes so fucking long
 #        time.sleep(10)
 #        os.spawnv(os.P_WAIT, "/bin/ping", ["ping", options.fuzzbox_ip, "-c1"])
+
+        #time for boot
+        time.sleep(options.boot_wait)
+
         proceed1(options)
-        accept_con(options.ss)
+
+        try:
+            accept_con(options.ss)
+        except socket.timeout:
+           print("Socket timeout, restarting")
+           report("Socket timeout, restarting")
+           write_socket(s, "logStop")
+           del_mountpoint(options)
+           powerofff(options)
+           if(not options.save_disks):
+               os.remove(options.tmp_disk_img)
+           continue
         s = options.s
 #        s.settimeout(options.settings.wait_sleep * 8)
 

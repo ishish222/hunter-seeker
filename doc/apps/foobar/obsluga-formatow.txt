@@ -1,15 +1,15 @@
-mp4/aac
+x mp4/aac
 playlists
-he-aac (made by itunes)
-flac
-wav
+x he-aac (made by itunes)
+x flac
+x wav
 aiff
-ogg
-mp3
+x ogg
+x mp3
 m4r
-alac
+? alac
 webm
-wma
+x wma
 Speex
 wavpack
 musepack

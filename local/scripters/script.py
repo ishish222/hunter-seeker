@@ -173,6 +173,10 @@ class Script:
                         write_monitor_only(pipe, "quit\n")
                         continue
 
+                    if(k[1:].find("powerdown") == 0):
+                        write_monitor_only(pipe, "system_powerdown\n")
+                        continue
+
                     if(k[1:].find("readline") == 0):
                         read_monitor(pipe)
                         continue

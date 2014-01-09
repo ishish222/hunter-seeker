@@ -8,7 +8,7 @@ n - nieskonczone
     - adres IP i MAC
     - zainstalowana aplikacja
     - zainstalowane opr. wspomagajace (sterowniki virtio)
-[k] 2. Znalezc oryginaly
+[kx] 2. Znalezc oryginaly
 [k] 3. Znalezc markery (poczatkowy, koncowy i gotowosci)
 [k] 4. Przeprowadzic testy markerow i handlerow (czy testy koncza sie wtedy, kiedy powinny, czy reakcje sa poprawne, kilka razy)
 [d][todo] 5. Przeprowadzic zebranie sladu i analize pokrycia kodu, wybrac oryginaly i generatory

@@ -1,0 +1,14 @@
+ST:
+
+np.: 0x43c618 (foobar2000.exe +0x3c618)
+
+MA:
+
+np.: 
+0x106e5df (foo_input_std.dll +0x3e5df) (mp3)
+0x104c6e3 (foo_input_std.dll +0x1c6e3) (ogg, opus)
+0x1052107 (foo_input_std.dll +0x22107) (flac)
+0x108731b (foo_input_std.dll +0x5731b) (aac)
+0x10a8731 (foo_input_std.dll +0x78731) (wma)
+0x106834a (foo_input_std.dll +0x3834a) (wav)
+

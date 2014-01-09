@@ -8,22 +8,35 @@ visible = False
 testing = False
 breaking = False
 debug = True
+vnc = False
 
 machines = {
-    'hs2-01': {'disk' : 'hs2-01.qcow2', 'tap' : 'tap1', 'ip' : '192.168.1.101', 'mac' : '00:00:00:00:00:01', 'server_ip' : '192.168.1.1', 'server_port' : 12301, 'vnc' : ':1'},
-    'hs2-02': {'disk' : 'hs2-02.qcow2', 'tap' : 'tap2', 'ip' : '192.168.2.102', 'mac' : '00:00:00:00:00:02', 'server_ip' : '192.168.2.1', 'server_port' : 12302, 'vnc' : ':2'},
-    'hs2-03': {'disk' : 'hs2-03.qcow2', 'tap' : 'tap3', 'ip' : '192.168.3.103', 'mac' : '00:00:00:00:00:03', 'server_ip' : '192.168.3.1', 'server_port' : 12303, 'vnc' : ':3'},
-    'hs2-04': {'disk' : 'hs2-04.qcow2', 'tap' : 'tap4', 'ip' : '192.168.4.104', 'mac' : '00:00:00:00:00:04', 'server_ip' : '192.168.4.1', 'server_port' : 12304, 'vnc' : ':4'},
-    'hs2-05': {'disk' : 'hs2-05.qcow2', 'tap' : 'tap5', 'ip' : '192.168.5.105', 'mac' : '00:00:00:00:00:05', 'server_ip' : '192.168.5.1', 'server_port' : 12305, 'vnc' : ':5'},
-    'hs2-06': {'disk' : 'hs2-06.qcow2', 'tap' : 'tap6', 'ip' : '192.168.6.106', 'mac' : '00:00:00:00:00:06', 'server_ip' : '192.168.6.1', 'server_port' : 12306, 'vnc' : ':6'},
-    'hs2-07': {'disk' : 'hs2-07.qcow2', 'tap' : 'tap7', 'ip' : '192.168.1.107', 'mac' : '00:00:00:00:00:07', 'server_ip' : '192.168.1.1', 'server_port' : 12307, 'vnc' : ':7'},
-    'hs2-08': {'disk' : 'hs2-08.qcow2', 'tap' : 'tap8', 'ip' : '192.168.1.108', 'mac' : '00:00:00:00:00:08', 'server_ip' : '192.168.1.1', 'server_port' : 12308, 'vnc' : ':8'},
-    'hs2-09': {'disk' : 'hs2-09.qcow2', 'tap' : 'tap9', 'ip' : '192.168.1.109', 'mac' : '00:00:00:00:00:09', 'server_ip' : '192.168.1.1', 'server_port' : 12309, 'vnc' : ':9'},
-    'hs2-10': {'disk' : 'hs2-10.qcow2', 'tap' : 'tap10', 'ip' : '192.168.1.110', 'mac' : '00:00:00:00:00:0a', 'server_ip' : '192.168.1.1', 'server_port' : 12310, 'vnc' : ':10'},
-    'hs2-11': {'disk' : 'hs2-11.qcow2', 'tap' : 'tap11', 'ip' : '192.168.1.111', 'mac' : '00:00:00:00:00:0b', 'server_ip' : '192.168.1.1', 'server_port' : 12311, 'vnc' : ':11'},
-    'hs2-12': {'disk' : 'hs2-12.qcow2', 'tap' : 'tap12', 'ip' : '192.168.1.112', 'mac' : '00:00:00:00:00:0c', 'server_ip' : '192.168.1.1', 'server_port' : 12312, 'vnc' : ':12'},
-    'hs2-13': {'disk' : 'hs2-13.qcow2', 'tap' : 'tap13', 'ip' : '192.168.1.113', 'mac' : '00:00:00:00:00:0d', 'server_ip' : '192.168.1.1', 'server_port' : 12313, 'vnc' : ':13'},
-    'hs2-14': {'disk' : 'hs2-14.qcow2', 'tap' : 'tap14', 'ip' : '192.168.1.114', 'mac' : '00:00:00:00:00:0e', 'server_ip' : '192.168.1.1', 'server_port' : 12314, 'vnc' : ':14'},
+#    'hs2-01': {'disk' : 'hs2-01.raw', 'tap' : 'tap1', 'ip' : '192.168.1.101', 'mac' : '00:00:00:00:00:01', 'server_ip' : '192.168.1.1', 'server_port' : 12301, 'vnc' : ':1'},
+#    'hs2-02': {'disk' : 'hs2-02.raw', 'tap' : 'tap2', 'ip' : '192.168.2.102', 'mac' : '00:00:00:00:00:02', 'server_ip' : '192.168.2.1', 'server_port' : 12302, 'vnc' : ':2'},
+#    'hs2-03': {'disk' : 'hs2-03.raw', 'tap' : 'tap3', 'ip' : '192.168.3.103', 'mac' : '00:00:00:00:00:03', 'server_ip' : '192.168.3.1', 'server_port' : 12303, 'vnc' : ':3'},
+#    'hs2-04': {'disk' : 'hs2-04.raw', 'tap' : 'tap4', 'ip' : '192.168.4.104', 'mac' : '00:00:00:00:00:04', 'server_ip' : '192.168.4.1', 'server_port' : 12304, 'vnc' : ':4'},
+#    'hs2-05': {'disk' : 'hs2-05.raw', 'tap' : 'tap5', 'ip' : '192.168.5.105', 'mac' : '00:00:00:00:00:05', 'server_ip' : '192.168.5.1', 'server_port' : 12305, 'vnc' : ':5'},
+#    'hs2-06': {'disk' : 'hs2-06.raw', 'tap' : 'tap6', 'ip' : '192.168.6.106', 'mac' : '00:00:00:00:00:06', 'server_ip' : '192.168.6.1', 'server_port' : 12306, 'vnc' : ':6'},
+#    'hs2-07': {'disk' : 'hs2-07.raw', 'tap' : 'tap7', 'ip' : '192.168.1.107', 'mac' : '00:00:00:00:00:07', 'server_ip' : '192.168.1.1', 'server_port' : 12307, 'vnc' : ':7'},
+#    'hs2-08': {'disk' : 'hs2-08.raw', 'tap' : 'tap8', 'ip' : '192.168.1.108', 'mac' : '00:00:00:00:00:08', 'server_ip' : '192.168.1.1', 'server_port' : 12308, 'vnc' : ':8'},
+#    'hs2-09': {'disk' : 'hs2-09.raw', 'tap' : 'tap9', 'ip' : '192.168.1.109', 'mac' : '00:00:00:00:00:09', 'server_ip' : '192.168.1.1', 'server_port' : 12309, 'vnc' : ':9'},
+#    'hs2-10': {'disk' : 'hs2-10.raw', 'tap' : 'tap10', 'ip' : '192.168.1.110', 'mac' : '00:00:00:00:00:0a', 'server_ip' : '192.168.1.1', 'server_port' : 12310, 'vnc' : ':10'},
+#    'hs2-11': {'disk' : 'hs2-11.raw', 'tap' : 'tap11', 'ip' : '192.168.1.111', 'mac' : '00:00:00:00:00:0b', 'server_ip' : '192.168.1.1', 'server_port' : 12311, 'vnc' : ':11'},
+#    'hs2-12': {'disk' : 'hs2-12.raw', 'tap' : 'tap12', 'ip' : '192.168.1.112', 'mac' : '00:00:00:00:00:0c', 'server_ip' : '192.168.1.1', 'server_port' : 12312, 'vnc' : ':12'},
+#    'hs2-13': {'disk' : 'hs2-13.raw', 'tap' : 'tap13', 'ip' : '192.168.1.113', 'mac' : '00:00:00:00:00:0d', 'server_ip' : '192.168.1.1', 'server_port' : 12313, 'vnc' : ':13'},
+#    'hs2-14': {'disk' : 'hs2-14.raw', 'tap' : 'tap14', 'ip' : '192.168.1.114', 'mac' : '00:00:00:00:00:0e', 'server_ip' : '192.168.1.1', 'server_port' : 12314, 'vnc' : ':14'},
+    'hs2-01': {'disk' : 'hs2-01.raw', 'ip' : '127.0.0.1', 'port' : 12301, 'vnc' : ':1'},
+    'hs2-02': {'disk' : 'hs2-02.raw', 'ip' : '127.0.0.1', 'port' : 12302, 'vnc' : ':2'},
+    'hs2-03': {'disk' : 'hs2-03.raw', 'ip' : '127.0.0.1', 'port' : 12303, 'vnc' : ':3'},
+    'hs2-04': {'disk' : 'hs2-04.raw', 'ip' : '127.0.0.1', 'port' : 12304, 'vnc' : ':4'},
+    'hs2-05': {'disk' : 'hs2-05.raw', 'ip' : '127.0.0.1', 'port' : 12305, 'vnc' : ':5'},
+    'hs2-06': {'disk' : 'hs2-06.raw', 'ip' : '127.0.0.1', 'port' : 12306, 'vnc' : ':6'},
+    'hs2-07': {'disk' : 'hs2-07.raw', 'ip' : '127.0.0.1', 'port' : 12307, 'vnc' : ':7'},
+    'hs2-08': {'disk' : 'hs2-08.raw', 'ip' : '127.0.0.1', 'port' : 12308, 'vnc' : ':8'},
+    'hs2-09': {'disk' : 'hs2-09.raw', 'ip' : '127.0.0.1', 'port' : 12309, 'vnc' : ':9'},
+    'hs2-10': {'disk' : 'hs2-10.raw', 'ip' : '127.0.0.1', 'port' : 12310, 'vnc' : ':10'},
+    'hs2-11': {'disk' : 'hs2-11.raw', 'ip' : '127.0.0.1', 'port' : 12311, 'vnc' : ':11'},
+    'hs2-12': {'disk' : 'hs2-12.raw', 'ip' : '127.0.0.1', 'port' : 12312, 'vnc' : ':12'}
 }
 
 def react1(dbg):
@@ -66,20 +79,19 @@ mutator = changer.Changer
 metric_res = 10
 save_disks = False
 to_mult_factor = 30
+boot_wait = 25
+shutdown_wait = 25
 
 qemu_machines = "/home/hs1/machines/qemu"
 qemu_m = "3G"
 qemu_shared_folder = "/home/hs1/hs2-current-deploy/qemu-reader"
-qemu_additional =  ['-enable-kvm', '-cpu', 'host', '-smp', '2']
+qemu_additional =  ['-enable-kvm', '-cpu', 'host', '-smp', '1']
 qemu_additional += ['-monitor', 'stdio']
 
 def specific_preperations_1(options, args=None):
-    from sys import path
-    path.append("../client")
-    from script import rs
-    rs("python_server_spawn_args", options.m, args=args)
+    pass
 
-scripts_1 = []
+scripts_1 = ["python_server_spawn_e"]
 log_level = 4
 
 def check_counters(ea):
