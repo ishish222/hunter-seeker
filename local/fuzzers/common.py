@@ -71,6 +71,8 @@ def get_options():
     parser.add_option("-r", "--metric-res",     dest="metric_res", help="Metrics resolution", default=settings.metric_res)
     parser.add_option("-A", "--save-disks",     action="store_true", dest="save_disks", help="Save disks even if they don't contain crashing", default=settings.save_disks)
     parser.add_option("-N", "--vnc",            action="store_true", dest="vnc", help="Use VNC", default=settings.vnc)
+    parser.add_option("-R", "--profiling",      action="store_true", dest="profiling", help="Use profiling", default=settings.profiling)
+    parser.add_option("-k", "--taskset",      action="store_true", dest="use_taskset", help="Use taskset", default=settings.use_taskset)
     parser.add_option("-t", "--to-mult-factor", dest="to_mult_factor", help="Factor for calculating SO timeout based on TO (SO=TO*factor)", default=settings.to_mult_factor)
     parser.add_option("-w", "--boot-wait", dest="boot_wait", help="How long does this system boot", default=settings.boot_wait)
     parser.add_option("-W", "--shutdown-wait", dest="shutdown_wait", help="How long does this system shutdown", default=settings.shutdown_wait)
@@ -94,7 +96,10 @@ def get_options():
 #    options.mac = settings.machines[options.fuzzbox_name]['mac']
 
     #qemu settings
-    qemu_args =  ['qemu-system-i386']
+    if(options.use_taskset is True):
+        qemu_args =  ['taskset', '-c', settings.machines[options.fuzzbox_name]['taskset'], 'qemu-system-i386']
+    else:
+        qemu_args =  ['qemu-system-i386']
     qemu_args += ['-m', options.qemu_m]
     qemu_args += ['-drive', 'file=' + options.machines + '/' + options.hda + ',cache=none,if=virtio']
     if(options.hdb is not None):
@@ -121,6 +126,7 @@ def get_options():
     options.logger.setLevel(logging.DEBUG)
     options.logger.addHandler(options.handler)
     options.wait_sleep = float(options.wait_sleep)
+    options.metric_res = int(options.metric_res)
     options.boot_wait = float(options.boot_wait)
     options.shutdown_wait = float(options.shutdown_wait)
     options.to_mult_factor = float(options.to_mult_factor)
@@ -394,6 +400,8 @@ def sig1_handler(signum, frame):
         
 def sigkill_handler(signum, frame):
     global options
+
+    write_socket(options.s, "quit")
 
     powerofff(options)
 

@@ -8,7 +8,9 @@ visible = False
 testing = False
 breaking = False
 debug = True
-vnc = False
+vnc = True
+profiling = False
+use_taskset = True
 
 machines = {
 #    'hs2-01': {'disk' : 'hs2-01.raw', 'tap' : 'tap1', 'ip' : '192.168.1.101', 'mac' : '00:00:00:00:00:01', 'server_ip' : '192.168.1.1', 'server_port' : 12301, 'vnc' : ':1'},
@@ -25,24 +27,27 @@ machines = {
 #    'hs2-12': {'disk' : 'hs2-12.raw', 'tap' : 'tap12', 'ip' : '192.168.1.112', 'mac' : '00:00:00:00:00:0c', 'server_ip' : '192.168.1.1', 'server_port' : 12312, 'vnc' : ':12'},
 #    'hs2-13': {'disk' : 'hs2-13.raw', 'tap' : 'tap13', 'ip' : '192.168.1.113', 'mac' : '00:00:00:00:00:0d', 'server_ip' : '192.168.1.1', 'server_port' : 12313, 'vnc' : ':13'},
 #    'hs2-14': {'disk' : 'hs2-14.raw', 'tap' : 'tap14', 'ip' : '192.168.1.114', 'mac' : '00:00:00:00:00:0e', 'server_ip' : '192.168.1.1', 'server_port' : 12314, 'vnc' : ':14'},
-    'hs2-01': {'disk' : 'hs2-01.raw', 'ip' : '127.0.0.1', 'port' : 12301, 'vnc' : ':1'},
-    'hs2-02': {'disk' : 'hs2-02.raw', 'ip' : '127.0.0.1', 'port' : 12302, 'vnc' : ':2'},
-    'hs2-03': {'disk' : 'hs2-03.raw', 'ip' : '127.0.0.1', 'port' : 12303, 'vnc' : ':3'},
-    'hs2-04': {'disk' : 'hs2-04.raw', 'ip' : '127.0.0.1', 'port' : 12304, 'vnc' : ':4'},
-    'hs2-05': {'disk' : 'hs2-05.raw', 'ip' : '127.0.0.1', 'port' : 12305, 'vnc' : ':5'},
-    'hs2-06': {'disk' : 'hs2-06.raw', 'ip' : '127.0.0.1', 'port' : 12306, 'vnc' : ':6'},
-    'hs2-07': {'disk' : 'hs2-07.raw', 'ip' : '127.0.0.1', 'port' : 12307, 'vnc' : ':7'},
-    'hs2-08': {'disk' : 'hs2-08.raw', 'ip' : '127.0.0.1', 'port' : 12308, 'vnc' : ':8'},
-    'hs2-09': {'disk' : 'hs2-09.raw', 'ip' : '127.0.0.1', 'port' : 12309, 'vnc' : ':9'},
-    'hs2-10': {'disk' : 'hs2-10.raw', 'ip' : '127.0.0.1', 'port' : 12310, 'vnc' : ':10'},
-    'hs2-11': {'disk' : 'hs2-11.raw', 'ip' : '127.0.0.1', 'port' : 12311, 'vnc' : ':11'},
-    'hs2-12': {'disk' : 'hs2-12.raw', 'ip' : '127.0.0.1', 'port' : 12312, 'vnc' : ':12'}
+    'hs2-01': {'disk' : 'hs2-01.raw', 'ip' : '127.0.0.1', 'port' : 12301, 'vnc' : ':1', 'taskset' : '1,2,3,4'},
+    'hs2-02': {'disk' : 'hs2-02.raw', 'ip' : '127.0.0.1', 'port' : 12302, 'vnc' : ':2', 'taskset' : '6,7,8,9'},
+    'hs2-03': {'disk' : 'hs2-03.raw', 'ip' : '127.0.0.1', 'port' : 12303, 'vnc' : ':3', 'taskset' : '11,12,13,14'},
+    'hs2-04': {'disk' : 'hs2-04.raw', 'ip' : '127.0.0.1', 'port' : 12304, 'vnc' : ':4', 'taskset' : '16,17,18,19'},
+    'hs2-05': {'disk' : 'hs2-05.raw', 'ip' : '127.0.0.1', 'port' : 12305, 'vnc' : ':5', 'taskset' : '21,22,23,24'},
+    'hs2-06': {'disk' : 'hs2-06.raw', 'ip' : '127.0.0.1', 'port' : 12306, 'vnc' : ':6', 'taskset' : '21,22,23'},
+    'hs2-07': {'disk' : 'hs2-07.raw', 'ip' : '127.0.0.1', 'port' : 12307, 'vnc' : ':7', 'taskset' : '14'},
+    'hs2-08': {'disk' : 'hs2-08.raw', 'ip' : '127.0.0.1', 'port' : 12308, 'vnc' : ':8', 'taskset' : '224'},
+    'hs2-09': {'disk' : 'hs2-09.raw', 'ip' : '127.0.0.1', 'port' : 12309, 'vnc' : ':9', 'taskset' : '3584'},
+    'hs2-10': {'disk' : 'hs2-10.raw', 'ip' : '127.0.0.1', 'port' : 12310, 'vnc' : ':10', 'taskset' : '57344'},
+    'hs2-11': {'disk' : 'hs2-11.raw', 'ip' : '127.0.0.1', 'port' : 12311, 'vnc' : ':11', 'taskset' : '917504'},
+    'hs2-12': {'disk' : 'hs2-12.raw', 'ip' : '127.0.0.1', 'port' : 12312, 'vnc' : ':12', 'taskset' : '14680064'}
 }
 
 def react1(dbg):
     dbg.dlog("SR marker reached")
-    dbg.reqScript("enter3")
+    dbg.reqScript("E3")
     return DBG_CONTINUE
+
+script_codes = {}
+script_codes["E3"] = "enter3"
 
 ma_addrs = []
 ma_rvas = []
@@ -78,14 +83,14 @@ mutations = 3
 mutator = changer.Changer
 metric_res = 10
 save_disks = False
-to_mult_factor = 30
-boot_wait = 25
-shutdown_wait = 25
+to_mult_factor = 100
+boot_wait = 60
+shutdown_wait = 60
 
 qemu_machines = "/home/hs1/machines/qemu"
 qemu_m = "3G"
 qemu_shared_folder = "/home/hs1/hs2-current-deploy/qemu-reader"
-qemu_additional =  ['-enable-kvm', '-cpu', 'host', '-smp', '1']
+qemu_additional =  ['-enable-kvm', '-cpu', 'host', '-smp', '2']
 qemu_additional += ['-monitor', 'stdio']
 
 def specific_preperations_1(options, args=None):

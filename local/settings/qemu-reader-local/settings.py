@@ -7,10 +7,14 @@ PASS_COUNT = 0
 visible = False
 testing = False
 breaking = False
-debug = False
+debug = True
+vnc = True
+profiling = True
+use_taskset = True
 
 machines = {
-    'hs2-1': {'disk' : 'hs2-1.raw', 'tap' : 'tap1', 'ip' : '192.168.1.101', 'mac' : '00:00:00:00:00:01', 'server_ip' : '192.168.1.1', 'server_port' : 12301, 'vnc' : ':1'},
+    'hs2-1': {'disk' : 'hs2-1.raw', 'ip' : '127.0.0.1', 'port' : 12345, 'vnc' : ':1', 'taskset' : '6'},
+#    'hs2-1': {'disk' : 'hs2-1.raw', 'tap' : 'tap1', 'ip' : '192.168.1.101', 'mac' : '00:00:00:00:00:01', 'server_ip' : '192.168.1.1', 'server_port' : 12301, 'vnc' : ':1'},
     'hs2-2': {'disk' : 'hs2-2.qcow2', 'ip' : '127.0.0.1', 'port' : 12346, 'vnc' : '1'}
 }
 
@@ -18,9 +22,13 @@ ff = True
 
 def react1(dbg):
     dbg.dlog("SR marker reached")
-    dbg.reqScript("enter")
+    dbg.reqScript("E3")
     print("SR")
     return DBG_CONTINUE
+
+script_codes = {}
+script_codes["E3"] = "enter3"
+script_codes["CL"] = "close_sample_reader"
 
 ma_addrs = []
 ma_rvas = []
@@ -60,14 +68,16 @@ extension = "pdf"
 mutations = 3
 mutator = changer.Changer
 metric_res = 10
-save_disks = False
+save_disks = True
 to_mult_factor = 30
+boot_wait = 25
+shutdown_wait = 25
 
 
 qemu_machines = "/home/ish/machines/qemu"
 qemu_m = "3G"
 qemu_shared_folder = "/home/ish/projects/2012-08-02-korrino/hs2-current-deploy/qemu-reader-local"
-qemu_additional =  ['-enable-kvm', '-smp', '2']
+qemu_additional =  ['-enable-kvm', '-smp', '1']
 qemu_additional += ['-monitor', 'stdio']
 
 def specific_preperations_1(options, args=None):

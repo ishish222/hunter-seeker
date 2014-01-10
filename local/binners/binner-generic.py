@@ -148,8 +148,13 @@ def process_status_queue(satisfactory = None):
 #        main_binner.dlog("Queue size after get : %d" % main_binner.status.qsize())
         status = item[1]
 #        main_binner.dlog("Processing %s" % status)
-#        if(status == ""):
-#            status = "TO" # TO is overriden by all
+        if(status == "TO"):
+            if(main_binner.prev_status == "MA"):
+                status = "RDTO"
+            if(main_binner.prev_status == "TO"):
+                status = "RDTO"
+            if(main_binner.prev_status == "RD"):
+                status = "STTO"
         if(status == "SR"):
 #            main_binner.dlog("Requested script: %s" % item[2])
             main_binner.writePipe("Status: %s\n" % status)
@@ -167,9 +172,11 @@ def process_status_queue(satisfactory = None):
 #            print(main_binner.last_data)
             #main_binner.stop_debuggers()
             #handle_crash()
+        print(status)
         if(satisfactory != None):
             if(status in satisfactory):
                 return True
+        main_binner.prev_status = status
     return False
 
 
@@ -249,11 +256,10 @@ def execute(cmds):
 #            process_status_queue()
             #process_reactions()
             main_binner.loop_debuggers(invocation = "powershell -command \"& { invoke-expression e:\\samples\\shared\\%s }\"" % args)
-            while(process_status_queue(["ST", "CR", "TO"]) != True):
-                main_binner.loop_debuggers()
-            if(status == "TO"):
-                print("ST TO")
-                return
+            while(process_status_queue(["ST", "CR", "STTO"]) != True):
+                main_binner.loop_debuggers(settings.wait_sleep)
+#            if(status == "TO"):
+#                status = "STTO"
             if(status == "CR"):
                 print("CRrrrrrrrrrr")
                 return
@@ -285,11 +291,8 @@ def execute(cmds):
 
 #            main_binner.loop_debuggers()
             #process_reactions()
-            while(process_status_queue(["RD", "CR", "TO"]) != True):
-                main_binner.loop_debuggers()
-            if(status == "TO"):
-                print("RD TO")
-                return
+            while(process_status_queue(["RD", "CR", "RDTO"]) != True):
+                main_binner.loop_debuggers(settings.wait_sleep)
             if(status == "CR"):
                 print("CRrrrrrrrrrr")
                 return
@@ -511,6 +514,12 @@ def execute(cmds):
             main_binner.ok()
             main_binner.start_debuggers()
 
+        elif(cmd == "start_profiling"):
+            main_binner.start_profiling()
+
+        elif(cmd == "dump_stats"):
+            main_binner.dump_stats(args)
+
 #    except Exception, e:
 #        print(e)
 #        while True:
@@ -554,7 +563,22 @@ Hunter-Seeker
         cmd = readPipe()
         cmds = cmd.split(" ")
         execute(cmds)
+        if(cmd == "quit"):
+            break
+
+import cProfile, pstats, StringIO
+pr = cProfile.Profile()
+pr.enable()
+f = open("e:\\logs\\stats-binner", "a")
 
 if __name__ == '__main__':
     binner_routine()
+#    profile.run("binner_routine()", "e:\\logs\\stats-binner")
+
+pr.disable()
+s = StringIO.StringIO()
+sortby = 'cumulative'
+ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
+f.write("test")
+f.close()
 

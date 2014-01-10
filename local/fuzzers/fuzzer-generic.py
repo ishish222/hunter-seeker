@@ -173,6 +173,9 @@ def fuzzing_routine():
             write_socket(s, "logStart e:\\logs\\log-%s-%s.txt" % (options.fuzzbox_name, timestamp2()))
             read_socket(s)
 
+            if(options.profiling):
+                write_socket(s, "start_profiling")
+
             write_socket(s, "checkReady")
 
 #            while(not signaled):
@@ -184,6 +187,11 @@ def fuzzing_routine():
 #                try:
                     (lastResponse, status, reqScript) = read_socket(s)
 #                execute_script(reqScript)
+                    if(status == "STTO"):
+                        proceed5(options)
+                        continue
+                    if(status == "RDTO"):
+                        proceed5(options)
                     if(status == "SR"):
                     # react to SR
 #                    register_script()
@@ -229,6 +237,9 @@ def fuzzing_routine():
                             to_count = 0
                             ma_count = 0
                             last_time_check = current_time
+                            if(options.profiling):
+                                write_socket(s, "dump_stats")
+
                         if(sample_count % options.settings.restart_count == 0):
                             report("Tested: " + str(sample_count) + ", will restart")
                             restart(options)

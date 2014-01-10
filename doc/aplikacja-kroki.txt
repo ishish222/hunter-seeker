@@ -17,7 +17,7 @@ n - nieskonczone
 [dx] 8. Przetestowac proces fuzzowania (reakcje na AV (rand breaking), MA, TO), dodatkowe reakcje
     - wyznaczyc optymalne MA (odsetek MA z dluuugim timoutem dla konkretnej probki)
     - wyznaczyc optymalne TO (najmniejsza liczba sekund, przy ktorej fuzzbox osiaga odsetek MA zblizony do wyznaczonego krok wczesniej, dla konkretnej probki)
-    - wyznaczyc SO, liczbe boxow, rdzeni (metoda prob i bledow)
+    - wyznaczyc SO, liczbe boxow, rdzeni (metoda prob i bledow, oprzyj sie o pinninngi)
     - sprawdzic poprawnosc wynikow testowych (zgodnosc rzeczywistej reakcji z zaobserwowana)
     - sprawdzic reakcje na crash
 [kx] 9. Zoptymalizowac proces fuzzowania
