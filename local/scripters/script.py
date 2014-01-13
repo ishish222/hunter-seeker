@@ -31,9 +31,9 @@ class ScriptException(Exception):
 def read_monitor(pipe):
     data = ''
     while(True):
-        data += pipe.stdout.read(1)
+#        data += pipe.stdout.read(1)
+        data += pipe.recv(1)
         if(data[-6:] == "(qemu)"): 
-            pipe.stdout.flush()
             break
     return data[:-6]
 
@@ -42,13 +42,15 @@ def write_monitor_only(pipe, data):
         print("Monitor not ready")
         return
 #    print("m> " + str(data[:-1]))
-    pipe.stdin.write(data + "\n")
+#    pipe.stdin.write(data + "\n")
+    pipe.send(data + "\n")
 
 def write_monitor_2(pipe, data):
     if(pipe == None):
         print("Monitor not ready")
         return
-    pipe.stdin.write(data + "\n")
+#    pipe.stdin.write(data + "\n")
+    pipe.send(data + "\n")
     ret = read_monitor(pipe)
 #    print(ret)
     return ret
@@ -58,7 +60,8 @@ def write_monitor(pipe, data):
         print("Monitor not ready")
         return
 #    print("m> " + str(data[:-1]))
-    pipe.stdin.write(data + "\n")
+#    pipe.stdin.write(data + "\n")
+    pipe.send(data + "\n")
     ret = read_monitor(pipe)
 #    print(ret)
     ret = read_monitor(pipe)

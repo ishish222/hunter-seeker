@@ -8,41 +8,54 @@ visible = False
 testing = False
 breaking = False
 debug = False
+vnc = True
+profiling = False
+use_taskset = True
 
 machines = {
-    'hs2-1': {'disk' : 'hs2-1.raw', 'tap' : 'tap1', 'ip' : '192.168.1.101', 'mac' : '00:00:00:00:00:01', 'server_ip' : '192.168.1.1', 'server_port' : 12301, 'vnc' : ':1'},
-    'hs2-2': {'disk' : 'hs2-2.qcow2', 'ip' : '127.0.0.1', 'port' : 12346, 'vnc' : '1'}
+    'hs2-2': {'disk' : 'hs2-2.raw', 'vnc' : ':2', 'taskset' : '1,2,3', 'monitor' : '/tmp/monitor-hs2', 'serial' : '/tmp/serial-hs2'}
 }
 
 ff = True
 
 def react1(dbg):
-    dbg.dlog("SR marker reached")
-    dbg.reqScript("enter")
-    print("SR")
+    print("ES")
+    dbg.reqScript("ES")
     return DBG_CONTINUE
+
+def react2(dbg):
+    print("FO")
+    dbg.reqScript("FO")
+    return DBG_CONTINUE
+
+script_codes = {}
+script_codes["ES"] = "foobar3"
+script_codes["FO"] = "foobar2"
 
 ma_addrs = []
 ma_rvas = []
 ma_st_addrs = []
-ma_st_rvas = [("AcroRd32.exe", 0x4cae0, 0)]
+ma_st_rvas = [("foobar2000.exe", 0x3c618, 1)] # check again, but seems it has to pass one
 ma_end_addrs = []
-ma_end_rvas = [("user32.dll", 0x18fe9, 7)]
+ma_end_rvas = [("foo_input_std.dll", 0x3e5df, 0)]
 ma_react_addrs = []
-ma_react_rvas = [("AcroRd32.dll", 0x3664da, (0, react1, ["space"]))]
+ma_react_rvas = [
+("foobar2000.exe", 0x7ceca, (0, react1, []))
+#("foobar2000.exe", 0x58b5b, (0, react2, []))
+]
 ma_rd_addrs = []
-ma_rd_rvas = [("user32.dll", 0x18fe9, 2)]
+ma_rd_rvas = [("foobar2000.exe", 0x7f1bd, 0)]
 
 samples_shared_path = "../samples/shared"
 samples_saved = "../samples/saved"
 samples_binned = "../samples/binned"
 samples_original = "d:\\samples\\original"
 log_path = "../logs"
-app_path = "C:\\Program Files\\foobar2000\\foobar2000.exe"
-app_module = "foobar2000.exe"
+app_path = "C:\\Program Files\\InsERT\\InsERT GT\\Archiw.exe"
+app_module = "Archiw.exe"
 corrector = None
 buffer_size = 4096
-log_name = "HS:Foobar2000"
+log_name = "HS:Subiekt"
 wait_sleep = 5
 fuzzbox_timeout = wait_sleep*4
 start_sleep = 5
@@ -58,11 +71,12 @@ mutator = changer.Changer
 metric_res = 10
 save_disks = False
 to_mult_factor = 30
-
+boot_wait = 60
+shutdown_wait = 60
 
 qemu_machines = "/home/ish/machines/qemu"
 qemu_m = "3G"
-qemu_shared_folder = "/home/ish/projects/2012-08-02-korrino/hs2-current-deploy/qemu-reader-local"
+qemu_shared_folder = "/home/ish/projects/2012-08-02-korrino/hs2-current-deploy/qemu-foobar-local"
 qemu_additional =  ['-enable-kvm', '-smp', '2']
 qemu_additional += ['-monitor', 'stdio']
 
@@ -70,6 +84,7 @@ def specific_preperations_1(options, args=None):
     from sys import path
     path.append("../client")
     from script import rs
+    rs("lclick", options.m, args=args)
     rs("python_server_spawn_args", options.m, args=args)
 
 scripts_1 = []
@@ -108,7 +123,7 @@ scripts_2 = []
 def specific_preperations_3(options, args=None):
     pass
 
-scripts_3 = []
+scripts_3 = ["maximize", "subiekt_mouse_1"]
 
 def specific_preperations_4(options, args=None):
     pass
@@ -120,9 +135,10 @@ from time import sleep
 def specific_preperations_5(options, args=None):
     pass
 
-#wtf
+scripts_5 = ["nop"]
 
-scripts_5 = ["enter3", "close_sample_reader"]
+def specific_preperations_6(options, args=None):
+    pass
 
 def prepare_sample(sample_path):
     return sample_path

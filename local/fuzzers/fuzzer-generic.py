@@ -117,7 +117,9 @@ def fuzzing_routine():
     signal.signal(signal.SIGINT, sigkill_handler)
 #    signal.signal(signal.SIGUSR1, sig1_handler)
 
-    options.ss = prepare_con()
+    #options.ss = prepare_con()
+    options.ms = prepare_monitor(options.ms_path)
+    options.ss = prepare_serial(options.ss_path)
 
     metric_res = options.metric_res
 
@@ -135,6 +137,8 @@ def fuzzing_routine():
         log.flush()
         print("Spawning fuzz for batch: %s" % options.tmp_disk_img)
         start(options)
+        options.m, _ = options.ms.accept()
+        options.s, _ = options.ss.accept()
         print("[%s] Started" % timestamp())
         #mount_cdrom(options, options.cdrom)
         slot = pci_mount(options, options.tmp_disk_img) #hotplug should be completed during bootup
@@ -145,11 +149,10 @@ def fuzzing_routine():
 
         #time for boot
         time.sleep(options.boot_wait)
-
         proceed1(options)
 
         try:
-            accept_con(options.ss)
+           wait_for_init(options.s)
         except socket.timeout:
            print("Socket timeout, restarting")
            report("Socket timeout, restarting")

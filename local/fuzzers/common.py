@@ -83,10 +83,10 @@ def get_options():
     options.fuzzbox_name = sys.argv[1]
     if(options.hda is None):
         options.hda = settings.machines[options.fuzzbox_name]['disk']
-    if(options.fuzzbox_ip is None):
-        options.fuzzbox_ip = settings.machines[options.fuzzbox_name]['ip'] 
-    if(options.fuzzbox_port is None):
-        options.fuzzbox_port = settings.machines[options.fuzzbox_name]['port'] 
+#    if(options.fuzzbox_ip is None):
+#        options.fuzzbox_ip = settings.machines[options.fuzzbox_name]['ip'] 
+#    if(options.fuzzbox_port is None):
+#        options.fuzzbox_port = settings.machines[options.fuzzbox_name]['port'] 
 
 #    options.fuzzbox_ip = settings.machines[options.fuzzbox_name]['ip'] 
 #    options.server_ip = settings.machines[options.fuzzbox_name]['server_ip'] 
@@ -108,13 +108,18 @@ def get_options():
     if(options.cdrom is not None):
         qemu_args += ['-cdrom', options.cdrom]
 
+    options.ms_path = settings.machines[options.fuzzbox_name]['monitor']
+    options.ss_path = settings.machines[options.fuzzbox_name]['serial']
 #    qemu_args += ['-net', 'nic,model=virtio', '-net', 'tap,ifname='+options.tap+',script=no,downscript=no']
-    qemu_args += ['-net', 'nic,model=virtio', '-net', 'user,restrict=n,guestfwd=tcp:10.0.2.100:12345-tcp:127.0.0.1:' + str(options.fuzzbox_port)]
+#    qemu_args += ['-net', 'nic,model=virtio', '-net', 'user,restrict=n,guestfwd=tcp:10.0.2.100:12345-tcp:127.0.0.1:' + str(options.fuzzbox_port)]
 #    qemu_args += ['-net', 'nic,model=rtl8139', '-net', 'tap,ifname='+options.tap+',script=no,downscript=no']
 
     if(options.visible == False and options.vnc == True):
         qemu_args += ['-vnc', settings.machines[options.fuzzbox_name]['vnc']]
     qemu_args += settings.qemu_additional
+
+    qemu_args += ['-monitor', "unix:%s" % settings.machines[options.fuzzbox_name]['monitor']]
+    qemu_args += ['-serial', "unix:%s" % settings.machines[options.fuzzbox_name]['serial']]
 
     testdir(settings.qemu_shared_folder + "/logs")
     
@@ -283,12 +288,50 @@ def restart(options):
     time.sleep(3)
     start(options)
 
+def prepare_monitor(path):
+    ms = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    if(os.path.exists(path)): os.remove(path)
+    ms.bind(path)
+    ms.listen(3)
+    return ms
+
+def prepare_serial(path):
+    ms = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    if(os.path.exists(path)): os.remove(path)
+    ms.bind(path)
+    ms.listen(3)
+    return ms
+
 def prepare_con():
     ss = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 #    ss.bind((options.server_ip, options.server_port))
     ss.bind(("127.0.0.1", options.fuzzbox_port))
     ss.listen(3)
     return ss
+
+def wait_for_init(s):
+    dt = socket.getdefaulttimeout()
+    socket.setdefaulttimeout(80)
+    dts = s.gettimeout()
+    s.settimeout(80)
+    while True:
+        try:
+            print("Waiting for init")
+            init(options.s)
+            break
+        except socket.timeout:
+            print("Accpet timed out, raising")
+#            raise socket.timeout
+            proceed1(options)
+#            os.spawnv(os.P_WAIT, "/bin/ping", ["ping", options.fuzzbox_ip, "-c1"])
+            continue
+
+    print("Connected")
+    socket.setdefaulttimeout(dt)
+    s.settimeout(options.fuzzbox_timeout)
+    print("Socket timeout set to: %f" % options.fuzzbox_timeout)
+    options.s.settimeout(options.fuzzbox_timeout)
+    return options.s
 
 def accept_con(ss):
     dt = socket.getdefaulttimeout()
@@ -351,17 +394,17 @@ def proceed2(options):
     return True
 
 def proceed3(options):
-    if(defined("settings.specific_preperations_3")):
-        options.settings.specific_preperations_3(options)
-    if(defined("settings.scripts_3")):
-        rss(options.settings.scripts_3, options.m, options.slowdown)
-
     s = options.s
 
     write_socket(s, "spawn " + options.settings.app_path)
     read_socket(s)
 
     time.sleep(options.settings.start_sleep)
+
+    if(defined("settings.specific_preperations_3")):
+        options.settings.specific_preperations_3(options)
+    if(defined("settings.scripts_3")):
+        rss(options.settings.scripts_3, options.m, options.slowdown)
 
     write_socket(s, "binTest")
     read_socket(s)

@@ -96,12 +96,12 @@ class binner(object):
         self.dlog("%s" % data, level)
 
     def writePipe(self, data):
-        self.ph.send(data)
+        self.ph.write(data)
 
     def readPipe(self):
         data = ""
         while True:
-            data += self.ph.recv(1)
+            data += self.ph.read(1)
             
             if(data[-6:] == "-=OK=-"): 
                 break

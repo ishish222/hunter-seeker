@@ -10,10 +10,10 @@ breaking = False
 debug = True
 vnc = True
 profiling = True
-use_taskset = True
+use_taskset = False
 
 machines = {
-    'hs2-1': {'disk' : 'hs2-1.raw', 'ip' : '127.0.0.1', 'port' : 12345, 'vnc' : ':1', 'taskset' : '6'},
+    'hs2-1': {'disk' : 'hs2-1.raw', 'ip' : '127.0.0.1', 'port' : 12345, 'vnc' : ':1', 'taskset' : '6', 'monitor' : '/tmp/monitor-hs1', 'serial' : '/tmp/serial-hs1'},
 #    'hs2-1': {'disk' : 'hs2-1.raw', 'tap' : 'tap1', 'ip' : '192.168.1.101', 'mac' : '00:00:00:00:00:01', 'server_ip' : '192.168.1.1', 'server_port' : 12301, 'vnc' : ':1'},
     'hs2-2': {'disk' : 'hs2-2.qcow2', 'ip' : '127.0.0.1', 'port' : 12346, 'vnc' : '1'}
 }
@@ -78,12 +78,13 @@ qemu_machines = "/home/ish/machines/qemu"
 qemu_m = "3G"
 qemu_shared_folder = "/home/ish/projects/2012-08-02-korrino/hs2-current-deploy/qemu-reader-local"
 qemu_additional =  ['-enable-kvm', '-smp', '1']
-qemu_additional += ['-monitor', 'stdio']
+#qemu_additional += ['-monitor', 'stdio']
 
 def specific_preperations_1(options, args=None):
     from sys import path
     path.append("../client")
     from script import rs
+    rs("lclick", options.m)
     rs("python_server_spawn_args", options.m, args=args)
 
 scripts_1 = []

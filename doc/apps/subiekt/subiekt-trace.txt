@@ -1,0 +1,24 @@
+notes:
+
+0x029d2eeb: 0x029d28e0 (long, processing .bak), might be useful for MA nah
+0x029d2e8a: sth's wrong here? or long? shit that was LONG, well not THAT long but still. LONG. Could this be MA? nah
+0x029d2e92: next long :<.
+0x029d2e9e: damn <opens tumblr>
+0x78237ca7: 0x78237f52 - sprobujmy 
+0x10063e14 (Kamaleon.dll +0x63e14) - MA?
+
+stack unwind from opening archive:
+0x029d6c0f: CreateFileA
+0x029d274d: edx
+0x029d2cf9: 0x029d2650
+0x78237c9a: [eax+0x5c] //looks like ST & MA, MFC class method, after this thread ends (3rd is MA?)
+
+stack unwind from creating thread:
+0x79132ac7: CreateThread
+0x782381fb: 0x781d1470
+0x78237f14: mfc
+0x029c94e0: 0x029fdaba
+
+stack unwind from accessing unicode string "Dearchiwizacja zak"
+too long :<
+

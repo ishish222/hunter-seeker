@@ -3,6 +3,7 @@ import sys
 sys.path.append("e:\\server\\paimei")
 sys.path.append("e:\\common")
 
+import serial
 import win32pipe, win32file, win32gui
 import time
 import binner
@@ -31,7 +32,8 @@ def readPipe():
     global ph
     data = ""
     while True:
-        data += ph.recv(1)
+#        data += ph.recv(1)
+        data += ph.read(1)
         
         if(data[-6:] == "-=OK=-"): 
             break
@@ -39,7 +41,8 @@ def readPipe():
 
 def writePipe(data):
     global ph
-    ph.send(data + "-=OK=-")
+#    ph.send(data + "-=OK=-")
+    ph.write(data + "-=OK=-")
 
 ### TODO: trzeba dopracowac!
 
@@ -547,14 +550,16 @@ Hunter-Seeker
     # binner will self-configure based on settings
     #ph = getPipe(PIPE_NAME)
 
-    ph = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+#    ph = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    ph = serial.Serial(0)
 #    s.bind(("0.0.0.0", 12345))
 #    s.listen(3)
 #    dlog("Trying to connect...", 2)
-    ph.connect(("10.0.2.100", 12345))
+#    ph.connect(("10.0.2.100", 12345))
 #    ph, addr = s.accept()
 #    dlog("Got connection", 2)
-    ph.send("python binner")
+#    ph.send("python binner")
+    ph.write("python binner")
 
     main_binner = binner.binner(ph)
     main_binner.ok()

@@ -1,0 +1,12 @@
+1. Maszyna - ok
+
+Markery:
+
+Poczatkowe: 0x44cae0 -0x400000
+Koncowe: 6 uderzenie w: user32.dll!BeginPaint 0x7e428fe9 -0x7e410000
+trudno znalezc, bo plik jest wewnetrznie przetwarzany zanim zostanie przekazany do wyswietlenia
+ech, w koncu znalazlem. Mozliwe, ze da sie zastosowac do innych duzych aplikacji opartych na mechanizmach asynchronicznych 
+Mozna sprobowac otwierac w ff i polegac na tamtych markerach
+
+Reakcje:
+

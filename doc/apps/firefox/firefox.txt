@@ -1,3 +1,5 @@
+Kod: ff
+
 Supported formats:
     MP3, MP4, AAC, CD Audio, WMA, Vorbis, Opus, FLAC, WavPack, WAV, AIFF, Musepack, Speex, AU, SND (src: http://www.foobar2000.org/)
 https://developer.mozilla.org/en-US/docs/HTML/Supported_media_formats
