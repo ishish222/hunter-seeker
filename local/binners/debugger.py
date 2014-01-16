@@ -243,6 +243,10 @@ class debugger(pydbg):
         self.dlog("Signaled: SR", 1)
         self.binner.send("SR%s" % script_code)
 
+    def reqScriptArgs(self, script_code, args):
+        self.dlog("Signaled: SL", 1)
+        self.binner.send("SL%s %s%s" % (script_code, args, end))
+
     def execute(self, cmd, args):
         if(args == None):
             dbg_cmds[cmd][0](self)
@@ -593,7 +597,7 @@ class debugger(pydbg):
             self.dlog("0x%x: %s" % (ma_addr[0], self.marker_handler))
             self.bp_set(ma_addr[0], handler = self.marker_handler)
             self.breakpoints[ma_addr[0]].pass_count = ma_addr[1]
-            self.counters[ma_addr[0]] = 0
+            self.counters[ma_addr[0]] = (ma_addr[1], 0)
 
         self.preparation_lock.release()
         self.dlog("[UNLOCK] Preparation section", 2)
@@ -634,7 +638,7 @@ class debugger(pydbg):
             self.dlog("0x%x: function: %s scripts: %s" % (ma_addr[0], reaction[1], reaction[2]))
             self.bp_set(ma_addr[0], handler = reaction[1])
             self.breakpoints[ma_addr[0]].pass_count = reaction[0]
-            self.counters[ma_addr[0]] = 0
+            self.counters[ma_addr[0]] = (ma_addr[1][0], 0) #take care of this
 
         self.preparation_lock.release()
         self.dlog("[UNLOCK] Preparation section", 2)
@@ -725,6 +729,7 @@ class debugger(pydbg):
         self.dlog("Current hit no: %d, pass count: %d" % (self.counters[ea][HIT_COUNT], self.counters[ea][PASS_COUNT]), 2)
     
         if(self.counters[ea][HIT_COUNT] == self.counters[ea][PASS_COUNT]+1):
+            self.counters[ea] = (self.counters[ea][PASS_COUNT], 0) # zeroing
             return True
         else:
             return False

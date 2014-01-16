@@ -22,3 +22,36 @@ stack unwind from creating thread:
 stack unwind from accessing unicode string "Dearchiwizacja zak"
 too long :<
 
+stack unwind from error msg (Archiwizacja.dll @ 0x29a0000, mfc80.dll @ 0x781d0000, Kameleon.dll @ 0x10001000):
+0x029e04a9:
+0x029ca595
+0x029ca926
+0x7821b931
+0x7e418734
+0x7e423ce4
+0x7e423b2b
+0x7e43e594
+0x7e418731
+0x7e418811
+...
+0x100baaa9
+0x100baad9
+0x10076d91
+0x100baf3e
+
+consider subiekt_3 as reaction to 0x029ca926 (Archiwizacja.dll + 0x2a926) # niezbyt dobre
+
+0x100baaa9 + WindowProc analysis :< 
+too complicated :P
+
+Looking for MwssageBox starting from ST, descending
+0x29c8867
+...
+0x29ca926 -> 0x29ca595 -> 0x29e04a9 -> ...
+Kurwa to jest ten sam watek :<
+
+Dobra, analiza przeplywu sterowania :)
+Lancuch wyswietlany jest zwracany przez 0x29ca58e, ktore robi jedynie dereferencje (chyba jako getter) ecx
+Dobra masz:
+0x029ca4e8 (Archiwizacja.dll +0x2a4e8) - konstrukcja lancucha o bledzie z nazwy serwera
+

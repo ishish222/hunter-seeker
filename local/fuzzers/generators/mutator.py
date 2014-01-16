@@ -27,6 +27,7 @@ class Mutator(file):
         self.areas = list()
         self.selectorPath = "selector"
         if(os.path.isfile("selector")):
+            print("Selector loaded")
             self.readSelector()
         else:
             self.readSize(path)

@@ -89,6 +89,8 @@ def translate(k):
         k = "equal"
     if(k == ":"):
         k = "shift-semicolon"
+    if(k.isupper()):
+        k = "shift-%c" % k.lower()
     return k
 
 class Script:

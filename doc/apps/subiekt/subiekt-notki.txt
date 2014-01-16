@@ -3,7 +3,8 @@ Kod: is
 Markery:
 
 ST:
-0x029c94e0 (Archiwizacja.dll +0x294e0), pass 0
+0x029c94e0 (Archiwizacja.dll +0x294e0), pass 0 (tylko dla skompresowanych)
+0x029c8867 (Archiwizacja.dll +0x28867), pass 0 (chyba dla wszystkich)
 
 MA:
 0x10063e14 (Kamaleon.dll +0x63e14), pass 0

@@ -240,14 +240,15 @@ def execute(cmds):
     
     #            main_binner.loop_debuggers()
                 #process_reactions()
-                while(process_status_queue(["RD", "CR", "TO"]) != True):
-                    main_binner.loop_debuggers()
-                if(status == "TO"):
-                    print("RD TO")
-                    continue
-                if(status == "CR"):
-                    print("CRrrrrrrrrrr")
-                    break
+                if(settings.needs_ready):
+                    while(process_status_queue(["RD", "CR", "TO"]) != True):
+                        main_binner.loop_debuggers()
+                    if(status == "TO"):
+                        print("RD TO")
+                        continue
+                    if(status == "CR"):
+                        print("CRrrrrrrrrrr")
+                        break
     
             main_binner.writePipe("Done")
             main_binner.ok()
@@ -258,7 +259,7 @@ def execute(cmds):
 
 #            process_status_queue()
             #process_reactions()
-            main_binner.loop_debuggers(invocation = "powershell -command \"& { invoke-expression e:\\samples\\shared\\%s }\"" % args)
+            main_binner.loop_debuggers(invocation_args=args)
             while(process_status_queue(["ST", "CR", "STTO"]) != True):
                 main_binner.loop_debuggers(settings.wait_sleep)
 #            if(status == "TO"):
@@ -286,7 +287,8 @@ def execute(cmds):
             main_binner.ok()
 
             main_binner.detach_end_markers()
-            main_binner.attach_rd_markers()
+            if(settings.needs_ready):
+                main_binner.attach_rd_markers()
             # time for reaction to test end
             main_binner.start_debuggers("Closing execution")
             main_binner.readPipe()
@@ -294,11 +296,14 @@ def execute(cmds):
 
 #            main_binner.loop_debuggers()
             #process_reactions()
-            while(process_status_queue(["RD", "CR", "RDTO"]) != True):
-                main_binner.loop_debuggers(settings.wait_sleep)
-            if(status == "CR"):
-                print("CRrrrrrrrrrr")
-                return
+            if(settings.needs_ready):
+                while(process_status_queue(["RD", "CR", "RDTO"]) != True):
+                    main_binner.loop_debuggers(settings.wait_sleep)
+                if(status == "CR"):
+                    print("CRrrrrrrrrrr")
+                    return
+            else:
+                status = "RD"
 
             main_binner.writePipe("Status: %s" % status)
             main_binner.ok()

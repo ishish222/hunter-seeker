@@ -20,81 +20,6 @@ from datetime import datetime
 from common import *
 import tempfile
 
-class CrashException(Exception):
-    pass
-
-def pci_mount(options, filee):
-    dev_str = write_monitor(options.m, "pci_add auto storage file=%s,if=virtio" % filee)
-    if(dev_str.find("could not open disk image:") > -1):
-        print(dev_str)
-        return
-    slot_off = dev_str.find("slot ") + 5
-    slot = int(dev_str[slot_off])
-    print("PCI dev mounted in slot: " + str(slot))
-    return slot
-
-def pci_umount(options, slot):
-    write_monitor_2(options.m, "pci_del %d" % slot)
-#    read_monitor(options.m)
-
-def mount_drive(options):
-    os.spawnv(os.P_WAIT, "/usr/bin/sudo", ["sudo", "mount", "-o", "loop,offset=32256,umask=0000", options.tmp_disk_img, options.tmp_mountpoint])
-
-def umount_drive(options):
-    os.spawnv(os.P_WAIT, "/usr/bin/sudo", ["sudo", "umount", options.tmp_mountpoint])
-
-def create_drive(options):
-    options.tmp_mountpoint = tempfile.mktemp()
-    os.spawnv(os.P_WAIT, "/bin/mkdir", ["mkdir", options.tmp_mountpoint])
-    try:
-        options.tmp_disk_img = tempfile.mktemp(suffix = "-samples.raw", dir=".")
-        os.spawnv(os.P_WAIT, "/bin/cp", ["cp", "../secondary.raw", options.tmp_disk_img])
-    except Exception, e:
-        print(e)
-    print("Created disk & mountpoint")
-
-def del_mountpoint(options):
-    os.spawnv(os.P_WAIT, "/bin/rm", ["rm", "-rf", options.tmp_mountpoint])
-    print("Removed mountpoint")
-    
-def generate(options):
-    samples_list = []
-    mount_drive(options)
-    try:
-        my_generator = generator.Generator(options.origin, options.tmp_mountpoint+"/samples/shared", "."+options.extension, options.settings.mutator, corrector = None)
-        my_generator.mutations=int(options.mutations)
-        samples_list = my_generator.generate(options.samples_count)
-    except Exception, e:
-        print(e)
-
-    # copy server files
-    os.spawnv(os.P_WAIT, "/bin/cp", ["cp", "-r", "../server", options.tmp_mountpoint])
-    os.spawnv(os.P_WAIT, "/bin/cp", ["cp", "-r", "../common", options.tmp_mountpoint])
-
-    umount_drive(options)
-    print("Generated samples")
-    return samples_list
-
-def eject_cdrom(options):
-    write_monitor_2(options.m, "eject ide1-cd0")
-
-def mount_cdrom(options, path):
-    write_monitor_2(options.m, "change ide1-cd0 %s" % path)
-
-#not always working OK
-def killHost(options):
-    s = options.s
-    write_socket(s, "ps")
-    read_socket(s)
-    write_socket(s, "killHost")
-    read_socket(s)
-    write_socket(s, "kill dwwin.exe")
-    read_socket(s)
-    write_socket(s, "kill %s" % options.settings.app_module)
-    read_socket(s)
-    write_socket(s, "ps")
-    read_socket(s)
-
 signaled = False
 
 def sig1_handler(signum, frame):
@@ -137,8 +62,6 @@ def fuzzing_routine():
         log.flush()
         print("Spawning fuzz for batch: %s" % options.tmp_disk_img)
         start(options)
-        options.m, _ = options.ms.accept()
-        options.s, _ = options.ss.accept()
         print("[%s] Started" % timestamp())
         #mount_cdrom(options, options.cdrom)
         slot = pci_mount(options, options.tmp_disk_img) #hotplug should be completed during bootup
@@ -148,7 +71,7 @@ def fuzzing_routine():
 #        os.spawnv(os.P_WAIT, "/bin/ping", ["ping", options.fuzzbox_ip, "-c1"])
 
         #time for boot
-        time.sleep(options.boot_wait)
+#        time.sleep(options.boot_wait)
         proceed1(options)
 
         try:
@@ -207,7 +130,8 @@ def fuzzing_routine():
                         sample_file = os.path.basename(sample_path)
                         test_path = options.settings.prepare_sample(sample_path)
                         test_file = os.path.basename(test_path)
-                        write_socket(s, "testFile " + test_file)
+                        write_socket(s, "testFile e:\\samples\\shared\\" + test_file)
+                        options.settings.runner_0(options, [test_file])
                         log.write("%s: " % test_file)
                         log.flush()
                         continue
@@ -249,20 +173,23 @@ def fuzzing_routine():
                             proceed1(options)
                             accept_con(ss)
                             s = options.s
+
+#                        if(not options.settings.needs_ready):
+                        if(False):
+                            sample_path = samples_list.pop()
+                            sample_file = os.path.basename(sample_path)
+                            test_path = options.settings.prepare_sample(sample_path)
+                            test_file = os.path.basename(test_path)
+                            write_socket(s, "testFile e:\\samples\\shared\\" + test_file)
+                            options.settings.runner_0(options, [test_file])
+                            log.write("%s: " % test_file)
+                            log.flush()
+
                         continue
-#                    except socket.timeout:
-#                        print("Socket timeout, skipping")
-#                        report("Socket timeout, skipping")
-#                        write_socket(s, "logStop")
-#                        del_mountpoint(options)
-#                        powerofff(options)
-#                        if(not options.save_disks):
-#                            os.remove(options.tmp_disk_img)
-#                        continue
                
                 write_socket(s, "getSynopsis")
                 dossier, _, _ = read_socket(s)
-                handle_crashing_sample(dossier, sample_path, sample_file)
+#                handle_crashing_sample(dossier, sample_path, sample_file)
                 log.write("[%s], registered, binned\n" % status)
                 log.flush()
                 report("CR")

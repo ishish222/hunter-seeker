@@ -20,6 +20,7 @@ c:../../blob/res/flac/519394c0f839fe5f5a7108f9937d740d.flac
 c:../../blob/res/flac/83ff4cdeaf0bded940e111f1f9bf7f0a.flac
 c:../../blob/res/flac/9b5bd78091a95f972a9f5ca4d345a57d.flac
 t:settings/qemu-foobar-local/settings.py
+t:settings/default-croconaw/default.py
 t:fuzzers/generators
 t:fuzzers/correctors
 t:fuzzers/common.py

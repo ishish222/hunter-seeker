@@ -11,10 +11,13 @@ import tempfile
 #log_error = log.log_error
 
 class Generator(object):
-    def __init__(self, origin_path_ = "", dest_path_ = "", dest_suffix_ = ".sample", mutator_ = None, mutations_ = 3):
+    def __init__(self, origin_path_ = "", dest_path_ = "", dest_suffix_ = None, mutator_ = None, mutations_ = 3):
         self.origin_path = origin_path_
         self.dest_path = dest_path_
-        self.dest_suffix = dest_suffix_
+        if(dest_suffix_ != None):
+            self.dest_suffix = dest_suffix_
+        else:
+            self.dest_suffix = "."+origin_path_.split(".")[-1]
         self.mutator = mutator_
         self.mutations = mutations_
 

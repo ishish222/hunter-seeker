@@ -17,7 +17,7 @@ import time
 from select import select
 import socket
 
-statusPri = {'SR' : 1, 'CR' : 0, 'TO' : 2, 'MA' : 2, 'RD' : 2, 'ST' : 2}
+statusPri = {'SR' : 1, 'SL' : 1, 'CR' : 0, 'TO' : 2, 'MA' : 2, 'RD' : 2, 'ST' : 2}
 end = "=[OK]="
 
 ### functions
@@ -155,6 +155,17 @@ class binner(object):
                 self.reqScript = settings.script_codes[script_code]
                 status = "SR"
                 self.status.put((statusPri[status], status, self.reqScript))
+            if(data == "SL"):
+                script_code = dbg_socket.recv(2)
+                self.reqScript = settings.script_codes[script_code]
+                status = "SL"
+                while True:
+                    long_data += dbg_socket.recv(1)
+                    if(long_data[-6:] == end): 
+                        self.last_data = long_data[:-6]
+                        break
+                self.reqScript += long_data
+                self.status.put((statusPri[status], status, self.reqScript))
             if(data == "LO"):
                 while True:
                     long_data += dbg_socket.recv(1)
@@ -170,8 +181,8 @@ class binner(object):
             return
         return
 
-    def loop_debuggers(self, to = None, invocation = None):
-        self.loop_debuggers_iteration(to, invocation)
+    def loop_debuggers(self, to = None, invocation_args = None):
+        self.loop_debuggers_iteration(to, invocation_args)
 
         # answers are good, but we're waiting for events
         while(self.status.qsize() == 0):
@@ -196,13 +207,13 @@ class binner(object):
             self.race_lock.release()
 
     # start and break on event
-    def loop_debuggers_iteration(self, to = None, invocation = None):
+    def loop_debuggers_iteration(self, to = None, invocation_args = None):
         if(to == None):
             # will wait for signal
             self.start_debuggers("Loop interation")
-            if(invocation != None):
-                self.dlog("Invoking: %s" % invocation)
-                Popen(invocation)
+            if(invocation_args != None):
+                self.dlog("Invoking: %s" % invocation_args)
+                settings.runner(invocation_args)
             self.poll_debuggers()
             self.stop_debuggers("Detected readiness")
         else:
@@ -210,9 +221,9 @@ class binner(object):
             event.clear()
             # will wait for timeout
             self.start_debuggers("Loop interation")
-            if(invocation != None):
-                self.dlog("Invoking: %s" % invocation)
-                Popen(invocation)
+            if(invocation_args != None):
+                self.dlog("Invoking: %s" % invocation_args)
+                settings.runner(invocation_args)
             # Create race
             T1 = Thread(target=self.race1, args=(event,))
             T2 = Thread(target=self.race2, args=(to,event))

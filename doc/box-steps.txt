@@ -26,3 +26,9 @@ set opera as launcher!
 in ps: set-executionpolicy bypass
 turn off fw!
 
+--
+
+new:
+wylacz autorun
+zainstalouj python, pywin, pyserial
+dodaj cmd.exe do autorun

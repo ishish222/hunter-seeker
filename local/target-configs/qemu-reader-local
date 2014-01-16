@@ -12,6 +12,7 @@ t:fuzzers/generators
 t:fuzzers/correctors
 t:fuzzers/common.py
 t:settings/qemu-reader-local/settings.py
+t:settings/default-croconaw/default.py
 s:paimei
 s:binners/binner-generic.py
 s:binners/binner.py

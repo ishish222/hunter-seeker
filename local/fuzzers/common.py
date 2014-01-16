@@ -10,6 +10,7 @@ import generators.generatorCorrected as generator
 import socket
 from subprocess import Popen, PIPE
 import time
+import tempfile
 
 logo = """
  __                      .__               
@@ -75,7 +76,10 @@ def get_options():
     parser.add_option("-k", "--taskset",      action="store_true", dest="use_taskset", help="Use taskset", default=settings.use_taskset)
     parser.add_option("-t", "--to-mult-factor", dest="to_mult_factor", help="Factor for calculating SO timeout based on TO (SO=TO*factor)", default=settings.to_mult_factor)
     parser.add_option("-w", "--boot-wait", dest="boot_wait", help="How long does this system boot", default=settings.boot_wait)
+    parser.add_option("-I", "--revert-wait", dest="revert_wait", help="How long does this system revert", default=settings.revert_wait)
     parser.add_option("-W", "--shutdown-wait", dest="shutdown_wait", help="How long does this system shutdown", default=settings.shutdown_wait)
+    parser.add_option("-f", "--init-timeout", dest="init_timeout", help="Timeout for binner initiation", default=settings.init_timeout)
+    parser.add_option("-z", "--samples-size-margin", dest="samples_size_margin", help="Size marigin of single sample for disk size calculations", default=settings.samples_size_margin)
 
 
     (options, args) = parser.parse_args()
@@ -133,9 +137,11 @@ def get_options():
     options.wait_sleep = float(options.wait_sleep)
     options.metric_res = int(options.metric_res)
     options.boot_wait = float(options.boot_wait)
+    options.revert_wait = float(options.revert_wait)
     options.shutdown_wait = float(options.shutdown_wait)
     options.to_mult_factor = float(options.to_mult_factor)
     options.fuzzbox_timeout = float(options.wait_sleep*options.to_mult_factor)
+    options.init_timeout = float(options.init_timeout)
 
     #thats right bitches
     options.settings = settings
@@ -248,13 +254,6 @@ def write_socket(s, data):
     s.send(data + "-=OK=-")
 
 def powerofff(options):
-#    try:
-#        print("Shutting down ss")
-#        options.ss.shutdown(socket.SHUT_RDWR)
-#        options.ss.close()
-#    except Exception:
-#        print("Error shutting down ss")
-#        pass
     try:
         print("Shutting down s")
         options.s.shutdown(socket.SHUT_RDWR)
@@ -263,13 +262,16 @@ def powerofff(options):
         print("Error shutting down s")
         pass
     print("[Powering off]")
-    rs("powerdown", options.m)
+    if(options.settings.use_snapshots == False):
+        rs("powerdown", options.m)
+        time.sleep(options.shutdown_wait)
+    else:
+        rs("quit", options.m)
     options.m = None
-    time.sleep(options.shutdown_wait)
 
 def revert(options):
     print("[Reverting]")
-    #rs("load_ready", m)
+#    rs("load_ready", options.m)
     rss(options.settings.revert_scripts, options.m, options.slowdown)
 
 def start(options):
@@ -277,10 +279,14 @@ def start(options):
     print options.qemu_args
     m = Popen(options.qemu_args, stdout=PIPE, stdin=PIPE)
     time.sleep(3)
-    options.m = m
-#    revert(options)
-#    time.sleep(60)
-#    rs("open_cmd", options.m)
+    options.m, _ = options.ms.accept()
+    options.s, _ = options.ss.accept()
+
+    if(options.settings.use_snapshots == True):
+        revert(options)
+        time.sleep(options.revert_wait)
+    else:
+        time.sleep(options.boot_wait)
     return m
 
 def restart(options):
@@ -311,9 +317,9 @@ def prepare_con():
 
 def wait_for_init(s):
     dt = socket.getdefaulttimeout()
-    socket.setdefaulttimeout(80)
+    socket.setdefaulttimeout(options.init_timeout)
     dts = s.gettimeout()
-    s.settimeout(80)
+    s.settimeout(options.init_timeout)
     while True:
         try:
             print("Waiting for init")
@@ -544,5 +550,114 @@ def execute_script(options, reqScript):
         rs(reqScript, options.m, options.slowdown)
         reqScript = ""
 
+
+class CrashException(Exception):
+    pass
+
+class FuzzingException(Exception):
+    pass
+
+def simple_exec(args):
+    ans = Popen(args, stdout=PIPE)
+    return ans.stdout.readline()[:-1]
+
+def long_exec(args):
+    ans = Popen(args, stdout=PIPE)
+    return ans.stdout,read()
+
+def create_image(path, size):
+    simple_exec(["qemu-img", "create", "-f", "raw", path, str(size)])
+    loop_dev = simple_exec(["sudo", "losetup", "-f", "--show", path])
+    simple_exec(["sudo", "mkfs.ntfs", "-f", "-L", "secondary", loop_dev])
+    time.sleep(2)
+    simple_exec(["sudo", "losetup", "-d", loop_dev])
+    return path
+
+def pci_mount(options, filee):
+    dev_str = write_monitor(options.m, "pci_add auto storage file=%s,if=virtio" % filee)
+    if(dev_str.find("could not open disk image:") > -1):
+        print(dev_str)
+        return
+    slot_off = dev_str.find("slot ") + 5
+    slot = int(dev_str[slot_off])
+    print("PCI dev mounted in slot: " + str(slot))
+    return slot
+
+def pci_umount(options, slot):
+    write_monitor_2(options.m, "pci_del %d" % slot)
+#    read_monitor(options.m)
+
+def mount_drive(options):
+    options.tmp_mountpoint = tempfile.mktemp()
+    os.spawnv(os.P_WAIT, "/bin/mkdir", ["mkdir", options.tmp_mountpoint])
+    print("Mounting %s" % options.tmp_mountpoint)
+    os.spawnv(os.P_WAIT, "/usr/bin/sudo", ["sudo", "mount", "-o", "loop,umask=0000", options.tmp_disk_img, options.tmp_mountpoint])
+
+def umount_drive(options):
+    print("Umounting %s" % options.tmp_mountpoint)
+    os.spawnv(os.P_WAIT, "/usr/bin/sudo", ["sudo", "umount", options.tmp_mountpoint])
+    os.spawnv(os.P_WAIT, "/bin/rm", ["rm", "-rf", options.tmp_mountpoint])
+
+def create_drive(options):
+    origin_size = os.stat(options.origin).st_size
+    size_margin  = origin_size * options.samples_size_margin
+    origin_size += size_margin
+    disk_size = origin_size * (options.samples_count + 1) + options.settings.SERVER_SIZE
+    disk_size = max(int(disk_size), options.settings.MIN_DISK_SIZE)
+    if(disk_size > options.settings.MAX_DISK_SIZE): raise FuzzingException
+    options.tmp_disk_img = tempfile.mktemp(suffix = "-samples.raw", dir=".")
+    create_image(options.tmp_disk_img, disk_size)
+    print("Batch disk size : %s" % disk_size)
+    print("Created disk")
+
+def del_mountpoint(options):
+    os.spawnv(os.P_WAIT, "/bin/rm", ["rm", "-rf", options.tmp_mountpoint])
+    print("Removed mountpoint")
+    
+def generate(options):
+    samples_list = []
+    mount_drive(options)
+    os.spawnv(os.P_WAIT, "/bin/mkdir", ["mkdir", "-p", options.tmp_mountpoint+"/samples/shared"])
+    os.spawnv(os.P_WAIT, "/bin/mkdir", ["mkdir", "-p", options.tmp_mountpoint+"/samples/saved"])
+    os.spawnv(os.P_WAIT, "/bin/mkdir", ["mkdir", "-p", options.tmp_mountpoint+"/samples/binned"])
+    os.spawnv(os.P_WAIT, "/bin/mkdir", ["mkdir", "-p", options.tmp_mountpoint+"/samples/other"])
+    os.spawnv(os.P_WAIT, "/bin/mkdir", ["mkdir", "-p", options.tmp_mountpoint+"/logs"])
+    os.spawnv(os.P_WAIT, "/bin/mkdir", ["mkdir", "-p", options.tmp_mountpoint+"/server"])
+    os.spawnv(os.P_WAIT, "/bin/cp", ["cp", options.origin, options.tmp_mountpoint+"/samples/shared"])
+
+    try:
+        my_generator = generator.Generator(options.origin, options.tmp_mountpoint+"/samples/shared", mutator_=options.settings.mutator, corrector=None)
+        my_generator.mutations=int(options.mutations)
+        samples_list += my_generator.generate(options.samples_count)
+    except Exception, e:
+    
+        print(e)
+
+    # copy server files
+    os.spawnv(os.P_WAIT, "/bin/cp", ["cp", "-r", "../server", options.tmp_mountpoint])
+    os.spawnv(os.P_WAIT, "/bin/cp", ["cp", "-r", "../common", options.tmp_mountpoint])
+
+    umount_drive(options)
+    print("Generated samples")
+    return samples_list
+
+def eject_cdrom(options):
+    write_monitor_2(options.m, "eject ide1-cd0")
+
+def mount_cdrom(options, path):
+    write_monitor_2(options.m, "change ide1-cd0 %s" % path)
+
+def killHost(options):
+    s = options.s
+    write_socket(s, "ps")
+    read_socket(s)
+    write_socket(s, "killHost")
+    read_socket(s)
+    write_socket(s, "kill dwwin.exe")
+    read_socket(s)
+    write_socket(s, "kill %s" % options.settings.app_module)
+    read_socket(s)
+    write_socket(s, "ps")
+    read_socket(s)
 
 

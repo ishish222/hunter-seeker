@@ -9,11 +9,14 @@ import importlib
 from mmap import mmap
 
 class Generator(object):
-    def __init__(self, origin_path_ = "", dest_path_ = "", dest_suffix_ = ".sample", mutator_ = None, mutations_ = 3, corrector = None):
+    def __init__(self, origin_path_ = "", dest_path_ = "", dest_suffix_ = None, mutator_ = None, mutations_ = 3, corrector = None):
         global correctorlib
         self.origin_path = origin_path_
         self.dest_path = dest_path_
-        self.dest_suffix = dest_suffix_
+        if(dest_suffix_ != None):
+            self.dest_suffix = dest_suffix_
+        else:
+            self.dest_suffix = "."+origin_path_.split(".")[-1]
         self.mutator = mutator_
         self.mutations = mutations_
         if(corrector != None):
