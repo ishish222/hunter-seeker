@@ -1,6 +1,9 @@
 DBG_CONTINUE = 0x00010002
 HIT_COUNT = 1
 PASS_COUNT = 0
+MIN_DISK_SIZE = 2000000
+MAX_DISK_SIZE = 2000000000
+SERVER_SIZE = 50000000
 
 visible = False
 testing = False
@@ -47,6 +50,7 @@ samples_shared_path = "../samples/shared"
 samples_saved = "../samples/saved"
 samples_binned = "../samples/binned"
 samples_original = "d:\\samples\\original"
+samples_size_margin = 0.3
 log_path = "../logs"
 corrector = None
 buffer_size = 4096

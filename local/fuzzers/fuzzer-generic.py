@@ -174,17 +174,6 @@ def fuzzing_routine():
                             accept_con(ss)
                             s = options.s
 
-#                        if(not options.settings.needs_ready):
-                        if(False):
-                            sample_path = samples_list.pop()
-                            sample_file = os.path.basename(sample_path)
-                            test_path = options.settings.prepare_sample(sample_path)
-                            test_file = os.path.basename(test_path)
-                            write_socket(s, "testFile e:\\samples\\shared\\" + test_file)
-                            options.settings.runner_0(options, [test_file])
-                            log.write("%s: " % test_file)
-                            log.flush()
-
                         continue
                
                 write_socket(s, "getSynopsis")
