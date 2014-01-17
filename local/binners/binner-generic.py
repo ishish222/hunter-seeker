@@ -169,12 +169,7 @@ def process_status_queue(satisfactory = None):
             main_binner.stop_debuggers("Script execution finished")
 #            main_binner.dlog("Queue size after script: %d" % main_binner.status.qsize())
             continue
-        elif(status == "CR"):
-            main_binner.writePipe("Status: %s" % status)
-            main_binner.ok()
-#            print(main_binner.last_data)
-            #main_binner.stop_debuggers()
-            #handle_crash()
+
         print(status)
         if(satisfactory != None):
             if(status in satisfactory):
@@ -206,7 +201,7 @@ def execute(cmds):
             for sample in glob("e:\\samples\\shared\\*.*"):
                 main_binner.attach_st_markers()
                 main_binner.loop_debuggers(invocation = "powershell -command \"& { invoke-expression %s }\"" % sample)
-                while(process_status_queue(["ST", "CR", "TO"]) != True):
+                while(process_status_queue(["ST", "CR", "TO", "CR"]) != True):
                     main_binner.loop_debuggers()
                 if(status == "TO"):
                     print("ST TO")
@@ -262,10 +257,14 @@ def execute(cmds):
             main_binner.loop_debuggers(invocation_args=args)
             while(process_status_queue(["ST", "CR", "STTO"]) != True):
                 main_binner.loop_debuggers(settings.wait_sleep)
-#            if(status == "TO"):
-#                status = "STTO"
             if(status == "CR"):
-                print("CRrrrrrrrrrr")
+                dlog("Processing CR1")
+                main_binner.get_ea()
+                main_binner.test_bin_dir()
+                main_binner.save_synopsis(args)
+                main_binner.save_sample(args)
+                main_binner.writePipe("Status: CR")
+                main_binner.ok()
                 return
 
             main_binner.writePipe("Status: %s" % status)
@@ -274,13 +273,18 @@ def execute(cmds):
             main_binner.detach_st_markers()
             main_binner.attach_end_markers()
 
-#            process_status_queue()
-#            main_binner.loop_debuggers(settings.wait_sleep)
-            #process_reactions()
             while(process_status_queue(["MA", "CR", "TO"]) != True):
                 main_binner.loop_debuggers(settings.wait_sleep)
             if(status == "CR"):
-                print("CRrrrrrrrrrr")
+                dlog("Processing CR2")
+                main_binner.get_ea()
+                main_binner.test_bin_dir()
+                main_binner.save_synopsis(args)
+                main_binner.save_sample(args)
+                dlog("Hereeeeeee")
+                time.sleep(10)
+                main_binner.writePipe("Status: CR")
+                main_binner.ok()
                 return
 
             main_binner.writePipe("Status: %s" % status)
@@ -299,11 +303,19 @@ def execute(cmds):
             if(settings.needs_ready):
                 while(process_status_queue(["RD", "CR", "RDTO"]) != True):
                     main_binner.loop_debuggers(settings.wait_sleep)
-                if(status == "CR"):
-                    print("CRrrrrrrrrrr")
-                    return
             else:
-                status = "RD"
+                process_status_queue(["RD", "CR", "RDTO"])
+                if(status != "CR"): status = "RD"
+
+            if(status == "CR"):
+                dlog("Processing CR3")
+                main_binner.get_ea()
+                main_binner.test_bin_dir()
+                main_binner.save_synopsis(args)
+                main_binner.save_sample(args)
+                main_binner.writePipe("Status: CR")
+                main_binner.ok()
+                return
 
             main_binner.writePipe("Status: %s" % status)
             main_binner.ok()
@@ -528,6 +540,9 @@ def execute(cmds):
         elif(cmd == "dump_stats"):
             main_binner.dump_stats(args)
 
+        elif(cmd == "quit"):
+            main_binner.close_logs()
+
 #    except Exception, e:
 #        print(e)
 #        while True:
@@ -579,7 +594,7 @@ Hunter-Seeker
 import cProfile, pstats, StringIO
 pr = cProfile.Profile()
 pr.enable()
-f = open("e:\\logs\\stats-binner", "a")
+f = open("e:\\logs\\stats-binner", "a", 0)
 
 if __name__ == '__main__':
     binner_routine()

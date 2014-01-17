@@ -16,12 +16,18 @@ import win32pipe, win32file
 import time
 from select import select
 import socket
+import os
+from shutil import copyfile
 
 statusPri = {'SR' : 1, 'SL' : 1, 'CR' : 0, 'TO' : 2, 'MA' : 2, 'RD' : 2, 'ST' : 2}
 end = "=[OK]="
 
 ### functions
 # unable to move cause settings module is not visible
+
+def testdir(x): 
+    if(os.path.isdir(x) == False):
+        os.mkdir(x)
 
 def defined(name):
     if(name in globals()):
@@ -60,6 +66,8 @@ class binner(object):
         self.dbg_event = Event()
         self.dbg_output = None
         self.dbg_line = ""
+        self.last_crashed = None
+        self.last_answer = ""
        
         self.status = PriorityQueue()
         self.reqScript = ""
@@ -67,8 +75,10 @@ class binner(object):
         self.main_socket.bind(("127.0.0.1", 12347))
         self.main_socket.listen(3)
         self.last_data = ""
+        self.ea = None
         self.used_pids = []
         self.prev_status = ""
+        self.last_file = ""
 
         if(defined("settings.log_level") == True):
             self.log_level = settings.log_level
@@ -96,6 +106,7 @@ class binner(object):
         self.dlog("%s" % data, level)
 
     def writePipe(self, data):
+        self.dlog("Writing to pipe: %s" % data, 3)
         self.ph.write(data)
 
     def readPipe(self):
@@ -142,35 +153,48 @@ class binner(object):
             self.read_debugger(dbg)
 
     def read_debugger(self, dbg_socket):
+        self.last_answer = ""
         data = ""
         while True:
             r, _, _ = select((dbg_socket, ), [], [], 0)
             if(r == []): break
             data = dbg_socket.recv(2)
+            self.last_answer += data
             if(data == "SA"):
                 status = dbg_socket.recv(2)
+                self.last_answer += status
                 self.status.put((statusPri[status], status))
+                if(status == "CR"): 
+                    self.last_crashed = dbg_socket
             if(data == "SR"):
                 script_code = dbg_socket.recv(2)
+                self.last_answer += script_code
                 self.reqScript = settings.script_codes[script_code]
                 status = "SR"
                 self.status.put((statusPri[status], status, self.reqScript))
             if(data == "SL"):
+                long_data = ""
                 script_code = dbg_socket.recv(2)
+                self.last_answer += script_code
                 self.reqScript = settings.script_codes[script_code]
                 status = "SL"
                 while True:
                     long_data += dbg_socket.recv(1)
                     if(long_data[-6:] == end): 
                         self.last_data = long_data[:-6]
+                        self.last_answer += self.last_data
                         break
                 self.reqScript += long_data
                 self.status.put((statusPri[status], status, self.reqScript))
             if(data == "LO"):
+                self.dlog("In receiving LO")
+                print("here")
+                long_data = ""
                 while True:
                     long_data += dbg_socket.recv(1)
                     if(long_data[-6:] == end): 
                         self.last_data = long_data[:-6]
+                        self.last_answer += self.last_data
                         break
 
     def write_debugger(self, dbg_socket, data):
@@ -431,7 +455,7 @@ class binner(object):
         print("Binner starting log")
         if(self.last_log_file != None):
             self.last_log_file.close()
-        self.last_log_file = open("%s-binner.txt" % name, "a")
+        self.last_log_file = open("%s-binner.txt" % name, "a", 0)
         self.send_command("LS%s%s" % (name, end))
 
     def log_write(self, text):
@@ -457,6 +481,30 @@ class binner(object):
         self.dlog("Got it")
         self.writePipe(data)
         self.ok()
+
+    def get_ea(self):
+        self.write_debugger(self.last_crashed, "EA")
+        time.sleep(1)
+        self.read_debugger(self.last_crashed)
+        self.ea = self.last_data
+
+    def test_bin_dir(self):
+        bin_dir = "%s\\%s" % (settings.samples_binned, self.ea)
+        testdir(bin_dir)
+
+    def save_synopsis(self, filee):
+        fname = filee.split("\\")[-1]
+        self.send_command("SS%s\\%s\\%s%s" % (settings.samples_binned, self.ea, fname, end))
+        self.ok()
+
+    def save_sample(self, filee):
+        fname = filee.split("\\")[-1]
+        copyfile(filee, "%s\\%s\\%s" % (settings.samples_binned, self.ea, fname))
+
+    def close_logs(self):
+        self.last_log_file.flush()
+        self.last_log_file.close()
+        self.send_command("CL")
 
     def start_profiling(self):
         self.send_command("RS")

@@ -125,7 +125,14 @@ def default_av_handler(dbg):
     dbg.dlog("avThread")
 
     dbg.crash_bin.record_crash(dbg)
-    print("CR")
+    dbg.signal_cr()
+
+    # take over cmd parsing?
+    while True:
+        cmd, args = readline(dbg.binner)
+        dbg.dlog("Received: %s" % cmd, 2)
+        dbg.execute(cmd, args)
+
 #    dbg.detach_st_markers()
 #    dbg.detach_end_markers()
 #    dbg.detach_rd_markers()
@@ -134,11 +141,10 @@ def default_av_handler(dbg):
 #    dbg.detach_bp_handler()
 #    dbg.detach_av_handler()
 #    dbg.detach_ss_handler()
-    dbg.detach_av_handler()
+#    dbg.detach_av_handler()
 #    dbg.terminate_process(method = "exitprocess")
-    dbg.schedule_termination = True
-    dbg.get_synopsis()
-    dbg.signal_cr()
+#    dbg.schedule_termination = True
+#    dbg.get_synopsis()
 #    dbg.detach()
 #    exit()
 
@@ -179,32 +185,22 @@ class debugger(pydbg):
         self.schedule_termination = False
         self.debug = False
         self.last_log_file = None
-
-        if(defined("settings.log_level") == True):
-            self.log_level = settings.log_level
-        else:
-            self.log_level = 0
-
-        if(defined("settings.debug") == True):
-            if(settings.debug == True):
-                self.debug = True
-                self.last_log_file = open("e:\\logs\\init_log.txt", "a", 0)
+        self.pr = None
+        self.log_level = settings.log_level
+        if(settings.debug == True):
+            self.debug = True
+            self.last_log_file = open("e:\\logs\\init_log.txt", "a", 0)
         else:
             self.debug = False
             self.last_log_file = None
 
     def dlog(self, data, level=0):
-#        dlog("[binner] %s" % data, level)
-#        print("in dlog")
         if(self.debug == True):
             if(self.log_level <0):
                 return
             if(level > self.log_level):
                 return
-#            self.last_log_file.write("[%d] %s\n" % (self.pid, data))
-#            print("logging")
             self.last_log_file.write("[%s] %s\n" % (timestamp(), data))
-#        print("leaving dlog")
 
     def signal_st(self):
         self.dlog("Signaled: ST", 1)
@@ -229,6 +225,7 @@ class debugger(pydbg):
     def signal_cr(self):
         self.dlog("Signaled: CR", 1)
         self.last_state = "CR"
+        #self.binner.send("SACR%s%s" % (self.crash_binning.last_crash.exception_address, end))
         self.binner.send("SACR")
 
     def signal_ex(self):
@@ -769,8 +766,8 @@ class debugger(pydbg):
             self.close_handle(thread_handle)
 
     def start_log(self, name):
-        print("starting log")
-        self.debug = True
+        if(self.debug == False):
+            return
         self.logStarted = True
         if(self.last_log_file != None):
             self.last_log_file.close()
@@ -784,8 +781,21 @@ class debugger(pydbg):
         if(self.last_log_file != None):
             self.last_log_file.close()
             self.last_log_file = None
-        self.debug = False
+        self.logStarted = False
     
+    def save_synopsis(self, filee):
+        f = open("%s.synopsis" % filee, "a", 0)
+        f.write(self.crash_bin.crash_synopsis())
+        f.flush()
+        f.close()
+        # + signatures
+
+    def get_ea(self):
+        self.dlog("In get_ea")
+        ea = self.crash_bin.last_crash.exception_address
+        self.dlog("Sending: LO%x%s" % (ea, end))
+        self.binner.send("LO%x%s" % (ea, end))
+
     def get_synopsis(self):
         self.binner.send(self.crash_bin.crash_synopsis())
 #        self.ok() 
@@ -798,8 +808,13 @@ class debugger(pydbg):
 #        self.stats.write("1\n")
 #        self.stats.flush()
 
+    def close_logs(self):
+        self.last_log_file.flush()
+        self.last_log_file.close()
+
     def stop_profiling(self):
-        self.pr.disable()
+        if(self.pr != None):
+            self.pr.disable()
 
     def dump_stats(self, fname):
         try:
@@ -844,6 +859,9 @@ dbg_cmds["LW"] = (None, True)
 dbg_cmds["GS"] = (debugger.get_synopsis, False)
 dbg_cmds["RS"] = (debugger.start_profiling, False)
 dbg_cmds["RD"] = (debugger.dump_stats, True)
+dbg_cmds["SS"] = (debugger.save_synopsis, True)
+dbg_cmds["EA"] = (debugger.get_ea, False)
+dbg_cmds["CL"] = (debugger.close_logs, False)
 
 ### main routines
 def readline(stream):

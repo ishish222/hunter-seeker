@@ -32,7 +32,7 @@ def fuzzing_routine():
     signaled = False
     options = get_options()
     log = open("./log-%s-%s-%s" % (options.fuzzbox_name, timestamp2(), options.origin), "a")
-    create_sample_dirs(options)
+#    create_sample_dirs(options)
     report("Starting fuzzer")
     print("[%s] Generic fuzzer" % timestamp())
 
@@ -64,7 +64,7 @@ def fuzzing_routine():
         start(options)
         print("[%s] Started" % timestamp())
         #mount_cdrom(options, options.cdrom)
-        slot = pci_mount(options, options.tmp_disk_img) #hotplug should be completed during bootup
+        options.slot = pci_mount(options, options.tmp_disk_img) #hotplug should be completed during bootup
 #        rs("ipconfig_set_ip_2", options.m, args=[options.fuzzbox_ip, options.server_ip])
         # it takes so fucking long
 #        time.sleep(10)
@@ -181,6 +181,7 @@ def fuzzing_routine():
 #                handle_crashing_sample(dossier, sample_path, sample_file)
                 log.write("[%s], registered, binned\n" % status)
                 log.flush()
+                print("CR in: %s" % options.tmp_disk_img)
                 report("CR")
     #            if(test_path != sample_path):
     #                os.remove(test_path)

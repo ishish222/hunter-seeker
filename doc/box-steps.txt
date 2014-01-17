@@ -32,3 +32,5 @@ new:
 wylacz autorun
 zainstalouj python, pywin, pyserial
 dodaj cmd.exe do autorun
+optimize for quick removal
+

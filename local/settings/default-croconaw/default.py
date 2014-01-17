@@ -19,9 +19,9 @@ ff = True
 save_disks = False
 
 machines = {
-    'hs2-1': {'disk' : 'hs2-1.raw', 'vnc' : ':1', 'taskset' : '1,2', 'monitor' : '/tmp/monitor-hs1', 'serial' : '/tmp/serial-hs1'},
-    'hs2-2': {'disk' : 'hs2-2.raw', 'vnc' : ':2', 'taskset' : '1,2,3', 'monitor' : '/tmp/monitor-hs2', 'serial' : '/tmp/serial-hs2'},
-    'hs2-3': {'disk' : 'hs2-3.qcow2', 'vnc' : ':3', 'taskset' : '1,2,3', 'monitor' : '/tmp/monitor-hs3', 'serial' : '/tmp/serial-hs3'}
+    'hs2-01': {'disk' : 'hs2-01.raw', 'vnc' : ':1', 'taskset' : '1,2', 'monitor' : '/tmp/monitor-hs1', 'serial' : '/tmp/serial-hs1'},
+    'hs2-02': {'disk' : 'hs2-02.raw', 'vnc' : ':2', 'taskset' : '1,2,3', 'monitor' : '/tmp/monitor-hs2', 'serial' : '/tmp/serial-hs2'},
+    'hs2-03': {'disk' : 'hs2-03.qcow2', 'vnc' : ':3', 'taskset' : '1,2,3', 'monitor' : '/tmp/monitor-hs3', 'serial' : '/tmp/serial-hs3'}
 }
 
 script_codes = {}
@@ -37,9 +37,9 @@ ma_react_rvas = []
 ma_rd_addrs = []
 ma_rd_rvas = []
 
-samples_shared_path = "../samples/shared"
-samples_saved = "../samples/saved"
-samples_binned = "../samples/binned"
+samples_shared_path = "e:\\samples\\shared"
+samples_saved = "e:\\samples\\saved"
+samples_binned = "e:\\samples\\binned"
 samples_original = "d:\\samples\\original"
 samples_size_margin = 0.3
 log_path = "../logs"
@@ -60,17 +60,17 @@ mutations = 3
 mutator = None
 metric_res = 10
 to_mult_factor = 30
-boot_wait = 25
+boot_wait = 15
 revert_wait = 20
-shutdown_wait = 25
+shutdown_wait = 15
 init_timeout = 10 
 log_level = 4
-
+smp = 2
 
 qemu_machines = "/home/ish/machines/qemu"
 qemu_m = "3G"
 qemu_shared_folder = "/home/ish/projects/2012-08-02-korrino/hs2-current-deploy/qemu-reader-local"
-qemu_additional =  ['-enable-kvm', '-smp', '2']
+qemu_additional =  ['-enable-kvm']
 
 def runner_0(options, args=None):
     pass

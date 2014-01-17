@@ -19,6 +19,10 @@ c:../../blob/res/aac/95a32d30d59725aea7a89a5bd6ed5b71.aac
 c:../../blob/res/flac/519394c0f839fe5f5a7108f9937d740d.flac
 c:../../blob/res/flac/83ff4cdeaf0bded940e111f1f9bf7f0a.flac
 c:../../blob/res/flac/9b5bd78091a95f972a9f5ca4d345a57d.flac
+c:tests/qemu-foobar/c-3.s-1000.fast.hs2-01
+c:tests/qemu-foobar/c-3.s-1000.fast.hs2-02
+c:tests/qemu-foobar/c-3.s-1000.fast.hs2-03
+c:tests/qemu-foobar/c-3.s-1000.fast.hs2-04
 t:settings/qemu-foobar/settings.py
 t:settings/default-flareon/default.py
 t:fuzzers/generators

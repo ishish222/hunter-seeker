@@ -80,6 +80,7 @@ def get_options():
     parser.add_option("-W", "--shutdown-wait", dest="shutdown_wait", help="How long does this system shutdown", default=settings.shutdown_wait)
     parser.add_option("-f", "--init-timeout", dest="init_timeout", help="Timeout for binner initiation", default=settings.init_timeout)
     parser.add_option("-z", "--samples-size-margin", dest="samples_size_margin", help="Size marigin of single sample for disk size calculations", default=settings.samples_size_margin)
+    parser.add_option("-u", "--smp", dest="smp", help="Number of vCPUs", default=settings.smp)
 
 
     (options, args) = parser.parse_args()
@@ -87,17 +88,6 @@ def get_options():
     options.fuzzbox_name = sys.argv[1]
     if(options.hda is None):
         options.hda = settings.machines[options.fuzzbox_name]['disk']
-#    if(options.fuzzbox_ip is None):
-#        options.fuzzbox_ip = settings.machines[options.fuzzbox_name]['ip'] 
-#    if(options.fuzzbox_port is None):
-#        options.fuzzbox_port = settings.machines[options.fuzzbox_name]['port'] 
-
-#    options.fuzzbox_ip = settings.machines[options.fuzzbox_name]['ip'] 
-#    options.server_ip = settings.machines[options.fuzzbox_name]['server_ip'] 
-#    options.server_port = settings.machines[options.fuzzbox_name]['server_port'] 
-    
-#    options.tap = settings.machines[options.fuzzbox_name]['tap']
-#    options.mac = settings.machines[options.fuzzbox_name]['mac']
 
     #qemu settings
     if(options.use_taskset is True):
@@ -114,9 +104,6 @@ def get_options():
 
     options.ms_path = settings.machines[options.fuzzbox_name]['monitor']
     options.ss_path = settings.machines[options.fuzzbox_name]['serial']
-#    qemu_args += ['-net', 'nic,model=virtio', '-net', 'tap,ifname='+options.tap+',script=no,downscript=no']
-#    qemu_args += ['-net', 'nic,model=virtio', '-net', 'user,restrict=n,guestfwd=tcp:10.0.2.100:12345-tcp:127.0.0.1:' + str(options.fuzzbox_port)]
-#    qemu_args += ['-net', 'nic,model=rtl8139', '-net', 'tap,ifname='+options.tap+',script=no,downscript=no']
 
     if(options.visible == False and options.vnc == True):
         qemu_args += ['-vnc', settings.machines[options.fuzzbox_name]['vnc']]
@@ -124,6 +111,7 @@ def get_options():
 
     qemu_args += ['-monitor', "unix:%s" % settings.machines[options.fuzzbox_name]['monitor']]
     qemu_args += ['-serial', "unix:%s" % settings.machines[options.fuzzbox_name]['serial']]
+    qemu_args += ['-smp', str(options.smp)]
 
     testdir(settings.qemu_shared_folder + "/logs")
     
@@ -136,6 +124,7 @@ def get_options():
     options.logger.addHandler(options.handler)
     options.wait_sleep = float(options.wait_sleep)
     options.metric_res = int(options.metric_res)
+    options.smp = int(options.smp)
     options.boot_wait = float(options.boot_wait)
     options.revert_wait = float(options.revert_wait)
     options.shutdown_wait = float(options.shutdown_wait)
@@ -254,6 +243,10 @@ def write_socket(s, data):
     s.send(data + "-=OK=-")
 
 def powerofff(options):
+    try:
+        pci_umount(options.slot)
+    except Exception:
+        print("Problems unmounting pci")
     try:
         print("Shutting down s")
         options.s.shutdown(socket.SHUT_RDWR)
@@ -568,7 +561,7 @@ def long_exec(args):
 def create_image(path, size):
     simple_exec(["qemu-img", "create", "-f", "raw", path, str(size)])
     loop_dev = simple_exec(["sudo", "losetup", "-f", "--show", path])
-    simple_exec(["sudo", "mkfs.ntfs", "-f", "-L", "secondary", loop_dev])
+    simple_exec(["sudo", "mkfs.ntfs", "-f", "-L", "secondary", "-H", "0", "-S", "0", "-z", "0", "-p", "0", loop_dev])
     time.sleep(2)
     simple_exec(["sudo", "losetup", "-d", loop_dev])
     return path
