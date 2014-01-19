@@ -23,3 +23,17 @@ esc:
 0x47ceca (foobar2000.exe +0x7ceca) OK (unstable script)
 down-down-enter: (possibly alt-tab first)
 0x458b5b (foobar2000.exe +0x58b5b)
+
+wykryte funkcje kontroli integralnosci:
+0x5364e0 - crc32 - niepotw
+0x5362e8 - crc32 - niepotw
+0x538128 - md5
+
+other ST candidates:
+0x47f8d1,0
+
+
+looking for "Starting playback..." / "Playback stopped":
+ST: 0x4a5d3e (foobar2000.exe + 0xa5d3e)
+MA: 0x47b9fb (foobar2000.exe + 0x7b9fb)
+

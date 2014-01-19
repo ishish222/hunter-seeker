@@ -1,0 +1,68 @@
+t1:     C-3.ar.d03b,    type: pdf,      status: spr.,           speed: 10 ktpd
+t2:     C-3.ar.1086,    type: pdf,      status: spr.,           speed: 5 ktpd
+t3:     C-3.ar.06d1,    type: pdf,      status: spr.,           speed: 5 ktpd
+t4:     C-3.fb.36e1,    type: aac,      status: spr., 
+t5:     C-3.fb.42ff,    type: aac,      status: np. t4
+t6:     C-3.fb.95a3,    type: aac,      status: np. t4
+t7:     C-3.fb.d786,    type: mp3,      status: spr.,           speed: 7.5 ktpd
+t8:     C-3.fb.6642,    type: mp3,      status: np. t7
+t9:     C-3.fb.1636,    type: wma,      status: np. t11
+t10:    C-3.fb.a235,    type: wma,      status: np. t11
+t11:    C-3.fb.e977,    type: wma,      status: spr.
+t12:    C-3.fb.ee19,    type: wma,      status: np. t11
+t13:    C-3.fb.264a,    type: wav,      status: spr.
+t14:    C-3.fb.6bfe,    type: wav,      status: np. t13
+t15:    C-3.fb.880e,    type: wav,      status: np. t13
+t16:    C-3.fb.5193,    type: flac,     status: spr.
+t17:    C-3.fb.83ff,    type: flac,     status: np. t16
+t18:    C-3.fb.9b5b,    type: flac,     status: np. t16
+t19:    C-3.fb.4bd2,    type: ogg,      status: niespr. odl.
+t20:    C-3.fb.a358,    type: ogg,      status: niespr. odl.
+t21:    C-3.fb.baab,    type: ogg,      status: niespr. odl.
+t22:    C-3.fb.f9fe,    type: ogg,      status: niespr. odl.
+t23:    SR-1.fb.d786,   type: mp3,      status: spr.
+t24:    SR-1.fb.6642,   type: mp3,      status: np. t23
+t25:    C-3.is.89b2,    type: bak,      status: spr.
+t26:    C-3.is.d6c6,    type: bak,      status: np. t25
+t27:    C-3.fb.0928,    type: mp3,      status: np. t7
+t28:    C-3.fb.522a,    type: mp3,      status: np. t7
+t29:    C-3.fb.fb72,    type: mp3,      status: np. t7
+t30:    C-3.fb.3c6d,    type: mp3,      status: np. t7
+t31:    C-3.fb.dae4,    type: mp3,      status: np. t7
+t32:    C-3.fb.e65b,    type: mp3,      status: np. t7
+t33:    C-3.fb.ec76,    type: mp3,      status: np. t7
+t34:    C-3.fb.18df,    type: mp3,      status: np. t7
+t35:    C-3.fb.1959,    type: mp3,      status: np. t7
+t36:    C-3.fb.a90c,    type: mp3,      status: np. t7
+t37:    C-3.fb.4281,    type: mp3,      status: np. t7
+t38:    C-3.fb.57bc,    type: mp3,      status: np. t7
+t39:    C-3.fb.6f58,    type: mp3,      status: np. t7
+t40:    C-3.fb.8409,    type: mp3,      status: np. t7
+t41:    SR-1.fb.0928,   type: mp3,      status: np. t7
+t42:    SR-1.fb.522a,   type: mp3,      status: np. t7
+t43:    SR-1.fb.fb72,   type: mp3,      status: np. t7
+t44:    SR-1.fb.3c6d,   type: mp3,      status: np. t7
+t45:    SR-1.fb.dae4,   type: mp3,      status: np. t7
+t46:    SR-1.fb.e65b,   type: mp3,      status: np. t7
+t47:    SR-1.fb.ec76,   type: mp3,      status: np. t7
+t48:    SR-1.fb.18df,   type: mp3,      status: np. t7
+t49:    SR-1.fb.1959,   type: mp3,      status: np. t7
+t50:    SR-1.fb.a90c,   type: mp3,      status: np. t7
+t51:    SR-1.fb.4281,   type: mp3,      status: np. t7
+t52:    SR-1.fb.57bc,   type: mp3,      status: np. t7
+t53:    SR-1.fb.6f58,   type: mp3,      status: np. t7
+t54:    SR-1.fb.8409,   type: mp3,      status: np. t7
+t55:    C-3.fb.21b9,    type: ogg,      status: spr.
+t56:    C-3.fb.9ed3,    type: ogg,      status: np. t55
+t57:    C-3.fb.5607,    type: ogg,      status: np. t55
+t58:    C-3.fb.9ad3,    type: ogg,      status: np. t55
+t59:    C-3.fb.ba73,    type: ogg,      status: np. t55
+t60:    C-3.fb.e08a,    type: ogg,      status: np. t55
+t61:    SR-1.fb.21b9,   type: ogg,      status: np. t55
+t62:    SR-1.fb.9ed3,   type: ogg,      status: np. t55
+t63:    SR-1.fb.5607,   type: ogg,      status: np. t55
+t64:    SR-1.fb.9ad3,   type: ogg,      status: np. t55
+t65:    SR-1.fb.ba73,   type: ogg,      status: np. t55
+t66:    SR-1.fb.e08a,   type: ogg,      status: np. t55
+
+

@@ -24,7 +24,7 @@ log_name = "HS:Reader"
 
 wait_sleep = 5
 fuzzbox_timeout = wait_sleep*4
-mutator = changer.Changer
+mutator = "changer.Changer"
 
 extension = "pdf"
 save_disks = True

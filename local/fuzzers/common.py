@@ -81,6 +81,7 @@ def get_options():
     parser.add_option("-f", "--init-timeout", dest="init_timeout", help="Timeout for binner initiation", default=settings.init_timeout)
     parser.add_option("-z", "--samples-size-margin", dest="samples_size_margin", help="Size marigin of single sample for disk size calculations", default=settings.samples_size_margin)
     parser.add_option("-u", "--smp", dest="smp", help="Number of vCPUs", default=settings.smp)
+    parser.add_option("-E", "--mutator", dest="mutator", help="Mutator to use", default=settings.mutator)
 
 
     (options, args) = parser.parse_args()
@@ -618,8 +619,15 @@ def generate(options):
     os.spawnv(os.P_WAIT, "/bin/mkdir", ["mkdir", "-p", options.tmp_mountpoint+"/server"])
     os.spawnv(os.P_WAIT, "/bin/cp", ["cp", options.origin, options.tmp_mountpoint+"/samples/shared"])
 
+    mutator_mod, mutator_class = options.mutator.split(".")
+    
+    import_stat = "import generators.%s as mutmod" % mutator_mod
+    exec import_stat
+    assign_stat = "mutclass = mutmod.%s" % mutator_class
+    exec assign_stat
+
     try:
-        my_generator = generator.Generator(options.origin, options.tmp_mountpoint+"/samples/shared", mutator_=options.settings.mutator, corrector=None)
+        my_generator = generator.Generator(options.origin, options.tmp_mountpoint+"/samples/shared", mutator_=mutclass, corrector=None)
         my_generator.mutations=int(options.mutations)
         samples_list += my_generator.generate(options.samples_count)
     except Exception, e:

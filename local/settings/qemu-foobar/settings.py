@@ -36,7 +36,7 @@ log_name = "HS:Foobar2000"
 wait_sleep = 5
 fuzzbox_timeout = wait_sleep*4
 closing_plugin_name = "nop"
-mutator = changer.Changer
+mutator = "changer.Changer"
 boot_wait = 60
 shutdown_wait = 60
 

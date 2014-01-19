@@ -34,7 +34,7 @@ log_name = "HS:Subiekt"
 fuzzbox_timeout = wait_sleep*4
 closing_plugin_name = "nop"
 revert_scripts = ["load_ready"]
-mutator = changer.Changer
+mutator = "changer.Changer"
 
 def runner_0(options, args=None):
     rs("lclick", options.m)

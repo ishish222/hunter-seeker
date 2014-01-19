@@ -1,0 +1,321 @@
+<map version="0.8.0">
+<!-- To view this file, download free mind mapping software FreeMind from http://freemind.sourceforge.net -->
+<node CREATED="1390090466734" ID="ID_1334868448" MODIFIED="1390091470953" STYLE="fork" TEXT="foobar">
+<edge COLOR="#808080" STYLE="bezier" WIDTH="thin"/>
+<font NAME="Courier New" SIZE="12"/>
+<node CREATED="1390090529968" ID="ID_1622689526" MODIFIED="1390091470953" POSITION="right" STYLE="fork" TEXT="1">
+<edge COLOR="#808080" STYLE="bezier" WIDTH="thin"/>
+<font NAME="Courier New" SIZE="12"/>
+<node CREATED="1390091069453" FOLDED="true" ID="ID_580917472" MODIFIED="1390091470953" STYLE="fork" TEXT="foobar2000.exe:004F684F call    near ptr unk_4FF1F2">
+<edge COLOR="#808080" STYLE="bezier" WIDTH="thin"/>
+<font NAME="Courier New" SIZE="12"/>
+<node CREATED="1390091048906" FOLDED="true" ID="ID_1902457870" MODIFIED="1390091051906" TEXT="foobar2000.exe:004FF223 call    near ptr unk_4FF4A0">
+<node CREATED="1390091029734" FOLDED="true" ID="ID_587474142" MODIFIED="1390091033437" TEXT="foobar2000.exe:004FF655 call    near ptr unk_4FFF0A">
+<node CREATED="1390091009718" FOLDED="true" ID="ID_1825140124" MODIFIED="1390091013203" TEXT="foobar2000.exe:004FFF65 call    dword ptr [eax+14h]">
+<node CREATED="1390090990703" FOLDED="true" ID="ID_860655288" MODIFIED="1390090995265" TEXT="foo_input_std.dll:0112DD76 call    near ptr unk_112DF90">
+<node CREATED="1390090964406" FOLDED="true" ID="ID_1908051528" MODIFIED="1390090966812" TEXT="foo_input_std.dll:0112E01D call    near ptr unk_112E260">
+<node CREATED="1390090943625" FOLDED="true" ID="ID_1411063530" MODIFIED="1390090949703" TEXT="foo_input_std.dll:0112E2C0 call    near ptr unk_112AEA0">
+<node CREATED="1390090838359" FOLDED="true" ID="ID_1862828247" MODIFIED="1390090850703" TEXT="foo_input_std.dll:0112AF5B call    near ptr unk_11D4CC5">
+<node CREATED="1390090610359" FOLDED="true" ID="ID_117520779" MODIFIED="1390090627968" TEXT="foo_input_std.dll:011D4D05 call    dword ptr [eax+18h]">
+<node CREATED="1390090575593" ID="ID_1703920609" MODIFIED="1390090575593" TEXT="foobar2000.exe:0043AEED call    near ptr unk_43BC10">
+<node CREATED="1390090504078" ID="ID_1854629482" MODIFIED="1390090504078" TEXT="foobar2000.exe:0043BCFE call    near ptr unk_43C5D0"/>
+<node CREATED="1390090532250" ID="ID_377820393" MODIFIED="1390090532250" TEXT="foobar2000.exe:0043BD24 call    near ptr unk_4163F0"/>
+<node CREATED="1390090549421" ID="ID_1039497405" MODIFIED="1390090549421" TEXT="foobar2000.exe:0043BD34 call    eax"/>
+<node CREATED="1390090561875" ID="ID_881932899" MODIFIED="1390090561875" TEXT="foobar2000.exe:0043BD58 call    eax"/>
+</node>
+</node>
+<node CREATED="1390090622687" ID="ID_548995943" MODIFIED="1390090622687" TEXT="foo_input_std.dll:011D4D15 call    dword ptr [eax]"/>
+<node CREATED="1390090751234" ID="ID_930176108" MODIFIED="1390090751234" TEXT="foo_input_std.dll:011D4D1E call    off_11FF390"/>
+</node>
+<node CREATED="1390090867000" ID="ID_431390622" MODIFIED="1390090867000" TEXT="foo_input_std.dll:0112AF85 call    edx"/>
+<node CREATED="1390090874281" ID="ID_1920504261" MODIFIED="1390090874281" TEXT="foo_input_std.dll:0112AF92 call    edx"/>
+<node CREATED="1390090879937" ID="ID_1944127765" MODIFIED="1390090879937" TEXT="foo_input_std.dll:0112AF9F call    edx"/>
+<node CREATED="1390090888125" ID="ID_1437087410" MODIFIED="1390090888125" TEXT="foo_input_std.dll:0112AFBD call    edx"/>
+<node CREATED="1390090895437" ID="ID_1580335021" MODIFIED="1390090895437" TEXT="foo_input_std.dll:0112AFC3 call    near ptr unk_110E2A0"/>
+<node CREATED="1390090902109" ID="ID_251264743" MODIFIED="1390090902109" TEXT="foo_input_std.dll:0112AFD6 call    eax"/>
+<node CREATED="1390090910656" ID="ID_1203553729" MODIFIED="1390090910656" TEXT="foo_input_std.dll:0112AFE5 call    eax"/>
+<node CREATED="1390090923796" ID="ID_1937951482" MODIFIED="1390090923796" TEXT="foo_input_std.dll:0112B010 call    eax"/>
+<node CREATED="1390090931750" ID="ID_1543529674" MODIFIED="1390090931750" TEXT="foo_input_std.dll:0112B031 call    near ptr unk_11CD899"/>
+</node>
+</node>
+<node CREATED="1390090973640" ID="ID_1643410581" MODIFIED="1390090973640" TEXT="foo_input_std.dll:0112E02D call    eax"/>
+<node CREATED="1390090980515" ID="ID_709416059" MODIFIED="1390090980515" TEXT="foo_input_std.dll:0112E04D call    eax"/>
+</node>
+</node>
+<node CREATED="1390091020421" ID="ID_180379751" MODIFIED="1390091020421" TEXT="foobar2000.exe:004FFF79 call    dword ptr [eax]"/>
+</node>
+<node CREATED="1390091039390" ID="ID_685312347" MODIFIED="1390091039390" TEXT="foobar2000.exe:004FF666 call    near ptr unk_4FFA81"/>
+</node>
+<node CREATED="1390091058703" ID="ID_449802517" MODIFIED="1390091058703" TEXT="foobar2000.exe:004FF232 call    off_52D704"/>
+</node>
+</node>
+<node CREATED="1390091173781" ID="ID_503717578" MODIFIED="1390091470953" POSITION="right" STYLE="fork" TEXT="2">
+<edge COLOR="#808080" STYLE="bezier" WIDTH="thin"/>
+<font NAME="Courier New" SIZE="12"/>
+<node CREATED="1390091176140" FOLDED="true" ID="ID_557803720" MODIFIED="1390092336859" STYLE="fork" TEXT="loc_47F3E5 idle">
+<edge COLOR="#808080" STYLE="bezier" WIDTH="thin"/>
+<font NAME="Courier New" SIZE="12"/>
+<node CREATED="1390091189703" ID="ID_370132469" MODIFIED="1390091470953" STYLE="fork" TEXT="foobar2000.exe:0047F3F8 call    near ptr unk_4FB825">
+<edge COLOR="#808080" STYLE="bezier" WIDTH="thin"/>
+<font NAME="Courier New" SIZE="12"/>
+</node>
+<node CREATED="1390091198234" ID="ID_237366298" MODIFIED="1390091470953" STYLE="fork" TEXT="foobar2000.exe:0047F408 call    esi ; ntdll_RtlEnterCriticalSection">
+<edge COLOR="#808080" STYLE="bezier" WIDTH="thin"/>
+<font NAME="Courier New" SIZE="12"/>
+</node>
+<node CREATED="1390091210078" ID="ID_206019556" MODIFIED="1390091470953" STYLE="fork" TEXT="foobar2000.exe:0047F41A call    edi ; ntdll_RtlLeaveCriticalSection">
+<edge COLOR="#808080" STYLE="bezier" WIDTH="thin"/>
+<font NAME="Courier New" SIZE="12"/>
+</node>
+<node CREATED="1390091221046" ID="ID_1274576677" MODIFIED="1390091470953" STYLE="fork" TEXT="foobar2000.exe:0047F46D call    esi ; ntdll_RtlEnterCriticalSection">
+<edge COLOR="#808080" STYLE="bezier" WIDTH="thin"/>
+<font NAME="Courier New" SIZE="12"/>
+</node>
+<node CREATED="1390091234218" ID="ID_1547907949" MODIFIED="1390091470937" STYLE="fork" TEXT="foobar2000.exe:0047F47F call    edi ; ntdll_RtlLeaveCriticalSectio">
+<edge COLOR="#808080" STYLE="bezier" WIDTH="thin"/>
+<font NAME="Courier New" SIZE="12"/>
+</node>
+<node CREATED="1390091254218" ID="ID_523572574" MODIFIED="1390091470937" STYLE="fork" TEXT="foobar2000.exe:0047F616 call    off_52D31C">
+<edge COLOR="#808080" STYLE="bezier" WIDTH="thin"/>
+<font NAME="Courier New" SIZE="12"/>
+</node>
+<node CREATED="1390091263625" ID="ID_186937527" MODIFIED="1390091470937" STYLE="fork" TEXT="foobar2000.exe:0047F820 call    off_52D318">
+<edge COLOR="#808080" STYLE="bezier" WIDTH="thin"/>
+<font NAME="Courier New" SIZE="12"/>
+</node>
+<node CREATED="1390091270812" ID="ID_309859464" MODIFIED="1390091470937" STYLE="fork" TEXT="foobar2000.exe:0047F835 call    near ptr unk_47E10A">
+<edge COLOR="#808080" STYLE="bezier" WIDTH="thin"/>
+<font NAME="Courier New" SIZE="12"/>
+</node>
+<node CREATED="1390091284937" ID="ID_807648534" MODIFIED="1390091470937" STYLE="fork" TEXT="foobar2000.exe:0047FCD7 call    near ptr unk_47DD4D">
+<edge COLOR="#808080" STYLE="bezier" WIDTH="thin"/>
+<font NAME="Courier New" SIZE="12"/>
+</node>
+<node CREATED="1390091292687" ID="ID_28284682" MODIFIED="1390091470937" STYLE="fork" TEXT="foobar2000.exe:0047FD27 call    near ptr unk_4F6BF9">
+<edge COLOR="#808080" STYLE="bezier" WIDTH="thin"/>
+<font NAME="Courier New" SIZE="12"/>
+</node>
+<node CREATED="1390091300093" ID="ID_1385295933" MODIFIED="1390091470937" STYLE="fork" TEXT="foobar2000.exe:0047FDB8 call    near ptr unk_4F6BAB">
+<edge COLOR="#808080" STYLE="bezier" WIDTH="thin"/>
+<font NAME="Courier New" SIZE="12"/>
+</node>
+<node CREATED="1390091306609" ID="ID_488199063" MODIFIED="1390091470937" STYLE="fork" TEXT="foobar2000.exe:0047FE1F call    near ptr unk_47E040">
+<edge COLOR="#808080" STYLE="bezier" WIDTH="thin"/>
+<font NAME="Courier New" SIZE="12"/>
+</node>
+<node COLOR="#990000" CREATED="1390091311531" ID="ID_964459636" MODIFIED="1390092289421" TEXT="foobar2000.exe:0047F868 call    off_52D2F8">
+<edge COLOR="#808080" STYLE="bezier" WIDTH="thin"/>
+<font NAME="Courier New" SIZE="12"/>
+</node>
+<node CREATED="1390091316171" ID="ID_1840135732" MODIFIED="1390091470921" STYLE="fork" TEXT="foobar2000.exe:0047F876 call    near ptr unk_42A970">
+<edge COLOR="#808080" STYLE="bezier" WIDTH="thin"/>
+<font NAME="Courier New" SIZE="12"/>
+</node>
+<node CREATED="1390091328515" ID="ID_207168159" MODIFIED="1390091470921" STYLE="fork" TEXT="foobar2000.exe:0047FE64 call    off_52D31C">
+<edge COLOR="#808080" STYLE="bezier" WIDTH="thin"/>
+<font NAME="Courier New" SIZE="12"/>
+</node>
+<node CREATED="1390091337531" ID="ID_59956278" MODIFIED="1390091470921" STYLE="fork" TEXT="foobar2000.exe:0047FEDE call    near ptr unk_4A2FE9">
+<edge COLOR="#808080" STYLE="bezier" WIDTH="thin"/>
+<font NAME="Courier New" SIZE="12"/>
+</node>
+<node CREATED="1390091346421" ID="ID_532066990" MODIFIED="1390091470921" STYLE="fork" TEXT="foobar2000.exe:0047FF18 call    near ptr unk_4A2FE9">
+<edge COLOR="#808080" STYLE="bezier" WIDTH="thin"/>
+<font NAME="Courier New" SIZE="12"/>
+</node>
+<node CREATED="1390091356187" ID="ID_1381101211" MODIFIED="1390091470921" STYLE="fork" TEXT="foobar2000.exe:0047FF4D call    near ptr unk_42A9E0">
+<edge COLOR="#808080" STYLE="bezier" WIDTH="thin"/>
+<font NAME="Courier New" SIZE="12"/>
+</node>
+<node CREATED="1390091361812" ID="ID_1496851682" MODIFIED="1390091470921" STYLE="fork" TEXT="foobar2000.exe:0047FF56 call    dword ptr [eax+2Ch]">
+<edge COLOR="#808080" STYLE="bezier" WIDTH="thin"/>
+<font NAME="Courier New" SIZE="12"/>
+</node>
+<node CREATED="1390091371203" ID="ID_415496988" MODIFIED="1390091470906" STYLE="fork" TEXT="foobar2000.exe:0047FF77 call    near ptr unk_47EB17">
+<edge COLOR="#808080" STYLE="bezier" WIDTH="thin"/>
+<font NAME="Courier New" SIZE="12"/>
+</node>
+<node CREATED="1390091379468" ID="ID_977227939" MODIFIED="1390091470906" STYLE="fork" TEXT="foobar2000.exe:0047FFA4 call    near ptr unk_47E625">
+<edge COLOR="#808080" STYLE="bezier" WIDTH="thin"/>
+<font NAME="Courier New" SIZE="12"/>
+</node>
+<node CREATED="1390091387156" ID="ID_1246676636" MODIFIED="1390091470906" STYLE="fork" TEXT="foobar2000.exe:0047FFB9 call    near ptr unk_47E625">
+<edge COLOR="#808080" STYLE="bezier" WIDTH="thin"/>
+<font NAME="Courier New" SIZE="12"/>
+</node>
+<node CREATED="1390091394328" ID="ID_25455444" MODIFIED="1390091470906" STYLE="fork" TEXT="foobar2000.exe:0047FFD4 call    near ptr unk_407DA0">
+<edge COLOR="#808080" STYLE="bezier" WIDTH="thin"/>
+<font NAME="Courier New" SIZE="12"/>
+</node>
+<node CREATED="1390091399953" ID="ID_700973966" MODIFIED="1390091470906" STYLE="fork" TEXT="foobar2000.exe:0047FFE3 call    off_52D318">
+<edge COLOR="#808080" STYLE="bezier" WIDTH="thin"/>
+<font NAME="Courier New" SIZE="12"/>
+</node>
+<node CREATED="1390091505250" MODIFIED="1390091505250" TEXT="foobar2000.exe:00480066 call    off_52D708"/>
+<node CREATED="1390091514390" MODIFIED="1390091514390" TEXT="foobar2000.exe:0048007E call    near ptr unk_47DDF9"/>
+<node CREATED="1390091520359" MODIFIED="1390091520359" TEXT="foobar2000.exe:00480090 call    off_52D704"/>
+<node CREATED="1390091526218" MODIFIED="1390091526218" TEXT="foobar2000.exe:004800A1 call    near ptr unk_481230"/>
+<node CREATED="1390091531125" MODIFIED="1390091531125" TEXT="foobar2000.exe:004800AA call    off_52D290"/>
+</node>
+<node CREATED="1390091176140" ID="ID_1884277704" MODIFIED="1390092331218" STYLE="fork" TEXT="loc_47F3E5 playing">
+<edge COLOR="#808080" STYLE="bezier" WIDTH="thin"/>
+<font NAME="Courier New" SIZE="12"/>
+<node CREATED="1390091189703" ID="ID_1794767627" MODIFIED="1390091470953" STYLE="fork" TEXT="foobar2000.exe:0047F3F8 call    near ptr unk_4FB825">
+<edge COLOR="#808080" STYLE="bezier" WIDTH="thin"/>
+<font NAME="Courier New" SIZE="12"/>
+</node>
+<node CREATED="1390091198234" ID="ID_1956527311" MODIFIED="1390091470953" STYLE="fork" TEXT="foobar2000.exe:0047F408 call    esi ; ntdll_RtlEnterCriticalSection">
+<edge COLOR="#808080" STYLE="bezier" WIDTH="thin"/>
+<font NAME="Courier New" SIZE="12"/>
+</node>
+<node CREATED="1390091210078" ID="ID_75650908" MODIFIED="1390091470953" STYLE="fork" TEXT="foobar2000.exe:0047F41A call    edi ; ntdll_RtlLeaveCriticalSection">
+<edge COLOR="#808080" STYLE="bezier" WIDTH="thin"/>
+<font NAME="Courier New" SIZE="12"/>
+</node>
+<node CREATED="1390091221046" ID="ID_537649541" MODIFIED="1390091470953" STYLE="fork" TEXT="foobar2000.exe:0047F46D call    esi ; ntdll_RtlEnterCriticalSection">
+<edge COLOR="#808080" STYLE="bezier" WIDTH="thin"/>
+<font NAME="Courier New" SIZE="12"/>
+</node>
+<node CREATED="1390091234218" ID="ID_1002808756" MODIFIED="1390091470937" STYLE="fork" TEXT="foobar2000.exe:0047F47F call    edi ; ntdll_RtlLeaveCriticalSectio">
+<edge COLOR="#808080" STYLE="bezier" WIDTH="thin"/>
+<font NAME="Courier New" SIZE="12"/>
+</node>
+<node CREATED="1390091254218" ID="ID_69513143" MODIFIED="1390091470937" STYLE="fork" TEXT="foobar2000.exe:0047F616 call    off_52D31C">
+<edge COLOR="#808080" STYLE="bezier" WIDTH="thin"/>
+<font NAME="Courier New" SIZE="12"/>
+</node>
+<node CREATED="1390091263625" ID="ID_1372647212" MODIFIED="1390091470937" STYLE="fork" TEXT="foobar2000.exe:0047F820 call    off_52D318">
+<edge COLOR="#808080" STYLE="bezier" WIDTH="thin"/>
+<font NAME="Courier New" SIZE="12"/>
+</node>
+<node CREATED="1390091270812" ID="ID_1852019747" MODIFIED="1390091470937" STYLE="fork" TEXT="foobar2000.exe:0047F835 call    near ptr unk_47E10A">
+<edge COLOR="#808080" STYLE="bezier" WIDTH="thin"/>
+<font NAME="Courier New" SIZE="12"/>
+</node>
+<node CREATED="1390092644890" ID="ID_1243457620" MODIFIED="1390092935687" TEXT="playing">
+<node CREATED="1390092641328" ID="ID_284947963" MODIFIED="1390092642484" TEXT="foobar2000.exe:0047F85F call    near ptr unk_47E28E"/>
+<node CREATED="1390092660843" MODIFIED="1390092660843" TEXT="foobar2000.exe:0047F868 call    off_52D2F8"/>
+<node CREATED="1390092668328" MODIFIED="1390092668328" TEXT="foobar2000.exe:0047F876 call    near ptr unk_42A970"/>
+</node>
+<node CREATED="1390093220171" ID="ID_1791546321" MODIFIED="1390093415218" TEXT="playing-opening file">
+<node CREATED="1390093345484" ID="ID_1250797409" MODIFIED="1390093345484" TEXT="foobar2000.exe:0047FAB3 call    off_52D704"/>
+<node CREATED="1390093330296" ID="ID_824776969" MODIFIED="1390093330296" TEXT="foobar2000.exe:0047FAE9 call    near ptr unk_40DAC0"/>
+<node CREATED="1390093317734" ID="ID_1925646697" MODIFIED="1390093317734" TEXT="foobar2000.exe:0047FAFE call    off_52D31C"/>
+<node CREATED="1390093307359" ID="ID_705343893" MODIFIED="1390093307359" TEXT="foobar2000.exe:0047FB10 call    dword ptr [eax+28h]"/>
+<node CREATED="1390093296984" ID="ID_907261539" MODIFIED="1390093296984" TEXT="foobar2000.exe:0047FB22 call    off_52D318"/>
+<node CREATED="1390093280296" ID="ID_537830617" MODIFIED="1390093280296" TEXT="foobar2000.exe:0047FB3A call    near ptr unk_50098B"/>
+<node CREATED="1390093266187" ID="ID_807096800" MODIFIED="1390093266187" TEXT="foobar2000.exe:0047FB56 call    dword ptr [eax+54h]"/>
+<node CREATED="1390093255484" ID="ID_896917131" MODIFIED="1390093255484" TEXT="foobar2000.exe:0047FB6C call    dword ptr [eax+54h]"/>
+<node CREATED="1390093239531" ID="ID_168735354" MODIFIED="1390093239531" TEXT="foobar2000.exe:0047FB7A call    near ptr unk_500AD0"/>
+<node CREATED="1390093228734" ID="ID_79073626" MODIFIED="1390093228734" TEXT="foobar2000.exe:0047FBEC call    dword ptr [eax]"/>
+</node>
+<node CREATED="1390092736687" ID="ID_1324802293" MODIFIED="1390095175875" TEXT="idle &amp; playing">
+<node CREATED="1390091284937" ID="ID_187012339" MODIFIED="1390091470937" STYLE="fork" TEXT="foobar2000.exe:0047FCD7 call    near ptr unk_47DD4D">
+<edge COLOR="#808080" STYLE="bezier" WIDTH="thin"/>
+<font NAME="Courier New" SIZE="12"/>
+</node>
+<node CREATED="1390091292687" ID="ID_1345332050" MODIFIED="1390091470937" STYLE="fork" TEXT="foobar2000.exe:0047FD27 call    near ptr unk_4F6BF9">
+<edge COLOR="#808080" STYLE="bezier" WIDTH="thin"/>
+<font NAME="Courier New" SIZE="12"/>
+</node>
+<node CREATED="1390091300093" ID="ID_983039365" MODIFIED="1390091470937" STYLE="fork" TEXT="foobar2000.exe:0047FDB8 call    near ptr unk_4F6BAB">
+<edge COLOR="#808080" STYLE="bezier" WIDTH="thin"/>
+<font NAME="Courier New" SIZE="12"/>
+</node>
+<node CREATED="1390091306609" ID="ID_1038381949" MODIFIED="1390091470937" STYLE="fork" TEXT="foobar2000.exe:0047FE1F call    near ptr unk_47E040">
+<edge COLOR="#808080" STYLE="bezier" WIDTH="thin"/>
+<font NAME="Courier New" SIZE="12"/>
+</node>
+<node COLOR="#990000" CREATED="1390091311531" ID="ID_1338268473" MODIFIED="1390092289421" TEXT="foobar2000.exe:0047F868 call    off_52D2F8">
+<edge COLOR="#808080" STYLE="bezier" WIDTH="thin"/>
+<font NAME="Courier New" SIZE="12"/>
+</node>
+<node CREATED="1390091316171" ID="ID_1647236704" MODIFIED="1390095297234" STYLE="fork" TEXT="foobar2000.exe:0047F876 call    near ptr unk_42A970">
+<edge COLOR="#808080" STYLE="bezier" WIDTH="thin"/>
+<font NAME="Courier New" SIZE="12"/>
+<node COLOR="#006699" CREATED="1390095240296" ID="ID_1683859158" MODIFIED="1390095301062" TEXT="paints / updates progress bar"/>
+</node>
+</node>
+<node CREATED="1390093508781" ID="ID_174294952" MODIFIED="1390093608937" TEXT="playing start">
+<node CREATED="1390093532078" ID="ID_1499978032" MODIFIED="1390093532078" TEXT="foobar2000.exe:0047F8D1 call    off_52D31C"/>
+<node CREATED="1390093522140" ID="ID_983986688" MODIFIED="1390093522140" TEXT="foobar2000.exe:0047F90E call    near ptr unk_480897"/>
+<node CREATED="1390093551765" ID="ID_782346950" MODIFIED="1390093551765" TEXT="foobar2000.exe:0047F9B3 call    off_52D318"/>
+<node CREATED="1390093577218" ID="ID_699144765" MODIFIED="1390093577218" TEXT="foobar2000.exe:0047F868 call    off_52D2F8"/>
+<node CREATED="1390093609406" MODIFIED="1390093609406" TEXT="foobar2000.exe:0047F876 call    near ptr unk_42A970"/>
+</node>
+<node CREATED="1390093712734" ID="ID_1257697455" MODIFIED="1390093828156" TEXT="playing">
+<node CREATED="1390093764421" ID="ID_925316298" MODIFIED="1390093764421" TEXT="foobar2000.exe:0047F8D1 call    off_52D31C"/>
+<node CREATED="1390093745890" ID="ID_665144346" MODIFIED="1390093745890" TEXT="foobar2000.exe:0047F90E call    near ptr unk_480897"/>
+<node CREATED="1390093734078" ID="ID_1309612084" MODIFIED="1390093734078" TEXT="foobar2000.exe:0047F938 call    off_52D304"/>
+<node CREATED="1390093723843" ID="ID_1404657040" MODIFIED="1390093723843" TEXT="foobar2000.exe:0047F950 call    near ptr unk_40DAC0"/>
+<node CREATED="1390094968328" ID="ID_1567998285" MODIFIED="1390094968328" TEXT="foobar2000.exe:0047F9A7 call    near ptr unk_407DA0"/>
+<node CREATED="1390093806250" ID="ID_1011605598" MODIFIED="1390093807421" TEXT="foobar2000.exe:0047F9B3 call    off_52D318"/>
+<node CREATED="1390093822328" MODIFIED="1390093822328" TEXT="foobar2000.exe:0047FA79 call    off_52D708"/>
+<node CREATED="1390093841906" MODIFIED="1390093841906" TEXT="foobar2000.exe:0047FA9A call    dword ptr [eax+4]"/>
+<node CREATED="1390093851687" ID="ID_807940076" MODIFIED="1390093851687" TEXT="foobar2000.exe:0047FAA4 call    near ptr unk_47DC10">
+<node CREATED="1390093854078" ID="ID_856886662" MODIFIED="1390093855171" TEXT="ST"/>
+</node>
+<node CREATED="1390093874328" MODIFIED="1390093874328" TEXT="foobar2000.exe:0047FAB3 call    off_52D704"/>
+<node CREATED="1390093887031" MODIFIED="1390093887031" TEXT="foobar2000.exe:0047FAE9 call    near ptr unk_40DAC0"/>
+<node CREATED="1390093906203" MODIFIED="1390093906203" TEXT="foobar2000.exe:0047FAFE call    off_52D31C"/>
+<node CREATED="1390093914640" MODIFIED="1390093914640" TEXT="foobar2000.exe:0047FB10 call    dword ptr [eax+28h]"/>
+<node CREATED="1390093922343" MODIFIED="1390093922343" TEXT="foobar2000.exe:0047FB22 call    off_52D318"/>
+<node CREATED="1390093936281" MODIFIED="1390093936281" TEXT="foobar2000.exe:0047FB3A call    near ptr unk_50098B"/>
+<node CREATED="1390093946515" MODIFIED="1390093946515" TEXT="foobar2000.exe:0047FB56 call    dword ptr [eax+54h]"/>
+<node CREATED="1390093954000" MODIFIED="1390093954000" TEXT="foobar2000.exe:0047FB6C call    dword ptr [eax+54h]"/>
+<node CREATED="1390093962875" MODIFIED="1390093962875" TEXT="foobar2000.exe:0047FB7A call    near ptr unk_500AD0"/>
+<node CREATED="1390093979484" MODIFIED="1390093979484" TEXT="foobar2000.exe:0047FBEC call    dword ptr [eax]"/>
+<node CREATED="1390093994046" MODIFIED="1390093994046" TEXT="foobar2000.exe:0047F868 call    off_52D2F8"/>
+<node CREATED="1390093999750" MODIFIED="1390093999750" TEXT="foobar2000.exe:0047F876 call    near ptr unk_42A970"/>
+</node>
+<node CREATED="1390091328515" ID="ID_1011839352" MODIFIED="1390091470921" STYLE="fork" TEXT="foobar2000.exe:0047FE64 call    off_52D31C">
+<edge COLOR="#808080" STYLE="bezier" WIDTH="thin"/>
+<font NAME="Courier New" SIZE="12"/>
+</node>
+<node CREATED="1390091337531" ID="ID_116994862" MODIFIED="1390091470921" STYLE="fork" TEXT="foobar2000.exe:0047FEDE call    near ptr unk_4A2FE9">
+<edge COLOR="#808080" STYLE="bezier" WIDTH="thin"/>
+<font NAME="Courier New" SIZE="12"/>
+</node>
+<node CREATED="1390092962125" ID="ID_1570408812" MODIFIED="1390092963687" TEXT="idle">
+<node CREATED="1390091346421" ID="ID_85294455" MODIFIED="1390091470921" STYLE="fork" TEXT="foobar2000.exe:0047FF18 call    near ptr unk_4A2FE9">
+<edge COLOR="#808080" STYLE="bezier" WIDTH="thin"/>
+<font NAME="Courier New" SIZE="12"/>
+</node>
+</node>
+<node CREATED="1390091356187" ID="ID_1142180046" MODIFIED="1390091470921" STYLE="fork" TEXT="foobar2000.exe:0047FF4D call    near ptr unk_42A9E0">
+<edge COLOR="#808080" STYLE="bezier" WIDTH="thin"/>
+<font NAME="Courier New" SIZE="12"/>
+</node>
+<node CREATED="1390091361812" ID="ID_712843922" MODIFIED="1390091470921" STYLE="fork" TEXT="foobar2000.exe:0047FF56 call    dword ptr [eax+2Ch]">
+<edge COLOR="#808080" STYLE="bezier" WIDTH="thin"/>
+<font NAME="Courier New" SIZE="12"/>
+</node>
+<node CREATED="1390091371203" ID="ID_1846807715" MODIFIED="1390091470906" STYLE="fork" TEXT="foobar2000.exe:0047FF77 call    near ptr unk_47EB17">
+<edge COLOR="#808080" STYLE="bezier" WIDTH="thin"/>
+<font NAME="Courier New" SIZE="12"/>
+</node>
+<node CREATED="1390091379468" ID="ID_1757271674" MODIFIED="1390091470906" STYLE="fork" TEXT="foobar2000.exe:0047FFA4 call    near ptr unk_47E625">
+<edge COLOR="#808080" STYLE="bezier" WIDTH="thin"/>
+<font NAME="Courier New" SIZE="12"/>
+</node>
+<node CREATED="1390091387156" ID="ID_1264944780" MODIFIED="1390091470906" STYLE="fork" TEXT="foobar2000.exe:0047FFB9 call    near ptr unk_47E625">
+<edge COLOR="#808080" STYLE="bezier" WIDTH="thin"/>
+<font NAME="Courier New" SIZE="12"/>
+</node>
+<node CREATED="1390091394328" ID="ID_1084376626" MODIFIED="1390091470906" STYLE="fork" TEXT="foobar2000.exe:0047FFD4 call    near ptr unk_407DA0">
+<edge COLOR="#808080" STYLE="bezier" WIDTH="thin"/>
+<font NAME="Courier New" SIZE="12"/>
+</node>
+<node CREATED="1390091399953" ID="ID_1599691137" MODIFIED="1390091470906" STYLE="fork" TEXT="foobar2000.exe:0047FFE3 call    off_52D318">
+<edge COLOR="#808080" STYLE="bezier" WIDTH="thin"/>
+<font NAME="Courier New" SIZE="12"/>
+</node>
+<node CREATED="1390091505250" MODIFIED="1390091505250" TEXT="foobar2000.exe:00480066 call    off_52D708"/>
+<node CREATED="1390091514390" MODIFIED="1390091514390" TEXT="foobar2000.exe:0048007E call    near ptr unk_47DDF9"/>
+<node CREATED="1390091520359" MODIFIED="1390091520359" TEXT="foobar2000.exe:00480090 call    off_52D704"/>
+<node CREATED="1390091526218" ID="ID_1634642200" MODIFIED="1390091526218" TEXT="foobar2000.exe:004800A1 call    near ptr unk_481230"/>
+<node CREATED="1390091531125" MODIFIED="1390091531125" TEXT="foobar2000.exe:004800AA call    off_52D290"/>
+</node>
+</node>
+</node>
+</map>
