@@ -1,0 +1,16 @@
+verified:
+Xara
+3DSMAX
+Gimp
+Pity2013
+
+to-verify:
+Acad-2010
+Photoshop CS5
+ArcGIS
+
+Not worky:
+Lightroom - needs Win7
+ACAD 2014 - some exception on qemu :< maybe try with different NET 3.5?
+ChemDoodle - Java (later)
+BinGeno - bez sensu

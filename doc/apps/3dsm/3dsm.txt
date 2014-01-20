@@ -1,0 +1,41 @@
+Kod: fb
+
+Legenda:
+k - operacja krotka
+d - operacja dluga
+x - skonczone
+n - nieskonczone
+
+[kx] 1. Przygotowac maszyne (stan ready)
+    - adres IP i MAC
+    - zainstalowana aplikacja
+    - zainstalowane opr. wspomagajace (sterowniki virtio)
+[kx] 2. Znalezc oryginaly
+[kx] 3. Znalezc markery (poczatkowy, koncowy i gotowosci)
+[k] 4. Przeprowadzic testy markerow i handlerow (czy testy koncza sie wtedy, kiedy powinny, czy reakcje sa poprawne, kilka razy)
+[d][todo] 5. Przeprowadzic zebranie sladu i analize pokrycia kodu, wybrac oryginaly i generatory
+[k] 6. Opracowac runner i skrypt zamykajacy (ctrl-w)
+[k] 7. Utworzyc plik konfiguracyjny 
+[d] 8. Przetestowac proces fuzzowania (reakcje na AV (rand breaking), MA, TO), dodatkowe reakcje
+    - wyznaczyc optymalne MA (odsetek MA z dluuugim timoutem dla konkretnej probki, czyli: dlugi timeout, mala rozdzielczosc metryk, jeden box na jeden oryginal. Ciaglosc dzialania nie jest konieczna, moga byc restarty, wiec SO normalne. Wazne jest, zeby statystyki MA byly dokladne (czas bedzie wazny pozniej))
+    06d1: 6,10,7,8,5
+    d03b: 10,10,10,10,10 (ee, jest w ogole sens ten oryginal brac? w sumie o czym to niby swiadczy? xD)
+    1086: 9,10,10,10,10 (o kurcze tego sie nie spodziewalem :)) 
+    - wyznaczyc optymalne TO (najmniejsza liczba sekund, przy ktorej fuzzbox osiaga odsetek MA zblizony do wyznaczonego krok wczesniej, dla konkretnej probki, pojedynczo, zeby nie wprowadzac zaklocen restartami? nom, chyba tak :))
+    06d1: strzal: 5 
+    d03b: strzal: 3
+    1086: strzal: 8
+    - wyznaczyc SO, liczbe boxow, rdzeni (metoda prob i bledow)
+    W kolejnosci: liczba rdzeni, liczba boxow, SO?
+    - sprawdzic poprawnosc wynikow testowych (zgodnosc rzeczywistej reakcji z zaobserwowana)
+    Testy z zachowaniem dyskow, wylosuj zarejestrowane trzy probki MA, TO. Odpal je w obserwerze albo recznie i sprawdz reakcje.
+    - sprawdzic reakcje na crash
+    Breaking ;), sprawdzenie obslugi probki crashujacej (czy test dysku jest przerywany, czy informacja o crashu jest zarejestrowana, czy probka jest poprawnie zbinnowana)
+[k] 9. Zoptymalizowac proces fuzzowania
+    - wszystko co da sie jeszze zrobic. Dopisac jakies reakcje? Czy co
+[k] 10. Wstawic do harmonogramu testy wstepne i kompletne
+[d] 11. Przeprowadzic wstepne testy (do pierwszego crasha, wyznaczyc t1)
+[d] 12. Przeprowadzic kompletne testy
+    - wyznaczyc kombinacje oryginalu i algorytmow mutacyjnych
+    - uruchomic i sprawdzac okresowo fuzzery
+

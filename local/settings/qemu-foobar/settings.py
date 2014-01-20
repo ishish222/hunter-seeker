@@ -15,15 +15,18 @@ def react2(dbg):
 script_codes["ES"] = "foobar3"
 script_codes["FO"] = "foobar2"
 
-ma_st_rvas = [("foobar2000.exe", 0x3c618, 1)] # check again, but seems it has to pass one
-ma_end_rvas = [
-("foo_input_std.dll", 0x3e5df, 0), # mp3
-("foo_input_std.dll", 0x1c6e3, 0), # ogg, opus
-("foo_input_std.dll", 0x22107, 0), # flac
-("foo_input_std.dll", 0x5731b, 0), # aac
-("foo_input_std.dll", 0x78731, 0), # wma
-("foo_input_std.dll", 0x3834a, 0)  # wav
-]
+#ma_st_rvas = [("foobar2000.exe", 0x3c618, 1)] # check again, but seems it has to pass one
+#ma_st_rvas = [("foobar2000.exe", 0x7f8d1, 0)]
+ma_st_rvas = [("foobar2000.exe", 0xa5d3e, 0)]
+ma_end_rvas = [("foobar2000.exe", 0x7b9fb, 0)]
+#ma_end_rvas = [
+#("foo_input_std.dll", 0x3e5df, 0), # mp3
+#("foo_input_std.dll", 0x1c6e3, 0), # ogg, opus
+#("foo_input_std.dll", 0x22107, 0), # flac
+#("foo_input_std.dll", 0x5731b, 0), # aac
+#("foo_input_std.dll", 0x78731, 0), # wma
+#("foo_input_std.dll", 0x3834a, 0)  # wav
+#]
 ma_react_rvas = [
 ("foobar2000.exe", 0x7ceca, (0, react1, []))
 #("foobar2000.exe", 0x58b5b, (0, react2, []))

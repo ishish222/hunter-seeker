@@ -209,8 +209,8 @@ class binner(object):
         self.loop_debuggers_iteration(to, invocation_args)
 
         # answers are good, but we're waiting for events
-        while(self.status.qsize() == 0):
-            self.loop_debuggers_iteration(to)
+#        while(self.status.qsize() == 0):
+#            self.loop_debuggers_iteration(to)
 
     def race1(self, event):
         self.poll_debuggers()

@@ -3,8 +3,8 @@ import generators.changer as changer
 from subprocess import Popen
 
 def react1(dbg):
-    print("ES")
-    dbg.reqScript("ES")
+    dbg.reqScript("RE")
+    dbg.binner.send("SAMA") # we don't need locks this time
     return DBG_CONTINUE
 
 def react2(dbg):
@@ -12,22 +12,31 @@ def react2(dbg):
     dbg.reqScript("FO")
     return DBG_CONTINUE
 
-script_codes["ES"] = "foobar3"
+debug = True
+
+script_codes["R2"] = "ret2"
+script_codes["RE"] = "ret"
 script_codes["FO"] = "foobar2"
 
-ma_st_rvas = [("foobar2000.exe", 0xa5d3e, 0)]
-ma_end_rvas = [("foobar2000.exe", 0x7b9fb, 0)]
-ma_react_rvas = [
-("foobar2000.exe", 0x7ceca, (0, react1, []))
-]
-ma_rd_rvas = [("foobar2000.exe", 0x7f1bd, 0)]
+ma_st_rvas = [("DesignerPro.exe", 0xe30ac, 0)]
+ma_end_rvas = [("user32.dll", 0x17f87, 0)]
 
-app_path = "C:\\Program Files\\Autodesk\\AutoCAD 2014\\acad.exe"
-app_module = "acad.exe"
+ma_react_rvas = [
+#("DesignerPro.exe", 0xa08ffe, (0, react1, []))
+#("DesignerPro.exe", 0xa0d036, (0, react1, []))
+("user32.dll", 0x1680b, (0, react1, []))
+]
+#("foobar2000.exe", 0x58b5b, (0, react2, []))
+#]
+ma_rd_rvas = [("DesignerPro.exe", 0xa95a26, 0)]
+
+app_path = "C:\\Program Files\\Xara\\Xara Designer Pro X9\\DesignerPro.exe"
+app_module = "DesignerPro.exe"
 buffer_size = 4096
-log_name = "HS:ACAD"
+log_name = "HS:XaraDesigner9"
 fuzzbox_timeout = wait_sleep*4
 closing_plugin_name = "nop"
+start_sleep = 30
 mutator = "changer.Changer"
 
 def specific_preperations_1(options, args=None):
@@ -40,7 +49,7 @@ def specific_preperations_1(options, args=None):
 def runner(args):
     Popen("powershell -command \"& { invoke-expression %s }\"" % args)
 
-scripts_3 = ["foobar_mouse_2", "lclick"]
+scripts_4 = ["lclick", "esc"]
 
-scripts_5 = ["nop"]
+#scripts_5 = ["sleep_05"]
 

@@ -7,6 +7,16 @@ c:scripters
 c:../../blob/res/pdf/analyzed/06d1e4d05f1bbf243e9f99b38e429d46.pdf
 c:../../blob/res/pdf/analyzed/1086625a01d849baafe36df18897b299.pdf
 c:../../blob/res/pdf/analyzed/d03b8a87f20c35047a1b42e7b35006dd.pdf
+c:tests/c-3.s-1000.slow.hs2-01
+c:tests/c-3.s-1000.slow.hs2-02
+c:tests/c-3.s-1000.slow.hs2-03
+c:tests/c-3.s-1000.slow.hs2-04
+c:tests/c-3.s-1000.slow.hs2-05
+c:tests/sr-1.s-1000.slow.hs2-01
+c:tests/sr-1.s-1000.slow.hs2-02
+c:tests/sr-1.s-1000.slow.hs2-03
+c:tests/sr-1.s-1000.slow.hs2-04
+c:tests/sr-1.s-1000.slow.hs2-05
 t:fuzzers/generators
 t:fuzzers/correctors
 t:fuzzers/common.py

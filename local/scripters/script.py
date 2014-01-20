@@ -123,7 +123,7 @@ class Script:
 
                     if(k[1:].find("sleep") == 0):
                     #sleep request
-                        secs = int(k[7:], 10)
+                        secs = float(k[7:])
                         self.delay(secs)
                         continue
 

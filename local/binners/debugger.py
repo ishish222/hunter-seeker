@@ -159,6 +159,7 @@ class debugger(pydbg):
         pydbg.__init__(self)
         self.binner = binner
         self.preparation_lock = Lock()
+        self.send_lock = Lock()
         self.crash_bin = utils.crash_binning.crash_binning()
         #blacklists
         self.bl_modules = []
@@ -205,44 +206,44 @@ class debugger(pydbg):
     def signal_st(self):
         self.dlog("Signaled: ST", 1)
         self.last_state = "ST"
-        self.binner.send("SAST")
+        self.binner_send("SAST")
 
     def signal_ma(self):
         self.dlog("Signaled: MA", 1)
         self.last_state = "MA"
-        self.binner.send("SAMA")
+        self.binner_send("SAMA")
 
     def signal_rd(self):
         self.dlog("Signaled: RD", 1)
         self.last_state = "RD"
-        self.binner.send("SARD")
+        self.binner_send("SARD")
 
     def signal_rs(self):
         self.dlog("Signaled: RS", 1)
         self.last_state = "RS"
-        self.binner.send("SARS")
+        self.binner_send("SARS")
 
     def signal_cr(self):
         self.dlog("Signaled: CR", 1)
         self.last_state = "CR"
-        #self.binner.send("SACR%s%s" % (self.crash_binning.last_crash.exception_address, end))
-        self.binner.send("SACR")
+        #self.binner_send("SACR%s%s" % (self.crash_binning.last_crash.exception_address, end))
+        self.binner_send("SACR")
 
     def signal_ex(self):
         self.dlog("Signaled: EX", 1)
         self.last_state = "EX"
-        self.binner.send("SAEX")
+        self.binner_send("SAEX")
 
     def ok(self):
-        self.binner.send("=[OK]=")
+        self.binner_send("=[OK]=")
 
     def reqScript(self, script_code):
         self.dlog("Signaled: SR", 1)
-        self.binner.send("SR%s" % script_code)
+        self.binner_send("SR%s" % script_code)
 
     def reqScriptArgs(self, script_code, args):
         self.dlog("Signaled: SL", 1)
-        self.binner.send("SL%s %s%s" % (script_code, args, end))
+        self.binner_send("SL%s %s%s" % (script_code, args, end))
 
     def execute(self, cmd, args):
         if(args == None):
@@ -258,6 +259,11 @@ class debugger(pydbg):
 
     def attach2(self, pid):
         self.attach(int(pid))
+
+    def binner_send(self, data):
+        self.send_lock.acquire()
+        self.binner.send(data)
+        self.send_lock.release()
 
     def read_config(self):
         #blacklists
@@ -404,6 +410,7 @@ class debugger(pydbg):
 
     def stop(self):
         self.dlog("Trying to stop")
+        self.send_lock.acquire()
         if(self.debugger_active == True):
             self.debugger_active = False
             l.acquire()
@@ -411,6 +418,7 @@ class debugger(pydbg):
 
     def stop_force(self):
         self.dlog("Trying to stop forced")
+        self.send_lock.acquire()
         if(self.debugger_active == True):
             self.debugger_active = False
             l.acquire()
@@ -426,6 +434,7 @@ class debugger(pydbg):
         if(self.debugger_active == False):
             self.debugger_active = True
             l.release()
+        self.send_lock.release()
         self.dlog("Started")
 
     def stopping_routine(self, to):
@@ -794,10 +803,10 @@ class debugger(pydbg):
         self.dlog("In get_ea")
         ea = self.crash_bin.last_crash.exception_address
         self.dlog("Sending: LO%x%s" % (ea, end))
-        self.binner.send("LO%x%s" % (ea, end))
+        self.binner_send("LO%x%s" % (ea, end))
 
     def get_synopsis(self):
-        self.binner.send(self.crash_bin.crash_synopsis())
+        self.binner_send(self.crash_bin.crash_synopsis())
 #        self.ok() 
 
     def start_profiling(self):

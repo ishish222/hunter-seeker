@@ -1,0 +1,22 @@
+skrypty:
+otwieranie: zwykly runner
+zamykanie: ctrl-w
+
+
+ST:
+0xaccd90 (-0x400000)
+
+END:
+np.
+0xbbcd94
+0xe1bfe3
+
+RD:
+0xefe760 (-0x400000)
+
+Path:
+C:\\Program Files\\Xara\\Xara Designer Pro X9\\DesignerPro.exe
+
+skrypty:
+otwieranie: zwykly runner w gosciu
+zamukanie: ctrl-w
