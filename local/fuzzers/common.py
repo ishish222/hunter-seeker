@@ -5,7 +5,7 @@ import logging
 import logging.handlers
 import os
 from datetime import datetime
-from script import rs, rss, runscriptq, write_monitor
+from script import rs, rss, runscriptq, write_monitor, write_monitor_2
 import generators.generatorCorrected as generator
 import socket
 from subprocess import Popen, PIPE
@@ -245,7 +245,8 @@ def write_socket(s, data):
 
 def powerofff(options):
     try:
-        pci_umount(options.slot)
+        pci_umount(options.slot_shared)
+        pci_umount(options.slot_saved)
     except Exception:
         print("Problems unmounting pci")
     try:
@@ -559,16 +560,16 @@ def long_exec(args):
     ans = Popen(args, stdout=PIPE)
     return ans.stdout,read()
 
-def create_image(path, size):
+def create_image(path, size, label):
     simple_exec(["qemu-img", "create", "-f", "raw", path, str(size)])
     loop_dev = simple_exec(["sudo", "losetup", "-f", "--show", path])
-    simple_exec(["sudo", "mkfs.ntfs", "-f", "-L", "secondary", "-H", "0", "-S", "0", "-z", "0", "-p", "0", loop_dev])
+    simple_exec(["sudo", "mkfs.ntfs", "-f", "-L", label, "-H", "0", "-S", "0", "-z", "0", "-p", "0", loop_dev])
     time.sleep(2)
     simple_exec(["sudo", "losetup", "-d", loop_dev])
     return path
 
 def pci_mount(options, filee):
-    dev_str = write_monitor(options.m, "pci_add auto storage file=%s,if=virtio" % filee)
+    dev_str = write_monitor_2(options.m, "pci_add auto storage file=%s,if=virtio" % filee)
     if(dev_str.find("could not open disk image:") > -1):
         print(dev_str)
         return
@@ -592,17 +593,24 @@ def umount_drive(options):
     os.spawnv(os.P_WAIT, "/usr/bin/sudo", ["sudo", "umount", options.tmp_mountpoint])
     os.spawnv(os.P_WAIT, "/bin/rm", ["rm", "-rf", options.tmp_mountpoint])
 
-def create_drive(options):
+def calc_disk_size(options):
     origin_size = os.stat(options.origin).st_size
     size_margin  = origin_size * options.samples_size_margin
     origin_size += size_margin
     disk_size = origin_size * (options.samples_count + 1) + options.settings.SERVER_SIZE
     disk_size = max(int(disk_size), options.settings.MIN_DISK_SIZE)
-    if(disk_size > options.settings.MAX_DISK_SIZE): raise FuzzingException
-    options.tmp_disk_img = tempfile.mktemp(suffix = "-samples.raw", dir=".")
-    create_image(options.tmp_disk_img, disk_size)
-    print("Batch disk size : %s" % disk_size)
-    print("Created disk")
+    return disk_size
+
+def create_drive(options, size=None, name=None, label=None):
+    if(size == None):
+        size = calc_disk_size(options)
+    if(size > options.settings.MAX_DISK_SIZE): raise FuzzingException
+    if(name == None):
+        name = tempfile.mktemp(suffix = "-samples.raw", dir=".")
+    if(label == None):
+        label = "secondary"
+    create_image(name, size, label)
+    return name
 
 def del_mountpoint(options):
     os.spawnv(os.P_WAIT, "/bin/rm", ["rm", "-rf", options.tmp_mountpoint])

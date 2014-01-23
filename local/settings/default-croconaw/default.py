@@ -39,7 +39,7 @@ ma_rd_rvas = []
 
 samples_shared_path = "e:\\samples\\shared"
 samples_saved = "e:\\samples\\saved"
-samples_binned = "e:\\samples\\binned"
+samples_binned = "f:\\"
 samples_original = "d:\\samples\\original"
 samples_size_margin = 0.3
 log_path = "../logs"

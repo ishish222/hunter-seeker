@@ -1,0 +1,10 @@
+#!/bin/sh
+SRC=$1
+DST=$2
+TMPDIR=$(mktemp -d)
+echo "Extrating from $SRC into $DST"
+mkdir -p $DST
+sudo mount $SRC $TMPDIR
+cp -r $TMPDIR/* $DST
+sudo umount $TMPDIR
+rm -rf $TMPDIR

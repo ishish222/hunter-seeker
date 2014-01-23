@@ -52,11 +52,15 @@ def fuzzing_routine():
     to_count = 0
     ma_count = 0
     last_time_check = time.localtime()
+        
+    #create saved disk
+    saved_size = calc_disk_size(options) * 10
+    options.saved_disk_img = create_drive(options, size=saved_size, name="%s-saved.raw" % timestamp2(), label="saved")
 
     # restart fuzzer on samples exhaustion, socket timout, etc. 
     while True:
         print("Current stats (SA/MA/TO): %d/%d/%d" % (sample_count, ma_count, to_count))
-        create_drive(options)
+        options.tmp_disk_img = create_drive(options)
         samples_list = generate(options)
         log.write("[%s]\n" % options.tmp_disk_img)
         log.flush()
@@ -64,14 +68,11 @@ def fuzzing_routine():
         start(options)
         print("[%s] Started" % timestamp())
         #mount_cdrom(options, options.cdrom)
-        options.slot = pci_mount(options, options.tmp_disk_img) #hotplug should be completed during bootup
-#        rs("ipconfig_set_ip_2", options.m, args=[options.fuzzbox_ip, options.server_ip])
-        # it takes so fucking long
-#        time.sleep(10)
-#        os.spawnv(os.P_WAIT, "/bin/ping", ["ping", options.fuzzbox_ip, "-c1"])
+        read_monitor(options.m)
+        options.slot_shared = pci_mount(options, options.tmp_disk_img) #hotplug should be completed during bootup
+        time.sleep(1)
+        options.slot_saved = pci_mount(options, options.saved_disk_img) #hotplug should be completed during bootup
 
-        #time for boot
-#        time.sleep(options.boot_wait)
         proceed1(options)
 
         try:
@@ -113,6 +114,9 @@ def fuzzing_routine():
 #                try:
                     (lastResponse, status, reqScript) = read_socket(s)
 #                execute_script(reqScript)
+                    if(status == "PTO"):
+                        proceed5(options)
+                        continue
                     if(status == "STTO"):
                         proceed5(options)
                         continue
@@ -186,7 +190,7 @@ def fuzzing_routine():
     #            if(test_path != sample_path):
     #                os.remove(test_path)
 #                killHost(options)
-                time.sleep(10)
+#                time.sleep(10)
                 raise CrashException
 
             except IndexError:
@@ -194,6 +198,7 @@ def fuzzing_routine():
                 report("Samples exhausted, restarting")
                 write_socket(s, "logStop")
                 del_mountpoint(options)
+#                time.sleep(30)
                 print("Restarting")
                 powerofff(options)
                 if(not options.save_disks):
@@ -201,9 +206,12 @@ def fuzzing_routine():
                 continue
 
             except socket.timeout:
+                # suspicious, i want that sample :)
+                write_socket(s, "getSynopsis")
                 print("Socket timeout, restarting")
                 report("Socket timeout, restarting")
                 write_socket(s, "logStop")
+#                time.sleep(30)
                 del_mountpoint(options)
                 powerofff(options)
                 if(not options.save_disks):
@@ -213,6 +221,7 @@ def fuzzing_routine():
             except CrashException:
                 print("Got crash, restarting")
                 report("Got crash, restarting")
+#                time.sleep(30)
                 write_socket(s, "logStop")
                 del_mountpoint(options)
                 powerofff(options)

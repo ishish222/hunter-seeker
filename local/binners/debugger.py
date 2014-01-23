@@ -18,6 +18,7 @@ from select import select
 import socket
 from random import random
 import struct
+from mutex_2 import NamedMutex
 
 ### functions
 # unable to move cause settings module is not visible
@@ -70,7 +71,6 @@ default_module_blacklist.append("shell32.dll")
 default_module_blacklist.append("mswsock.dll")
 default_module_blacklist.append("ws2_help.dll")
 
-
 def defined(name):
     if(name in globals()):
         return True
@@ -87,51 +87,81 @@ def defined(name):
 ### default handlers
 
 def phony_handler(dbg):
+    dbg.dlog("acquire attempt by phony handler")
+    dbg.dbg_lock_acquire(dbg.send_lock)
     dbg.dlog("Phony handler!!")
+    dbg.dlog("release attempt by phony handler")
+    dbg.dbg_lock_release(dbg.send_lock)
     return DBG_CONTINUE
 
 def default_st_handler(dbg):
+    dbg.dlog("acquire attempt by st handler")
+    dbg.dbg_lock_acquire(dbg.send_lock)
     if(dbg.check_counters(dbg.exception_address)):
         dbg.dlog("ST marker reached")
         dbg.signal_st()
+    dbg.dbg_lock_release(dbg.send_lock)
+    dbg.dlog("release attempt by st handler")
     return DBG_CONTINUE
 
 
 def default_end_handler(dbg):
+    dbg.dlog("acquire attempt by end handler")
+    dbg.dbg_lock_acquire(dbg.send_lock)
     if(dbg.check_counters(dbg.exception_address)):
         dbg.dlog("END marker reached")
         dbg.signal_ma()
+    dbg.dlog("release attempt by end handler")
+    dbg.dbg_lock_release(dbg.send_lock)
     return DBG_CONTINUE
 
 def default_rd_handler(dbg):
+    dbg.dlog("acquire attempt by rd handler")
+    dbg.dbg_lock_acquire(dbg.send_lock)
     if(dbg.check_counters(dbg.exception_address)):
         dbg.dlog("RD marker reached")
         dbg.signal_rd()
+    dbg.dlog("release attempt by rd handler")
+    dbg.dbg_lock_release(dbg.send_lock)
     return DBG_CONTINUE
 
 def default_bp_handler(dbg):
+    dbg.dlog("acquire attempt by bp handler")
+    dbg.dbg_lock_acquire(dbg.send_lock)
     dlog("EXCEPTION_BREAKPOINT")
 
     dbg.signal_ex()
+    dbg.dbg_lock_release(dbg.send_lock)
+    dbg.dlog("release attempt by bp handler")
     return DBG_CONTINUE
     
 def default_ss_handler(dbg):
+    dbg.dlog("acquire attempt by ss handler")
+    dbg.dbg_lock_acquire(dbg.send_lock)
     dlog("EXCEPTION_SINGLE_STEP")
 
     dbg.signal_ex()
+    dbg.dlog("release attempt by ex handler")
+    dbg.dbg_lock_release(dbg.send_lock)
     return DBG_CONTINUE
     
 def default_av_handler(dbg):
+    dbg.dlog("acquire attempt by av handler")
+    dbg.dbg_lock_acquire(dbg.send_lock)
     dbg.dlog("avThread")
 
     dbg.crash_bin.record_crash(dbg)
     dbg.signal_cr()
 
     # take over cmd parsing?
+    dbg.dlog("release attempt by av handler")
+    dbg.dbg_lock_release(dbg.send_lock)
+
     while True:
-        cmd, args = readline(dbg.binner)
-        dbg.dlog("Received: %s" % cmd, 2)
-        dbg.execute(cmd, args)
+        pass
+#        cmd, args = readline(dbg.binner)
+#        dbg.dlog("Received: %s" % cmd, 2)
+#        dbg.execute(cmd, args)
 
 #    dbg.detach_st_markers()
 #    dbg.detach_end_markers()
@@ -151,12 +181,14 @@ def default_av_handler(dbg):
     # wait to die?
 #    return DBG_EXCEPTION_NOT_HANDLED
     return DBG_CONTINUE
-    
+
 ### debugger class
 class debugger(pydbg):
 
     def __init__(self, binner):
         pydbg.__init__(self)
+        self.start_mutex = NamedMutex("StartMutex")
+        self.stop_mutex = NamedMutex("StopMutex")
         self.binner = binner
         self.preparation_lock = Lock()
         self.send_lock = Lock()
@@ -194,6 +226,20 @@ class debugger(pydbg):
         else:
             self.debug = False
             self.last_log_file = None
+
+    def dbg_lock_acquire(self, lock):
+        lock.acquire()
+        self.dlog("lock acquired")
+    
+    def dbg_lock_release(self, lock):
+        try:
+            lock.release()
+        except ValueError:
+            self.dlog("ValueError")
+        except ThreadError:
+            self.dlog("ThreadError")
+        self.dlog("lock released")
+        
 
     def dlog(self, data, level=0):
         if(self.debug == True):
@@ -239,7 +285,7 @@ class debugger(pydbg):
 
     def reqScript(self, script_code):
         self.dlog("Signaled: SR", 1)
-        self.binner_send("SR%s" % script_code)
+        self.binner_send("SR%s" % script_code) #already locked
 
     def reqScriptArgs(self, script_code, args):
         self.dlog("Signaled: SL", 1)
@@ -261,9 +307,10 @@ class debugger(pydbg):
         self.attach(int(pid))
 
     def binner_send(self, data):
-        self.send_lock.acquire()
+#        self.dbg_lock_acquire(self.send_lock)
+        print(data)
         self.binner.send(data)
-        self.send_lock.release()
+#        self.dbg_lock_release(self.send_lock)
 
     def read_config(self):
         #blacklists
@@ -410,18 +457,20 @@ class debugger(pydbg):
 
     def stop(self):
         self.dlog("Trying to stop")
-        self.send_lock.acquire()
         if(self.debugger_active == True):
+#            self.dlog("acquire attempt by stop")
+#            self.dbg_lock_acquire(self.send_lock) #if you have something to send, you'll have to wait for another stop
             self.debugger_active = False
-            l.acquire()
+ #           self.dbg_lock_acquire(l)
         self.dlog("Stopped")
 
     def stop_force(self):
         self.dlog("Trying to stop forced")
-        self.send_lock.acquire()
         if(self.debugger_active == True):
             self.debugger_active = False
-            l.acquire()
+#            self.dlog("acquire attempt by forced stop")
+            self.dbg_lock_acquire(self.send_lock) #if you have something to send, you'll have to wait for another stop
+            self.dbg_lock_acquire(l)
         self.dlog("Stopped")
 
     def start(self, to = None):
@@ -433,8 +482,8 @@ class debugger(pydbg):
             self.break_things()
         if(self.debugger_active == False):
             self.debugger_active = True
-            l.release()
-        self.send_lock.release()
+#            self.dbg_lock_release(l)
+#            self.dbg_lock_release(self.send_lock)
         self.dlog("Started")
 
     def stopping_routine(self, to):
@@ -580,6 +629,15 @@ class debugger(pydbg):
 
     def attach_av_handler(self):
         self.set_callback(EXCEPTION_ACCESS_VIOLATION, self.av_handler)
+        self.set_callback(STATUS_IN_PAGE_ERROR, self.av_handler)
+        self.set_callback(STATUS_ILLEGAL_INSTRUCTION, self.av_handler)
+        self.set_callback(STATUS_INVALID_DISPOSITION, self.av_handler)
+        self.set_callback(STATUS_INTEGER_DIVIDE_BY_ZERO, self.av_handler)
+        self.set_callback(STATUS_INTEGER_OVERFLOW, self.av_handler)
+        self.set_callback(STATUS_PRIVILEGED_INSTRUCTION, self.av_handler)
+        self.set_callback(STATUS_STACK_OVERFLOW, self.av_handler)
+        self.set_callback(STATUS_UNHANDLED_EXCEPTION, self.av_handler)
+        self.set_callback(STATUS_PIPE_BROKEN, self.av_handler)
         self.dlog("AV handler installed", 2)
 
     def detach_bp_handler(self):
@@ -596,7 +654,7 @@ class debugger(pydbg):
         self.dlog("AV handler uninstalled", 2)
 
     def attach_markers(self):
-        self.preparation_lock.acquire()
+        self.dbg_lock_acquire(self.preparation_lock)
         self.dlog("[LOCK] Preparation section", 2)
 
         for ma_addr in self.markers:
@@ -605,11 +663,11 @@ class debugger(pydbg):
             self.breakpoints[ma_addr[0]].pass_count = ma_addr[1]
             self.counters[ma_addr[0]] = (ma_addr[1], 0)
 
-        self.preparation_lock.release()
+        self.dbg_lock_release(self.preparation_lock)
         self.dlog("[UNLOCK] Preparation section", 2)
 
     def attach_st_markers(self):
-        self.preparation_lock.acquire()
+        self.dbg_lock_acquire(self.preparation_lock)
         self.dlog("[LOCK] Preparation section", 2)
 
         for ma_addr in self.st_markers:
@@ -618,11 +676,11 @@ class debugger(pydbg):
             self.breakpoints[ma_addr[0]].pass_count = ma_addr[1]
             self.counters[ma_addr[0]] = (ma_addr[1], 0)
 
-        self.preparation_lock.release()
+        self.dbg_lock_release(self.preparation_lock)
         self.dlog("[UNLOCK] Preparation section", 2)
 
     def attach_end_markers(self):
-        self.preparation_lock.acquire()
+        self.dbg_lock_acquire(self.preparation_lock)
         self.dlog("[LOCK] Preparation section", 2)
 
         for ma_addr in self.end_markers:
@@ -632,11 +690,11 @@ class debugger(pydbg):
             self.dlog("Pass count: %d" % self.breakpoints[ma_addr[0]].pass_count)
             self.counters[ma_addr[0]] = (ma_addr[1], 0)
 
-        self.preparation_lock.release()
+        self.dbg_lock_release(self.preparation_lock)
         self.dlog("[UNLOCK] Preparation section", 2)
 
     def attach_react_markers(self):
-        self.preparation_lock.acquire()
+        self.dbg_lock_acquire(self.preparation_lock)
         self.dlog("[LOCK] Preparation section", 2)
 
         for ma_addr in self.react_markers:
@@ -646,11 +704,11 @@ class debugger(pydbg):
             self.breakpoints[ma_addr[0]].pass_count = reaction[0]
             self.counters[ma_addr[0]] = (ma_addr[1][0], 0) #take care of this
 
-        self.preparation_lock.release()
+        self.dbg_lock_release(self.preparation_lock)
         self.dlog("[UNLOCK] Preparation section", 2)
 
     def attach_rd_markers(self):
-        self.preparation_lock.acquire()
+        self.dbg_lock_acquire(self.preparation_lock)
         self.dlog("[LOCK] Preparation section", 2)
 
         for ma_addr in self.rd_markers:
@@ -660,57 +718,57 @@ class debugger(pydbg):
             self.dlog("Pass count: %d" % self.breakpoints[ma_addr[0]].pass_count)
             self.counters[ma_addr[0]] = (ma_addr[1], 0)
 
-        self.preparation_lock.release()
+        self.dbg_lock_release(self.preparation_lock)
         self.dlog("[UNLOCK] Preparation section", 2)
 
     def detach_markers(self):
-        self.preparation_lock.acquire()
+        self.dbg_lock_acquire(self.preparation_lock)
         self.dlog("[LOCK] Preparation section", 2)
 
         for ma_addr in self.markers:
             self.bp_del(ma_addr[0])
 
-        self.preparation_lock.release()
+        self.dbg_lock_release(self.preparation_lock)
         self.dlog("[UNLOCK] Preparation section", 2)
 
     def detach_st_markers(self):
-        self.preparation_lock.acquire()
+        self.dbg_lock_acquire(self.preparation_lock)
         self.dlog("[LOCK] Preparation section", 2)
 
         for ma_addr in self.st_markers:
             self.bp_del(ma_addr[0])
 
-        self.preparation_lock.release()
+        self.dbg_lock_release(self.preparation_lock)
         self.dlog("[UNLOCK] Preparation section", 2)
 
     def detach_end_markers(self):
-        self.preparation_lock.acquire()
+        self.dbg_lock_acquire(self.preparation_lock)
         self.dlog("[LOCK] Preparation section", 2)
 
         for ma_addr in self.end_markers:
             self.bp_del(ma_addr[0])
 
-        self.preparation_lock.release()
+        self.dbg_lock_release(self.preparation_lock)
         self.dlog("[UNLOCK] Preparation section", 2)
 
     def detach_react_markers(self):
-        self.preparation_lock.acquire()
+        self.dbg_lock_acquire(self.preparation_lock)
         self.dlog("[LOCK] Preparation section", 2)
 
         for ma_addr in self.react_markers:
             self.bp_del(ma_addr[0])
 
-        self.preparation_lock.release()
+        self.dbg_lock_release(self.preparation_lock)
         self.dlog("[UNLOCK] Preparation section", 2)
 
     def detach_rd_markers(self):
-        self.preparation_lock.acquire()
+        self.dbg_lock_acquire(self.preparation_lock)
         self.dlog("[LOCK] Preparation section", 2)
 
         for ma_addr in self.rd_markers:
             self.bp_del(ma_addr[0])
 
-        self.preparation_lock.release()
+        self.dbg_lock_release(self.preparation_lock)
         self.dlog("[UNLOCK] Preparation section", 2)
 
     def break_things(self):
@@ -826,13 +884,14 @@ class debugger(pydbg):
             self.pr.disable()
 
     def dump_stats(self, fname):
-        try:
-            s = StringIO.StringIO()
-            sortby = 'cumulative'
-            ps = pstats.Stats(self.pr, stream=s).sort_stats(sortby)
-            ps.dump_stats(fname)
-        except Exception:
-            self.dlog(str(sys.exc_info()))
+        if(self.pr != None):
+            try:
+                s = StringIO.StringIO()
+                sortby = 'cumulative'
+                ps = pstats.Stats(self.pr, stream=s).sort_stats(sortby)
+                ps.dump_stats(fname)
+            except Exception:
+                self.dlog(str(sys.exc_info()))
 
 # protocol def: required operation, need to read args?
 dbg_cmds = {}
@@ -901,6 +960,15 @@ def comm_routine(dbg):
         dbg.dump_stats("e:\\logs\\debugger-%d-error" % dbg.pid)
         #send exception
 
+def stopping_routine(dbg):
+    while True:
+        print("Waiting for stop mutex")
+        dbg.stop_mutex.acquire()
+#        print("Got it, releasing")
+        dbg.debugger_routine = False
+        dbg.stop_mutex.release()
+        time.sleep(0.01)
+
 def debugger_routine():
     global l
     global running
@@ -914,18 +982,25 @@ def debugger_routine():
     dbg.dlog("Will accept attach now")
     cmd, args = readline(dbg.binner)
     dbg.execute(cmd, args)
+
+    st = Thread(target=stopping_routine, args=(dbg,))
+    st.start()
     ct = Thread(target=comm_routine, args=(dbg,))
     ct.start()
 
     # dbg in main thread, all commands in additional threads
-    time.sleep(5)
+    print(dbg.start_mutex)
     while True:
-        l.acquire()
+#        print("Waiting for mutex")
+#        dbg.dbg_lock_acquire(l)
+        dbg.start_mutex.acquire()
+        dbg.start_mutex.release()
+#        print("Got mutex, starting")
         dbg.debug_event_loop()
-        try:
-            l.release()
-        except Exception:
-            pass
+#        try:
+#            dbg.dbg_lock_release(l)
+#        except Exception:
+#            pass
         if(dbg.schedule_termination == True):
             break
 

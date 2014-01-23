@@ -18,6 +18,7 @@ from select import select
 import socket
 import os
 from shutil import copyfile
+from mutex_2 import NamedMutex
 
 statusPri = {'SR' : 1, 'SL' : 1, 'CR' : 0, 'TO' : 2, 'MA' : 2, 'RD' : 2, 'ST' : 2}
 end = "=[OK]="
@@ -47,6 +48,8 @@ def defined(name):
 class binner(object):
     def __init__(self, ph):
 #        self.ph = None
+        self.start_mutex = NamedMutex("StartMutex", True)
+        self.stop_mutex = NamedMutex("StopMutex", True)
         self.ph = ph
         self.test_lock = Lock()
         self.loop_lock = Lock()
@@ -188,7 +191,6 @@ class binner(object):
                 self.status.put((statusPri[status], status, self.reqScript))
             if(data == "LO"):
                 self.dlog("In receiving LO")
-                print("here")
                 long_data = ""
                 while True:
                     long_data += dbg_socket.recv(1)
@@ -259,7 +261,9 @@ class binner(object):
 
     # start, collect events, but ignore them 
     def stop_debuggers(self, reason="unknown"):
-        self.send_command("S3")
+#        self.send_command("S3")
+        self.stop_mutex.release()
+        self.stop_mutex.acquire()
         self.loop_lock.acquire()
         self.dlog("[LOCK] Debug section", 2)
         self.dlog("Reason: %s" % reason, 2)
@@ -273,6 +277,10 @@ class binner(object):
             self.status.put(temp)
 
     def start_debuggers(self, reason="unknown", to=None):
+#        print("Releasing mutex")
+        self.start_mutex.release()
+#        print("Acquiring mutex")
+        self.start_mutex.acquire()
         self.loop_lock.release()
         self.dlog("[UNLOCK] Debug section", 2)
         self.dlog("Waiting for debug event")
@@ -494,12 +502,12 @@ class binner(object):
 
     def save_synopsis(self, filee):
         fname = filee.split("\\")[-1]
-        self.send_command("SS%s\\%s\\%s%s" % (settings.samples_binned, self.ea, fname, end))
+        self.send_command("SS%s%s\\%s%s" % (settings.samples_binned, self.ea, fname, end))
         self.ok()
 
     def save_sample(self, filee):
         fname = filee.split("\\")[-1]
-        copyfile(filee, "%s\\%s\\%s" % (settings.samples_binned, self.ea, fname))
+        copyfile(filee, "%s%s\\%s" % (settings.samples_binned, self.ea, fname))
 
     def close_logs(self):
         self.last_log_file.flush()

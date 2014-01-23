@@ -114,7 +114,8 @@ def process_reactions():
     global status
 
     status = ""
-    for i in range(0, main_binner.status.qsize()):
+#    for i in range(0, main_binner.status.qsize()):
+    while(main_binner.status.qsize() > 0):
 #    while(not main_binner.status.empty()):
 #        main_binner.dlog("Queue size before get: %d" % main_binner.status.qsize())
         item = main_binner.status.get()
@@ -140,42 +141,50 @@ def process_reactions():
             continue
 
 
-def process_status_queue(satisfactory = None):
+def process_status_queue(satisfying = None):
     global main_binner
     global status
 
     status = ""
+    satisfied = False
+    
     while(not main_binner.status.empty()):
-#        main_binner.dlog("Queue size before get: %d" % main_binner.status.qsize())
+        main_binner.dlog("Queue size before get: %d" % main_binner.status.qsize())
         item = main_binner.status.get()
-#        main_binner.dlog("Queue size after get : %d" % main_binner.status.qsize())
+        main_binner.dlog("Queue size after get : %d" % main_binner.status.qsize())
         status = item[1]
-#        main_binner.dlog("Processing %s" % status)
+        main_binner.dlog("Processing %s" % status)
         if(status == "TO"):
             if(main_binner.prev_status == "MA"):
-                status = "RDTO"
+                status = "PTO"
             if(main_binner.prev_status == "TO"):
-                status = "RDTO"
+                status = "PTO"
             if(main_binner.prev_status == "RD"):
-                status = "STTO"
+                status = "PTO"
         if(status == "SR"):
-#            main_binner.dlog("Requested script: %s" % item[2])
+            main_binner.dlog("Requested script: %s" % item[2])
             main_binner.writePipe("Status: %s\n" % status)
             main_binner.writePipe("Script: %s\n" % item[2])
             main_binner.ok()
             # time for reaction to SR
             main_binner.start_debuggers("Script execution")
             main_binner.readPipe()
-            main_binner.stop_debuggers("Script execution finished")
-#            main_binner.dlog("Queue size after script: %d" % main_binner.status.qsize())
+            main_binner.stop_debuggers("Script execution finished") #could add statuses into queue
+            main_binner.dlog("Queue size after script: %d" % main_binner.status.qsize())
             continue
 
-        print(status)
-        if(satisfactory != None):
-            if(status in satisfactory):
-                return True
+#        print(status)
+        if(satisfying != None):
+            if(status in satisfying):
+                print("Status %s is satisfying" % status)
+                satisfied = True
+            else:
+                print("Status %s is not satisfying" % status)
+                print("Satisfying statuses:")
+                print(satisfying)
         main_binner.prev_status = status
-    return False
+
+    return satisfied
 
 
 ### binner commands
@@ -255,7 +264,7 @@ def execute(cmds):
 #            process_status_queue()
             #process_reactions()
             main_binner.loop_debuggers(invocation_args=args)
-            while(process_status_queue(["ST", "CR", "STTO"]) != True):
+            while(process_status_queue(["ST", "CR", "PTO"]) != True):
                 main_binner.loop_debuggers(settings.wait_sleep)
             if(status == "CR"):
                 dlog("Processing CR1")
@@ -267,13 +276,14 @@ def execute(cmds):
                 main_binner.ok()
                 return
 
+            print(status)
             main_binner.writePipe("Status: %s" % status)
             main_binner.ok()
 
             main_binner.detach_st_markers()
             main_binner.attach_end_markers()
 
-            while(process_status_queue(["MA", "CR", "TO"]) != True):
+            while(process_status_queue(["MA", "CR", "TO", "PTO"]) != True):
                 main_binner.loop_debuggers(settings.wait_sleep)
             if(status == "CR"):
                 dlog("Processing CR2")
@@ -287,6 +297,7 @@ def execute(cmds):
                 main_binner.ok()
                 return
 
+            print(status)
             main_binner.writePipe("Status: %s" % status)
             main_binner.ok()
 
@@ -301,10 +312,10 @@ def execute(cmds):
 #            main_binner.loop_debuggers()
             #process_reactions()
             if(settings.needs_ready):
-                while(process_status_queue(["RD", "CR", "RDTO"]) != True):
+                while(process_status_queue(["RD", "CR", "PTO"]) != True):
                     main_binner.loop_debuggers(settings.wait_sleep)
             else:
-                process_status_queue(["RD", "CR", "RDTO"])
+                process_status_queue(["RD", "CR", "PTO"])
                 if(status != "CR"): status = "RD"
 
             if(status == "CR"):
@@ -317,6 +328,7 @@ def execute(cmds):
                 main_binner.ok()
                 return
 
+            print(status)
             main_binner.writePipe("Status: %s" % status)
             main_binner.ok()
             main_binner.detach_rd_markers()

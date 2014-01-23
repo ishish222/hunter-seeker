@@ -64,5 +64,12 @@ t63:    SR-1.fb.5607,   type: ogg,      status: np. t55
 t64:    SR-1.fb.9ad3,   type: ogg,      status: np. t55
 t65:    SR-1.fb.ba73,   type: ogg,      status: np. t55
 t66:    SR-1.fb.e08a,   type: ogg,      status: np. t55
-
+t67:    C-3.xa.a6fc,    type: xar,      status: CR
+t68:    C-3.xa.a75c,    type: xar,      status: CR
+t69:    C-3.xa.c037,    type: xar,      status: CR
+t70:    C-3.xa.ca52,    type: xar,      status: CR
+t71:    SR-1.xa.a6fc,   type: xar,      status: CR
+t72:    SR-1.xa.a75c,   type: xar,      status: CR
+t73:    SR-1.xa.c037,   type: xar,      status: CR
+t74:    SR-1.xa.ca52,   type: xar,      status: CR
 
