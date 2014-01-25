@@ -19,6 +19,7 @@ import socket
 from random import random
 import struct
 from mutex_2 import NamedMutex
+from walk import walk, add_default_blacklists
 
 ### functions
 # unable to move cause settings module is not visible
@@ -226,6 +227,7 @@ class debugger(pydbg):
         else:
             self.debug = False
             self.last_log_file = None
+        self.walk = None
 
     def dbg_lock_acquire(self, lock):
         lock.acquire()
@@ -240,7 +242,6 @@ class debugger(pydbg):
             self.dlog("ThreadError")
         self.dlog("lock released")
         
-
     def dlog(self, data, level=0):
         if(self.debug == True):
             if(self.log_level <0):
@@ -258,6 +259,16 @@ class debugger(pydbg):
         self.dlog("Signaled: MA", 1)
         self.last_state = "MA"
         self.binner_send("SAMA")
+
+    def signal_ws(self):
+        self.dlog("Signaled: WS", 1)
+        self.last_state = "WS"
+        self.binner_send("SAWS")
+
+    def signal_we(self):
+        self.dlog("Signaled: WE", 1)
+        self.last_state = "WE"
+        self.binner_send("SAWE")
 
     def signal_rd(self):
         self.dlog("Signaled: RD", 1)
@@ -849,7 +860,21 @@ class debugger(pydbg):
             self.last_log_file.close()
             self.last_log_file = None
         self.logStarted = False
-    
+
+
+    def take_a_walk(self, args):
+        depth, gf_path = args.split(" ")
+        depth = int(depth)
+
+        st_addr = self.st_markers[0][0]
+        end_addr = self.end_markers[0][0]
+
+        self.walk = walk(st_addr, end_addr, max_level=depth, gf_path=gf_path)
+        add_default_blacklists(self.walk)
+        self.walk.install_walk_bp()
+        self.walk.install_walk_end_bp()
+        self.walk.register_callbacks()
+
     def save_synopsis(self, filee):
         f = open("%s.synopsis" % filee, "a", 0)
         f.write(self.crash_bin.crash_synopsis())
@@ -930,6 +955,7 @@ dbg_cmds["RD"] = (debugger.dump_stats, True)
 dbg_cmds["SS"] = (debugger.save_synopsis, True)
 dbg_cmds["EA"] = (debugger.get_ea, False)
 dbg_cmds["CL"] = (debugger.close_logs, False)
+dbg_cmds["WK"] = (debugger.take_a_walk, True)
 
 ### main routines
 def readline(stream):

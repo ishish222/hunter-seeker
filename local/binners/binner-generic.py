@@ -109,38 +109,6 @@ def verify():
 #    dlog("Please verify process")
     time.sleep(5)
 
-def process_reactions():
-    global main_binner
-    global status
-
-    status = ""
-#    for i in range(0, main_binner.status.qsize()):
-    while(main_binner.status.qsize() > 0):
-#    while(not main_binner.status.empty()):
-#        main_binner.dlog("Queue size before get: %d" % main_binner.status.qsize())
-        item = main_binner.status.get()
-#        main_binner.dlog("Queue size after get : %d" % main_binner.status.qsize())
-        status = item[1]
-#        main_binner.dlog("Processing %s" % status)
-#        if(status == ""):
-#            status = "TO" # TO is overriden by all
-        if(status == "SR"):
-#            main_binner.dlog("Requested script: %s" % item[2])
-            main_binner.writePipe("Status: %s\n" % status)
-            main_binner.writePipe("Script: %s\n" % item[2])
-            main_binner.ok()
-            # time for reaction to SR
-            main_binner.start_debuggers("Script execution")
-            main_binner.readPipe()
-            main_binner.stop_debuggers("Script execution finished")
-#            main_binner.dlog("Queue size after script: %d" % main_binner.status.qsize())
-            continue
-        else:
-            # put in back!
-            main_binner.status.put(item)
-            continue
-
-
 def process_status_queue(satisfying = None):
     global main_binner
     global status
@@ -226,7 +194,6 @@ def execute(cmds):
     
     #            process_status_queue()
     #            main_binner.loop_debuggers(settings.wait_sleep)
-                #process_reactions()
                 while(process_status_queue(["MA", "CR", "TO"]) != True):
                     main_binner.loop_debuggers(settings.wait_sleep)
                 if(status == "CR"):
@@ -243,7 +210,6 @@ def execute(cmds):
                 main_binner.stop_debuggers("Closing execution finished")
     
     #            main_binner.loop_debuggers()
-                #process_reactions()
                 if(settings.needs_ready):
                     while(process_status_queue(["RD", "CR", "TO"]) != True):
                         main_binner.loop_debuggers()
@@ -258,16 +224,16 @@ def execute(cmds):
             main_binner.ok()
             main_binner.detach_rd_markers()
 
+### test a file
+
         elif(cmd == "testFile"):
             main_binner.attach_st_markers()
 
-#            process_status_queue()
-            #process_reactions()
             main_binner.loop_debuggers(invocation_args=args)
             while(process_status_queue(["ST", "CR", "PTO"]) != True):
                 main_binner.loop_debuggers(settings.wait_sleep)
             if(status == "CR"):
-                dlog("Processing CR1")
+#                dlog("Processing CR1")
                 main_binner.get_ea()
                 main_binner.test_bin_dir()
                 main_binner.save_synopsis(args)
@@ -276,7 +242,6 @@ def execute(cmds):
                 main_binner.ok()
                 return
 
-            print(status)
             main_binner.writePipe("Status: %s" % status)
             main_binner.ok()
 
@@ -286,18 +251,16 @@ def execute(cmds):
             while(process_status_queue(["MA", "CR", "TO", "PTO"]) != True):
                 main_binner.loop_debuggers(settings.wait_sleep)
             if(status == "CR"):
-                dlog("Processing CR2")
+#                dlog("Processing CR2")
                 main_binner.get_ea()
                 main_binner.test_bin_dir()
                 main_binner.save_synopsis(args)
                 main_binner.save_sample(args)
-                dlog("Hereeeeeee")
-                time.sleep(10)
+#                dlog("Hereeeeeee")
                 main_binner.writePipe("Status: CR")
                 main_binner.ok()
                 return
 
-            print(status)
             main_binner.writePipe("Status: %s" % status)
             main_binner.ok()
 
@@ -310,7 +273,6 @@ def execute(cmds):
             main_binner.stop_debuggers("Closing execution finished")
 
 #            main_binner.loop_debuggers()
-            #process_reactions()
             if(settings.needs_ready):
                 while(process_status_queue(["RD", "CR", "PTO"]) != True):
                     main_binner.loop_debuggers(settings.wait_sleep)
@@ -319,7 +281,7 @@ def execute(cmds):
                 if(status != "CR"): status = "RD"
 
             if(status == "CR"):
-                dlog("Processing CR3")
+#                dlog("Processing CR3")
                 main_binner.get_ea()
                 main_binner.test_bin_dir()
                 main_binner.save_synopsis(args)
@@ -328,10 +290,70 @@ def execute(cmds):
                 main_binner.ok()
                 return
 
-            print(status)
             main_binner.writePipe("Status: %s" % status)
             main_binner.ok()
             main_binner.detach_rd_markers()
+
+### walk a file
+
+        elif(cmd == "walk"):
+            filee, depth, gf_file = args.split(" ")
+            
+            main_binner.take_a_walk("%s %s" % (depth, gf_file))
+
+            main_binner.loop_debuggers(invocation_args=filee)
+            while(process_status_queue(["WS"]) != True):
+                main_binner.loop_debuggers()
+            if(status == "CR"):
+                # CR before ST
+                main_binner.writePipe("Status: CR")
+                main_binner.ok()
+                return
+
+            main_binner.writePipe("Status: %s" % status)
+            main_binner.ok()
+
+            while(process_status_queue(["WE"]) != True):
+                main_binner.loop_debuggers()
+            if(status == "CR"):
+                # CR before ST
+                main_binner.writePipe("Status: CR")
+                main_binner.ok()
+                return
+
+            main_binner.writePipe("Status: %s" % status)
+            main_binner.ok()
+
+            if(settings.needs_ready):
+                main_binner.attach_rd_markers()
+            # time for reaction to test end
+            main_binner.start_debuggers("Closing execution")
+            main_binner.readPipe()
+            main_binner.stop_debuggers("Closing execution finished")
+
+#            main_binner.loop_debuggers()
+            if(settings.needs_ready):
+                while(process_status_queue(["RD", "CR", "PTO"]) != True):
+                    main_binner.loop_debuggers(settings.wait_sleep)
+            else:
+                process_status_queue(["RD", "CR", "PTO"])
+                if(status != "CR"): status = "RD"
+
+            if(status == "CR"):
+#                dlog("Processing CR3")
+                main_binner.get_ea()
+                main_binner.test_bin_dir()
+                main_binner.save_synopsis(args)
+                main_binner.save_sample(args)
+                main_binner.writePipe("Status: CR")
+                main_binner.ok()
+                return
+
+            main_binner.writePipe("Status: %s" % status)
+            main_binner.ok()
+            main_binner.detach_rd_markers()
+
+### other
 
         elif(cmd == "observe"):
 #            dlog("In observe")

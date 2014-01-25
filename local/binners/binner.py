@@ -500,6 +500,9 @@ class binner(object):
         bin_dir = "%s\\%s" % (settings.samples_binned, self.ea)
         testdir(bin_dir)
 
+    def take_a_walk(self, args):
+        self.send_command("WK%s%s" % (args, end))
+
     def save_synopsis(self, filee):
         fname = filee.split("\\")[-1]
         self.send_command("SS%s%s\\%s%s" % (settings.samples_binned, self.ea, fname, end))

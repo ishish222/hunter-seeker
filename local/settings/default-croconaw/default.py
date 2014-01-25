@@ -36,6 +36,8 @@ ma_react_addrs = []
 ma_react_rvas = []
 ma_rd_addrs = []
 ma_rd_rvas = []
+ma_ws_rvas = []
+ma_we_rvas = []
 
 samples_shared_path = "e:\\samples\\shared"
 samples_saved = "e:\\samples\\saved"

@@ -27,6 +27,78 @@ def sig1_handler(signum, frame):
     report("Signaled")
     signaled = True
 
+class statistics(object):
+    def __init__(self, metrics):
+        self.metric_res = metrics
+        self.sample_count = 0
+        self.to_count = 0
+        self.ma_count = 0
+        self.last_time_check = time.localtime()
+
+def test_samples_batch(options, samples_list, stats, log):
+    (lastResponse, status, reqScript) = read_socket(options.s)
+    if(status == "PTO"):
+        proceed5(options)
+        return status
+    if(status == "STTO"):
+        proceed5(options)
+        return status
+    if(status == "RDTO"):
+        proceed5(options)
+    if(status == "SR"):
+        time.sleep(0.2)
+        execute_script(options, reqScript)
+        write_socket(options.s, "")
+        return status
+    if(status == "RD"):
+        sample_path = samples_list.pop()
+        sample_file = os.path.basename(sample_path)
+        test_path = options.settings.prepare_sample(sample_path)
+        test_file = os.path.basename(test_path)
+        write_socket(options.s, "testFile e:\\samples\\shared\\" + test_file)
+        options.settings.runner_0(options, [test_file])
+        log.write("%s: " % test_file)
+        log.flush()
+        return status
+    if(status == "MA" or status == "TO"):
+        # react to test end
+        proceed5(options)
+        write_socket(options.s, "")
+        log.write("[%s] \n" % status)
+        log.flush()
+
+        if(status == "MA"):
+            stats.ma_count += 1
+            stats.to_count = 0
+        if(status == "TO"):
+            stats.to_count += 1
+            if(stats.to_count % 3 == 0):
+                report("3x TO, settling")
+                stats.to_count = 0
+                settle(options)
+
+        # MA or TO, keep track on sample count
+        stats.sample_count += 1
+        if(stats.sample_count % stats.metric_res == 0):
+            current_time = time.localtime()
+            elapsed = time.mktime(current_time) - time.mktime(stats.last_time_check)
+            report("Tested: " + str(stats.sample_count))
+            report(str(stats.metric_res) + " tested in " + str(elapsed) + " seconds")
+            report("Last speed: " + str(stats.metric_res/elapsed) + " tps")
+            report("MA count: " + str(stats.ma_count))
+            stats.to_count = 0
+            stats.ma_count = 0
+            stats.last_time_check = current_time
+            if(options.profiling):
+                write_socket(options.s, "dump_stats")
+
+        if(stats.sample_count % options.settings.restart_count == 0):
+            report("Tested: " + str(stats.sample_count) + ", will restart")
+            restart(options)
+            proceed1(options)
+            accept_con(ss)
+    return status
+
 def fuzzing_routine():
     global signaled
     signaled = False
@@ -46,12 +118,7 @@ def fuzzing_routine():
     options.ms = prepare_monitor(options.ms_path)
     options.ss = prepare_serial(options.ss_path)
 
-    metric_res = options.metric_res
-
-    sample_count = 0
-    to_count = 0
-    ma_count = 0
-    last_time_check = time.localtime()
+    stats = statistics(options.metric_res)
         
     #create saved disk
     saved_size = calc_disk_size(options) * 10
@@ -59,7 +126,7 @@ def fuzzing_routine():
 
     # restart fuzzer on samples exhaustion, socket timout, etc. 
     while True:
-        print("Current stats (SA/MA/TO): %d/%d/%d" % (sample_count, ma_count, to_count))
+        print("Current stats (SA/MA/TO): %d/%d/%d" % (stats.sample_count, stats.ma_count, stats.to_count))
         options.tmp_disk_img = create_drive(options)
         samples_list = generate(options)
         log.write("[%s]\n" % options.tmp_disk_img)
@@ -108,78 +175,14 @@ def fuzzing_routine():
 #            while(not signaled):
 #                pass
 
+            # choose a loop
+
             status = ""
             try:
                 while(status != "CR"):
-#                try:
-                    (lastResponse, status, reqScript) = read_socket(s)
-#                execute_script(reqScript)
-                    if(status == "PTO"):
-                        proceed5(options)
-                        continue
-                    if(status == "STTO"):
-                        proceed5(options)
-                        continue
-                    if(status == "RDTO"):
-                        proceed5(options)
-                    if(status == "SR"):
-                    # react to SR
-#                    register_script()
-                        time.sleep(0.2)
-                        execute_script(options, reqScript)
-                        write_socket(s, "")
-                        continue
-                    if(status == "RD"):
-                        sample_path = samples_list.pop()
-                        sample_file = os.path.basename(sample_path)
-                        test_path = options.settings.prepare_sample(sample_path)
-                        test_file = os.path.basename(test_path)
-                        write_socket(s, "testFile e:\\samples\\shared\\" + test_file)
-                        options.settings.runner_0(options, [test_file])
-                        log.write("%s: " % test_file)
-                        log.flush()
-                        continue
-                    if(status == "MA" or status == "TO"):
-                        # react to test end
-                        proceed5(options)
-                        write_socket(s, "")
-                        log.write("[%s] \n" % status)
-                        log.flush()
-    
-                        if(status == "MA"):
-                            ma_count += 1
-                            to_count = 0
-                        if(status == "TO"):
-                            to_count += 1
-                            if(to_count % 3 == 0):
-                                report("3x TO, settling")
-                                to_count = 0
-                                settle(options)
-    
-                        # MA or TO, keep track on sample count
-                        sample_count += 1
-                        if(sample_count % metric_res == 0):
-                            current_time = time.localtime()
-                            elapsed = time.mktime(current_time) - time.mktime(last_time_check)
-                            report("Tested: " + str(sample_count))
-                            report(str(metric_res) + " tested in " + str(elapsed) + " seconds")
-                            report("Last speed: " + str(metric_res/elapsed) + " tps")
-                            report("MA count: " + str(ma_count))
-                            to_count = 0
-                            ma_count = 0
-                            last_time_check = current_time
-                            if(options.profiling):
-                                write_socket(s, "dump_stats")
+                    loop_st = "status = %s(options, samples_list, stats, log)" % options.loop
+                    exec loop_st
 
-                        if(sample_count % options.settings.restart_count == 0):
-                            report("Tested: " + str(sample_count) + ", will restart")
-                            restart(options)
-                            proceed1(options)
-                            accept_con(ss)
-                            s = options.s
-
-                        continue
-               
                 write_socket(s, "getSynopsis")
                 dossier, _, _ = read_socket(s)
 #                handle_crashing_sample(dossier, sample_path, sample_file)

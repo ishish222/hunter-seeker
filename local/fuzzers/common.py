@@ -82,6 +82,7 @@ def get_options():
     parser.add_option("-z", "--samples-size-margin", dest="samples_size_margin", help="Size marigin of single sample for disk size calculations", default=settings.samples_size_margin)
     parser.add_option("-u", "--smp", dest="smp", help="Number of vCPUs", default=settings.smp)
     parser.add_option("-E", "--mutator", dest="mutator", help="Mutator to use", default=settings.mutator)
+    parser.add_option("-G", "--loop-function", dest="loop", help="Loop function to use", default="test_samples_batch")
 
 
     (options, args) = parser.parse_args()

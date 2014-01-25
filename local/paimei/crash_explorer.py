@@ -109,9 +109,13 @@ if(graph == True):
     gf.write("<map version=\"0.8.0\">\n")
 
 #app = "C:\\Program Files\\AutoCAD 2010\\acad.exe"
-app = "C:\\Program Files\\Autodesk\\AutoCAD 2014\\acad.exe"
-imagename = "acad.exe"
-filee = "C:\\test.dwg"
+#app = "C:\\Program Files\\Autodesk\\AutoCAD 2014\\acad.exe"
+#imagename = "acad.exe"
+#filee = "C:\\test.dwg"
+
+app = "C:\\Program Files\\Xara\\Xara Designer Pro X9\\DesignerPro.exe"
+imagename = "DesignerPro.exe"
+filee = "C:\\test.xar"
 
 def windows_kill(pid):
     PROCESS_TERMINATE = 1
