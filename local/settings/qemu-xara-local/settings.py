@@ -11,6 +11,11 @@ def react1(dbg):
     dbg.dbg_lock_release(dbg.send_lock)
     return DBG_CONTINUE
 
+def exception(dbg, ec):
+    dbg.dlog("Got exception")
+    dbg.signal_ex("%08X" % ec)
+    return DBG_EXCEPTION_NOT_HANDLED
+
 def react2(dbg):
     print("FO")
     dbg.reqScript("FO")
@@ -61,5 +66,6 @@ def runner(args):
 
 scripts_3 = ["lclick", "esc", "space", "lclick", "close_sample_reader", "close_sample_reader", "close_sample_reader", "close_sample_reader", "sleep_1"]
 
+ex_handler = exception
 #scripts_5 = ["sleep_05"]
 

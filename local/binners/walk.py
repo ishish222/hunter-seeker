@@ -320,7 +320,7 @@ class walk():
             print(e)
 
     def dive(self):
-        print("Inside diving 1, level: %d" % self.level)
+#        print("Inside diving 1, level: %d" % self.level)
         ea = self.current_ea
         my_module = self.dbg.addr_to_module(int(ea & 0xffffffff))
         target_module = self.dbg.addr_to_module(decode_op1(self.dbg, self.dbg.op1))
@@ -343,10 +343,10 @@ class walk():
                 self.delete_next_bp = True
                 self.dbg.single_step(False)
                 return
-        print("Inside diving 2, level: %d" % self.level)
+#        print("Inside diving 2, level: %d" % self.level)
         if(self.max_level > 0x0):
             if(self.level > self.max_level): 
-                print("Max level %d reached, not diving" % self.level)
+#                print("Max level %d reached, not diving" % self.level)
                 self.dlog("Max level reached, not diving")
                 self.dlog("[d] Until " + hex(self.current_ea + self.current_instr.length))
                 if(True):
@@ -357,11 +357,11 @@ class walk():
                 self.dbg.single_step(False)
                 return
         self.dbg.single_step(True)
-        print("Inside diving 3, level: %d" % self.level)
+#        print("Inside diving 3, level: %d" % self.level)
         self.level += 1
-        print("Inside diving 4, level: %d" % self.level)
+#        print("Inside diving 4, level: %d" % self.level)
         self.dlog("[d] Diving, level: %d" % self.level)
-        print("[d] Diving, level: %d" % self.level)
+#        print("[d] Diving, level: %d" % self.level)
         if(True):
 #        if(graph == True):
             self.gf.write(format_node(ea, my_module, self.dbg.walk.current_dis, target_module))

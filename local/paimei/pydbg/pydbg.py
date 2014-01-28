@@ -107,6 +107,7 @@ class pydbg(object):
         self.follow_forks             = ff        # flag controlling whether or not pydbg attaches to forked processes
         self.client_server            = cs        # flag controlling whether or not pydbg is in client/server mode
         self.callbacks                = {}        # exception callback handler dictionary
+        self.default_exc_callback     = None
         self.system_dlls              = []        # list of loaded system dlls
         self.dirty                    = False     # flag specifying that the memory space of the debuggee was modified
         self.system_break             = None      # the address at which initial and forced breakpoints occur at
@@ -984,6 +985,8 @@ class pydbg(object):
                 # generic callback support.
                 elif self.callbacks.has_key(ec):
                     continue_status = self.callbacks[ec](self)
+                elif self.default_exc_callback != None:
+                    continue_status = self.default_exc_callback(self, ec)
                 # unhandled exception.
                 else:
                     self._log("TID:%04x caused an unhandled exception (%08x) at %08x" % (self.dbg.dwThreadId, ec, self.exception_address))

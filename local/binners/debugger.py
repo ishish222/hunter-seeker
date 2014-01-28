@@ -286,10 +286,10 @@ class debugger(pydbg):
         #self.binner_send("SACR%s%s" % (self.crash_binning.last_crash.exception_address, end))
         self.binner_send("SACR")
 
-    def signal_ex(self):
+    def signal_ex(self, str_ec="unknown_"):
         self.dlog("Signaled: EX", 1)
         self.last_state = "EX"
-        self.binner_send("SAEX")
+        self.binner_send("EX%s" % str_ec)
 
     def ok(self):
         self.binner_send("=[OK]=")
@@ -473,6 +473,12 @@ class debugger(pydbg):
             self.av_handler = settings.av_handler
         else:
             self.av_handler = default_av_handler
+        
+        if(defined("settings.ex_handler")):
+            self.dlog("EX handler found", 2)
+            self.ex_handler = settings.ex_handler
+        else:
+            self.ex_handler = None
         
         #directories
         self.dlog("Reading directories")
@@ -676,7 +682,12 @@ class debugger(pydbg):
         self.set_callback(STATUS_STACK_OVERFLOW, self.av_handler)
         self.set_callback(STATUS_UNHANDLED_EXCEPTION, self.av_handler)
         self.set_callback(STATUS_PIPE_BROKEN, self.av_handler)
+        self.dlog(self.callbacks[EXCEPTION_ACCESS_VIOLATION])
         self.dlog("AV handler installed", 2)
+
+    def attach_ex_handler(self):
+        self.default_exc_callback = self.ex_handler
+        self.dlog(self.default_exc_callback)
 
     def detach_bp_handler(self):
         self.set_callback(EXCEPTION_BREAKPOINT, self.exception_handler_breakpoint)
@@ -699,6 +710,9 @@ class debugger(pydbg):
         self.callbacks.pop(STATUS_UNHANDLED_EXCEPTION)
         self.callbacks.pop(STATUS_PIPE_BROKEN)
         self.dlog("AV handler uninstalled", 2)
+
+    def detach_ex_handler(self):
+        self.default_exc_callback = None
 
     def attach_markers(self):
         self.dbg_lock_acquire(self.preparation_lock)
@@ -1000,11 +1014,13 @@ dbg_cmds["A5"] = (debugger.attach_st_markers, False)
 dbg_cmds["A6"] = (debugger.attach_end_markers, False)
 dbg_cmds["A7"] = (debugger.attach_react_markers, False)
 dbg_cmds["A8"] = (debugger.attach_rd_markers, False)
+dbg_cmds["A9"] = (debugger.attach_ex_handler, False)
 dbg_cmds["D4"] = (debugger.detach_markers, False)
 dbg_cmds["D5"] = (debugger.detach_st_markers, False)
 dbg_cmds["D6"] = (debugger.detach_end_markers, False)
 dbg_cmds["D7"] = (debugger.detach_react_markers, False)
 dbg_cmds["D8"] = (debugger.detach_rd_markers, False)
+dbg_cmds["D9"] = (debugger.detach_ex_handler, False)
 dbg_cmds["T1"] = (debugger.track_all_threads, False)
 dbg_cmds["T2"] = (debugger.start_tracking_all_threads, False)
 dbg_cmds["T3"] = (debugger.stop_tracking_all_threads, False)

@@ -20,7 +20,7 @@ import os
 from shutil import copyfile
 from mutex_2 import NamedMutex
 
-statusPri = {'SR' : 1, 'SL' : 1, 'CR' : 0, 'TO' : 2, 'MA' : 2, 'RD' : 2, 'ST' : 2, 'WS' : 2, 'WE' : 2}
+statusPri = {'SR' : 1, 'SL' : 1, 'CR' : 0, 'TO' : 2, 'MA' : 2, 'RD' : 2, 'ST' : 2, 'WS' : 2, 'WE' : 2, 'EX' : 1}
 end = "=[OK]="
 
 ### functions
@@ -175,6 +175,12 @@ class binner(object):
                 self.reqScript = settings.script_codes[script_code]
                 status = "SR"
                 self.status.put((statusPri[status], status, self.reqScript))
+            if(data == "EX"):
+                exception_code = dbg_socket.recv(8)
+                print(exception_code)
+                self.last_answer += exception_code
+                status = "EX"
+                self.status.put((statusPri[status], status, exception_code))
             if(data == "SL"):
                 long_data = ""
                 script_code = dbg_socket.recv(2)
@@ -378,6 +384,10 @@ class binner(object):
     def attach_av_handler(self):
         self.dlog("Attaching AV handlers")
         self.send_command("A1")
+
+    def attach_ex_handler(self):
+        self.dlog("Attaching EX handlers")
+        self.send_command("A9")
 
     def attach_bp_handler(self):
         self.dlog("Attaching BP handlers")

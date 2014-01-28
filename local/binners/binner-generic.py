@@ -129,6 +129,10 @@ def process_status_queue(satisfying = None):
                 status = "PTO"
             if(main_binner.prev_status == "RD"):
                 status = "PTO"
+        if(status == "EX"):
+            main_binner.writePipe("Status: %s\n" % status)
+            main_binner.writePipe("Encountered exception: %s\n" % item[2])
+            main_binner.ok()
         if(status == "SR"):
             main_binner.dlog("Requested script: %s" % item[2])
             main_binner.writePipe("Status: %s\n" % status)
@@ -565,6 +569,7 @@ def execute(cmds):
     
         elif(cmd == "installHandlers"):
             main_binner.attach_react_markers()
+            main_binner.attach_ex_handler()
             main_binner.attach_av_handler()
             main_binner.ok()
 
