@@ -62,3 +62,37 @@ unwinding from translating 0x363:
 
 from DestroyWindow:
 
+
+Looking for processing function:
+starting from exception addr (seems to be inside exception handling routine)
+
+..
+0x55aa2f
+0x55aa48
+0x4ccdcc
+0x4da64f
+0x4d13e4
+0x5fd023
+0x6e0ea5
+0x6e1474
+0x7f0a2b
+0x7f0d3b
+0x6e0bcd
+0xacb4db
+0xacd3dd
+0xad006b
+0xe211ab
+0xada864
+0xadbcaf
+0xadb8cf
+0xadcc29
+0xbc095f (processing candidate)
+0xe0bb8c (often, own dispatch?)
+0xbc2a19 (very often, own dispatch?)
+0xe07358 (very often, own dispatch?)
+0xe0a2ff (very often, own dispatch?)
+0xe0a38f (very often, own dispatch?)
+0x7e418731 (user32.dll, msg dispatch?)
+
+WS: 0xbc095f (DesignerPro.exe +0x7c095f)
+WE: 0xbc0961 (DesignerPro.exe +0x7c0961)

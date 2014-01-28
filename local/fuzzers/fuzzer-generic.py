@@ -36,6 +36,35 @@ class statistics(object):
         self.ma_count = 0
         self.last_time_check = time.localtime()
 
+def samples_walk(options, samples_list, stats, log):
+    options.s.settimeout(None)
+    (lastResponse, status, reqScript) = read_socket(options.s)
+    if(status == "RD"):
+        sample_path = samples_list.pop()
+        sample_file = os.path.basename(sample_path)
+        test_path = options.settings.prepare_sample(sample_path)
+        test_file = os.path.basename(test_path)
+        if(options.walk_start == None):
+            write_socket(options.s, "walk e:\\samples\\shared\\%s %d f:\\%s.mm" % (test_file, options.walk_level, test_file))
+        else:
+            write_socket(options.s, "walk2 e:\\samples\\shared\\%s %d f:\\%s.mm %s" % (test_file, options.walk_level, test_file, options.walk_start))
+        options.settings.runner_0(options, [test_file])
+        log.write("%s: " % test_file)
+        log.flush()
+        return status
+    if(status == "SR"):
+        time.sleep(0.2)
+        execute_script(options, reqScript)
+        write_socket(options.s, "")
+        return status
+    if(status == "PTO"):
+        proceed5(options)
+        return status
+    if(status == "WE"):
+        # react to test end
+        proceed5(options)
+        write_socket(options.s, "")
+
 def test_samples_batch(options, samples_list, stats, log):
     (lastResponse, status, reqScript) = read_socket(options.s)
     if(status == "PTO"):
@@ -206,6 +235,10 @@ def fuzzing_routine():
             # choose a loop
 
             status = ""
+            if(options.wait_key):
+                print("Press enter")
+                sys.stdin.read(1)
+
             try:
                 while(status != "CR"):
                     loop_st = "status = %s(options, samples_list, stats, log)" % options.loop
@@ -237,8 +270,9 @@ def fuzzing_routine():
                         os.remove(options.tmp_disk_img)
                     continue
                 else:
+                    print("Samples exhausted, shutting down")
                     report("Samples exhausted, shutting down")
-                    powerofff(options)
+#                    time.sleep(10)
                     break
 
             except socket.timeout:

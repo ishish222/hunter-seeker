@@ -379,6 +379,24 @@ class debugger(pydbg):
         else:
             self.rd_markers = []
 
+        if(defined("settings.ma_ws_addrs")):
+            self.dlog("WS markers found", 2)
+            self.ws_markers = settings.ma_ws_addrs
+        else:
+            self.ws_markers = []
+
+        if(defined("settings.ma_we_addrs")):
+            self.dlog("WE markers found", 2)
+            self.we_markers = settings.ma_we_addrs
+        else:
+            self.we_markers = []
+
+        if(defined("settings.ma_bl_addrs")):
+            self.dlog("BL markers found", 2)
+            self.bl_markers = settings.ma_bl_addrs
+        else:
+            self.bl_markers = []
+
         #rvas
         self.dlog("Loading RVAs")
         if(defined("settings.ma_rvas")):
@@ -396,6 +414,15 @@ class debugger(pydbg):
         if(defined("settings.ma_rd_rvas")):
             self.dlog("RD RVAs found", 2)
             self.rd_markers += self.resolve_rvas(settings.ma_rd_rvas)
+        if(defined("settings.ma_ws_rvas")):
+            self.dlog("WS RVAs found", 2)
+            self.ws_markers += self.resolve_rvas(settings.ma_ws_rvas)
+        if(defined("settings.ma_we_rvas")):
+            self.dlog("WE RVAs found", 2)
+            self.we_markers += self.resolve_rvas(settings.ma_we_rvas)
+        if(defined("settings.ma_bl_rvas")):
+            self.dlog("BL RVAs found", 2)
+            self.bl_markers += self.resolve_rvas(settings.ma_bl_rvas)
 
         #handlers
         self.dlog("Loading handlers")
@@ -662,6 +689,15 @@ class debugger(pydbg):
     def detach_av_handler(self):
         self.dlog("detaching AV handler")
         self.callbacks.pop(EXCEPTION_ACCESS_VIOLATION)
+        self.callbacks.pop(STATUS_IN_PAGE_ERROR)
+        self.callbacks.pop(STATUS_ILLEGAL_INSTRUCTION)
+        self.callbacks.pop(STATUS_INVALID_DISPOSITION)
+        self.callbacks.pop(STATUS_INTEGER_DIVIDE_BY_ZERO)
+        self.callbacks.pop(STATUS_INTEGER_OVERFLOW)
+        self.callbacks.pop(STATUS_PRIVILEGED_INSTRUCTION)
+        self.callbacks.pop(STATUS_STACK_OVERFLOW)
+        self.callbacks.pop(STATUS_UNHANDLED_EXCEPTION)
+        self.callbacks.pop(STATUS_PIPE_BROKEN)
         self.dlog("AV handler uninstalled", 2)
 
     def attach_markers(self):
@@ -866,14 +902,43 @@ class debugger(pydbg):
         depth, gf_path = args.split(" ")
         depth = int(depth)
 
-        st_addr = self.st_markers[0][0]
-        end_addr = self.end_markers[0][0]
+        st_addr = self.ws_markers[0][0]
+        end_addr = self.we_markers[0][0]
 
-        self.walk = walk(st_addr, end_addr, max_level=depth, gf_path=gf_path)
+        self.dlog("Talking a walk from 0x%x until 0x%x, level %d, saving into %s" % (st_addr, end_addr, depth, gf_path))
+    
+        self.walk = None
+        self.walk = walk(st_addr, end_addr, max_level=depth, gf_path=gf_path, dbg=self)
+
         add_default_blacklists(self.walk)
-        self.walk.install_walk_bp()
-        self.walk.install_walk_end_bp()
-        self.walk.register_callbacks()
+        for bl_marker in self.bl_markers:
+            self.walk.addr_blacklist.append(bl_marker[0])
+
+#        self.walk.install_walk_bp()
+#        self.walk.install_walk_end_bp()
+#        self.walk.register_callbacks()
+#
+        self.dlog("Walk is prepared")
+
+    def take_a_walk2(self, args):
+        depth, gf_path, addr = args.split(" ")
+        depth = int(depth)
+        addr = int(addr, 16)
+
+        st_addr = addr
+        instr = self.get_instruction(addr)
+        end_addr = addr + instr.length
+
+        self.dlog("Talking a walk from 0x%x until 0x%x, level %d, saving into %s" % (st_addr, end_addr, depth, gf_path))
+    
+        self.walk = None
+        self.walk = walk(st_addr, end_addr, max_level=depth, gf_path=gf_path, dbg=self)
+
+        add_default_blacklists(self.walk)
+        for bl_marker in self.bl_markers:
+            self.walk.addr_blacklist.append(bl_marker[0])
+
+        self.dlog("Walk is prepared")
 
     def save_synopsis(self, filee):
         f = open("%s.synopsis" % filee, "a", 0)
@@ -956,6 +1021,7 @@ dbg_cmds["SS"] = (debugger.save_synopsis, True)
 dbg_cmds["EA"] = (debugger.get_ea, False)
 dbg_cmds["CL"] = (debugger.close_logs, False)
 dbg_cmds["WK"] = (debugger.take_a_walk, True)
+dbg_cmds["WN"] = (debugger.take_a_walk2, True)
 
 ### main routines
 def readline(stream):

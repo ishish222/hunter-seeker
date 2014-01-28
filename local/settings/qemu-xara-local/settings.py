@@ -36,6 +36,9 @@ ma_react_rvas = [
 #("foobar2000.exe", 0x58b5b, (0, react2, []))
 #]
 ma_rd_rvas = [("DesignerPro.exe", 0xa95a26, 0)]
+ma_ws_rvas = [("DesignerPro.exe", 0x7c095f, 0)]
+ma_we_rvas = [("DesignerPro.exe", 0x7c0961, 0)]
+ma_bl_rvas = [("DesignerPro.exe", 0x4B8304, 0), ("DesignerPro.exe", 0x4B83D9, 0)]
 
 app_path = "C:\\Program Files\\Xara\\Xara Designer Pro X9\\DesignerPro.exe"
 app_module = "DesignerPro.exe"
@@ -56,7 +59,7 @@ def specific_preperations_1(options, args=None):
 def runner(args):
     Popen("powershell -command \"& { invoke-expression %s }\"" % args)
 
-scripts_4 = ["lclick", "esc", "space", "sleep_1"]
+scripts_3 = ["lclick", "esc", "space", "lclick", "close_sample_reader", "close_sample_reader", "close_sample_reader", "close_sample_reader", "sleep_1"]
 
 #scripts_5 = ["sleep_05"]
 

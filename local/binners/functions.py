@@ -1,6 +1,7 @@
 from multiprocessing import Lock
 from datetime import datetime
 import settings
+import struct 
 
 def defined(name):
     if(name in globals()):
@@ -31,6 +32,7 @@ def timestamp():
 regs = ["EAX", "EBX", "ECX", "EDX", "ESI", "EDI", "EBP", "ESP", "EIP"]
 
 def decode_op1(dbg, op1):
+#    print("op1: " + op1)
     my_op = op1
     if(my_op[0] == '['):
         my_op = decode_op1(dbg, my_op[1:-1])

@@ -20,7 +20,7 @@ import os
 from shutil import copyfile
 from mutex_2 import NamedMutex
 
-statusPri = {'SR' : 1, 'SL' : 1, 'CR' : 0, 'TO' : 2, 'MA' : 2, 'RD' : 2, 'ST' : 2}
+statusPri = {'SR' : 1, 'SL' : 1, 'CR' : 0, 'TO' : 2, 'MA' : 2, 'RD' : 2, 'ST' : 2, 'WS' : 2, 'WE' : 2}
 end = "=[OK]="
 
 ### functions
@@ -502,6 +502,9 @@ class binner(object):
 
     def take_a_walk(self, args):
         self.send_command("WK%s%s" % (args, end))
+
+    def take_a_walk2(self, args):
+        self.send_command("WN%s%s" % (args, end))
 
     def save_synopsis(self, filee):
         fname = filee.split("\\")[-1]

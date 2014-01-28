@@ -36,8 +36,14 @@ ma_react_addrs = []
 ma_react_rvas = []
 ma_rd_addrs = []
 ma_rd_rvas = []
+
+ma_ws_addrs = []
+ma_we_addrs = []
 ma_ws_rvas = []
 ma_we_rvas = []
+
+ma_bl_addrs = []
+ma_bl_rvas = []
 
 samples_shared_path = "e:\\samples\\shared"
 samples_saved = "e:\\samples\\saved"
@@ -95,11 +101,15 @@ def specific_preperations_4(options, args=None):
 def specific_preperations_5(options, args=None):
     pass
 
+def specific_preperations_6(options, args=None):
+    pass
+
 scripts_1 = []
 scripts_2 = []
 scripts_3 = []
 scripts_4 = []
 scripts_5 = []
+scripts_6 = []
 
 def prepare_sample(sample_path):
     return sample_path

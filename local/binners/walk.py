@@ -1,5 +1,7 @@
 from functions import decode_op1
 from threading import Event
+from pydbg.defines import *
+import time
 
 def format_empty_node(ea, my_mod, dis, tmod, color = None):
     if(tmod != None):
@@ -14,9 +16,11 @@ def format_empty_node(ea, my_mod, dis, tmod, color = None):
 
 
     if(color == None):
-        return "<node TEXT=\"" + my_name + str(":") + hex(int(ea & 0xffffffff)) + ": " + dis + " (" + target_name + ")" + "\"/>\n"
+        return "<node TEXT=\"" + my_name + str(":") + hex(int(ea & 0xffffffff)) + ": " + dis + " (" + target_name + ")" + "\" POSITION=\"right\"/>\n"
+#        return "<node TEXT=\"" + my_name + str(":") + hex(int(ea & 0xffffffff)) + ": " + dis + " (" + target_name + ")" + "\"/>\n"
     else:
-        return "<node COLOR=\""+ color +"\" TEXT=\"" + my_name + str(":") + hex(int(ea & 0xffffffff)) + ": " + dis + " (" + target_name + ")" + "\"/>\n"
+        return "<node COLOR=\""+ color +"\" TEXT=\"" + my_name + str(":") + hex(int(ea & 0xffffffff)) + ": " + dis + " (" + target_name + ")" + "\" POSITION=\"right\"/>\n"
+#        return "<node COLOR=\""+ color +"\" TEXT=\"" + my_name + str(":") + hex(int(ea & 0xffffffff)) + ": " + dis + " (" + target_name + ")" + "\"/>\n"
         
 def format_node(ea, my_mod, dis, tmod, color = None):
     if(tmod != None):
@@ -30,15 +34,19 @@ def format_node(ea, my_mod, dis, tmod, color = None):
         my_name = "unknown"
 
     if(color == None):
-        return "<node FOLDED=\"true\" TEXT=\"" + my_name + str(":") + hex(int(ea & 0xffffffff)) + ": " + dis + " (" + target_name + ")" + "\">\n"
+        return "<node FOLDED=\"true\" TEXT=\"" + my_name + str(":") + hex(int(ea & 0xffffffff)) + ": " + dis + " (" + target_name + ")" + "\" POSITION=\"right\">\n"
+#        return "<node FOLDED=\"true\" TEXT=\"" + my_name + str(":") + hex(int(ea & 0xffffffff)) + ": " + dis + " (" + target_name + ")" + "\">\n"
     else:
-        return "<node FOLDED=\"true\" COLOR=\""+ color +"\" TEXT=\"" + my_name + str(":") + hex(int(ea & 0xffffffff)) + ": " + dis + " (" + target_name + ")" + "\">\n"
+        return "<node FOLDED=\"true\" COLOR=\""+ color +"\" TEXT=\"" + my_name + str(":") + hex(int(ea & 0xffffffff)) + ": " + dis + " (" + target_name + ")" + "\" POSITION=\"right\">\n"
+#        return "<node FOLDED=\"true\" COLOR=\""+ color +"\" TEXT=\"" + my_name + str(":") + hex(int(ea & 0xffffffff)) + ": " + dis + " (" + target_name + ")" + "\">\n"
 
 def format_empty_node_text(text, color = None):
     if(color == None):
-        return "<node TEXT=\"" + text + "\"/>\n"
+        return "<node TEXT=\"" + text + "\" POSITION=\"right\"/>\n"
+#        return "<node TEXT=\"" + text + "\"/>\n"
     else:
-        return "<node COLOR=\""+ color +"\" TEXT=\"" + text + "\"/>\n"
+        return "<node COLOR=\""+ color +"\" TEXT=\"" + text + "\" POSITION=\"right\"/>\n"
+#        return "<node COLOR=\""+ color +"\" TEXT=\"" + text + "\"/>\n"
 
 def format_node(ea, my_mod, dis, tmod, color = None):
     if(tmod != None):
@@ -52,15 +60,17 @@ def format_node(ea, my_mod, dis, tmod, color = None):
         my_name = "unknown"
 
     if(color == None):
-        return "<node FOLDED=\"true\" TEXT=\"" + my_name + str(":") + hex(int(ea & 0xffffffff)) + ": " + dis + " (" + target_name + ")" + "\">\n"
+#        return "<node FOLDED=\"true\" TEXT=\"" + my_name + str(":") + hex(int(ea & 0xffffffff)) + ": " + dis + " (" + target_name + ")" + "\">\n"
+        return "<node FOLDED=\"true\" TEXT=\"" + my_name + str(":") + hex(int(ea & 0xffffffff)) + ": " + dis + " (" + target_name + ")" + "\" POSITION=\"right\">\n"
     else:
-        return "<node FOLDED=\"true\" COLOR=\""+ color +"\" TEXT=\"" + my_name + str(":") + hex(int(ea & 0xffffffff)) + ": " + dis + " (" + target_name + ")" + "\">\n"
+#        return "<node FOLDED=\"true\" COLOR=\""+ color +"\" TEXT=\"" + my_name + str(":") + hex(int(ea & 0xffffffff)) + ": " + dis + " (" + target_name + ")" + "\">\n"
+        return "<node FOLDED=\"true\" COLOR=\""+ color +"\" TEXT=\"" + my_name + str(":") + hex(int(ea & 0xffffffff)) + ": " + dis + " (" + target_name + ")" + "\" POSITION=\"right\">\n"
 
 def format_empty_node_text(text, color = None):
     if(color == None):
-        return "<node TEXT=\"" + text + "\"/>\n"
+        return "<node TEXT=\"" + text + "\" POSITION=\"right\"/>\n"
     else:
-        return "<node COLOR=\""+ color +"\" TEXT=\"" + text + "\"/>\n"
+        return "<node COLOR=\""+ color +"\" TEXT=\"" + text + "\" POSITION=\"right\"/>\n"
 
 def handle_ret(dbg):
     ea = dbg.get_register("EIP")
@@ -76,33 +86,73 @@ def handle_ret_surface(dbg):
     return DBG_CONTINUE
     
 def handle_walk_start(dbg):
-    dbg.walk.dlog("[*] Reached walk start")
+    dbg.walk.dlog("Reached walk start")
 
     # handle walk end
 #    dbg.walk.walk_end_addr = dbg.walk.walk_addr + dbg.walk.current_instr.length
 #    dbg.walk.install_walk_end_bp()
-    dbg.walk.level -= 1
-    # dive
     dbg.signal_ws()
-    dbg.walk.dive()
+    # dive
+    dbg.walk.level = 0
+    dbg.walk.gf.write("<map version=\"0.8.0\">\n")
+    ea = dbg.get_register("EIP")
+    dbg.walk.current_ea = ea
+    dbg.walk.current_dis = dbg.disasm(ea)
+    dbg.walk.current_instr = dbg.get_instruction(ea)
+
+    if(dbg.mnemonic == "call"):
+        dbg.walk.level -= 1
+        dbg.walk.dive()
+#    handle_working_bp(dbg)
     print("--cut here--")
+    dbg.single_step(True)
+    return DBG_CONTINUE
+
+def handle_crash(dbg):
+    print("--cut here--")
+    dbg.walk.dlog("Walk interrupted due to crash")
+    print("[*] Walk interrupted due to crash")
+    dbg.single_step(False)
+    dbg.walk.running = False
+    if(dbg.walk.gf != None):
+        for i in range(0, dbg.walk.level):
+            dbg.walk.gf.write("</node>")
+        dbg.walk.gf.write("</node>\n</map>\n")
+        dbg.walk.gf.close()
+        dbg.walk.gf = None
+#    dbg.walk.kill()
+
+    dbg.walk.uninstall_walk_bp()
+    dbg.walk.uninstall_walk_end_bp()
+    dbg.signal_we()
+#    dbg.walk.unregister_callbacks()
+
+#    return DBG_CONTINUE
 
 def handle_walk_end(dbg):
     print("--cut here--")
-    self.dlog("[*] Reached walk end")
+    dbg.walk.dlog("Reached walk end")
     print("[*] Reached walk end")
     dbg.single_step(False)
-    dbg.signal_we()
-    dbg.walk.unregister_callbacks()
     dbg.walk.running = False
+    if(dbg.walk.gf != None):
+        dbg.walk.gf.write("</node>\n</map>\n")
+        dbg.walk.gf.close()
+        dbg.walk.gf = None
+    dbg.signal_we()
 #    dbg.walk.kill()
+
+    dbg.walk.uninstall_walk_bp()
+    dbg.walk.uninstall_walk_end_bp()
+#    dbg.walk.unregister_callbacks()
+
     return DBG_CONTINUE
 
 def handle_working_bp(dbg):
     ea = dbg.get_register("EIP")
     dbg.walk.current_ea = ea
     dbg.walk.current_dis = dbg.disasm(ea)
-    dbg.walk.current_instr = dbg.get_instruction(dbg.get_register("EIP"))
+    dbg.walk.current_instr = dbg.get_instruction(ea)
 
     if(dbg.mnemonic == "int3"):
         return DBG_CONTINUE
@@ -112,14 +162,14 @@ def handle_working_bp(dbg):
             print("[*] Blacklisted, ignoring")
             return DBG_CONTINUE
 
-        dbg.walk.level -= 1
+#        dbg.walk.level -= 1
 
     if(dbg.mnemonic == "call"):
 #        for i in range(0, dbg.walk.level):
 #            print(" ", end="")
 
-        my_module = my_walk.dbg.addr_to_module(int(ea & 0xffffffff))
-        target_module = my_walk.dbg.addr_to_module(decode_op1(my_walk.dbg, my_walk.dbg.op1))
+        my_module = dbg.addr_to_module(int(ea & 0xffffffff))
+        target_module = dbg.addr_to_module(decode_op1(dbg, dbg.op1))
 
         if(target_module == None):
             target_name = "unknown"
@@ -131,7 +181,7 @@ def handle_working_bp(dbg):
         else:
             my_name = my_module.szModule
 
-        print(my_name + str(":") + hex(int(ea & 0xffffffff)) + ": " + dbg.walk.current_dis + " (" + target_name + ")")
+        #print(my_name + str(":") + hex(int(ea & 0xffffffff)) + ": " + dbg.walk.current_dis + " (" + target_name + ")")
         dbg.walk.dive()
         return DBG_CONTINUE
 
@@ -154,13 +204,19 @@ class walk():
             self.dbg = dbg
         self.dbg.walk = self
         self.walk_addr = addr
-        self.walk_end_addr = 0x0
+        self.walk_end_addr = endaddr
         self.addr_blacklist = []
         self.module_blacklist = []
         self.current_ea = 0x0
         self.delete_next_bp = False
         self.finished = Event()
         self.gf = open(gf_path, "a", 0)
+        self.level_lowest = 0x0
+
+        self.install_walk_bp()
+        self.install_walk_end_bp()
+        self.register_callbacks()
+
 
     def attach(self):
         for (pid, name) in self.dbg.enumerate_processes():
@@ -203,14 +259,20 @@ class walk():
     def register_callbacks(self):
         try:
             print("[*] Registering callbacks")
+            self.dlog("Registering callbacks")
 #            self.dbg.set_callback(EXCEPTION_BREAKPOINT, handle_bp)
-            self.dbg.set_callback(EXCEPTION_SINGLE_STEP, handle_ss)
+            self.dbg.detach_av_handler()
+            self.dbg.av_handler = handle_crash
+            self.dbg.attach_av_handler()
+            self.dbg.set_callback(EXCEPTION_SINGLE_STEP, handle_working_bp)
+#            self.dbg.set_callback(, handle_crash)
         except Exception as e:
             print(e)
        
     def unregister_callbacks(self):
         try:
             print("[*] Unregistering callbacks")
+            self.dlog("Unregistering callbacks")
 #            self.dbg.set_callback(EXCEPTION_BREAKPOINT, handle_empty)
             self.dbg.set_callback(EXCEPTION_SINGLE_STEP, handle_empty)
         except Exception as e:
@@ -219,14 +281,32 @@ class walk():
     def install_walk_bp(self):
         try:
             print("[*] Installing walk handlers")
-            self.dbg.bp_set(self.walk_addr, handle_walk_start, "Walked function")
+            self.dlog("Installing walk handlers")
+            self.dbg.bp_set(self.walk_addr, handler=handle_walk_start)
+        except Exception as e:
+            print(e)
+
+    def uninstall_walk_bp(self):
+        try:
+            print("[*] Deinstalling walk handler")
+            self.dlog("Deinstalling walk handler")
+            self.dbg.bp_del(self.walk_addr)
         except Exception as e:
             print(e)
 
     def install_walk_end_bp(self):
         try:
             print("[*] Installing walk end handler")
-            self.dbg.bp_set(self.walk_end_addr, handle_walk_end, "Walked function finished")
+            self.dlog("Installing walk end handler")
+            self.dbg.bp_set(self.walk_end_addr, handler=handle_walk_end)
+        except Exception as e:
+            print(e)
+
+    def uninstall_walk_end_bp(self):
+        try:
+            print("[*] Deinstalling walk end handler")
+            self.dlog("Deinstalling walk end handler")
+            self.dbg.bp_del(self.walk_end_addr)
         except Exception as e:
             print(e)
 
@@ -240,6 +320,7 @@ class walk():
             print(e)
 
     def dive(self):
+        print("Inside diving 1, level: %d" % self.level)
         ea = self.current_ea
         my_module = self.dbg.addr_to_module(int(ea & 0xffffffff))
         target_module = self.dbg.addr_to_module(decode_op1(self.dbg, self.dbg.op1))
@@ -255,26 +336,34 @@ class walk():
             if(mod.upper() == target_module_name.upper()):
                 self.dlog("[d] Target module blacklisted, not diving")
                 self.dlog("[d] Until " + hex(self.current_ea + self.current_instr.length))
-                if(graph == True):
+#                if(graph == True):
+                if(True):
                     self.gf.write(format_empty_node(ea, my_module, self.dbg.walk.current_dis, target_module, "#006699"))
                 self.install_bp(self.current_ea + self.current_instr.length, handler = handle_ret)
                 self.delete_next_bp = True
                 self.dbg.single_step(False)
                 return
+        print("Inside diving 2, level: %d" % self.level)
         if(self.max_level > 0x0):
             if(self.level > self.max_level): 
+                print("Max level %d reached, not diving" % self.level)
                 self.dlog("Max level reached, not diving")
                 self.dlog("[d] Until " + hex(self.current_ea + self.current_instr.length))
-                if(graph == True):
+                if(True):
+#                if(graph == True):
                     self.gf.write(format_empty_node(ea, my_module, self.dbg.walk.current_dis, target_module))
                 self.install_bp(self.current_ea + self.current_instr.length, handler = handle_ret)
                 self.delete_next_bp = True
                 self.dbg.single_step(False)
                 return
         self.dbg.single_step(True)
+        print("Inside diving 3, level: %d" % self.level)
         self.level += 1
-        self.dlog("[d] Diving, level: " + hex(self.level))
-        if(graph == True):
+        print("Inside diving 4, level: %d" % self.level)
+        self.dlog("[d] Diving, level: %d" % self.level)
+        print("[d] Diving, level: %d" % self.level)
+        if(True):
+#        if(graph == True):
             self.gf.write(format_node(ea, my_module, self.dbg.walk.current_dis, target_module))
         self.install_bp(self.current_ea + self.current_instr.length, handler = handle_ret_surface)
 
@@ -282,12 +371,16 @@ class walk():
         self.dbg.single_step(True)
         self.level -= 1
         self.dlog("Surfacing, level: " + hex(self.level))
-        if(graph == True):
+#        if(graph == True):
+        if(True):
             self.gf.write("</node>\n")
         if(self.level < 0x0):
+#        if(self.level < self.level_lowest):
+#            self.level_lowest = self.level
             print("[!] Level is signed. Sth went wrong")
-            self.running = False
-            self.kill()
+            self.dlog("[!] Level is signed. Sth went wrong")
+#            self.running = False
+#            self.kill()
 
     def detach(self):
         dbg.detach()
