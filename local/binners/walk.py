@@ -2,6 +2,7 @@ from functions import decode_op1
 from threading import Event
 from pydbg.defines import *
 import time
+import utils
 
 def format_empty_node(ea, my_mod, dis, tmod, color = None):
     if(tmod != None):
@@ -17,10 +18,8 @@ def format_empty_node(ea, my_mod, dis, tmod, color = None):
 
     if(color == None):
         return "<node TEXT=\"" + my_name + str(":") + hex(int(ea & 0xffffffff)) + ": " + dis + " (" + target_name + ")" + "\" POSITION=\"right\"/>\n"
-#        return "<node TEXT=\"" + my_name + str(":") + hex(int(ea & 0xffffffff)) + ": " + dis + " (" + target_name + ")" + "\"/>\n"
     else:
         return "<node COLOR=\""+ color +"\" TEXT=\"" + my_name + str(":") + hex(int(ea & 0xffffffff)) + ": " + dis + " (" + target_name + ")" + "\" POSITION=\"right\"/>\n"
-#        return "<node COLOR=\""+ color +"\" TEXT=\"" + my_name + str(":") + hex(int(ea & 0xffffffff)) + ": " + dis + " (" + target_name + ")" + "\"/>\n"
         
 def format_node(ea, my_mod, dis, tmod, color = None):
     if(tmod != None):
@@ -35,35 +34,7 @@ def format_node(ea, my_mod, dis, tmod, color = None):
 
     if(color == None):
         return "<node FOLDED=\"true\" TEXT=\"" + my_name + str(":") + hex(int(ea & 0xffffffff)) + ": " + dis + " (" + target_name + ")" + "\" POSITION=\"right\">\n"
-#        return "<node FOLDED=\"true\" TEXT=\"" + my_name + str(":") + hex(int(ea & 0xffffffff)) + ": " + dis + " (" + target_name + ")" + "\">\n"
     else:
-        return "<node FOLDED=\"true\" COLOR=\""+ color +"\" TEXT=\"" + my_name + str(":") + hex(int(ea & 0xffffffff)) + ": " + dis + " (" + target_name + ")" + "\" POSITION=\"right\">\n"
-#        return "<node FOLDED=\"true\" COLOR=\""+ color +"\" TEXT=\"" + my_name + str(":") + hex(int(ea & 0xffffffff)) + ": " + dis + " (" + target_name + ")" + "\">\n"
-
-def format_empty_node_text(text, color = None):
-    if(color == None):
-        return "<node TEXT=\"" + text + "\" POSITION=\"right\"/>\n"
-#        return "<node TEXT=\"" + text + "\"/>\n"
-    else:
-        return "<node COLOR=\""+ color +"\" TEXT=\"" + text + "\" POSITION=\"right\"/>\n"
-#        return "<node COLOR=\""+ color +"\" TEXT=\"" + text + "\"/>\n"
-
-def format_node(ea, my_mod, dis, tmod, color = None):
-    if(tmod != None):
-        target_name = tmod.szModule
-    else:
-        target_name = "unknown"
-
-    if(my_mod != None):
-        my_name = my_mod.szModule
-    else:
-        my_name = "unknown"
-
-    if(color == None):
-#        return "<node FOLDED=\"true\" TEXT=\"" + my_name + str(":") + hex(int(ea & 0xffffffff)) + ": " + dis + " (" + target_name + ")" + "\">\n"
-        return "<node FOLDED=\"true\" TEXT=\"" + my_name + str(":") + hex(int(ea & 0xffffffff)) + ": " + dis + " (" + target_name + ")" + "\" POSITION=\"right\">\n"
-    else:
-#        return "<node FOLDED=\"true\" COLOR=\""+ color +"\" TEXT=\"" + my_name + str(":") + hex(int(ea & 0xffffffff)) + ": " + dis + " (" + target_name + ")" + "\">\n"
         return "<node FOLDED=\"true\" COLOR=\""+ color +"\" TEXT=\"" + my_name + str(":") + hex(int(ea & 0xffffffff)) + ": " + dis + " (" + target_name + ")" + "\" POSITION=\"right\">\n"
 
 def format_empty_node_text(text, color = None):
@@ -71,6 +42,12 @@ def format_empty_node_text(text, color = None):
         return "<node TEXT=\"" + text + "\" POSITION=\"right\"/>\n"
     else:
         return "<node COLOR=\""+ color +"\" TEXT=\"" + text + "\" POSITION=\"right\"/>\n"
+
+def format_node_text(text, color = None):
+    if(color == None):
+        return "<node FOLDED=\"true\" TEXT=\"" + text + "\" POSITION=\"right\">\n"
+    else:
+        return "<node FOLDED=\"true\" COLOR=\""+ color +"\" TEXT=\"" + text + "\" POSITION=\"right\">\n"
 
 def handle_ret(dbg):
     ea = dbg.get_register("EIP")
@@ -189,6 +166,15 @@ def handle_working_bp(dbg):
 
     return DBG_CONTINUE
 
+def handle_ex(dbg, ec):
+    ea = dbg.get_register("EIP")
+    dbg.walk.current_ea = ea
+    dbg.walk.current_dis = dbg.disasm(ea)
+    dbg.walk.gf.write(format_empty_node_text("%x: %s generated EXCEPTION %08X" % (ea, dbg.walk.current_dis, ec), color="#ff0000"))
+#    dbg.walk.gf.write(format_node_text("%x: %s generated EXCEPTION %08X" % (ea, dbg.walk.current_dis, ec), color="#ff0000"))
+#    dbg.walk.gf.write("</node>\n")
+    return DBG_EXCEPTION_NOT_HANDLED
+
 class walk():
     def __init__(self, addr, endaddr, app="", imagename="", filee="", max_level=3, dbg=None, gf_path=""):
         self.app = app
@@ -265,6 +251,7 @@ class walk():
             self.dbg.av_handler = handle_crash
             self.dbg.attach_av_handler()
             self.dbg.set_callback(EXCEPTION_SINGLE_STEP, handle_working_bp)
+            self.dbg.default_exc_callback = handle_ex
 #            self.dbg.set_callback(, handle_crash)
         except Exception as e:
             print(e)
