@@ -32,6 +32,10 @@ class Mutator(file):
         else:
             self.readSize(path)
         self.calcSizeTotal()
+        self.prepare()
+
+    def prepare(self):
+        pass
 
     def sortAreas(self):
         self.areas.sort()
