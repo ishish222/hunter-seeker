@@ -1,4 +1,6 @@
 c:fuzzers/fuzzer-generic.py
+c:fuzzers/fuzzer-state-2.py
+c:fuzzers/mechanisms
 c:scripters
 c:../../blob/res/xar/set-1/a6fc6e3ca34c4b6918ef780e5afb5156.xar
 c:../../blob/res/xar/set-1/a75c2a7e835a2465848f070b8450e9c1.xar
