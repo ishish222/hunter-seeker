@@ -68,6 +68,7 @@ revert_scripts = ["load_ready"]
 slowdown = 1
 mutations = 3
 mutator = None
+generator = "generators.generatorCorrected"
 metric_res = 100
 to_mult_factor = 30
 boot_wait = 25

@@ -38,8 +38,6 @@ ma_react_rvas = [
 #("DesignerPro.exe", 0xa0d036, (0, react1, []))
 ("user32.dll", 0x1680b, (0, react1, [])) #0x7e42680b
 ]
-#("foobar2000.exe", 0x58b5b, (0, react2, []))
-#]
 ma_rd_rvas = [("DesignerPro.exe", 0xa95a26, 0)]
 ma_ws_rvas = [("DesignerPro.exe", 0x7c095f, 0)]
 ma_we_rvas = [("DesignerPro.exe", 0x7c0961, 0)]

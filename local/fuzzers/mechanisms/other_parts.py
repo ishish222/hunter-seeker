@@ -8,9 +8,11 @@ def fail_check(options, state):
     if(not state.failed):
         return True
     else: 
+        print "Failed"
         state.failed = False
         state.failure_reason = ""
         return False
+
 
 def fuzzing_loop(options, state):
     stats = state.stats
@@ -20,7 +22,7 @@ def nop(options, state):
     pass
 
 def exit_failure(options, state):
-    print "Failed: %s" % state.failure_reason
+    print(state.failure_info)
     state.failure_count +=1
     if(state.failure_count > 3): 
         print "Too many failures, exiting"

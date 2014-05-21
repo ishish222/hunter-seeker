@@ -13,7 +13,6 @@ import sys
 import signal
 sys.path += ["./scripters"]
 sys.path += ["../common"]
-import generators.generatorCorrected as generator
 import settings
 from script import rs, rss, runscriptq, write_monitor, write_monitor_2, read_monitor
 from datetime import datetime
@@ -21,6 +20,7 @@ from common import *
 import tempfile
 from glob import glob
 from mechanisms.mechanisms import step
+import traceback
 
 signaled = False
 
@@ -138,7 +138,8 @@ def runsteps(options, state, steps):
     while(not step.is_final):
         retries = 0
         while True: # retrying & testing loop
-            if(retries < 1 or step.should_retry == True):
+#            if(retries < 1 or (retries > 0 and step.should_retry == True)):
+            if True:
                 try:
                     if(type(step.operation) == dict): 
                         runsteps(options, state, step.operation)
@@ -147,6 +148,7 @@ def runsteps(options, state, steps):
                 except Exception, e:
                     state.failed = True
                     state.failure_reason = e
+                    state.failure_info = traceback.format_exc()
             if(step.test(options, state)): 
                 # test was succesful
                 if(type(step.next_step) == str):
@@ -159,15 +161,16 @@ def runsteps(options, state, steps):
                 break
             else: 
                 # test failed
-                if(step.retries > retries):
+                retries += 1
+                if(step.retries > retries and step.should_retry == True):
                     # have retries left
                     time.sleep(step.timeout)
-                    retries += 1
                     continue
                 else:
                     # no retries left
                     next_step = step.failure
                     step = steps[next_step]
+                    print "-=[%s] %s" % (steps["name"], next_step)
                     break
 
 class state_class(object):
@@ -181,9 +184,11 @@ class state_class(object):
 def fuzzing_routine():
     options = get_options()
 
-    statement = "from mechanisms.m_%s import %s" % (options.loop, options.loop)
+    mechmod, mech = options.loop.split(".")
+
+    statement = "from mechanisms.m_%s import %s" % (mechmod, mech)
     exec statement
-    statement = "steps = %s" % options.loop
+    statement = "steps = %s" % mech
     exec statement
  
 #    steps = xara_fuzzer #parametrize 

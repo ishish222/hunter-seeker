@@ -14,7 +14,7 @@ class nodeSwitcher(Mutator):
         try:
             jsparser.parse(self.source)
         except Exception:
-            print("Syntax error, I'm unable to introduce more mutations, leaving sample as it is")
+#            print("Syntax error, I'm unable to introduce more mutations, leaving sample as it is")
             return
         self.all_nodes = jsparser.all_nodes
         self.node_count = len(self.all_nodes)
