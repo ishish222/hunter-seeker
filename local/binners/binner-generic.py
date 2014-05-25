@@ -158,6 +158,13 @@ def process_status_queue(satisfying = None):
 
     return satisfied
 
+def window_check(hwnd, lParam):
+    global window_name
+    global found
+
+    writePipe(win32gui.GetWindowText(hwnd))
+    if(win32gui.GetWindowText(hwnd).find(window_name) != -1):
+        found = True
 
 ### binner commands
 def execute(cmds):
@@ -175,6 +182,21 @@ def execute(cmds):
             watchThread = Thread(target = watchThread_routine, args=(float(cmds[1]),))
             watchThread.start()
             main_binner.start_debuggers()
+            main_binner.ok()
+
+        if(cmd == "windowExists"):
+            global window_name
+            global found
+
+            found = False
+            window_name = args
+
+            win32gui.EnumWindows(window_check, None)
+
+            if(found == True):
+                main_binner.writePipe("FOUND")
+            else:
+                main_binner.writePipe("NOT FOUND")
             main_binner.ok()
 
 
@@ -290,6 +312,81 @@ def execute(cmds):
                 main_binner.test_bin_dir()
                 main_binner.save_synopsis(args)
                 main_binner.save_sample(args)
+                main_binner.writePipe("Status: CR")
+                main_binner.ok()
+                return
+
+            main_binner.writePipe("Status: %s" % status)
+            main_binner.ok()
+            main_binner.detach_rd_markers()
+
+### test a directory
+
+        elif(cmd == "testDir"):
+            args2 = args.split("\"")
+            cmds[1] = args2[1]
+            cmds[2] = args2[3]
+            print("0: %s\n1: %s\n2: %s\n" % (cmds[0], cmds[1], cmds[2]))
+            real_target = cmds[2]
+            main_binner.attach_st_markers()
+
+            main_binner.loop_debuggers(invocation_args=cmds[2])
+            while(process_status_queue(["ST", "CR", "PTO"]) != True):
+                main_binner.loop_debuggers(settings.wait_sleep)
+            if(status == "CR"):
+#                dlog("Processing CR1")
+                main_binner.get_ea()
+                main_binner.test_bin_dir()
+                main_binner.save_synopsis(args)
+                main_binner.save_sample(cmds[1])
+                main_binner.writePipe("Status: CR")
+                main_binner.ok()
+                return
+
+            main_binner.writePipe("Status: %s" % status)
+            main_binner.ok()
+
+            main_binner.detach_st_markers()
+            main_binner.attach_end_markers()
+
+            while(process_status_queue(["MA", "CR", "TO", "PTO"]) != True):
+                main_binner.loop_debuggers(settings.wait_sleep)
+            if(status == "CR"):
+#                dlog("Processing CR2")
+                main_binner.get_ea()
+                main_binner.test_bin_dir()
+                main_binner.save_synopsis(args)
+                main_binner.save_sample(cmds[1])
+#                dlog("Hereeeeeee")
+                main_binner.writePipe("Status: CR")
+                main_binner.ok()
+                return
+
+            main_binner.writePipe("Status: %s" % status)
+            main_binner.ok()
+
+            main_binner.detach_end_markers()
+            if(settings.needs_ready):
+                main_binner.attach_rd_markers()
+            # time for reaction to test end
+            main_binner.start_debuggers("Closing execution")
+            main_binner.readPipe()
+            main_binner.stop_debuggers("Closing execution finished")
+
+#            main_binner.loop_debuggers()
+            if(settings.needs_ready):
+                while(process_status_queue(["RD", "CR", "PTO"]) != True):
+                    main_binner.loop_debuggers(settings.wait_sleep)
+            else:
+                process_status_queue(["RD", "CR", "PTO"])
+                if(status != "CR"): status = "RD"
+
+            if(status == "CR"):
+#                dlog("Processing CR3")
+                main_binner.get_ea()
+                main_binner.test_bin_dir()
+                main_binner.save_synopsis(args)
+                main_binner.save_sample(cmds[1])
                 main_binner.writePipe("Status: CR")
                 main_binner.ok()
                 return

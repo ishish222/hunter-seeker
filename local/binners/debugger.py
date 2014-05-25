@@ -899,6 +899,7 @@ class debugger(pydbg):
         self.logStarted = True
         if(self.last_log_file != None):
             self.last_log_file.close()
+        print("debugger opening: %s-%d.txt" % (name, self.pid))
         self.last_log_file = open("%s-%d.txt" % (name, self.pid), "a", 0)
 
     def write_log(self, data):

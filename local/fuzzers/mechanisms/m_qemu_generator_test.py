@@ -21,7 +21,7 @@ def my_generate(options):
     generator, mutator, corrector = options.args.split(",")
     samples_list = []
     common.create_layout(options)
-    os.spawnv(os.P_WAIT, "/bin/cp", ["cp", options.origin, options.tmp_mountpoint+"/samples/shared"])
+    os.spawnv(os.P_WAIT, "/bin/cp", ["cp", "-r", options.origin, options.tmp_mountpoint+"/samples/shared"])
 
     print("Testing generator %s with mutator %s" % (generator, mutator))
     

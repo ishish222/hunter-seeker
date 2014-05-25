@@ -13,7 +13,6 @@ def fail_check(options, state):
         state.failure_reason = ""
         return False
 
-
 def fuzzing_loop(options, state):
     stats = state.stats
     print("Current stats (SA/MA/TO): %d/%d/%d" % (stats.sample_count, stats.ma_count, stats.to_count))
@@ -35,4 +34,10 @@ def next_test(options, state):
         return "poweroff_regenerate"
     else:
         return "test"
+
+def init_test(options, state):
+    if(state.initialized == True):
+        return "fuzzing_loop"
+    else:
+        return "binner_spawn_python_server"
 

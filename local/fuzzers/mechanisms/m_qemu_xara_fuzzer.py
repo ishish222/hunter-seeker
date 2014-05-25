@@ -125,11 +125,11 @@ qemu_xara_fuzzer = {
         ),
     "qemu_mount_disks" : m.step(
         qemu_parts.qemu_mount_disks,
-        next_step = "xara_script_1"
+        next_step = "binner_spawn_python_server"
         ),
-    "xara_script_1" : m.step(
-        specific_preperations_1,
-        next_step = "qemu_connect_dev_socket",
+    "binner_spawn_python_server" : m.step(
+        binner_parts.binner_spawn_python_server, 
+        next_step = "qemu_connect_dev_socket"
         ),
     "qemu_connect_dev_socket" : m.step(
         qemu_parts.qemu_connect_dev_socket, 

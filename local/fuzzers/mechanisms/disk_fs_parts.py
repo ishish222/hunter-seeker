@@ -11,12 +11,17 @@ report = common.report
 
 def calc_disk_size(options):
     origin_size = 0
-    for dirpath, dirnames, filenames in os.walk(options.origin):
-        for f in filenames:
-            fp = os.path.join(dirpath, f)
-            origin_size += os.path.getsize(fp)
 
-    origin_size = os.stat(options.origin).st_size
+    if(os.path.isfile(options.origin)):
+        origin_size = os.stat(options.origin).st_size
+    else:
+        for dirpath, dirnames, filenames in os.walk(options.origin):
+            for f in filenames:
+                fp = os.path.join(dirpath, f)
+                origin_size += os.path.getsize(fp)
+    
+    print("Origin size: %d" % origin_size)
+
     size_margin  = origin_size * options.samples_size_margin
     origin_size += size_margin
     disk_size = origin_size * (options.samples_count + 1) + options.settings.SERVER_SIZE

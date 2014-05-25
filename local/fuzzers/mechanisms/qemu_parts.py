@@ -51,7 +51,7 @@ def qemu_start_full(options, state):
     options.m, _ = options.ms.accept()
     options.s, _ = options.ss.accept()
 
-    time.sleep(options.boot_wait)
+#    time.sleep(options.boot_wait)
     #TODO!!! wee nedd to perform test, not wait!
 
     print("[%s] Qemu full boot finished" % common.timestamp())
@@ -92,19 +92,47 @@ def qemu_mount_disks(options, state):
 
 # was: init
 def qemu_connect_dev_socket(options, state):
+    s = options.s
+    dt = socket.getdefaulttimeout()
+    socket.setdefaulttimeout(options.init_timeout)
+    dts = s.gettimeout()
+    s.settimeout(options.init_timeout)
+
+#    while True:
     try:
-        common.wait_for_init(options.s)
+        print("Waiting for connection...")
+        read_socket(options.s)
+        state.initialized = True
     except socket.timeout:
-        print("Socket timeout, restarting")
-        report("Socket timeout, restarting")
-        common.write_socket(options.s, "logStop")
-        common.del_mountpoint(options)
-        common.powerofff(options)
-        if(not options.save_disks):
-           os.remove(options.tmp_disk_img)
+        print("Accpet timed out")
         state.initialized = False
-        return
-    state.initialized = True
+#            raise socket.timeout
+#            proceed1(options)
+#            os.spawnv(os.P_WAIT, "/bin/ping", ["ping", options.fuzzbox_ip, "-c1"])
+#            continue
+    socket.setdefaulttimeout(dt)
+    s.settimeout(dts)
+
+#    print("Connected")
+#    socket.setdefaulttimeout(dt)
+#    s.settimeout(options.fuzzbox_timeout)
+#    print("Socket timeout set to: %f" % options.fuzzbox_timeout)
+#    options.s.settimeout(options.fuzzbox_timeout)
+#    return options.s
+
+#    try:
+#        common.wait_for_init(options.s)
+#    except socket.timeout:
+#        print("Socket timeout, restarting")
+#        report("Socket timeout, restarting")
+#        common.write_socket(options.s, "logStop")
+#        common.del_mountpoint(options)
+#        common.powerofff(options)
+#        if(not options.save_disks):
+#           os.remove(options.tmp_disk_img)
+#        state.initialized = False
+#        return
+#    state.initialized = True
 
 def poweroff_revert(options, state):
     write_socket(options.s, "logStop")

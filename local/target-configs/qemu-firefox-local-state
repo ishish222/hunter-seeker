@@ -2,6 +2,8 @@ c:fuzzers/fuzzer-generic.py
 c:fuzzers/fuzzer-state-2.py
 c:fuzzers/mechanisms
 c:scripters
+c:../../blob/res/www/wp.pl
+c:../../blob/res/www/wp.pl2
 c:../../blob/res/theora/out.ogv
 c:../../blob/res/theora/out-1.ogv
 c:tests/c-3.s-1000.fast.hs2-01

@@ -1,7 +1,9 @@
 import time
 import sys
 sys.path += ["../../common"]
+sys.path += ["../client"]
 import common
+from script import rs, runscriptq
 
 write_socket = common.write_socket
 read_socket = common.read_socket
@@ -10,6 +12,10 @@ report = common.report
 def binner_kill_explorer(options, state):
     write_socket(options.s, "killExplorer")
     read_socket(options.s)
+
+def binner_spawn_python_server(options, state):
+    rs("lclick", options.m)
+    rs("python_server_spawn_args", options.m)
 
 def binner_spawn(options, state):
     write_socket(options.s, "startBinner")
@@ -75,5 +81,8 @@ def binner_save(options, state):
     print("Got crash, restarting")
     report("Got crash, restarting")
     time.sleep(30)
+
+def binner_close_sample(options, state):
+    runscriptq(options.settings.closing_plugin_name, options.m)
 
 

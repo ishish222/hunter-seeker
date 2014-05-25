@@ -8,107 +8,109 @@ sys.path += ["../../common"]
 import common
 import os
 import time
+import generators.generatorCorrected as generatorCorrected
+import generators.jsMutator as jsMutator
 
 read_socket = common.read_socket
 write_socket = common.write_socket
 report = common.report
 
-def prepare_samples(options, state):
-    common.mount_drive(options)
-    for sample in state.samples_list:
-        print "Modifyng: %s" % os.path.basename(sample)
-        sample_base = os.path.basename(sample)
-        sample_dir = os.path.dirname(sample)
-        new_dir = "%s/%s_dir" % (sample_dir, sample_base)
-        print "New dir: %s" % new_dir
-    common.umount_drive(options)
+def mechanism_prepare(options, state):
+    options.generate = my_generate
 
-def prepare_sample(sample_path):
-    file_path = sample_path + ".html"
-    sample_file = path.basename(sample_path)
-    f = open(file_path, "w")
-    text = """
-<html>
-<script>
-function end()
-{{
-document.location="http://{0}.pl";
-}}
-</script>
-<video autoplay src="{0}" onended="end()"></video>
-</html>
-""".format(sample_file)
-    f.write(text)
-    f.close
-    return file_path
+def my_generate(options):
+    options.real_target = options.args
+
+    if(options.real_target == None):
+        print("Point to real target (e.g. htm file)")
+        raise Exception
+
+    generator = generatorCorrected.DirGenerator
+    mutator = jsMutator.nodeSwitcher
+    corrector = "None"
+    samples_list = []
+    common.create_layout(options)
+    os.spawnv(os.P_WAIT, "/bin/cp", ["cp", "-r", options.origin, options.tmp_mountpoint+"/samples/shared"])
 
 
-#TODO: adjust this
-def specific_preperations_1(options, state):
-    from sys import path
-    path.append("../client")
-    from script import rs
-    rs("lclick", options.m)
-    rs("python_server_spawn_args", options.m)
+    my_generator = generator(options.origin, options.tmp_mountpoint+"/samples/shared", mutator_=mutator, fext="*.js", corrector = None, real_target = options.real_target)
+    my_generator.mutations=int(options.mutations)
+
+    samples_list += my_generator.generate(options.samples_count)
+
+    return samples_list
 
 #TODO: need to translate this to another statful mechanism
 def test(options, state):
-    (lastResponse, status, reqScript) = read_socket(options.s)
-    state.status = status
-    state.lastResponse = lastResponse
-    state.reqScript = reqScript
-    stats = state.stats
-
-    #TODO: need to replace proceed5 with custom operations
-
-    if(status == "PTO"):
-        common.proceed5(options)
-        return status
-    if(status == "STTO"):
-        common.proceed5(options)
-        return status
-    if(status == "RDTO"):
-        common.proceed5(options)
-    if(status == "SR"):
-        time.sleep(0.2)
-        common.execute_script(options, reqScript)
-        write_socket(options.s, "")
-        return status
-    if(status == "RD"):
-        try:
-            sample_path = state.samples_list.pop()
-        except Exception, e:
-            state.samples_exhausted = True
-            return
-#        sample_path = prepare_sample(sample_path)
-        sample_file = os.path.basename(sample_path)
-        test_path = options.settings.prepare_sample(sample_path)
-        test_file = os.path.basename(test_path)
-        write_socket(options.s, "testFile e:\\samples\\shared\\" + test_file)
-
-        #TODO: replace runner with custom operations
-        options.log.write("%s: " % test_file)
-        options.log.flush()
-        return status
-    if(status == "MA" or status == "TO"):
-        # react to test end
-        common.proceed5(options)
-        write_socket(options.s, "")
-        options.log.write("[%s] \n" % status)
-        options.log.flush()
-
-        if(status == "MA"):
-            stats.ma_count += 1
-            stats.to_count = 0
-        if(status == "TO"):
-            stats.to_count += 1
-            if(stats.to_count % 3 == 0):
-                report("3x TO, settling")
+    while True:
+        (lastResponse, status, reqScript) = read_socket(options.s)
+        state.status = status
+        state.lastResponse = lastResponse
+        state.reqScript = reqScript
+        stats = state.stats
+    
+        #TODO: need to replace proceed5 with custom operations
+    
+        if(status == "PTO"):
+            common.proceed5(options)
+            return status
+        if(status == "STTO"):
+            common.proceed5(options)
+            return status
+        if(status == "RDTO"):
+            common.proceed5(options)
+        if(status == "SR"):
+            time.sleep(0.2)
+            common.execute_script(options, reqScript)
+            write_socket(options.s, "")
+            return status
+        if(status == "RD"):
+            try:
+                sample_path = state.samples_list.pop()
+            except Exception, e:
+                state.samples_exhausted = True
+                return
+    #        sample_path = prepare_sample(sample_path)
+    #        sample_file = os.path.basename(sample_path)
+    #        test_path = options.settings.prepare_sample(sample_path)
+            test_file = sample_path
+            write_socket(options.s, "testDir \"e:\\samples\\shared\\%s\" \"e:\\samples\\shared\\%s\"" % (common.windows_escape(test_file), common.windows_escape(options.real_target)))
+    
+            #TODO: replace runner with custom operations
+            options.log.write("%s: " % test_file)
+            options.log.flush()
+#            return status
+        if(status == "MA" or status == "TO"):
+            # react to test end
+            common.proceed5(options)
+            write_socket(options.s, "")
+            options.log.write("[%s] \n" % status)
+            options.log.flush()
+    
+            if(status == "MA"):
+                stats.ma_count += 1
                 stats.to_count = 0
-                common.settle(options)
-        stats.sample_count += 1
-    return state.status
+            if(status == "TO"):
+                stats.to_count += 1
+                if(stats.to_count % 3 == 0):
+                    report("3x TO, settling")
+                    stats.to_count = 0
+                    common.settle(options)
+            stats.sample_count += 1
+            return state.status
 
+def my_window_wait(options, state):
+    pass
+
+def test_my_window(options, state):
+    write_socket(options.s, "windowExists Firefox")
+    (lastResponse, status, reqScript) = read_socket(options.s)
+    if(lastResponse.find("NOT FOUND") > -1):
+        return False
+    elif(lastResponse.find("FOUND") > -1):
+        return True
+    return False
+    
 def check_stats(options, state):
     stats = state.stats
 
@@ -131,6 +133,10 @@ def check_stats(options, state):
 qemu_firefox_fuzzer = {
     "name" : "Firefox Fuzzer",
     "start" : m.step(
+        mechanism_prepare,
+        next_step = "qemu_prepare"
+        ),
+    "qemu_prepare" : m.step(
         qemu_parts.qemu_prepare, 
         next_step = "create_saved_disk_autogenerated"
         ),
@@ -140,29 +146,24 @@ qemu_firefox_fuzzer = {
         ), 
     "prepare_disk_autogenerated" : m.step(
         disk_fs_parts.prepare_disk_autogenerated,
-        next_step = "qemu_start_full"
-#        next_step = "prepare_samples"
-        ),
-#    "prepare_samples" : m.step(
-#        prepare_samples,
 #        next_step = "stop"
-#        ),
+        next_step = "qemu_start_full"
+        ),
     "qemu_start_full" : m.step(
         qemu_parts.qemu_start_full, 
         next_step = "qemu_mount_disks"
         ),
     "qemu_mount_disks" : m.step(
         qemu_parts.qemu_mount_disks,
-        next_step = "qemu_connect_dev_socket"
-#        next_step = "xara_script_1"
+        next_step = "binner_spawn_python_server"
         ),
-#    "xara_script_1" : m.step(
-#        specific_preperations_1,
-#        next_step = "qemu_connect_dev_socket",
-#        ),
+    "binner_spawn_python_server" : m.step(
+        binner_parts.binner_spawn_python_server, 
+        next_step = "qemu_connect_dev_socket"
+        ),
     "qemu_connect_dev_socket" : m.step(
         qemu_parts.qemu_connect_dev_socket, 
-        next_step = "fuzzing_loop"
+        next_step = other_parts.init_test
         ),
     "fuzzing_loop" : m.step(
         other_parts.fuzzing_loop,
@@ -178,6 +179,14 @@ qemu_firefox_fuzzer = {
         ),
     "binner_spawn_app" : m.step(
         binner_parts.binner_spawn_app,
+        next_step = "test_my_window"
+        ),
+    "test_my_window" : m.step(
+        my_window_wait,
+        test = test_my_window,
+        retries = -1,
+        timeout = 3,
+        should_retry = True,
         next_step = "binner_configure"
         ),
     "binner_configure" : m.step(
@@ -198,6 +207,10 @@ qemu_firefox_fuzzer = {
         ),
     "test" : m.step(
         test,
+        next_step = "close",
+        ),
+    "close" : m.step(
+        binner_parts.binner_close_sample,
         next_step = other_parts.next_test,
         ),
     "save" : m.step(

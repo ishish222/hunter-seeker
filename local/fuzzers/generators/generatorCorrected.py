@@ -12,7 +12,7 @@ import random
 class GeneratorException(Exception): pass
 
 class DirGenerator(object):
-    def __init__(self, origin_path_ = "", dest_path_ = "", mutator_ = None, corrector = None, mutations_ = 3, fname = None, fext = None):
+    def __init__(self, origin_path_ = "", dest_path_ = "", mutator_ = None, corrector = None, mutations_ = 3, fname = None, fext = None, real_target = None):
         self.origin_path = origin_path_
         self.dirname = os.path.basename(self.origin_path)
         self.dest_path = dest_path_
@@ -21,23 +21,35 @@ class DirGenerator(object):
         self.corrector = corrector
         self.fname = fname
         self.fext = fext
+        self.real_target = real_target
 
     def generate(self, amt=100):
         samples_list = []
+        flist = []
 
         #TODO: replace with testdir?
         os.spawnv(os.P_WAIT, "/bin/mkdir", ["mkdir", "-p", self.dest_path])
+
+        if(self.fext != None):
+            for root, dirnames, filenames in os.walk(self.origin_path):
+                for dir_ in dirnames:
+                    target_pattern = "%s/%s/%s" % (self.origin_path, dir_, self.fext)
+                    print(target_pattern)
+                    flist += glob.glob(target_pattern)
+
         for i in range(0, amt):
             tname = tempfile.mkdtemp(dir = self.dest_path)
+            bname = os.path.basename(tname)
             L = ["cp", "-r", self.origin_path, tname]
             os.spawnv(os.P_WAIT, "/bin/cp", L)
 
             if(self.fname != None):
                 self.target_file = self.fname
             elif(self.fext != None):
-                target_pattern = "%s/%s" % (self.origin_path, self.fext)
-                flist = glob.glob(target_pattern)
                 flist_len = len(flist)
+                if(flist_len <1):
+                    print "No candidates found"
+                    raise GeneratorException
                 fnum = random.randint(0, flist_len-1)
     #            self.target_file = os.path.basename(flist[fnum]) # TODO:what if deeper in directories?
                 self.target_file = flist[fnum]
@@ -58,7 +70,11 @@ class DirGenerator(object):
                 self.corrector(fmap)
                 fmap.close()
             mutatorInstance.close()
-            samples_list.append(fname)
+#            samples_list.append(fname)
+            if(self.real_target == None):
+                samples_list.append("%s/%s" % (bname, self.target_file))
+            else:
+                samples_list.append("%s/%s" % (bname, self.real_target))
         return samples_list
 
     def generate_one(self, amt=100):

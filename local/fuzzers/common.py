@@ -22,6 +22,13 @@ logo = """
 """
 print(logo)
 
+def windows_escape(txt):
+#    return windows_slashes(txt.replace(" ", "\\ "))
+    return windows_slashes(txt)
+
+def windows_slashes(txt):
+    return txt.replace("/", "\\")
+
 def defined(name):
     if(name in globals()):
         return True

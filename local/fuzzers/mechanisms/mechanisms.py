@@ -7,6 +7,7 @@ class step(object):
             test = other_parts.fail_check, 
             should_retry = False,
             retries = 0,
+            timeout = 3,
             failure = "exit_failure",
             next_step = None
             ):
@@ -15,5 +16,6 @@ class step(object):
         self.test = test
         self.should_retry = should_retry
         self.retries = retries
+        self.timeout = timeout
         self.failure = failure
         self.next_step = next_step

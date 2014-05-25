@@ -3,7 +3,7 @@ DBG_EXCEPTION_NOT_HANDLED      = 0x80010001
 HIT_COUNT = 1
 PASS_COUNT = 0
 MIN_DISK_SIZE = 4000000
-MAX_DISK_SIZE = 2000000000
+MAX_DISK_SIZE = 4000000000
 SERVER_SIZE = 50000000
 
 visible = False
@@ -56,7 +56,7 @@ corrector = None
 buffer_size = 4096
 log_name = "HS:Unknown"
 extension = "sample"
-wait_sleep = 5
+wait_sleep = 7
 fuzzbox_timeout = 20
 start_sleep = 10
 revert_sleep = 40

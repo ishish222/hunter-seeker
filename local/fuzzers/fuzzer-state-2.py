@@ -162,7 +162,7 @@ def runsteps(options, state, steps):
             else: 
                 # test failed
                 retries += 1
-                if(step.retries > retries and step.should_retry == True):
+                if((step.retries > retries or step.retries == -1) and step.should_retry == True):
                     # have retries left
                     time.sleep(step.timeout)
                     continue
@@ -182,6 +182,7 @@ class state_class(object):
         self.samples_exhausted = False
 
 def fuzzing_routine():
+    signal.signal(signal.SIGINT, sigkill_handler)
     options = get_options()
 
     mechmod, mech = options.loop.split(".")

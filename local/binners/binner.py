@@ -470,7 +470,7 @@ class binner(object):
 
     def start_log(self, name):
 #        self.debug = True
-        print("Binner starting log")
+        print("Binner starting log: %s-binner.txt" % name)
         if(self.last_log_file != None):
             self.last_log_file.close()
         self.last_log_file = open("%s-binner.txt" % name, "a", 0)
