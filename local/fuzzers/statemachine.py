@@ -2,6 +2,9 @@
 # author: Tomasz Salacinski (ishish)
 # mailto: tomasz.salacinski@korrino.com
 
+def dummy():
+    pass
+
 class State:
     def __init__(self):
         self.name = "Generic"
@@ -14,8 +17,7 @@ class State:
         self.trans_error_handler = dummy
         self.acceptable_error_count = 1
     
-def dummy():
-    pass
+Exit = State()
 
 def _get_subclasses(cls):
     """ Run through subclasses of a particular class

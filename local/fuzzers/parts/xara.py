@@ -5,4 +5,4 @@ Start = statemachine.State()
 Start.name = "Start"
 Start.consequence = other_parts.PrintLogo
 
-other_parts.PrintLogo.consequence = "Exit"
+other_parts.PrintLogo.consequence = statemachine.Exit
