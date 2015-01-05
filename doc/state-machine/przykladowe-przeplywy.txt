@@ -1,0 +1,18 @@
+Przeplyw 1 (ogolny)
+
+1. uruchomienie hsa
+2. sparsowanie opcji
+3. wlaczenie i przetestowanie logowania
+4. zarejestrowanie sygnalow i potokow
+5. (opcjonalnie) uruchomienie diagnostyki
+6. wygenerowanie dyskow zachowanych probek
+
+# petla
+7. wygenerowanie probek (algorytm na maszyne stanowa)
+8. przygotowanie srodowiska testowego (algorytm na maszyne stanowa)
+#costamcostam proceed
+
+9. przeprowadzenie testow (algorytm na maszyne stanowa)
+10. zamkniecie srodowiska testowego (algorytm na maszyne stanowa)
+11. 
+

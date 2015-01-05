@@ -1,0 +1,27 @@
+przerobienie na maszynke stanowa przetwarzajaca mape stanow.
+
+stan zawiera:
+swoj identyfikator (moze byc nazwa)
+liste stanow kolejnych
+instrukcje stanu, w tym: instrukcje wyboru stanu kolejnego (instrukcjami moze byc mapa stanow)
+instrukcje przejscia do stanu kolejnego (moze byc mapa stanow)
+instrukcje sprawdzenia udanego przejscia do stanu kolejnego
+instrukcje obslugi bledu przejscia (w tym timeout)
+liczba dopuszczalnych bledow przejscia
+
+maszynka:
+1. pobiera stan startowy i ustawia go jako aktualny
+2. wykonuje instrukcje stanu aktualnego
+3. jesli stan koncowy, konczy dzialanie
+4. podejmuje decyzje o stanie kolejnym
+5. wykonuje instrukcje przejscia do wybranego stanu kolejnego
+6. sprawdza udane przejscie do stanu kolejnego
+7. jesli udane, zapisuje aktualny stan w historii i ustawia stan kolejny jako aktualny, goto 2
+8. jesli nieudane, wykonuje instrukcje obslugi bledu przejscia
+
+Notki:
+- wstawic pelne zaladowanie aplikacji jako stan
+- wprowadzic diagnostyke obcizenia i czekanie na uspokojenie srodowiska
+- obsluzyc polaczenie z innym portem w przypadku zajetosci ?
+- binner nie ma swiadomosci stanu, jedynie wykonuje instrukcje najszybciej jak moze, a w przypadku problemu zglasza problem.
+- debugger stanowi narzedzie binnera

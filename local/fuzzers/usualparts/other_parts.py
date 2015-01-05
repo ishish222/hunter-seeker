@@ -1,3 +1,5 @@
+import statemachine
+
 def always_true(options, state):
     return True
 
@@ -47,4 +49,20 @@ def init_test(options, state):
         return "fuzzing_loop"
     else:
         return "binner_spawn_python_server"
+
+def print_logo():
+    logo = """
+ __                      .__               
+|  | ____________________|__| ____   ____  
+|  |/ /  _ \_  __ \_  __ \  |/    \ /  _ \ 
+|    <  <_> )  | \/|  | \/  |   |  (  <_> )
+|__|_ \____/|__|   |__|  |__|___|  /\____/ 
+     \/                          \/        
+"""
+    print(logo)
+
+PrintLogo = statemachine.State()
+PrintLogo.name = "PrintLogo"
+PrintLogo.consequence = None
+PrintLogo.executing_routine = print_logo
 
