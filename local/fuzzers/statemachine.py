@@ -18,6 +18,7 @@ class State:
         self.acceptable_error_count = 1
     
 Exit = State()
+Exit.name = "Exit"
 
 def _get_subclasses(cls):
     """ Run through subclasses of a particular class

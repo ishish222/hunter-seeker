@@ -61,8 +61,136 @@ def print_logo():
 """
     print(logo)
 
+import os 
+
+def testdir(x): 
+    if(os.path.isdir(x) == False):
+        os.mkdir(x)
+
+def testfile(x):
+    return os.path.exists(x)
+
+def get_options():
+    from optparse import OptionParser
+    import settings
+    import sys
+    import logging
+    import logging.handlers
+    import glob
+
+    parser = OptionParser()
+    parser.add_option("-M", "--machines",       dest="machines", help="Machines path", default=settings.qemu_machines)
+    parser.add_option("-a", "--hda",            dest="hda", help="First disk")
+    parser.add_option("-b", "--hdb",            dest="hdb", help="Second disk")
+    parser.add_option("-c", "--cdrom",          dest="cdrom", help="CD")
+    parser.add_option("-m", "--m",              dest="qemu_m", help="Amount of memory", default=settings.qemu_m)
+    parser.add_option("-S", "--scripts",        dest="scripts", help="Scripts to start with")
+    parser.add_option("-o", "--origin",         dest="origin", help="Original file")
+    parser.add_option("-s", "--shared",         dest="shared_folder", help="Folder for shared applications", default=settings.qemu_shared_folder)
+    parser.add_option("-d", "--samples-shared", dest="samples_shared", help="Folder for shared samples", default=settings.samples_shared_path)
+    parser.add_option("-v", "--samples-saved",  dest="samples_saved", help="Folder for saved samples", default=settings.samples_saved)
+    parser.add_option("-B", "--samples-binned", dest="samples_binned", help="Folder for binned samples", default=settings.samples_binned)
+    parser.add_option("-i", "--fuzzbox_ip",     dest="fuzzbox_ip", help="Force fuzzbox ip (normally based on hda)")
+    parser.add_option("-p", "--fuzzbox_port",   dest="fuzzbox_port", help="Force fuzzbox port (normally based on hda)")
+    parser.add_option("-V", "--visible",        dest="visible", help="Should box be visible?", action="store_true", default=settings.visible)
+    parser.add_option("-l", "--slowdown",       dest="slowdown", help="Slowdown (default is 1)", default=settings.slowdown)
+    parser.add_option("-e", "--extension",      dest="extension", help="Extension of generated sample", default=settings.extension)
+    parser.add_option("-n", "--mutation-number", dest="mutations", help="Number of mutations to perform", default=settings.mutations)
+    parser.add_option("-D", "--orig-samples-dir", dest="samples_orig", help="Path to original samples", default="")
+    parser.add_option("-P", "--sample",         dest="sample", help="Path to sample", default="")
+    parser.add_option("-C", "--command",        dest="obs_command", help="Observer command", default="testStEndMarkers")
+    parser.add_option("-L", "--timeout",        dest="wait_sleep", help="Timeout for state transitions", default=settings.wait_sleep)
+    parser.add_option("-O", "--count",          dest="samples_count", help="Amount of samples in single run", default=10)
+    parser.add_option("-T", "--tap",            dest="tap", help="Tap interface", default="tap0")
+    parser.add_option("-r", "--metric-res",     dest="metric_res", help="Metrics resolution", default=settings.metric_res)
+    parser.add_option("-A", "--save-disks",     action="store_true", dest="save_disks", help="Save disks even if they don't contain crashing", default=settings.save_disks)
+    parser.add_option("-N", "--vnc",            action="store_true", dest="vnc", help="Use VNC", default=settings.vnc)
+    parser.add_option("-R", "--profiling",      action="store_true", dest="profiling", help="Use profiling", default=settings.profiling)
+    parser.add_option("-k", "--taskset",        action="store_true", dest="use_taskset", help="Use taskset", default=settings.use_taskset)
+    parser.add_option("-t", "--to-mult-factor", dest="to_mult_factor", help="Factor for calculating SO timeout based on TO (SO=TO*factor)", default=settings.to_mult_factor)
+    parser.add_option("-w", "--boot-wait",      dest="boot_wait", help="How long does this system boot", default=settings.boot_wait)
+    parser.add_option("-I", "--revert-wait",    dest="revert_wait", help="How long does this system revert", default=settings.revert_wait)
+    parser.add_option("-W", "--shutdown-wait",  dest="shutdown_wait", help="How long does this system shutdown", default=settings.shutdown_wait)
+    parser.add_option("-f", "--init-timeout",   dest="init_timeout", help="Timeout for binner initiation", default=settings.init_timeout)
+    parser.add_option("-z", "--samples-size-margin", dest="samples_size_margin", help="Size marigin of single sample for disk size calculations", default=settings.samples_size_margin)
+    parser.add_option("-u", "--smp",            dest="smp", help="Number of vCPUs", default=settings.smp)
+    parser.add_option("-K", "--generator",      dest="generator", help="Generator to use", default=settings.generator)
+    parser.add_option("-E", "--mutator",        dest="mutator", help="Mutator to use", default=settings.mutator)
+    parser.add_option("-G", "--loop-function",  dest="loop", help="Loop function to use", default="dummy")
+    parser.add_option("-H", "--samples-source", dest="samples_source", help="Samples source to use", default="autogenerated_batch")
+    parser.add_option("-J", "--glob",           dest="glob_pattern", help="Glob pattern to use for glob sample source", default=None)
+    parser.add_option("-j", "--wait-key",       action="store_true", dest="wait_key", help="Wait for keystroke", default=False)
+    parser.add_option("-U", "--walk-level",     dest="walk_level", help="Walk level", default="3")
+    parser.add_option("-X", "--ws",             dest="walk_start", help="Walk start address (should be call)", default=None)
+    parser.add_option("-g", "--args",           dest="args", default=None)
+
+    (options, args) = parser.parse_args()
+    (options, args) = parser.parse_args()
+
+    options.fuzzbox_name = sys.argv[1]
+    if(options.hda is None):
+        options.hda = settings.machines[options.fuzzbox_name]['disk']
+
+    #qemu settings
+    if(options.use_taskset is True):
+        qemu_args =  ['taskset', '-c', settings.machines[options.fuzzbox_name]['taskset'], 'qemu-system-i386']
+    else:
+        qemu_args =  ['qemu-system-i386']
+    qemu_args += ['-m', options.qemu_m]
+    qemu_args += ['-drive', 'file=' + options.machines + '/' + options.hda + ',cache=none,if=virtio']
+    if(options.hdb is not None):
+        qemu_args += ['-drive', 'file=', './' + options.hdb, ',cache=none,if=vitrio']
+
+    if(options.cdrom is not None):
+        qemu_args += ['-cdrom', options.cdrom]
+
+    options.ms_path = settings.machines[options.fuzzbox_name]['monitor']
+    options.ss_path = settings.machines[options.fuzzbox_name]['serial']
+
+    if(options.visible == False and options.vnc == True):
+        qemu_args += ['-vnc', settings.machines[options.fuzzbox_name]['vnc']]
+    qemu_args += settings.qemu_additional
+
+    qemu_args += ['-monitor', "unix:%s" % settings.machines[options.fuzzbox_name]['monitor']]
+    qemu_args += ['-serial', "unix:%s" % settings.machines[options.fuzzbox_name]['serial']]
+    qemu_args += ['-smp', str(options.smp)]
+
+    testdir(settings.qemu_shared_folder + "/logs")
+    
+    options.qemu_args = qemu_args
+    options.slowdown = float(options.slowdown)
+    options.samples_count = int(options.samples_count)
+    options.logger = logging.getLogger('MyLogger')
+    options.handler = logging.handlers.SysLogHandler(address = '/dev/log')
+    options.logger.setLevel(logging.DEBUG)
+    options.logger.addHandler(options.handler)
+    options.wait_sleep = float(options.wait_sleep)
+    options.metric_res = int(options.metric_res)
+    options.smp = int(options.smp)
+    options.boot_wait = float(options.boot_wait)
+    options.revert_wait = float(options.revert_wait)
+    options.shutdown_wait = float(options.shutdown_wait)
+    options.to_mult_factor = float(options.to_mult_factor)
+    options.fuzzbox_timeout = float(options.wait_sleep*options.to_mult_factor)
+    options.init_timeout = float(options.init_timeout)
+    options.walk_level = float(options.walk_level)
+
+    #thats right bitches
+    options.settings = settings
+    glob.options = options
+    return
+
+
+import usualparts.hs_logging 
+
+GetOptions = statemachine.State()
+GetOptions.name = "Get options"
+GetOptions.consequence = usualparts.hs_logging.EnableLogging
+GetOptions.executing_routine = get_options
+
 PrintLogo = statemachine.State()
-PrintLogo.name = "PrintLogo"
-PrintLogo.consequence = None
+PrintLogo.name = "Print logo"
+PrintLogo.consequence = GetOptions
 PrintLogo.executing_routine = print_logo
+
 

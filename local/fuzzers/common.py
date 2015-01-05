@@ -11,16 +11,8 @@ import socket
 from subprocess import Popen, PIPE
 import time
 import tempfile
-
-logo = """
- __                      .__               
-|  | ____________________|__| ____   ____  
-|  |/ /  _ \_  __ \_  __ \  |/    \ /  _ \ 
-|    <  <_> )  | \/|  | \/  |   |  (  <_> )
-|__|_ \____/|__|   |__|  |__|___|  /\____/ 
-     \/                          \/        
-"""
-print(logo)
+import usualparts.glob as glob
+options = glob.options
 
 def windows_escape(txt):
 #    return windows_slashes(txt.replace(" ", "\\ "))
@@ -164,7 +156,6 @@ def create_sample_dirs(options):
     testdir(options.settings.samples_binned + "/unk")
 
 def report(string):
-    global options
     options.logger.info("[" + settings.log_name + ":" + options.fuzzbox_name + "] " + string)
 
 def prepare_fuzzbox():

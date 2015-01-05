@@ -3,11 +3,15 @@
 # mailto: tomasz.salacinski@korrino.com
 
 import sys
+sys.path += ["./scripters"]
+sys.path += ["../common"]
 import statemachine
 
 def stateful_routine():
     machine_file = sys.argv[len(sys.argv) -1]
-    print machine_file
+    print
+    print "Loading machine: [%s]" % machine_file
+    print
 
     import_stat = "import parts.%s as machine" % machine_file
     exec import_stat
@@ -15,13 +19,9 @@ def stateful_routine():
     current_state = machine.Start
 
     while(current_state != statemachine.Exit):
+        print "=> Current state: [%s]" % current_state.name
         current_state.executing_routine()
         current_state = current_state.consequence
-
-    print "zaladowanie obiektow stanow"
-    print "zaladowanie zadanej mapy stanow"
-    print "wykonanie zadanej mapy stanow"
-    print ""
 
 
 if __name__ == '__main__':
