@@ -2,6 +2,17 @@ from default import *
 import generators.changer as changer
 from subprocess import Popen
 
+"""
+Machine preparation:
+disable restore session
+export env:
+NSPR_LOG_MODULES = nsSecureBrowserUI:5
+
+"""
+
+breaking = True
+#debug = True
+
 def exception(dbg, ec):
     dbg.dlog("Got exception")
     dbg.signal_ex("%08X" % ec)
@@ -25,7 +36,6 @@ boot_wait = 7
 ex_handler = exception
 mutator = "changer.Changer"
 generator = "generator.DirGenerator"
-debug = True
 
 def runner(args):
     Popen("powershell -command \"& { invoke-expression \"%s\" }\"" % args)

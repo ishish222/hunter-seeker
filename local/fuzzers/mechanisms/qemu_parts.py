@@ -6,6 +6,7 @@ import sys
 sys.path += ["../../common"]
 import common
 import signal
+import os
 
 report = common.report
 read_socket = common.read_socket
@@ -93,9 +94,9 @@ def qemu_mount_disks(options, state):
 # was: init
 def qemu_connect_dev_socket(options, state):
     s = options.s
-    dt = socket.getdefaulttimeout()
-    socket.setdefaulttimeout(options.init_timeout)
-    dts = s.gettimeout()
+#    dt = socket.getdefaulttimeout()
+#    socket.setdefaulttimeout(options.init_timeout)
+#    dts = s.gettimeout()
     s.settimeout(options.init_timeout)
 
 #    while True:
@@ -110,8 +111,8 @@ def qemu_connect_dev_socket(options, state):
 #            proceed1(options)
 #            os.spawnv(os.P_WAIT, "/bin/ping", ["ping", options.fuzzbox_ip, "-c1"])
 #            continue
-    socket.setdefaulttimeout(dt)
-    s.settimeout(dts)
+#    socket.setdefaulttimeout(dt)
+    s.settimeout(options.settings.fuzzbox_timeout)
 
 #    print("Connected")
 #    socket.setdefaulttimeout(dt)
@@ -134,7 +135,7 @@ def qemu_connect_dev_socket(options, state):
 #        return
 #    state.initialized = True
 
-def poweroff_revert(options, state):
+def poweroff_no_revert(options, state):
     write_socket(options.s, "logStop")
     common.del_mountpoint(options)
 
@@ -157,7 +158,17 @@ def poweroff_revert(options, state):
     print("Last batch: %s" % options.tmp_disk_img)
     print("Last saved: %s" % options.saved_disk_img)
 
-def poweroff_no_revert(options, state):
+def check_cr(options, state):
+    if(state.got_cr):
+        os.rename(options.saved_disk_img, "cr-%s" % options.saved_disk_img)
+        options.saved_disk_img = "cr-%s" % options.saved_disk_img
+        state.got_cr = False
+    else:
+        os.remove(options.saved_disk_img)
+    if(options.settings.save_shared == False):
+        os.remove(options.tmp_disk_img)
+
+def poweroff_revert(options, state):
     write_socket(options.s, "logStop")
     common.del_mountpoint(options)
 

@@ -17,7 +17,8 @@ import time
 from select import select
 import socket
 import os
-from shutil import copyfile
+from shutil import copyfile, copytree
+import os
 from mutex_2 import NamedMutex
 
 statusPri = {'SR' : 1, 'SL' : 1, 'CR' : 0, 'TO' : 2, 'MA' : 2, 'RD' : 2, 'ST' : 2, 'WS' : 2, 'WE' : 2, 'EX' : 1}
@@ -522,8 +523,22 @@ class binner(object):
         self.ok()
 
     def save_sample(self, filee):
-        fname = filee.split("\\")[-1]
-        copyfile(filee, "%s%s\\%s" % (settings.samples_binned, self.ea, fname))
+#        fname = filee.split("\\")[-1]
+        fname = filee.replace(settings.samples_shared_path, "")
+#        if(os.path.isfile(filee)):
+#            copyfile(filee, "%s%s\\%s" % (settings.samples_binned, self.ea, fname))
+#        else:
+#            copytree(filee, "%s%s\\%s" % (settings.samples_binned, self.ea, fname))
+        #copyfile(filee, "%s%s\\%s" % (settings.samples_binned, self.ea, fname))
+        #copy(filee, "%s%s\\%s" % (settings.samples_binned, self.ea, fname))
+        dir1 = filee
+        dir2 = "%s%s\\%s" % (settings.samples_binned, self.ea, fname)
+        if(dir1[-1:] == "\\"): dir1 = dir1[:-1]
+        if(dir2[-1:] == "\\"): dir2 = dir2[:-1]
+        cmd = "xcopy /R /Y /I /E %s %s" % (dir1, dir2)
+        print "%s" % cmd
+        os.system(cmd)
+        #os.system("copy %s %s%s\\%s" % (filee, settings.samples_binned, self.ea, fname))
 
     def close_logs(self):
         self.last_log_file.flush()
