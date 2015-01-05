@@ -11,8 +11,8 @@ import socket
 from subprocess import Popen, PIPE
 import time
 import tempfile
-import usualparts.glob as glob
-options = glob.options
+import usualparts.globs as globs
+options = globs.options
 
 def windows_escape(txt):
 #    return windows_slashes(txt.replace(" ", "\\ "))
@@ -38,9 +38,6 @@ class ErrorDetectedException(Exception):
     pass
 
 def get_options():
-    # global options can be used only in this file for reporting & signal handling
-    global options
-
     parser = OptionParser()
     parser.add_option("-M", "--machines",       dest="machines", help="Machines path", default=settings.qemu_machines)
     parser.add_option("-a", "--hda",            dest="hda", help="First disk")
@@ -156,6 +153,9 @@ def create_sample_dirs(options):
     testdir(options.settings.samples_binned + "/unk")
 
 def report(string):
+    import usualparts.globs as globs
+    options = globs.options
+
     options.logger.info("[" + settings.log_name + ":" + options.fuzzbox_name + "] " + string)
 
 def prepare_fuzzbox():

@@ -9,8 +9,9 @@ class State:
     def __init__(self):
         self.name = "Generic"
         self.consequence = None
-        self.consequences = None
+        self.available_consequences = None
         self.choosing_routine = dummy
+        self.choosing_consequence = dummy
         self.executing_routine = dummy
         self.trans_routine = dummy
         self.check_trans_routine = dummy

@@ -12,13 +12,13 @@ report = common.report
 read_socket = common.read_socket
 write_socket = common.write_socket
 
-class statistics(object):
-    def __init__(self, metrics):
-        self.metric_res = metrics
-        self.sample_count = 0
-        self.to_count = 0
-        self.ma_count = 0
-        self.last_time_check = time.localtime()
+def qemu_bind_pipes():
+    import globs
+    options = globs.options
+
+    options.ms = common.prepare_monitor(options.ms_path)
+    options.ss = common.prepare_serial(options.ss_path)
+
 
 def qemu_prepare(options, state):
     global signaled

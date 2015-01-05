@@ -76,7 +76,7 @@ def get_options():
     import sys
     import logging
     import logging.handlers
-    import glob
+    import globs
 
     parser = OptionParser()
     parser.add_option("-M", "--machines",       dest="machines", help="Machines path", default=settings.qemu_machines)
@@ -127,7 +127,9 @@ def get_options():
     (options, args) = parser.parse_args()
     (options, args) = parser.parse_args()
 
-    options.fuzzbox_name = sys.argv[1]
+    before_last = len(sys.argv) -2
+
+    options.fuzzbox_name = sys.argv[before_last]
     if(options.hda is None):
         options.hda = settings.machines[options.fuzzbox_name]['disk']
 
@@ -177,7 +179,7 @@ def get_options():
 
     #thats right bitches
     options.settings = settings
-    glob.options = options
+    globs.options = options
     return
 
 

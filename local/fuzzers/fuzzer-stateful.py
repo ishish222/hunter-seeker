@@ -7,6 +7,9 @@ sys.path += ["./scripters"]
 sys.path += ["../common"]
 import statemachine
 
+class MachineError(Exception):
+    pass
+
 def stateful_routine():
     machine_file = sys.argv[len(sys.argv) -1]
     print
@@ -20,7 +23,11 @@ def stateful_routine():
 
     while(current_state != statemachine.Exit):
         print "=> Current state: [%s]" % current_state.name
-        current_state.executing_routine()
+        if(current_state.consequence != None):
+            current_state.executing_routine()
+        else:
+            current_state.consequence = current_state.choosing_consequence()
+            print "Choosing: [%s]" % current_state.consequence.name
         current_state = current_state.consequence
 
 
