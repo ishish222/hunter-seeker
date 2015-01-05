@@ -1,9 +1,9 @@
 import statemachine
-import usualparts.other_parts as other_parts
+import usualparts.default_map
 
 Start = statemachine.State()
 Start.name = "Start"
-Start.consequence = other_parts.PrintLogo
+Start.consequence = usualparts.default_map.PrintLogo
 
 #other_parts.GetOptions.consequence = statemachine.Exit
 

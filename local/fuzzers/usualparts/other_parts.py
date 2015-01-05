@@ -181,16 +181,10 @@ def get_options():
     return
 
 
-import usualparts.hs_logging 
-
-GetOptions = statemachine.State()
-GetOptions.name = "Get options"
-GetOptions.consequence = usualparts.hs_logging.EnableLogging
-GetOptions.executing_routine = get_options
-
-PrintLogo = statemachine.State()
-PrintLogo.name = "Print logo"
-PrintLogo.consequence = GetOptions
-PrintLogo.executing_routine = print_logo
+def register_signals():
+    import signal
+    import common
+    signal.signal(signal.SIGINT, common.sigkill_handler)
+#    signal.signal(signal.SIGUSR1, sig1_handler)
 
 
