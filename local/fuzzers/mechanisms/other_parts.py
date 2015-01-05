@@ -27,6 +27,13 @@ def exit_failure(options, state):
         print "Too many failures, exiting"
         exit()
 
+def next_test2(options, state):
+    if(state.failed):
+        state.failed = False
+        return "poweroff_no_revert"
+    else:
+        return "close"
+
 def next_test(options, state):
     if(state.status == "CR"):
         return "save"

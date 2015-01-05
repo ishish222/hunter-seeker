@@ -72,15 +72,18 @@ def binner_key_wait(options, state):
         sys.stdin.read(1)
 
 def binner_save(options, state):
-    write_socket(options.s, "getSynopsis")
-    dossier, _, _ = read_socket(options.s)
-    options.log.write("[%s], registered, binned\n" % state.status)
-    options.log.flush()
-    print("CR in: %s" % options.tmp_disk_img)
-    report("CR")
-    print("Got crash, restarting")
-    report("Got crash, restarting")
-    time.sleep(30)
+#    write_socket(options.s, "getSynopsis")
+#    dossier, _, _ = read_socket(options.s)
+#    options.log.write("[%s], registered, binned\n" % state.status)
+#    options.log.flush()
+#    print("CR in: %s" % options.tmp_disk_img)
+#    report("CR")
+#    print("Got crash, restarting")
+#    report("Got crash, restarting")
+#    time.sleep(30)
+#    read_socket(options.s) #waiting for "saved"
+    
+    print "Saved automatically"
 
 def binner_close_sample(options, state):
     runscriptq(options.settings.closing_plugin_name, options.m)

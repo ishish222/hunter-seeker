@@ -180,6 +180,7 @@ class state_class(object):
         self.initialized = False
         self.failure_count = 0
         self.samples_exhausted = False
+        self.got_cr = False
 
 def fuzzing_routine():
     signal.signal(signal.SIGINT, sigkill_handler)

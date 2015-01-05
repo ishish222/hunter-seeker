@@ -18,6 +18,7 @@ dry_run = False
 needs_ready = False
 ff = True
 save_disks = False
+save_shared = False
 
 machines = {
     'hs2-01': {'disk' : 'hs2-01.raw', 'vnc' : ':1', 'taskset' : '1,2', 'monitor' : '/tmp/monitor-hs1', 'serial' : '/tmp/serial-hs1'},
