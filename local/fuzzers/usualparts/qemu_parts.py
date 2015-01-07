@@ -7,6 +7,7 @@ sys.path += ["../../common"]
 import common
 import signal
 import os
+import globs
 
 report = common.report
 read_socket = common.read_socket
@@ -40,7 +41,9 @@ def qemu_prepare(options, state):
     state.stats = statistics(options.metric_res)
 
 
-def qemu_start_full(options, state):
+def qemu_start_full():
+    options = globs.state.options
+
     options.log.write("[%s]\n" % options.tmp_disk_img)
     options.log.flush()
     print("Spawning fuzz for batch: %s" % options.tmp_disk_img)
@@ -58,6 +61,8 @@ def qemu_start_full(options, state):
     print("[%s] Qemu full boot finished" % common.timestamp())
 
 def qemu_start_revert(options, state):
+    options = globs.state.options
+
     options.log.write("[%s]\n" % options.tmp_disk_img)
     options.log.flush()
     print("Spawning fuzz for batch: %s" % options.tmp_disk_img)
