@@ -24,6 +24,9 @@ syntax: glob
 *.sample
 *.rrd
 
+#mercurial
+*.orig
+
 #dirs
 origins/*
 samples_shared/*

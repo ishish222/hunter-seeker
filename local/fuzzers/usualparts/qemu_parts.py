@@ -14,7 +14,7 @@ write_socket = common.write_socket
 
 def qemu_bind_pipes():
     import globs
-    options = globs.options
+    options = globs.state.options
 
     options.ms = common.prepare_monitor(options.ms_path)
     options.ss = common.prepare_serial(options.ss_path)

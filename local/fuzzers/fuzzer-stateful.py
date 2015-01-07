@@ -5,6 +5,10 @@
 import sys
 sys.path += ["./scripters"]
 sys.path += ["../common"]
+
+import usualparts.globs as globs
+globs.init()
+
 import statemachine
 
 class MachineError(Exception):

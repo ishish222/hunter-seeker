@@ -1,4 +1,6 @@
 import statemachine
+import globs
+options = globs.state.options
 
 def always_true(options, state):
     return True
@@ -76,7 +78,6 @@ def get_options():
     import sys
     import logging
     import logging.handlers
-    import globs
 
     parser = OptionParser()
     parser.add_option("-M", "--machines",       dest="machines", help="Machines path", default=settings.qemu_machines)
@@ -179,7 +180,7 @@ def get_options():
 
     #thats right bitches
     options.settings = settings
-    globs.options = options
+    globs.state.options = options
     return
 
 

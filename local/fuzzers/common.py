@@ -12,7 +12,8 @@ from subprocess import Popen, PIPE
 import time
 import tempfile
 import usualparts.globs as globs
-options = globs.options
+options = globs.state.options
+
 
 def windows_escape(txt):
 #    return windows_slashes(txt.replace(" ", "\\ "))
@@ -153,9 +154,7 @@ def create_sample_dirs(options):
     testdir(options.settings.samples_binned + "/unk")
 
 def report(string):
-    import usualparts.globs as globs
-    options = globs.options
-
+    options = globs.state.options
     options.logger.info("[" + settings.log_name + ":" + options.fuzzbox_name + "] " + string)
 
 def prepare_fuzzbox():
