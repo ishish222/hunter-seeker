@@ -14,7 +14,6 @@ read_socket = common.read_socket
 write_socket = common.write_socket
 
 def qemu_bind_pipes():
-    import globs
     options = globs.state.options
 
     options.ms = common.prepare_monitor(options.ms_path)
@@ -81,7 +80,9 @@ def qemu_start_revert(options, state):
     print("[%s] Qemu revert boot finished" % common.timestamp())
 
 #was: proceed
-def qemu_mount_disks(options, state):
+#def qemu_mount_disks(options, state):
+def qemu_mount_disks():
+    options = globs.state.options
     #mount_cdrom(options, options.cdrom)
     read_monitor(options.m)
     options.slot_shared = common.pci_mount(options, options.tmp_disk_img) #hotplug should be completed during bootup
@@ -97,7 +98,9 @@ def qemu_mount_disks(options, state):
 #        rss(options.settings.scripts_1, options.m, options.slowdown)
 
 # was: init
-def qemu_connect_dev_socket(options, state):
+#def qemu_connect_dev_socket(options, state):
+def qemu_connect_dev_socket():
+    options = globs.state.options
     s = options.s
 #    dt = socket.getdefaulttimeout()
 #    socket.setdefaulttimeout(options.init_timeout)

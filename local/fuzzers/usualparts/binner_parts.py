@@ -4,16 +4,23 @@ sys.path += ["../../common"]
 sys.path += ["../client"]
 import common
 from script import rs, runscriptq
+import globs
 
 write_socket = common.write_socket
 read_socket = common.read_socket
 report = common.report
 
-def binner_kill_explorer(options, state):
+#def binner_kill_explorer(options, state):
+def binner_kill_explorer():
+    options = globs.state.options
+
     write_socket(options.s, "killExplorer")
     read_socket(options.s)
 
-def binner_spawn_python_server(options, state):
+#def binner_spawn_python_server(options, state):
+def binner_spawn_python_server():
+    options = globs.state.options
+
     rs("lclick", options.m)
     rs("python_server_spawn_args", options.m)
 

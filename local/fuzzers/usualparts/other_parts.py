@@ -190,4 +190,6 @@ def register_signals():
     signal.signal(signal.SIGINT, common.sigkill_handler)
 #    signal.signal(signal.SIGUSR1, sig1_handler)
 
-
+def wait_10_seconds():
+    import time
+    time.sleep(10)
