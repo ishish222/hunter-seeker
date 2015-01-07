@@ -14,6 +14,7 @@ class state_class(object):
     status = None
     stats = None
     reqScript = ""
+    initialized = False
     
 
 def init():

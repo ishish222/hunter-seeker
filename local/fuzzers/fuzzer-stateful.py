@@ -28,11 +28,21 @@ def stateful_routine():
     while(current_state != statemachine.Exit):
         print "=> Current state: [%s]" % current_state.name
         if(current_state.consequence != None):
-            current_state.executing_routine()
+            try:
+                current_state.executing_routine()
+            except statemachine.MachineError:
+                if(current_state.attempts < current_state.acceptable_error_count):
+                    current_state.attempts = current_state.attempts +1
+                    current_state.trans_error_handler()
+#                    continue
+                else:
+                    print("Too many state transition errors, exiting")
+                    exit()
+            current_state = current_state.consequence
+              
         else:
-            current_state.consequence = current_state.choosing_consequence()
-            print "Choosing: [%s]" % current_state.consequence.name
-        current_state = current_state.consequence
+            current_state = current_state.choosing_consequence()
+            print "Choosing: [%s]" % current_state.name
 
 
 if __name__ == '__main__':

@@ -8,6 +8,7 @@ import common
 import signal
 import os
 import globs
+from statemachine import MachineError
 
 report = common.report
 read_socket = common.read_socket
@@ -101,6 +102,8 @@ def qemu_mount_disks():
 #def qemu_connect_dev_socket(options, state):
 def qemu_connect_dev_socket():
     options = globs.state.options
+    state = globs.state
+
     s = options.s
 #    dt = socket.getdefaulttimeout()
 #    socket.setdefaulttimeout(options.init_timeout)
@@ -115,6 +118,8 @@ def qemu_connect_dev_socket():
     except socket.timeout:
         print("Accpet timed out")
         state.initialized = False
+        print "raising machine error"
+        raise MachineError
 #            raise socket.timeout
 #            proceed1(options)
 #            os.spawnv(os.P_WAIT, "/bin/ping", ["ping", options.fuzzbox_ip, "-c1"])

@@ -5,6 +5,9 @@
 def dummy():
     pass
 
+class MachineError(Exception):
+    pass
+
 class State:
     def __init__(self):
         self.name = "Generic"
@@ -17,6 +20,7 @@ class State:
         self.check_trans_routine = dummy
         self.trans_error_handler = dummy
         self.acceptable_error_count = 1
+        self.attempts = 0
     
 Exit = State()
 Exit.name = "Exit"

@@ -24,11 +24,15 @@ def binner_spawn_python_server():
     rs("lclick", options.m)
     rs("python_server_spawn_args", options.m)
 
-def binner_spawn(options, state):
+def binner_spawn():
+    options = globs.state.options
+
     write_socket(options.s, "startBinner")
     read_socket(options.s)
 
-def binner_spawn_app(options, state):
+def binner_spawn_app():
+    options = globs.state.options
+
     write_socket(options.s, "spawn " + options.settings.app_path)
     read_socket(options.s)
 
@@ -37,7 +41,9 @@ def binner_spawn_app(options, state):
 #    print "Finished sleeping"
 #    read_socket(options.s)
 
-def binner_configure(options, state):
+def binner_configure():
+    options = globs.state.options
+
     write_socket(options.s, "binTest")
     read_socket(options.s)
 
@@ -60,25 +66,35 @@ def binner_configure(options, state):
         write_socket(options.s, "setupSlowdown {0}".format(options.slowdown))
         read_socket(options.s)
 
-def binner_start_logs(options, state):
+def binner_start_logs():
+    options = globs.state.options
+
     write_socket(options.s, "logStart e:\\logs\\log-%s-%s.txt" % (options.fuzzbox_name, common.timestamp2()))
     read_socket(options.s)
 
-def binner_start_profiling(options, state):
+def binner_start_profiling():
+    options = globs.state.options
+
     write_socket(options.s, "start_profiling")
 
-def binner_check_ready(options, state):
+def binner_check_ready():
+    options = globs.state.options
+
     write_socket(options.s, "checkReady")
 
     #TODO: should this be here?
     state.status = ""
 
-def binner_key_wait(options, state):
+def binner_key_wait():
+    options = globs.state.options
+
     if(options.wait_key):
         print("Press enter")
         sys.stdin.read(1)
 
-def binner_save(options, state):
+def binner_save():
+    options = globs.state.options
+
 #    write_socket(options.s, "getSynopsis")
 #    dossier, _, _ = read_socket(options.s)
 #    options.log.write("[%s], registered, binned\n" % state.status)
@@ -92,7 +108,9 @@ def binner_save(options, state):
     
     print "Saved automatically"
 
-def binner_close_sample(options, state):
+def binner_close_sample():
+    options = globs.state.options
+
     runscriptq(options.settings.closing_plugin_name, options.m)
 
 

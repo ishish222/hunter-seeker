@@ -183,6 +183,8 @@ def timestamp2():
     return d.strftime("%Y-%m-%d-%H-%M-%S-%f")
 
 def read_socket(s):
+    options = globs.state.options
+
     lastResponse = ""
     status = ""
     reqScript = ""
@@ -210,6 +212,8 @@ def read_socket(s):
     return (lastResponse, status, reqScript)
 
 def read_socket_q(s):
+    options = globs.state.options
+
     status = ""
     data = ""
 
@@ -234,10 +238,14 @@ def read_socket_q(s):
     return lastResponse
 
 def write_socket(s, data):
+    options = globs.state.options
+
     print(timestamp() + "> " + str(data))
     s.send(data + "-=OK=-")
 
 def powerofff(options):
+    options = globs.state.options
+
     try:
         pci_umount(options.slot_shared)
         pci_umount(options.slot_saved)
@@ -261,11 +269,15 @@ def powerofff(options):
     print("Last saved: %s" % options.saved_disk_img)
 
 def revert(options):
+    options = globs.state.options
+
     print("[Reverting]")
 #    rs("load_ready", options.m)
     rss(options.settings.revert_scripts, options.m, options.slowdown)
 
 def start(options):
+    options = globs.state.options
+
     print("[%s] Starting" % timestamp())
     print options.qemu_args
     m = Popen(options.qemu_args, stdout=PIPE, stdin=PIPE)
@@ -281,6 +293,8 @@ def start(options):
     return m
 
 def restart(options):
+    options = globs.state.options
+
     powerofff(options)
     time.sleep(3)
     start(options)
@@ -300,6 +314,8 @@ def prepare_serial(path):
     return ms
 
 def prepare_con():
+    options = globs.state.options
+
     ss = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 #    ss.bind((options.server_ip, options.server_port))
     ss.bind(("127.0.0.1", options.fuzzbox_port))
@@ -307,6 +323,8 @@ def prepare_con():
     return ss
 
 def wait_for_init(s):
+    options = globs.state.options
+
     dt = socket.getdefaulttimeout()
     socket.setdefaulttimeout(options.init_timeout)
     dts = s.gettimeout()
@@ -331,6 +349,8 @@ def wait_for_init(s):
     return options.s
 
 def accept_con(ss):
+    options = globs.state.options
+
     dt = socket.getdefaulttimeout()
     socket.setdefaulttimeout(80)
     dtss = ss.gettimeout()

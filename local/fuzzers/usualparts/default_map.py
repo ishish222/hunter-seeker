@@ -6,8 +6,8 @@ import usualparts.qemu_parts
 import usualparts.disk_fs_parts
 import usualparts.binner_parts
 import generators
+import globs
 
-#
 #
 #
 # ?decyzja
@@ -34,10 +34,26 @@ BinnerKillExplorer.name = "Killing explorer"
 BinnerKillExplorer.consequence = Sleep
 BinnerKillExplorer.executing_routine = usualparts.binner_parts.binner_kill_explorer
 
+def is_socket_connected():
+    options = globs.state.options
+    state = globs.state
+
+    if(state.initialized == True):    
+        return BinnerKillExplorer
+    else:
+        return BinnerSpawnPythonServer
+
+IsSocketConnected = statemachine.State()
+IsSocketConnected.name = "Checking socket connection"
+IsSocketConnected.consequence = None
+IsSocketConnected.choosing_consequence = is_socket_connected
+
 QemuConnectDevSocket = statemachine.State()
 QemuConnectDevSocket.name = "Connecting socket"
-QemuConnectDevSocket.consequence = BinnerKillExplorer
+QemuConnectDevSocket.consequence = IsSocketConnected
 QemuConnectDevSocket.executing_routine = usualparts.qemu_parts.qemu_connect_dev_socket
+QemuConnectDevSocket.trans_error_handler = usualparts.other_parts.wait_10_seconds
+QemuConnectDevSocket.acceptable_error_count = 10
 
 BinnerSpawnPythonServer = statemachine.State()
 BinnerSpawnPythonServer.name = "Spawning python server"
