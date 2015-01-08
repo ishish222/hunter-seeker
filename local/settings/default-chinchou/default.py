@@ -82,6 +82,7 @@ qemu_machines = "/mnt/4/machines/"
 qemu_m = "2G"
 qemu_shared_folder = "/home/ish/hs_shared"
 qemu_additional =  ['-enable-kvm']
+qemu_command = 'qemu-system-i386'
 
 def runner_0(options, args=None):
     pass

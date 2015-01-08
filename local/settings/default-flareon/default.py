@@ -83,6 +83,7 @@ qemu_machines = "/home/hs1/machines/qemu"
 qemu_m = "3G"
 qemu_shared_folder = "/home/hs1/hs2-current-deploy/qemu-reader"
 qemu_additional =  ['-enable-kvm']
+qemu_command = 'qemu-system-i386'
 
 def runner_0(options, args=None):
     pass

@@ -18,20 +18,40 @@ import globs
 #binner_configure
 #binner_spawn_app
 #binner_spawn
-#binner_kill_explorer
-#fuzzing_loop
-#qemu_connect_dev_socket
-#binner_spawn_python_server
-#qemu_mount_disks
 
 Sleep = statemachine.State()
 Sleep.name = "Sleeping"
 Sleep.consequence = statemachine.Exit
 Sleep.executing_routine = usualparts.other_parts.wait_10_seconds
 
+BinnerCheckReady = statemachine.State()
+BinnerCheckReady.name = "Binner starting logs"
+BinnerCheckReady.consequence = Sleep
+BinnerCheckReady.executing_routine = usualparts.binner_parts.binner_start_logs
+
+BinnerStartLogs = statemachine.State()
+BinnerStartLogs.name = "Binner starting logs"
+BinnerStartLogs.consequence = BinnerCheckReady
+BinnerStartLogs.executing_routine = usualparts.binner_parts.binner_start_logs
+
+BinnerConfigure = statemachine.State()
+BinnerConfigure.name = "Configuring binner"
+BinnerConfigure.consequence = BinnerStartLogs
+BinnerConfigure.executing_routine = usualparts.binner_parts.binner_configure
+
+BinnerSpawnApp = statemachine.State()
+BinnerSpawnApp.name = "Binner spawning application"
+BinnerSpawnApp.consequence = BinnerConfigure
+BinnerSpawnApp.executing_routine = usualparts.binner_parts.binner_spawn_app
+
+BinnerSpawn = statemachine.State()
+BinnerSpawn.name = "Binner spawning"
+BinnerSpawn.consequence = BinnerSpawnApp
+BinnerSpawn.executing_routine = usualparts.binner_parts.binner_spawn
+
 BinnerKillExplorer = statemachine.State()
 BinnerKillExplorer.name = "Killing explorer"
-BinnerKillExplorer.consequence = Sleep
+BinnerKillExplorer.consequence = BinnerSpawn
 BinnerKillExplorer.executing_routine = usualparts.binner_parts.binner_kill_explorer
 
 def is_socket_connected():

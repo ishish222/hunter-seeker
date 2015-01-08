@@ -1,0 +1,21 @@
+W stateful:
+Odpalic temu z dyskiem z probkami jako drugim surowym dyskiem
+
+<cooldown>
+
+odpalic pythona, binner, apke
+
+<cooldown>
+
+pobrac pid apki
+
+przez monitor:
+    load_plugin
+    enable_emulation
+    taint (probka)
+    trace pid
+    jak CR - stoptrace
+    zapisac stan
+
+zakonczyc
+

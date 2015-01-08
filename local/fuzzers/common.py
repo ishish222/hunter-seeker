@@ -93,9 +93,9 @@ def get_options():
 
     #qemu settings
     if(options.use_taskset is True):
-        qemu_args =  ['taskset', '-c', settings.machines[options.fuzzbox_name]['taskset'], 'qemu-system-i386']
+        qemu_args =  ['taskset', '-c', settings.machines[options.fuzzbox_name]['taskset'], settings.qemu_command]
     else:
-        qemu_args =  ['qemu-system-i386']
+        qemu_args =  [settings.qemu_command]
     qemu_args += ['-m', options.qemu_m]
     qemu_args += ['-drive', 'file=' + options.machines + '/' + options.hda + ',cache=none,if=virtio']
     if(options.hdb is not None):
