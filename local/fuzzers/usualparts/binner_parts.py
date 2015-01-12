@@ -37,7 +37,7 @@ def binner_spawn_app():
     read_socket(options.s)
 
 #    print("Will sleep for %d" % options.settings.start_sleep)
-    time.sleep(options.settings.start_sleep)
+#    time.sleep(options.settings.start_sleep)
 #    print "Finished sleeping"
 #    read_socket(options.s)
 

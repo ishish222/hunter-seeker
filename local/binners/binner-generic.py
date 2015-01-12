@@ -199,35 +199,32 @@ def execute(cmds):
                 main_binner.writePipe("NOT FOUND")
             main_binner.ok()
 
-
-        
-        if(cmd == "startCPUMon"):
-            from functions import QueryCPUUsageThread
-            global usage
-            usage = QueryCPUUsageThread()
-#            usage.start()
-
-
-        if(cmd == "stopCPUMon"):
-            global usage
-            if usage == None:
-                return
-            else:
-                usage.stop()
-
         if(cmd == "getCPUUsage"):
-            print "1"
             from functions import getCPU
-            print "2"
             val = getCPU()
-            print "3"
-            main_binner.writePipe("Usage: %d" % val)
+            main_binner.writePipe("Usage: %d\n" % val)
             main_binner.ok()
-            print "4"
-               
 
         if(cmd == "cooldown"):
-            pass
+            from functions import getCPU
+
+            main_binner.writePipe("Waiting for cooldown\n")
+            cool_count = 5
+            cool_level = 10
+            cool_wait = 1
+
+            count = 0
+            while(count <5):
+                time.sleep(cool_wait)
+                val = getCPU()
+                main_binner.writePipe("CPU usage: %d\n" % val)
+                if val < cool_level:
+                    count = count+1
+                else:
+                    count = 0
+
+            main_binner.writePipe("We're cool\n")
+            main_binner.ok()
 
         elif(cmd == "testAll"):
             for sample in glob("e:\\samples\\shared\\*.*"):
