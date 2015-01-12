@@ -158,6 +158,39 @@ class QueryCPUUsageThread(threading.Thread):
 
         return value.union.longValue
 
+def getCPU():
+    LONGLONG = ctypes.c_longlong
+    HQUERY = HCOUNTER = HANDLE
+    pdh = ctypes.windll.pdh
+    Error_Success = 0x00000000
+
+    hQuery = HQUERY()
+    hCounter = HCOUNTER()
+
+    if not pdh.PdhOpenQueryW(None, 0, byref(hQuery)) == Error_Success:
+        raise Exception
+
+    if not pdh.PdhAddCounterW(hQuery, u'''\\Processor(_Total)\\% Processor Time''', 0, byref(hCounter)) == Error_Success:
+        raise Exception
+
+    PDH_FMT_LONG = 0x00000100
+    if not pdh.PdhCollectQueryData(hQuery) == Error_Success:
+        raise Exception
+
+    ctypes.windll.kernel32.Sleep(1000)
+
+    if not pdh.PdhCollectQueryData(hQuery) == Error_Success:
+        raise Exception
+
+    dwType = DWORD(0)
+    value = PDH_FMT_COUNTERVALUE()
+
+    if not pdh.PdhGetFormattedCounterValue(hCounter, PDH_FMT_LONG, byref(dwType), byref(value)) == Error_Success:
+        raise Exception
+
+    return value.union.longValue
+
+
 if __name__=='__main__':
     thread = QueryCPUUsageThread()
     thread.start()

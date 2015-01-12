@@ -26,6 +26,7 @@ def stateful_routine():
     current_state = machine.Start
 
     while(current_state != statemachine.Exit):
+        print ""
         print "=> Current state: [%s]" % current_state.name
         if(current_state.consequence != None):
             try:

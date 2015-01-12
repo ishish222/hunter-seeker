@@ -205,7 +205,7 @@ def execute(cmds):
             from functions import QueryCPUUsageThread
             global usage
             usage = QueryCPUUsageThread()
-            usage.start()
+#            usage.start()
 
 
         if(cmd == "stopCPUMon"):
@@ -216,12 +216,14 @@ def execute(cmds):
                 usage.stop()
 
         if(cmd == "getCPUUsage"):
-            global usage
-            if usage == None:
-                return
-            else:
-                usage_now = usage.getCPUUsage()
-                main_binner.writePipe("Usage: %d" % usage_now)
+            print "1"
+            from functions import getCPU
+            print "2"
+            val = getCPU()
+            print "3"
+            main_binner.writePipe("Usage: %d" % val)
+            main_binner.ok()
+            print "4"
                
 
         if(cmd == "cooldown"):
