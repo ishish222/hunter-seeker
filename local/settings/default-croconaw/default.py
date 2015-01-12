@@ -19,6 +19,7 @@ needs_ready = False
 ff = True
 save_disks = False
 save_shared = False
+cooldown_level = 20
 
 machines = {
     'hs2-01': {'disk' : 'hs2-01.raw', 'vnc' : ':1', 'taskset' : '1,2', 'monitor' : '/tmp/monitor-hs1', 'serial' : '/tmp/serial-hs1'},
@@ -83,6 +84,8 @@ qemu_m = "3G"
 qemu_shared_folder = "/home/ish/projects/2012-08-02-korrino/hs2-current-deploy/qemu-reader-local"
 qemu_additional =  ['-enable-kvm']
 qemu_command = 'qemu-system-i386'
+qemu_drive_options = 'cache=none,if=virtio'
+qemu_env = None
 
 def runner_0(options, args=None):
     pass

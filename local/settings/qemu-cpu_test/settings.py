@@ -38,10 +38,10 @@ fuzzbox_timeout = wait_sleep*4
 closing_plugin_name = "nop"
 start_sleep = 30
 mutator = "changer.Changer"
-qemu_command = "~/temu-1.0/tracecap/temu"
-qemu_env = "LD_LIBRARY_PATH=/mnt/gentoo32/usr/lib"
-qemu_additional = ['--no-kqemu']
-qemu_drive_options=""
+#qemu_command = "~/temu-1.0/tracecap/temu"
+#qemu_env = "LD_LIBRARY_PATH=/mnt/gentoo32/usr/lib"
+#qemu_additional = ['--no-kqemu']
+#qemu_drive_options=""
 
 def specific_preperations_1(options, args=None):
     from sys import path

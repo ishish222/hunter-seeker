@@ -135,14 +135,16 @@ def get_options():
         options.hda = settings.machines[options.fuzzbox_name]['disk']
 
     #qemu settings
+    options.qemu_command = settings.qemu_command
+    options.qemu_drive_options = settings.qemu_drive_options
     if(options.use_taskset is True):
-        qemu_args =  ['taskset', '-c', settings.machines[options.fuzzbox_name]['taskset'], 'qemu-system-i386']
+        qemu_args =  ['taskset', '-c', settings.machines[options.fuzzbox_name]['taskset'], options.qemu_command]
     else:
-        qemu_args =  ['qemu-system-i386']
+        qemu_args =  [options.qemu_command]
     qemu_args += ['-m', options.qemu_m]
-    qemu_args += ['-drive', 'file=' + options.machines + '/' + options.hda + ',cache=none,if=virtio']
+    qemu_args += ['-drive', 'file=' + options.machines + '/' + options.hda + ',' + options.qemu_drive_options]
     if(options.hdb is not None):
-        qemu_args += ['-drive', 'file=', './' + options.hdb, ',cache=none,if=vitrio']
+        qemu_args += ['-drive', 'file=', './' + options.hdb + ',' + options.qemu_drive_options]
 
     if(options.cdrom is not None):
         qemu_args += ['-cdrom', options.cdrom]
@@ -157,6 +159,9 @@ def get_options():
     qemu_args += ['-monitor', "unix:%s" % settings.machines[options.fuzzbox_name]['monitor']]
     qemu_args += ['-serial', "unix:%s" % settings.machines[options.fuzzbox_name]['serial']]
     qemu_args += ['-smp', str(options.smp)]
+    
+    if(settings.qemu_env != None):
+        qemu_args.insert(0, settings.qemu_env)
 
     testdir(settings.qemu_shared_folder + "/logs")
     

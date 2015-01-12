@@ -44,9 +44,10 @@ def qemu_prepare(options, state):
 def qemu_start_full():
     options = globs.state.options
 
-    options.log.write("[%s]\n" % options.tmp_disk_img)
-    options.log.flush()
-    print("Spawning fuzz for batch: %s" % options.tmp_disk_img)
+    if(hasattr(options, 'tmp_disk_img')):
+        options.log.write("[%s]\n" % options.tmp_disk_img)
+        options.log.flush()
+        print("Spawning fuzz for batch: %s" % options.tmp_disk_img)
 
     print("[%s] Starting" % common.timestamp())
     print options.qemu_args
@@ -86,9 +87,14 @@ def qemu_mount_disks():
     options = globs.state.options
     #mount_cdrom(options, options.cdrom)
     read_monitor(options.m)
-    options.slot_shared = common.pci_mount(options, options.tmp_disk_img) #hotplug should be completed during bootup
+
+    if(hasattr(options,'tmp_disk_img')):
+        options.slot_shared = common.pci_mount(options, options.tmp_disk_img) #hotplug should be completed during bootup
+
     time.sleep(1)
-    options.slot_saved = common.pci_mount(options, options.saved_disk_img) #hotplug should be completed during bootup
+
+    if(hasattr(options,'saved_disk_img')):
+        options.slot_saved = common.pci_mount(options, options.saved_disk_img) #hotplug should be completed during bootup
 
     #TODO:replaced by proceed1, maybe I should replace it with specific parts?
 

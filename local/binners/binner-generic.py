@@ -200,6 +200,33 @@ def execute(cmds):
             main_binner.ok()
 
 
+        
+        if(cmd == "startCPUMon"):
+            from functions import QueryCPUUsageThread
+            global usage
+            usage = QueryCPUUsageThread()
+            usage.start()
+
+
+        if(cmd == "stopCPUMon"):
+            global usage
+            if usage == None:
+                return
+            else:
+                usage.stop()
+
+        if(cmd == "getCPUUsage"):
+            global usage
+            if usage == None:
+                return
+            else:
+                usage_now = usage.getCPUUsage()
+                main_binner.writePipe("Usage: %d" % usage_now)
+               
+
+        if(cmd == "cooldown"):
+            pass
+
         elif(cmd == "testAll"):
             for sample in glob("e:\\samples\\shared\\*.*"):
                 main_binner.attach_st_markers()

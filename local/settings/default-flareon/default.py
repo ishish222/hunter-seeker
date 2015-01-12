@@ -19,6 +19,7 @@ needs_ready = False
 ff = True
 save_disks = False
 save_shared = False
+cooldown_level = 20
 
 machines = {
     'hs2-01': {'disk' : 'hs2-01.raw', 'vnc' : ':1', 'taskset' : '1,2,3', 'monitor' : '/tmp/monitor-hs1', 'serial' : '/tmp/serial-hs1'},
@@ -32,7 +33,8 @@ machines = {
     'hs2-09': {'disk' : 'hs2-09.raw', 'vnc' : ':9', 'taskset' : '3584', 'monitor' : '/tmp/monitor-hs1', 'serial' : '/tmp/serial-hs1'},
     'hs2-10': {'disk' : 'hs2-10.raw', 'vnc' : ':10', 'taskset' : '57344', 'monitor' : '/tmp/monitor-hs1', 'serial' : '/tmp/serial-hs1'},
     'hs2-11': {'disk' : 'hs2-11.raw', 'vnc' : ':11', 'taskset' : '917504', 'monitor' : '/tmp/monitor-hs1', 'serial' : '/tmp/serial-hs1'},
-    'hs2-12': {'disk' : 'hs2-12.raw', 'vnc' : ':12', 'taskset' : '14680064', 'monitor' : '/tmp/monitor-hs1', 'serial' : '/tmp/serial-hs1'}
+    'hs2-12': {'disk' : 'hs2-12.raw', 'vnc' : ':12', 'taskset' : '14680064', 'monitor' : '/tmp/monitor-hs1', 'serial' : '/tmp/serial-hs1'},
+    'temu-01': {'disk' : 'temu-01.raw', 'vnc' : ':1', 'taskset' : '1,2,3', 'monitor' : '/tmp/monitor-ts1', 'serial' : '/tmp/serial-ts1'}
 }
 
 script_codes = {}
@@ -84,6 +86,8 @@ qemu_m = "3G"
 qemu_shared_folder = "/home/hs1/hs2-current-deploy/qemu-reader"
 qemu_additional =  ['-enable-kvm']
 qemu_command = 'qemu-system-i386'
+qemu_drive_options = 'cache=none,if=virtio'
+qemu_env = None
 
 def runner_0(options, args=None):
     pass
