@@ -68,5 +68,5 @@ CreateEmpty.executing_routine = usualparts.disk_fs_parts.prepare_disk_empty
 # reroutes
 dm.PreparePipes.consequence = CreateEmpty
 dm.BinnerSpawn.consequence = dm.BinnerStartLogs
-dm.Sleep.consequence = CPUEnable
+dm.BinnerCheckReady.consequence = CPUEnable
 
