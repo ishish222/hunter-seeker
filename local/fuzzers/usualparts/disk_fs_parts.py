@@ -90,6 +90,19 @@ def prepare_disk_glob():
     options.log.write("[%s]\n" % options.tmp_disk_img)
     options.log.flush()
 
+def prepare_disk_glob_temu():
+    options = globs.state.options
+
+    options.tmp_disk_img = create_drive(options, size=options.disk_size, offset=32256, format_cmd='mkfs.vfat')
+    mount_drive(options)
+    create_layout(options)
+    for sample in state.samples_list:
+        print(options.tmp_mountpoint + "/samples/shared/" + sample)
+        os.spawnv(os.P_WAIT, "/bin/cp", ["cp", sample, options.tmp_mountpoint + "/samples/shared/"])
+    umount_drive(options)
+    options.log.write("[%s]\n" % options.tmp_disk_img)
+    options.log.flush()
+
 def create_layout(options):
     os.spawnv(os.P_WAIT, "/bin/mkdir", ["mkdir", "-p", options.tmp_mountpoint+"/samples/shared"])
     os.spawnv(os.P_WAIT, "/bin/mkdir", ["mkdir", "-p", options.tmp_mountpoint+"/samples/saved"])
@@ -120,15 +133,15 @@ def long_exec(args):
     ans = Popen(args, stdout=PIPE)
     return ans.stdout,read()
 
-def create_image(path, size, label):
+def create_image(path, size, label, offset=0, format_cmd='mkfs.ntfs'):
     simple_exec(["qemu-img", "create", "-f", "raw", path, str(size)])
-    loop_dev = simple_exec(["sudo", "losetup", "-f", "--show", path])
-    simple_exec(["sudo", "mkfs.ntfs", "-f", "-L", label, "-H", "0", "-S", "0", "-z", "0", "-p", "0", loop_dev])
+    loop_dev = simple_exec(["sudo", "losetup", "-o", str(offset), "-f", "--show", path])
+    simple_exec(["sudo", format_cmd, "-f", "-L", label, "-H", "0", "-S", "0", "-z", "0", "-p", "0", loop_dev])
     time.sleep(2)
     simple_exec(["sudo", "losetup", "-d", loop_dev])
     return path
 
-def create_drive(options, size=None, name=None, label=None):
+def create_drive(options, size=None, name=None, label=None, offset=0, format_cmd='mkfs.ntfs'):
     if(size == None):
         size = calc_disk_size(options)
     if(size > options.settings.MAX_DISK_SIZE): raise FuzzingException
@@ -136,6 +149,6 @@ def create_drive(options, size=None, name=None, label=None):
         name = tempfile.mktemp(suffix = "-samples.raw", dir=".")
     if(label == None):
         label = "secondary"
-    create_image(name, size, label)
+    create_image(name, size, label, offset)
     return name
 
