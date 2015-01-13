@@ -1,0 +1,89 @@
+import globs
+import time
+from statemachine import MachineError
+import common
+
+report = common.report
+
+def test_sample():
+    options = globs.state.options
+    #this should be on run end
+#    print("Current stats (SA/MA/TO): %d/%d/%d" % (stats.sample_count, stats.ma_count, stats.to_count))
+
+    try:
+        sample_path = state.samples_list.pop()
+    except Exception, e:
+        state.samples_exhausted = True
+        return
+
+    sample_file = os.path.basename(sample_path)
+    test_path = options.settings.prepare_sample(sample_path)
+    test_file = os.path.basename(test_path)
+    write_socket(options.s, "testFile e:\\samples\\shared\\" + test_file)
+
+    options.settings.runner_0(options, [test_file])
+    options.log.write("%s: " % test_file)
+    options.log.flush()
+    #test is under way
+    options.log.write("[%s] \n" % status)
+    options.log.flush()
+
+
+def perform_pre_test():
+    options = globs.state.options
+
+def perform_after_test():
+    options = globs.state.options
+
+    common.proceed5(options)
+    write_socket(options.s, "")
+
+def update_stats():
+    options = globs.state.options
+    status = globs.state.status
+    stats = globs.stats
+
+    if(status == "MA"):
+        stats.ma_count += 1
+        stats.to_count = 0
+    if(status == "TO"):
+        stats.to_count += 1
+        if(stats.to_count % 3 == 0):
+            report("3x TO, settling")
+            stats.to_count = 0
+            common.settle(options)
+    stats.sample_count += 1
+
+    # print stats if reached metric deadline
+    if(stats.sample_count % stats.metric_res == 0):
+        current_time = time.localtime()
+        elapsed = time.mktime(current_time) - time.mktime(stats.last_time_check)
+        report("Tested: " + str(stats.sample_count))
+        report(str(stats.metric_res) + " tested in " + str(elapsed) + " seconds")
+        report("Last speed: " + str(stats.metric_res/elapsed) + " tps")
+        report("MA count: " + str(stats.ma_count))
+        stats.to_count = 0
+        stats.ma_count = 0
+        stats.last_time_check = current_time
+        if(options.profiling):
+            write_socket(options.s, "dump_stats")
+
+
+def read_last_sample():
+    options = globs.state.options
+
+    (lastResponse, status, reqScript) = read_socket(options.s)
+    state.status = status
+    state.lastResponse = lastResponse
+    state.reqScript = reqScript
+
+def execute_script():
+    options = globs.state.options
+    common.execute_script(options, reqScript)
+    write_socket(options.s, "")
+
+def handle_crash():
+    #crash is handled internally by binner, maybe we should change it
+    print("Got crash, restarting")
+    report("Got crash, restarting")
+
