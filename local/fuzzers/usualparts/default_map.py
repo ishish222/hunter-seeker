@@ -5,28 +5,93 @@ import usualparts.diagnostic
 import usualparts.qemu_parts
 import usualparts.disk_fs_parts
 import usualparts.binner_parts
+import usualparts.testing_parts
 import generators
 import globs
-
-#
-#
-# ?decyzja
-#test
-#binner_key_wait
-#binner_check_ready
-#binner_start_logs
-#binner_configure
-#binner_spawn_app
-#binner_spawn
+from statemachine import MachineError
 
 Sleep = statemachine.State()
 Sleep.name = "Sleeping"
 Sleep.consequence = statemachine.Exit
 Sleep.executing_routine = usualparts.other_parts.wait_10_seconds
 
+#for recursion
+TestPerform = statemachine.State()
+ScriptRun = statemachine.State()
+UpdateStats = statemachine.State()
+HandleCrash = statemachine.State()
+PreparePipes = statemachine.State()
+
+def make_after_test_decision():
+    options = globs.state.options
+    state = globs.state
+
+    if(state == None): 
+        raise MachineError
+    
+    if(state =="PTO"):
+        # co to znaczy?
+        return TestPerform
+    if(status == "STTO"):
+        return TestPerform
+    if(status == "RDTO"):
+        return TestPerform
+    if(status == "SR"):
+        return ScriptRun
+    if(status == "RD"):
+        return TestPerform
+    if(status == "MA"):
+        return UpdateStats
+    if(status == "TO"):
+        return UpdateStats
+    if(status == "CR"):
+        return HandleCrash
+
+
+# Main decision vertex
+Decision = statemachine.State()
+Decision.name = "Deciding on next step"
+Decision.consequence = None
+Decision.choosing_consequence = make_after_test_decision
+
+PoweroffNoRevert = statemachine.State()
+PoweroffNoRevert.name = "Powering off w/o reverting"
+PoweroffNoRevert.consequence = PreparePipes
+PoweroffNoRevert.executing_routine = usualparts.qemu_parts.poweroff_no_revert
+
+StopLog = statemachine.State()
+StopLog.name = "Disabling binner logging"
+StopLog.consequence = PoweroffNoRevert
+StopLog.executing_routine = usualparts.hs_logging.disable_logging
+
+HandleCrash = statemachine.State()
+HandleCrash.name = "Handle the crash"
+HandleCrash.consequence = StopLog
+HandleCrash.executing_routine = usualparts.testing_parts.handle_crash
+
+RefreshSamples = statemachine.State()
+RefreshSamples.name = "Perform sample test"
+RefreshSamples.consequence = Decision #test
+RefreshSamples.executing_routine = usualparts.testing_parts.test_sample #change
+
+ScriptRun = statemachine.State()
+ScriptRun.name = "Run a script"
+ScriptRun.consequence = Decision
+ScriptRun.executing_routine = usualparts.testing_parts.execute_script
+
+UpdateStats = statemachine.State()
+UpdateStats.name = "Updating stats"
+UpdateStats.consequence = Decision
+UpdateStats.executing_routine = usualparts.testing_parts.update_stats
+
+TestPerform = statemachine.State()
+TestPerform.name = "Perform sample test"
+TestPerform.consequence = Decision
+TestPerform.executing_routine = usualparts.testing_parts.test_sample
+
 BinnerCheckReady = statemachine.State()
 BinnerCheckReady.name = "Binner starting logs"
-BinnerCheckReady.consequence = Sleep
+BinnerCheckReady.consequence = TestPerform #check if true
 BinnerCheckReady.executing_routine = usualparts.binner_parts.binner_start_logs
 
 BinnerStartLogs = statemachine.State()
@@ -73,7 +138,7 @@ QemuConnectDevSocket.name = "Connecting socket"
 QemuConnectDevSocket.consequence = IsSocketConnected
 QemuConnectDevSocket.executing_routine = usualparts.qemu_parts.qemu_connect_dev_socket
 QemuConnectDevSocket.trans_error_handler = usualparts.other_parts.wait_10_seconds
-QemuConnectDevSocket.acceptable_error_count = 10
+QemuConnectDevSocket.acceptable_error_count = 100
 
 BinnerSpawnPythonServer = statemachine.State()
 BinnerSpawnPythonServer.name = "Spawning python server"

@@ -584,6 +584,13 @@ def create_image(path, size, label):
     simple_exec(["sudo", "losetup", "-d", loop_dev])
     return path
 
+def drive_mount(options, filee, idd):
+    dev_str = write_monitor_2(options.m, "drive_add 0 if=none,file=%s,format=raw,id=%s" % (filee, idd))
+    if(dev_str.find("OK") < 0):
+        print(dev_str)
+        return
+    write_monitor_2(options.m, 'device_add virtio-blk-pci,drive=%s,id=%s-virtio' % (idd, idd))
+
 def pci_mount(options, filee):
     dev_str = write_monitor_2(options.m, "pci_add auto storage file=%s,if=virtio" % filee)
     if(dev_str.find("could not open disk image:") > -1):
@@ -593,6 +600,9 @@ def pci_mount(options, filee):
     slot = int(dev_str[slot_off])
     print("PCI dev mounted in slot: " + str(slot))
     return slot
+
+def drive_umount(options, filee, idd):
+    write_monitor_2(options.m, 'device_rem %s-virtio' % idd)
 
 def pci_umount(options, slot):
     write_monitor_2(options.m, "pci_del %d" % slot)

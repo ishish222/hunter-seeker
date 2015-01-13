@@ -1,8 +1,8 @@
 import statemachine
+import globs
+import common
 
 def enable_logging():
-    import common
-    import globs
     options = globs.state.options
 
     log = open("./log-%s-%s-%s" % (options.fuzzbox_name, common.timestamp2(), options.origin), "a")
@@ -10,3 +10,7 @@ def enable_logging():
     print("[%s] Stateful fuzzer" % common.timestamp())
     options.log = log
 
+def disable_logging():
+    options = globs.state.options
+
+    write_socket(options.s, "logStop")
