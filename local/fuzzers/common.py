@@ -343,7 +343,10 @@ def wait_for_init(s):
 
     print("Connected")
     socket.setdefaulttimeout(dt)
-    s.settimeout(options.fuzzbox_timeout)
+    #s.settimeout(options.fuzzbox_timeout)
+
+    # we have cooldown, it requires long timeout. Lets test infinite
+    s.settimeout(None)
     print("Socket timeout set to: %f" % options.fuzzbox_timeout)
     options.s.settimeout(options.fuzzbox_timeout)
     return options.s

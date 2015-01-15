@@ -8,7 +8,7 @@ import usualparts.binner_parts
 import usualparts.testing_parts
 import generators
 import globs
-from statemachine import MachineError
+from statemachine import MachineError, Exit
 
 Sleep = statemachine.State()
 Sleep.name = "Sleeping"
@@ -21,15 +21,22 @@ ScriptRun = statemachine.State()
 UpdateStats = statemachine.State()
 HandleCrash = statemachine.State()
 PreparePipes = statemachine.State()
+RefreshSamples = statemachine.State()
+ChooseSavedMethod = statemachine.State()
+PoweroffNoRevert = statemachine.State()
+WaitForMoar = statemachine.State()
 
 def make_after_test_decision():
     options = globs.state.options
+    status = globs.state.status
     state = globs.state
 
     if(state == None): 
-        raise MachineError
+        return Exit
     
-    if(state =="PTO"):
+    if(state.samples_exhausted):
+        return RefreshSamples
+    if(status =="PTO"):
         # co to znaczy?
         return TestPerform
     if(status == "STTO"):
@@ -44,9 +51,12 @@ def make_after_test_decision():
         return UpdateStats
     if(status == "TO"):
         return UpdateStats
+    if(status == "ST"):
+        return WaitForMoar
     if(status == "CR"):
         return HandleCrash
 
+    return Exit
 
 # Main decision vertex
 Decision = statemachine.State()
@@ -54,9 +64,12 @@ Decision.name = "Deciding on next step"
 Decision.consequence = None
 Decision.choosing_consequence = make_after_test_decision
 
-PoweroffNoRevert = statemachine.State()
+WaitForMoar.name = "Waiting for moar input"
+WaitForMoar.consequence = Decision
+WaitForMoar.executing_routine = usualparts.testing_parts.read_output
+
 PoweroffNoRevert.name = "Powering off w/o reverting"
-PoweroffNoRevert.consequence = PreparePipes
+PoweroffNoRevert.consequence = ChooseSavedMethod
 PoweroffNoRevert.executing_routine = usualparts.qemu_parts.poweroff_no_revert
 
 StopLog = statemachine.State()
@@ -64,29 +77,33 @@ StopLog.name = "Disabling binner logging"
 StopLog.consequence = PoweroffNoRevert
 StopLog.executing_routine = usualparts.hs_logging.disable_logging
 
-HandleCrash = statemachine.State()
+#HandleCrash = statemachine.State()
 HandleCrash.name = "Handle the crash"
 HandleCrash.consequence = StopLog
 HandleCrash.executing_routine = usualparts.testing_parts.handle_crash
 
-RefreshSamples = statemachine.State()
-RefreshSamples.name = "Perform sample test"
-RefreshSamples.consequence = Decision #test
-RefreshSamples.executing_routine = usualparts.testing_parts.test_sample #change
+#RefreshSamples = statemachine.State()
+RefreshSamples.name = "Refresh samples batch"
+RefreshSamples.consequence = PoweroffNoRevert
+RefreshSamples.executing_routine = usualparts.testing_parts.handle_samples_exhaustion
 
-ScriptRun = statemachine.State()
+#ScriptRun = statemachine.State()
 ScriptRun.name = "Run a script"
 ScriptRun.consequence = Decision
 ScriptRun.executing_routine = usualparts.testing_parts.execute_script
 
-UpdateStats = statemachine.State()
+#UpdateStats = statemachine.State()
 UpdateStats.name = "Updating stats"
 UpdateStats.consequence = Decision
 UpdateStats.executing_routine = usualparts.testing_parts.update_stats
 
-TestPerform = statemachine.State()
+GetResult = statemachine.State()
+GetResult.name = "Getting test result"
+GetResult.consequence = Decision
+GetResult.executing_routine = usualparts.testing_parts.read_last_sample
+
 TestPerform.name = "Perform sample test"
-TestPerform.consequence = Decision
+TestPerform.consequence = GetResult
 TestPerform.executing_routine = usualparts.testing_parts.test_sample
 
 BinnerCheckReady = statemachine.State()
@@ -99,14 +116,24 @@ BinnerStartLogs.name = "Binner starting logs"
 BinnerStartLogs.consequence = BinnerCheckReady
 BinnerStartLogs.executing_routine = usualparts.binner_parts.binner_start_logs
 
+FuzzerReady = statemachine.State()
+FuzzerReady.name = "Fuzzer is ready"
+FuzzerReady.consequence = BinnerCheckReady
+FuzzerReady.executing_routine = usualparts.qemu_parts.qemu_ready
+
 BinnerConfigure = statemachine.State()
 BinnerConfigure.name = "Configuring binner"
-BinnerConfigure.consequence = BinnerStartLogs
+BinnerConfigure.consequence = FuzzerReady
 BinnerConfigure.executing_routine = usualparts.binner_parts.binner_configure
+
+Cooldown = statemachine.State()
+Cooldown.name = "Cooling down"
+Cooldown.consequence = BinnerConfigure
+Cooldown.executing_routine = usualparts.binner_parts.cooldown
 
 BinnerSpawnApp = statemachine.State()
 BinnerSpawnApp.name = "Binner spawning application"
-BinnerSpawnApp.consequence = BinnerConfigure
+BinnerSpawnApp.consequence = Cooldown
 BinnerSpawnApp.executing_routine = usualparts.binner_parts.binner_spawn_app
 
 BinnerSpawn = statemachine.State()
@@ -184,16 +211,14 @@ def choosing_saved_disk_procedure():
     else:
         return GlobMethod
 
-ChooseSavedMethod = statemachine.State()
 ChooseSavedMethod.name = "Choosing method"
 ChooseSavedMethod.consequence = None
 ChooseSavedMethod.choosing_consequence = choosing_saved_disk_procedure
-ChooseSavedMethod.executing_routine = usualparts.qemu_parts.qemu_bind_pipes
 
 PreparePipes = statemachine.State()
 PreparePipes.name = "Prepare pipes"
 PreparePipes.consequence = ChooseSavedMethod
-PreparePipes.executing_routine = usualparts.qemu_parts.qemu_bind_pipes
+PreparePipes.executing_routine = usualparts.qemu_parts.qemu_prepare_pipes
 
 PrepareStats = statemachine.State()
 PrepareStats.name = "Prepare stats"

@@ -1,19 +1,29 @@
-import globs
 import time
 from statemachine import MachineError
 import common
+import globs
+import os
 
 report = common.report
+write_socket = common.write_socket
+read_socket = common.read_socket
+
 
 def test_sample():
     options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+
+    for s in globs.state.samples_list:
+        print s
     #this should be on run end
 #    print("Current stats (SA/MA/TO): %d/%d/%d" % (stats.sample_count, stats.ma_count, stats.to_count))
 
     try:
-        sample_path = state.samples_list.pop()
+        sample_path = globs.state.samples_list.pop()
     except Exception, e:
-        state.samples_exhausted = True
+        print e
+        globs.state.samples_exhausted = True
         return
 
     sample_file = os.path.basename(sample_path)
@@ -44,15 +54,15 @@ def update_stats():
     stats = globs.stats
 
     if(status == "MA"):
-        stats.ma_count += 1
-        stats.to_count = 0
+        globs.state.stats.ma_count += 1
+        globs.state.stats.to_count = 0
     if(status == "TO"):
-        stats.to_count += 1
-        if(stats.to_count % 3 == 0):
+        globs.state.stats.to_count += 1
+        if(globs.state.stats.to_count % 3 == 0):
             report("3x TO, settling")
-            stats.to_count = 0
+            globs.state.stats.to_count = 0
             common.settle(options)
-    stats.sample_count += 1
+    globs.state.stats.sample_count += 1
 
     # print stats if reached metric deadline
     if(stats.sample_count % stats.metric_res == 0):
@@ -62,20 +72,30 @@ def update_stats():
         report(str(stats.metric_res) + " tested in " + str(elapsed) + " seconds")
         report("Last speed: " + str(stats.metric_res/elapsed) + " tps")
         report("MA count: " + str(stats.ma_count))
-        stats.to_count = 0
-        stats.ma_count = 0
-        stats.last_time_check = current_time
+        globs.state.stats.to_count = 0
+        globs.state.stats.ma_count = 0
+        globs.state.stats.last_time_check = current_time
         if(options.profiling):
             write_socket(options.s, "dump_stats")
 
 
-def read_last_sample():
+def read_output():
     options = globs.state.options
+    state = globs.state
 
     (lastResponse, status, reqScript) = read_socket(options.s)
-    state.status = status
-    state.lastResponse = lastResponse
-    state.reqScript = reqScript
+    globs.state.status = status
+    globs.state.lastResponse = lastResponse
+    globs.state.reqScript = reqScript
+
+def read_last_sample():
+    options = globs.state.options
+    state = globs.state
+
+    (lastResponse, status, reqScript) = read_socket(options.s)
+    globs.state.status = status
+    globs.state.lastResponse = lastResponse
+    globs.state.reqScript = reqScript
 
 def execute_script():
     options = globs.state.options
@@ -87,3 +107,12 @@ def handle_crash():
     print("Got crash, restarting")
     report("Got crash, restarting")
 
+def handle_samples_exhaustion():
+    options = globs.state.options
+
+    print("Samples exhaustion")
+    report("Samples exhaustion")
+    if(not options.save_disks):
+        os.remove(options.tmp_disk_img)
+
+    

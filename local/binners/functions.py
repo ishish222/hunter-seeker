@@ -186,7 +186,9 @@ def getCPU():
     value = PDH_FMT_COUNTERVALUE()
 
     if not pdh.PdhGetFormattedCounterValue(hCounter, PDH_FMT_LONG, byref(dwType), byref(value)) == Error_Success:
-        raise Exception
+#        raise Exception
+        # no idea why this exception occurs, let's try to handle it like overload
+        return 100
 
     return value.union.longValue
 

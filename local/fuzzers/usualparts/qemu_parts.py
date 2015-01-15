@@ -14,16 +14,26 @@ report = common.report
 read_socket = common.read_socket
 write_socket = common.write_socket
 
-def qemu_bind_pipes():
+def qemu_prepare_pipes():
     options = globs.state.options
 
     options.ms = common.prepare_monitor(options.ms_path)
     options.ss = common.prepare_serial(options.ss_path)
 
 
+def qemu_ready():
+    globs.state.reqScript = ""
+    globs.state.status = "RD"
+    print "test"
+    for s in globs.state.samples_list:
+        print s
+
 def qemu_prepare(options, state):
     global signaled
     signaled = False
+
+    options = globs.state.options
+    state = globs.state
 
     #necessary?
     options.log = open("./log-%s-%s-%s" % (options.fuzzbox_name, common.timestamp2(), options.origin), "a")
@@ -60,6 +70,9 @@ def qemu_start_full():
     #TODO!!! wee nedd to perform test, not wait!
 
     print("[%s] Qemu full boot finished" % common.timestamp())
+    print "test"
+    for s in globs.state.samples_list:
+        print s
 
 def qemu_start_revert(options, state):
     options = globs.state.options
@@ -98,6 +111,9 @@ def qemu_mount_disks():
 #        options.slot_saved = common.pci_mount(options, options.saved_disk_img) #hotplug should be completed during bootup
         options.slot_saved = common.drive_mount(options, options.saved_disk_img, 'saved') #hotplug should be completed during bootup
 
+    print "test"
+    for s in globs.state.samples_list:
+        print s
     #TODO:replaced by proceed1, maybe I should replace it with specific parts?
 
     # executed during each fuzzbox start
@@ -128,35 +144,13 @@ def qemu_connect_dev_socket():
         state.initialized = False
         print "raising machine error"
         raise MachineError
-#            raise socket.timeout
-#            proceed1(options)
-#            os.spawnv(os.P_WAIT, "/bin/ping", ["ping", options.fuzzbox_ip, "-c1"])
-#            continue
-#    socket.setdefaulttimeout(dt)
-    s.settimeout(options.settings.fuzzbox_timeout)
+    #s.settimeout(options.settings.fuzzbox_timeout)
+    #trying infinite
+    s.settimeout(None)
 
-#    print("Connected")
-#    socket.setdefaulttimeout(dt)
-#    s.settimeout(options.fuzzbox_timeout)
-#    print("Socket timeout set to: %f" % options.fuzzbox_timeout)
-#    options.s.settimeout(options.fuzzbox_timeout)
-#    return options.s
-
-#    try:
-#        common.wait_for_init(options.s)
-#    except socket.timeout:
-#        print("Socket timeout, restarting")
-#        report("Socket timeout, restarting")
-#        common.write_socket(options.s, "logStop")
-#        common.del_mountpoint(options)
-#        common.powerofff(options)
-#        if(not options.save_disks):
-#           os.remove(options.tmp_disk_img)
-#        state.initialized = False
-#        return
-#    state.initialized = True
-
-def poweroff_no_revert(options, state):
+def poweroff_no_revert():
+    options = globs.state.options
+    
     write_socket(options.s, "logStop")
     common.del_mountpoint(options)
 

@@ -113,4 +113,10 @@ def binner_close_sample():
 
     runscriptq(options.settings.closing_plugin_name, options.m)
 
+def cooldown():
+    options = globs.state.options
+
+    print "Cooling down"
+    write_socket(options.s, "cooldown")
+    read_socket(options.s)
 
