@@ -108,7 +108,7 @@ TestPerform.executing_routine = usualparts.testing_parts.test_sample
 
 BinnerCheckReady = statemachine.State()
 BinnerCheckReady.name = "Binner starting logs"
-BinnerCheckReady.consequence = TestPerform #check if true
+BinnerCheckReady.consequence = TestPerform
 BinnerCheckReady.executing_routine = usualparts.binner_parts.binner_start_logs
 
 BinnerStartLogs = statemachine.State()
