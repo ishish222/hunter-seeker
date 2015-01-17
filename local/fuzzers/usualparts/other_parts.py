@@ -1,5 +1,6 @@
 import statemachine
 import globs
+import os
 options = globs.state.options
 
 def always_true(options, state):
@@ -142,9 +143,16 @@ def get_options():
     else:
         qemu_args =  [options.qemu_command]
     qemu_args += ['-m', options.qemu_m]
-    qemu_args += ['-drive', 'file=' + options.machines + '/' + options.hda + ',' + options.qemu_drive_options]
-    if(options.hdb is not None):
-        qemu_args += ['-drive', 'file=', './' + options.hdb + ',' + options.qemu_drive_options]
+
+    if(options.qemu_drive_options != ""):
+        qemu_args += ['-drive', 'file=' + options.machines + '/' + options.hda + ',' + options.qemu_drive_options]
+        if(options.hdb is not None):
+            qemu_args += ['-drive', 'file=', './' + options.hdb + ',' + options.qemu_drive_options]
+    else:
+        qemu_args += ['-drive', 'file=' + options.machines + '/' + options.hda]
+        if(options.hdb is not None):
+            qemu_args += ['-drive', 'file=', './' + options.hdb]
+
 
     if(options.cdrom is not None):
         qemu_args += ['-cdrom', options.cdrom]
@@ -161,7 +169,11 @@ def get_options():
     qemu_args += ['-smp', str(options.smp)]
     
     if(settings.qemu_env != None):
-        qemu_args.insert(0, settings.qemu_env)
+        for exp in settings.qemu_env:
+            os.environ[exp[0]] = exp[1]
+    print os.environ
+#        qemu_args.insert(0, settings.qemu_env)
+    
 
     testdir(settings.qemu_shared_folder + "/logs")
     

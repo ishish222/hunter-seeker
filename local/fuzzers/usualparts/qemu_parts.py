@@ -1,4 +1,4 @@
-from subprocess import Popen, PIPE
+from subprocess import Popen, PIPE, STDOUT
 import socket
 import time
 from script import rs, rss, runscriptq, write_monitor, write_monitor_2, read_monitor
@@ -61,7 +61,7 @@ def qemu_start_full():
 
     print("[%s] Starting" % common.timestamp())
     print options.qemu_args
-    m = Popen(options.qemu_args, stdout=PIPE, stdin=PIPE)
+    m = Popen(options.qemu_args, stdout=PIPE, stdin=PIPE, stderr=STDOUT, env=os.environ)
     time.sleep(3)
     options.m, _ = options.ms.accept()
     options.s, _ = options.ss.accept()
@@ -96,6 +96,23 @@ def qemu_start_revert(options, state):
 
 #was: proceed
 #def qemu_mount_disks(options, state):
+def temu_mount_disks():
+    options = globs.state.options
+    #mount_cdrom(options, options.cdrom)
+    read_monitor(options.m)
+
+    if(hasattr(options,'tmp_disk_img')):
+        options.slot_shared = common.mount_via_usb(options, options.tmp_disk_img, 'shared') #hotplug should be completed during bootup
+
+    time.sleep(1)
+
+    if(hasattr(options,'saved_disk_img')):
+        options.slot_saved = common.mount_via_usb(options, options.saved_disk_img, 'saved') #hotplug should be completed during bootup
+
+    print "test"
+    for s in globs.state.samples_list:
+        print s
+
 def qemu_mount_disks():
     options = globs.state.options
     #mount_cdrom(options, options.cdrom)
@@ -147,6 +164,32 @@ def qemu_connect_dev_socket():
     #s.settimeout(options.settings.fuzzbox_timeout)
     #trying infinite
     s.settimeout(None)
+
+def qemu_umount_disks():
+    #move from poweroff
+    pass
+
+def temu_umount_disks():
+    common.pci_umount('0.1')
+#    common.pci_umount(options.slot_saved)
+
+def temu_poweroff_no_revert():
+    options = globs.state.options
+    
+    try:
+        print("Shutting down s")
+        options.s.shutdown(socket.SHUT_RDWR)
+        options.s.close()
+    except Exception:
+        print("Error shutting down s")
+        pass
+    print("[Powering off]")
+    rs("powerdown", options.m)
+    time.sleep(options.shutdown_wait)
+    options.m = None
+    print("Last batch: %s" % options.tmp_disk_img)
+    print("Last saved: %s" % options.saved_disk_img)
+
 
 def poweroff_no_revert():
     options = globs.state.options

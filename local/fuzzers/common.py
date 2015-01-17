@@ -587,6 +587,12 @@ def create_image(path, size, label):
     simple_exec(["sudo", "losetup", "-d", loop_dev])
     return path
 
+def mount_via_usb(options, filee, idd):
+    dev_str = write_monitor_2(options.m, "usb_add disk:%s" % filee)
+
+def umount_via_usb(options, filee, idd):
+    dev_str = write_monitor_2(options.m, "usb_del %s" % filee)
+
 def drive_mount(options, filee, idd):
     dev_str = write_monitor_2(options.m, "drive_add 0 if=none,file=%s,format=raw,id=%s" % (filee, idd))
     if(dev_str.find("OK") < 0):
@@ -611,11 +617,14 @@ def pci_umount(options, slot):
     write_monitor_2(options.m, "pci_del %d" % slot)
 #    read_monitor(options.m)
 
-def mount_drive(options):
+def mount_drive(options, offset=None):
     options.tmp_mountpoint = tempfile.mktemp()
     os.spawnv(os.P_WAIT, "/bin/mkdir", ["mkdir", options.tmp_mountpoint])
     print("Mounting %s" % options.tmp_mountpoint)
-    os.spawnv(os.P_WAIT, "/usr/bin/sudo", ["sudo", "mount", "-o", "loop,umask=0000", options.tmp_disk_img, options.tmp_mountpoint])
+    if(offset == None):
+        os.spawnv(os.P_WAIT, "/usr/bin/sudo", ["sudo", "mount", "-o", "loop,umask=0000", options.tmp_disk_img, options.tmp_mountpoint])
+    else:
+        os.spawnv(os.P_WAIT, "/usr/bin/sudo", ["sudo", "mount", "-o", "loop,umask=0000,offset=%s" % offset, options.tmp_disk_img, options.tmp_mountpoint])
 
 def umount_drive(options):
     print("Umounting %s" % options.tmp_mountpoint)

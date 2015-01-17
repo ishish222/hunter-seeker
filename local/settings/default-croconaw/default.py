@@ -86,6 +86,8 @@ qemu_additional =  ['-enable-kvm']
 qemu_command = 'qemu-system-i386'
 qemu_drive_options = 'cache=none,if=virtio'
 qemu_env = None
+qemu_drives_dir=""
+qemu_secondary=""
 
 def runner_0(options, args=None):
     pass

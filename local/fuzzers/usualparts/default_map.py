@@ -199,7 +199,7 @@ DiskGlob.executing_routine = usualparts.disk_fs_parts.prepare_disk_glob
 
 GlobMethod = statemachine.State()
 GlobMethod.name = "Generating saved using glob"
-GlobMethod.consequence = statemachine.Exit
+GlobMethod.consequence = DiskGlob
 GlobMethod.executing_routine = usualparts.disk_fs_parts.create_saved_disk_glob
 
 def choosing_saved_disk_procedure():
