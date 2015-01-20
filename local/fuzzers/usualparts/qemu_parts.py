@@ -119,14 +119,14 @@ def qemu_mount_disks():
     read_monitor(options.m)
 
     if(hasattr(options,'tmp_disk_img')):
-#        options.slot_shared = common.pci_mount(options, options.tmp_disk_img) #hotplug should be completed during bootup
-        options.slot_shared = common.drive_mount(options, options.tmp_disk_img, 'shared') #hotplug should be completed during bootup
+        options.slot_shared = common.pci_mount(options, options.tmp_disk_img) #hotplug should be completed during bootup
+#        options.slot_shared = common.drive_mount(options, options.tmp_disk_img, 'shared') #hotplug should be completed during bootup
 
     time.sleep(1)
 
     if(hasattr(options,'saved_disk_img')):
-#        options.slot_saved = common.pci_mount(options, options.saved_disk_img) #hotplug should be completed during bootup
-        options.slot_saved = common.drive_mount(options, options.saved_disk_img, 'saved') #hotplug should be completed during bootup
+        options.slot_saved = common.pci_mount(options, options.saved_disk_img) #hotplug should be completed during bootup
+#        options.slot_saved = common.drive_mount(options, options.saved_disk_img, 'saved') #hotplug should be completed during bootup
 
     print "test"
     for s in globs.state.samples_list:

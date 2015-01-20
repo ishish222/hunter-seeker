@@ -50,8 +50,12 @@ def binner_configure():
     write_socket(options.s, "attachBinner " + options.settings.app_module)
     read_socket(options.s)
 
+    time.sleep(1)
+
     write_socket(options.s, "setupMarkers")
     read_socket(options.s)
+
+    time.sleep(1)
 
     write_socket(options.s, "installHandlers")
     read_socket(options.s)
@@ -65,6 +69,8 @@ def binner_configure():
     if(options.slowdown != options.settings.slowdown):
         write_socket(options.s, "setupSlowdown {0}".format(options.slowdown))
         read_socket(options.s)
+
+    time.sleep(5)
 
 def binner_start_logs():
     options = globs.state.options

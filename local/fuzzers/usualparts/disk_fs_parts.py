@@ -61,6 +61,7 @@ def prepare_disk_empty():
     options.tmp_disk_img = create_drive(options, size=10000000)
     mount_drive(options)
     create_layout(options)
+    globs.state.samples_exhausted = True
     umount_drive(options)
     options.log.write("[%s]\n" % options.tmp_disk_img)
     options.log.flush()
@@ -91,6 +92,7 @@ def prepare_disk_glob():
     for sample in state.samples_list:
         print(options.tmp_mountpoint + "/samples/shared/" + sample)
         os.spawnv(os.P_WAIT, "/bin/cp", ["cp", sample, options.tmp_mountpoint + "/samples/shared/"])
+    globs.state.samples_exhausted = False
     umount_drive(options)
     options.log.write("[%s]\n" % options.tmp_disk_img)
     options.log.flush()

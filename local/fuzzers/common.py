@@ -445,12 +445,13 @@ def proceed3(options):
     if(options.slowdown != options.settings.slowdown):
         write_socket(s, "setupSlowdown {0}".format(options.slowdown))
         read_socket(s)
+    return True
 
+def proceed4(options):
     if(defined("settings.specific_preperations_4")):
         options.settings.specific_preperations_4(options)
     if(defined("settings.scripts_4")):
         rss(options.settings.scripts_4, options.m, options.slowdown)
-    return True
 
 def proceed5(options):
     if(defined("settings.specific_preperations_5")):

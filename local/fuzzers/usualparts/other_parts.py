@@ -3,6 +3,19 @@ import globs
 import os
 options = globs.state.options
 
+def defined(name):
+    if(name in globals()):
+        return True
+    if(name in locals()):
+        return True
+    if(name in vars()):
+        return True
+    names = name.split(".")
+    if(len(names)>1):
+        if(names[1] in dir(globals()[names[0]])):
+            return True
+    return False
+
 def always_true(options, state):
     return True
 
