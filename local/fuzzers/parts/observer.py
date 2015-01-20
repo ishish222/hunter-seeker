@@ -37,7 +37,7 @@ def make_after_walk_decision():
     if(status == "WS"):
         return dm.WaitForMoar
     if(status == "WE"):
-        return dm.WaitForMoar
+        return WalkPerform
     if(status == "CR"):
         return dm.HandleCrash
 

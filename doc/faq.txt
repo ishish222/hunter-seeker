@@ -1,0 +1,2 @@
+broken pipe: sprawdz, czy inne qemu nie zajmuje rury
+

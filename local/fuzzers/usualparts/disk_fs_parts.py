@@ -41,10 +41,11 @@ def create_saved_disk_glob():
     options = globs.state.options
     state = globs.state
 
-    globs.state.samples_list = glob(options.glob_pattern)
+    state.samples_list = glob(options.glob_pattern)
     disk_size = 0
     for sample in state.samples_list:
         disk_size += os.stat(sample).st_size
+
     size_margin  = disk_size * options.samples_size_margin
     disk_size += size_margin
     disk_size += options.settings.SERVER_SIZE
@@ -89,9 +90,13 @@ def prepare_disk_glob():
     globs.state.options.tmp_disk_img = create_drive(options, size=options.disk_size)
     mount_drive(options)
     create_layout(options)
+    sl_corrected = list()
     for sample in state.samples_list:
-        print(options.tmp_mountpoint + "/samples/shared/" + sample)
+        new_sample = os.path.basename(sample)
+        print(options.tmp_mountpoint + "/samples/shared/" + new_sample)
         os.spawnv(os.P_WAIT, "/bin/cp", ["cp", sample, options.tmp_mountpoint + "/samples/shared/"])
+        sl_corrected.append(new_sample)
+    state.samples_list = sl_corrected
     globs.state.samples_exhausted = False
     umount_drive(options)
     options.log.write("[%s]\n" % options.tmp_disk_img)
