@@ -445,7 +445,7 @@ def execute(cmds):
             main_binner.writePipe("Status: %s" % status)
             main_binner.ok()
 
-            while(process_status_queue(["WE"]) != True):
+            while(process_status_queue(["WE", "CR"]) != True):
                 main_binner.loop_debuggers()
             if(status == "CR"):
                 # CR before ST

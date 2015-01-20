@@ -111,6 +111,9 @@ def read_output():
     options = globs.state.options
     state = globs.state
 
+    if(state.samples_exhausted):
+        return
+
     print "waiting for output"
 
     (lastResponse, status, reqScript) = read_socket(options.s)
@@ -121,6 +124,9 @@ def read_output():
 def read_last_sample():
     options = globs.state.options
     state = globs.state
+
+    if(state.samples_exhausted):
+        return
 
     print "waiting for output"
 

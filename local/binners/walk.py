@@ -105,7 +105,7 @@ def handle_crash(dbg):
 
     dbg.walk.uninstall_walk_bp()
     dbg.walk.uninstall_walk_end_bp()
-    dbg.signal_we()
+    dbg.signal_cr()
 #    dbg.walk.unregister_callbacks()
 
 #    return DBG_CONTINUE

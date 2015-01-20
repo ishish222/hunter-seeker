@@ -13,4 +13,4 @@ def enable_logging():
 def disable_logging():
     options = globs.state.options
 
-    write_socket(options.s, "logStop")
+    common.write_socket(options.s, "logStop")
