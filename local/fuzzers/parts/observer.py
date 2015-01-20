@@ -17,7 +17,8 @@ def make_after_walk_decision():
         return Exit
     
     if(state.samples_exhausted):
-        return Exit
+        print 'Samples exhausted'
+        return dm.Shutdown
     if(status =="PTO"):
         # co to znaczy?
         return WalkPerform
@@ -33,7 +34,9 @@ def make_after_walk_decision():
         return dm.UpdateStats
     if(status == "TO"):
         return dm.UpdateStats
-    if(status == "ST"):
+    if(status == "WS"):
+        return dm.WaitForMoar
+    if(status == "WE"):
         return dm.WaitForMoar
     if(status == "CR"):
         return dm.HandleCrash

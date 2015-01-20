@@ -9,7 +9,7 @@ c:tests/c-3.s-1000.fast.hs2-02
 c:tests/c-3.s-1000.fast.hs2-03
 c:tests/c-3.s-1000.fast.hs2-04
 c:util/extract-saved
-t:settings/qemu-xara/settings.py
+t:settings/qemu-xara-observer/settings.py
 t:settings/default-flareon/default.py
 t:fuzzers/generators
 t:fuzzers/correctors

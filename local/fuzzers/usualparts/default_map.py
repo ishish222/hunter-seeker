@@ -16,6 +16,7 @@ Sleep.consequence = statemachine.Exit
 Sleep.executing_routine = usualparts.other_parts.wait_10_seconds
 
 #for recursion
+Shutdown = statemachine.State()
 BinnerCheckReady = statemachine.State()
 PreFuzzingActions= statemachine.State()
 StopLog = statemachine.State()
@@ -71,6 +72,10 @@ Decision.choosing_consequence = make_after_test_decision
 WaitForMoar.name = "Waiting for moar input"
 WaitForMoar.consequence = Decision
 WaitForMoar.executing_routine = usualparts.testing_parts.read_output
+
+Shutdown.name = "Shutting down"
+Shutdown.consequence = Exit
+Shutdown.executing_routine = usualparts.qemu_parts.poweroff_no_revert
 
 PoweroffNoRevert.name = "Powering off w/o reverting"
 PoweroffNoRevert.consequence = ChooseSavedMethod
