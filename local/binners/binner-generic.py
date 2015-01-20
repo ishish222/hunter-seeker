@@ -145,7 +145,7 @@ def process_status_queue(satisfying = None):
             main_binner.dlog("Queue size after script: %d" % main_binner.status.qsize())
             continue
 
-#        print(status)
+        print("Got status: %s " % status)
         if(satisfying != None):
             if(status in satisfying):
                 print("Status %s is satisfying" % status)
@@ -424,6 +424,7 @@ def execute(cmds):
 ### walk a file
 
         elif(cmd == "walk"):
+            print "here1"
             filee, depth, gf_file = args.split(" ")
             depth = int(depth)
             print("Walking %s for %d levels, generating graph into %s" % (filee, depth, gf_file))
@@ -440,6 +441,7 @@ def execute(cmds):
                 main_binner.ok()
                 return
 
+            print "here2"
             main_binner.writePipe("Status: %s" % status)
             main_binner.ok()
 
@@ -461,10 +463,13 @@ def execute(cmds):
             main_binner.readPipe()
             main_binner.stop_debuggers("Closing execution finished")
 
+            print "here3"
 #            main_binner.loop_debuggers()
             if(settings.needs_ready):
                 while(process_status_queue(["RD", "CR", "PTO"]) != True):
+                    print "waiting for RD"
                     main_binner.loop_debuggers(settings.wait_sleep)
+                    print "got sth"
             else:
                 process_status_queue(["RD", "CR", "PTO"])
                 if(status != "CR"): status = "RD"
@@ -479,9 +484,10 @@ def execute(cmds):
                 main_binner.ok()
                 return
 
-            main_binner.writePipe("Status: %s" % status)
-            main_binner.ok()
-            main_binner.detach_rd_markers()
+            if(settings.needs_ready):
+                main_binner.writePipe("Status: %s" % status)
+                main_binner.ok()
+                main_binner.detach_rd_markers()
 
 ### walk a file from new addr
 

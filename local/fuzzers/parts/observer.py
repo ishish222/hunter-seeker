@@ -31,13 +31,13 @@ def make_after_walk_decision():
     if(status == "RD"):
         return WalkPerform
     if(status == "MA"):
-        return dm.UpdateStats
+        return dm.CloseSample
     if(status == "TO"):
-        return dm.UpdateStats
+        return dm.CloseSample
     if(status == "WS"):
         return dm.WaitForMoar
     if(status == "WE"):
-        return WalkPerform
+        return dm.CloseSample
     if(status == "CR"):
         return dm.HandleCrash
 

@@ -70,7 +70,7 @@ def binner_configure():
         write_socket(options.s, "setupSlowdown {0}".format(options.slowdown))
         read_socket(options.s)
 
-    time.sleep(5)
+    time.sleep(1)
 
 def binner_start_logs():
     options = globs.state.options
@@ -118,6 +118,7 @@ def binner_close_sample():
     options = globs.state.options
 
     runscriptq(options.settings.closing_plugin_name, options.m)
+    write_socket(options.s, "")
 
 def cooldown():
     options = globs.state.options

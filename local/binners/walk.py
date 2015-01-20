@@ -52,14 +52,16 @@ def format_node_text(text, color = None):
 def handle_ret(dbg):
     ea = dbg.get_register("EIP")
     dbg.bp_del(ea)
-    dbg.single_step(True)
+    if(dbg.walk.running):
+        dbg.single_step(True)
     return DBG_CONTINUE
 
 def handle_ret_surface(dbg):
     ea = dbg.get_register("EIP")
     dbg.bp_del(ea)
     dbg.walk.surface()
-    dbg.single_step(True)
+    if(dbg.walk.running):
+        dbg.single_step(True)
     return DBG_CONTINUE
     
 def handle_walk_start(dbg):
@@ -71,6 +73,7 @@ def handle_walk_start(dbg):
     dbg.signal_ws()
     # dive
     dbg.walk.level = 0
+    dbg.walk.running = True
     dbg.walk.gf.write("<map version=\"0.8.0\">\n")
     ea = dbg.get_register("EIP")
     dbg.walk.current_ea = ea
@@ -82,7 +85,8 @@ def handle_walk_start(dbg):
         dbg.walk.dive()
 #    handle_working_bp(dbg)
     print("--cut here--")
-    dbg.single_step(True)
+    if(dbg.walk.running):
+        dbg.single_step(True)
     return DBG_CONTINUE
 
 def handle_crash(dbg):
@@ -109,6 +113,9 @@ def handle_crash(dbg):
 def handle_walk_end(dbg):
     print("--cut here--")
     dbg.walk.dlog("Reached walk end")
+    print("current dbg breakpoints:")
+    for b in dbg.breakpoints:
+        print b
     print("[*] Reached walk end")
     dbg.single_step(False)
     dbg.walk.running = False
@@ -116,13 +123,11 @@ def handle_walk_end(dbg):
         dbg.walk.gf.write("</node>\n</map>\n")
         dbg.walk.gf.close()
         dbg.walk.gf = None
-    dbg.signal_we()
-#    dbg.walk.kill()
-
     dbg.walk.uninstall_walk_bp()
     dbg.walk.uninstall_walk_end_bp()
-#    dbg.walk.unregister_callbacks()
+    dbg.signal_we()
 
+    dbg.single_step(False)
     return DBG_CONTINUE
 
 def handle_working_bp(dbg):
@@ -162,7 +167,8 @@ def handle_working_bp(dbg):
         dbg.walk.dive()
         return DBG_CONTINUE
 
-    dbg.single_step(True)
+    if(dbg.walk.running):
+        dbg.single_step(True)
 
     return DBG_CONTINUE
 
@@ -202,6 +208,7 @@ class walk():
         self.install_walk_bp()
         self.install_walk_end_bp()
         self.register_callbacks()
+        self.running = False
 
 
     def attach(self):
@@ -341,9 +348,11 @@ class walk():
                     self.gf.write(format_empty_node(ea, my_module, self.dbg.walk.current_dis, target_module))
                 self.install_bp(self.current_ea + self.current_instr.length, handler = handle_ret)
                 self.delete_next_bp = True
-                self.dbg.single_step(False)
+                if(self.running):
+                    self.dbg.single_step(False)
                 return
-        self.dbg.single_step(True)
+        if(self.running):
+            self.dbg.single_step(True)
 #        print("Inside diving 3, level: %d" % self.level)
         self.level += 1
 #        print("Inside diving 4, level: %d" % self.level)
@@ -355,7 +364,8 @@ class walk():
         self.install_bp(self.current_ea + self.current_instr.length, handler = handle_ret_surface)
 
     def surface(self):
-        self.dbg.single_step(True)
+        if(self.running):
+            self.dbg.single_step(True)
         self.level -= 1
         self.dlog("Surfacing, level: " + hex(self.level))
 #        if(graph == True):

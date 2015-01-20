@@ -17,6 +17,7 @@ Sleep.executing_routine = usualparts.other_parts.wait_10_seconds
 
 #for recursion
 Shutdown = statemachine.State()
+CloseSample = statemachine.State()
 BinnerCheckReady = statemachine.State()
 PreFuzzingActions= statemachine.State()
 StopLog = statemachine.State()
@@ -97,8 +98,12 @@ ScriptRun.name = "Run a script"
 ScriptRun.consequence = WaitForMoar
 ScriptRun.executing_routine = usualparts.testing_parts.execute_script
 
+CloseSample.name = "Closing sample"
+CloseSample.consequence = WaitForMoar
+CloseSample.executing_routine = usualparts.binner_parts.binner_close_sample
+
 UpdateStats.name = "Updating stats"
-UpdateStats.consequence = WaitForMoar
+UpdateStats.consequence = CloseSample
 UpdateStats.executing_routine = usualparts.testing_parts.update_stats
 
 GetResult.name = "Getting test result"

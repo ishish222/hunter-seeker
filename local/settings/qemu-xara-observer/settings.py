@@ -12,6 +12,7 @@ def react2(dbg):
     dbg.reqScript("FO")
     return DBG_CONTINUE
 
+needs_ready = True
 debug = True
 
 script_codes["R2"] = "ret2"
@@ -38,7 +39,7 @@ app_module = "DesignerPro.exe"
 buffer_size = 4096
 log_name = "HS:XaraDesigner9"
 fuzzbox_timeout = wait_sleep*4
-closing_plugin_name = "nop"
+closing_plugin_name = "ctrl_f"
 start_sleep = 30
 mutator = "changer.Changer"
 
