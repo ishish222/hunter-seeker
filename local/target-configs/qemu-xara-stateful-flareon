@@ -9,7 +9,7 @@ c:../../blob/res/xar/a75c2a7e835a2465848f070b8450e9c1.xar
 c:../../blob/res/xar/c0374b6e9771ef27e380fefcbfbd35db.xar
 c:../../blob/res/xar/ca52ebda133607eec33d62a4ae046bc7.xar
 c:util/extract-saved
-t:settings/qemu-xara-observer/settings.py
+t:settings/qemu-xara/settings.py
 t:settings/default-flareon/default.py
 t:fuzzers/generators
 t:fuzzers/correctors

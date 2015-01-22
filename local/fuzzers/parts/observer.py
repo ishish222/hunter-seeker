@@ -15,12 +15,14 @@ def make_after_walk_decision():
 
     if(state == None): 
         print "State is None, shutting down"
-        return Shutdown
+        return dm.Shutdown
     
     if(state.samples_exhausted):
         print 'Samples exhausted'
         return dm.Shutdown
-    if(status =="PTO"):
+    if(status == "PT"):
+        return WalkPerform
+    if(status == "PTO"):
         return WalkPerform
     if(status == "STTO"):
         return WalkPerform
@@ -41,8 +43,8 @@ def make_after_walk_decision():
     if(status == "CR"):
         return dm.HandleCrash
 
-    print "Unable to handle state, shutting down"
-    return Shutdown
+    print "Unable to handle status %s, shutting down" %status
+    return dm.Shutdown
 
 WalkDecision.name = "Deciding on next step"
 WalkDecision.consequence = None

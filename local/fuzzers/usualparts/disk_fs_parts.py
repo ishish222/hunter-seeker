@@ -96,6 +96,7 @@ def prepare_disk_glob():
         print(options.tmp_mountpoint + "/samples/shared/" + new_sample)
         os.spawnv(os.P_WAIT, "/bin/cp", ["cp", sample, options.tmp_mountpoint + "/samples/shared/"])
         sl_corrected.append(new_sample)
+        sl_corrected.sort() # in order to control order :)
     state.samples_list = sl_corrected
     globs.state.samples_exhausted = False
     umount_drive(options)

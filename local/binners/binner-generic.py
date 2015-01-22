@@ -511,6 +511,69 @@ def execute(cmds):
             main_binner.writePipe("Status: %s" % status)
             main_binner.ok()
 
+            while(process_status_queue(["WE", "CR"]) != True):
+                main_binner.loop_debuggers()
+            if(status == "CR"):
+                # CR before ST
+                main_binner.writePipe("Status: CR")
+                main_binner.ok()
+                return
+
+            main_binner.writePipe("Status: %s" % status)
+            main_binner.ok()
+
+            if(settings.needs_ready):
+                main_binner.attach_rd_markers()
+            # time for reaction to test end
+            main_binner.start_debuggers("Closing execution")
+            main_binner.readPipe()
+            main_binner.stop_debuggers("Closing execution finished")
+
+#            main_binner.loop_debuggers()
+            if(settings.needs_ready):
+                while(process_status_queue(["RD", "CR", "PTO"]) != True):
+                    print "waiting for RD"
+                    main_binner.loop_debuggers(settings.wait_sleep)
+                    print "got sth"
+            else:
+                process_status_queue(["RD", "CR", "PTO"])
+                if(status != "CR"): status = "RD"
+
+            if(status == "CR"):
+#                dlog("Processing CR3")
+                main_binner.get_ea()
+                main_binner.test_bin_dir()
+                main_binner.save_synopsis(args)
+                main_binner.save_sample(args)
+                main_binner.writePipe("Status: CR")
+                main_binner.ok()
+                return
+
+            if(settings.needs_ready):
+                main_binner.writePipe("Status: %s" % status)
+                main_binner.ok()
+                main_binner.detach_rd_markers()
+
+        elif(cmd == "walk3"):
+            filee, depth, gf_file, addr = args.split(" ")
+            depth = int(depth)
+            print("Walking %s for %d levels, generating graph into %s" % (filee, depth, gf_file))
+            
+            main_binner.take_a_walk2("%s %s %s" % (depth, gf_file, addr))
+            time.sleep(2)
+
+            main_binner.loop_debuggers(invocation_args=filee)
+            while(process_status_queue(["WS"]) != True):
+                main_binner.loop_debuggers()
+            if(status == "CR"):
+                # CR before ST
+                main_binner.writePipe("Status: CR")
+                main_binner.ok()
+                return
+
+            main_binner.writePipe("Status: %s" % status)
+            main_binner.ok()
+
             while(process_status_queue(["WE"]) != True):
                 main_binner.loop_debuggers()
             if(status == "CR"):

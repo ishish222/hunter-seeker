@@ -79,7 +79,7 @@ def perform_after_test():
 def update_stats():
     options = globs.state.options
     status = globs.state.status
-    stats = globs.stats
+    stats = globs.state.stats
 
     if(status == "MA"):
         globs.state.stats.ma_count += 1
