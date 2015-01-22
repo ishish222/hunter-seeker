@@ -102,14 +102,13 @@ def temu_mount_disks():
     read_monitor(options.m)
 
     if(hasattr(options,'tmp_disk_img')):
-        options.slot_shared = common.mount_via_usb(options, options.tmp_disk_img, 'shared') #hotplug should be completed during bootup
+        options.slot_shared = common.mount_via_usb(options, options.tmp_disk_img, 'shared')
 
     time.sleep(1)
 
     if(hasattr(options,'saved_disk_img')):
-        options.slot_saved = common.mount_via_usb(options, options.saved_disk_img, 'saved') #hotplug should be completed during bootup
+        options.slot_saved = common.mount_via_usb(options, options.saved_disk_img, 'saved')
 
-    print "test"
     for s in globs.state.samples_list:
         print s
 
@@ -128,7 +127,6 @@ def qemu_mount_disks():
         options.slot_saved = common.pci_mount(options, options.saved_disk_img) #hotplug should be completed during bootup
 #        options.slot_saved = common.drive_mount(options, options.saved_disk_img, 'saved') #hotplug should be completed during bootup
 
-    print "test"
     for s in globs.state.samples_list:
         print s
     #TODO:replaced by proceed1, maybe I should replace it with specific parts?

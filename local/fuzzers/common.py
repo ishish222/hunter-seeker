@@ -601,6 +601,9 @@ def drive_mount(options, filee, idd):
         return
     write_monitor_2(options.m, 'device_add virtio-blk-pci,drive=%s,id=%s-virtio' % (idd, idd))
 
+def drive_umount(options, filee, idd):
+    write_monitor_2(options.m, 'device_rem %s-virtio' % idd)
+
 def pci_mount(options, filee):
     dev_str = write_monitor_2(options.m, "pci_add auto storage file=%s,if=virtio" % filee)
     if(dev_str.find("could not open disk image:") > -1):
@@ -611,16 +614,11 @@ def pci_mount(options, filee):
     print("PCI dev mounted in slot: " + str(slot))
     return slot
 
-def drive_umount(options, filee, idd):
-    write_monitor_2(options.m, 'device_rem %s-virtio' % idd)
-
 def pci_umount(options, slot):
     write_monitor_2(options.m, "pci_del %d" % slot)
 #    read_monitor(options.m)
 
 def mount_drive(options, offset=None):
-    options.tmp_mountpoint = tempfile.mktemp()
-    os.spawnv(os.P_WAIT, "/bin/mkdir", ["mkdir", options.tmp_mountpoint])
     print("Mounting %s" % options.tmp_mountpoint)
     if(offset == None):
         os.spawnv(os.P_WAIT, "/usr/bin/sudo", ["sudo", "mount", "-o", "loop,umask=0000", options.tmp_disk_img, options.tmp_mountpoint])
@@ -630,7 +628,6 @@ def mount_drive(options, offset=None):
 def umount_drive(options):
     print("Umounting %s" % options.tmp_mountpoint)
     os.spawnv(os.P_WAIT, "/usr/bin/sudo", ["sudo", "umount", options.tmp_mountpoint])
-    os.spawnv(os.P_WAIT, "/bin/rm", ["rm", "-rf", options.tmp_mountpoint])
 
 def calc_disk_size(options):
     origin_size = os.stat(options.origin).st_size
@@ -651,9 +648,14 @@ def create_drive(options, size=None, name=None, label=None):
     create_image(name, size, label)
     return name
 
+def create_mountpoint(options):
+    options.tmp_mountpoint = tempfile.mktemp()
+    os.spawnv(os.P_WAIT, "/bin/mkdir", ["mkdir", options.tmp_mountpoint])
+    print("Created mountpoint: %s" % options.tmp_mountpoint)
+
 def del_mountpoint(options):
     os.spawnv(os.P_WAIT, "/bin/rm", ["rm", "-rf", options.tmp_mountpoint])
-    print("Removed mountpoint")
+    print("Removed mountpoint: %s" % options.tmp_mountpoint)
     
 def create_layout(options):
     os.spawnv(os.P_WAIT, "/bin/mkdir", ["mkdir", "-p", options.tmp_mountpoint+"/samples/shared"])

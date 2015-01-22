@@ -15,6 +15,13 @@ Start.name = "Start"
 #Start.consequence = usualparts.default_map.PrintLogo
 Start.consequence = usualparts.default_map.GetOptions
 
+# add file
+# mount disk
+# copy file 
+# umount disk
+
+# remove file
+
 TemuPoweroffNoRevert.name = "Powering off temu"
 TemuPoweroffNoRevert.consequence = dm.Sleep
 TemuPoweroffNoRevert.executing_routine = usualparts.qemu_parts.temu_poweroff_no_revert

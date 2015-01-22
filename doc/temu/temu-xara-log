@@ -1,0 +1,82 @@
+load_plugin ./tracecap.so
+load_config ./main.ini
+
+taint_file observing-batch-3/tmpi4pFEc.xar 0 1
+trace 344 ./out-xara-1.trace
+    CR3 for PID 344 not found. Tracing all processes!
+
+Forgot to install reg!
+
+Test if driver loaded:
+    - boot
+    - tasklist
+    - trace explorer.exe
+
+trace worky!
+Taints not worky :<
+--
+
+Notepad attempt:
+load_plugin ./tracecap.so
+load_config ./main.ini
+taint_file observing-batch-3/tmpi4pFEc.xar 0 1
+enable_emulation 
+tracebyname notepad.exe ./out-notepad-1.trace
+
+<execute samples in notepad>
+    PID: 168 CR3: 0x03fec000
+    Tracing notepad.exe
+
+Brak skazonych instrukcji
+
+--
+
+Designer attempt +secondary disk (-usb) +odpalona aplikacja 
+could not taint on usb :<
+
+--
+
+Designer attempt +secondary disk (-hdb) +odpalona aplikacja 
+load_plugin ./tracecap.so
+load_config ./main.ini
+taint_file interesting-all-2/tmpiCXii6.xar 1 0
+trace 1296 ./out-xara-4.trace
+enable_emulation 
+    PID: 1296 CR3: 0x017bc000
+    Time of first tainted data: 1421938332.684455
+
+Yay! 8GB/h xD
+
+
+--
+
+Notki od automatyzacji:
+1. Add a file
+2. Boot & connect
+3. spawn target
+4. cooldown
+5. load_plugin
+6. load_config
+7. wait for keypress
+<user>
+8. enable_emulation
+9. taint
+10. tracebyname
+11. execute sample
+
+--
+
+Troubleshooting:
+nie wykrywa PID - moze sterownik nie zostal zaladowany
+
+Nie sledzi skazonych instrukcji - zmniejszyc cache, wylaczyc cache dyskow
+
+--
+
+Z listy dyskusyjnej:
+
+Next, you may want to stick to what you already have, i.e., 'load_plugin', 'tracebyname', 'enable_emulation', 'taint_file'. 
+Once you are done with execution. 
+You could 'stop', 'disable_emulation', 'trace_stop' and 'unload_plugin'. 
+
+

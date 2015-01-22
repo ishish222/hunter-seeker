@@ -37,7 +37,7 @@ Sleep2.consequence = CPUCheck
 CreateEmpty = statemachine.State()
 CreateEmpty.name = "Create empty disk"
 CreateEmpty.consequence = dm.StartQemuFull
-CreateEmpty.executing_routine = usualparts.disk_fs_parts.prepare_disk_empty
+CreateEmpty.executing_routine = usualparts.disk_fs_parts.create_disk_empty
 
 #reroutes
 dm.PreparePipes.consequence = CreateEmpty
