@@ -2,12 +2,41 @@ import time
 from statemachine import MachineError
 import common
 import globs
+from glob import glob
 import os
+import usualparts.disk_fs_parts as df
 
 report = common.report
 write_socket = common.write_socket
 read_socket = common.read_socket
 
+def create_temu_samples_disk():
+    options = globs.state.options
+    state = globs.state
+    
+    state.samples_list = glob(options.glob_pattern)
+
+    disk_size = 0
+    for sample in state.samples_list:
+        disk_size += os.stat(sample).st_size
+
+    globs.state.options.tmp_disk_img = df.create_temp_drive(options, size=disk_size, format_cmd = 'copy_secondary')
+    time.sleep(1)
+
+    df.create_mountpoint(options)
+    df.mount_drive_host(options, 'loop,offset=32256')
+    df.create_layout(options)
+
+    for sample in state.samples_list:
+        print(options.tmp_mountpoint + '/' + sample)
+        os.spawnv(os.P_WAIT, '/usr/bin/sudo', ['sudo', 'cp', sample, options.tmp_mountpoint])
+
+    df.umount_drive_host(options)
+    df.del_mountpoint(options)
+    options.log.write("[%s]\n" % options.tmp_disk_img)
+    options.log.flush()
+
+    options.qemu_args += ['-drive', 'file=', './' + options.tmp_disk_img]
 
 def find_pid():
     options = globs.state.options

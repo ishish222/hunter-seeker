@@ -4,10 +4,10 @@ c:fuzzers/parts
 c:fuzzers/usualparts
 c:fuzzers/statemachine.py
 c:../../blob/res/xar/sample.xar
-c:tests/c-3.s-1000.fast.hs2-01
-c:tests/c-3.s-1000.fast.hs2-02
-c:tests/c-3.s-1000.fast.hs2-03
-c:tests/c-3.s-1000.fast.hs2-04
+c:../../blob/res/xar/a6fc6e3ca34c4b6918ef780e5afb5156.xar
+c:../../blob/res/xar/a75c2a7e835a2465848f070b8450e9c1.xar
+c:../../blob/res/xar/c0374b6e9771ef27e380fefcbfbd35db.xar
+c:../../blob/res/xar/ca52ebda133607eec33d62a4ae046bc7.xar
 c:util/extract-saved
 t:settings/qemu-xara-temu/settings.py
 t:settings/default-flareon/default.py

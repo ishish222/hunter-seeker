@@ -142,19 +142,19 @@ def create_shared_disk_glob_temu():
     options.log.flush()
 
 def create_layout(options):
-    os.spawnv(os.P_WAIT, "/bin/mkdir", ["mkdir", "-p", options.tmp_mountpoint+"/samples/shared"])
-    os.spawnv(os.P_WAIT, "/bin/mkdir", ["mkdir", "-p", options.tmp_mountpoint+"/samples/saved"])
-    os.spawnv(os.P_WAIT, "/bin/mkdir", ["mkdir", "-p", options.tmp_mountpoint+"/samples/binned"])
-    os.spawnv(os.P_WAIT, "/bin/mkdir", ["mkdir", "-p", options.tmp_mountpoint+"/samples/other"])
-    os.spawnv(os.P_WAIT, "/bin/mkdir", ["mkdir", "-p", options.tmp_mountpoint+"/logs"])
-    os.spawnv(os.P_WAIT, "/bin/mkdir", ["mkdir", "-p", options.tmp_mountpoint+"/server"])
+    os.spawnv(os.P_WAIT, "/usr/bin/sudo", ["sudo", "mkdir", "-p", options.tmp_mountpoint+"/samples/shared"])
+    os.spawnv(os.P_WAIT, "/usr/bin/sudo", ["sudo", "mkdir", "-p", options.tmp_mountpoint+"/samples/saved"])
+    os.spawnv(os.P_WAIT, "/usr/bin/sudo", ["sudo", "mkdir", "-p", options.tmp_mountpoint+"/samples/binned"])
+    os.spawnv(os.P_WAIT, "/usr/bin/sudo", ["sudo", "mkdir", "-p", options.tmp_mountpoint+"/samples/other"])
+    os.spawnv(os.P_WAIT, "/usr/bin/sudo", ["sudo", "mkdir", "-p", options.tmp_mountpoint+"/logs"])
+    os.spawnv(os.P_WAIT, "/usr/bin/sudo", ["sudo", "mkdir", "-p", options.tmp_mountpoint+"/server"])
     # copy server files
-    os.spawnv(os.P_WAIT, "/bin/cp", ["cp", "-r", "../server", options.tmp_mountpoint])
-    os.spawnv(os.P_WAIT, "/bin/cp", ["cp", "-r", "../common", options.tmp_mountpoint])
+    os.spawnv(os.P_WAIT, "/usr/bin/sudo", ["sudo", "cp", "-r", "../server", options.tmp_mountpoint])
+    os.spawnv(os.P_WAIT, "/usr/bin/sudo", ["sudo", "cp", "-r", "../common", options.tmp_mountpoint])
 
-def mount_drive_host(options):
+def mount_drive_host(options, additional='loop,umask=0000'):
     print("Mounting %s" % options.tmp_mountpoint)
-    os.spawnv(os.P_WAIT, "/usr/bin/sudo", ["sudo", "mount", "-o", "loop,umask=0000", options.tmp_disk_img, options.tmp_mountpoint])
+    os.spawnv(os.P_WAIT, "/usr/bin/sudo", ["sudo", "mount", "-o", additional, options.tmp_disk_img, options.tmp_mountpoint])
 
 def umount_drive_host(options):
     print("Umounting %s" % options.tmp_mountpoint)
@@ -181,10 +181,8 @@ def create_image(path, size, label, offset=0, format_cmd='mkfs.ntfs'):
     return path
 
 def copy_image(path1, path2):
-    simple_exec(["sudo", "cp", "-f", "-L", label, "-H", "0", "-S", "0", "-z", "0", "-p", "0", loop_dev])
-    time.sleep(2)
-    simple_exec(["sudo", "losetup", "-d", loop_dev])
-    return path
+    simple_exec(["sudo", "cp", path1, path2])
+    return path2
 
 def create_temp_drive(options, size=None, name=None, label=None, offset=0, format_cmd='mkfs.ntfs'):
     if(size == None):
@@ -195,7 +193,7 @@ def create_temp_drive(options, size=None, name=None, label=None, offset=0, forma
     if(label == None):
         label = "secondary"
     if(format_cmd == 'copy_secondary'):
-        copy_image(options.qemu_drives_dir + '/' + options.qemu_secondary, name)
+        copy_image(options.settings.qemu_drives_dir + '/' + options.settings.qemu_secondary, name)
     else:
         create_image(name, size, label, offset)
     return name
