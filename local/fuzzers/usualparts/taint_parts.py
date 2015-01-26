@@ -5,6 +5,8 @@ import globs
 from glob import glob
 import os
 import usualparts.disk_fs_parts as df
+from script import rs, rss, runscriptq, write_monitor, write_monitor_2
+from os import system
 
 report = common.report
 write_socket = common.write_socket
@@ -36,7 +38,7 @@ def create_temu_samples_disk():
     options.log.write("[%s]\n" % options.tmp_disk_img)
     options.log.flush()
 
-    options.qemu_args += ['-drive', 'file=', './' + options.tmp_disk_img]
+    options.qemu_args += ['-drive', 'file='+ options.tmp_disk_img]
 
 def find_pid():
     options = globs.state.options
@@ -44,7 +46,40 @@ def find_pid():
     status = globs.state.status
 
     write_socket(s, "ps")
-    
+    glob.state.pid = 0 #change
+
+def temu_configure_tracecap():
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+
+    write_monitor(options.m, "load_plugin ./tracecap.so")
+    time.sleep(1)
+    write_monitor(options.m, "load_config ./main.ini")
+    time.sleep(1)
+
+def temu_taint_start():
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+
+    write_monitor(options.m, "enable_emulation")
+    time.sleep(1)
+    write_monitor(options.m, "taint_file %s 1 0" % 'plik')
+    time.sleep(1)
+    write_monitor(options.m, "trace %s %s" % ('pid', 'out'))
+
+    # spawn sample
+
+def temu_taint_conclude():
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+
+    write_monitor(options.m, "trace_stop")
+    time.sleep(1)
+    write_monitor(options.m, "disable_emulation")
+    time.sleep(1)
 
 def open_sample():
     options = globs.state.options

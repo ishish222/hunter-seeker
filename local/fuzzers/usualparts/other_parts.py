@@ -227,3 +227,9 @@ def wait_1_seconds():
 def wait_10_seconds():
     import time
     time.sleep(10)
+
+def wait_for_keypress():
+    os.system('read -s -n 1 -p "Press any key to continue..."')
+    print
+
+

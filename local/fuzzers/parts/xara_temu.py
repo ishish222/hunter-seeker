@@ -2,6 +2,7 @@ import statemachine
 import usualparts.default_map as dm
 import usualparts.taint_parts 
 import usualparts.binner_parts
+import usualparts.other_parts
 import time
 
 Start = statemachine.State()
@@ -11,17 +12,37 @@ TemuUmountDisks = statemachine.State()
 TemuMountDisks = statemachine.State()
 LongSleep = statemachine.State()
 TemuCreateSharedDisk = statemachine.State()
+TemuConfigurePlugin = statemachine.State()
+TemuTaintBegin = statemachine.State()
+TemuTaintWait = statemachine.State()
+TemuTaintConclude = statemachine.State()
 
 Start.name = "Start"
 #Start.consequence = usualparts.default_map.PrintLogo
 Start.consequence = usualparts.default_map.GetOptions
 
+TemuTaintBegin.name = "Beginning tainting"
+TemuTaintBegin.consequence = TemuTaintWait
+TemuTaintBegin.executing_routine = usualparts.taint_parts.temu_taint_start
+
+TemuTaintWait.name = "Waiting for user command to conclude"
+TemuTaintWait.consequence = TemuTaintConclude
+TemuTaintWait.executing_routine = usualparts.other_parts.wait_for_keypress
+
+TemuTaintConclude.name = "Concluding tainting"
+TemuTaintConclude.consequence = TemuPoweroffNoRevert
+TemuTaintConclude.executing_routine = usualparts.taint_parts.temu_taint_conclude
+
+TemuConfigurePlugin.name = "Configuring tracecap"
+TemuConfigurePlugin.consequence = TemuTaintBegin
+TemuConfigurePlugin.executing_routine = usualparts.taint_parts.temu_configure_tracecap
+
 TemuCreateSharedDisk.name = "Creating samples disk for Temu"
-TemuCreateSharedDisk.consequence  = dm.StartQemuFull
+TemuCreateSharedDisk.consequence = dm.StartQemuFull
 TemuCreateSharedDisk.executing_routine = usualparts.taint_parts.create_temu_samples_disk
 
 TemuPoweroffNoRevert.name = "Powering off Temu"
-TemuPoweroffNoRevert.consequence = dm.Sleep
+TemuPoweroffNoRevert.consequence = statemachine.Exit
 TemuPoweroffNoRevert.executing_routine = usualparts.qemu_parts.temu_poweroff_no_revert
 
 #TemuMountDisks.name = "Mounting Temu disks"

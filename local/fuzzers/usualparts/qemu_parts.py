@@ -159,7 +159,7 @@ def qemu_connect_dev_socket():
         state.initialized = False
         print "raising machine error"
         raise MachineError
-    #s.settimeout(options.settings.fuzzbox_timeout)
+    s.settimeout(options.settings.fuzzbox_timeout)
     #trying infinite
     s.settimeout(None)
 
