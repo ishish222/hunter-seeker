@@ -121,6 +121,8 @@ def read_output():
         globs.state.status = status
         globs.state.lastResponse = lastResponse
         globs.state.reqScript = reqScript
+
+        print "Read: %s" % lastResponse
     except Exception, e:
         raise MachineError
         globs.state.timeout = True

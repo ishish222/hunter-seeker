@@ -81,6 +81,9 @@ def make_after_test_decision():
         print "State is None, shutting down"
         return ShutdownSequence
 
+    if(state == ""):
+        return GetOutput
+
     if(state.timeout):
         return PoweroffNoRevertNoRefresh
     
@@ -116,6 +119,7 @@ Decision.choosing_consequence = make_after_test_decision
 
 ShutdownSequence.name = "Initiating shutdown sequence"
 ShutdownSequence.consequence = Shutdown
+ShutdownSequence.executing_routine = usualparts.other_parts.wait_100_seconds
 
 RefreshSequence.name = "Initiating refresh sequence"
 RefreshSequence.consequence = RefreshSamples

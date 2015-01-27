@@ -317,6 +317,7 @@ def execute(cmds):
 
             main_binner.writePipe("Status: %s" % status)
             main_binner.ok()
+            print "Send: %s" % status
 
             main_binner.detach_st_markers()
             main_binner.attach_end_markers()
@@ -325,13 +326,16 @@ def execute(cmds):
                 main_binner.loop_debuggers(settings.wait_sleep)
             if(status == "CR"):
 #                dlog("Processing CR2")
+                print "CR handling 1"
                 main_binner.get_ea()
                 main_binner.test_bin_dir()
                 main_binner.save_synopsis(args)
                 main_binner.save_sample(args)
 #                dlog("Hereeeeeee")
+                print "CR handling 2"
                 main_binner.writePipe("Status: CR")
                 main_binner.ok()
+                print "Send: %s" % status
                 return
 
             main_binner.writePipe("Status: %s" % status)

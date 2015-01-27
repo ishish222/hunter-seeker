@@ -111,6 +111,7 @@ class binner(object):
 
     def writePipe(self, data):
         self.dlog("Writing to pipe: %s" % data, 3)
+#        print("Writing to pipe: %s" % data)
         self.ph.write(data)
 
     def readPipe(self):
@@ -520,7 +521,7 @@ class binner(object):
     def save_synopsis(self, filee):
         fname = filee.split("\\")[-1]
         self.send_command("SS%s%s\\%s%s" % (settings.samples_binned, self.ea, fname, end))
-        self.ok()
+#        self.ok()
 
     def save_sample(self, filee):
 #        fname = filee.split("\\")[-1]
