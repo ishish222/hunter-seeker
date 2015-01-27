@@ -535,7 +535,8 @@ class binner(object):
         dir2 = "%s%s\\%s" % (settings.samples_binned, self.ea, fname)
         if(dir1[-1:] == "\\"): dir1 = dir1[:-1]
         if(dir2[-1:] == "\\"): dir2 = dir2[:-1]
-        cmd = "xcopy /R /Y /I /E %s %s" % (dir1, dir2)
+        #cmd = "xcopy /R /Y /I /E %s %s" % (dir1, dir2)
+        cmd = "copy %s %s" % (dir1, dir2)
         print "%s" % cmd
         os.system(cmd)
         #os.system("copy %s %s%s\\%s" % (filee, settings.samples_binned, self.ea, fname))

@@ -15,6 +15,7 @@ class state_class(object):
     stats = None
     reqScript = ""
     initialized = False
+    timeout = False
     
 
 def init():

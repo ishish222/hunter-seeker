@@ -17,10 +17,15 @@ Sleep.executing_routine = usualparts.other_parts.wait_10_seconds
 
 #for recursion
 
-#crash path
-CrashStopLog = statemachine.State()
-CrashPoweroffNoRevert = statemachine.State()
+#paths
 
+# no samples refreshing
+StopLogNoRefresh = statemachine.State()
+PoweroffNoRevertNoRefresh = statemachine.State()
+
+# shutdown path
+ShutdownSequence = statemachine.State()
+RefreshSequence = statemachine.State()
 
 Shutdown = statemachine.State()
 CloseSample = statemachine.State()
@@ -37,8 +42,7 @@ RefreshSamples = statemachine.State()
 PoweroffNoRevert = statemachine.State()
 
 # execution loop
-WaitForMoar = statemachine.State()
-GetResult = statemachine.State()
+GetOutput = statemachine.State()
 Decision = statemachine.State()
 
 # disk generation
@@ -75,11 +79,14 @@ def make_after_test_decision():
 
     if(state == None): 
         print "State is None, shutting down"
-        return Shutdown
+        return ShutdownSequence
+
+    if(state.timeout):
+        return PoweroffNoRevertNoRefresh
     
     if(state.samples_exhausted):
-        return RefreshSamples
-    if(status =="PTO"):
+        return RefreshSequence
+    if(status =="PT"):
         # co to znaczy?
         return TestPerform
     if(status == "STTO"):
@@ -95,21 +102,23 @@ def make_after_test_decision():
     if(status == "TO"):
         return UpdateStats
     if(status == "ST"):
-        return WaitForMoar
+        return GetOutput
     if(status == "CR"):
         return HandleCrash
 
-    print "Unable to handle state, shutting down"
-    return Shutdown
+    print "Unable to handle state: %s, shutting down" % status
+    return ShutdownSequence
 
 # Main decision vertex
 Decision.name = "Deciding on next step"
 Decision.consequence = None
 Decision.choosing_consequence = make_after_test_decision
 
-WaitForMoar.name = "Waiting for moar input"
-WaitForMoar.consequence = Decision
-WaitForMoar.executing_routine = usualparts.testing_parts.read_output
+ShutdownSequence.name = "Initiating shutdown sequence"
+ShutdownSequence.consequence = Shutdown
+
+RefreshSequence.name = "Initiating refresh sequence"
+RefreshSequence.consequence = RefreshSamples
 
 Shutdown.name = "Shutting down"
 Shutdown.consequence = Exit
@@ -127,16 +136,16 @@ StopLog.executing_routine = usualparts.hs_logging.disable_logging
 
 #Crash path
 
-CrashPoweroffNoRevert.name = "Powering off w/o reverting"
-CrashPoweroffNoRevert.consequence = StartQemuFull
-CrashPoweroffNoRevert.executing_routine = usualparts.qemu_parts.poweroff_no_revert
+PoweroffNoRevertNoRefresh.name = "Powering off w/o reverting"
+PoweroffNoRevertNoRefresh.consequence = StartQemuFull
+PoweroffNoRevertNoRefresh.executing_routine = usualparts.qemu_parts.poweroff_no_revert
 
-CrashStopLog.name = "Disabling binner logging"
-CrashStopLog.consequence = CrashPoweroffNoRevert
-CrashStopLog.executing_routine = usualparts.hs_logging.disable_logging
+StopLogNoRefresh.name = "Disabling binner logging"
+StopLogNoRefresh.consequence = PoweroffNoRevertNoRefresh
+StopLogNoRefresh.executing_routine = usualparts.hs_logging.disable_logging
 
 HandleCrash.name = "Handle the crash"
-HandleCrash.consequence = CrashStopLog
+HandleCrash.consequence = StopLogNoRefresh
 HandleCrash.executing_routine = usualparts.testing_parts.handle_crash
 
 RefreshSamples.name = "Refresh samples batch"
@@ -144,23 +153,25 @@ RefreshSamples.consequence = PoweroffNoRevert
 RefreshSamples.executing_routine = usualparts.testing_parts.handle_samples_exhaustion
 
 ScriptRun.name = "Run a script"
-ScriptRun.consequence = WaitForMoar
+ScriptRun.consequence = GetOutput
 ScriptRun.executing_routine = usualparts.testing_parts.execute_script
 
 CloseSample.name = "Closing sample"
-CloseSample.consequence = WaitForMoar
+CloseSample.consequence = GetOutput
 CloseSample.executing_routine = usualparts.binner_parts.binner_close_sample
 
 UpdateStats.name = "Updating stats"
 UpdateStats.consequence = CloseSample
 UpdateStats.executing_routine = usualparts.testing_parts.update_stats
 
-GetResult.name = "Getting test result"
-GetResult.consequence = Decision
-GetResult.executing_routine = usualparts.testing_parts.read_last_sample
+GetOutput.name = "Getting test result"
+GetOutput.consequence = Decision
+GetOutput.executing_routine = usualparts.testing_parts.read_last_sample
+GetOutput.acceptable_error_count = 10
+GetOutput.trans_error_handler = usualparts.other_parts.noop
 
 TestPerform.name = "Perform sample test"
-TestPerform.consequence = WaitForMoar
+TestPerform.consequence = GetOutput
 TestPerform.executing_routine = usualparts.testing_parts.test_sample
 
 BinnerCheckReady.name = "Binner starting logs"

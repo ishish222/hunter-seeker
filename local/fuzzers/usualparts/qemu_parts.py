@@ -24,9 +24,8 @@ def qemu_prepare_pipes():
 def qemu_ready():
     globs.state.reqScript = ""
     globs.state.status = "RD"
-    print "test"
-    for s in globs.state.samples_list:
-        print s
+#    for s in globs.state.samples_list:
+#        print s
 
 def qemu_prepare(options, state):
     global signaled
@@ -70,9 +69,8 @@ def qemu_start_full():
     #TODO!!! wee nedd to perform test, not wait!
 
     print("[%s] Qemu full boot finished" % common.timestamp())
-    print "test"
-    for s in globs.state.samples_list:
-        print s
+#    for s in globs.state.samples_list:
+#        print s
 
 def qemu_start_revert(options, state):
     options = globs.state.options
@@ -109,8 +107,8 @@ def temu_mount_disks():
     if(hasattr(options,'saved_disk_img')):
         options.slot_saved = common.mount_via_usb(options, options.saved_disk_img, 'saved')
 
-    for s in globs.state.samples_list:
-        print s
+#    for s in globs.state.samples_list:
+#        print s
 
 def qemu_mount_disks():
     options = globs.state.options
@@ -127,8 +125,8 @@ def qemu_mount_disks():
         options.slot_saved = common.pci_mount(options, options.saved_disk_img) #hotplug should be completed during bootup
 #        options.slot_saved = common.drive_mount(options, options.saved_disk_img, 'saved') #hotplug should be completed during bootup
 
-    for s in globs.state.samples_list:
-        print s
+#    for s in globs.state.samples_list:
+#        print s
     #TODO:replaced by proceed1, maybe I should replace it with specific parts?
 
     # executed during each fuzzbox start
@@ -161,7 +159,7 @@ def qemu_connect_dev_socket():
         raise MachineError
     s.settimeout(options.settings.fuzzbox_timeout)
     #trying infinite
-    s.settimeout(None)
+    #s.settimeout(None)
 
 def qemu_umount_disks():
     #move from poweroff

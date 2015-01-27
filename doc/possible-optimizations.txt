@@ -1,2 +1,5 @@
 resave machine state
 use tmpfs partitions
+
+traktowac timeouty, zawiasy etc. jako naturalny stan rzeczy, a zmniejszenie liczby zwiazanych z nimi restartow - jako jeden z kierunekow optymalizacji
+reducing TO over MA

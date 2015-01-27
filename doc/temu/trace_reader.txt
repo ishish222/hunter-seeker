@@ -1,0 +1,21 @@
+(00000001)e65486:       movzx  eax,BYTE PTR [ecx]       
+M@0x0b889d00[0x00000058][1](R) T1 {1 (680, 0) ()()()}   
+R@eax[0x02152100][4](W) T0 
+ESP:  NUM_OP: 3 PID: 0 TID: 1744 TP: TPSrc EFLAGS: 0x00200202 CC_OP: 0x00000010 DF: 0x00000001 
+RAW: 0x0fb601 
+MEMREGS(1):         R@ecx[0x0b889d00][4](R) T0 
+
+(<sequence no>) <eip>: <disasm> <operand: <contents> <taint info: >  > <process level info> <raw bytes> <additional>
+
+--
+taint info:
+T1 {1 (680, 0) ()()()}
+
+{<taint id> {<taint id> (?, <offset>) ()()()}
+
+--
+Movie:
+https://www.youtube.com/watch?v=JsUtRzF0LJ4
+trace_align: 23:45
+
+x86_slicer appliance: 35:02

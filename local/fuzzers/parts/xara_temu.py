@@ -16,6 +16,7 @@ TemuConfigurePlugin = statemachine.State()
 TemuTaintBegin = statemachine.State()
 TemuTaintWait = statemachine.State()
 TemuTaintConclude = statemachine.State()
+TemuCooldown = statemachine.State()
 
 Start.name = "Start"
 #Start.consequence = usualparts.default_map.PrintLogo
@@ -45,9 +46,9 @@ TemuPoweroffNoRevert.name = "Powering off Temu"
 TemuPoweroffNoRevert.consequence = statemachine.Exit
 TemuPoweroffNoRevert.executing_routine = usualparts.qemu_parts.temu_poweroff_no_revert
 
-#TemuMountDisks.name = "Mounting Temu disks"
-#TemuMountDisks.consequence = dm.QemuConnectDevSocket
-#TemuMountDisks.executing_routine = usualparts.qemu_parts.temu_mount_disks
+TemuCooldown.name = "Cooling down Temu"
+TemuCooldown.consequence = usualparts.taint_parts.cooldown_temu
+TemuCooldown.executing_routine = dm.BinnerConfigure
 
 #TemuUmountDisks.name = "Umounting Temu disks"
 #TemuUmountDisks.consequence = TemuPoweroffNoRevert
@@ -61,7 +62,8 @@ def long_sleep():
     time.sleep(600)
 
 LongSleep.name = "Taking a short 10 min nap"
-LongSleep.consequence = dm.BinnerSpawnPythonServer
+#LongSleep.consequence = dm.BinnerSpawnPythonServer
+LongSleep.consequence = usualparts.other_parts.noop
 LongSleep.executing_routine = long_sleep
 
 #reroutes
@@ -69,5 +71,6 @@ dm.PreparePipes.consequence = TemuCreateSharedDisk
 dm.StartQemuFull.consequence = LongSleep
 dm.BinnerConfigure.consequence = FindPID
 dm.StopLog.consequence = TemuUmountDisks
+dm.BinnerSpawnApp.consequence = TemuCooldown
 
 

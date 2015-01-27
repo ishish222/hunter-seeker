@@ -57,3 +57,4 @@ scripts_4 = ["lclick", "esc"]
 
 #scripts_5 = ["sleep_05"]
 
+fuzzbox_timeout = None

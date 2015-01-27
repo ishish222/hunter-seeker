@@ -40,8 +40,8 @@ def test_sample():
     state = globs.state
     status = globs.state.status
 
-    for s in globs.state.samples_list:
-        print s
+#    for s in globs.state.samples_list:
+#        print s
     #this should be on run end
 #    print("Current stats (SA/MA/TO): %d/%d/%d" % (stats.sample_count, stats.ma_count, stats.to_count))
 
@@ -116,24 +116,17 @@ def read_output():
 
     print "waiting for output"
 
-    (lastResponse, status, reqScript) = read_socket(options.s)
-    globs.state.status = status
-    globs.state.lastResponse = lastResponse
-    globs.state.reqScript = reqScript
+    try:
+        (lastResponse, status, reqScript) = read_socket(options.s)
+        globs.state.status = status
+        globs.state.lastResponse = lastResponse
+        globs.state.reqScript = reqScript
+    except Exception, e:
+        raise MachineError
+        globs.state.timeout = True
 
 def read_last_sample():
-    options = globs.state.options
-    state = globs.state
-
-    if(state.samples_exhausted):
-        return
-
-    print "waiting for output"
-
-    (lastResponse, status, reqScript) = read_socket(options.s)
-    globs.state.status = status
-    globs.state.lastResponse = lastResponse
-    globs.state.reqScript = reqScript
+    return read_output()
 
 def execute_script():
     options = globs.state.options

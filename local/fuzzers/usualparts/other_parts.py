@@ -232,4 +232,5 @@ def wait_for_keypress():
     os.system('read -s -n 1 -p "Press any key to continue..."')
     print
 
-
+def noop():
+    pass

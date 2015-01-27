@@ -34,10 +34,9 @@ def stateful_routine():
             except statemachine.MachineError:
                 if(current_state.attempts < current_state.acceptable_error_count):
                     current_state.attempts = current_state.attempts +1
-                    current_state.trans_error_handler()
-#                    continue
+                    current_state.trans_error_handler() # this handler is only for preparing for repeat, fuzzing decisions should be made elsewhere
                 else:
-                    print("Too many state transition errors, exiting")
+                    print("Too many state transition errors, exiting") # this means there's a possible error in machine, should notify via mail or sms
                     exit()
             current_state = current_state.consequence
               

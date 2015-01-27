@@ -58,6 +58,8 @@ class DirGenerator(object):
                 print "Need to specify target file name or extension"
                 raise GeneratorException
 #            print "Target file: %s" % self.target_file
+            #add four letters of original name
+            
             self.dest_suffix = "."+self.target_file.split(".")[-1]
 
             fname = "%s/%s" % (tname, self.target_file)
@@ -94,9 +96,10 @@ class Generator(object):
 
     def generate(self, amt=100):
         samples_list = []
+        extension = os.path.basename(self.origin_path)[0:4]
         os.spawnv(os.P_WAIT, "/bin/mkdir", ["mkdir", "-p", self.dest_path])
         for i in range(0, amt):
-            tmp, tname = tempfile.mkstemp(suffix = self.dest_suffix, dir = self.dest_path)
+            tmp, tname = tempfile.mkstemp(suffix = '-' + extension + self.dest_suffix, dir = self.dest_path)
             L = ["cp", self.origin_path, tname]
             os.spawnv(os.P_WAIT, "/bin/cp", L)
             os.close(tmp)

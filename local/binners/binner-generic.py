@@ -226,6 +226,27 @@ def execute(cmds):
             main_binner.writePipe("We're cool\n")
             main_binner.ok()
 
+        if(cmd == "cooldown2"):
+            from functions import getCPU
+
+            cool_count, cool_level = args.split(" ")
+
+            main_binner.writePipe("Waiting for cooldown\n")
+            cool_count = 5
+
+            count = 0
+            while(count <5):
+                time.sleep(cool_wait)
+                val = getCPU()
+                main_binner.writePipe("CPU usage: %d\n" % val)
+                if val < cool_level:
+                    count = count+1
+                else:
+                    count = 0
+
+            main_binner.writePipe("We're cool\n")
+            main_binner.ok()
+
         elif(cmd == "testAll"):
             for sample in glob("e:\\samples\\shared\\*.*"):
                 main_binner.attach_st_markers()

@@ -120,3 +120,10 @@ def perform_after_test():
     common.proceed5(options)
     write_socket(options.s, "")
 
+def cooldown_temu():
+    options = globs.state.options
+
+    print "Cooling down for Temu"
+    write_socket(options.s, "cooldown2 5 30")
+    read_socket(options.s)
+

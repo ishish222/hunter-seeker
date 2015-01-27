@@ -11,6 +11,12 @@ read_socket = common.read_socket
 report = common.report
 
 #def binner_kill_explorer(options, state):
+def binner_kill_host():
+    options = globs.state.options
+
+    write_socket(options.s, "killHost")
+    read_socket(options.s)
+
 def binner_kill_explorer():
     options = globs.state.options
 
