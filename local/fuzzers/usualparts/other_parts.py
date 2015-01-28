@@ -225,8 +225,9 @@ def sigkill_handler(signum, frame):
 def register_signals():
     import signal
     import common
-    signal.signal(signal.SIGINT, sigkill_handler)
-    signal.signal(signal.SIGTERM, sigkill_handler)
+    # przeszkadza jednak, nie mozna zakonczyc czasem
+#    signal.signal(signal.SIGINT, sigkill_handler)
+#    signal.signal(signal.SIGTERM, sigkill_handler)
     signal.signal(signal.SIGUSR1, sigkill_handler)
     signal.signal(signal.SIGHUP, sigkill_handler)
 

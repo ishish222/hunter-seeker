@@ -29,6 +29,7 @@ RefreshSequence = statemachine.State()
 
 Shutdown = statemachine.State()
 CloseSample = statemachine.State()
+LogResult = statemachine.State()
 BinnerCheckReady = statemachine.State()
 PreFuzzingActions= statemachine.State()
 StopLog = statemachine.State()
@@ -78,14 +79,13 @@ def make_after_test_decision():
     state = globs.state
 
     if(state == None): 
-        print "State is None, shutting down"
         return ShutdownSequence
 
-    if(state == ""):
-        return GetOutput
-
-    if(state.timeout):
-        return PoweroffNoRevertNoRefresh
+    if(status == ""):
+        if(state.timeout):
+            return PoweroffNoRevertNoRefresh
+        else:
+            return GetOutput
     
     if(state.samples_exhausted):
         return RefreshSequence
@@ -164,8 +164,12 @@ CloseSample.name = "Closing sample"
 CloseSample.consequence = GetOutput
 CloseSample.executing_routine = usualparts.binner_parts.binner_close_sample
 
+LogResult.name = "Logging the results"
+LogResult.consequence = CloseSample
+LogResult.executing_routine = usualparts.testing_parts.log_result
+
 UpdateStats.name = "Updating stats"
-UpdateStats.consequence = CloseSample
+UpdateStats.consequence = LogResult
 UpdateStats.executing_routine = usualparts.testing_parts.update_stats
 
 GetOutput.name = "Getting test result"

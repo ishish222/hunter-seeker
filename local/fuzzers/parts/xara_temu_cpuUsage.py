@@ -4,6 +4,9 @@ import usualparts.taint_parts
 import usualparts.binner_parts
 import usualparts.other_parts
 import time
+import usualparts.globs as globs
+from common import write_socket, read_socket
+
 
 Start = statemachine.State()
 FindPID = statemachine.State()
@@ -17,6 +20,8 @@ TemuTaintBegin = statemachine.State()
 TemuTaintWait = statemachine.State()
 TemuTaintConclude = statemachine.State()
 TemuCooldown = statemachine.State()
+ShortSleep= statemachine.State()
+GetUsage = statemachine.State()
 
 Start.name = "Start"
 #Start.consequence = usualparts.default_map.PrintLogo
@@ -63,15 +68,32 @@ FindPID.executing_routine = usualparts.taint_parts.find_pid
 def long_sleep():
     time.sleep(600)
 
+def short_sleep():
+    time.sleep(60)
+
+def ask_for_cpu_usage():
+    options = globs.state.options
+    print "Checking usage"
+    write_socket(options.s, "getCPUUsage")
+    read_socket(options.s)
+
+ShortSleep.name = "Taking a short 1 m nap"
+ShortSleep.consequence = GetUsage
+ShortSleep.executing_routine = short_sleep
+
+GetUsage.name = "Checking CPUUsage"
+GetUsage.consequence = ShortSleep
+GetUsage.executing_routine = ask_for_cpu_usage
+
 LongSleep.name = "Taking a short 10 min nap"
-#LongSleep.consequence = dm.BinnerSpawnPythonServer
-LongSleep.consequence = usualparts.other_parts.noop
+LongSleep.consequence = dm.BinnerSpawnPythonServer
+#LongSleep.consequence = GetUsage
 LongSleep.executing_routine = long_sleep
 
 #reroutes
 dm.PreparePipes.consequence = TemuCreateSharedDisk
 dm.StartQemuFull.consequence = LongSleep
-dm.BinnerConfigure.consequence = FindPID
+dm.BinnerConfigure.consequence = GetUsage
 dm.StopLog.consequence = TemuUmountDisks
 dm.BinnerSpawnApp.consequence = TemuCooldown
 

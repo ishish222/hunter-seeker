@@ -38,6 +38,7 @@ def stateful_routine():
             try:
                 current_state.executing_routine()
             except statemachine.MachineError:
+                print "Got state transition error"
                 if(current_state.attempts < current_state.acceptable_error_count):
                     current_state.attempts = current_state.attempts +1
                     current_state.trans_error_handler() # this handler is only for preparing for repeat, fuzzing decisions should be made elsewhere

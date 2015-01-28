@@ -9,7 +9,10 @@ report = common.report
 write_socket = common.write_socket
 read_socket = common.read_socket
 
+
 def walk_sample():
+    # sledzenie wykonania probki od markera MA
+
     options = globs.state.options
     state = globs.state
     status = globs.state.status
@@ -36,13 +39,14 @@ def walk_sample():
 
 
 def test_sample():
+    # test single sample
+    
     options = globs.state.options
     state = globs.state
     status = globs.state.status
 
-#    for s in globs.state.samples_list:
-#        print s
-    #this should be on run end
+    # resetowanie stanu
+    globs.state.status = ""
 #    print("Current stats (SA/MA/TO): %d/%d/%d" % (stats.sample_count, stats.ma_count, stats.to_count))
 
     try:
@@ -60,10 +64,6 @@ def test_sample():
     options.settings.runner_0(options, [test_file])
     options.log.write("%s: " % test_file)
     options.log.flush()
-    #test is under way
-    #options.log.write("[%s] \n" % status)
-    #options.log.flush()
-
 
 def perform_pre_test():
     options = globs.state.options
@@ -73,8 +73,16 @@ def perform_pre_test():
 def perform_after_test():
     options = globs.state.options
 
+    # zamknij probke
     common.proceed5(options)
     write_socket(options.s, "")
+
+def log_result():
+    options = globs.state.options
+
+    # wpis w logu
+    options.log.write("[%s] \n" % globs.state.status)
+    options.log.flush()
 
 def update_stats():
     options = globs.state.options
@@ -114,18 +122,15 @@ def read_output():
     if(state.samples_exhausted):
         return
 
-    print "waiting for output"
-
     try:
         (lastResponse, status, reqScript) = read_socket(options.s)
         globs.state.status = status
         globs.state.lastResponse = lastResponse
         globs.state.reqScript = reqScript
 
-        print "Read: %s" % lastResponse
     except Exception, e:
-        raise MachineError
         globs.state.timeout = True
+        raise MachineError
 
 def read_last_sample():
     return read_output()
