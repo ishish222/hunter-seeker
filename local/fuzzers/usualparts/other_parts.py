@@ -1,6 +1,7 @@
 import statemachine
 import globs
 import os
+
 options = globs.state.options
 
 def defined(name):
@@ -214,11 +215,20 @@ def get_options():
     return
 
 
+def sigkill_handler(signum, frame):
+    options = globs.state.options
+    print "Detected sigkill from user"
+    options.shutting_down = True
+    raise statemachine.MachineExit
+    return
+
 def register_signals():
     import signal
     import common
-    signal.signal(signal.SIGINT, common.sigkill_handler)
-#    signal.signal(signal.SIGUSR1, sig1_handler)
+    signal.signal(signal.SIGINT, sigkill_handler)
+    signal.signal(signal.SIGTERM, sigkill_handler)
+    signal.signal(signal.SIGUSR1, sigkill_handler)
+    signal.signal(signal.SIGHUP, sigkill_handler)
 
 def wait_1_seconds():
     import time

@@ -119,7 +119,7 @@ Decision.choosing_consequence = make_after_test_decision
 
 ShutdownSequence.name = "Initiating shutdown sequence"
 ShutdownSequence.consequence = Shutdown
-ShutdownSequence.executing_routine = usualparts.other_parts.wait_100_seconds
+#ShutdownSequence.executing_routine = usualparts.other_parts.wait_100_seconds
 
 RefreshSequence.name = "Initiating refresh sequence"
 RefreshSequence.consequence = RefreshSamples

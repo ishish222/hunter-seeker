@@ -5,9 +5,12 @@ import usualparts.globs as globs
 import common
 
 Start = statemachine.State()
+
 ShutdownKillHost = statemachine.State()
 RefreshKillHost = statemachine.State()
 PlugTimeHole = statemachine.State()
+
+DefaultShutdown = dm.ShutdownSequence
 
 Start.name = "Start"
 #Start.consequence = usualparts.default_map.PrintLogo

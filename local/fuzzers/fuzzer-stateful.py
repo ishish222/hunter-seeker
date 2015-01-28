@@ -24,8 +24,14 @@ def stateful_routine():
     exec import_stat
 
     current_state = machine.Start
+    default_shutdown = machine.DefaultShutdown
 
     while(current_state != statemachine.Exit):
+        # handle possible ctrl-C
+#        state = globs.state
+#        if(state.shutting_down):
+#            current_state = default_shutdown
+
         print ""
         print "=> Current state: [%s]" % current_state.name
         if(current_state.consequence != None):
@@ -38,6 +44,8 @@ def stateful_routine():
                 else:
                     print("Too many state transition errors, exiting") # this means there's a possible error in machine, should notify via mail or sms
                     exit()
+            except statemachine.MachineExit:
+                current_state.consequence = default_shutdown
             current_state = current_state.consequence
               
         else:

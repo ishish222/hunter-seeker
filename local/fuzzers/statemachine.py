@@ -8,6 +8,9 @@ def dummy():
 class MachineError(Exception):
     pass
 
+class MachineExit(Exception):
+    pass
+
 class State:
     def __init__(self):
         self.name = "Generic"

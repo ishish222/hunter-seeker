@@ -16,6 +16,7 @@ class state_class(object):
     reqScript = ""
     initialized = False
     timeout = False
+    shutting_down = False
     
 
 def init():
