@@ -53,6 +53,7 @@ ma_rd_addrs = []
 ma_rd_rvas = []
 
 samples_shared_path = "e:\\samples\\shared"
+samples_shared_subdir = "samples/shared"
 samples_saved = "e:\\samples\\saved"
 samples_binned = "f:\\"
 samples_original = "d:\\samples\\original"

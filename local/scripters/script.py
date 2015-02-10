@@ -64,7 +64,7 @@ def write_monitor(pipe, data):
 #    pipe.stdin.write(data + "\n")
     pipe.send(data + "\n")
     ret = read_monitor(pipe)
-    print(ret)
+#    print(ret)
     ret = read_monitor(pipe)
 #    print(ret)
     return ret

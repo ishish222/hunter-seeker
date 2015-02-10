@@ -823,6 +823,10 @@ def execute(cmds):
 #            main_binner.writePipe("REACT marker list: {0}\n".format(main_binner.end_markers))
             main_binner.ok()
 
+        elif(cmd == "runFile"):
+            settings.runner(args)
+            main_binner.ok()
+
         elif(cmd == "binTest"):
 #            dlog("binTest")
             main_binner.writePipe("Communication with binner is working")

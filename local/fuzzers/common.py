@@ -671,7 +671,7 @@ def create_layout(options):
 def generate(options):
     samples_list = []
     create_layout(options)
-    os.spawnv(os.P_WAIT, "/bin/cp", ["cp", options.origin, options.tmp_mountpoint+"/samples/shared"])
+    os.spawnv(os.P_WAIT, "/bin/cp", ["cp", options.origin, '%s/%s' % (options.tmp_mountpoint, options.settings.samples_shared_subdir)])
 
     generator_mod, generator_class = options.generator.split(".")
     mutator_mod, mutator_class = options.mutator.split(".")

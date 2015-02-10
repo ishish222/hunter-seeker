@@ -32,7 +32,7 @@ def create_temu_samples_disk():
 
     for sample in state.samples_list:
         print(options.tmp_mountpoint + '/' + sample)
-        os.spawnv(os.P_WAIT, '/usr/bin/sudo', ['sudo', 'cp', sample, options.tmp_mountpoint])
+        os.spawnv(os.P_WAIT, '/usr/bin/sudo', ['sudo', 'cp', sample, '%s/%s' % (options.tmp_mountpoint, options.settings.samples_shared_subdir)])
 
     df.umount_drive_host(options)
     df.del_mountpoint(options)
@@ -95,9 +95,9 @@ def temu_taint_start():
     time.sleep(1)
 
 
-    wo_drive = '\\'.join(options.settings.samples_shared_path.split('\\')[1:])
-    print "taint_file %s\\%s 1 0\n" % (wo_drive, sample_path)
-    write_monitor_2(options.m, "taint_file %s\\%s 1 0\n" % (wo_drive, sample_path))
+    wo_drive = '/'.join(options.settings.samples_shared_path.split('\\')[1:])
+    print "taint_file %s/%s 1 0\n" % (wo_drive, sample_path)
+    write_monitor_2(options.m, "taint_file %s/%s 1 0\n" % (wo_drive, sample_path))
     print(read_monitor(options.m))
     time.sleep(1)
 
@@ -113,7 +113,7 @@ def temu_taint_start():
     test_file = path.basename(test_path)
 
     time.sleep(2)
-    write_socket(options.s, "testFile %s\\%s\n" % (options.settings.samples_shared_path, test_file))
+    write_socket(options.s, "runFile %s\\%s" % (options.settings.samples_shared_path, test_file))
 
     options.settings.runner_0(options, [test_file])
     options.log.write("%s: " % test_file)
