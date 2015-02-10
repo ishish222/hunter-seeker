@@ -1,10 +1,18 @@
 #!/bin/sh
 SRC=$1
 DST=$2
+OFFSET=$3
 TMPDIR=$(mktemp -d)
 echo "Extrating from $SRC into $DST"
 mkdir -p $DST
-sudo mount $SRC $TMPDIR
+
+if [ $OFFSET ]
+then
+    sudo mount -o offset=$OFFSET $SRC $TMPDIR
+else
+    sudo mount $SRC $TMPDIR
+fi
+
 cp -r $TMPDIR/* $DST
 sudo umount $TMPDIR
 rm -rf $TMPDIR

@@ -78,6 +78,7 @@ shutdown_wait = 15
 init_timeout = 10 
 log_level = 4
 smp = 2
+large_results_dir = '/tmp'
 
 qemu_machines = "/home/ish/machines/qemu"
 qemu_m = "3G"

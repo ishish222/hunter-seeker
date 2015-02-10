@@ -161,6 +161,30 @@ def qemu_connect_dev_socket():
     #trying infinite
     #s.settimeout(None)
 
+def qemu_connect_dev_socket_infinite():
+    options = globs.state.options
+    state = globs.state
+
+    s = options.s
+#    dt = socket.getdefaulttimeout()
+#    socket.setdefaulttimeout(options.init_timeout)
+#    dts = s.gettimeout()
+    s.settimeout(options.init_timeout)
+
+#    while True:
+    try:
+        print("Waiting for connection...")
+        read_socket(options.s)
+        state.initialized = True
+    except socket.timeout:
+        print("Accpet timed out")
+        state.initialized = False
+        print "raising machine error"
+        raise MachineError
+    #s.settimeout(options.settings.fuzzbox_timeout)
+    #trying infinite
+    s.settimeout(None)
+
 def qemu_umount_disks():
     #move from poweroff
     pass

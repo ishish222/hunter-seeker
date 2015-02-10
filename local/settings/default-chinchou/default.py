@@ -78,6 +78,7 @@ shutdown_wait = 15
 init_timeout = 10 
 log_level = 4
 smp = 2
+large_results_dir = '/tmp'
 
 qemu_machines = "/mnt/4/machines/"
 qemu_m = "2G"

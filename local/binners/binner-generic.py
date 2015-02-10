@@ -230,15 +230,19 @@ def execute(cmds):
             from functions import getCPU
 
             cool_count, cool_level = args.split(" ")
+            cool_count = int(cool_count)
+            cool_level = int(cool_level)
+            cool_wait = 5
 
-            main_binner.writePipe("Waiting for cooldown\n")
-            cool_count = 5
+            main_binner.writePipe("Waiting for cooldown: level %d, count %d\n" % (cool_level, cool_count))
+            print("Waiting for cooldown: level %d, count %d\n" % (cool_level, cool_count))
 
             count = 0
             while(count <5):
                 time.sleep(cool_wait)
                 val = getCPU()
                 main_binner.writePipe("CPU usage: %d\n" % val)
+                print 'val: %d, cool_level: %d' % (val, cool_level)
                 if val < cool_level:
                     count = count+1
                 else:

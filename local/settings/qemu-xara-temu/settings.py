@@ -42,7 +42,8 @@ mutator = "changer.Changer"
 qemu_m = "2000"
 qemu_command = "/home/hs1/temu-1.0-3/tracecap/temu"
 qemu_env = [('LD_LIBRARY_PATH', '/mnt/gentoo32/usr/lib')]
-qemu_additional = ['--no-kqemu', '-usb']
+smp = 4
+qemu_additional = ['--no-kqemu', '-net', 'none']
 qemu_drive_options=""
 qemu_secondary="temu-samples-1.img"
 

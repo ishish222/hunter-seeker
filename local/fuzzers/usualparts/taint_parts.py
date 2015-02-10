@@ -5,8 +5,9 @@ import globs
 from glob import glob
 import os
 import usualparts.disk_fs_parts as df
-from script import rs, rss, runscriptq, write_monitor, write_monitor_2
-from os import system
+from script import rs, rss, runscriptq, write_monitor, write_monitor_2, read_monitor
+from os import system, path
+import re
 
 report = common.report
 write_socket = common.write_socket
@@ -45,17 +46,37 @@ def find_pid():
     state = globs.state
     status = globs.state.status
 
-    write_socket(s, "ps")
-    glob.state.pid = 0 #change
+    write_socket(options.s, "ps")
+    (lastResponse, status, reqScript) = read_socket(options.s)
+
+    pid_re = '0x[0-9A-Fa-f]+ (0x[0-9A-Fa-f]+) (\S+)'
+    pids = re.findall(pid_re, lastResponse)
+
+    print pids
+
+    globs.state.pid = 0
+
+    for pid, name in pids:
+        if(name == options.settings.app_module):
+            globs.state.pid = int(pid, 16)
+
+    print 'Found: 0x%x' % globs.state.pid
 
 def temu_configure_tracecap():
     options = globs.state.options
     state = globs.state
     status = globs.state.status
 
-    write_monitor(options.m, "load_plugin ./tracecap.so")
+    globs.state.options.qemu_dir = path.dirname(options.settings.qemu_command)
+    qemu_dir = globs.state.options.qemu_dir
+
+    write_monitor_2(options.m, 'load_plugin %s/tracecap.so\n' % qemu_dir)
+    print read_monitor(options.m)
+    print 'plgin loaded'
     time.sleep(1)
-    write_monitor(options.m, "load_config ./main.ini")
+    write_monitor_2(options.m, "load_config %s/main.ini\n" % qemu_dir)
+    print read_monitor(options.m)
+    print 'config loaded'
     time.sleep(1)
 
 def temu_taint_start():
@@ -63,22 +84,48 @@ def temu_taint_start():
     state = globs.state
     status = globs.state.status
 
-    write_monitor(options.m, "enable_emulation")
+    sample_path = state.samples_list.pop()
+    sample_file = path.basename(sample_path)
+    
+    print sample_path
+    print sample_file
+    
+    write_monitor_2(options.m, "enable_emulation\n")
+    read_monitor(options.m)
     time.sleep(1)
-    write_monitor(options.m, "taint_file %s 1 0" % 'plik')
-    time.sleep(1)
-    write_monitor(options.m, "trace %s %s" % ('pid', 'out'))
 
-    # spawn sample
+
+    wo_drive = '\\'.join(options.settings.samples_shared_path.split('\\')[1:])
+    print "taint_file %s\\%s 1 0\n" % (wo_drive, sample_path)
+    write_monitor_2(options.m, "taint_file %s\\%s 1 0\n" % (wo_drive, sample_path))
+    print(read_monitor(options.m))
+    time.sleep(1)
+
+#    state.pid=1
+
+    print "trace %s %s\n" % (state.pid, '%s/%s-%s.out' % (options.settings.large_results_dir, common.timestamp2(), sample_file))
+    write_monitor_2(options.m, "trace %s \"%s\"\n" % (state.pid, '%s/%s-%s.out' % (options.settings.large_results_dir, common.timestamp2(), sample_file)))
+    print(read_monitor(options.m))
+    time.sleep(1)
+
+    # prepare sample
+    test_path = options.settings.prepare_sample(sample_path)
+    test_file = path.basename(test_path)
+
+    time.sleep(2)
+    write_socket(options.s, "testFile %s\\%s\n" % (options.settings.samples_shared_path, test_file))
+
+    options.settings.runner_0(options, [test_file])
+    options.log.write("%s: " % test_file)
 
 def temu_taint_conclude():
     options = globs.state.options
     state = globs.state
     status = globs.state.status
 
-    write_monitor(options.m, "trace_stop")
+    write_monitor_2(options.m, "trace_stop\n")
     time.sleep(1)
-    write_monitor(options.m, "disable_emulation")
+    write_monitor_2(options.m, "disable_emulation\n")
     time.sleep(1)
 
 def open_sample():
@@ -124,6 +171,7 @@ def cooldown_temu():
     options = globs.state.options
 
     print "Cooling down for Temu"
-    write_socket(options.s, "cooldown2 5 30")
+    #write_socket(options.s, "cooldown2 5 30")
+    write_socket(options.s, "cooldown2 5 101")
     read_socket(options.s)
 

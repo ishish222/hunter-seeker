@@ -31,6 +31,7 @@ class ScriptException(Exception):
 def read_monitor(pipe):
     data = ''
     while(True):
+#        print data
 #        data += pipe.stdout.read(1)
         data += pipe.recv(1)
         if(data[-6:] == "(qemu)"): 
@@ -63,7 +64,7 @@ def write_monitor(pipe, data):
 #    pipe.stdin.write(data + "\n")
     pipe.send(data + "\n")
     ret = read_monitor(pipe)
-#    print(ret)
+    print(ret)
     ret = read_monitor(pipe)
 #    print(ret)
     return ret
