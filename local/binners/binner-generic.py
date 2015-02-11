@@ -214,7 +214,7 @@ def execute(cmds):
             cool_wait = 1
 
             count = 0
-            while(count <5):
+            while(count < cool_count):
                 time.sleep(cool_wait)
                 val = getCPU()
                 main_binner.writePipe("CPU usage: %d\n" % val)
@@ -238,7 +238,32 @@ def execute(cmds):
             print("Waiting for cooldown: level %d, count %d\n" % (cool_level, cool_count))
 
             count = 0
-            while(count <5):
+            while(count < cool_count):
+                time.sleep(cool_wait)
+                val = getCPU()
+                main_binner.writePipe("CPU usage: %d\n" % val)
+                print 'val: %d, cool_level: %d' % (val, cool_level)
+                if val < cool_level:
+                    count = count+1
+                else:
+                    count = 0
+
+            main_binner.writePipe("We're cool\n")
+            main_binner.ok()
+
+        if(cmd == "cooldown3"):
+            from functions import getCPU
+
+            cool_count, cool_level = args.split(" ")
+            cool_count = int(cool_count)
+            cool_level = int(cool_level)
+            cool_wait = 1
+
+            main_binner.writePipe("Waiting for cooldown: level %d, count %d\n" % (cool_level, cool_count))
+            print("Waiting for cooldown: level %d, count %d\n" % (cool_level, cool_count))
+
+            count = 0
+            while(count < cool_count):
                 time.sleep(cool_wait)
                 val = getCPU()
                 main_binner.writePipe("CPU usage: %d\n" % val)

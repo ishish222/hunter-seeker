@@ -129,7 +129,18 @@ def binner_close_sample():
 def cooldown():
     options = globs.state.options
 
-    print "Cooling down"
     write_socket(options.s, "cooldown")
+    read_socket(options.s)
+
+def cooldown2():
+    options = globs.state.options
+
+    write_socket(options.s, "cooldown2 10 30")
+    read_socket(options.s)
+
+def cooldown3():
+    options = globs.state.options
+
+    write_socket(options.s, "cooldown3 5 10")
     read_socket(options.s)
 

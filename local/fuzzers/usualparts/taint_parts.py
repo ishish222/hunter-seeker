@@ -124,8 +124,10 @@ def temu_taint_conclude():
     status = globs.state.status
 
     write_monitor_2(options.m, "trace_stop\n")
+    print(read_monitor(options.m))
     time.sleep(1)
     write_monitor_2(options.m, "disable_emulation\n")
+    print(read_monitor(options.m))
     time.sleep(1)
 
 def open_sample():

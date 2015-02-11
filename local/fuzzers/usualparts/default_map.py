@@ -79,6 +79,9 @@ def make_after_test_decision():
     state = globs.state
 
     if(state == None): 
+        print "Unable to handle state: %s, shutting down" % status
+        globs.state.status = "ER"
+        usualparts.testing_parts.log_result()
         return ShutdownSequence
 
     if(status == ""):
@@ -89,6 +92,8 @@ def make_after_test_decision():
     
     if(state.samples_exhausted):
         return RefreshSequence
+
+
     if(status =="PT"):
         # co to znaczy?
         return TestPerform
@@ -101,15 +106,21 @@ def make_after_test_decision():
     if(status == "RD"):
         return TestPerform
     if(status == "MA"):
+        usualparts.testing_parts.log_result()
         return UpdateStats
     if(status == "TO"):
+        usualparts.testing_parts.log_result()
         return UpdateStats
     if(status == "ST"):
         return GetOutput
     if(status == "CR"):
+        usualparts.testing_parts.log_result()
         return HandleCrash
 
     print "Unable to handle state: %s, shutting down" % status
+    globs.state.status = "ER"
+    usualparts.testing_parts.log_result()
+
     return ShutdownSequence
 
 # Main decision vertex
@@ -169,7 +180,8 @@ LogResult.consequence = CloseSample
 LogResult.executing_routine = usualparts.testing_parts.log_result
 
 UpdateStats.name = "Updating stats"
-UpdateStats.consequence = LogResult
+#UpdateStats.consequence = LogResult
+UpdateStats.consequence = CloseSample #logging results in decision
 UpdateStats.executing_routine = usualparts.testing_parts.update_stats
 
 GetOutput.name = "Getting test result"
@@ -202,9 +214,9 @@ BinnerConfigure.name = "Configuring binner"
 BinnerConfigure.consequence = FuzzerReady
 BinnerConfigure.executing_routine = usualparts.binner_parts.binner_configure
 
-Cooldown.name = "Cooling down"
+Cooldown.name = "Cooling down 3"
 Cooldown.consequence = BinnerConfigure
-Cooldown.executing_routine = usualparts.binner_parts.cooldown
+Cooldown.executing_routine = usualparts.binner_parts.cooldown3
 
 BinnerSpawnApp.name = "Binner spawning application"
 BinnerSpawnApp.consequence = Cooldown

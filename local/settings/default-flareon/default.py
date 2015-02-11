@@ -35,8 +35,8 @@ machines = {
     'hs2-11': {'disk' : 'hs2-11.raw', 'vnc' : ':11', 'taskset' : '917504', 'monitor' : '/tmp/monitor-hs1', 'serial' : '/tmp/serial-hs1'},
     'hs2-12': {'disk' : 'hs2-12.raw', 'vnc' : ':12', 'taskset' : '14680064', 'monitor' : '/tmp/monitor-hs1', 'serial' : '/tmp/serial-hs1'},
     'hs3-01': {'disk' : 'hs3-win7-01.raw', 'vnc' : ':1', 'taskset' : '1,2,3', 'monitor' : '/tmp/monitor-hs1', 'serial' : '/tmp/serial-hs1'},
-    'temu-01': {'disk' : 'temu-01.raw', 'vnc' : ':1', 'taskset' : '9,10,11', 'monitor' : '/tmp/monitor-ts1', 'serial' : '/tmp/serial-ts1'},
-    'temu-02': {'disk' : 'temu-02.raw', 'vnc' : ':2', 'taskset' : '13,14,15', 'monitor' : '/tmp/monitor-ts2', 'serial' : '/tmp/serial-ts2'}
+    'temu-01': {'disk' : 'temu-01.raw', 'vnc' : ':21', 'taskset' : '9,10,11', 'monitor' : '/tmp/monitor-ts1', 'serial' : '/tmp/serial-ts1'},
+    'temu-02': {'disk' : 'temu-02.raw', 'vnc' : ':22', 'taskset' : '13,14,15', 'monitor' : '/tmp/monitor-ts2', 'serial' : '/tmp/serial-ts2'}
 }
 
 script_codes = {}
@@ -82,7 +82,8 @@ revert_wait = 20
 shutdown_wait = 25
 init_timeout = 10 
 log_level = 4
-smp = 2
+#smp = 2
+smp = 1 # in order to precisely measure usage
 large_results_dir = '/mnt/2/output'
 
 qemu_machines = "/home/hs1/machines/qemu"
