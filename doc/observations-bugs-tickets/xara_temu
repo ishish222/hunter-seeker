@@ -1,0 +1,9 @@
+1. Slady maja tylko po 3, 4 GB. Kiedy przechodze do dalszej czesci, okazuje sie, ze rura jest zlamana. O co cho?
+
+Wyglada jak blad temu, ktory zawiesza lub konczy dzialanie emulatora. Slad moze byc kompletny, poniewaz raport o bledzie juz zostal wyswietlony.
+
+Uwaga do testów:
+Od uruchomienia qemu do zabicia explorera ok. 20 min.
+Od uruchomienia probki do pierwszego sladu:
+
+

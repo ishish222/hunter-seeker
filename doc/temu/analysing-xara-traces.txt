@@ -1,0 +1,159 @@
+tmp0GUg8s.xar:
+
+Examine dossier & find interesting instruction:
+
+DesignerPro.exe:0062387e mov dword [eax],0x0 from thread 1936 caused access violation                                                                                                                               
+when attempting to write to 0x00000000
+
+Find instruction in trace:
+
+/home/hs1/temu-tools/vine-bin/trace_reader -trace 2015-02-11-15-45-50-825213-tmp0GUg8s.xar.out -count | grep 0062387e
+
+$ time /home/hs1/temu-tools/vine-bin/trace_reader -trace 2015-02-11-15-45-50-825213-tmp0GUg8s.xar.out -count | grep 62387
+
+...
+(16862387)77527a43:     add    %eax,-0x43c(%ebp)        R@eax[0x00000114][4](R) T0      M@0x0012c220[0x7760b254][4](RW) T1 {15 (529, 568) (529, 568) (529, 568) (529, 568) }
+(16962387)6244e0:       push   %ecx     R@ecx[0xf77e8f33][4](R) T1 {15 (529, 568) (529, 568) (529, 568) (529, 568) }    M@0x00128c08[0xf77ee7f1][4](W) T1 {15 (529, 568) (529, 568) (529, 568) (529, 568) }
+(17062387)7c9012a9:     je     0x000000007c9012cd       J@[0x00000024][4](R) T0
+(17073043)623870:       mov    0xb4(%esi),%edx  M@0x0012940c[0x104b0768][4](R) T1 {15 (529, 568) (529, 568) (529, 568) (529, 568) }     R@edx[0x02320608][4](W) T0
+(17073044)623876:       mov    %eax,(%edx)      R@eax[0x104b4770][4](R) T1 {15 (529, 568) (529, 568) (529, 568) (529, 568) }    M@0x104b0768[0x00000000][4](W) T0
+(17073045)623878:       mov    %eax,0xb4(%esi)  R@eax[0x104b4770][4](R) T1 {15 (529, 568) (529, 568) (529, 568) (529, 568) }    M@0x0012940c[0x104b0768][4](W) T1 {15 (529, 568) (529, 568) (529, 568) (529, 568) }
+(17073859)623fb8:       push   %esi     R@esi[0x00000004][4](R) T1 {15 (529, 568) (529, 568) (529, 568) (529, 568) }    M@0x00128b78[0x00623870][4](W) T0
+(17139876)623870:       mov    0xb4(%esi),%edx  M@0x0012940c[0x104e47d0][4](R) T1 {15 (529, 568) (529, 568) (529, 568) (529, 568) }     R@edx[0x02320608][4](W) T0
+(17139877)623876:       mov    %eax,(%edx)      R@eax[0x104e87d8][4](R) T1 {15 (529, 568) (529, 568) (529, 568) (529, 568) }    M@0x104e47d0[0x00000000][4](W) T0
+(17139878)623878:       mov    %eax,0xb4(%esi)  R@eax[0x104e87d8][4](R) T1 {15 (529, 568) (529, 568) (529, 568) (529, 568) }    M@0x0012940c[0x104e47d0][4](W) T1 {15 (529, 568) (529, 568) (529, 568) (529, 568) }
+(17140006)623fb8:       push   %esi     R@esi[0x00000004][4](R) T1 {15 (529, 568) (529, 568) (529, 568) (529, 568) }    M@0x00128b78[0x00623870][4](W) T0
+(17162387)7c914d99:     test   %eax,%eax        R@eax[0x006810c1][4](R) T1 {15 (529, 568) (529, 568) (529, 568) (529, 568) }    R@eax[0x006810c1][4](R) T1 {15 (529, 568) (529, 568) (529, 568) (529, 568) }
+(17182046)623870:       mov    0xb4(%esi),%edx  M@0x0012940c[0x104f07e8][4](R) T1 {15 (529, 568) (529, 568) (529, 568) (529, 568) }     R@edx[0x02320608][4](W) T0
+(17182047)623876:       mov    %eax,(%edx)      R@eax[0x104f47f0][4](R) T1 {15 (529, 568) (529, 568) (529, 568) (529, 568) }    M@0x104f07e8[0x00000000][4](W) T0
+(17182048)623878:       mov    %eax,0xb4(%esi)  R@eax[0x104f47f0][4](R) T1 {15 (529, 568) (529, 568) (529, 568) (529, 568) }    M@0x0012940c[0x104f07e8][4](W) T1 {15 (529, 568) (529, 568) (529, 568) (529, 568) }
+(17182197)623fb8:       push   %esi     R@esi[0x00000004][4](R) T1 {15 (529, 568) (529, 568) (529, 568) (529, 568) }    M@0x00128b78[0x00623870][4](W) T0
+(17262387)624356:       sub    %edx,%eax        R@edx[0x00000000][4](R) T1 {15 (529, 568) (529, 568) (529, 568) (529, 568) }    R@eax[0x00000000][4](RW) T1 {15 (529, 568) (529, 568) (529, 568) (529, 568) }
+(17278571)623870:       mov    0xb4(%esi),%edx  M@0x0012940c[0x105748f0][4](R) T1 {15 (529, 568) (529, 568) (529, 568) (529, 568) }     R@edx[0x02320608][4](W) T0
+(17278572)623876:       mov    %eax,(%edx)      R@eax[0x105788f8][4](R) T1 {15 (529, 568) (529, 568) (529, 568) (529, 568) }    M@0x105748f0[0x00000000][4](W) T0
+(17278573)623878:       mov    %eax,0xb4(%esi)  R@eax[0x105788f8][4](R) T1 {15 (529, 568) (529, 568) (529, 568) (529, 568) }    M@0x0012940c[0x105748f0][4](W) T1 {15 (529, 568) (529, 568) (529, 568) (529, 568) }
+(17278987)623fb8:       push   %esi     R@esi[0x00000004][4](R) T1 {15 (529, 568) (529, 568) (529, 568) (529, 568) }    M@0x00128b78[0x00623870][4](W) T0
+(17297328)623870:       mov    0xb4(%esi),%edx  M@0x0012940c[0x1057c900][4](R) T1 {15 (529, 568) (529, 568) (529, 568) (529, 568) }     R@edx[0x02320608][4](W) T0
+(17297329)623876:       mov    %eax,(%edx)      R@eax[0x10580908][4](R) T1 {15 (529, 568) (529, 568) (529, 568) (529, 568) }    M@0x1057c900[0x00000000][4](W) T0
+(17297330)623878:       mov    %eax,0xb4(%esi)  R@eax[0x10580908][4](R) T1 {15 (529, 568) (529, 568) (529, 568) (529, 568) }    M@0x0012940c[0x1057c900][4](W) T1 {15 (529, 568) (529, 568) (529, 568) (529, 568) }
+(17297846)623fb8:       push   %esi     R@esi[0x00000004][4](R) T1 {15 (529, 568) (529, 568) (529, 568) (529, 568) }    M@0x00128b78[0x00623870][4](W) T0
+
+real    13m2.544s
+user    10m59.890s
+sys     4m23.210s
+
+time /home/hs1/temu-tools/vine-bin/trace_reader -trace 2015-02-11-15-45-50-825213-tmp0GUg8s.xar.out -createindex
+
+real    2m9.516s
+user    2m8.610s
+sys     0m0.830s
+
+time /home/hs1/temu-tools/vine-bin/trace_reader -trace 2015-02-11-15-45-50-825213-tmp0GUg8s.xar.out | cut -d':' -f1 > 2015-02-11-15-45-50-825213-tmp0GUg8s.xar.out.eips
+
+--
+
+Inne:
+Zobaczyc ostatnia instrukcje:
+trace_reader -header - sprawdz liczbe instrukcji
+trace_reader -first <ostatnia instrukcja>
+
+tracedump powinien wyswietlic dump, ale albo nie ma info o wyjatku albo wersja sie nie zgadza:
+tracedump requires trace version 60+../2015-02-11-15-45-50-825213-tmp0GUg8s.xar.out has version 50Fatal error: exception Not_found
+
+Uzywanie slicera
+Uzywanie alignera [40:00]
+
+12:41 - 11:06 = 01:30
+
+temu breaks after some time (12:49)
+
+smp1:
+
+spawn:      12:55   
+runfile:    13:07   15:55
+first taint:14:08
+break: 
+first taint:14:9
+break:      14:18
+
+Note:
+Feb 16 14:15:56 localhost kernel: temu[4081]: segfault at 8 ip 00000000f75eb0a1 sp 00000000ffb3875c error 6 in libc-2.15.so[f74bd000+198000]
+
+Gdb:
+--
+Program received signal SIGSEGV, Segmentation fault.
+0xf762f9e0 in ?? () from /lib32/libc.so.6
+(gdb)
+Continuing.
+[Thread 0xf7773b40 (LWP 16192) exited]
+
+Program terminated with signal SIGSEGV, Segmentation fault.
+The program no longer exists.
+(gdb) 
+
+(nie zdazylem zbadac stosy, bo program juz nie dzialal)
+
+From stderr:
+Cannot determine file system type
+Cannot determine file system type
+Cannot determine file system type
+Enabled: 0x00 Proto: 0x00 Sport: 0 Dport: 0 Src: 0.0.0.0 Dst: 0.0.0.0
+out of memory 
+
+--
+
+Modyfikacja limitow:
+przed:
+core file size          (blocks, -c) 0
+data seg size           (kbytes, -d) unlimited
+scheduling priority             (-e) 0
+file size               (blocks, -f) unlimited
+pending signals                 (-i) 128039
+max locked memory       (kbytes, -l) 64
+max memory size         (kbytes, -m) unlimited
+open files                      (-n) 1024
+pipe size            (512 bytes, -p) 8
+POSIX message queues     (bytes, -q) 819200
+real-time priority              (-r) 0
+stack size              (kbytes, -s) 8192
+cpu time               (seconds, -t) unlimited
+max user processes              (-u) 128039
+virtual memory          (kbytes, -v) unlimited
+file locks                      (-x) unlimited
+
+po:
+core file size          (blocks, -c) 0
+data seg size           (kbytes, -d) unlimited
+scheduling priority             (-e) 0
+file size               (blocks, -f) unlimited
+pending signals                 (-i) 128039
+max locked memory       (kbytes, -l) 64
+max memory size         (kbytes, -m) unlimited
+open files                      (-n) 1024
+pipe size            (512 bytes, -p) 8
+POSIX message queues     (bytes, -q) 819200
+real-time priority              (-r) 0
+stack size              (kbytes, -s) 8192
+cpu time               (seconds, -t) unlimited
+max user processes              (-u) 128039
+virtual memory          (kbytes, -v) unlimited
+file locks                      (-x) unlimited
+
+Chyba trzeba zmniejszac jeszcze z cmd. Albo czegos nie rozumiem.
+
+--
+
+Tests with oom killer disabled:
+<pending>
+still crashes
+
+--
+Tests with binary version from BH 2010:
+
+spawn:      15:19
+nie ma ekranu, nie wiadomo, czy sie uruchomil binner
+
+Tests with original temu with tracecap.so from BH:
+todo
+
+

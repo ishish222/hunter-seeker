@@ -865,6 +865,10 @@ class debugger(pydbg):
             self.write_log("%s 0x%x 0x%x" % (mod[0], mod[1], mod[2]))
         self.write_log("--")
 
+    def get_modules(self):
+        for mod in self.enumerate_modules_w_size():
+            yield (mod[0], mod[1], mod[2])
+
     def dump_threads(self):
         self.write_log("Threads:") 
         for thread in self.enumerate_threads():
@@ -958,6 +962,14 @@ class debugger(pydbg):
     def save_synopsis(self, filee):
         f = open("%s.synopsis" % filee, "a", 0)
         f.write(self.crash_bin.crash_synopsis())
+
+        f.write("Modules:")
+
+        #include module info
+
+        for name,off,size in self.get_modules():
+            f.write("%s 0x%x 0x%x" % (name,off,size))
+
         f.flush()
         f.close()
         # + signatures

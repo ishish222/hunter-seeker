@@ -60,7 +60,10 @@ def qemu_start_full():
 
     print("[%s] Starting" % common.timestamp())
     print options.qemu_args
-    m = Popen(options.qemu_args, stdout=PIPE, stdin=PIPE, stderr=STDOUT, env=os.environ)
+
+    myErr = open("./err", "w+")
+
+    m = Popen(options.qemu_args, stdout=PIPE, stdin=PIPE, stderr=myErr.fileno(), env=os.environ)
     time.sleep(3)
     options.m, _ = options.ms.accept()
     options.s, _ = options.ss.accept()

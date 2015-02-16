@@ -118,6 +118,10 @@ def temu_taint_start():
     options.settings.runner_0(options, [test_file])
     options.log.write("%s: " % test_file)
 
+    print(read_monitor(options.m))
+    print(read_monitor(options.m))
+    print(read_monitor(options.m))
+
 def temu_taint_conclude():
     options = globs.state.options
     state = globs.state
