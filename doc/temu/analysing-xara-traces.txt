@@ -148,6 +148,54 @@ Tests with oom killer disabled:
 still crashes
 
 --
+
+dalsza analiza crasha
+
+Program received signal SIGSEGV, Segmentation fault.
+0x557790a1 in ?? () from /lib32/libc.so.6
+(gdb) 
+
+#0  0x557790a1 in ?? () from /lib32/libc.so.6
+#1  0xd397e2db in tracing_taint_propagate (nr_src=1, src_oprnds=0xfff68f5c, dst_oprnd=0xfff68f4c, mode=0) at commands.c:213
+#2  0x0814c28f in taintcheck_reg2mem (regidx=32, size=0, ptr=0x1564aab0) at /home/ish/temu-1.0-3/temu-1.0/taintcheck.c:238
+#3  0x08138492 in __TC_stl_mmu (addr=29845568, val=7995497, mmu_idx=0, regidx=32) at ../softmmu_template.h:429
+#4  0x112a2662 in code_gen_buffer ()
+#5  0x00000000 in ?? ()
+
+kolejna sesja:
+
+#0  __memmove_ssse3_rep () at ../sysdeps/i386/i686/multiarch/memcpy-ssse3-rep.S:181
+#1  0xd39a42db in tracing_taint_propagate (nr_src=1, src_oprnds=0xff98df8c, dst_oprnd=0xff98df7c, mode=0) at commands.c:213
+#2  0x0814c28f in taintcheck_reg2mem (regidx=32, size=0, ptr=0x15643830) at /home/ish/temu-1.0-3/temu-1.0/taintcheck.c:238
+#3  0x114ac0ff in code_gen_buffer ()
+#4  0xa7869500 in ?? ()
+Backtrace stopped: previous frame inner to this frame (corrupt stack?)
+
+temu po rekompilacji na flareon:
+#0  0x000000007d823000 in ?? ()
+#1  0x00000000600a70fd in cpu_x86_exec (env1=0x7d823000) at /home/hs1/temu-1.0-4/cpu-exec.c:681
+#2  0x000000006002c96c in main (argc=9, argv=0x0) at /home/hs1/temu-1.0-4/vl.c:7452
+
+--
+
+proba rekompilacji w srodowisku 32bit (/mnt/gentoo32):
+
+Blad:
+
+make -C i386-softmmu all
+make[1]: Entering directory '/home/ish32/temu-current/i386-softmmu'
+../dyngen -c -o opc.h op.o
+dyngen: Unsupported ELF class
+Makefile:599: recipe for target 'opc.h' failed
+make[1]: *** [opc.h] Error 1
+make[1]: Leaving directory '/home/ish32/temu-current/i386-softmmu'
+Makefile:36: recipe for target 'subdir-i386-softmmu' failed
+make: *** [subdir-i386-softmmu] Error 2
+
+Odp:
+Zmodyfikuj $cpu zeby bylo i386 (ustawia uname -m)
+
+--
 Tests with binary version from BH 2010:
 
 spawn:      15:19
