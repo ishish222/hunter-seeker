@@ -204,4 +204,13 @@ nie ma ekranu, nie wiadomo, czy sie uruchomil binner
 Tests with original temu with tracecap.so from BH:
 todo
 
+--
+
+Testy po rekompilacji:
+spawn:          11:30
+taint start:    11:54
+first taint:    12:33
+crash:          wyglada na to ze nie ma :) 
+
+
 

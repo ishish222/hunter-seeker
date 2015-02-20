@@ -1,0 +1,14 @@
+kompiluj w 32bit chroocie na flareon
+skopiuj plik configure
+patch blad sygnnalu
+patch na dodatkowe znaki:
+    w tablicy KeyDef w monitor.c dodaj:
++    { 0x27, "semicolon" },
++    { 0x28, "apostrophe" },
++    { 0x29, "grave_accent" },
+
++    { 0x2b, "backslash" },
+
+make
+make install
+linki obslugujace share/keymaps
