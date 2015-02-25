@@ -1,0 +1,196 @@
+### Pomysly
+
+Silnik .NET :) - fajna eskalacja
+Silnik Dalvik - to samo
+Silnik Java
+
+Torrent i inne p2p - moze zamienic siec p2p w botnet p2p? xD
+
+### Producenci duzi:
+
+[Microsoft]
+
+Songsmith
+AutoCollage
+Visual Studio
+Office
+Project Standard
+Visio
+Outlook
+
+--
+[Adobe]
+
+Photoshop
+Illustrator
+InDesign
+Muse
+Lightroom
+After Effects
+EchoSign
+FormsCentral
+Dreamweaver
+
+--
+[Autodesk]
+
+3DSMax
+AutoCAD
+DWG
+Design Review
+Revit
+... spooro
+
+[Symantec]
+
+### Producenci - PL
+
+InsERT S.A.: http://www.insert.com.pl/index.html
+Programy:
+Subiekt GT: http://www.insert.com.pl/programy_dla_firm/sprzedaz/subiekt_gt/opis.html
+Gestor GT
+Sello
+Rachmistrz GT
+Gratyfikant GT
+oscGT
+mobilny Subiekt
+Subiekt Sprint - system sprzedaży
+
+--
+BIPROGEO: http://www.biprogeo.com.pl/produkty-wlasne.dhtml
+
+--
+CadSol
+http://www.cadsol.pl/nasze-rozwiazania/catia-v5
+
+--
+Huzar Software
+http://www.huzar.pl/index.php?x=programy
+Istnieje możliwość przetestowania programu WinSAD. Zainteresowanych prosimy o kontakt.
+
+--
+Infortes
+http://infortes.pl/oferta/oprogramowanie/rozwiazania-autorskie/infortes-mes/
+
+--
+MAPI Jadlospis
+http://www.mapi.com.pl/
+
+--
+MCM Software
+http://www.mcm.pl/programy_win.php
+
+--
+myConsult
+http://myconsult.com.pl/pl/systemy_erp_comarch/19/
+
+--
+NetCRM
+http://www.netcrm.pl/oferta/
+
+--
+QuestPOL
+http://www.questpol.com.pl/cadcam.php
+
+
+FLOW Science: http://www.flow3d.com/
+LiveCHatInc: http://www.livechatinc.com/
+
+
+
+programy do PIT?
+GIMP, corel draw, photoshop i inne
+gry?
+przegladarki zdjec
+kompresja / dekompresja
+progrtamy do konwersji formatow
+wersje dla Windows: OpenOffice, 
+xara 3d
+nero
+jakies shellowe narzedzia pakietow bezpieczenstwa (bardzo mozliwe ze bledy przekladaja sie na graficzne aplikacje)
+cinema 4d
+
+grafika:
+Magix Photo Clinic
+Acorn Draw
+ArtWorks
+Corel Draw
+PaintShop Pro
+TrueVision ?
+
+Formaty (z: Xara):
+pptx, fax, 
+HD photo: wdp, hdp
+emf, wmf
+RAW: crw, cr2, nef, mrw, raf, kdc
+Xara: wix, web, xar, art
+standard HTML5:
+ogg theora 
+H.264
+WebM
+
+formaty przegladarek:
+
+IE:
+mp3, mp4, aac, webm, m4a
+
+Chromium:
+Vorbis audio codec
+Theora video codec
+VP8 video codec
+PCM 8-bit unsigned integer
+PCM 16-bit signed integer little endian
+PCM 32-bit float little endian
+Ogg container format
+WebM container format
+WAV container format
+
+extensions:
+mp4, m4v, m4a, mp3, ogv, ogm, ogg, oga, webm, wav
+amr, avi, flac, 3gp
+
+Opera:
+webM, ogg, vp8, theora
+
+Firefox:
+webM, Ogg Theora Vorbis, Ogg Opus, MP4 H.264, 
+
+Formaty, kodeki, kontenery
+vorbis - kodek dzwieku
+ogg - kontener i rodzina kodekow
+theora - kodek
+mp3 - kodek dzwieku
+aac+ - kodek dzwieku
+wma - kodek dzwieku
+divx - kodek obrazu
+mpeg-2 - kodek obrazu
+h.264 (mpeg-4) - kodek obrazu
+webm - format (v:On2 VP8, a:vorbis, k:matroska)
+wma - kodek
+wmv - kodek
+avi - kontener
+flv - kontener
+matroska - kontener
+
+kandydaci: webm, theora
+
+
+sets:
+[set-1]:
+Opera 16
+Firefox 24
+Flash ? (ActiveX & standalone)
+Adobe Reader 11
+Foobar 2000 1.2.9
+
+Archivizery:
+rar
+7z
+zip
+
+W stylu Office:
+libreoffice
+Lotus Word Pro
+Lotus Symphony
+StarOffice Calc
+

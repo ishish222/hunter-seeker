@@ -210,7 +210,35 @@ Testy po rekompilacji:
 spawn:          11:30
 taint start:    11:54
 first taint:    12:33
-crash:          wyglada na to ze nie ma :) 
+crash:          wyglada na to ze nie ma :)
+                edit: sa, ale po ok. 150 GB ;)
 
+--
 
+generowanie indexu dla pliku 141 GB: 3h
+
+--
+
+Proba aligned:
+
+time /home/hs1/temu-tools/vine-bin/aligned.pl 2015-02-20-18-06-39-327036-tmp1gqlsN.xar.out 2015-02-20-11-54-03-785558-c0374b6e9771ef27e380fefcbfbd35db.xar.out > aligned.out
+Out of memory!
+
+real    1m39.036s
+user    0m20.880s
+sys     0m14.500s
+
+Drukowanie instrukcji:
+time /home/hs1/temu-tools/vine-bin/trace_reader -v -count -intel -trace ./2015-02-23-15-52-47-221424-tmp1gqlsN.xar.out | cut -d ':' -f1 > ./2015-02-23-15-52-47-221424-tmp1gqlsN.xar.out.count-eips
+
+real    595m27.950s
+user    519m48.020s
+sys     168m26.230s
+
+Szukanie instrukcji:
+time grep 00e4beaa 2015-02-23-15-52-47-221424-tmp1gqlsN.xar.out.count-eips
+
+real    1m10.909s
+user    0m9.790s
+sys     0m3.940s
 

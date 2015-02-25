@@ -19,3 +19,16 @@ przez monitor:
 
 zakonczyc
 
+--
+
+potrzebne:
+1. trace z oryginalu (tylko skazone)
+2. trace z probki (tylko skazone)
+3. rozwidlenie z powyzszych (x1)
+jesli sie da:
+! to jest prawidlowa procedura
+4. trace z probki (wszystkie)
+5. numer instrukcji z wyjatkiem (x2)
+6. analiza instrukcji <0,x2>, <x1,x2>
+
+

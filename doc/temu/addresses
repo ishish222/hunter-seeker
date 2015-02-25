@@ -1,0 +1,10 @@
+kernel32.dll                    7c800000
+RaiseException                  7c812f81
+UnhandledExceptionFilter        7c864cf2
+RtlUnhandledExceptionFilter     7c8817d9
+
+ntdll.dll                       7c900000
+RtlRaiseException               7c90e528
+RtlUnhandledExceptionFilter2    7c967c59
+
+
