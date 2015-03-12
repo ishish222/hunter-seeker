@@ -1,3 +1,4 @@
+from script import rs, rss, runscriptq, write_monitor, write_monitor_2, read_monitor
 import time
 from statemachine import MachineError
 import common
@@ -154,3 +155,7 @@ def handle_samples_exhaustion():
         os.remove(options.tmp_disk_img)
 
     
+def run_ret():
+    options = globs.state.options
+    rss("ret", options.m, options.slowdown)
+

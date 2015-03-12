@@ -242,3 +242,67 @@ real    1m10.909s
 user    0m9.790s
 sys     0m3.940s
 
+--
+182G
+
+time /home/hs1/temu-tools/vine-bin/trace_reader -v -count -intel -trace ./2015-02-26-14-30-15-172861-tmpEOVO0L.xar.out | cut -d ':' -f1 > 2015-02-26-14-30-15-172861-tmpEOVO0L.xar.out.count-eips
+
+real    1847m4.699s
+user    1623m27.990s
+sys     514m55.750s
+
+Sortowanie tekstowych instrukcji:
+
+63 GB:
+
+time cat  2015-02-25-13-20-20-034195-tmpEOVO0L.xar.out.count-eips | cut -d ')' -f2 | sort | uniq > 2015-02-25-13-20-20-034195-tmpEOVO0L.xar.out.eips.uniq
+
+real    54m18.802s
+user    53m5.830s
+sys     0m58.850s
+
+--
+
+182 GB:
+
+$ time cat  2015-02-26-14-30-15-172861-tmpEOVO0L.xar.out.count-eips | cut -d ')' -f2 | sort | uniq > 2015-02-26-14-30-15-172861-tmpEOVO0L.xar.outeips.uniq
+
+real    164m39.425s
+user    149m25.760s
+sys     3m4.400s
+
+przy czym uwaga: 
+czasami konczy sie miejsce w /tmp, ktory jest chyba uzywany przy wykorzystywaniu pipeow, dlatego potrzebne jest polecenie:
+$ export TMPDIR=/mnt/2/tmp2/
+
+--
+
+W innej probce (tmpEOVO0L.xar) nie ma tez instrukcji (72e154)
+
+W zwiazku z tym przeprowadzam badanie, czy po wyswietleniu wyjatku nadal jakies zbuforowane dane powinny plynac do pliku z logiem. 
+
+(Czy Miller mowi, jak duzo zajmuja tracey lub jak dlugo leca? Sprawdzic IO, czy sie zmienia)
+
+Badanie 1: Zostawic analize tmpEOVO0L.xar na dluzej (do konca) i sprawdzic, czy zostaly zapisane instrukcje, ktorych nie ma w starszym. 
+Done. Istnieja instrukcje, ktorych nie ma w starszym.
+
+$ wc -l tmpEOVO0L.xar.out.eips.uniq.diff
+105832 tmpEOVO0L.xar.out.eips.uniq.diff
+
+
+Badanie 2: Napisac malutki program, ktory popelnia AV gdy otworzy plik (runner wysle sygnal/wiadomosc) (in progress)
+Program a.exe wywietla MessageBoxa, po zamknieciu wczytuje probke i wykonuje division by zero.
+Watson zauwaza division by zero zanim w ogole zaczyna sie zrzucanie sladow, trzeba zweryfikowac, czy zwykle przekopiowanie do bufora wystarcza i dziala poprawnie.
+Czekam 2h.
+
+
+Jeszcze jedno badanie:
+Badanie 3: przeprowadzic analize skazenia po reboocie, bez fuzzera nadzorcy (recznie).
+
+--
+
+Dodatkowo:
+
+na podstawie sladow bedzie mozna chyba reszte diagnostyki przeprowadzic.
+na podstawie sladow mozna analizowac pokrycie kodu (m.in. w oparciu o header)
+

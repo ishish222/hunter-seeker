@@ -144,3 +144,9 @@ def cooldown3():
     write_socket(options.s, "cooldown3 5 10")
     read_socket(options.s)
 
+def cooldown4():
+    options = globs.state.options
+
+    write_socket(options.s, "cooldown3 3 101")
+    read_socket(options.s)
+

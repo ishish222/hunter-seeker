@@ -1,0 +1,18 @@
+Tracer musi:
+1. drukowac do pliku informacje nt. kazdej instrukcji, ktore wystarczaja na wyznaczanie slice'ow
+
+info o zaladowanych modulach
+watek, adres, instrukcja (w formie hex?), 
+info o wyjatku
+
+Potrzebuje:
+nazwy pliku
+jakie wywolania kernela odpowiadaja za kopiowanie danych z systemu plikow? na podstawie tego bedzie mozna hookowac np. czytanie z gniazd, klawiatury, etc.
+
+tracer zapamieta uchwyt do pliku, jesli CreateFileA lub CreateFileW otworzy poszukiwana nazwe pliku
+tracer zacznie trasowanie przy przeczytaniu z pliku
+(opcjonalnie) zredukuje rep'y
+(nope) ominie wywolania biblioteczne (na podst. white/blacklisty)
+ominie wywolania kernela
+
+

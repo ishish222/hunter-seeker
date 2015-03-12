@@ -1,0 +1,26 @@
+Analiza skazen:
+
+tabela rejestrow, i pamieci, komorki to bajty-maski skazenia
+wyznaczenie instrukcji, ktore propaguja lub modyfikuja skazenie
+parsowanie wszystkich instrukcji propagujacych, uwzgledniajac tablice (rwx)
+
+algorytm parsowania instrukcji propagujacej i modyfikujacej:
+wyznacz operand zrodlowy i docelowy
+sprawdz skazenie operandu zrodlowego
+wyznacz skazenie operandu docelowego
+wprowadz skazenie docelowe i zaznacz instrukcje
+
+Analiza sliceow (analiza zainteresowania):
+parsowanie instrukcji propagujacych i modyfikujacych od tylu:
+wyznacz operand zrodlowy i docelowy
+sprawdz zainteresowanie operandu docelowego
+wyznacz zainteresowanie operandu zrodlowego
+wprowadz zainteresowanie zrodlowe i zaznacz instrukcje
+
+Implementacja pamieci i rejestrow:
+pamiec - array
+rejestry - array z offsetem
+
+little-endian: struct.pack/unpack
+
+rejestry to array

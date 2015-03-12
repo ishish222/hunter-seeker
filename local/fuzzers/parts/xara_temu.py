@@ -52,7 +52,7 @@ TemuPoweroffNoRevert.executing_routine = usualparts.qemu_parts.temu_poweroff_no_
 
 TemuCooldown.name = "Cooling down Temu"
 TemuCooldown.consequence = FindPID
-TemuCooldown.executing_routine = usualparts.taint_parts.cooldown_temu
+TemuCooldown.executing_routine = usualparts.binner_parts.cooldown4
 
 #TemuUmountDisks.name = "Umounting Temu disks"
 #TemuUmountDisks.consequence = TemuPoweroffNoRevert
@@ -63,7 +63,7 @@ FindPID.consequence = TemuConfigurePlugin
 FindPID.executing_routine = usualparts.taint_parts.find_pid
 
 def long_sleep():
-    time.sleep(600)
+    time.sleep(300)
 
 LongSleep.name = "Taking a short 10 min nap"
 LongSleep.consequence = dm.BinnerSpawnPythonServer

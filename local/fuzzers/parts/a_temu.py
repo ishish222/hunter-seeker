@@ -51,8 +51,7 @@ TemuPoweroffNoRevert.consequence = statemachine.Exit
 TemuPoweroffNoRevert.executing_routine = usualparts.qemu_parts.temu_poweroff_no_revert
 
 TemuCooldown.name = "Cooling down Temu"
-#TemuCooldown.consequence = FindPID
-TemuCooldown.consequence = dm.BinnerConfigure
+TemuCooldown.consequence = FindPID
 TemuCooldown.executing_routine = usualparts.binner_parts.cooldown4
 
 #TemuUmountDisks.name = "Umounting Temu disks"
@@ -66,7 +65,7 @@ FindPID.executing_routine = usualparts.taint_parts.find_pid
 def long_sleep():
     time.sleep(300)
 
-LongSleep.name = "Taking a short 5 min nap"
+LongSleep.name = "Taking a short 10 min nap"
 LongSleep.consequence = dm.BinnerSpawnPythonServer
 LongSleep.executing_routine = long_sleep
 
@@ -81,8 +80,8 @@ dm.StartQemuFull.consequence = LongSleep
 dm.BinnerConfigure.consequence = FindPID
 dm.StopLog.consequence = TemuUmountDisks
 dm.BinnerSpawnApp.consequence = TemuCooldown
-dm.PreFuzzingActions.consequence = FindPID
 #dm.BinnerKillExplorer.consequence = WaitForKey
+dm.TestPerform.executing_routine = usualparts.testing_parts.run_ret
 
 # replace socket with timeout with infinite
 dm.QemuConnectDevSocket.executing_routine = usualparts.qemu_parts.qemu_connect_dev_socket_infinite
