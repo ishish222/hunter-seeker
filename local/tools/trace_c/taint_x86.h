@@ -91,8 +91,8 @@ class WORD_t
         char* tmp;
         tmp = (char*)&v_t;
 
-        val[0].val = tmp[0];
-        val[1].val = tmp[1];
+        val[0].val_t = tmp[0];
+        val[1].val_t = tmp[1];
 
         return;
     }
@@ -286,6 +286,7 @@ class WORD_t
             a += sizeof(BYTE_t);
         }
     }
+
 };
 
 class DWORD_t
@@ -294,7 +295,17 @@ class DWORD_t
 
     BYTE_t val[4];
     
-    DWORD get_DWORD()
+    WORD_t to_WORD_t()
+    {
+        WORD_t ret;
+
+        ret[0] = val[0];
+        ret[1] = val[1];
+
+        return ret;
+    }
+
+    DWORD to_DWORD()
     {
         DWORD ret;
 
@@ -309,7 +320,7 @@ class DWORD_t
         return ret;
     }
 
-    DWORD get_t_DWORD()
+    DWORD to_t_DWORD()
     {
         DWORD ret;
 
@@ -342,15 +353,15 @@ class DWORD_t
         char* tmp;
         tmp = (char*)&v_t;
 
-        val[0].val = tmp[0];
-        val[1].val = tmp[1];
-        val[2].val = tmp[2];
-        val[3].val = tmp[3];
+        val[0].val_t = tmp[0];
+        val[1].val_t = tmp[1];
+        val[2].val_t = tmp[2];
+        val[3].val_t = tmp[3];
 
         return;
     }
 
-    BYTE_t operator[](int index)
+    BYTE_t& operator[](int index)
     {
         if(index < 0x4)
             return val[index];
@@ -370,8 +381,8 @@ class DWORD_t
         DWORD v;
         DWORD t;
 
-        v = this->get_DWORD() + b;
-        t = this->get_t_DWORD();
+        v = this->to_DWORD() + b;
+        t = this->to_t_DWORD();
         
         ret.set_DWORD(v);
         ret.set_t_DWORD(t);
@@ -385,8 +396,8 @@ class DWORD_t
         DWORD v;
         DWORD t;
 
-        v = this->get_DWORD() + b.get_DWORD();
-        t = this->get_t_DWORD() || b.get_t_DWORD();
+        v = this->to_DWORD() + b.to_DWORD();
+        t = this->to_t_DWORD() || b.to_t_DWORD();
         
         ret.set_DWORD(v);
         ret.set_t_DWORD(t);
@@ -400,8 +411,8 @@ class DWORD_t
         DWORD v;
         DWORD t;
 
-        v = this->get_DWORD() + b;
-        t = this->get_t_DWORD();
+        v = this->to_DWORD() + b;
+        t = this->to_t_DWORD();
         
         ret.set_DWORD(v);
         ret.set_t_DWORD(t);
@@ -417,8 +428,8 @@ class DWORD_t
         DWORD v;
         DWORD t;
 
-        v = this->get_DWORD() + b.get_DWORD();
-        t = this->get_t_DWORD() || b.get_t_DWORD();
+        v = this->to_DWORD() + b.to_DWORD();
+        t = this->to_t_DWORD() || b.to_t_DWORD();
         
         ret.set_DWORD(v);
         ret.set_t_DWORD(t);
@@ -434,8 +445,8 @@ class DWORD_t
         DWORD v;
         DWORD t;
 
-        v = this->get_DWORD() - b;
-        t = this->get_t_DWORD();
+        v = this->to_DWORD() - b;
+        t = this->to_t_DWORD();
         
         ret.set_DWORD(v);
         ret.set_t_DWORD(t);
@@ -449,8 +460,8 @@ class DWORD_t
         DWORD v;
         DWORD t;
 
-        v = this->get_DWORD() - b.get_DWORD();
-        t = this->get_t_DWORD() || b.get_t_DWORD();
+        v = this->to_DWORD() - b.to_DWORD();
+        t = this->to_t_DWORD() || b.to_t_DWORD();
         
         ret.set_DWORD(v);
         ret.set_t_DWORD(t);
@@ -464,8 +475,14 @@ class DWORD_t
         DWORD v;
         DWORD t;
 
-        v = this->get_DWORD() - b;
-        t = this->get_t_DWORD();
+        printf("this->v: %x, ", this->to_DWORD());
+        printf("this->t: %x\n", this->to_t_DWORD());
+        printf("b->v: %x, ", b);
+        printf("b->t: %x\n", 0x0);
+        v = this->to_DWORD() - b;
+        printf("v: %x, ", v);
+        t = this->to_t_DWORD();
+        printf("t: %x\n", t);
         
         ret.set_DWORD(v);
         ret.set_t_DWORD(t);
@@ -481,8 +498,8 @@ class DWORD_t
         DWORD v;
         DWORD t;
 
-        v = this->get_DWORD() - b.get_DWORD();
-        t = this->get_t_DWORD() || b.get_t_DWORD();
+        v = this->to_DWORD() - b.to_DWORD();
+        t = this->to_t_DWORD() || b.to_t_DWORD();
         
         ret.set_DWORD(v);
         ret.set_t_DWORD(t);
@@ -577,10 +594,7 @@ class DWORD_t
             a += sizeof(BYTE_t);
         }
     }
-};
 
-class reg_t: public DWORD_t
-{
     DWORD get_HW()
     {
         WORD ret;
@@ -632,14 +646,27 @@ class reg_t: public DWORD_t
 
         return ret;
     }
-
 };
+
 
 class taint_x86
 {
     public:
     BYTE_t* memory;
     BYTE_t registers[REG_SIZE];
+
+    DWORD_t eax;
+    DWORD_t ecx;
+    DWORD_t edx;
+    DWORD_t ebx;
+
+    DWORD_t esi;
+    DWORD_t edi;
+    DWORD_t ebp;
+    DWORD_t esp;
+
+    DWORD_t eflags;
+    DWORD_t eip;
 
     typedef int (taint_x86::*instruction_routine)(char* args);
     instruction_routine instructions_32[0x100];
@@ -667,6 +694,7 @@ class taint_x86
     // engine methods
     int execute_instruction(char*);
     int print_context();
+    int print_t_context();
     int print_bt_buffer(BYTE_t*, DWORD);
     int print_all_regs();
 
@@ -686,12 +714,14 @@ class taint_x86
 //        this->reg_store_32(ESP, "\x00\x00\x11\x00");
         this->memory = (BYTE_t*)malloc(sizeof(BYTE_t)*MEM_SIZE);
 
-        DWORD_t tmp(0x11223344);
+        this->eax = DWORD_t(0x11223344);
+        this->eax[0].val_t = 0xff;
+        this->esp = DWORD_t(0x00001100);
 
-        this->reg_store_32(EAX, tmp);
-        this->reg_store_32(EBX, 0x55332211);
-        this->reg_store_32(ESP, 0x00001100);
-
+        BYTE_t a;
+        a = 0x10;
+        a.val_t = 0xff;
+        this->memory[0x11223344] = a;
     }
 
     ~taint_x86() {

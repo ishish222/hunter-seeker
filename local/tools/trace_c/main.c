@@ -21,8 +21,11 @@ int main()
     instruction[0x0] = '\x5a';
     instruction[0x1] = '\x5a';
     instruction[0x2] = '\x50';
+
     taint_eng.execute_instruction(instruction);
     taint_eng.print_context();
+    taint_eng.print_t_context();
+    
 
     return 0x0;
 }

@@ -77,10 +77,20 @@ DWORD taint_x86::le2dword(char* le)
 */
 void taint_x86::store_32(OFFSET off, DWORD_t v)
 {
+    printf("storing %x at %x\n", v[3], off);
     this->memory[off + 0] = v[3];
+    printf("storing %x at %x\n", v[2], off +1);
     this->memory[off + 1] = v[2];
+    printf("storing %x at %x\n", v[1], off +2);
     this->memory[off + 2] = v[1];
+    printf("storing %x at %x\n", v[0], off +3);
     this->memory[off + 3] = v[0];
+
+    DWORD_t ret;
+    ret[0] = this->memory[off + 3];
+    printf("restoring %x from %x\n", ret[0], off +3);
+    printf("restoring %x from %x\n", this->memory[off+3], off +3);
+
     return;
 }
 
@@ -89,21 +99,26 @@ DWORD_t taint_x86::restore_32(OFFSET off)
     DWORD_t ret;
 
     ret[0] = this->memory[off + 3];
+    printf("restoring %x from %x\n", ret[0], off +3);
     ret[1] = this->memory[off + 2];
+    printf("restoring %x from %x\n", ret[1], off +2);
     ret[2] = this->memory[off + 1];
+    printf("restoring %x from %x\n", ret[2], off +1);
     ret[3] = this->memory[off + 0];
+    printf("restoring %x from %x\n", ret[3], off +0);
+
     return ret;
 }
 
 void taint_x86::store_32(DWORD_t off, DWORD_t v)
 {
-    store_32(off.val, v);
+    store_32(off.to_DWORD(), v);
     return;
 }
 
 DWORD_t taint_x86::restore_32(DWORD_t off)
 {
-    return restore_32(off.val);
+    return restore_32(off.to_DWORD());
 }
 
 void taint_x86::reg_store_32(OFFSET off, DWORD_t v)
@@ -242,37 +257,30 @@ int taint_x86::print_all_regs()
 
 DWORD_t taint_x86::a_pop_32()
 {
-    DWORD_t esp;
     DWORD_t val;
 
-    // update ESP 
-    esp = reg_restore_32(ESP);
-
     // store value at stack
-    val = restore_32(esp);
+    val = restore_32(this->esp);
+    printf("esp read: 0x%x val: 0x%x\n", this->esp.to_DWORD(), val.to_DWORD());
+    printf("here2 0x%x\n", val);
 
-    // 
-    esp += 0x4;
-    //esp.val_t remains
-
-    reg_store_32(ESP, esp);
+    // update ESP 
+    this->esp += 0x4;
 
     return val;
 }
 
 int taint_x86::a_push_32(DWORD_t val)
 {
-    DWORD_t esp;
-   
     // update ESP 
-    esp = reg_restore_32(ESP);
-    esp -= 0x4;
-    //esp.val_t remains
+    printf("before: 0x%08x\n", this->esp.to_DWORD());
+    this->esp -= 0x4;
+    printf("after: 0x%08x\n", this->esp.to_DWORD());
+
 
     // store value at stack
-    store_32(esp, val);
-
-    reg_store_32(ESP, esp);
+    printf("esp write: 0x%x val: 0x%x\n", this->esp.to_DWORD(), val.to_DWORD());
+    store_32(this->esp, val);
 
     return 0x0;
 }
@@ -290,27 +298,43 @@ int taint_x86::r_pop_ebx_32(char* args)
     printf("here\n");
     DWORD_t val;
     val = a_pop_32();
-    reg_store_32(EBX, val);
+    printf("val: %x\n", val);
+    this->ebx = val;
     return 0x0;
 }
 
 int taint_x86::r_push_eax_32(char* args)
 {
     printf("Properly\n");
-    return a_push_32(reg_restore_32(EAX));
+    return a_push_32(this->eax);
 }
 
 int taint_x86::print_context()
 {
     printf("Current context:\n\n");
-    printf("EAX: 0x%08x\n", this->reg_restore_32(EAX));
-    printf("ECX: 0x%08x\n", this->reg_restore_32(ECX));
-    printf("EDX: 0x%08x\n", this->reg_restore_32(EDX));
-    printf("EBX: 0x%08x\n", this->reg_restore_32(EBX));
-    printf("ESI: 0x%08x\n", this->reg_restore_32(ESI));
-    printf("EDI: 0x%08x\n", this->reg_restore_32(EDI));
-    printf("EBP: 0x%08x\n", this->reg_restore_32(EBP));
-    printf("ESP: 0x%08x\n", this->reg_restore_32(ESP));
-    printf("EIP: 0x%08x\n", this->reg_restore_32(EIP));
+    printf("EAX: 0x%08x\n", this->eax.to_DWORD());
+    printf("ECX: 0x%08x\n", this->ecx.to_DWORD());
+    printf("EDX: 0x%08x\n", this->edx.to_DWORD());
+    printf("EBX: 0x%08x\n", this->ebx.to_DWORD());
+    printf("ESI: 0x%08x\n", this->esi.to_DWORD());
+    printf("EDI: 0x%08x\n", this->edi.to_DWORD());
+    printf("EBP: 0x%08x\n", this->ebp.to_DWORD());
+    printf("ESP: 0x%08x\n", this->esp.to_DWORD());
+    printf("EIP: 0x%08x\n", this->eip.to_DWORD());
+    printf("\n");
+}
+
+int taint_x86::print_t_context()
+{
+    printf("Current taint context:\n\n");
+    printf("EAX: 0x%08x\n", this->eax.to_t_DWORD());
+    printf("ECX: 0x%08x\n", this->ecx.to_t_DWORD());
+    printf("EDX: 0x%08x\n", this->edx.to_t_DWORD());
+    printf("EBX: 0x%08x\n", this->ebx.to_t_DWORD());
+    printf("ESI: 0x%08x\n", this->esi.to_t_DWORD());
+    printf("EDI: 0x%08x\n", this->edi.to_t_DWORD());
+    printf("EBP: 0x%08x\n", this->ebp.to_t_DWORD());
+    printf("ESP: 0x%08x\n", this->esp.to_t_DWORD());
+    printf("EIP: 0x%08x\n", this->eip.to_t_DWORD());
     printf("\n");
 }
