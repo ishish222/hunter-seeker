@@ -59,6 +59,7 @@ int taint_x86::restore_32(DWORD off, char* val)
     return 0;
 }
 */
+/*
 DWORD taint_x86::le2dword(char* le)
 {
     DWORD ret;
@@ -73,34 +74,92 @@ DWORD taint_x86::le2dword(char* le)
     return ret;
 
 }
-
-void taint_x86::store_32(int off, DWORD v)
+*/
+void taint_x86::store_32(OFFSET off, DWORD_t v)
 {
-    char* val;
-    val = (char*)&v;
-
-    this->memory[off + 0] = val[3];
-    this->memory[off + 1] = val[2];
-    this->memory[off + 2] = val[1];
-    this->memory[off + 3] = val[0];
-
+    this->memory[off + 0] = v[3];
+    this->memory[off + 1] = v[2];
+    this->memory[off + 2] = v[1];
+    this->memory[off + 3] = v[0];
     return;
 }
 
-DWORD taint_x86::restore_32(int off)
+DWORD_t taint_x86::restore_32(OFFSET off)
 {
-    DWORD ret;
-    char* val;
-    val = (char*)&ret;
+    DWORD_t ret;
 
-    val[3] = this->memory[off + 0];
-    val[2] = this->memory[off + 1];
-    val[1] = this->memory[off + 2];
-    val[0] = this->memory[off + 3];
-
+    ret[0] = this->memory[off + 3];
+    ret[1] = this->memory[off + 2];
+    ret[2] = this->memory[off + 1];
+    ret[3] = this->memory[off + 0];
     return ret;
 }
 
+void taint_x86::store_32(DWORD_t off, DWORD_t v)
+{
+    store_32(off.val, v);
+    return;
+}
+
+DWORD_t taint_x86::restore_32(DWORD_t off)
+{
+    return restore_32(off.val);
+}
+
+void taint_x86::reg_store_32(OFFSET off, DWORD_t v)
+{
+    this->memory[off + 0] = v[0];
+    this->memory[off + 1] = v[1];
+    this->memory[off + 2] = v[2];
+    this->memory[off + 3] = v[3];
+    
+/*
+    char* val;
+    char* val_t;
+    val = (char*)&v.val;
+    val = (char*)&v.val_t;
+
+    this->registers[off + 0].val = val[3];
+    this->registers[off + 1].val = val[2];
+    this->registers[off + 2].val = val[1];
+    this->registers[off + 3].val = val[0];
+
+    this->registers[off + 0].val_t = val_t[3];
+    this->registers[off + 1].val_t = val_t[2];
+    this->registers[off + 2].val_t = val_t[1];
+    this->registers[off + 3].val_t = val_t[0];
+*/
+    return;
+}
+
+DWORD_t taint_x86::reg_restore_32(OFFSET off)
+{
+    DWORD_t ret;
+
+    ret[0] = this->memory[off + 0];
+    ret[1] = this->memory[off + 1];
+    ret[2] = this->memory[off + 2];
+    ret[3] = this->memory[off + 3];
+
+/*
+    char* val;
+    char* val_t;
+    val = (char*)&ret;
+    vali_t = (char*)&ret_t;
+
+    val[3] = this->registers[off + 0].val;
+    val[2] = this->registers[off + 1].val;
+    val[1] = this->registers[off + 2].val;
+    val[0] = this->registers[off + 3].val;
+
+    val_t[3] = this->registers[off + 0].val_t;
+    val_t[2] = this->registers[off + 1].val_t;
+    val_t[1] = this->registers[off + 2].val_t;
+    val_t[0] = this->registers[off + 3].val_t;
+*/
+    return ret;
+}
+/*
 void taint_x86::reg_store_32(int off, DWORD v)
 {
     char* val;
@@ -127,7 +186,7 @@ DWORD taint_x86::reg_restore_32(int off)
 
     return ret;
 }
-
+*/
 // is it necessary?
 /*
 DWORD taint_x86::dword(char* off)
@@ -163,11 +222,11 @@ int taint_x86::execute_instruction(char* instr)
     return (this->*(instructions_32[current_byte]))(args);
 }
 
-int taint_x86::print_buffer(char* buf, int scope)
+int taint_x86::print_bt_buffer(BYTE_t* buf, int scope)
 {
-    for(int i=0; i< scope; i++)
+    for(int i=0; i< scope; i+=sizeof(BYTE_t))
     {
-        printf("0x%02x ", buf[i]);
+        printf("0x%02x ", buf[i].val);
         if((i+1) % 0x10 == 0x0)
             printf("\n");
     }
@@ -176,33 +235,39 @@ int taint_x86::print_buffer(char* buf, int scope)
 
 int taint_x86::print_all_regs()
 {
-    return this->print_buffer(registers, REG_SIZE);
+    return this->print_bt_buffer(registers, REG_SIZE);
 }
 
-int taint_x86::a_pop_32()
+//instructions routines
+
+DWORD_t taint_x86::a_pop_32()
 {
-    DWORD esp;
-    DWORD val;
+    DWORD_t esp;
+    DWORD_t val;
 
     // update ESP 
     esp = reg_restore_32(ESP);
 
     // store value at stack
     val = restore_32(esp);
+
+    // 
     esp += 0x4;
+    //esp.val_t remains
 
     reg_store_32(ESP, esp);
 
     return val;
 }
 
-int taint_x86::a_push_32(DWORD val)
+int taint_x86::a_push_32(DWORD_t val)
 {
-    DWORD esp;
+    DWORD_t esp;
    
     // update ESP 
     esp = reg_restore_32(ESP);
     esp -= 0x4;
+    //esp.val_t remains
 
     // store value at stack
     store_32(esp, val);
@@ -214,7 +279,7 @@ int taint_x86::a_push_32(DWORD val)
 
 int taint_x86::r_pop_eax_32(char* args)
 {
-    DWORD val;
+    DWORD_t val;
     val = a_pop_32();
     reg_store_32(EAX, val);
     return 0x0;
@@ -223,7 +288,7 @@ int taint_x86::r_pop_eax_32(char* args)
 int taint_x86::r_pop_ebx_32(char* args)
 {
     printf("here\n");
-    DWORD val;
+    DWORD_t val;
     val = a_pop_32();
     reg_store_32(EBX, val);
     return 0x0;
