@@ -1,0 +1,98 @@
+Instruction consists of:
+1. Optional prefixes (in any order)
+2. primary opcode bytes (up to three)
+3. addressing form specifier(if required) consisting of ModR/M and sometimes SIB (Scale-Index-Base)
+4. displacement (if required)
+5. immediate data (if required)
+
+Ad.1 Prefix groups:
+1. lock and repeat prefixes 
+LOCK -              0xf0
+REPNE, REPNZ -      0xf2
+REP, REPE, REPZ -   0xf3
+
+2. segment override prefixes:
+CS override - 0x2e
+SS override - 0x36
+DS override - 0x3e
+ES override - 0x26
+FS override - 0x64
+GS override - 0x65
+
+Branch hits (for use with Jxx, hint for processor):
+branch not taken -  0x2e 
+branch taken -      0x3e 
+
+3. operand size override prefix (switch between 16 & 32) - 0x66
+
+4. address size override prefix (switch between 16 & 32) - 0x67
+
+Ad.2 Opcodes
+
+A primary opcode can be 1, 2, or 3 bytes in length. An additional 3-bit opcode field is sometimes encoded in the
+ModR/M byte. Smaller fields can be defined within the primary opcode. Such fields define the direction of opera-
+tion, size of displacements, register encoding, condition codes, or sign extension. Encoding fields used by an
+opcode vary depending on the class of operation.
+
+Two-byte opcodes consist of:
+0x0f escape byte and a second opcode, or
+mandatory prefix, escape byte, second opcode
+
+For example, CVTDQ2PD consists of the following sequence: F3 0F E6. The first byte is a mandatory prefix (it is not
+considered as a repeat prefix).
+
+Three-byte opcodes consist of:
+0x0f escape byte and a second two-byte opcode, or
+mandatory prefix, escape byte, second two-byte opcode
+
+Ad.3 ModR/M and SIB bytes
+Three fields:
+1. mod field - combines with r/m fields to form 32 possible values: eight registers and 24 addressing modes
+2. reg/opcode field - specifies register number or three more bits of opcode info
+3. r/m field - can specify register as an operand or it can be combined with mod field to encode an adressing mode. Sometimes, certain combinations of the mod field and the r/m field is used to express
+opcode information for some instructions.
+
+Certain encodings of ModR/M byte require a second addressing byte - SIB byte. The base-plus-index and scale-plus-index forms of addressing require SIB. 
+SIB contains fields:
+1. scale field - specifies the scale factor
+2. index field - specifies register number of the index register
+3. base field - specifies register number of the base register
+
+Ad. 4 Displacement bytes
+Some addressing forms include a displacement immediately following ModR/M (or SIB). It can be 1, 2, 4 bytes.
+
+--
+
+ModR/M addressing encoding
+
+16bit:
+
+mod:
+00 - [base + index]
+01 - [base + index] + disp8
+10 - [base + index] + disp16
+11 - register
+
+r/m:
+check table 2-1 (page 461)
+
+32bit:
+00 - [base]
+01 - [base] + disp8
+10 - [base] + disp32
+11 - register
+
+r/m:
+check table 2-2 (page 462)
+
+--
+
+Instruction summary table 
+
+Opcode column:
+hexadecimal operation code
+[dok.]
+
+Instruction column:
+
+
