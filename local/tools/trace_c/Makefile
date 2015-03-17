@@ -1,5 +1,5 @@
 CC =g++
-CFLAGS = -I.
+CFLAGS = -I. -ggdb
 NAME = trace
 OBJS = taint_x86.o main.c
 

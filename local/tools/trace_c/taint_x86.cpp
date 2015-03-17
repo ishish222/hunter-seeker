@@ -38,45 +38,94 @@ int taint_x86::restore_16(DWORD addr, DWORD* val)
 
     return 0;
 }
-*/
-int taint_x86::store_32(DWORD v_addr, char* val)
+int taint_x86::store_32(DWORD off, char* val)
 {
-    //lil endian
-/*    this->memory[addr + 0] = val & 0x000000ff;
-    this->memory[addr + 1] = val & 0x0000ff00;
-    this->memory[addr + 2] = val & 0x00ff0000;
-    this->memory[addr + 3] = val & 0xff000000;
-*/
-
-    this->memory[v_addr + 0] = val[3];
-    this->memory[v_addr + 1] = val[2];
-    this->memory[v_addr + 2] = val[1];
-    this->memory[v_addr + 3] = val[0];
+    this->memory[off + 0] = val[3];
+    this->memory[off + 1] = val[2];
+    this->memory[off + 2] = val[1];
+    this->memory[off + 3] = val[0];
 
     return 0;
 }
 
-int taint_x86::restore_32(DWORD addr, char** val)
+int taint_x86::restore_32(DWORD off, char* val)
 {
-    //lil endian
-    /*DWORD a;
 
-    a = 0;
-    a += this->memory[addr + 3] << 0x00;
-    a += this->memory[addr + 2] << 0x08;
-    a += this->memory[addr + 1] << 0x10;
-    a += this->memory[addr + 0] << 0x18;
-
-    *val = a;*/
-    char* val2;
-    val2 = *val;
-
-    val2[3] = this->memory[addr + 0];
-    val2[2] = this->memory[addr + 1];
-    val2[1] = this->memory[addr + 2];
-    val2[0] = this->memory[addr + 3];
+    val[3] = this->memory[off + 0];
+    val[2] = this->memory[off + 1];
+    val[1] = this->memory[off + 2];
+    val[0] = this->memory[off + 3];
 
     return 0;
+}
+*/
+DWORD taint_x86::le2dword(char* le)
+{
+    DWORD ret;
+    char* val;
+    val = (char*)&ret;
+
+    val[3] = le[0];
+    val[2] = le[1];
+    val[1] = le[2];
+    val[0] = le[3];
+
+    return ret;
+
+}
+
+void taint_x86::store_32(int off, DWORD v)
+{
+    char* val;
+    val = (char*)&v;
+
+    this->memory[off + 0] = val[3];
+    this->memory[off + 1] = val[2];
+    this->memory[off + 2] = val[1];
+    this->memory[off + 3] = val[0];
+
+    return;
+}
+
+DWORD taint_x86::restore_32(int off)
+{
+    DWORD ret;
+    char* val;
+    val = (char*)&ret;
+
+    val[3] = this->memory[off + 0];
+    val[2] = this->memory[off + 1];
+    val[1] = this->memory[off + 2];
+    val[0] = this->memory[off + 3];
+
+    return ret;
+}
+
+void taint_x86::reg_store_32(int off, DWORD v)
+{
+    char* val;
+    val = (char*)&v;
+
+    this->registers[off + 0] = val[3];
+    this->registers[off + 1] = val[2];
+    this->registers[off + 2] = val[1];
+    this->registers[off + 3] = val[0];
+
+    return;
+}
+
+DWORD taint_x86::reg_restore_32(int off)
+{
+    DWORD ret;
+    char* val;
+    val = (char*)&ret;
+
+    val[3] = this->registers[off + 0];
+    val[2] = this->registers[off + 1];
+    val[1] = this->registers[off + 2];
+    val[0] = this->registers[off + 3];
+
+    return ret;
 }
 
 // is it necessary?
@@ -114,42 +163,89 @@ int taint_x86::execute_instruction(char* instr)
     return (this->*(instructions_32[current_byte]))(args);
 }
 
-int taint_x86::a_push_32(char* args)
+int taint_x86::print_buffer(char* buf, int scope)
 {
-    printf("Properly\n");
+    for(int i=0; i< scope; i++)
+    {
+        printf("0x%02x ", buf[i]);
+        if((i+1) % 0x10 == 0x0)
+            printf("\n");
+    }
+    printf("\n");
+}
+
+int taint_x86::print_all_regs()
+{
+    return this->print_buffer(registers, REG_SIZE);
+}
+
+int taint_x86::a_pop_32()
+{
+    DWORD esp;
+    DWORD val;
+
+    // update ESP 
+    esp = reg_restore_32(ESP);
+
+    // store value at stack
+    val = restore_32(esp);
+    esp += 0x4;
+
+    reg_store_32(ESP, esp);
+
+    return val;
+}
+
+int taint_x86::a_push_32(DWORD val)
+{
     DWORD esp;
    
     // update ESP 
-    esp = DWORD(this->registers[ESP]);
-    printf("ESP: 0x%x\n", esp);
+    esp = reg_restore_32(ESP);
     esp -= 0x4;
 
     // store value at stack
-    store_32(esp, args);
-    printf("Executing\n");
-    this->registers[ESP] = esp;
-    printf("Executing\n");
+    store_32(esp, val);
 
+    reg_store_32(ESP, esp);
+
+    return 0x0;
+}
+
+int taint_x86::r_pop_eax_32(char* args)
+{
+    DWORD val;
+    val = a_pop_32();
+    reg_store_32(EAX, val);
+    return 0x0;
+}
+
+int taint_x86::r_pop_ebx_32(char* args)
+{
+    printf("here\n");
+    DWORD val;
+    val = a_pop_32();
+    reg_store_32(EBX, val);
     return 0x0;
 }
 
 int taint_x86::r_push_eax_32(char* args)
 {
     printf("Properly\n");
-    return a_push_32(args);
+    return a_push_32(reg_restore_32(EAX));
 }
 
 int taint_x86::print_context()
 {
     printf("Current context:\n\n");
-    printf("EAX: 0x%08x\n", this->registers[EAX]);
-    printf("ECX: 0x%08x\n", this->registers[ECX]);
-    printf("EDX: 0x%08x\n", this->registers[EDX]);
-    printf("EBX: 0x%08x\n", this->registers[EBX]);
-    printf("ESI: 0x%08x\n", this->registers[ESI]);
-    printf("EDI: 0x%08x\n", this->registers[EDI]);
-    printf("EBP: 0x%08x\n", this->registers[EBP]);
-    printf("ESP: 0x%08x\n", this->registers[ESP]);
-    printf("EIP: 0x%08x\n", this->registers[EIP]);
+    printf("EAX: 0x%08x\n", this->reg_restore_32(EAX));
+    printf("ECX: 0x%08x\n", this->reg_restore_32(ECX));
+    printf("EDX: 0x%08x\n", this->reg_restore_32(EDX));
+    printf("EBX: 0x%08x\n", this->reg_restore_32(EBX));
+    printf("ESI: 0x%08x\n", this->reg_restore_32(ESI));
+    printf("EDI: 0x%08x\n", this->reg_restore_32(EDI));
+    printf("EBP: 0x%08x\n", this->reg_restore_32(EBP));
+    printf("ESP: 0x%08x\n", this->reg_restore_32(ESP));
+    printf("EIP: 0x%08x\n", this->reg_restore_32(EIP));
     printf("\n");
 }

@@ -14,7 +14,15 @@ int main()
     printf("Here we go\n");
 
 
+    taint_eng.print_context();
     taint_eng.execute_instruction(instruction);
+    taint_eng.print_context();
+
+    instruction[0x0] = '\x5a';
+    instruction[0x1] = '\x5a';
+    instruction[0x2] = '\x50';
+    taint_eng.execute_instruction(instruction);
+    taint_eng.print_context();
 
     return 0x0;
 }
