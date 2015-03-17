@@ -43,6 +43,251 @@ class BYTE_t
     }
 };
 
+class WORD_t
+{
+    public:
+
+    BYTE_t val[2];
+
+    WORD get_WORD()
+    {
+        WORD ret;
+
+        char* tmp;
+        tmp = (char*)&ret;
+
+        tmp[0] = val[0].val;
+        tmp[1] = val[1].val;
+
+        return ret;
+    }
+
+    WORD get_t_WORD()
+    {
+        DWORD ret;
+
+        char* tmp;
+        tmp = (char*)&ret;
+
+        tmp[0] = val[0].val_t;
+        tmp[1] = val[1].val_t;
+
+        return ret;
+    }
+
+    void set_WORD(WORD v)
+    {
+        char* tmp;
+        tmp = (char*)&v;
+
+        val[0].val = tmp[0];
+        val[1].val = tmp[1];
+
+        return;
+    }
+
+    void set_t_WORD(WORD v_t)
+    {
+        char* tmp;
+        tmp = (char*)&v_t;
+
+        val[0].val = tmp[0];
+        val[1].val = tmp[1];
+
+        return;
+    }
+
+    BYTE_t operator[](int index)
+    {
+        if(index < 0x2)
+            return val[index];
+    }
+    
+    WORD_t operator=(WORD_t a)
+    {
+        this->val[0] = a.val[0];
+        this->val[1] = a.val[1];
+    }
+
+    WORD_t operator+(WORD b)
+    {
+        WORD_t ret;
+        WORD v;
+        WORD t;
+
+        v = this->get_WORD() + b;
+        t = this->get_t_WORD();
+        
+        ret.set_WORD(v);
+        ret.set_t_WORD(t);
+
+        return ret;
+    }
+
+    WORD_t operator+(WORD_t b)
+    {
+        WORD_t ret;
+        WORD v;
+        WORD t;
+
+        v = this->get_WORD() + b.get_WORD();
+        t = this->get_t_WORD() || b.get_t_WORD();
+        
+        ret.set_WORD(v);
+        ret.set_t_WORD(t);
+
+        return ret;
+    }
+
+    WORD_t operator+=(WORD b)
+    {   
+        WORD_t ret;
+        WORD v;
+        WORD t;
+
+        v = this->get_WORD() + b;
+        t = this->get_t_WORD();
+        
+        ret.set_WORD(v);
+        ret.set_t_WORD(t);
+        this->set_WORD(v);
+        this->set_t_WORD(t);
+
+        return ret;
+    }
+
+    WORD_t operator+=(WORD_t b)
+    {
+        WORD_t ret;
+        WORD v;
+        WORD t;
+
+        v = this->get_WORD() + b.get_WORD();
+        t = this->get_t_WORD() || b.get_t_WORD();
+        
+        ret.set_WORD(v);
+        ret.set_t_WORD(t);
+        this->set_WORD(v);
+        this->set_t_WORD(t);
+
+        return ret;
+    }
+
+    WORD_t operator-(WORD b)
+    {
+        WORD_t ret;
+        WORD v;
+        WORD t;
+
+        v = this->get_WORD() - b;
+        t = this->get_t_WORD();
+        
+        ret.set_WORD(v);
+        ret.set_t_WORD(t);
+
+        return ret;
+    }
+
+    WORD_t operator-(WORD_t b)
+    {
+        WORD_t ret;
+        WORD v;
+        WORD t;
+
+        v = this->get_WORD() - b.get_WORD();
+        t = this->get_t_WORD() || b.get_t_WORD();
+        
+        ret.set_WORD(v);
+        ret.set_t_WORD(t);
+
+        return ret;
+    }
+
+    WORD_t operator-=(WORD b)
+    {   
+        WORD_t ret;
+        WORD v;
+        WORD t;
+
+        v = this->get_WORD() - b;
+        t = this->get_t_WORD();
+        
+        ret.set_WORD(v);
+        ret.set_t_WORD(t);
+        this->set_WORD(v);
+        this->set_t_WORD(t);
+
+        return ret;
+    }
+
+    WORD_t operator-=(WORD_t b)
+    {
+        WORD_t ret;
+        WORD v;
+        WORD t;
+
+        v = this->get_WORD() - b.get_WORD();
+        t = this->get_t_WORD() || b.get_t_WORD();
+        
+        ret.set_WORD(v);
+        ret.set_t_WORD(t);
+        this->set_WORD(v);
+        this->set_t_WORD(t);
+
+        return ret;
+    }
+
+    //from null
+    WORD_t()
+    {
+        val[0] = 0x0;
+        val[1] = 0x0;
+    }
+
+    //from BYTE, proxy to BYTE constructor
+    WORD_t(BYTE a)
+    {
+        val[0] = a;
+        val[1] = 0x0;
+    }
+
+    //from BYTE_t, proxy to BYTE constructor
+    WORD_t(BYTE_t a)
+    {
+        val[0] = a;
+        val[1] = 0x0;
+    }
+
+    //from WORD, cast to char and consider individual bytes
+    WORD_t(WORD a)
+    {
+        char* tmp;
+        tmp = (char*)&a;
+
+        val[0] = tmp[0];
+        val[1] = tmp[1];
+    }
+
+    //from BYTE_t pointer, with endianess
+    WORD_t(BYTE_t* a, int le=0)
+    {
+        if(!le)
+        {
+            val[0] = *a;
+            a += sizeof(BYTE_t);
+            val[1] = *a;
+            a += sizeof(BYTE_t);
+        }
+        else
+        {
+            val[3] = *a;
+            a += sizeof(BYTE_t);
+            val[2] = *a;
+            a += sizeof(BYTE_t);
+        }
+    }
+};
+
 class DWORD_t
 {
     public:
@@ -333,19 +578,63 @@ class DWORD_t
         }
     }
 };
-/*
-typedef struct BYTE_t_
-{
-    BYTE val;
-    BYTE val_t;
-} BYTE_t;
 
-typedef struct DWORD_t_
+class reg_t: public DWORD_t
 {
-    BYTE_t val[4];
-    BYTE_t val_t[4];
-} DWORD_t;
-*/
+    DWORD get_HW()
+    {
+        WORD ret;
+
+        char* tmp;
+        tmp = (char*)&ret;
+
+        tmp[0] = val[2].val;
+        tmp[1] = val[3].val;
+
+        return ret;
+    }
+
+    DWORD get_t_HW()
+    {
+        WORD ret;
+
+        char* tmp;
+        tmp = (char*)&ret;
+
+        tmp[0] = val[2].val_t;
+        tmp[1] = val[3].val_t;
+
+        return ret;
+    }
+
+    DWORD get_LW()
+    {
+        WORD ret;
+
+        char* tmp;
+        tmp = (char*)&ret;
+
+        tmp[0] = val[0].val;
+        tmp[1] = val[1].val;
+
+        return ret;
+    }
+
+    DWORD get_t_LW()
+    {
+        WORD ret;
+
+        char* tmp;
+        tmp = (char*)&ret;
+
+        tmp[0] = val[0].val_t;
+        tmp[1] = val[1].val_t;
+
+        return ret;
+    }
+
+};
+
 class taint_x86
 {
     public:
