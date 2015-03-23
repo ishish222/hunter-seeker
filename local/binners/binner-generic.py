@@ -4,6 +4,7 @@ sys.path.append("e:\\server\\paimei")
 sys.path.append("e:\\common")
 
 import serial
+#import parallel
 import win32pipe, win32file, win32gui
 import time
 import binner

@@ -648,6 +648,11 @@ class DWORD_t
     }
 };
 
+typedef struct modrm_op_ready_32_
+{
+    DWORD_t* src;
+    DWORD_t* tgt;
+} modrm_op_ready_32;
 
 class taint_x86
 {
@@ -668,6 +673,9 @@ class taint_x86
     DWORD_t eflags;
     DWORD_t eip;
 
+    //modrm ready operands table
+    modrm_op_ready_32 modrm_table_32[0x100];
+
     typedef int (taint_x86::*instruction_routine)(char* args);
     instruction_routine instructions_32[0x100];
 
@@ -675,6 +683,8 @@ class taint_x86
     int r_pop_eax_32(char*);
     int r_pop_ebx_32(char*);
     int r_push_eax_32(char*);
+    int r_mov_r_rm_32(char*);
+    int r_mov_rm_r_32(char*);
 
     // auxilliary
     int a_push_32(DWORD_t);
@@ -697,14 +707,19 @@ class taint_x86
     int print_t_context();
     int print_bt_buffer(BYTE_t*, DWORD);
     int print_all_regs();
+    int decode_modrm_byte(char*, DWORD_t*, DWORD_t*);
 
     taint_x86()
     {
         printf("Initializing taint emulator\n");
     
+        modrm_table_32[0x0].src = &this->eax; modrm_table_32[0x0].tgt = &this->eax;
+
         this->instructions_32[0x50] = &taint_x86::r_push_eax_32;
         this->instructions_32[0x58] = &taint_x86::r_pop_eax_32;
         this->instructions_32[0x5a] = &taint_x86::r_pop_ebx_32;
+        this->instructions_32[0x8b] = &taint_x86::r_mov_r_rm_32;
+        this->instructions_32[0x89] = &taint_x86::r_mov_rm_r_32;
 //        this->instructions_32[0x50] = taint_x86::r_push_eax_32;
 //        this->instructions_32[0x51] = r_push_ecx_32;
 //        this->instructions_32[0x52] = r_push_edx_32;

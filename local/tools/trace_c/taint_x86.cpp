@@ -223,7 +223,7 @@ DWORD taint_x86::dword(char* off)
 int taint_x86::execute_instruction(char* instr)
 {
     printf("Executing\n");
-    char current_byte;
+    unsigned char current_byte;
     char* args;
 
     printf("Executing\n");
@@ -305,8 +305,65 @@ int taint_x86::r_pop_ebx_32(char* args)
 
 int taint_x86::r_push_eax_32(char* args)
 {
-    printf("Properly\n");
     return a_push_32(this->eax);
+}
+
+int taint_x86::decode_modrm_byte(char* args, DWORD_t* src, DWORD_t* tgt)
+{
+    modrm_op_ready_32 ops;
+
+    printf("modrm byte: 0x%x\n", args[0]);
+
+    ops = this->modrm_table_32[args[0]];
+    if(ops.src != 0x0 && ops.tgt != 0x0)
+    {
+        printf("found match\n");
+        src = ops.src;
+        tgt = ops.tgt;
+        printf("this->eax: 0x%p\n", &this->eax);
+        printf("found src: 0x%p\n", src);
+        return 0x0;
+    }
+        
+    return 1;
+}
+
+int taint_x86::r_mov_rm_r_32(char* args)
+{
+    char* modrm_byte;
+    DWORD_t* op1;
+    DWORD_t* op2;
+
+    modrm_byte = args;
+
+    decode_modrm_byte(modrm_byte, op1, op2);
+    printf("decoded: rm: %x, r: %x\n", op1->val, op2->val);
+
+//    this->memory[op1->to_DWORD()] = *op2;
+    printf("op1 content: %x\n", *op1);
+    printf("op2 content: %x\n", *op2);
+    *op1 = this->restore_32(*op2);
+
+    return 0x0;
+}
+
+int taint_x86::r_mov_r_rm_32(char* args)
+{
+    char* modrm_byte;
+    DWORD_t* op1;
+    DWORD_t* op2;
+
+    modrm_byte = args;
+
+    decode_modrm_byte(modrm_byte, op1, op2);
+    printf("op1 content: %x\n", op1->val);
+    printf("op2 content: %x\n", op2->val);
+    printf("decoded: r: %x, rm: %x\n", op1->val, op2->val);
+
+//    *op1 = this->memory[op2->to_DWORD()];
+    this->store_32(*op1, *op2);
+
+    return 0x0;
 }
 
 int taint_x86::print_context()
