@@ -4,7 +4,6 @@ sys.path.append("e:\\server\\paimei")
 sys.path.append("e:\\common")
 
 import serial
-#import parallel
 import win32pipe, win32file, win32gui
 import time
 import binner
@@ -741,6 +740,16 @@ def execute(cmds):
             main_binner.ok()
 #            dlog("Verified RD marker")
             main_binner.detach_rd_markers()
+
+        elif(cmd == "openserialport"):
+#            dlog("In getSynopsis", 2)
+            try:
+                ph2 = serial.Serial(1)
+            except Exception:
+                print "No second serial"
+            ph2.write("test-=OK=-") 
+            print("done")
+            main_binner.ok()
 
         elif(cmd == "getSynopsis"):
 #            dlog("In getSynopsis", 2)

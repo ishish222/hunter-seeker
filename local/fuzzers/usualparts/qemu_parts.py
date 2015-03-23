@@ -19,6 +19,7 @@ def qemu_prepare_pipes():
 
     options.ms = common.prepare_monitor(options.ms_path)
     options.ss = common.prepare_serial(options.ss_path)
+    options.ss2 = common.prepare_serial(options.ss_path + '2')
 
 
 def qemu_ready():

@@ -180,6 +180,7 @@ def get_options():
 
     qemu_args += ['-monitor', "unix:%s" % settings.machines[options.fuzzbox_name]['monitor']]
     qemu_args += ['-serial', "unix:%s" % settings.machines[options.fuzzbox_name]['serial']]
+    qemu_args += ['-serial', "unix:%s" % settings.machines[options.fuzzbox_name]['serial']+'2']
     qemu_args += ['-smp', str(options.smp)]
     
     if(settings.qemu_env != None):
