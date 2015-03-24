@@ -19,13 +19,6 @@ def configure_port():
     #write_socket(options.s, "trace e:\\samples\\shared\\%s %d f:\\%s.mm" % (test_file, options.walk_level, test_file))
     write_socket(options.s, "openserialport")
     
-    options.s2, _ = options.ss2.accept()
-    
-    read_socket(options.s2)
-
-
-
-
 def trace_sample():
     # sledzenie wykonania probki od markera MA
 
@@ -45,13 +38,21 @@ def trace_sample():
     test_file = os.path.basename(test_path)
 
     if(options.walk_start == None):
-        write_socket(options.s, "walk e:\\samples\\shared\\%s %d f:\\%s.mm" % (test_file, options.walk_level, test_file))
+#        write_socket(options.s, "walk e:\\samples\\shared\\%s %d f:\\%s.mm" % (test_file, options.walk_level, test_file))
+        write_socket(options.s, "trace e:\\samples\\shared\\%s" % (test_file))
     else:
-        write_socket(options.s, "walk2 e:\\samples\\shared\\%s %d f:\\%s.mm %s" % (test_file, options.walk_level, test_file, options.walk_start))
+        pass
+#        write_socket(options.s, "walk2 e:\\samples\\shared\\%s %d f:\\%s.mm %s" % (test_file, options.walk_level, test_file, options.walk_start))
+
+    options.s2, _ = options.ss2.accept()
+    read_socket(options.s2)
 
     options.settings.runner_0(options, [test_file])
     options.log.write("%s: " % test_file)
     options.log.flush()
+    
+    print "Waiting for instruction"
+    read_socket(options.s2)
 
 
 def test_sample():

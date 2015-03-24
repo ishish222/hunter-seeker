@@ -917,6 +917,28 @@ class debugger(pydbg):
         self.logStarted = False
 
 
+    def take_a_trace(self, args=None):
+        st_addr = self.st_markers[0][0]
+        end_addr = self.ma_markers[0][0]
+    
+
+        self.dlog("Talking a trace from 0x%x until 0x%x" % (st_addr, end_addr))
+    
+        self.walk = None
+        self.walk = trace(st_addr, end_addr, dbg=self)
+
+        add_default_blacklists(self.walk)
+
+        for bl_marker in self.bl_markers:
+            self.walk.addr_blacklist.append(bl_marker[0])
+
+#        self.walk.install_walk_bp()
+#        self.walk.install_walk_end_bp()
+#        self.walk.register_callbacks()
+#
+        self.dlog("Trace is prepared")
+        print("Trace is prepared")
+
     def take_a_walk(self, args):
         depth, gf_path = args.split(" ")
         depth = int(depth)
@@ -1051,6 +1073,7 @@ dbg_cmds["EA"] = (debugger.get_ea, False)
 dbg_cmds["CL"] = (debugger.close_logs, False)
 dbg_cmds["WK"] = (debugger.take_a_walk, True)
 dbg_cmds["WN"] = (debugger.take_a_walk2, True)
+dbg_cmds["TC"] = (debugger.take_a_trace, True)
 
 ### main routines
 def readline(stream):

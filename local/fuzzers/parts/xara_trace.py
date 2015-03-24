@@ -21,17 +21,17 @@ Start.name = "Start"
 #Start.consequence = usualparts.default_map.PrintLogo
 Start.consequence = usualparts.default_map.GetOptions
 
-TraceConfigurePort.name = "Configuring trace port"
-TraceConfigurePort.consequence = dm.Shutdown
-TraceConfigurePort.executing_routine = usualparts.tracing_parts.configure_port
+#TraceConfigurePort.name = "Configuring trace port"
+#TraceConfigurePort.consequence = dm.Shutdown
+#TraceConfigurePort.executing_routine = usualparts.tracing_parts.trace_sample
 
 #TraceEnd.name = "Concluding execution of sample"
 #TraceEnd.consequence = dm.Shutdown
 #TraceEnd.executing_routine = 
 
-#TraceStart.name = "Starting execution of sample"
-#TraceStart.consequence = TraceEnd
-#TraceStart.executing_routine = 
+TraceStart.name = "Starting execution of sample"
+TraceStart.consequence = dm.Shutdown
+TraceStart.executing_routine = usualparts.tracing_parts.trace_sample
 
 ShutdownKillHost.name = "Killing host application"
 ShutdownKillHost.consequence = dm.Shutdown
@@ -56,5 +56,5 @@ dm.ShutdownSequence.consequence = ShutdownKillHost
 dm.RefreshSequence.consequence = RefreshKillHost
 dm.ScriptRun.consequence = PlugTimeHole
 
-dm.BinnerCheckReady.consequence = TraceConfigurePort
+dm.BinnerCheckReady.consequence = TraceStart
 

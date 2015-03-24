@@ -512,6 +512,9 @@ class binner(object):
         bin_dir = "%s\\%s" % (settings.samples_binned, self.ea)
         testdir(bin_dir)
 
+    def take_a_trace(self, args=None):
+        self.send_command("TC")
+
     def take_a_walk(self, args):
         self.send_command("WK%s%s" % (args, end))
 
