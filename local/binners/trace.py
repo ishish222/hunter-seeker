@@ -7,6 +7,8 @@ import serial
 
 def handle_trace_start(dbg):
     dbg.trace.dlog("Reached trace start")
+    dbg.trace.ph2.write("Tracing started\n")
+    dbg.trace.ph2.write("--cut-here--\n")
 
     # handle trace end
 #    dbg.trace.trace_end_addr = dbg.trace.trace_addr + dbg.trace.current_instr.length
@@ -25,6 +27,8 @@ def handle_trace_start(dbg):
     return DBG_CONTINUE
 
 def handle_crash(dbg):
+    dbg.trace.ph2.write("--cut-here--\n")
+    dbg.trace.ph2.write("Interrupted due to crash\n")
     print("--cut here--")
     dbg.trace.dlog("Walk interrupted due to crash")
     print("[*] Walk interrupted due to crash")
@@ -39,6 +43,8 @@ def handle_crash(dbg):
 #    return DBG_CONTINUE
 
 def handle_trace_end(dbg):
+    dbg.trace.ph2.write("--cut-here--\n")
+    dbg.trace.ph2.write("Interrupted due to finish\n")
     print("--cut here--")
     dbg.trace.dlog("Reached trace end")
     print("current dbg breakpoints:")
@@ -58,42 +64,48 @@ def handle_working_bp(dbg):
     ea = dbg.get_register("EIP")
     dbg.trace.current_ea = ea
     dbg.trace.current_dis = dbg.disasm(ea)
-    dbg.trace.current_instr = dbg.get_instruction(ea)
-
-    if(dbg.mnemonic == "int3"):
-        return DBG_CONTINUE
-
-    for addr in dbg.trace.addr_blacklist:
-        if(ea == addr):
-            print("[*] Blacklisted, ignoring")
-            return DBG_CONTINUE
-
-#        dbg.trace.level -= 1
-
-    dbg.ph2.write("%08x-=OK=-" % ea)
-
-    if(dbg.mnemonic == "call"):
-#        for i in range(0, dbg.trace.level):
-#            print(" ", end="")
-        my_module = dbg.addr_to_module(int(ea & 0xffffffff))
-        target_module = dbg.addr_to_module(decode_op1(dbg, dbg.op1))
-
-        if(target_module == None):
-            target_name = "unknown"
-        else:
-            target_name = target_module.szModule
-
-        if(my_module == None):
-            my_name = "unknown"
-        else:
-            my_name = my_module.szModule
-
-        #print(my_name + str(":") + hex(int(ea & 0xffffffff)) + ": " + dbg.trace.current_dis + " (" + target_name + ")")
-        dbg.trace.dive()
-        return DBG_CONTINUE
-
-    if(dbg.trace.running):
-        dbg.single_step(True)
+#    dbg.trace.current_instr = dbg.get_instruction(ea)
+#
+##    if(dbg.mnemonic == "int3"):
+##        return DBG_CONTINUE
+#
+#    for addr in dbg.trace.addr_blacklist:
+#        if(ea == addr):
+#            print("[*] Blacklisted, ignoring")
+#            return DBG_CONTINUE
+#
+## dodaj obslluge listy obserwowanych
+#
+##        dbg.trace.level -= 1
+#
+    dbg.trace.ph2.write("%08x %s\n" % (dbg.trace.current_ea, dbg.trace.current_dis))
+#
+#    if(dbg.mnemonic == "call"):
+##        for i in range(0, dbg.trace.level):
+##            print(" ", end="")
+#        my_module = dbg.addr_to_module(int(ea & 0xffffffff))
+#        target_module = dbg.addr_to_module(decode_op1(dbg, dbg.op1))
+#
+#        if(target_module == None):
+#            target_name = "unknown"
+#        else:
+#            target_name = target_module.szModule
+#
+#        if(my_module == None):
+#            my_name = "unknown"
+#        else:
+#            my_name = my_module.szModule
+#
+#        #print(my_name + str(":") + hex(int(ea & 0xffffffff)) + ": " + dbg.trace.current_dis + " (" + target_name + ")")
+##        dbg.trace.dive()
+##        return DBG_CONTINUE
+#
+#    if(dbg.trace.running):
+#        dbg.single_step(True)
+#
+#
+#    dbg.trace.ph2.write("aaaaaaaaaaaaaaaaaaa\n")
+    dbg.single_step(True)
 
     return DBG_CONTINUE
 
@@ -109,9 +121,11 @@ def handle_ex(dbg, ec):
 class trace():
     def __init__(self, addr, endaddr, app="", imagename="", dbg=None):
 
-        try:
+        #try:
+        if True:
             self.ph2 = serial.Serial(1)
-            self.ph2.write("test-=OK=-") 
+            self.ph2.baudRate = 921600
+#            self.ph2.write("test-=OK=-") 
 
             self.app = app
             self.imagename = imagename
@@ -134,8 +148,9 @@ class trace():
             self.install_trace_end_bp()
             self.register_callbacks()
             self.running = False
-        except Exception:
-            self.dlog("Error initializing trace")
+#        except Exception:
+#            self.dlog("Error initializing trace")
+        self.dlog("Trace successfully initialized")
 
 
     def attach(self):
@@ -317,7 +332,7 @@ class trace():
             print(e)
 
     def dlog(self, data):
-        self.dbg.dlog("[WALK] %s" % data)
+        self.dbg.dlog("[TRACE] %s" % data)
 
 def add_default_blacklists(my_trace):
     my_trace.module_blacklist.append("ntdll.dll")

@@ -139,6 +139,7 @@ def get_options():
     parser.add_option("-U", "--walk-level",     dest="walk_level", help="Walk level", default="3")
     parser.add_option("-X", "--ws",             dest="walk_start", help="Walk start address (should be call)", default=None)
     parser.add_option("-g", "--args",           dest="args", default=None)
+    parser.add_option("-F", "--output",         dest="out_path", default='./heis-out')
 
     (options, args) = parser.parse_args()
     (options, args) = parser.parse_args()
@@ -180,7 +181,7 @@ def get_options():
 
     qemu_args += ['-monitor', "unix:%s" % settings.machines[options.fuzzbox_name]['monitor']]
     qemu_args += ['-serial', "unix:%s" % settings.machines[options.fuzzbox_name]['serial']]
-    qemu_args += ['-serial', "unix:%s" % settings.machines[options.fuzzbox_name]['serial']+'2']
+    qemu_args += ['-serial', "file:%s" % settings.machines[options.fuzzbox_name]['serial']+'3']
     qemu_args += ['-smp', str(options.smp)]
     
     if(settings.qemu_env != None):

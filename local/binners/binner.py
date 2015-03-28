@@ -304,6 +304,7 @@ class binner(object):
             yield self.debuggers[pid].list_tebs()
 
     def detach_all(self):
+        print("detaching")
         self.send_command("Q1")
         while(len(self.debuggers) > 0):
             dbg = self.debuggers.popitem()
@@ -512,8 +513,19 @@ class binner(object):
         bin_dir = "%s\\%s" % (settings.samples_binned, self.ea)
         testdir(bin_dir)
 
-    def take_a_trace(self, args=None):
-        self.send_command("TC")
+    def take_a_trace(self, args):
+        self.send_command("TC%s%s" % (args, end))
+
+    def take_a_trace2(self, pid):
+        self.dlog("taking a trace")
+        from subprocess import Popen, PIPE
+#        st_addr = self.st_markers[0][0]
+#        end_addr = self.end_markers[0][0]
+        st_addr = 0x4e30ac
+        end_addr = 0x7e427f87
+   
+        self.dlog("e:\\server\\trace.exe %s 0x%x 0x%x" % (pid, st_addr, end_addr))
+        Popen("e:\\server\\trace.exe %s 0x%x 0x%x" % (pid, st_addr, end_addr), stdout=PIPE, stderr=PIPE)
 
     def take_a_walk(self, args):
         self.send_command("WK%s%s" % (args, end))

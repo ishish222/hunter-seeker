@@ -21,3 +21,5 @@ s:binners/debugger.py
 s:binners/functions.py
 s:binners/mutex_2.py
 s:binners/walk.py
+s:binners/trace.py
+s:binners/trace.exe

@@ -5,6 +5,7 @@ import common
 import globs
 import os
 from other_parts import defined
+from taint_parts import find_pid
 
 report = common.report
 write_socket = common.write_socket
@@ -18,7 +19,14 @@ def configure_port():
 
     #write_socket(options.s, "trace e:\\samples\\shared\\%s %d f:\\%s.mm" % (test_file, options.walk_level, test_file))
     write_socket(options.s, "openserialport")
-    
+
+def detach_debugger():
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+
+    write_socket(options.s, "detachdebugger")
+
 def trace_sample():
     # sledzenie wykonania probki od markera MA
 
@@ -39,21 +47,35 @@ def trace_sample():
 
     if(options.walk_start == None):
 #        write_socket(options.s, "walk e:\\samples\\shared\\%s %d f:\\%s.mm" % (test_file, options.walk_level, test_file))
-        write_socket(options.s, "trace e:\\samples\\shared\\%s" % (test_file))
+#        write_socket(options.s, "trace e:\\samples\\shared\\%s" % (test_file))
+        write_socket(options.s, "trace2 e:\\samples\\shared\\%s %d" % (test_file, globs.state.pid))
     else:
         pass
 #        write_socket(options.s, "walk2 e:\\samples\\shared\\%s %d f:\\%s.mm %s" % (test_file, options.walk_level, test_file, options.walk_start))
 
-    options.s2, _ = options.ss2.accept()
-    read_socket(options.s2)
-
+#    options.s2, _ = options.ss2.accept()
+#
     options.settings.runner_0(options, [test_file])
     options.log.write("%s: " % test_file)
     options.log.flush()
-    
+#    
     print "Waiting for instruction"
-    read_socket(options.s2)
-
+##    lastResponse = ''
+##
+##    while(lastResponse!='end'):
+##        (lastResponse, status, reqScript) = read_socket(options.s2)
+##        print lastResponse
+#    buf = ''
+#
+#    out = options.out_path
+#    fout = open(out, 'w+')
+#
+    while True:
+        pass
+#        buf = options.s2.recv(0x1000000)
+#        fout.write(buf)
+#
+#    fout.close()            
 
 def test_sample():
     # test single sample

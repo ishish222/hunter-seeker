@@ -19,7 +19,7 @@ import socket
 from random import random
 import struct
 from mutex_2 import NamedMutex
-from walk import walk, add_default_blacklists
+from trace import trace, add_default_blacklists
 
 ### functions
 # unable to move cause settings module is not visible
@@ -917,9 +917,18 @@ class debugger(pydbg):
         self.logStarted = False
 
 
-    def take_a_trace(self, args=None):
+    def take_a_trace2(self, pid):
+        self.dlog("taking a trace")
+        from subprocess import Popen
         st_addr = self.st_markers[0][0]
-        end_addr = self.ma_markers[0][0]
+        end_addr = self.end_markers[0][0]
+   
+        self.dlog("e:\\server\\trace.exe %d 0x%x 0x%x" % (pid, st_addr, end_addr))
+        Popen("e:\\server\\trace.exe %d 0x%x 0x%x" % (pid, st_addr, end_addr))
+
+    def take_a_trace(self, args):
+        st_addr = self.st_markers[0][0]
+        end_addr = self.end_markers[0][0]
     
 
         self.dlog("Talking a trace from 0x%x until 0x%x" % (st_addr, end_addr))
@@ -1022,6 +1031,11 @@ class debugger(pydbg):
         if(self.pr != None):
             self.pr.disable()
 
+    def detach(self):
+        self.dlog("detaching")
+        #super(pydbg, self).detach()
+        pydbg.detach()
+
     def dump_stats(self, fname):
         if(self.pr != None):
             try:
@@ -1074,6 +1088,7 @@ dbg_cmds["CL"] = (debugger.close_logs, False)
 dbg_cmds["WK"] = (debugger.take_a_walk, True)
 dbg_cmds["WN"] = (debugger.take_a_walk2, True)
 dbg_cmds["TC"] = (debugger.take_a_trace, True)
+dbg_cmds["TE"] = (debugger.take_a_trace2, True)
 
 ### main routines
 def readline(stream):

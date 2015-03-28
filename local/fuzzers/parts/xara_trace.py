@@ -3,6 +3,7 @@ import usualparts.default_map as dm
 import usualparts.binner_parts
 import usualparts.globs as globs
 import usualparts.tracing_parts
+import usualparts.taint_parts
 import common
 
 Start = statemachine.State()
@@ -14,6 +15,8 @@ PlugTimeHole = statemachine.State()
 TraceConfigurePort = statemachine.State()
 TraceStart = statemachine.State()
 TraceEnd = statemachine.State()
+DetachDebugger = statemachine.State()
+PID = statemachine.State()
 
 DefaultShutdown = dm.ShutdownSequence
 
@@ -50,11 +53,22 @@ PlugTimeHole.name = "Executing script for Xara time hole"
 PlugTimeHole.consequence = dm.GetOutput
 PlugTimeHole.executing_routine = xara_plug_time_hole
 
+DetachDebugger.name = "detaching debuggers"
+DetachDebugger.consequence = TraceStart
+DetachDebugger.executing_routine = usualparts.tracing_parts.detach_debugger
+
+PID.name = "GetPID"
+PID.consequence = DetachDebugger
+PID.executing_routine = usualparts.taint_parts.find_pid
+
+
 #rerouting
 
 dm.ShutdownSequence.consequence = ShutdownKillHost
 dm.RefreshSequence.consequence = RefreshKillHost
 dm.ScriptRun.consequence = PlugTimeHole
 
-dm.BinnerCheckReady.consequence = TraceStart
+dm.Cooldown.consequence = PID
+
+dm.QemuConnectDevSocket.executing_routine = usualparts.qemu_parts.qemu_connect_dev_socket_infinite
 

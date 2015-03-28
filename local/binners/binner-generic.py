@@ -481,11 +481,11 @@ def execute(cmds):
             filee = args
             print("Tracing %s" % (filee))
             
-            main_binner.take_a_trace()
-            time.sleep(2)
+            main_binner.take_a_trace("%s" % 'NU')
 
+            print "About to release debugger"
             main_binner.loop_debuggers(invocation_args=filee)
-            while(process_status_queue(["ST"]) != True):
+            while(process_status_queue(["WS"]) != True):
                 main_binner.loop_debuggers()
             if(status == "CR"):
                 # CR before ST
@@ -493,11 +493,89 @@ def execute(cmds):
                 main_binner.ok()
                 return
 
+            print "About to release debugger"
+
             print "here2"
             main_binner.writePipe("Status: %s" % status)
             main_binner.ok()
 
-            while(process_status_queue(["MA", "CR"]) != True):
+            while(process_status_queue(["WE", "CR"]) != True):
+                main_binner.loop_debuggers()
+            if(status == "CR"):
+                # CR before ST
+                main_binner.writePipe("Status: CR")
+                main_binner.ok()
+                return
+
+            main_binner.writePipe("Status: %s" % status)
+            main_binner.ok()
+
+            if(settings.needs_ready):
+                main_binner.attach_rd_markers()
+            # time for reaction to test end
+            main_binner.start_debuggers("Closing execution")
+            main_binner.readPipe()
+            main_binner.stop_debuggers("Closing execution finished")
+
+            print "here3"
+#            main_binner.loop_debuggers()
+            if(settings.needs_ready):
+                while(process_status_queue(["RD", "CR", "PTO"]) != True):
+                    print "waiting for RD"
+                    main_binner.loop_debuggers(settings.wait_sleep)
+                    print "got sth"
+            else:
+                process_status_queue(["RD", "CR", "PTO"])
+                if(status != "CR"): status = "RD"
+
+            if(status == "CR"):
+#                dlog("Processing CR3")
+                main_binner.get_ea()
+                main_binner.test_bin_dir()
+                main_binner.save_synopsis(args)
+                main_binner.save_sample(args)
+                main_binner.writePipe("Status: CR")
+                main_binner.ok()
+                return
+
+            if(settings.needs_ready):
+                main_binner.writePipe("Status: %s" % status)
+                main_binner.ok()
+                main_binner.detach_rd_markers()
+
+        elif(cmd == "detachdebugger"):
+            main_binner.detach_all()
+            print("Detached")
+            main_binner.ok()
+
+        elif(cmd == "trace2"):
+            print args
+            filee, pid = args.split(' ')
+            print("Tracing %s" % (filee))
+            
+            main_binner.take_a_trace2("%s" % pid)
+
+            settings.runner(filee)
+            main_binner.ok()
+            return
+            
+
+            main_binner.loop_debuggers(invocation_args=filee)
+            while(process_status_queue(["WS"]) != True):
+                main_binner.loop_debuggers()
+            if(status == "CR"):
+                # CR before ST
+                main_binner.writePipe("Status: CR")
+                main_binner.ok()
+                return
+
+            print "About to release debugger"
+
+            print "here2"
+            main_binner.writePipe("Status: %s" % status)
+            main_binner.ok()
+
+            while(process_status_queue(["WE", "CR"]) != True):
                 main_binner.loop_debuggers()
             if(status == "CR"):
                 # CR before ST
