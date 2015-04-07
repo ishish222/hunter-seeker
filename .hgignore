@@ -13,6 +13,7 @@ syntax: glob
 *.idb
 *.ipch
 *.tlog
+*.lib
 
 
 #linux/python

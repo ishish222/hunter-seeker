@@ -33,6 +33,8 @@ DWORD access = PROCESS_ALL_ACCESS;
 DWORD taccess = THREAD_ALL_ACCESS;
 DWORD faccess = GENERIC_ALL;
 HANDLE serialH;
+FILE* f;
+char path[] = "c:\\trace.txt";
 
 DWORD readCurAddr(DWORD th)
 {
@@ -48,7 +50,7 @@ DWORD readCurAddr(DWORD th)
 	res = GetThreadContext(curTh, &ctx);
 	//ReadProcessMemory(myHandle, (LPCVOID)ctx.Eip, &cur_instr, 0x1, 0x0);
 
-	printf("0x%08x\n", ctx.Eip);
+	fprintf(f, "0x%08x\n", ctx.Eip);
 	char line[0x10];
 	sprintf(line, "0x%08x\n", ctx.Eip);
 	DWORD bytes_written;
@@ -178,6 +180,7 @@ int trace_start(DWORD thread)
 		res = SetThreadContext(curTh, &ctx);
 
 		CloseHandle(curTh);
+        f = fopen(path, "w+");
 		
 	} while(Thread32Next(snap, &te));
 
@@ -195,6 +198,7 @@ int trace_ss(DWORD arg)
 int trace_end(DWORD arg)
 {
 	printf("Reached end\n");
+    fclose(f);
 	return 0;
 }
 
