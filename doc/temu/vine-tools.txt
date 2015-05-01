@@ -1,0 +1,47 @@
+trace_reader:
+
+$ ls -lh  ../../temu-1.0-3/tracecap/out-xara-4.trace
+-rw-r--r-- 1 hs1 users 137G Jan 23 16:22 ../../temu-1.0-3/tracecap/out-xara-4.trace
+
+$ time ./trace_reader -eip -trace ../../temu-1.0-3/tracecap/out-xara-4.trace > ../../temu-1.0-3/tracecap/out-xara-4.eips
+
+--
+
+what do i need?
+
+executed instructions (probably not available?)
+tainted instructions (eips)
+
+list of threads
+
+--
+
+To get modules layout:
+
+time ./trace_reader -trace ../../temu-1.0-3/tracecap/out-xara-4.trace -header
+Trace version: 50
+Number of instructions: 0
+Process: DesignerPro.exe PID: 1296
+         Module: MxEXIF_REL_U_VC9.dll @ 0x00370000 Size: 368640
+         Module: vs_effectlib.dll @ 0x003e0000 Size: 98304
+         Module: DesignerPro.exe @ 0x00400000 Size: 22421504
+         Module: httpd.dll @ 0x01980000 Size: 110592
+...
+         Module: user32.dll @ 0x7e410000 Size: 593920
+
+real    0m0.008s
+user    0m0.000s
+sys     0m0.000s
+
+--
+
+verbose listing, including TID info:
+./trace_reader -trace ../../temu-1.0-3/tracecap/out-xara-4.trace -v
+
+--
+
+To list eips & TIDS:
+time ./trace_reader -trace ../../temu-1.0-3/tracecap/out-xara-4.trace -v | sed 's/\(.*\):\x09.*TID: \(.*\)TP:.*/\1 \2/' > ../../temu-1.0-3/tracecap/out-xara-4.trace.eips.tids
+
+
+

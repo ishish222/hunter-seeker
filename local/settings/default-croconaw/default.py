@@ -24,7 +24,8 @@ cooldown_level = 20
 machines = {
     'hs2-01': {'disk' : 'hs2-01.raw', 'vnc' : ':1', 'taskset' : '1,2', 'monitor' : '/tmp/monitor-hs1', 'serial' : '/tmp/serial-hs1'},
     'hs2-02': {'disk' : 'hs2-02.raw', 'vnc' : ':2', 'taskset' : '1,2,3', 'monitor' : '/tmp/monitor-hs2', 'serial' : '/tmp/serial-hs2'},
-    'hs2-03': {'disk' : 'hs2-03.qcow2', 'vnc' : ':3', 'taskset' : '1,2,3', 'monitor' : '/tmp/monitor-hs3', 'serial' : '/tmp/serial-hs3'}
+    'hs2-03': {'disk' : 'hs2-03.qcow2', 'vnc' : ':3', 'taskset' : '1,2,3', 'monitor' : '/tmp/monitor-hs3', 'serial' : '/tmp/serial-hs3'},
+    'temu-01': {'disk' : 'temu-01.raw', 'vnc' : ':1', 'taskset' : '1,2,3', 'monitor' : '/tmp/monitor-hs3', 'serial' : '/tmp/serial-hs3'}
 }
 
 script_codes = {}
@@ -87,7 +88,7 @@ qemu_additional =  ['-enable-kvm']
 qemu_command = 'qemu-system-i386'
 qemu_drive_options = 'cache=none,if=virtio'
 qemu_env = None
-qemu_drives_dir=""
+qemu_drives_dir="/home/ish/machines/qemu"
 qemu_secondary=""
 
 def runner_0(options, args=None):

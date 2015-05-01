@@ -1,0 +1,4 @@
+If compiling on 64bit system:
+
+./configure --target-list=i386-softmmu --proj-name=tracecap --prefix=$(pwd)/install --cpu=i386
+
