@@ -1,0 +1,48 @@
+### Forward:
+
+Parametry:
+    Wejscie:
+    instrukcje
+    dump w chwili t1
+
+    Wyjscie:
+    lost_values
+    dump w chwili t2
+    dump skazen w chwili t2
+    dodatkowe informacje
+        posumowanie dla czlowieka
+        podsumowanie strukturalne
+        
+Analiza:
+
+Przy niszczeniu watku musi zostac zapisany context
+Przy wyladowaniu biblioteki musi zostac zapisana nazwa
+Po zakonczeniu tracowania wyladuj wszystkie biblioteki
+Po zakonczeniu trasowania zniszcz wszystkie watki
+
+### Reverse:
+
+Parametry:
+    Wejscie:
+    odwrocone instrukcje
+    dump w chwili t2
+
+Wyjscie:
+    dump w chwili t1 - nieistotny
+    dump skazen w chwili t1
+    dodatkowe informacje
+
+Przygotowanie wejscia:
+wprowadzamy oznaczenie skazenia na koncu
+Odwracamy liste instrukcji
+Odwracamy liste wartosci straconych
+
+Analiza:
+
+Niszczenie watku jest obslugiwane jak tworzenie watku
+Tworzenie watku jest obslugiwane jak niszczenie watku
+Wyladowanie biblioteki jest obslugiwane jak zaladowanie biblioteki
+Zaladowanie biblioteki jest potrzebne jak wyladowanie biblioteki
+
+
+

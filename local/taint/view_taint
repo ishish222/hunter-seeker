@@ -1,0 +1,191 @@
+#!/usr/bin/env python
+
+import pygtk
+pygtk.require('2.0')
+import gtk
+from subprocess import Popen, PIPE
+from sys import argv
+import time
+
+class HelloWorld:
+    def hello(self, widget, data=None):
+        print "Hello World"
+
+    def delete_event(self, widget, event, data=None):
+        # If you return FALSE in the "delete_event" signal handler,
+        # GTK will emit the "destroy" signal. Returning TRUE means
+        # you don't want the window to be destroyed.
+        # This is useful for popping up 'are you sure you want to quit?'
+        # type dialogs.
+        print "delete event occurred"
+
+        # Change FALSE to TRUE and the main window will not be destroyed
+        # with a "delete_event".
+        return False
+
+    def destroy(self, widget, data=None):
+        print "destroy signal occurred"
+        gtk.main_quit()
+
+    def drawable_update(self, widget, data=None):
+        # clear
+        # load temp images
+        # load lines according to status
+        #self.image_map.set_from_pixbuf(self.pixbuf_map)
+        #self.image.set_from_pixbuf(self.pixbuf)
+
+#        print 'update'
+#        if(self.status == 0):
+        self.image.window.draw_pixbuf(self.style, self.pixbuf, 0x0, 0x0, 0x0, 0x0, 0x40, self.h)
+        self.image_map.window.draw_pixbuf(widget.style.fg_gc[gtk.STATE_NORMAL], self.pixbuf_map, 0x0, 0x0, 0x0, 0x0, self.w, self.h)
+        self.lib_map.window.draw_pixbuf(widget.style.fg_gc[gtk.STATE_NORMAL], self.pixbuf_lib, 0x0, 0x0, 0x0, 0x0, self.pixbuf_lib.get_width(), self.h)
+    
+ 
+        if(self.status == 1):
+            print data.x
+            print data.y
+            self.p1 = data.y
+            self.image.window.draw_line(widget.style.fg_gc[gtk.STATE_NORMAL], 0x0, int(self.p1), self.w, int(self.p1))
+        if(self.status == 2):
+            self.image.window.draw_line(widget.style.fg_gc[gtk.STATE_NORMAL], 0x0, int(self.p1), self.w, int(self.p1))
+            self.image.window.draw_line(widget.style.fg_gc[gtk.STATE_NORMAL], 0x0, int(self.p2), self.w, int(self.p2))
+            print "From %d to %d" % (self.p1, self.p2)
+            self.last_size = self.img_to - self.img_from
+
+            frac1 = float(self.p1) / float(self.h)
+            frac2 = float(self.p2) / float(self.h)
+            print "From %f to %f" % (frac1, frac2)
+            self.img_from = int(frac1 * self.last_size) + self.img_last_from
+            self.img_to = int(frac2 * self.last_size) + self.img_last_from
+            print "From %d to %d" % (self.img_from, self.img_to)
+            self.img_last_from = self.img_from
+            self.require_new_image(self.img_from, self.img_to)
+            print self.img_path
+            print 'Please wait'
+            time.sleep(1)
+            self.load_new_images()
+            print 'Done'
+            self.status = 0x0
+            self.drawable_update(widget)
+
+    def load_new_images(self):
+        self.pixbuf = gtk.gdk.pixbuf_new_from_file(self.img_taint)
+        self.pixbuf_map = gtk.gdk.pixbuf_new_from_file(self.img_map)
+        self.pixbuf_lib = gtk.gdk.pixbuf_new_from_file(self.img_lib)
+        self.w = self.pixbuf.get_width()
+        self.h = self.pixbuf.get_height()
+
+#    def require_new_image(self, file_from, file_to, scope_from, scope_to):
+
+    def require_new_image(self, scope_from, scope_to):
+        print [self.proc_exe, self.config, '0x%08x' % scope_from, '0x%08x' % scope_to, str(self.scale), self.img_path]
+        proc = Popen([self.proc_exe, self.config, '0x%08x' % scope_from, '0x%08x' % scope_to, str(self.scale), self.img_path], stdout=PIPE) # scale
+        line = ''
+        while(line.find('All done') <0x0):
+            line = proc.stdout.readline()
+            print line[:-1]
+#        Popen(['cp', self.img_2_path, self.img_1_path])
+
+    def update_status(self, widget, data=None):
+        if(data.button == 0x1):
+            self.status = self.status + 1
+            if(self.status > 0x2): self.status = 2
+
+        if(data.button == 0x3):
+            self.status = self.status - 1
+            if(self.status < 0x0): self.status = 0
+
+        print self.status
+
+    def read_files(self):
+        from ConfigParser import *
+        rcp = RawConfigParser()
+
+        rcp.read(self.config)
+
+        self.taint_file = rcp.get('general','taint_dump_path')
+        self.taint_size = rcp.get('general','taint_size')
+        self.structured = rcp.get('general','structured_info_path')
+        # read ini
+        # read lib info from structured file
+
+    def __init__(self):
+        self.scale = 0x2
+        self.p1 = 0x0
+        self.p2 = 0x0
+        self.status = 0x0
+        self.proc_exe = '/home/ish/projects/2015-05-25-trace-taint/taint/show_taint'
+        if(len(argv) < 2):
+            exit()
+        self.config = argv[1]
+        self.read_files()
+        self.img_path = '/tmp/last'
+        self.img_taint = self.img_path + '-taint.png'
+        self.img_map = self.img_path + '-map.png'
+        self.img_lib = self.img_path + '-libs.png'
+        self.img_from = 0x0
+        self.img_last_from = 0x0
+        self.img_to = int(self.taint_size, 0x10)
+        print '0x%08x' % self.img_to
+
+#        Popen(['cp', self.img_start, self.img_1_path])
+        print 'Preparing starting image'
+        self.require_new_image(self.img_from, self.img_to)
+
+
+        # create a new window
+        self.window = gtk.Window(gtk.WINDOW_TOPLEVEL)
+        self.window.connect("delete_event", self.delete_event)
+        self.window.connect("destroy", self.destroy)
+        self.window.set_border_width(10)
+
+        self.hbox = gtk.HBox()
+        self.hbox.show()
+        self.window.add(self.hbox)
+
+        self.button = gtk.Button("Hello World")
+        self.button.connect("clicked", self.hello, None)
+        self.button.connect_object("clicked", gtk.Widget.destroy, self.window)
+        self.button.show()
+#        self.hbox.add(self.button)
+    
+        # graphics
+        self.image = gtk.DrawingArea()
+        self.image.show()
+        self.image_map = gtk.DrawingArea()
+        self.image_map.show()
+        self.lib_map = gtk.DrawingArea()
+        self.lib_map.show()
+
+
+        self.ebox1 = gtk.EventBox()
+        self.ebox1.show()
+        self.ebox1.set_events(gtk.gdk.BUTTON_RELEASE_MASK)
+        self.ebox1.connect("button_release_event", self.update_status)
+        self.ebox1.connect("button_release_event", self.drawable_update)
+        self.ebox1.add(self.image)
+
+        self.load_new_images()
+    
+        self.hbox.add(self.image_map)
+        self.hbox.add(self.ebox1)
+        self.hbox.add(self.lib_map)
+
+        self.load_new_images()
+        self.window.resize(int(self.w * 2.5), self.h)
+        self.window.show()
+        self.style = self.window.style.fg_gc[gtk.STATE_NORMAL]
+        self.window.connect('size-allocate', self.drawable_update)
+        self.image.window.draw_line(self.style, 0x0, 0x0, 0x10, 0x10)
+
+    def main(self):
+        # All PyGTK applications must have a gtk.main(). Control ends here
+        # and waits for an event to occur (like a key press or mouse event).
+        gtk.main()
+
+# If the program is run directly or passed as an argument to the python
+# interpreter then create a HelloWorld instance and show it
+if __name__ == "__main__":
+    hello = HelloWorld()
+    hello.main()
+

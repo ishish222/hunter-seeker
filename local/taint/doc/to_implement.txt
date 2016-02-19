@@ -1,0 +1,26 @@
+Spr:
+     24 Not implemented: 0x9b
+     24 Not implemented: 0xd9
+      8 Not implemented: 0xdb
+      8 Not implemented: 0xdd
+      1 Not implemented: 0x9d e
+      1 Not implemented: 0x9e e
+
+Jak to:
+      7 Not implemented: 0x13
+      2 Not implemented: 0xa0
+      1 Not implemented: 0x03 e
+      3 Not implemented: 0x86 e
+     19 Not implemented: 0x94 e
+     30 Not implemented: 0xc7 e
+     40 Not implemented: 0xae e
+     51 Not implemented: 0x8d e
+     58 Not implemented: 0x8f e 
+     73 Not implemented: 0x8e e
+     86 Not implemented: 0x95 e
+    161 Not implemented: 0xba e
+    161 Not implemented: 0xc1 e
+    273 Not implemented: 0x8c e
+    537 Not implemented: 0x87 e
+    593 Not implemented: 0x82 e
+    855 Not implemented: 0x83 e

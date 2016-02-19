@@ -1,0 +1,2 @@
+ltrace
+/home/ish/projects/2015-05-25-trace-taint/taint/ltrace -i b7d9_instr_all.txt -d b7d9_dump.bin -m b7d9_mods.bin -s 0x004ffe4c -e 98931000

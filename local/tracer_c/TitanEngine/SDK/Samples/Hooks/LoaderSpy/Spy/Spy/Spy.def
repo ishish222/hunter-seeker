@@ -1,3 +1,0 @@
-LIBRARY "Spy"
-EXPORTS
-SpyProcess
