@@ -1,0 +1,11 @@
+c:fuzzers/fuzzer-stateful.py
+c:scripters
+c:fuzzers/parts
+c:fuzzers/usualparts
+c:fuzzers/statemachine.py
+t:settings/qemu-xara-temu/settings.py
+t:settings/default-flareon/default.py
+t:fuzzers/generators
+t:fuzzers/correctors
+t:fuzzers/common.py
+s:tracer_c/a.exe
