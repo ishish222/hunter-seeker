@@ -211,6 +211,9 @@ def get_options():
     options.init_timeout = float(options.init_timeout)
     options.walk_level = float(options.walk_level)
 
+    # for additional parsing
+    options.parser = parser
+
     #thats right bitches
     options.settings = settings
     globs.state.options = options

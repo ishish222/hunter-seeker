@@ -8,4 +8,10 @@ t:settings/default-flareon/default.py
 t:fuzzers/generators
 t:fuzzers/correctors
 t:fuzzers/common.py
+c:util/extract-saved
 s:tracer_c/a.exe
+s:paimei
+s:binners/binner-generic.py
+s:binners/binner.py
+s:binners/debugger.py
+s:binners/functions.py

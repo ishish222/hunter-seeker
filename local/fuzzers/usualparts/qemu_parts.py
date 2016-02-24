@@ -127,12 +127,14 @@ def qemu_mount_disks():
     read_monitor(options.m)
 
     if(hasattr(options,'tmp_disk_img')):
+        print options.tmp_disk_img
         options.slot_shared = common.pci_mount(options, options.tmp_disk_img) #hotplug should be completed during bootup
 #        options.slot_shared = common.drive_mount(options, options.tmp_disk_img, 'shared') #hotplug should be completed during bootup
 
     time.sleep(1)
 
     if(hasattr(options,'saved_disk_img')):
+        print options.saved_disk_img
         options.slot_saved = common.pci_mount(options, options.saved_disk_img) #hotplug should be completed during bootup
 #        options.slot_saved = common.drive_mount(options, options.saved_disk_img, 'saved') #hotplug should be completed during bootup
 
@@ -145,6 +147,19 @@ def qemu_mount_disks():
 #        options.settings.specific_preperations_1(options)
 #    if(defined("settings.scripts_1")):
 #        rss(options.settings.scripts_1, options.m, options.slowdown)
+
+def qemu_mount_disks_wo_virtio():
+    options = globs.state.options
+    read_monitor(options.m)
+
+    if(hasattr(options,'tmp_disk_img')):
+        options.slot_shared = common.pci_mount_wo_virtio(options, options.tmp_disk_img) #hotplug should be completed during bootup
+
+    time.sleep(1)
+
+    if(hasattr(options,'saved_disk_img')):
+        options.slot_saved = common.pci_mount_wo_virtio(options, options.saved_disk_img) #hotplug should be completed during bootup
+
 
 # was: init
 #def qemu_connect_dev_socket(options, state):
@@ -278,6 +293,12 @@ def poweroff_revert(options, state):
     options.m = None
     print("Last batch: %s" % options.tmp_disk_img)
     print("Last saved: %s" % options.saved_disk_img)
+
+def offline_revert():
+    options = globs.state.options
+    state = globs.state
+    os.spawnv(os.P_WAIT, "/usr/bin/qemu-img", ["qemu-img", "snapshot", "-a", "clean", options.machines + '/' + options.hda])
+    
 
 def shutdown(options, state):
     options.log.close()

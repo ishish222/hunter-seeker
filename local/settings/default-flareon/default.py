@@ -88,13 +88,17 @@ large_results_dir = '/mnt/2/output'
 
 qemu_machines = "/home/hs1/machines/qemu"
 qemu_m = "3G"
-qemu_shared_folder = "/home/hs1/hs2-current-deploy/qemu-reader"
+qemu_shared_folder = "/home/hs1/shared"
 qemu_additional =  ['-enable-kvm']
 qemu_command = 'qemu-system-i386'
 qemu_drive_options = 'cache=none,if=virtio'
 qemu_env = None
 qemu_drives_dir="/home/hs1/images"
 qemu_secondary=""
+qemu_drive_format = 'mkfs.ntfs'
+host_mount_options="loop,umask=0000"
+
+hs_user="hs1"
 
 def runner_0(options, args=None):
     pass
