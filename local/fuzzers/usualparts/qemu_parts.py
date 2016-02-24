@@ -60,7 +60,7 @@ def qemu_start_full():
         print("Spawning fuzz for batch: %s" % options.tmp_disk_img)
 
     print("[%s] Starting" % common.timestamp())
-    print options.qemu_args
+    print " ".join(options.qemu_args)
 
     myErr = open("./err", "w+")
 
@@ -76,25 +76,32 @@ def qemu_start_full():
 #    for s in globs.state.samples_list:
 #        print s
 
-def qemu_start_revert(options, state):
+def qemu_start_revert():
     options = globs.state.options
 
-    options.log.write("[%s]\n" % options.tmp_disk_img)
-    options.log.flush()
-    print("Spawning fuzz for batch: %s" % options.tmp_disk_img)
+    if(hasattr(options, 'tmp_disk_img')):
+        options.log.write("[%s]\n" % options.tmp_disk_img)
+        options.log.flush()
+        print("Spawning fuzz for batch: %s" % options.tmp_disk_img)
 
     print("[%s] Starting" % common.timestamp())
-    print options.qemu_args
-    m = Popen(options.qemu_args, stdout=PIPE, stdin=PIPE)
+    print " ".join(options.qemu_args)
+
+    myErr = open("./err", "w+")
+
+    m = Popen(options.qemu_args, stdout=PIPE, stdin=PIPE, stderr=myErr.fileno(), env=os.environ)
     time.sleep(3)
     options.m, _ = options.ms.accept()
     options.s, _ = options.ss.accept()
 
     common.revert(options)
     time.sleep(options.revert_wait)
-    #TODO!!! additional wait here isn't so bad, is it?
+#    time.sleep(options.boot_wait)
+    #TODO!!! wee nedd to perform test, not wait!
 
-    print("[%s] Qemu revert boot finished" % common.timestamp())
+    print("[%s] Qemu full boot finished" % common.timestamp())
+#    for s in globs.state.samples_list:
+#        print s
 
 #was: proceed
 #def qemu_mount_disks(options, state):
