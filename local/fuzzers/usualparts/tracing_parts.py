@@ -17,7 +17,7 @@ def get_additional_options():
 
     parser.add_option("", "--smod",       dest="st_mod", help="Starting module for trace", default="0x0")
     parser.add_option("", "--emod",       dest="end_mod", help="Ending module for trace", default="kernel32.dll")
-    parser.add_option("", "--saddr",      dest="st_addr", help="Starting address for trace", default="0x0")
+    parser.add_option("", "--saddr",      dest="st_addr", help="Starting address for trace", default="0x1b7c")
     parser.add_option("", "--eaddr",      dest="end_addr", help="Ending address for trace", default="0x52acf")
     parser.add_option("", "--odir",       dest="out_dir", help="Out dir for trace", default="\\\\10.0.2.4\\qemu\\")
     parser.add_option("", "--prefix",     dest="prefix", help="Prefix for trace", default="last")
@@ -32,6 +32,7 @@ def trace_sample2():
     options = globs.state.options
     state = globs.state
     status = globs.state.status
+    additional = options.additional_options
 
     try:
         sample_path = globs.state.samples_list.pop()
@@ -45,7 +46,7 @@ def trace_sample2():
     test_file = os.path.basename(test_path)
 
     if(options.walk_start == None):
-        write_socket(options.s, "trace3 e:\\samples\\shared\\%s %s %s %s %s %s %s %s" % (test_file, st_mod, st_addr, end_mod, end_addr, out_dir, prefix, log_path))
+        write_socket(options.s, "trace3 e:\\server\\a.exe e:\\samples\\shared\\%s %s %s %s %s %s %s %s" % (test_file, additional.st_mod, additional.st_addr, additional.end_mod, additional.end_addr, additional.out_dir, additional.prefix, additional.log_path))
     else:
         pass
 #        write_socket(options.s, "walk2 e:\\samples\\shared\\%s %d f:\\%s.mm %s" % (test_file, options.walk_level, test_file, options.walk_start))

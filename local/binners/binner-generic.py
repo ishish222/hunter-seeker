@@ -477,6 +477,13 @@ def execute(cmds):
 
 ### trace a file
 
+        elif(cmd == "trace3"):
+            filee = args
+            print("Tracing %s" % (filee))
+            main_binner.spawn(args)
+            main_binner.writePipe("OK")
+            main_binner.ok()
+        
         elif(cmd == "trace"):
             filee = args
             print("Tracing %s" % (filee))
