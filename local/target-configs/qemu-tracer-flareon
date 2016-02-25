@@ -15,3 +15,4 @@ s:binners/binner-generic.py
 s:binners/binner.py
 s:binners/debugger.py
 s:binners/functions.py
+s:binners/mutex_2.py
