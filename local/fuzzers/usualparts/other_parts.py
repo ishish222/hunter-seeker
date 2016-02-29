@@ -94,7 +94,12 @@ def get_options():
     import logging
     import logging.handlers
 
-    parser = OptionParser()
+    class MyOptionParser(OptionParser):
+        def error(self, msg):
+            pass
+
+    parser = MyOptionParser()
+
     parser.add_option("-M", "--machines",       dest="machines", help="Machines path", default=settings.qemu_machines)
     parser.add_option("-a", "--hda",            dest="hda", help="First disk")
     parser.add_option("-b", "--hdb",            dest="hdb", help="Second disk")
