@@ -1,0 +1,4 @@
+c:taint/caller_taint
+c:taint/ltrace
+c:taint/strace
+c:taint/taint
