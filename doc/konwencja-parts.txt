@@ -1,9 +1,13 @@
 parts name: 
-    for application: <application>_<function>, e.g. xara_fuzz, xara_trace
-    generic applications: generic_<function>, e.g. generic_trace_tools
+    for application: <opt_vm-arch>_<application>_<function>, e.g. xara_fuzz, xara_trace
+    generic applications: <opt_vm_arch>_generic_<function>, e.g. generic_trace_tools
 
 settings - defaults for host folder:
     default-<host_name>, e.g. default-flareon
     
 settings for parts:
-    <vm-arch>-<parts_name>-<host_name>, e.g. qemu-xara-fuzz-flareon
+    <opt-vm-arch>-<parts_name>, e.g. qemu-xara-fuzz
+
+target config name:
+    <opt-vm-arch>-<parts_name>-<host_name>, e.g. qemu-xara-fuzz-flareon
+    
