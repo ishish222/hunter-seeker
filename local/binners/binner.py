@@ -343,6 +343,7 @@ class binner(object):
         #    debugger.terminate()
 
     def spawn(self, path):
+        print("Spawning: %s", path)
         self.proc = Popen(path)
 
     def attach(self, pid):

@@ -297,7 +297,8 @@ def poweroff_revert(options, state):
 def offline_revert():
     options = globs.state.options
     state = globs.state
-    os.spawnv(os.P_WAIT, "/usr/bin/qemu-img", ["qemu-img", "snapshot", "-a", "clean", options.machines + '/' + options.hda])
+    print("Reverting to: %s" % options.settings.revert_snapshot)
+    os.spawnv(os.P_WAIT, "/usr/bin/qemu-img", ["qemu-img", "snapshot", "-a", options.settings.revert_snapshot, options.machines + '/' + options.hda])
     
 
 def shutdown(options, state):

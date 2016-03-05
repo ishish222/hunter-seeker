@@ -92,11 +92,12 @@ def detach_debugger():
     write_socket(options.s, "detachdebugger")
 
 def trace_sample():
-    # sledzenie wykonania probki od markera MA
+    # sledzenie wykonania probki pomiedzy wybranymi markerami
 
     options = globs.state.options
     state = globs.state
     status = globs.state.status
+    additional = options.additional_options
 
     try:
         sample_path = globs.state.samples_list.pop()
@@ -112,7 +113,9 @@ def trace_sample():
     if(options.walk_start == None):
 #        write_socket(options.s, "walk e:\\samples\\shared\\%s %d f:\\%s.mm" % (test_file, options.walk_level, test_file))
 #        write_socket(options.s, "trace e:\\samples\\shared\\%s" % (test_file))
-        write_socket(options.s, "trace2 e:\\samples\\shared\\%s %d" % (test_file, globs.state.pid))
+#        write_socket(options.s, "trace2 e:\\samples\\shared\\%s %d" % (test_file, globs.state.pid))
+        write_socket(options.s, "trace4 e:\\server\\a.exe %d %s %s %s %s %s %s %s" % (state.pid, additional.st_mod, additional.st_addr, additional.end_mod, additional.end_addr, additional.out_dir, additional.prefix, additional.log_path))
+
     else:
         pass
 #        write_socket(options.s, "walk2 e:\\samples\\shared\\%s %d f:\\%s.mm %s" % (test_file, options.walk_level, test_file, options.walk_start))
@@ -124,22 +127,6 @@ def trace_sample():
     options.log.flush()
 #    
     print "Waiting for instruction"
-##    lastResponse = ''
-##
-##    while(lastResponse!='end'):
-##        (lastResponse, status, reqScript) = read_socket(options.s2)
-##        print lastResponse
-#    buf = ''
-#
-#    out = options.out_path
-#    fout = open(out, 'w+')
-#
-    while True:
-        pass
-#        buf = options.s2.recv(0x1000000)
-#        fout.write(buf)
-#
-#    fout.close()            
 
 def test_sample():
     # test single sample
@@ -163,6 +150,33 @@ def test_sample():
     test_path = options.settings.prepare_sample(sample_path)
     test_file = os.path.basename(test_path)
     write_socket(options.s, "testFile e:\\samples\\shared\\" + test_file)
+
+    options.settings.runner_0(options, [test_file])
+    options.log.write("%s: " % test_file)
+    options.log.flush()
+
+def open_sample():
+    # test single sample
+    
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+
+    # resetowanie stanu
+    globs.state.status = ""
+#    print("Current stats (SA/MA/TO): %d/%d/%d" % (stats.sample_count, stats.ma_count, stats.to_count))
+
+    try:
+        sample_path = globs.state.samples_list.pop()
+    except Exception, e:
+        print e
+        globs.state.samples_exhausted = True
+        return
+
+    sample_file = os.path.basename(sample_path)
+    test_path = options.settings.prepare_sample(sample_path)
+    test_file = os.path.basename(test_path)
+    write_socket(options.s, "openFile e:\\samples\\shared\\" + test_file)
 
     options.settings.runner_0(options, [test_file])
     options.log.write("%s: " % test_file)

@@ -328,6 +328,13 @@ def execute(cmds):
 
 ### test a file
 
+        elif(cmd == "openFile"):
+            settings.runner(args)
+            main_binner.ok()
+            return
+
+### test a file
+
         elif(cmd == "testFile"):
             main_binner.attach_st_markers()
 
@@ -475,9 +482,18 @@ def execute(cmds):
             main_binner.ok()
             main_binner.detach_rd_markers()
 
-### trace a file
+### trace a file by name
 
         elif(cmd == "trace3"):
+            filee = args
+            print("Tracing %s" % (filee))
+            main_binner.spawn(args)
+            main_binner.writePipe("OK")
+            main_binner.ok()
+        
+### trace a file by PID & wait for sample
+
+        elif(cmd == "trace4"):
             filee = args
             print("Tracing %s" % (filee))
             main_binner.spawn(args)
