@@ -20,6 +20,7 @@ PID = statemachine.State()
 GetAdditionalOptions = statemachine.State()
 RevertClean = statemachine.State()
 WaitForever = statemachine.State()
+WaitABit = statemachine.State()
 OpenSample= statemachine.State()
 
 DefaultShutdown = dm.ShutdownSequence
@@ -44,8 +45,12 @@ OpenSample.name = "Starting execution of sample"
 OpenSample.consequence = WaitForever
 OpenSample.executing_routine = usualparts.tracing_parts.open_sample
 
+WaitABit.name = "Waiting a bit"
+WaitABit.consequence = OpenSample
+WaitABit.executing_routine = usualparts.other_parts.wait_10_seconds
+
 TraceStart.name = "Starting execution of sample"
-TraceStart.consequence = OpenSample
+TraceStart.consequence = WaitABit
 TraceStart.executing_routine = usualparts.tracing_parts.trace_sample
 
 ShutdownKillHost.name = "Killing host application"

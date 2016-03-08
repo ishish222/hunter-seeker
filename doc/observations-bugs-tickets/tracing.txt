@@ -1,0 +1,1 @@
+Musi byc Windows7, inaczej wysypie sie na odwolaniu do biblioteki kernel32.dll szukajacym sciezek do bibliotek

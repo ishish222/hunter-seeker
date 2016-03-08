@@ -1,0 +1,3 @@
+IN,NtContinue
+IN,KiFastSystemCall
+IN,BaseThreadInitThunk
