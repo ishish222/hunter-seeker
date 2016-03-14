@@ -57,6 +57,7 @@
 
 char process_fname[0x200];
 char spawned = 0x0;
+FILE* log;
 
 #define WATCH_LIMIT 0x100
 
@@ -263,7 +264,13 @@ int d_print(const char* format, ...)
 {
     va_list argptr;
 
-    if(instr_count >= instr_dbg && instr_dbg > 0x0)
+    if(log)
+    {
+        va_start(argptr, format);
+        vfprintf(log, format, argptr);
+        va_end(argptr);
+    }
+    else
     {
         va_start(argptr, format);
         vfprintf(stdout, format, argptr);
@@ -279,13 +286,13 @@ FILE* configure_file()
     FILE* f;
     
     sprintf(cur_path, "%s_%d.txt", path, path_i);
-    printf("Writing instructions to %s\n", cur_path);
+    d_print("Writing instructions to %s\n", cur_path);
     
 
     f = fopen(cur_path, "w+");
     if(f == 0x0)
     {
-        printf("Error opening file %s: 0x%08x\n", cur_path, GetLastError());
+        d_print("Error opening file %s: 0x%08x\n", cur_path, GetLastError());
     }
     return f;
 } 
@@ -329,24 +336,24 @@ int add_to_buffer(char* line)
 
 void print_context(CONTEXT* ctx)
 {
-    printf("Context:\n");
-    printf("EAX:\t0x%08x\n", ctx->Eax);
-    printf("EBX:\t0x%08x\n", ctx->Ebx);
-    printf("ECX:\t0x%08x\n", ctx->Ecx);
-    printf("EDX:\t0x%08x\n", ctx->Edx);
-    printf("ESI:\t0x%08x\n", ctx->Esi);
-    printf("EDI:\t0x%08x\n", ctx->Edi);
-    printf("EBP:\t0x%08x\n", ctx->Ebp);
-    printf("ESP:\t0x%08x\n", ctx->Esp);
-    printf("EFLAGS:\t0x%08x\n", ctx->EFlags);
-    printf("EIP:\t0x%08x\n", ctx->Eip);
+    d_print("Context:\n");
+    d_print("EAX:\t0x%08x\n", ctx->Eax);
+    d_print("EBX:\t0x%08x\n", ctx->Ebx);
+    d_print("ECX:\t0x%08x\n", ctx->Ecx);
+    d_print("EDX:\t0x%08x\n", ctx->Edx);
+    d_print("ESI:\t0x%08x\n", ctx->Esi);
+    d_print("EDI:\t0x%08x\n", ctx->Edi);
+    d_print("EBP:\t0x%08x\n", ctx->Ebp);
+    d_print("ESP:\t0x%08x\n", ctx->Esp);
+    d_print("EFLAGS:\t0x%08x\n", ctx->EFlags);
+    d_print("EIP:\t0x%08x\n", ctx->Eip);
 }
 
 void sysret_refresh(void* data)
 {
 
-    printf("Refreshing\n");
-    printf("Unsetting SS for 0x%08x\n", last_tid);
+    d_print("Refreshing\n");
+    d_print("Unsetting SS for 0x%08x\n", last_tid);
     unset_ss(last_tid);
     set_ss(0x0);
 }
@@ -377,7 +384,7 @@ DWORD read_memory(HANDLE handle, void* from, void* to, SIZE_T size, SIZE_T* read
 
     //breakpoint on current address
 
-    printf("Breakpoint 4 refreshment: 0x%08x\n", last_eip);
+    d_print("Breakpoint 4 refreshment: 0x%08x\n", last_eip);
     add_breakpoint(last_eip, read_memory_2);
 
     set_ss(0x0);
@@ -400,7 +407,7 @@ int dec_eip(DWORD id)
 
     if(myHandle == (HANDLE)-0x1) return 0x1;
 
-    printf("Found, decreasing\n");
+    d_print("Found, decreasing\n");
 */
 
     //myHandle = OpenThread(THREAD_GET_CONTEXT |THREAD_SET_CONTEXT | THREAD_ALL_ACCESS, 0x0, id);
@@ -409,11 +416,11 @@ int dec_eip(DWORD id)
     ctx.ContextFlags = CONTEXT_CONTROL;
     if(GetThreadContext(myHandle, &ctx) == 0x0)
     {
-        printf("Failed to get context, error: 0x%08x\n", GetLastError());
+        d_print("Failed to get context, error: 0x%08x\n", GetLastError());
     }
-    printf("before: 0x%08x\n", ctx.Eip);
+    d_print("before: 0x%08x\n", ctx.Eip);
     ctx.Eip -= 0x1;
-    printf("after: 0x%08x\n", ctx.Eip);
+    d_print("after: 0x%08x\n", ctx.Eip);
     SetThreadContext(myHandle, &ctx);
 
     //CloseHandle(myHandle);
@@ -508,7 +515,7 @@ void register_exception(DWORD tid, EXCEPTION_RECORD er)
     char line[MAX_LINE];
     char line2[0x100];
 
-    printf("Registering Exception: code 0x%08x at: 0x%08x\n", er.ExceptionCode, er.ExceptionAddress);
+    d_print("Registering Exception: code 0x%08x at: 0x%08x\n", er.ExceptionCode, er.ExceptionAddress);
 
     serialize_exception(er, line2);
     sprintf(line, "EX,0x%08x,%s\n", tid, line2);
@@ -519,18 +526,18 @@ void register_exception(DWORD tid, EXCEPTION_RECORD er)
 
 void getSelectorEntries(HANDLE handle, CONTEXT ctx, LDT_ENTRY* ldt)
 {
-    if(GetThreadSelectorEntry(handle, ctx.SegGs, &ldt[0]) == 0x0) printf("Failed: 0x%08x\n", GetLastError());
-    if(GetThreadSelectorEntry(handle, ctx.SegFs, &ldt[1]) == 0x0) printf("Failed\n");
-    if(GetThreadSelectorEntry(handle, ctx.SegEs, &ldt[2]) == 0x0) printf("Failed\n");
-    if(GetThreadSelectorEntry(handle, ctx.SegDs, &ldt[3]) == 0x0) printf("Failed\n");
-    if(GetThreadSelectorEntry(handle, ctx.SegCs, &ldt[4]) == 0x0) printf("Failed\n");
-    if(GetThreadSelectorEntry(handle, ctx.SegSs, &ldt[5]) == 0x0) printf("Failed\n");
+    if(GetThreadSelectorEntry(handle, ctx.SegGs, &ldt[0]) == 0x0) d_print("Failed: 0x%08x\n", GetLastError());
+    if(GetThreadSelectorEntry(handle, ctx.SegFs, &ldt[1]) == 0x0) d_print("Failed\n");
+    if(GetThreadSelectorEntry(handle, ctx.SegEs, &ldt[2]) == 0x0) d_print("Failed\n");
+    if(GetThreadSelectorEntry(handle, ctx.SegDs, &ldt[3]) == 0x0) d_print("Failed\n");
+    if(GetThreadSelectorEntry(handle, ctx.SegCs, &ldt[4]) == 0x0) d_print("Failed\n");
+    if(GetThreadSelectorEntry(handle, ctx.SegSs, &ldt[5]) == 0x0) d_print("Failed\n");
     return;
 }
 
 void register_thread(DWORD tid, HANDLE handle)
 {
-    printf("Registering: TID 0x%08x, handle 0x%08x\n", tid, handle);
+    d_print("Registering: TID 0x%08x, handle 0x%08x\n", tid, handle);
     char line2[0x200];
     char line[MAX_LINE];
     CONTEXT ctx;
@@ -542,7 +549,7 @@ void register_thread(DWORD tid, HANDLE handle)
     if(threads2[tid].created)
     {
         // do not create new, update this one
-        printf("Updating: TID 0x%08x, handle 0x%08x\n", tid, handle);
+        d_print("Updating: TID 0x%08x, handle 0x%08x\n", tid, handle);
         threads2[tid].alive = 0x1;
         threads2[tid].handle = handle;
     }
@@ -555,7 +562,7 @@ void register_thread(DWORD tid, HANDLE handle)
         threads2[tid].created = 0x1;
     
         //if(threads2[tid].handle == 0x0) 
-        printf("Registering: TID 0x%08x, handle 0x%08x\n", tid, handle);
+        d_print("Registering: TID 0x%08x, handle 0x%08x\n", tid, handle);
 
         thread_list[thread_count] = tid;
         thread_count ++;
@@ -564,7 +571,7 @@ void register_thread(DWORD tid, HANDLE handle)
         add_to_buffer(line);
     }
 
-    printf("Registering TID: 0x%08x with handle: 0x%08x, new thread count: 0x%x\n", tid, threads2[tid].handle, thread_count);
+    d_print("Registering TID: 0x%08x with handle: 0x%08x, new thread count: 0x%x\n", tid, threads2[tid].handle, thread_count);
 
     ctx.ContextFlags = CONTEXT_FULL;
 
@@ -573,12 +580,12 @@ void register_thread(DWORD tid, HANDLE handle)
 
     getSelectorEntries(handle, ctx, ldt);
 /*
-    printf("GS: 0x%08x: 0x%08x, 0x%08x, 0x%08x\n", ctx.SegGs, ldt[0].LimitLow, ldt[0].BaseLow, ldt[0].HighWord);
-    printf("FS: 0x%08x: 0x%08x, 0x%08x, 0x%08x\n", ctx.SegFs, ldt[1].LimitLow, ldt[1].BaseLow, ldt[1].HighWord);
-    printf("ES: 0x%08x: 0x%08x, 0x%08x, 0x%08x\n", ctx.SegEs, ldt[2].LimitLow, ldt[2].BaseLow, ldt[2].HighWord);
-    printf("DS: 0x%08x: 0x%08x, 0x%08x, 0x%08x\n", ctx.SegDs, ldt[3].LimitLow, ldt[3].BaseLow, ldt[3].HighWord);
-    printf("CS: 0x%08x: 0x%08x, 0x%08x, 0x%08x\n", ctx.SegCs, ldt[4].LimitLow, ldt[4].BaseLow, ldt[4].HighWord);
-    printf("SS: 0x%08x: 0x%08x, 0x%08x, 0x%08x\n", ctx.SegSs, ldt[5].LimitLow, ldt[5].BaseLow, ldt[5].HighWord);
+    d_print("GS: 0x%08x: 0x%08x, 0x%08x, 0x%08x\n", ctx.SegGs, ldt[0].LimitLow, ldt[0].BaseLow, ldt[0].HighWord);
+    d_print("FS: 0x%08x: 0x%08x, 0x%08x, 0x%08x\n", ctx.SegFs, ldt[1].LimitLow, ldt[1].BaseLow, ldt[1].HighWord);
+    d_print("ES: 0x%08x: 0x%08x, 0x%08x, 0x%08x\n", ctx.SegEs, ldt[2].LimitLow, ldt[2].BaseLow, ldt[2].HighWord);
+    d_print("DS: 0x%08x: 0x%08x, 0x%08x, 0x%08x\n", ctx.SegDs, ldt[3].LimitLow, ldt[3].BaseLow, ldt[3].HighWord);
+    d_print("CS: 0x%08x: 0x%08x, 0x%08x, 0x%08x\n", ctx.SegCs, ldt[4].LimitLow, ldt[4].BaseLow, ldt[4].HighWord);
+    d_print("SS: 0x%08x: 0x%08x, 0x%08x, 0x%08x\n", ctx.SegSs, ldt[5].LimitLow, ldt[5].BaseLow, ldt[5].HighWord);
 */
     //print_context(&ctx);
 
@@ -603,7 +610,7 @@ int register_thread_debug(DWORD tid, HANDLE handle)
     if(handle == 0x0) 
         handle = OpenThread(THREAD_GET_CONTEXT |THREAD_SET_CONTEXT | THREAD_ALL_ACCESS, 0x0, tid);
 
-   // printf("Registering TID: 0x%08x with handle: 0x%08x, new thread count: 0x%x\n", tid, threads2[tid].handle, thread_count);
+   // d_print("Registering TID: 0x%08x with handle: 0x%08x, new thread count: 0x%x\n", tid, threads2[tid].handle, thread_count);
 
     ctx.ContextFlags = CONTEXT_FULL;
 
@@ -621,7 +628,7 @@ int register_thread_debug(DWORD tid, HANDLE handle)
 
 void deregister_thread(DWORD tid, HANDLE handle)
 {
-    printf("Deregistering: TID 0x%08x, handle 0x%08x\n", tid, handle);
+    d_print("Deregistering: TID 0x%08x, handle 0x%08x\n", tid, handle);
     char line2[0x200];
     char line[MAX_LINE];
     CONTEXT ctx;
@@ -635,9 +642,9 @@ void deregister_thread(DWORD tid, HANDLE handle)
     threads2[tid].open = 0x1;
 
     //if(threads2[tid].handle == 0x0) 
-    printf("Deregistering: TID 0x%08x, handle 0x%08x\n", tid, handle);
+    d_print("Deregistering: TID 0x%08x, handle 0x%08x\n", tid, handle);
 
-    printf("Deregistering TID: 0x%08x with handle: 0x%08x, new thread count: 0x%x\n", tid, threads2[tid].handle, thread_count);
+    d_print("Deregistering TID: 0x%08x with handle: 0x%08x, new thread count: 0x%x\n", tid, threads2[tid].handle, thread_count);
 
     ctx.ContextFlags = CONTEXT_FULL;
 
@@ -646,12 +653,12 @@ void deregister_thread(DWORD tid, HANDLE handle)
 
     getSelectorEntries(handle, ctx, ldt);
     /*
-    printf("GS: 0x%08x: 0x%08x, 0x%08x, 0x%08x\n", ctx.SegGs, ldt[0].LimitLow, ldt[0].BaseLow, ldt[0].HighWord);
-    printf("FS: 0x%08x: 0x%08x, 0x%08x, 0x%08x\n", ctx.SegFs, ldt[1].LimitLow, ldt[1].BaseLow, ldt[1].HighWord);
-    printf("ES: 0x%08x: 0x%08x, 0x%08x, 0x%08x\n", ctx.SegEs, ldt[2].LimitLow, ldt[2].BaseLow, ldt[2].HighWord);
-    printf("DS: 0x%08x: 0x%08x, 0x%08x, 0x%08x\n", ctx.SegDs, ldt[3].LimitLow, ldt[3].BaseLow, ldt[3].HighWord);
-    printf("CS: 0x%08x: 0x%08x, 0x%08x, 0x%08x\n", ctx.SegCs, ldt[4].LimitLow, ldt[4].BaseLow, ldt[4].HighWord);
-    printf("SS: 0x%08x: 0x%08x, 0x%08x, 0x%08x\n", ctx.SegSs, ldt[5].LimitLow, ldt[5].BaseLow, ldt[5].HighWord);
+    d_print("GS: 0x%08x: 0x%08x, 0x%08x, 0x%08x\n", ctx.SegGs, ldt[0].LimitLow, ldt[0].BaseLow, ldt[0].HighWord);
+    d_print("FS: 0x%08x: 0x%08x, 0x%08x, 0x%08x\n", ctx.SegFs, ldt[1].LimitLow, ldt[1].BaseLow, ldt[1].HighWord);
+    d_print("ES: 0x%08x: 0x%08x, 0x%08x, 0x%08x\n", ctx.SegEs, ldt[2].LimitLow, ldt[2].BaseLow, ldt[2].HighWord);
+    d_print("DS: 0x%08x: 0x%08x, 0x%08x, 0x%08x\n", ctx.SegDs, ldt[3].LimitLow, ldt[3].BaseLow, ldt[3].HighWord);
+    d_print("CS: 0x%08x: 0x%08x, 0x%08x, 0x%08x\n", ctx.SegCs, ldt[4].LimitLow, ldt[4].BaseLow, ldt[4].HighWord);
+    d_print("SS: 0x%08x: 0x%08x, 0x%08x, 0x%08x\n", ctx.SegSs, ldt[5].LimitLow, ldt[5].BaseLow, ldt[5].HighWord);
     */
     //print_context(&ctx);
 
@@ -682,7 +689,7 @@ void deregister_thread2(DWORD tid)
     threads2[tid].handle = 0x0;
     threads2[tid].open = 0x0;
 
-    printf("Deregistering TID: 0x%08x with handle: 0x%08x\n", tid, threads2[tid].handle);
+    d_print("Deregistering TID: 0x%08x with handle: 0x%08x\n", tid, threads2[tid].handle);
     sprintf(line, "DT,0x%08x\n", tid);
  
     add_to_buffer(line);
@@ -696,7 +703,7 @@ void register_lib(LOAD_DLL_DEBUG_INFO info)
     char line[MAX_LINE];
     unsigned size = 0;
 
-    printf("Handle: %p\n", info.hFile);
+    d_print("Handle: %p\n", info.hFile);
  
 #ifdef LIB_VER_W7
     GetFinalPathNameByHandleA(info.hFile, libs[lib_count].lib_name, MAX_NAME, VOLUME_NAME_NONE);
@@ -704,15 +711,15 @@ void register_lib(LOAD_DLL_DEBUG_INFO info)
 #ifdef LIB_VER_WXP
     strcpy(libs[lib_count].lib_name, "UNKNOWN");
 #endif
-    printf("Name pointer: %p, len: 0x%08x\n", libs[lib_count].lib_name, strlen(libs[lib_count].lib_name));
+    d_print("Name pointer: %p, len: 0x%08x\n", libs[lib_count].lib_name, strlen(libs[lib_count].lib_name));
 
     libs[lib_count].lib_addr = (DWORD)info.lpBaseOfDll;
 //    size = GetFileSize(info.hFile, 0x0);
 /*
-    printf("RL,0x%08x,%s,0x%08x\n", libs[lib_count].lib_addr, libs[lib_count].lib_name, size);
+    d_print("RL,0x%08x,%s,0x%08x\n", libs[lib_count].lib_addr, libs[lib_count].lib_name, size);
     sprintf(line, "RL,0x%08x,%s,0x%08x\n", libs[lib_count].lib_addr, libs[lib_count].lib_name, size);
 */
-    printf("RL,0x%08x,%s\n", libs[lib_count].lib_addr, libs[lib_count].lib_name);
+    d_print("RL,0x%08x,%s\n", libs[lib_count].lib_addr, libs[lib_count].lib_name);
     sprintf(line, "RL,0x%08x,%s\n", libs[lib_count].lib_addr, libs[lib_count].lib_name);
 
     libs[lib_count].alive = 0x1;
@@ -768,14 +775,14 @@ void ntmap_1_callback(void* data)
     DWORD read;
 
 
-    printf("Thread: %08x\n", de->dwThreadId);
+    d_print("Thread: %08x\n", de->dwThreadId);
 
     int i = 0x0;
 
     for(i = 0x0; i<thread_count; i++)
     {
         if(threads2[thread_list[i]].alive)
-        printf("TID: 0x%08x, handle: 0x%08x\n", thread_list[i], threads2[thread_list[i]].handle);
+        d_print("TID: 0x%08x, handle: 0x%08x\n", thread_list[i], threads2[thread_list[i]].handle);
 
     }
 
@@ -783,17 +790,17 @@ void ntmap_1_callback(void* data)
     DWORD esp = 0x0;
 //    myHandle = OpenThread(THREAD_GET_CONTEXT |THREAD_SET_CONTEXT | THREAD_ALL_ACCESS, 0x0, de->dwThreadId);
     myHandle = threads2[de->dwThreadId].handle;
-    printf("Handle: %x\n", myHandle);
-    printf("Handle in threads2: %x\n", threads2[de->dwThreadId]);
+    d_print("Handle: %x\n", myHandle);
+    d_print("Handle in threads2: %x\n", threads2[de->dwThreadId]);
 //    myHandle = threads2[de->dwThreadId].handle;
     CONTEXT ctx;
     ctx.ContextFlags = CONTEXT_FULL;
     if(GetThreadContext(myHandle, &ctx) == 0x0) 
     {
-        printf("Failed to get context, error: 0x%08x\n", GetLastError());
+        d_print("Failed to get context, error: 0x%08x\n", GetLastError());
         return;
     }
-    printf("ESP: %p\n", ctx.Esp);
+    d_print("ESP: %p\n", ctx.Esp);
 
     tmp = ctx.Esp + (0x3 * 0x4);
     read_memory(cpdi.hProcess, (void*)(tmp), (void*)&buffer_addr, 0x4, &read);
@@ -801,7 +808,7 @@ void ntmap_1_callback(void* data)
     tmp = ctx.Esp + (0x7 * 0x4);
     read_memory(cpdi.hProcess, (void*)(tmp), (void*)&size_addr, 0x4, &read);
 
-    printf("off: 0x%08x, size: 0x%08x\n", buffer_addr, size_addr);
+    d_print("off: 0x%08x, size: 0x%08x\n", buffer_addr, size_addr);
 
     add_breakpoint(nt2_off, ntmap_2_callback);
 //    CloseHandle(myHandle);
@@ -810,14 +817,14 @@ void ntmap_1_callback(void* data)
 void ntmap_2_callback(void* data)
 {
     char line[MAX_LINE];
-    printf("ntmap_2\n");
+    d_print("ntmap_2\n");
 
     DWORD offset, size, size_wrote, read;
 
     read_memory(cpdi.hProcess, (void*)(buffer_addr), (void*)&offset, 0x4, &read);
     read_memory(cpdi.hProcess, (void*)(size_addr), (void*)&size, 0x4, &read);
 
-    printf("Block 0x%08x - 0x%08x, 0x%08x bytes\n", offset, offset + size, size);
+    d_print("Block 0x%08x - 0x%08x, 0x%08x bytes\n", offset, offset + size, size);
 
     size_wrote = dump_mem(modifications, (void*)offset, size);
     if(size_wrote == size)
@@ -831,13 +838,13 @@ void ntmap_2_callback(void* data)
 
 void ntread_1_callback(void* data)
 {
-    printf("ntread_1\n");
+    d_print("ntread_1\n");
     add_breakpoint(nt4_off, ntread_2_callback);
 }
 
 void ntread_2_callback(void* data)
 {
-    printf("ntread_2\n");
+    d_print("ntread_2\n");
     add_breakpoint(nt3_off, ntread_1_callback);
 }
 
@@ -852,14 +859,14 @@ void sysenter_callback(void* data)
     ctx.ContextFlags = CONTEXT_FULL;
     if(GetThreadContext(threads2[tid].handle, &ctx) == 0x0) 
     {
-        printf("Failed to get context, error: 0x%08x\n", GetLastError());
+        d_print("Failed to get context, error: 0x%08x\n", GetLastError());
         return;
     }
-//    printf("ESP: %p\n", ctx.Esp);
+//    d_print("ESP: %p\n", ctx.Esp);
     sysenter_no = ctx.Eax;
     sysenter_esp = ctx.Esp;
 
-//    printf("Deregister thread @ SYSENTER: %08x\n", tid);
+//    d_print("Deregister thread @ SYSENTER: %08x\n", tid);
     deregister_thread(tid, threads2[tid].handle);
     add_breakpoint(sysret_off, sysret_callback);
     add_breakpoint(sysret_off, sysret_refresh);
@@ -876,12 +883,12 @@ void sysret_callback(void* data)
     unsigned i;
     char line[MAX_LINE];
 
-//    printf("Register thread @ SYSRET: %08x\n", tid);
+//    d_print("Register thread @ SYSRET: %08x\n", tid);
     register_thread(tid, threads2[tid].handle);
 
     // dump 0x50 bytes from stack
     /*
-    printf("Block 0x%08x - 0x%08x, 0x%08x bytes\n", sysenter_esp, sysenter_esp + 0x50, 0x50);
+    d_print("Block 0x%08x - 0x%08x, 0x%08x bytes\n", sysenter_esp, sysenter_esp + 0x50, 0x50);
     size = dump_mem(modifications, (void*)sysenter_esp, 0x50);
     sprintf(line, "UP,0x%08x,0x%08x", sysenter_esp, 0x50);
     add_to_buffer(line);
@@ -892,43 +899,43 @@ void sysret_callback(void* data)
     ctx.ContextFlags = CONTEXT_FULL;
     if(GetThreadContext(threads2[tid].handle, &ctx) == 0x0) 
     {
-        printf("Failed to get context, error: 0x%08x\n", GetLastError());
+        d_print("Failed to get context, error: 0x%08x\n", GetLastError());
         return;
     }
-    printf("EAX: 0x%08x\n", ctx.Eax);
+    d_print("EAX: 0x%08x\n", ctx.Eax);
 
     /*
     for(i = 0x0; i<MAX_SYSCALL_OUT_ARGS; i++)
             syscall_out_args_dump_list[i].off = last_location.off;
     */
 
-    printf("[[Syscall: 0x%08x @ 0x%08x]]\n", sysenter_no, ctx.Eip);
+    d_print("[[Syscall: 0x%08x @ 0x%08x]]\n", sysenter_no, ctx.Eip);
     for(i = 0x0; i<MAX_SYSCALL_OUT_ARGS; i++)
     {
-        printf("Arg no: 0x%02x\n", i);
+        d_print("Arg no: 0x%02x\n", i);
         if(syscall_out_args[sysenter_no][i].off_location == last_arg.off_location) 
         {
-            printf("Last arg, finishing\n");
+            d_print("Last arg, finishing\n");
             break;
         }
         if(syscall_out_args[sysenter_no][i].eax_val_success != STATUS_ANY)
         {
-            printf("Arg not any\n");
+            d_print("Arg not any\n");
             if(syscall_out_args[sysenter_no][i].eax_val_success != ctx.Eax) 
             {
-                printf("Wrong EAX\n");
+                d_print("Wrong EAX\n");
                 continue;
             }
         }
         if(1)
         {
-            printf("Locating buffer\n");
+            d_print("Locating buffer\n");
             arg_val = 0x0;
             arg_addr = 0x0;
             off = 0x0;
             size = 0x0;
 
-            printf("ESP: 0x%08x\n", sysenter_esp);
+            d_print("ESP: 0x%08x\n", sysenter_esp);
 
             // decide offset
             switch(syscall_out_args[sysenter_no][i].off_location)
@@ -936,22 +943,22 @@ void sysret_callback(void* data)
                 case LOCATION_CONST:
                     syscall_out_args_dump_list[i].off = syscall_out_args[sysenter_no][i].off;
                     arg_val = syscall_out_args_dump_list[i].off;
-                    printf("Arg off: 0x%08x\n", arg_val);
+                    d_print("Arg off: 0x%08x\n", arg_val);
                     break;
                 case LOCATION_MEM:
                     arg_addr = syscall_out_args[sysenter_no][i].off;
                     read_memory(cpdi.hProcess, (void*)arg_addr, (void*)&arg_val, 0x4, &read);
-                    printf("0x%08x: 0x%08x\n", arg_addr, arg_val);
+                    d_print("0x%08x: 0x%08x\n", arg_addr, arg_val);
                     if(arg_val == 0x0) break;
-                    printf("Arg off: 0x%08x\n", arg_val);
+                    d_print("Arg off: 0x%08x\n", arg_val);
                     syscall_out_args_dump_list[i].off = arg_val;
                     break;
                 case LOCATION_STACK:
                     arg_addr = sysenter_esp + 0x8;
                     arg_addr += syscall_out_args[sysenter_no][i].off * 0x4;
                     arg_val = arg_addr;
-                    printf("0x%08x: 0x%08x\n", arg_addr, arg_val);
-                    printf("Arg off: 0x%08x\n", arg_val);
+                    d_print("0x%08x: 0x%08x\n", arg_addr, arg_val);
+                    d_print("Arg off: 0x%08x\n", arg_val);
                     if(arg_val == 0x0) break;
                     syscall_out_args_dump_list[i].off = arg_val;
                     break;
@@ -959,21 +966,21 @@ void sysret_callback(void* data)
                     arg_addr = sysenter_esp + 0x8;
                     arg_addr += syscall_out_args[sysenter_no][i].off * 0x4;
                     read_memory(cpdi.hProcess, (void*)arg_addr, (void*)&arg_val, 0x4, &read);
-                    printf("0x%08x: 0x%08x\n", arg_addr, arg_val);
+                    d_print("0x%08x: 0x%08x\n", arg_addr, arg_val);
                     if(arg_val == 0x0) break;
-                    printf("Arg off: 0x%08x\n", arg_val);
+                    d_print("Arg off: 0x%08x\n", arg_val);
                     syscall_out_args_dump_list[i].off = arg_val;
                     break;
                 case LOCATION_ADDR_ADDR_STACK:
                     arg_addr = sysenter_esp + 0x8;
                     arg_addr += syscall_out_args[sysenter_no][i].off * 0x4;
                     read_memory(cpdi.hProcess, (void*)arg_addr, (void*)&arg_val, 0x4, &read);
-                    printf("0x%08x: 0x%08x\n", arg_addr, arg_val);
+                    d_print("0x%08x: 0x%08x\n", arg_addr, arg_val);
                     arg_addr = arg_val;
                     read_memory(cpdi.hProcess, (void*)arg_addr, (void*)&arg_val, 0x4, &read);
-                    printf("0x%08x: 0x%08x\n", arg_addr, arg_val);
+                    d_print("0x%08x: 0x%08x\n", arg_addr, arg_val);
                     if(arg_val == 0x0) break;
-                    printf("Arg off: 0x%08x\n", arg_val);
+                    d_print("Arg off: 0x%08x\n", arg_val);
                     syscall_out_args_dump_list[i].off = arg_val;
                     break;
             }
@@ -982,7 +989,7 @@ void sysret_callback(void* data)
             off = arg_val;
             arg_val = 0x0;
             arg_addr = 0x0;
-            printf("Locating size\n");
+            d_print("Locating size\n");
 
             // decide size
             switch(syscall_out_args[sysenter_no][i].size_location)
@@ -990,32 +997,32 @@ void sysret_callback(void* data)
                 case LOCATION_CONST:
                     syscall_out_args_dump_list[i].size = syscall_out_args[sysenter_no][i].size;
                     arg_val = syscall_out_args_dump_list[i].size;
-                    printf("Arg size: 0x%08x\n", arg_val);
+                    d_print("Arg size: 0x%08x\n", arg_val);
                     break;
                 case LOCATION_MEM:
                     arg_addr = syscall_out_args[sysenter_no][i].size;
                     read_memory(cpdi.hProcess, (void*)arg_addr, (void*)&arg_val, 0x4, &read);
-                    printf("0x%08x: 0x%08x\n", arg_addr, arg_val);
-                    printf("Arg size: 0x%08x\n", arg_val);
+                    d_print("0x%08x: 0x%08x\n", arg_addr, arg_val);
+                    d_print("Arg size: 0x%08x\n", arg_val);
                     syscall_out_args_dump_list[i].size = arg_val;
                     break;
                 case LOCATION_STACK:
                     arg_addr = sysenter_esp + 0x8;
                     arg_addr += syscall_out_args[sysenter_no][i].size * 0x4;
                     read_memory(cpdi.hProcess, (void*)arg_addr, (void*)&arg_val, 0x4, &read);
-                    printf("0x%08x: 0x%08x\n", arg_addr, arg_val);
-                    printf("Arg size: 0x%08x\n", arg_val);
+                    d_print("0x%08x: 0x%08x\n", arg_addr, arg_val);
+                    d_print("Arg size: 0x%08x\n", arg_val);
                     syscall_out_args_dump_list[i].size = arg_val;
                     break;
                 case LOCATION_ADDR_STACK:
                     arg_addr = sysenter_esp + 0x8;
                     arg_addr += syscall_out_args[sysenter_no][i].size * 0x4;
                     read_memory(cpdi.hProcess, (void*)arg_addr, (void*)&arg_val, 0x4, &read);
-                    printf("0x%08x: 0x%08x\n", arg_addr, arg_val);
+                    d_print("0x%08x: 0x%08x\n", arg_addr, arg_val);
                     arg_addr = arg_val;
                     read_memory(cpdi.hProcess, (void*)arg_addr, (void*)&arg_val, 0x4, &read);
-                    printf("0x%08x: 0x%08x\n", arg_addr, arg_val);
-                    printf("Arg size: 0x%08x\n", arg_val);
+                    d_print("0x%08x: 0x%08x\n", arg_addr, arg_val);
+                    d_print("Arg size: 0x%08x\n", arg_val);
                     syscall_out_args_dump_list[i].size = arg_val;
                     break;
             }
@@ -1025,7 +1032,7 @@ void sysret_callback(void* data)
             size_wrote = dump_mem(modifications, (void*)off, size);
             if(size_wrote == size)
             {
-                printf("[Out argument: 0x%08x, size: 0x%08x]\n", off, size);
+                d_print("[Out argument: 0x%08x, size: 0x%08x]\n", off, size);
                 sprintf(line, "UP,0x%08x,0x%08x\n", off, size);
                 add_to_buffer(line);
             }
@@ -1046,7 +1053,7 @@ void sysret_callback(void* data)
             arg_addr = arg_val;
             read_memory(cpdi.hProcess, (void*)arg_addr, (void*)&file_handle, 0x4, &read);
 
-            printf("Hunting for reads from: 0x%08x\n", file_handle);
+            d_print("Hunting for reads from: 0x%08x\n", file_handle);
         }
     }
 
@@ -1057,7 +1064,7 @@ void sysret_callback(void* data)
             // our file, enter taint
             sprintf(line, "RN,0x%08x,0x%08x\n", syscall_out_args_dump_list[3].off, syscall_out_args_dump_list[3].size);
             add_to_buffer(line);
-            printf("Marked taint: 0x%08x,0x%08x\n", off, size);
+            d_print("Marked taint: 0x%08x,0x%08x\n", off, size);
         }
     }
 
@@ -1066,7 +1073,7 @@ void sysret_callback(void* data)
     
 
     set_ss(tid);
-    printf("Setting SS for 0x%08x\n", tid);
+    d_print("Setting SS for 0x%08x\n", tid);
     //sprintf(line, "# ret2");
     //add_to_buffer(line);
     
@@ -1117,7 +1124,7 @@ void createthread_callback(void* data)
     start_addr = get_stack(tHandle, 3);
     
     sprintf(line, "TS,0x%08x\n", start_addr);
-    printf("TS,0x%08x\n", start_addr);
+    d_print("TS,0x%08x\n", start_addr);
     add_to_buffer(line);
     
 }
@@ -1126,7 +1133,7 @@ void isdebuggerpresent_callback_2(void* data);
 
 void isdebuggerpresent_callback_1(void* data)
 {
-    printf("[antidebug] enter\n");
+    d_print("[antidebug] enter\n");
     add_breakpoint(find_lib("KernelBase.dll") + ISDEBUGGER_OFF_2, isdebuggerpresent_callback_2);
 
     return;
@@ -1148,7 +1155,7 @@ void isdebuggerpresent_callback_2(void* data)
     /* zero out eax */
 
     GetThreadContext(tHandle, &ctx);
-    printf("[antidebug] EAX: 0x%08x\n", ctx.Eax);
+    d_print("[antidebug] EAX: 0x%08x\n", ctx.Eax);
     ctx.Eax = 0x0;
     SetThreadContext(tHandle, &ctx);
     CloseHandle(tHandle);
@@ -1157,11 +1164,11 @@ void isdebuggerpresent_callback_2(void* data)
     GetThreadContext(tHandle, &ctx);
     CloseHandle(tHandle);
 
-    printf("[antidebug] IsDebuggerPresent handled\n");
-    printf("[antidebug] EAX: 0x%08x\n", ctx.Eax);
+    d_print("[antidebug] IsDebuggerPresent handled\n");
+    d_print("[antidebug] EAX: 0x%08x\n", ctx.Eax);
 
     add_breakpoint(find_lib("KernelBase.dll") + ISDEBUGGER_OFF_1, isdebuggerpresent_callback_1);
-    printf("[antidebug] exit\n");
+    d_print("[antidebug] exit\n");
 
     return;
     
@@ -1191,7 +1198,7 @@ int register_all_threads()
         // and exit if unsuccessful
         if( !Thread32First( hThreadSnap, &te32 ) ) 
         {
-            printf("Thread32First\n");  // Show cause of failure
+            d_print("Thread32First\n");  // Show cause of failure
             CloseHandle( hThreadSnap );     // Must clean up the snapshot object!
             return -0x1;
         }
@@ -1209,7 +1216,7 @@ int register_all_threads()
 
                     thread_list[thread_count] = te32.th32ThreadID;
                     thread_count ++;
-                    printf("Registering TID: 0x%08x with handle: 0x%08x, new thread count: 0x%x\n", te32.th32ThreadID, threads2[thread_count].handle, thread_count);
+                    d_print("Registering TID: 0x%08x with handle: 0x%08x, new thread count: 0x%x\n", te32.th32ThreadID, threads2[thread_count].handle, thread_count);
  
                 }
  
@@ -1335,8 +1342,8 @@ void check_debug(DWORD eip, long long unsigned i_count, DWORD id)
     {
         if((watched[i].off == eip) || (watched[i].instr == i_count))
         {
-            printf("Offhit: %08x\n", eip);
-            printf("Instr_no: %lld\n", instr_count);
+            d_print("Offhit: %08x\n", eip);
+            d_print("Instr_no: %lld\n", instr_count);
 //            if(watched[i-1].hit || (i == 0x0))
             if(watched[i].hit <= watched[i].count)
             {
@@ -1344,21 +1351,21 @@ void check_debug(DWORD eip, long long unsigned i_count, DWORD id)
                 ctx.ContextFlags = CONTEXT_FULL;
                 if(GetThreadContext(myHandle, &ctx) == 0x0)
                 {
-                    printf("Failed to get context, error: 0x%08x\n", GetLastError());
+                    d_print("Failed to get context, error: 0x%08x\n", GetLastError());
                 }
-                printf("Print debug info @ 0x%08x\n", eip);
+                d_print("Print debug info @ 0x%08x\n", eip);
                 print_context(&ctx);
                 watched[i].count++;
                 if(watched[i].scan == 1) 
                 {
-                    printf("Scan start triggered by watchpoint %d @ instr no %lld\n", i, i_count);
+                    d_print("Scan start triggered by watchpoint %d @ instr no %lld\n", i, i_count);
                     fwrite("# Scan start\n", strlen("# Scan start\n"), 1, file);
                     scan_on = 1;
                 }
             }
             else
                 watched[i].count++;
-                printf("Previous not hit\n");
+                d_print("Previous not hit\n");
         }
     }
     return;
@@ -1404,7 +1411,7 @@ void ss_callback(void* data)
         {
             scan_on = 0x0;
             scan_count = 0x0;
-            printf("Scan end @ %lld\n", instr_count);
+            d_print("Scan end @ %lld\n", instr_count);
             fwrite("# Scan end\n", strlen("# Scan end\n"), 1, file);
         }
     }
@@ -1414,7 +1421,7 @@ void ss_callback(void* data)
         {
             if(!(instr_count % REG_DEBUG_INTERVAL))
             {
-                printf("Debug interval\n");
+                d_print("Debug interval\n");
                 register_thread_debug(tid, threads2[tid].handle);
             }
         }
@@ -1427,7 +1434,7 @@ void ss_callback(void* data)
     {
         if(register_thread_debug(tid, threads2[tid].handle) <= 0x0)
         {
-            printf("Error writing to file: 0x%x\n", GetLastError());
+            d_print("Error writing to file: 0x%x\n", GetLastError());
             exit(1);
         }
     }
@@ -1442,7 +1449,7 @@ void ss_callback(void* data)
 /*
     if(!(instr_count % INSTRUCTION_SMALL_INTERVAL) && instr_count>0x0)
     {
-        printf("%d\n", instr_count);   
+        d_print("%d\n", instr_count);   
     }
 */
     instr_count++;
@@ -1484,14 +1491,14 @@ SIZE_T dump_mem(FILE* f, void* from, SIZE_T len)
 
     unsigned j;
 
-    printf("Position before: 0x%08x\n", ftell(f));
+    d_print("Position before: 0x%08x\n", ftell(f));
     for(i=0x0; i<whole; i+= buf_size)
     {
         ReadProcessMemory(cpdi.hProcess, (void*)(from+i), (void*)mem_buf, buf_size, &read);
-        printf("Read: 0x%08x\n", read);
+        d_print("Read: 0x%08x\n", read);
         if(read == 0x0)
         {
-            printf("Failed to read from %p to %p\nError: 0x%08x\n", from,(from+part), GetLastError());
+            d_print("Failed to read from %p to %p\nError: 0x%08x\n", from,(from+part), GetLastError());
             break;
         }
 
@@ -1500,16 +1507,16 @@ SIZE_T dump_mem(FILE* f, void* from, SIZE_T len)
     }
 
     for(j=0x0; j<0x5; j++)
-        printf("0x%02x ", mem_buf[j]);
-    printf("\n");
+        d_print("0x%02x ", mem_buf[j]);
+    d_print("\n");
 
     if(part > 0x0)
     {
         ReadProcessMemory(cpdi.hProcess, (void*)(from+i), (void*)mem_buf, part, &read);
-        printf("Read: 0x%08x\n", read);
+        d_print("Read: 0x%08x\n", read);
         if(read == 0x0)
         {
-            printf("Failed to read from %p to %p\nError: 0x%08x\n", from,(from+part), GetLastError());
+            d_print("Failed to read from %p to %p\nError: 0x%08x\n", from,(from+part), GetLastError());
         }
 
         fwrite(mem_buf, read, 0x1, f);
@@ -1517,10 +1524,10 @@ SIZE_T dump_mem(FILE* f, void* from, SIZE_T len)
     }
 
     for(j=0x0; j<0x5; j++)
-        printf("0x%02x ", mem_buf[j]);
-    printf("\n");
+        d_print("0x%02x ", mem_buf[j]);
+    d_print("\n");
 
-    printf("Position after: 0x%08x\n", ftell(f));
+    d_print("Position after: 0x%08x\n", ftell(f));
 
     return wrote_total;
 }
@@ -1571,7 +1578,7 @@ void dump_memory()
     SIZE_T read;
     FILE* f;
 
-    printf("dumping mem start\n");
+    d_print("dumping mem start\n");
 #ifdef MEM_DUMP
     f = fopen(dumpPath, "wb");
 
@@ -1582,7 +1589,7 @@ void dump_memory()
         VirtualQueryEx(cpdi.hProcess, (void*)addr, &mbi, sizeof(MEMORY_BASIC_INFORMATION));
         if(GetLastError() == ERROR_INVALID_PARAMETER)
             break;
-        printf("Block 0x%08x - 0x%08x, 0x%08x bytes\n", mbi.BaseAddress, mbi.RegionSize + mbi.BaseAddress, mbi.RegionSize);
+        d_print("Block 0x%08x - 0x%08x, 0x%08x bytes\n", mbi.BaseAddress, mbi.RegionSize + mbi.BaseAddress, mbi.RegionSize);
 //        if(mbi.State == MEM_COMMIT && (mbi.Type == MEM_MAPPED || mbi.Type == MEM_PRIVATE) && page_accessible(mbi))
         if(mbi.State == MEM_COMMIT && page_accessible(mbi))
         {
@@ -1597,12 +1604,12 @@ void dump_memory()
 
     fclose(f);
 #endif
-    printf("dumping mem end\n");
+    d_print("dumping mem end\n");
 }
 
 void dump_contexts()
 {
-    printf("Dumping contexts\n");
+    d_print("Dumping contexts\n");
 
 }
 
@@ -1616,7 +1623,7 @@ void end_callback(void* data)
     DWORD eip;
     eip = (DWORD)de->u.Exception.ExceptionRecord.ExceptionAddress;
 
-    printf("Finishing @ 0x%08x, detaching\n", eip);
+    d_print("Finishing @ 0x%08x, detaching\n", eip);
     sprintf(line, "FI,0x%08x\n", eip);
     add_to_buffer(line);
 
@@ -1633,7 +1640,7 @@ void bp_callback(void* data)
     DWORD eip;
     eip = (DWORD)de->u.Exception.ExceptionRecord.ExceptionAddress;
 
-    printf("Starting @ 0x%08x\n", eip);
+    d_print("Starting @ 0x%08x\n", eip);
     sprintf(line, "ST,0x%08x\n", eip);
     add_to_buffer(line);
 
@@ -1666,21 +1673,21 @@ BOOL WINAPI HandlerRoutine(_In_ DWORD dwCtrlType)
     unsigned int i;
     DWORD tid;
 
-    printf("Detected ctrl-c\n");
+    d_print("Detected ctrl-c\n");
     
-    printf("Deregistering threads\n");
+    d_print("Deregistering threads\n");
 
     for(i=0x0; i<thread_count; i++)
     {
         tid = thread_list[i];
         if(threads2[tid].alive == 0x1) 
         {
-            printf("Deregistering: 0x%08x\n", tid);
+            d_print("Deregistering: 0x%08x\n", tid);
             deregister_thread(tid, threads2[tid].handle);
         }
     }
 
-    printf("Deregistering libs\n");
+    d_print("Deregistering libs\n");
     for(i=0x0; i<lib_count; i++)
     {
         if(libs[i].alive == 0x1) 
@@ -1706,14 +1713,14 @@ DWORD WINAPI writer(LPVOID lpParam)
         fflush(file);
         //fwrite("# Flushed\n", strlen("# Flushed\n"), 1, file);
         fflush(file);
-//        printf("Flushed\n");
+//        d_print("Flushed\n");
         SetEvent(eventUnlock);
     }
 }
 
 void default_handler(void *data)
 {
-    printf("Default handler!\n");
+    d_print("Default handler!\n");
     return;
 }
 
@@ -1735,15 +1742,15 @@ int del_breakpoint_idx(unsigned my_bpt_idx)
 
 int del_breakpoint_handler(unsigned bp_idx, unsigned handler_idx)
 {
-    printf("del_h\n");
+    d_print("del_h\n");
     my_bpt[bp_idx].handlers[handler_idx].enabled = 0x0;
     return 0x0;
 }
 
 int del_breakpoint(DWORD addr)
 {
-    printf("del_b\n");
-    printf("Deleting breakpoint at: 0x%08x\n", addr);
+    d_print("del_b\n");
+    d_print("Deleting breakpoint at: 0x%08x\n", addr);
 
     DWORD oldProt;
     char bpt_char = '\xcc';
@@ -1781,24 +1788,24 @@ int handle_breakpoint(DWORD addr, void* data)
     int handler_count;
     int our_bp = 0x0;
 
-    printf("Hnadling, my count: %d\n", my_bpt_count);
+    d_print("Hnadling, my count: %d\n", my_bpt_count);
     for(i = 0x0; i<my_bpt_count; i++)
     {
-        printf("checking: %d\n", i);
+        d_print("checking: %d\n", i);
         if(my_bpt[i].addr == addr) our_bp = 1;
         if((my_bpt[i].addr == addr) && (my_bpt[i].enabled == 0x1))
         {
             my_bpt_idx = i;
             //handle
             handler_count = my_bpt[my_bpt_idx].handler_count;
-            printf("Hit breakpoint @ 0x%08x, enumerating %d handlers\n", addr, handler_count);
+            d_print("Hit breakpoint @ 0x%08x, enumerating %d handlers\n", addr, handler_count);
 
             for(j = handler_count-1; j>-1; j--)
             {
                 //printf("Enabled: %d\n", my_bpt[my_bpt_idx].handlers[j].enabled);
                 if(my_bpt[my_bpt_idx].handlers[j].enabled)
                 {
-                    printf("Executing last handler\n");
+                    d_print("Executing last handler\n");
                     my_bpt[my_bpt_idx].handlers[j].handler(data);
                     del_breakpoint_handler(my_bpt_idx, j);
                     my_bpt[my_bpt_idx].handler_count--;
@@ -1806,7 +1813,7 @@ int handle_breakpoint(DWORD addr, void* data)
                     goto handled;
                 }
             }
-            printf("Removing\n");
+            d_print("Removing\n");
             del_breakpoint(addr);
             handled:
             dec_eip(de->dwThreadId);
@@ -1818,12 +1825,12 @@ int handle_breakpoint(DWORD addr, void* data)
 /*
     if((my_bpt_idx == -0x1) && (our_bp))
     {
-        printf("Removing\n");
+        d_print("Removing\n");
         del_breakpoint(addr);
         dec_eip(de->dwThreadId);
     }
 */
-    printf("5\n");
+    d_print("5\n");
 /*
     if(my_bpt[my_bpt_idx].enabled == 0x0)
     {
@@ -1840,10 +1847,10 @@ int handle_breakpoint(DWORD addr, void* data)
 
 int add_breakpoint_handler(unsigned idx, handler_routine handler)
 {
-    printf("add_h\n");
+    d_print("add_h\n");
     unsigned cur_idx;
 
-    printf("Adding handler @ 0x%08x\n", my_bpt[idx].addr);
+    d_print("Adding handler @ 0x%08x\n", my_bpt[idx].addr);
     cur_idx = my_bpt[idx].handler_count;
     my_bpt[idx].handlers[cur_idx].handler = handler;
     my_bpt[idx].handlers[cur_idx].enabled = 0x1;
@@ -1854,7 +1861,7 @@ int add_breakpoint_handler(unsigned idx, handler_routine handler)
 
 int add_breakpoint(DWORD addr, handler_routine handler)
 {
-    printf("add_b\n");
+    d_print("add_b\n");
     int i;
     int my_bpt_index;
 
@@ -1870,7 +1877,7 @@ int add_breakpoint(DWORD addr, handler_routine handler)
     /* if not, create */
     if(my_bpt_index == -1) 
     {
-        printf("Creating new bp\n");
+        d_print("Creating new bp\n");
         my_bpt_index = my_bpt_count;
         my_bpt[my_bpt_index].enabled = 0x0;
         my_bpt[my_bpt_index].addr = addr;
@@ -1882,7 +1889,7 @@ int add_breakpoint(DWORD addr, handler_routine handler)
     {
         DWORD oldProt;
         char bpt_char = '\xcc';
-        printf("Adding breakpoint opcode @ 0x%08x\n", addr);
+        d_print("Adding breakpoint opcode @ 0x%08x\n", addr);
 
         VirtualProtectEx(cpdi.hProcess, (void*)my_bpt[my_bpt_index].addr, 0x1, PAGE_EXECUTE_READWRITE, &oldProt);
 
@@ -1900,7 +1907,7 @@ int add_breakpoint(DWORD addr, handler_routine handler)
 }
 void start_trace_fname()
 {
-    printf("Creating process: %s\n", process_fname);
+    d_print("Creating process: %s\n", process_fname);
 
     CreateProcess(process_fname, 0x0, 0x0, 0x0, 0x0, DEBUG_ONLY_THIS_PROCESS, 0x0, 0x0, &si, &pi);
 
@@ -1909,12 +1916,12 @@ void start_trace_fname()
 
 void start_trace_pid()
 {
-    printf("Attaching debugger\n");
+    d_print("Attaching debugger\n");
 
     if(DebugActiveProcess(myPID) != 0x0)
-        printf("Successfully attached to PID: 0x%x, handle: 0x%x\n", myPID);
+        d_print("Successfully attached to PID: 0x%x, handle: 0x%x\n", myPID);
     else 
-        printf("Attach failed\n");
+        d_print("Attach failed\n");
 
 }
 
@@ -1959,6 +1966,11 @@ int main(int argc, char** argv)
     strcpy(mod_end, argv[4]);
 	addr_end = strtol(argv[5], 0x0, 0x10);
     prefix = argv[7];
+
+    if(argc == 9)
+    {
+        log = fopen(argv[8], "w+");
+    }
 
     sprintf(path, "%s\\%s_%s", argv[6], prefix, "instr");
     sprintf(iniPath, "%s\\%s_%s.ini", argv[6], prefix, "ini");
@@ -2373,7 +2385,7 @@ int main(int argc, char** argv)
         WaitForDebugEvent(&de, INFINITE);
         
         if(full_log)
-            printf("dwDebugEventCode: 0x%08x\n", de.dwDebugEventCode);
+            d_print("dwDebugEventCode: 0x%08x\n", de.dwDebugEventCode);
         
         switch(de.dwDebugEventCode)
         {
@@ -2386,11 +2398,13 @@ int main(int argc, char** argv)
                 //configure breakpoints
                 if(strstr(mod_st, "0x0"))
                 {
+                    printf("Main module: 0x%08x\n", (DWORD)de.u.CreateProcessInfo.lpBaseOfImage);
                     add_breakpoint(addr_st + (DWORD)de.u.CreateProcessInfo.lpBaseOfImage, bp_callback);
                 }
 
                 if(strstr(mod_end, "0x0"))
                 {
+                    printf("Main module: 0x%08x\n", (DWORD)de.u.CreateProcessInfo.lpBaseOfImage);
                     img_base = (DWORD)de.u.CreateProcessInfo.lpBaseOfImage;
                 }
                 //unset_ss(0x0);
@@ -2403,9 +2417,9 @@ int main(int argc, char** argv)
 /*
                 if(full_log)
                 {
-                    printf("Exception: 0x%08x\n", er.ExceptionCode);
-                    printf("at: 0x%08x\n", er.ExceptionAddress);
-                    printf("First chance: 0x%08x\n", de.u.Exception.dwFirstChance);
+                    d_print("Exception: 0x%08x\n", er.ExceptionCode);
+                    d_print("at: 0x%08x\n", er.ExceptionAddress);
+                    d_print("First chance: 0x%08x\n", de.u.Exception.dwFirstChance);
                 }
 */
                 switch(er.ExceptionCode)
@@ -2443,7 +2457,7 @@ int main(int argc, char** argv)
                 }
                 /*
                 if(er.ExceptionCode != EXCEPTION_SINGLE_STEP && er.ExceptionCode != EXCEPTION_BREAKPOINT)
-                    printf("Will continue with status: 0x%08x\n", status);
+                    d_print("Will continue with status: 0x%08x\n", status);
                 */
                 break;
 
@@ -2453,18 +2467,18 @@ int main(int argc, char** argv)
                 break;
 
             case LOAD_DLL_DEBUG_EVENT:
-                printf("Handle: 0x%08x\n", de.u.LoadDll.hFile);
+                d_print("Handle: 0x%08x\n", de.u.LoadDll.hFile);
                 register_lib(de.u.LoadDll);
-                printf("Addr: 0x%08x\n", libs[lib_count-1].lib_addr);
+                d_print("Addr: 0x%08x\n", libs[lib_count-1].lib_addr);
 
 #ifdef LIB_VER_W7
                 GetFinalPathNameByHandleA(de.u.LoadDll.hFile, libs[lib_count].lib_name, MAX_NAME, VOLUME_NAME_NONE);
 #endif
 
-                printf("Testing for start lib, compairng: %s & %s\n", libs[lib_count].lib_name, mod_st);
+                d_print("Testing for start lib, compairng: %s & %s\n", libs[lib_count].lib_name, mod_st);
                 if(strstr(libs[lib_count].lib_name, mod_st))
                 {
-                    printf("Match!\n");
+                    d_print("Match!\n");
                     add_breakpoint(addr_st + find_lib(mod_st), bp_callback);
                 }
 //                if(strstr(libs[lib_count-1].lib_name, mod_end))
@@ -2477,7 +2491,7 @@ int main(int argc, char** argv)
                 for(j = 0x0; j<hook_count; j++)
                 {
 #ifdef LIB_VER_W7
-                    printf("%s - %s\n",  libs[lib_count-1].lib_name, hooks[j].libname);
+                    d_print("%s - %s\n",  libs[lib_count-1].lib_name, hooks[j].libname);
                     if(strstr(libs[lib_count-1].lib_name, hooks[j].libname))
 #endif
 #ifdef LIB_VER_WXP
@@ -2485,7 +2499,7 @@ int main(int argc, char** argv)
 #endif
                     {
                         add_breakpoint((DWORD)(hooks[j].offset + de.u.LoadDll.lpBaseOfDll), hooks[j].handler);
-                        printf("Adding hook: %d\n", j);
+                        d_print("Adding hook: %d\n", j);
                     }
                 }
 
@@ -2496,7 +2510,7 @@ int main(int argc, char** argv)
                 if(libs[lib_count-1].lib_addr == NTDLL_OFF)
 #endif
                 {
-                    printf("ntdll loaded\n");
+                    d_print("ntdll loaded\n");
 #ifdef LIB_VER_W7
                     nt1_off = find_lib("ntdll.dll") + NTMAPVIEWOFSECTION_1;
                     nt2_off = find_lib("ntdll.dll") + NTMAPVIEWOFSECTION_2;
@@ -2521,7 +2535,7 @@ int main(int argc, char** argv)
                 break;
 
             case EXIT_THREAD_DEBUG_EVENT:
-                printf("Exiting thread\n");
+                d_print("Exiting thread\n");
                 deregister_thread(de.dwThreadId, de.u.CreateThread.hThread);
                 threads2[de.dwThreadId].alive = 0x0;
 
@@ -2533,7 +2547,7 @@ int main(int argc, char** argv)
                 break;
 
             case EXIT_PROCESS_DEBUG_EVENT:
-                printf("Exiting process\n");
+                d_print("Exiting process\n");
                 HandlerRoutine(0x0);
                 break;
 
@@ -2545,6 +2559,7 @@ int main(int argc, char** argv)
 
     CloseHandle(file);
     CloseHandle(modifications);
+    if(log) fclose(log);
 
     return 0;
 }

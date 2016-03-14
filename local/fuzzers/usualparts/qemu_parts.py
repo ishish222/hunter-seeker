@@ -308,3 +308,10 @@ def shutdown(options, state):
     print("Finished")
     exit()
 
+def revert(options):
+    options = globs.state.options
+
+    print("[Reverting]")
+#    rs("load_ready", options.m)
+    rss(options.settings.revert_scripts, options.m, options.slowdown)
+

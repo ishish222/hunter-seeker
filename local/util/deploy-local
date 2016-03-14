@@ -8,7 +8,7 @@ TARGET_HOST="hs1@10.8.0.6"
 TARGETS_DIR=../../targets/
 TARGET_DIR=$TARGETS_DIR$TARGET
 TARGET_CONFIGS_DIR=$LOCAL_ROOT/target-configs/
-DEPLOY_PATH=/home/ish/kor-pro/hs2-deploy/
+DEPLOY_PATH=/home/ish/hs2-deploys/
 
 echo "Local deploy"
 
@@ -16,5 +16,7 @@ DATE=$(date --iso)
 rm -rf $DEPLOY_PATH$TARGET/$DATE
 mkdir -p $DEPLOY_PATH$TARGET/$DATE
 cp -r $TARGET_DIR/* $DEPLOY_PATH$TARGET/$DATE/
-rm -f /home/ish/kor-pro/hs2-current-deploy/$TARGET
-ln -s $DEPLOY_PATH$TARGET/$DATE /home/ish/kor-pro/hs2-current-deploy/$TARGET
+rm -f /home/ish/hs2-current-deploy/$TARGET
+ln -s $DEPLOY_PATH$TARGET/$DATE /home/ish/hs2-current-deploy/$TARGET
+sudo ln -s $DEPLOY_PATH$TARGET/$DATE /home/hs1/hs2-current-deploy/$TARGET
+

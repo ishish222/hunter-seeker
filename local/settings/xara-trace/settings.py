@@ -39,8 +39,8 @@ fuzzbox_timeout = 0
 closing_plugin_name = "nop"
 start_sleep = 30
 mutator = "changer.Changer"
-qemu_drive_options =""
-qemu_additional = ['-net', 'nic,model=rtl8139', '-net', 'user,smb=%s' % qemu_shared_folder, '--enable-kvm']
+qemu_drive_options = "cache=none,if=virtio"
+qemu_additional = ['-net', 'nic,model=virtio', '-net', 'user,smb=%s' % qemu_shared_folder, '--enable-kvm']
 qemu_drive_format = 'copy_secondary'
 qemu_secondary="temu-samples-template.bp.img"
 host_mount_options="loop,umask=0000,offset=32256"
