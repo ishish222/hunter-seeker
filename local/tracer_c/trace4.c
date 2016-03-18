@@ -68,6 +68,8 @@ char started = 0x0;
 #define INSTRUCTION_SMALL_INTERVAL 10000
 
 unsigned long long instr_count;
+char instr_count_s[0x20];
+unsigned long long instr_limit;
 unsigned long long instr_dbg;
 int full_log = 0x0;
 
@@ -760,6 +762,7 @@ void deregister_lib(UNLOAD_DLL_DEBUG_INFO info)
 }
 
 void ss_callback(void* data);
+void end_callback(void* data);
 void ntmap_1_callback(void* data);
 void ntmap_2_callback(void* data);
 void ntread_1_callback(void* data);
@@ -1388,7 +1391,6 @@ void ss_callback(void* data)
 
     char bytes[0x2];
 
-
     if(!started) return;
 
     WaitForSingleObject(mutex, INFINITE);
@@ -1458,6 +1460,14 @@ void ss_callback(void* data)
     instr_count++;
     sprintf(line, "0x%x 0x%08x %lld\n", tid, eip, instr_count);
     add_to_buffer(line);
+
+    if(instr_limit)
+    {
+        if(instr_count >= instr_limit)
+        {
+            HandlerRoutine(0x0);
+        }
+    }
 
 //    set_ss(de->dwThreadId);
 
@@ -1701,6 +1711,8 @@ BOOL WINAPI HandlerRoutine(_In_ DWORD dwCtrlType)
         }
     }
 
+
+    WritePrivateProfileString("general", "instruction count", itoa(instr_count, instr_count_s, 10), iniPath);
 
     SetEvent(eventLock);
     WaitForSingleObject(eventUnlock, INFINITE);
@@ -1951,6 +1963,7 @@ int main(int argc, char** argv)
     unsigned i, j;
     scan_on = 0x0;
     instr_count = 0x1;
+    instr_limit= 0x0;
     instr_dbg = 0x0;
 
 	if(argc < 8)
@@ -1972,9 +1985,14 @@ int main(int argc, char** argv)
 	addr_end = strtol(argv[5], 0x0, 0x10);
     prefix = argv[7];
 
-    if(argc == 9)
+    if(argc > 8)
     {
         log = fopen(argv[8], "w+");
+    }
+
+    if(argc > 9)
+    {
+        instr_limit = strtol(argv[9], 0x0, 10);
     }
 
     sprintf(path, "%s\\%s_%s", argv[6], prefix, "instr");
