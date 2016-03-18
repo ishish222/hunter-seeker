@@ -22,6 +22,7 @@ def get_additional_options():
     parser.add_option("", "--odir",       dest="out_dir", help="Out dir for trace", default="\\\\10.0.2.4\\qemu\\")
     parser.add_option("", "--prefix",     dest="prefix", help="Prefix for trace", default="last")
     parser.add_option("", "--logpath",     dest="log_path", help="Log path for trace", default="\\\\10.0.2.4\\qemu\\last_log.txt")
+    parser.add_option("", "--limit",     dest="instr_limit", help="Instruction limit", default="0")
 
     (options.additional_options, args) = parser.parse_args()
 
@@ -46,6 +47,7 @@ def trace_sample2():
     test_file = os.path.basename(test_path)
 
     if(options.walk_start == None):
+#        write_socket(options.s, "trace3 e:\\server\\a.exe e:\\samples\\shared\\%s %s %s %s %s %s %s %s %s" % (test_file, additional.st_mod, additional.st_addr, additional.end_mod, additional.end_addr, additional.out_dir, additional.prefix, additional.log_path, additional.instr_limit))
         write_socket(options.s, "trace3 e:\\server\\a.exe e:\\samples\\shared\\%s %s %s %s %s %s %s %s" % (test_file, additional.st_mod, additional.st_addr, additional.end_mod, additional.end_addr, additional.out_dir, additional.prefix, additional.log_path))
     else:
         pass
@@ -114,6 +116,7 @@ def trace_sample():
 #        write_socket(options.s, "walk e:\\samples\\shared\\%s %d f:\\%s.mm" % (test_file, options.walk_level, test_file))
 #        write_socket(options.s, "trace e:\\samples\\shared\\%s" % (test_file))
 #        write_socket(options.s, "trace2 e:\\samples\\shared\\%s %d" % (test_file, globs.state.pid))
+#        write_socket(options.s, "trace4 e:\\server\\a.exe %d %s %s %s %s %s %s %s %s" % (state.pid, additional.st_mod, additional.st_addr, additional.end_mod, additional.end_addr, additional.out_dir, additional.prefix, additional.log_path, additional.instr_limit))
         write_socket(options.s, "trace4 e:\\server\\a.exe %d %s %s %s %s %s %s %s" % (state.pid, additional.st_mod, additional.st_addr, additional.end_mod, additional.end_addr, additional.out_dir, additional.prefix, additional.log_path))
 
     else:

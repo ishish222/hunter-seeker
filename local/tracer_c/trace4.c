@@ -58,6 +58,7 @@
 char process_fname[0x200];
 char spawned = 0x0;
 FILE* log;
+char started = 0x0;
 
 #define WATCH_LIMIT 0x100
 
@@ -1388,6 +1389,8 @@ void ss_callback(void* data)
     char bytes[0x2];
 
 
+    if(!started) return;
+
     WaitForSingleObject(mutex, INFINITE);
 
     eip = (DWORD)(de->u.Exception.ExceptionRecord.ExceptionAddress);
@@ -1636,6 +1639,8 @@ void bp_callback(void* data)
     char line[MAX_LINE];
     DEBUG_EVENT* de;
     de = (DEBUG_EVENT*)data;
+
+    started = 1;
 
     DWORD eip;
     eip = (DWORD)de->u.Exception.ExceptionRecord.ExceptionAddress;
