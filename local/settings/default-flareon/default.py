@@ -88,7 +88,7 @@ large_results_dir = '/mnt/2/output'
 revert_snapshot = 'clean'
 qemu_machines = "/home/hs1/machines/qemu"
 qemu_m = "3G"
-qemu_shared_folder = "/home/hs1/shared"
+qemu_shared_folder = "/mnt/1/output"
 qemu_additional =  ['-enable-kvm']
 qemu_command = 'qemu-system-i386'
 qemu_drive_options = 'cache=none,if=virtio'

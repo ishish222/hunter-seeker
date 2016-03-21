@@ -20,9 +20,10 @@ def get_additional_options():
     parser.add_option("", "--saddr",      dest="st_addr", help="Starting address for trace", default="0x1b7c")
     parser.add_option("", "--eaddr",      dest="end_addr", help="Ending address for trace", default="0x52acf")
     parser.add_option("", "--odir",       dest="out_dir", help="Out dir for trace", default="\\\\10.0.2.4\\qemu\\")
+    parser.add_option("", "--odir2",      dest="out_dir2", help="Appendix for trace output", default="last")
     parser.add_option("", "--prefix",     dest="prefix", help="Prefix for trace", default="last")
-    parser.add_option("", "--logpath",     dest="log_path", help="Log path for trace", default="\\\\10.0.2.4\\qemu\\last_log.txt")
-    parser.add_option("", "--limit",     dest="instr_limit", help="Instruction limit", default="0")
+    parser.add_option("", "--logpath",    dest="log_path", help="Log path for trace", default="\\\\10.0.2.4\\qemu\\last_log.txt")
+    parser.add_option("", "--limit",      dest="instr_limit", help="Instruction limit", default="0")
 
     (options.additional_options, args) = parser.parse_args()
 
@@ -46,8 +47,11 @@ def trace_sample2():
     test_path = options.settings.prepare_sample(sample_path)
     test_file = os.path.basename(test_path)
 
+    os.spawnv(os.P_WAIT, "/usr/bin/sudo", ["sudo", "mkdir", "-p", options.settings.qemu_shared_folder+"/"+additional.out_dir2])
+    os.spawnv(os.P_WAIT, "/usr/bin/sudo", ["sudo", "chown", options.settings.hs_user, options.settings.qemu_shared_folder+"/"+additional.out_dir2])
+
     if(options.walk_start == None):
-        write_socket(options.s, "trace3 e:\\server\\a.exe e:\\samples\\shared\\%s %s %s %s %s %s %s %s %s" % (test_file, additional.st_mod, additional.st_addr, additional.end_mod, additional.end_addr, additional.out_dir, additional.prefix, additional.log_path, additional.instr_limit))
+        write_socket(options.s, "trace3 e:\\server\\a.exe e:\\samples\\shared\\%s %s %s %s %s %s %s %s %s" % (test_file, additional.st_mod, additional.st_addr, additional.end_mod, additional.end_addr, additional.out_dir+additional.out_dir2, additional.prefix, additional.log_path, additional.instr_limit))
 #        write_socket(options.s, "trace3 e:\\server\\a.exe e:\\samples\\shared\\%s %s %s %s %s %s %s %s" % (test_file, additional.st_mod, additional.st_addr, additional.end_mod, additional.end_addr, additional.out_dir, additional.prefix, additional.log_path))
     else:
         pass
@@ -112,11 +116,14 @@ def trace_sample():
     test_path = options.settings.prepare_sample(sample_path)
     test_file = os.path.basename(test_path)
 
+    os.spawnv(os.P_WAIT, "/usr/bin/sudo", ["sudo", "mkdir", "-p", options.settings.qemu_shared_folder+"/"+additional.out_dir2])
+    os.spawnv(os.P_WAIT, "/usr/bin/sudo", ["sudo", "chown", options.settings.hs_user, options.settings.qemu_shared_folder+"/"+additional.out_dir2])
+
     if(options.walk_start == None):
 #        write_socket(options.s, "walk e:\\samples\\shared\\%s %d f:\\%s.mm" % (test_file, options.walk_level, test_file))
 #        write_socket(options.s, "trace e:\\samples\\shared\\%s" % (test_file))
 #        write_socket(options.s, "trace2 e:\\samples\\shared\\%s %d" % (test_file, globs.state.pid))
-        write_socket(options.s, "trace4 e:\\server\\a.exe %d %s %s %s %s %s %s %s %s" % (state.pid, additional.st_mod, additional.st_addr, additional.end_mod, additional.end_addr, additional.out_dir, additional.prefix, additional.log_path, additional.instr_limit))
+        write_socket(options.s, "trace4 e:\\server\\a.exe %d %s %s %s %s %s %s %s %s" % (state.pid, additional.st_mod, additional.st_addr, additional.end_mod, additional.end_addr, additional.out_dir+additional.out_dir2, additional.prefix, additional.log_path, additional.instr_limit))
 #        write_socket(options.s, "trace4 e:\\server\\a.exe %d %s %s %s %s %s %s %s" % (state.pid, additional.st_mod, additional.st_addr, additional.end_mod, additional.end_addr, additional.out_dir, additional.prefix, additional.log_path))
 
     else:
