@@ -599,21 +599,35 @@ int taint_x86::test_jmp(CONTEXT_INFO* info)
             print_ret(info);
             print_ret(info);
         }
+        else
+        {
+            return 0x0;
+        }
     }
     else
     {
         if(s != 0x0)
         {
-            if(this->enumerate) sprintf(out_line, "[x] (%d)0x%08x jmp %s!%s", this->current_instr_count ,this->current_eip, s->lib_name, s->func_name);
-            else sprintf(out_line, "[x] 0x%08x jmp %s!%s", this->current_eip, s->lib_name, s->func_name);
-            print_call(info, out_line, colors[CODE_RED]);
-            print_ret(info);
+            if(s->wanted)
+            {
+                if(this->enumerate) sprintf(out_line, "[x] (%d)0x%08x jmp %s!%s", this->current_instr_count ,this->current_eip, s->lib_name, s->func_name);
+                else sprintf(out_line, "[x] 0x%08x jmp %s!%s", this->current_eip, s->lib_name, s->func_name);
+                print_call(info, out_line, colors[CODE_RED]);
+                print_ret(info);
+            }
+            else
+            {
+                if(this->enumerate) sprintf(out_line, "(%d)0x%08x jmp %s!%s", this->current_instr_count ,this->current_eip, s->lib_name, s->func_name);
+                else sprintf(out_line, "0x%08x jmp %s!%s", this->current_eip, s->lib_name, s->func_name);
+                print_call(info, out_line, colors[CODE_BLUE]);
+                print_ret(info);
+            }
+        }
+        else
+        {
+            return 0x0;
         }
     }
-    if(this->enumerate) sprintf(out_line, "[x] (%d)0x%08x jmp 0x%08x", this->current_instr_count, this->current_eip, target);
-    else sprintf(out_line, "[x] 0x%08x jmp 0x%08x", this->current_eip, target);
-    print_call(info, out_line, colors[CODE_RED]);
-    print_ret(info);
 
     return 0x0;
 }
