@@ -29,8 +29,10 @@ Change of endiannes takes place when reading and writing to memory (to_mem, from
 #include <sys/queue.h>
 #include <errno.h>
 
-// compile-time options 
+// compile-time options and parameters
 #define ANALYZE_JUMPS 1
+#define ANALYZE_LOOPS 1
+#define NO_LOOP 0xffffffff
 
 #define MAX_NAME 0x100
 #define MAX_SYMBOL_NAME 0x50
@@ -39,8 +41,8 @@ Change of endiannes takes place when reading and writing to memory (to_mem, from
 #define MAX_THREADS 0x100
 #define MAX_THREAD_NUMBER 0x1000
 #define MAX_RETS 200
-#define MAX_LOOP_ADDRS 0x8
 #define GRAPH_START 100
+#define MAX_LOOP_ADDRS 0x10
 //#define MAX_THREADS 0x1000000
 #define MAX_PRPAGATIONS_OBSERVED 0x4000000
 #define MAX_TAINTS_OBSERVED 0x400
@@ -49,6 +51,7 @@ Change of endiannes takes place when reading and writing to memory (to_mem, from
 #define MAX_ 0x10
 #define MAX_BLACKLIST 0x50
 #define MAX_WANTED 0x100
+#define MAX_LOOP_FENCES 0x100
 
 // deprecated
 #define MEM     0xff
@@ -2166,6 +2169,14 @@ class DWORD_t
 
 };
 
+typedef struct LOOP_FENCE_
+{
+    OFFSET entry;
+    OFFSET start;
+    OFFSET end;
+
+} LOOP_FENCE;
+
 typedef struct SYMBOL_
 {
     OFFSET addr;
@@ -2256,11 +2267,12 @@ typedef struct _CONTEXT_INFO
     char calling;
     OFFSET target;
     OFFSET next;
+    OFFSET entry[MAX_RETS];
 
     /* loops handling */
     OFFSET call_src_register[MAX_RETS][MAX_LOOP_ADDRS][2];
     unsigned call_src_register_idx[MAX_RETS];
-    char in_loop[MAX_RETS];
+    unsigned loop_start[MAX_RETS];
 } CONTEXT_INFO;
 
 #define BP_MODE_READ    0x1
@@ -2425,9 +2437,15 @@ class taint_x86
     int remove_symbol(SYMBOL*);
     SYMBOL* get_symbol(OFFSET);
 
+    /* loop fences - new approach */
+    LOOP_FENCE loop_fences[MAX_LOOP_FENCES]; 
+    unsigned loop_fences_count;
+    
     int enter_loop(CONTEXT_INFO*);
     int exit_loop(CONTEXT_INFO*);
-    int check_loop(CONTEXT_INFO*, OFFSET, OFFSET);
+    //int check_loop(CONTEXT_INFO*, OFFSET, OFFSET);
+    int check_loop(CONTEXT_INFO*);
+    int check_loop_2(CONTEXT_INFO*);
 
     /* dumping taint transfer history */
     int write_history(FILE*);
@@ -2938,13 +2956,14 @@ class taint_x86
     int add_wanted(char*);
     int add_wanted_e(DWORD);
     int add_wanted_i(unsigned);
+    int add_fence(OFFSET, OFFSET, OFFSET);
     int check_lib_blacklist(LIB_INFO*);
     int check_addr_blacklist(OFFSET);
     int check_func_wanted(char*);
     int check_func_included(char*);
     int check_rets(OFFSET);
     LIB_INFO* get_lib(OFFSET);
-    int test_jmp(CONTEXT_INFO*);
+    int handle_jmp(CONTEXT_INFO*);
     int handle_call(CONTEXT_INFO*);
     int handle_ret(CONTEXT_INFO*, OFFSET);
     int handle_exception(EXCEPTION_INFO);

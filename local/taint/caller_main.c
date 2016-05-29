@@ -189,6 +189,40 @@ int register_wanted_e(char* line, taint_x86* taint_eng)
     return 0x0;
 }
 
+int register_fence(char* line, taint_x86* taint_eng)
+{
+    char* cmd;
+    OFFSET entry;
+    OFFSET start;
+    OFFSET end;
+
+    cmd = strtok(line, ",");
+    entry = strtol(strtok(0x0, ","), 0x0, 0x10);
+    start = strtol(strtok(0x0, ","), 0x0, 0x10);
+    end = strtol(strtok(0x0, ","), 0x0, 0x10);
+    taint_eng->add_fence(entry, start, end);
+
+    return 0x0;
+}
+
+int load_file(char* line, taint_x86* taint_eng)
+{
+    char* cmd;
+    char* file_name;
+
+    cmd = strtok(line, ",");
+    file_name = strtok(0x0, ",");
+    file_name[strlen(file_name)-1] = 0x0;
+    
+    printf("Switching instr file to %s\n", file_name);
+
+    fclose(taint_eng->instr_file);
+    taint_eng->load_instr_from_file(file_name);
+
+    return 0x0;
+}
+
+
 int register_included(char* line, taint_x86* taint_eng)
 {
     char* cmd;
@@ -762,10 +796,10 @@ int main(int argc, char** argv)
  
     /* executing instructions */
     while ((read = getline(&line, &len, taint_eng.instr_file)) != -1) 
-
     {
         if(line[0] != '0')
         {
+            //printf("%s\n", line);
             //strcat(structured_buffer, line);
             // other operations
             if(line[0] == 'R' && line[1] == 'T')
@@ -812,6 +846,12 @@ int main(int argc, char** argv)
 
             if(line[0] == 'C' && line[1] == 'T')
                 check_consistency(line, &taint_eng);
+
+            if(line[0] == 'F' && line[1] == 'E')
+                register_fence(line, &taint_eng);
+
+            if(line[0] == 'L' && line[1] == 'F')
+                load_file(line, &taint_eng);
 
             if(line[0] == 'S' && line[1] == 'T')
                 if(!(taint_eng.start_addr || taint_eng.start_instr))

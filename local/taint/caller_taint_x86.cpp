@@ -360,6 +360,23 @@ int taint_x86::add_wanted(char* str)
     return 0x0;
 }
 
+int taint_x86::add_fence(OFFSET entry, OFFSET start, OFFSET end)
+{
+    if(this->loop_fences_count >= MAX_LOOP_FENCES)
+    {
+        d_print(1, "Error, maximum of loop fences reached\n");
+        exit(-1);
+    }
+
+    this->loop_fences[this->loop_fences_count].entry = entry;
+    this->loop_fences[this->loop_fences_count].start = start;
+    this->loop_fences[this->loop_fences_count].end = end;
+    this->loop_fences_count++;
+    d_print(1, "Fence: 0x%08x - 0x%08x - 0x%08x\n", entry, start, end);
+
+    return 0x0;
+}
+
 int taint_x86::add_included(char* str)
 {
     if(this->included_count >= MAX_WANTED)
@@ -561,7 +578,7 @@ int taint_x86::handle_ret_surface(CONTEXT_INFO* info)
 
 */
 
-int taint_x86::test_jmp(CONTEXT_INFO* info)
+int taint_x86::handle_jmp(CONTEXT_INFO* info)
 {
 
 #ifndef ANALYZE_JUMPS
@@ -582,8 +599,11 @@ int taint_x86::test_jmp(CONTEXT_INFO* info)
     OFFSET target = info->target;
     OFFSET next = info->next;
 
+    check_loop_2(info);
+
     unsigned color;
     s = this->get_symbol(target);
+
 
     if(info->waiting != 0x0)
     {
@@ -638,10 +658,10 @@ int taint_x86::enter_loop(CONTEXT_INFO* info)
     unsigned cur_graph_pos;
     cur_graph_pos = this->cur_info->graph_pos;
 
-    if(!(this->cur_info->in_loop[cur_graph_pos]))
+//    if(!(this->cur_info->in_loop[cur_graph_pos]))
     {
         d_print(1, "Entering loop\n");
-        this->cur_info->in_loop[cur_graph_pos] = 0x1;
+//        this->cur_info->in_loop[cur_graph_pos] = 0x1;
         sprintf(out_line, "[loop]");
 //        print_call(info, out_line, colors[CODE_BLACK]);
 //        this->cur_info->graph_pos++;
@@ -655,49 +675,109 @@ int taint_x86::exit_loop(CONTEXT_INFO* info)
     unsigned cur_graph_pos;
     cur_graph_pos = this->cur_info->graph_pos;
 
-    if(this->cur_info->in_loop[cur_graph_pos])
+//    if(this->cur_info->in_loop[cur_graph_pos])
     {
         d_print(1, "Exiting loop\n");
-        this->cur_info->in_loop[cur_graph_pos] = 0x0;
+        this->cur_info->loop_start[cur_graph_pos] = NO_LOOP;
 //        print_ret(info);
 //        this->cur_info->graph_pos--;
     }
 }
 
-int taint_x86::check_loop(CONTEXT_INFO* info, OFFSET offset, OFFSET target)
+//int taint_x86::check_loop(CONTEXT_INFO* info, OFFSET offset, OFFSET target)
+int taint_x86::check_loop_2(CONTEXT_INFO* info)
+{
+    OFFSET offset;
+    unsigned cur_fence;
+
+    offset = this->current_eip;
+
+    for(cur_fence = 0x0; cur_fence < MAX_LOOP_FENCES; cur_fence++)
+    {
+        if(this->loop_fences[cur_fence].entry != info->entry[info->graph_pos])
+            return 0x0;
+
+        if(this->loop_fences[cur_fence].start == offset)
+            enter_loop(info);
+
+        if(this->loop_fences[cur_fence].end == offset)
+            exit_loop(info);
+    }
+
+    return 0x0;
+}
+
+
+int taint_x86::check_loop(CONTEXT_INFO* info)
 {
     unsigned cur_idx;
     unsigned cur_pos;
     unsigned graph_pos;
+    unsigned loop_idx, next_loop_idx;
+    OFFSET offset;
     char got_loop;
     got_loop = 0;
+
+    offset = this->current_eip;
 
     graph_pos = this->cur_info->graph_pos;
     cur_pos = this->cur_info->call_src_register_idx[graph_pos];
 
-    d_print(1, "Checking address: 0x%08x\n", offset);
+    d_print(1, "Checking address for loop: 0x%08x\n", offset);
     d_print(1, "Loop register @ level: %d:\n", graph_pos);
-    for(cur_idx = cur_pos; cur_idx != ((cur_pos+1) % MAX_LOOP_ADDRS);)
-    {
-        if((this->cur_info->call_src_register[graph_pos][cur_idx][0] == offset) && (this->cur_info->call_src_register[graph_pos][cur_idx][1] == target))
-        {
-            d_print(1, "0x%08x -> 0x%08x [x]\n", this->cur_info->call_src_register[graph_pos][cur_idx][0], this->cur_info->call_src_register[graph_pos][cur_idx][1]);
-            enter_loop(info);
-            got_loop = 1;
-        }
-        else d_print(1, "0x%08x -> 0x%08x\n", this->cur_info->call_src_register[graph_pos][cur_idx][0], this->cur_info->call_src_register[graph_pos][cur_idx][1]);
 
-        cur_idx --;
-        cur_idx %= MAX_LOOP_ADDRS;
+    loop_idx = this->cur_info->loop_start[graph_pos];
+
+    if(loop_idx != NO_LOOP) 
+    {
+        /* we are currently in a loop */
+        next_loop_idx = (loop_idx +1) % MAX_LOOP_ADDRS;
+
+        if(this->cur_info->call_src_register[graph_pos][next_loop_idx][0] == offset)
+        {
+            /* continue loop - do nothing (do not exit, register event) */  
+            return 0x0;
+        }
+        else
+        {
+            /* loop does not continue, leave */ 
+            exit_loop(info);
+        }
 
     }
-
+    else
+    {
+        /* we are currently not in a loop */
+        for(cur_idx = cur_pos; cur_idx != ((cur_pos+1) % MAX_LOOP_ADDRS);)
+        {
+    //        if((this->cur_info->call_src_register[graph_pos][cur_idx][0] == offset) && (this->cur_info->call_src_register[graph_pos][cur_idx][1] == target))
+            if((this->cur_info->call_src_register[graph_pos][cur_idx][0] == offset))
+            {
+    //            d_print(1, "0x%08x -> 0x%08x [x]\n", this->cur_info->call_src_register[graph_pos][cur_idx][0], this->cur_info->call_src_register[graph_pos][cur_idx][1]);
+                /* detected first repetition, register it and enter loop */
+                this->cur_info->loop_start[graph_pos] = cur_idx;
+                enter_loop(info);
+                got_loop = 1;
+                break;
+            }
+            else 
+            {
+                /* we did not detect repetition, we continue without checking */
+                d_print(1, "checked 0x%08x -> 0x%08x for loop\n", this->cur_info->call_src_register[graph_pos][cur_idx][0], this->cur_info->call_src_register[graph_pos][cur_idx][1]);
+            }
+    
+            cur_idx --;
+            cur_idx %= MAX_LOOP_ADDRS;
+        }
+    }
     if(got_loop) return 0x1;
+
+    /* register current event for loop next check */
 
     this->cur_info->call_src_register_idx[graph_pos]++;
     this->cur_info->call_src_register_idx[graph_pos] %= MAX_LOOP_ADDRS;
     this->cur_info->call_src_register[graph_pos][this->cur_info->call_src_register_idx[graph_pos]][0] = offset;
-    this->cur_info->call_src_register[graph_pos][this->cur_info->call_src_register_idx[graph_pos]][1] = target;
+//    this->cur_info->call_src_register[graph_pos][this->cur_info->call_src_register_idx[graph_pos]][1] = target;
 
 /*
     d_print(1, "Loop register:\n");
@@ -740,6 +820,8 @@ int taint_x86::handle_call(CONTEXT_INFO* info)
     OFFSET next = info->next;
     
 
+    check_loop_2(info);
+
     unsigned color;
     s = this->get_symbol(target);
 /*
@@ -779,8 +861,7 @@ int taint_x86::handle_call(CONTEXT_INFO* info)
 
     //d_print(1, "Pushing: 0x%08x\n", next);
     current = this->reg_restore_32(EIP);
-    //check_loop(info, this->current_eip);
-    if(check_loop(info, this->current_eip, target)) return 0x0;
+    //if(check_loop(info, this->current_eip, target)) return 0x0;
 
     /* prepare name */
     if(s != 0x0)
@@ -874,8 +955,21 @@ int taint_x86::handle_call(CONTEXT_INFO* info)
         print_call(info, out_line, colors[color]);
         info->rets[info->graph_pos] = next;
         info->graph_pos++;
+        info->entry[info->graph_pos] = target;
+
+        /* prepare loop detection structures */
+        info->call_src_register_idx[info->graph_pos] = 0x0;
+        info->loop_start[info->graph_pos] = NO_LOOP;
 
         unsigned i;
+
+        for(i=0x0; i<MAX_LOOP_ADDRS; i++)
+        {
+            info->call_src_register[info->graph_pos][i][0] = 0x0;
+            info->call_src_register[info->graph_pos][i][1] = 0x0;
+        }
+
+        /* other stuff */ 
 
         d_print(1, "[0x%08x] Ret table:\n", this->cur_tid);
         for(i=info->graph_pos_smallest; i<info->graph_pos; i++)
@@ -938,6 +1032,8 @@ int taint_x86::handle_ret(CONTEXT_INFO* cur_ctx, OFFSET eip)
                         cur_ctx->call_src_register[cur_ctx->graph_pos][k][0] = 0x0;
                         cur_ctx->call_src_register[cur_ctx->graph_pos][k][1] = 0x0;
                     }
+
+                    cur_ctx->loop_start[cur_ctx->graph_pos] = NO_LOOP; /* clear loop start index */
 
                     cur_ctx->graph_pos--;
                     print_ret(cur_ctx);
@@ -1854,6 +1950,11 @@ int taint_x86::add_thread(CONTEXT_info ctx_info)
         this->ctx_info[this->tid_count].graph_pos_smallest = GRAPH_START; //for call trace
         this->ctx_info[this->tid_count].waiting = 0x0; //for call trace
 
+        /* clear loop structures */
+        unsigned graph_pos;
+        graph_pos = this->ctx_info[this->tid_count].graph_pos;
+        this->ctx_info[this->tid_count].loop_start[graph_pos] = NO_LOOP;
+
         this->ctx_info[this->tid_count].tid = ctx_info.thread_id;
         //update lookup table
         this->tids[ctx_info.thread_id] = this->tid_count;
@@ -2269,10 +2370,15 @@ int taint_x86::load_mem_from_file(char* path)
 
 int taint_x86::load_instr_from_file(char* path)
 {
-    d_print(3, "Loading instr file: %s\n", path);
+    d_print(1, "Loading instr file: %s\n", path);
     this->instr_file = fopen(path, "rb");
+    if(this->instr_file == 0x0)
+    {
+        d_print(1, "Error opening instr file: %s, error: 0x%08x\n", path, errno);
+        exit(-1);
+    }
 
-    d_print(3, "Done\n");
+    d_print(1, "Done\n");
 
     return 0x0;
 }
@@ -10868,7 +10974,7 @@ int taint_x86::r_jmp_rel_8(BYTE_t* instr_ptr)
     if(this->started && !this->finished)
     {
         cur_ctx->target = target_2.get_DWORD();
-        this->test_jmp(cur_ctx);
+        this->handle_jmp(cur_ctx);
     }
 
     return 0x0;
@@ -10896,7 +11002,7 @@ int taint_x86::r_jmp_rel_16_32(BYTE_t* instr_ptr)
     if(this->started && !this->finished)
     {
         cur_ctx->target = target.get_DWORD();
-        this->test_jmp(cur_ctx);
+        this->handle_jmp(cur_ctx);
     }
 
     return 0x0;
@@ -10962,7 +11068,7 @@ int taint_x86::r_jmp_rm_16_32(BYTE_t* instr_ptr)
     if(this->started && !this->finished)
     {
         cur_ctx->target = target.get_DWORD();
-        this->test_jmp(cur_ctx);
+        this->handle_jmp(cur_ctx);
     }
 
     return 0x0;
