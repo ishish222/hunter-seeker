@@ -563,6 +563,11 @@ int taint_x86::handle_ret_surface(CONTEXT_INFO* info)
 
 int taint_x86::test_jmp(CONTEXT_INFO* info)
 {
+
+#ifndef ANALYZE_JUMPS
+    return 0x0;
+#endif
+
     SYMBOL* s;
     char out_line[MAX_NAME];
     char* func_name;
@@ -10828,8 +10833,10 @@ int taint_x86::r_call_rel(BYTE_t* instr_ptr)
 int taint_x86::r_jmp_rel_8(BYTE_t* instr_ptr)
 {
     DWORD_t ret_addr;
-    DWORD_t target, target_2;
-    DWORD disp32_reint, *disp32p;
+    BYTE_t target;
+    DWORD_t target_2;
+    char disp8_reint, *disp8p;
+
     CONTEXT_INFO* cur_ctx;
     cur_ctx = &this->ctx_info[this->tids[this->cur_tid]];
 
@@ -10838,16 +10845,18 @@ int taint_x86::r_jmp_rel_8(BYTE_t* instr_ptr)
     ret_addr += 0x1;
 
     target.from_mem(instr_ptr + this->current_instr_length);
-    disp32_reint = target.get_DWORD();
-    disp32p = (signed int*)&(disp32_reint);
-    target_2 = ret_addr + *disp32p; //signed displacement & operand size
+    disp8_reint = target.get_BYTE();
+    disp8p = (char*)&(disp8_reint);
+    target_2 = ret_addr + *disp8p; //signed displacement & operand size
+
+    d_print(2, "ret_addr: 0x%08x, target: 0x%08x, target2: 0x%08x\n", ret_addr.get_DWORD(), target.get_BYTE(), target_2.get_DWORD());
 
     if(this->started && !this->finished)
     {
-        this->cur_info->target = target_2.get_DWORD();
+        cur_ctx->target = target_2.get_DWORD();
+        this->test_jmp(cur_ctx);
     }
 
-    this->test_jmp(cur_ctx);
     return 0x0;
 }
 
@@ -10862,12 +10871,7 @@ int taint_x86::r_jmp_rel_16_32(BYTE_t* instr_ptr)
     target.from_mem(instr_ptr + this->current_instr_length);
     ret_addr = this->reg_restore_32(EIP);
     ret_addr += 0x5;
-
-    //this->handle_call(this->cur_info, target.get_DWORD(), ret_addr.get_DWORD());
-    if(this->started && !this->finished)
-    {
-        this->cur_info->target = target.get_DWORD();
-    }
+    target += ret_addr;
 
     a_push_32(ret_addr);
     
@@ -10875,35 +10879,78 @@ int taint_x86::r_jmp_rel_16_32(BYTE_t* instr_ptr)
     this->reg_store_32(EIP, target);
     this->current_instr_is_jump = 0x1;
 
-    this->test_jmp(cur_ctx);
+    if(this->started && !this->finished)
+    {
+        cur_ctx->target = target.get_DWORD();
+        this->test_jmp(cur_ctx);
+    }
+
     return 0x0;
 }
 
 int taint_x86::r_jmp_rm_16_32(BYTE_t* instr_ptr)
 {
+    modrm_ptr rm, r;
+    WORD_t src_16;
+    DWORD_t src_32;
+
+    this->a_decode_modrm(instr_ptr +1, &r, &rm);
+
+    switch(rm.region)
+    {
+        case (MODRM_REG):
+            switch(rm.size)
+            {
+                case MODRM_SIZE_16:
+                    this->reg_propagation_op_r_16(rm.offset);
+                    src_16 = this->reg_restore_16(rm.offset);
+                    break;
+                case MODRM_SIZE_32:
+                    this->reg_propagation_op_r_32(rm.offset);
+                    src_32 = this->reg_restore_32(rm.offset);
+                    break;
+            }
+            break;
+        case (MODRM_MEM):
+            switch(rm.size)
+            {
+                case MODRM_SIZE_16:
+                    this->reg_propagation_op_m_16(rm.offset);
+                    this->restore_16(rm.offset, src_16);
+                    break;
+                case MODRM_SIZE_32:
+                    this->reg_propagation_op_m_32(rm.offset);
+                    this->restore_32(rm.offset, src_32);
+                    break;
+            }
+            break;
+    }
+
     DWORD_t ret_addr;
     DWORD_t target;
-    char out_line[MAX_NAME];
+    target = 0x0 + src_16.get_WORD() + src_32.get_DWORD();
+
     CONTEXT_INFO* cur_ctx;
     cur_ctx = &this->ctx_info[this->tids[this->cur_tid]];
 
-    target.from_mem(instr_ptr + this->current_instr_length);
     ret_addr = this->reg_restore_32(EIP);
     ret_addr += 0x5;
-
-    //this->handle_call(this->cur_info, target.get_DWORD(), ret_addr.get_DWORD());
-    if(this->started && !this->finished)
-    {
-        this->cur_info->target = target.get_DWORD();
-    }
 
     a_push_32(ret_addr);
     
     d_print(2, "ret_addr: 0x%08x, target: 0x%08x\n", ret_addr.get_DWORD(), target.get_DWORD());
     this->reg_store_32(EIP, target);
+
+    this->attach_current_propagation_r_32(EIP);
+
     this->current_instr_is_jump = 0x1;
 
-    this->test_jmp(cur_ctx);
+    if(this->started && !this->finished)
+    {
+        cur_ctx->target = target.get_DWORD();
+        this->test_jmp(cur_ctx);
+    }
+
     return 0x0;
 }
 

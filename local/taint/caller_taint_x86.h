@@ -29,6 +29,9 @@ Change of endiannes takes place when reading and writing to memory (to_mem, from
 #include <sys/queue.h>
 #include <errno.h>
 
+// compile-time options 
+#define ANALYZE_JUMPS 1
+
 #define MAX_NAME 0x100
 #define MAX_SYMBOL_NAME 0x50
 #define MAX_SYMBOL_COUNT 0x1000000

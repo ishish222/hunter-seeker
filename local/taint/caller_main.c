@@ -740,7 +740,6 @@ int main(int argc, char** argv)
     taint_eng.t8[bp_idx].count = 992877; taint_eng.t8[bp_idx++].watched = &taint_eng.ctx_info[0].registers[EDI];
     taint_eng.t8[bp_idx].count = 942799; taint_eng.t8[bp_idx++].watched = &taint_eng.ctx_info[0].registers[EAX];
 */
-    taint_eng.t8[bp_idx].count = 98336; taint_eng.t8[bp_idx++].watched = &taint_eng.ctx_info[0].registers[EDX];
 
     bp_idx = 0x0;
     
