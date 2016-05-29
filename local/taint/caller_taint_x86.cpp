@@ -360,7 +360,7 @@ int taint_x86::add_wanted(char* str)
     return 0x0;
 }
 
-int taint_x86::add_fence(OFFSET entry, OFFSET start, OFFSET end)
+int taint_x86::add_fence(OFFSET entry, OFFSET start, OFFSET limit)
 {
     if(this->loop_fences_count >= MAX_LOOP_FENCES)
     {
@@ -370,9 +370,9 @@ int taint_x86::add_fence(OFFSET entry, OFFSET start, OFFSET end)
 
     this->loop_fences[this->loop_fences_count].entry = entry;
     this->loop_fences[this->loop_fences_count].start = start;
-    this->loop_fences[this->loop_fences_count].end = end;
+    this->loop_fences[this->loop_fences_count].limit = limit;
     this->loop_fences_count++;
-    d_print(1, "Fence: 0x%08x - 0x%08x - 0x%08x\n", entry, start, end);
+    d_print(1, "Fence: 0x%08x - 0x%08x - 0x%08x\n", entry, start, limit);
 
     return 0x0;
 }
@@ -599,7 +599,6 @@ int taint_x86::handle_jmp(CONTEXT_INFO* info)
     OFFSET target = info->target;
     OFFSET next = info->next;
 
-    check_loop_2(info);
 
     unsigned color;
     s = this->get_symbol(target);
@@ -668,6 +667,8 @@ int taint_x86::enter_loop(CONTEXT_INFO* info)
         print_empty_call(info, out_line, colors[CODE_BLACK]);
     }
 
+    info->loop_pos[cur_graph_pos]++;
+
 }
 
 int taint_x86::exit_loop(CONTEXT_INFO* info)
@@ -682,28 +683,81 @@ int taint_x86::exit_loop(CONTEXT_INFO* info)
 //        print_ret(info);
 //        this->cur_info->graph_pos--;
     }
+    info->loop_pos[cur_graph_pos]--;
+    info->cur_fence[cur_graph_pos] = 0x0;
 }
 
 //int taint_x86::check_loop(CONTEXT_INFO* info, OFFSET offset, OFFSET target)
 int taint_x86::check_loop_2(CONTEXT_INFO* info)
 {
     OFFSET offset;
-    unsigned cur_fence;
+    unsigned cur_fence_idx;
+    LOOP_FENCE* cur_fence;
 
     offset = this->current_eip;
+    cur_fence = info->cur_fence[info->graph_pos];
+    d_print(1, "Fence for graph pos: 0x%08x: 0x%08x\n", info->graph_pos, cur_fence);
 
-    for(cur_fence = 0x0; cur_fence < MAX_LOOP_FENCES; cur_fence++)
+    if(cur_fence != 0x0)
     {
-        if(this->loop_fences[cur_fence].entry != info->entry[info->graph_pos])
-            return 0x0;
+        /* in loop */
+        if(cur_fence->collecting)
+        {
+            /* still collecting looped addrs */
+            cur_fence->looped_addr[cur_fence->cur_looped_addr] = offset;
+            cur_fence->cur_looped_addr++;
 
-        if(this->loop_fences[cur_fence].start == offset)
-            enter_loop(info);
+            if(cur_fence->cur_looped_addr == cur_fence->limit)
+            {
+                /* collecting finished */
+                cur_fence->cur_looped_addr = 0x0;
+                cur_fence->collecting = 0x0;
 
-        if(this->loop_fences[cur_fence].end == offset)
-            exit_loop(info);
+                d_print(1, "Collected addrs:\n");
+
+                unsigned i;
+                for(i=0x0; i<cur_fence->limit; i++)
+                {
+                    d_print(1, "0x%08x\n", cur_fence->looped_addr[i]);
+                }
+
+            }
+        } 
+        else
+        {
+            /* collecting is finished, just track if we are still inside */
+            if(cur_fence->looped_addr[cur_fence->cur_looped_addr] != offset) exit_loop(info);
+            else 
+            {
+                cur_fence->cur_looped_addr++;
+                cur_fence->cur_looped_addr %= cur_fence->limit;
+            }
+        }
+
     }
+    else
+    {
+        /* we are not inside loop */
 
+        for(cur_fence_idx = 0x0; cur_fence_idx < MAX_LOOP_FENCES; cur_fence_idx++)
+        {
+            if(this->loop_fences[cur_fence_idx].entry != info->entry[info->graph_pos])
+                continue;
+    
+            if(this->loop_fences[cur_fence_idx].start == offset)
+            {
+                /* we enter loop */ 
+                cur_fence = &this->loop_fences[cur_fence_idx];
+                info->cur_fence[info->graph_pos] = cur_fence;
+                cur_fence->looped_addr[cur_fence->cur_looped_addr] = offset;
+                cur_fence->cur_looped_addr++;
+                cur_fence->collecting = 0x1;
+                enter_loop(info);
+            }
+    
+        }
+
+    }
     return 0x0;
 }
 
@@ -1009,6 +1063,13 @@ int taint_x86::handle_ret(CONTEXT_INFO* cur_ctx, OFFSET eip)
 
     if(cur_ctx->graph_pos == 0x0) return -1;
         
+    /* close loops at this level if open */
+
+    for(i; i<cur_ctx->loop_pos[cur_ctx->graph_pos]; i++)
+    {
+        exit_loop(cur_ctx);
+    }
+
         for(i = cur_ctx->graph_pos-1; i >= cur_ctx->graph_pos_smallest; i--)
         {
             if(abs(cur_ctx->rets[i] - eip) < 0x5)
