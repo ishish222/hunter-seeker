@@ -51,7 +51,7 @@ Change of endiannes takes place when reading and writing to memory (to_mem, from
 #define MAX_ 0x10
 #define MAX_BLACKLIST 0x50
 #define MAX_WANTED 0x100
-#define MAX_LOOP_FENCES 0x100
+#define MAX_LOOP_FENCES 0x10
 #define MAX_LOOP_ADDR 0x50
 
 // deprecated
@@ -2176,8 +2176,8 @@ typedef struct LOOP_FENCE_
     OFFSET start;
     OFFSET limit;
 
-    OFFSET looped_addr[MAX_LOOP_ADDR];
     unsigned cur_looped_addr;
+    OFFSET looped_addr[MAX_LOOP_ADDR];
     char collecting;
 
 } LOOP_FENCE;

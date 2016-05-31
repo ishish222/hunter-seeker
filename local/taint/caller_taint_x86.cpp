@@ -376,6 +376,8 @@ int taint_x86::add_fence(OFFSET entry, OFFSET start, OFFSET limit)
     this->loop_fences[this->loop_fences_count].entry = entry;
     this->loop_fences[this->loop_fences_count].start = start;
     this->loop_fences[this->loop_fences_count].limit = limit;
+    this->loop_fences[this->loop_fences_count].cur_looped_addr = 0x0;
+    this->loop_fences[this->loop_fences_count].collecting = 0x0;
     this->loop_fences_count++;
     d_print(1, "Fence: 0x%08x - 0x%08x - 0x%08x\n", entry, start, limit);
 
@@ -614,7 +616,7 @@ int taint_x86::enter_loop(CONTEXT_INFO* info)
     {
         d_print(1, "Entering loop\n");
         sprintf(out_line, "[loop]");
-        print_empty_call(info, out_line, colors[CODE_BLACK]);
+        print_call(info, out_line, colors[CODE_BLACK]);
     }
 
     info->loop_pos[cur_call_level]++;
@@ -632,6 +634,7 @@ int taint_x86::exit_loop(CONTEXT_INFO* info)
     }
     info->loop_pos[cur_call_level]--;
     info->cur_fence[cur_call_level] = 0x0;
+    print_ret(info);
 }
 
 int taint_x86::check_loop_2(CONTEXT_INFO* info)
@@ -662,11 +665,11 @@ int taint_x86::check_loop_2(CONTEXT_INFO* info)
             cur_fence->looped_addr[cur_fence->cur_looped_addr] = offset;
             cur_fence->cur_looped_addr++;
 
-            if(cur_fence->cur_looped_addr == cur_fence->limit)
+            if(cur_fence->cur_looped_addr >= cur_fence->limit)
             {
                 /* collecting finished */
                 cur_fence->cur_looped_addr = 0x0;
-                cur_fence->collecting = 0x0;
+                cur_fence->collecting = 0x2;
 
                 d_print(1, "Collected addrs:\n");
 
@@ -677,7 +680,7 @@ int taint_x86::check_loop_2(CONTEXT_INFO* info)
                 }
 
             /* output event to graph */
-            return 1;
+            return 0;
             }
         } 
         else
@@ -1105,6 +1108,7 @@ int taint_x86::dive(CONTEXT_INFO* info, OFFSET target, OFFSET next)
     info->rets[info->call_level] = next;
     info->call_level++;
     info->entry[info->call_level] = target;
+    info->cur_fence[info->call_level] = 0x0;
 
     /* prepare loop detection structures */
     info->call_src_register_idx[info->call_level] = 0x0;
