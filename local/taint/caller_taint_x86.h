@@ -31,7 +31,7 @@ Change of endiannes takes place when reading and writing to memory (to_mem, from
 
 // compile-time options and parameters
 #define ANALYZE_JUMPS 
-//#define ANALYZE_LOOPS 
+#define ANALYZE_LOOPS 
 #define NO_LOOP 0xffffffff
 
 #define MAX_NAME 0x100

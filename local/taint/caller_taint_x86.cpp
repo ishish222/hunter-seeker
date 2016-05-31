@@ -609,6 +609,9 @@ int taint_x86::handle_jmp(CONTEXT_INFO* info)
 /* loop routines */ 
 int taint_x86::enter_loop(CONTEXT_INFO* info)
 {
+#ifndef ANALYZE_LOOPS
+    return 0;
+#endif
     char out_line[MAX_NAME];
     unsigned cur_call_level;
     cur_call_level = this->cur_info->call_level;
@@ -625,6 +628,9 @@ int taint_x86::enter_loop(CONTEXT_INFO* info)
 
 int taint_x86::exit_loop(CONTEXT_INFO* info)
 {
+#ifndef ANALYZE_LOOPS
+    return 0;
+#endif
     unsigned cur_call_level;
     cur_call_level = this->cur_info->call_level;
 
@@ -1180,12 +1186,10 @@ int taint_x86::handle_ret(CONTEXT_INFO* cur_ctx, OFFSET eip)
         
     /* close loops at this level if open */
 
-    /*
     for(i; i<cur_ctx->loop_pos[cur_ctx->call_level]; i++)
     {
         exit_loop(cur_ctx);
     }
-    */
 
         for(i = cur_ctx->call_level-1; i >= cur_ctx->call_level_smallest; i--)
         {
@@ -1981,33 +1985,46 @@ int taint_x86::check_thread(CONTEXT_info ctx_info)
 
 int taint_x86::finish()
 {
-    unsigned i, j;
+    unsigned i, j, k;
     CONTEXT_INFO* cur_tid;
     char out_line[MAX_NAME];
     int diff_last, diff_first;
     unsigned open;
 
-
+    d_print(1, "Closing %d tids\n", this->tid_count);
     for(i=0x0; i<this->tid_count; i++)
     {
         cur_tid = &this->ctx_info[i];
+        d_print(1, "Closing 0x%08x\n", cur_tid->tid);
         open = cur_tid->call_level - cur_tid->call_level_smallest;
         d_print(1, "[0x%08x] Left with %d nodes open\n", cur_tid->tid, open);
         sprintf(out_line, "<!-- test -->\n");
         fwrite(out_line, strlen(out_line), 0x1, cur_tid->graph_file);
 
-        d_print(1, "[0x%08x] First: %d - %d = %d\n", GRAPH_START, cur_tid->call_level_smallest, abs(GRAPH_START - cur_tid->call_level_smallest));
+        d_print(1, "[0x%08x] First: %d - %d = %d\n", cur_tid->tid, cur_tid->call_level_smallest, abs(GRAPH_START - cur_tid->call_level_smallest));
 
         diff_first = abs(GRAPH_START - cur_tid->call_level_smallest);
         diff_last = open;
 
         d_print(1, "[0x%08x] Diff_last: %d\n", cur_tid->tid, diff_last);
-            for(j=0x0; j < diff_last; j++)
+        for(j=0x0; j < diff_last; j++)
+        {
+#ifdef ANALYZE_LOOPS
+            for(k; k<cur_tid->loop_pos[cur_tid->call_level]; k++)
             {
-                //print_ret(cur_tid->graph_file);
-                cur_tid->call_level--;
-                print_ret(cur_tid);
+                exit_loop(cur_tid);
             }
+#endif
+            print_ret(cur_tid);
+            cur_tid->call_level--;
+        }
+
+#ifdef ANALYZE_LOOPS
+        for(k; k<cur_tid->loop_pos[cur_tid->call_level]; k++)
+        {
+            exit_loop(cur_tid);
+        }
+#endif
 
         sprintf(out_line, "</node></map>\n");
         fwrite(out_line, strlen(out_line), 0x1, cur_tid->graph_file);
