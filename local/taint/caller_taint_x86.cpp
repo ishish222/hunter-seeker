@@ -13,6 +13,11 @@
 #define UPDATE_THREAD
 
 #define GRAPH_OFF 11
+#define CODE_BLACK  0x0
+#define CODE_BLUE   0x1
+#define CODE_GREEN  0x2
+#define CODE_RED    0x3
+
 
 #define GET_MOD(x) (x >> MOD_OFF ) & MOD_MASK
 #define GET_RM(x)  (x >> RM_OFF )  & RM_MASK
@@ -471,113 +476,69 @@ LIB_INFO* taint_x86::get_lib(OFFSET offset)
 }
 
 
-/* graph routines */
+/* graph output routines */
 
-//void print_call(FILE* f, char* line, const char* color)
-void print_call(CONTEXT_INFO* cur_ctx, char* line, const char* color)
+void taint_x86::print_call(CONTEXT_INFO* cur_ctx, char* line, const char* color)
 {
     char out_line[MAX_NAME];
     char working_line[MAX_NAME];
     FILE* f = cur_ctx->graph_file;   
- 
     unsigned i;
 
     strcpy(out_line, "");
 
-    for(i = GRAPH_START-GRAPH_OFF; i< cur_ctx->graph_pos; i++)
+    for(i = GRAPH_START-GRAPH_OFF; i< cur_ctx->call_level; i++)
         strcat(out_line, " ");
 
+    /*
+    sprintf(working_line, "<node COLOR=\"%s\" \
+                                CREATED=\"6666666666666\" \
+                                FOLDED=\"true\" \
+                                ID=\"ID_1208439975\" \
+                                MODIFIED=\"6666666666666\" \
+                                TEXT=\"%s\">\n", color, line);
+    */
     sprintf(working_line, "<node COLOR=\"%s\" CREATED=\"6666666666666\" FOLDED=\"true\" ID=\"ID_1208439975\" MODIFIED=\"6666666666666\" TEXT=\"%s\">\n", color, line);
-    //sprintf(working_line, "<node COLOR=\"%s\" CREATED=\"6666666666666\" FOLDED=\"true\" ID=\"ID_1208439975\" MODIFIED=\"6666666666666\" TEXT=\"a\">\n", color, line);
-    strcat(out_line, working_line);
 
+    strcat(out_line, working_line);
     fwrite(out_line, strlen(out_line), 0x1, f);
 }
 
-//void print_empty_call(FILE* f, char* line, const char* color)
-void print_empty_call(CONTEXT_INFO* cur_ctx, char* line, const char* color)
+void taint_x86::print_empty_call(CONTEXT_INFO* cur_ctx, char* line, const char* color)
 {
     unsigned i;
     FILE* f = cur_ctx->graph_file;   
-
-
     char out_line[MAX_NAME];
     char working_line[MAX_NAME];
     
     strcpy(out_line, "");
     
-    for(i = GRAPH_START-GRAPH_OFF; i< cur_ctx->graph_pos; i++)
+    for(i = GRAPH_START-GRAPH_OFF; i< cur_ctx->call_level; i++)
         strcat(out_line, " ");
     
     sprintf(working_line, "<node COLOR=\"%s\" CREATED=\"6666666666666\" FOLDED=\"true\" ID=\"ID_1208439975\" MODIFIED=\"6666666666666\" TEXT=\"%s\"></node>\n", color, line);
-    //sprintf(working_line, "<node COLOR=\"%s\" CREATED=\"6666666666666\" FOLDED=\"true\" ID=\"ID_1208439975\" MODIFIED=\"6666666666666\" TEXT=\"a\"></node>\n", color, line);
-    strcat(out_line, working_line);
 
+    strcat(out_line, working_line);
     fwrite(out_line, strlen(out_line), 0x1, f);
 }
 
-//void print_ret(FILE* f)
-void print_ret(CONTEXT_INFO* cur_ctx)
+void taint_x86::print_ret(CONTEXT_INFO* cur_ctx)
 {
     FILE* f = cur_ctx->graph_file;   
     char out_line[MAX_NAME];
-
     unsigned i;
 
     strcpy(out_line, "");
 
-    for(i = GRAPH_START-GRAPH_OFF; i< cur_ctx->graph_pos; i++)
+    for(i = GRAPH_START-GRAPH_OFF; i< cur_ctx->call_level; i++)
         strcat(out_line, " ");
 
 
     strcat(out_line, "</node>\n");
     fwrite(out_line, strlen(out_line), 0x1, f);
 }
-/*
-int taint_x86::handle_call_ignore(CONTEXT_INFO* info, OFFSET target, OFFSET next)
-{
 
-    return 0x0;
-}
-
-int taint_x86::handle_call_waiting(CONTEXT_INFO* info, OFFSET target, OFFSET next)
-{
-    //wypis
-    //waiting
-    return 0x0;
-}
-
-int taint_x86::handle_call_dive(CONTEXT_INFO* info, OFFSET target, OFFSET next)
-{
-    //pos
-    //wypis
-    return 0x0;
-}
-
-int taint_x86::handle_ret_ignore(CONTEXT_INFO* info)
-{
-    //nothing
-    return 0x0;
-}
-
-int taint_x86::handle_ret_under(CONTEXT_INFO* info)
-{
-    //pos
-    //smallest
-    //wypis
-    return 0x0;
-}
-
-int taint_x86::handle_ret_surface(CONTEXT_INFO* info)
-{
-    //pos
-    //wypis
-    return 0x0;
-}
-
-
-*/
-
+/* precise jmp analysis */
 int taint_x86::handle_jmp(CONTEXT_INFO* info)
 {
 
@@ -590,19 +551,11 @@ int taint_x86::handle_jmp(CONTEXT_INFO* info)
     char* func_name;
     DWORD_t current;
     DWORD_t waiting;
-
-#define CODE_BLACK  0x0
-#define CODE_BLUE   0x1
-#define CODE_GREEN  0x2
-#define CODE_RED    0x3
-
     OFFSET target = info->target;
     OFFSET next = info->next;
 
-
     unsigned color;
     s = this->get_symbol(target);
-
 
     if(info->waiting != 0x0)
     {
@@ -615,7 +568,7 @@ int taint_x86::handle_jmp(CONTEXT_INFO* info)
             if(this->enumerate) sprintf(out_line, "[x] (%d)0x%08x jmp %s!%s", this->current_instr_count ,this->current_eip, s->lib_name, s->func_name);
             else sprintf(out_line, "[x] 0x%08x jmp %s!%s", this->current_eip, s->lib_name, s->func_name);
             print_call(info, out_line, colors[CODE_RED]);
-            print_ret(info);
+            this->print_ret(info);
             print_ret(info);
         }
         else
@@ -651,55 +604,57 @@ int taint_x86::handle_jmp(CONTEXT_INFO* info)
     return 0x0;
 }
 
+/* loop routines */ 
 int taint_x86::enter_loop(CONTEXT_INFO* info)
 {
     char out_line[MAX_NAME];
-    unsigned cur_graph_pos;
-    cur_graph_pos = this->cur_info->graph_pos;
+    unsigned cur_call_level;
+    cur_call_level = this->cur_info->call_level;
 
-//    if(!(this->cur_info->in_loop[cur_graph_pos]))
     {
         d_print(1, "Entering loop\n");
-//        this->cur_info->in_loop[cur_graph_pos] = 0x1;
         sprintf(out_line, "[loop]");
-//        print_call(info, out_line, colors[CODE_BLACK]);
-//        this->cur_info->graph_pos++;
         print_empty_call(info, out_line, colors[CODE_BLACK]);
     }
 
-    info->loop_pos[cur_graph_pos]++;
+    info->loop_pos[cur_call_level]++;
 
 }
 
 int taint_x86::exit_loop(CONTEXT_INFO* info)
 {
-    unsigned cur_graph_pos;
-    cur_graph_pos = this->cur_info->graph_pos;
+    unsigned cur_call_level;
+    cur_call_level = this->cur_info->call_level;
 
-//    if(this->cur_info->in_loop[cur_graph_pos])
     {
         d_print(1, "Exiting loop\n");
-        this->cur_info->loop_start[cur_graph_pos] = NO_LOOP;
-//        print_ret(info);
-//        this->cur_info->graph_pos--;
+        this->cur_info->loop_start[cur_call_level] = NO_LOOP;
     }
-    info->loop_pos[cur_graph_pos]--;
-    info->cur_fence[cur_graph_pos] = 0x0;
+    info->loop_pos[cur_call_level]--;
+    info->cur_fence[cur_call_level] = 0x0;
 }
 
-//int taint_x86::check_loop(CONTEXT_INFO* info, OFFSET offset, OFFSET target)
 int taint_x86::check_loop_2(CONTEXT_INFO* info)
 {
+#ifndef ANALYZE_LOOPS
+    return 1;
+#endif
+
+
     OFFSET offset;
     unsigned cur_fence_idx;
     LOOP_FENCE* cur_fence;
 
     offset = this->current_eip;
-    cur_fence = info->cur_fence[info->graph_pos];
-    d_print(1, "Fence for graph pos: 0x%08x: 0x%08x\n", info->graph_pos, cur_fence);
+    cur_fence = info->cur_fence[info->call_level];
+    d_print(1, "Fence for graph pos: %d: 0x%08x\n", info->call_level, cur_fence);
 
     if(cur_fence != 0x0)
     {
+
+        d_print(1, "---\nActive fence: \nEntry: \t0x%08x\nStart: \t0x%08x\nLimit: \t%d\n", cur_fence->entry, cur_fence->start, cur_fence->limit);
+        d_print(1, "Collecting: \t0x%08x\nCurrent looped addr: \t%d\n---\n", cur_fence->collecting, cur_fence->cur_looped_addr);
+
         /* in loop */
         if(cur_fence->collecting)
         {
@@ -721,16 +676,25 @@ int taint_x86::check_loop_2(CONTEXT_INFO* info)
                     d_print(1, "0x%08x\n", cur_fence->looped_addr[i]);
                 }
 
+            /* output event to graph */
+            return 1;
             }
         } 
         else
         {
             /* collecting is finished, just track if we are still inside */
-            if(cur_fence->looped_addr[cur_fence->cur_looped_addr] != offset) exit_loop(info);
+            if(cur_fence->looped_addr[cur_fence->cur_looped_addr] != offset)
+            {
+                /* we left loop */
+                exit_loop(info);
+                return 1;
+            }
             else 
             {
+                /* we are traversing collected loop */
                 cur_fence->cur_looped_addr++;
                 cur_fence->cur_looped_addr %= cur_fence->limit;
+                return 0;
             }
         }
 
@@ -741,14 +705,15 @@ int taint_x86::check_loop_2(CONTEXT_INFO* info)
 
         for(cur_fence_idx = 0x0; cur_fence_idx < MAX_LOOP_FENCES; cur_fence_idx++)
         {
-            if(this->loop_fences[cur_fence_idx].entry != info->entry[info->graph_pos])
+            if(this->loop_fences[cur_fence_idx].entry != info->entry[info->call_level])
                 continue;
     
             if(this->loop_fences[cur_fence_idx].start == offset)
             {
+                d_print(1, "Matched fence for: 0x%08x\n", offset);
                 /* we enter loop */ 
                 cur_fence = &this->loop_fences[cur_fence_idx];
-                info->cur_fence[info->graph_pos] = cur_fence;
+                info->cur_fence[info->call_level] = &this->loop_fences[cur_fence_idx];
                 cur_fence->looped_addr[cur_fence->cur_looped_addr] = offset;
                 cur_fence->cur_looped_addr++;
                 cur_fence->collecting = 0x1;
@@ -756,6 +721,7 @@ int taint_x86::check_loop_2(CONTEXT_INFO* info)
             }
     
         }
+        return 1;
 
     }
     return 0x0;
@@ -766,7 +732,7 @@ int taint_x86::check_loop(CONTEXT_INFO* info)
 {
     unsigned cur_idx;
     unsigned cur_pos;
-    unsigned graph_pos;
+    unsigned call_level;
     unsigned loop_idx, next_loop_idx;
     OFFSET offset;
     char got_loop;
@@ -774,20 +740,20 @@ int taint_x86::check_loop(CONTEXT_INFO* info)
 
     offset = this->current_eip;
 
-    graph_pos = this->cur_info->graph_pos;
-    cur_pos = this->cur_info->call_src_register_idx[graph_pos];
+    call_level = this->cur_info->call_level;
+    cur_pos = this->cur_info->call_src_register_idx[call_level];
 
     d_print(1, "Checking address for loop: 0x%08x\n", offset);
-    d_print(1, "Loop register @ level: %d:\n", graph_pos);
+    d_print(1, "Loop register @ level: %d:\n", call_level);
 
-    loop_idx = this->cur_info->loop_start[graph_pos];
+    loop_idx = this->cur_info->loop_start[call_level];
 
     if(loop_idx != NO_LOOP) 
     {
         /* we are currently in a loop */
         next_loop_idx = (loop_idx +1) % MAX_LOOP_ADDRS;
 
-        if(this->cur_info->call_src_register[graph_pos][next_loop_idx][0] == offset)
+        if(this->cur_info->call_src_register[call_level][next_loop_idx][0] == offset)
         {
             /* continue loop - do nothing (do not exit, register event) */  
             return 0x0;
@@ -804,12 +770,12 @@ int taint_x86::check_loop(CONTEXT_INFO* info)
         /* we are currently not in a loop */
         for(cur_idx = cur_pos; cur_idx != ((cur_pos+1) % MAX_LOOP_ADDRS);)
         {
-    //        if((this->cur_info->call_src_register[graph_pos][cur_idx][0] == offset) && (this->cur_info->call_src_register[graph_pos][cur_idx][1] == target))
-            if((this->cur_info->call_src_register[graph_pos][cur_idx][0] == offset))
+    //        if((this->cur_info->call_src_register[call_level][cur_idx][0] == offset) && (this->cur_info->call_src_register[call_level][cur_idx][1] == target))
+            if((this->cur_info->call_src_register[call_level][cur_idx][0] == offset))
             {
-    //            d_print(1, "0x%08x -> 0x%08x [x]\n", this->cur_info->call_src_register[graph_pos][cur_idx][0], this->cur_info->call_src_register[graph_pos][cur_idx][1]);
+    //            d_print(1, "0x%08x -> 0x%08x [x]\n", this->cur_info->call_src_register[call_level][cur_idx][0], this->cur_info->call_src_register[call_level][cur_idx][1]);
                 /* detected first repetition, register it and enter loop */
-                this->cur_info->loop_start[graph_pos] = cur_idx;
+                this->cur_info->loop_start[call_level] = cur_idx;
                 enter_loop(info);
                 got_loop = 1;
                 break;
@@ -817,7 +783,7 @@ int taint_x86::check_loop(CONTEXT_INFO* info)
             else 
             {
                 /* we did not detect repetition, we continue without checking */
-                d_print(1, "checked 0x%08x -> 0x%08x for loop\n", this->cur_info->call_src_register[graph_pos][cur_idx][0], this->cur_info->call_src_register[graph_pos][cur_idx][1]);
+                d_print(1, "checked 0x%08x -> 0x%08x for loop\n", this->cur_info->call_src_register[call_level][cur_idx][0], this->cur_info->call_src_register[call_level][cur_idx][1]);
             }
     
             cur_idx --;
@@ -828,10 +794,10 @@ int taint_x86::check_loop(CONTEXT_INFO* info)
 
     /* register current event for loop next check */
 
-    this->cur_info->call_src_register_idx[graph_pos]++;
-    this->cur_info->call_src_register_idx[graph_pos] %= MAX_LOOP_ADDRS;
-    this->cur_info->call_src_register[graph_pos][this->cur_info->call_src_register_idx[graph_pos]][0] = offset;
-//    this->cur_info->call_src_register[graph_pos][this->cur_info->call_src_register_idx[graph_pos]][1] = target;
+    this->cur_info->call_src_register_idx[call_level]++;
+    this->cur_info->call_src_register_idx[call_level] %= MAX_LOOP_ADDRS;
+    this->cur_info->call_src_register[call_level][this->cur_info->call_src_register_idx[call_level]][0] = offset;
+//    this->cur_info->call_src_register[call_level][this->cur_info->call_src_register_idx[call_level]][1] = target;
 
 /*
     d_print(1, "Loop register:\n");
@@ -857,6 +823,8 @@ int taint_x86::check_loop(CONTEXT_INFO* info)
     return 0x0;
 }
 
+/* handling call, diving, surfacing, outputting graph content */
+
 int taint_x86::handle_call(CONTEXT_INFO* info)
 {
     SYMBOL* s;
@@ -864,41 +832,221 @@ int taint_x86::handle_call(CONTEXT_INFO* info)
     char* func_name;
     DWORD_t current;
     DWORD_t waiting;
-
-#define CODE_BLACK  0x0
-#define CODE_BLUE   0x1
-#define CODE_GREEN  0x2
-#define CODE_RED    0x3
-
     OFFSET target = info->target;
     OFFSET next = info->next;
+
+    #define DECISION_NO_EMIT        0x0
+    #define DECISION_EMIT           0x1
+    #define DECISION_EMIT_NESTED    0x2
+
+    #define DECISION_NO_DIVE        0x0
+    #define DECISION_DIVE           0x1
+
+    #define DECISION_LAYOUT_REGULAR 0x0
+    #define DECISION_LAYOUT_SYMBOL  0x1
+    #define DECISION_LAYOUT_SYMBOL_WANTED  0x2
+    #define DECISION_LAYOUT_4       0x3
+    #define DECISION_LAYOUT_5       0x4
+
+    char decision_emit;
+    char decision_dive;
+    char decision_template;
     
-
-    check_loop_2(info);
-
     unsigned color;
     s = this->get_symbol(target);
-/*
-    if(s)
-    {
-        d_print(1, "%s\n", s->func_name);
-        if(s->wanted) d_print(1, "Wanted");
-        else d_print(1, "Not wanted");
-    }
-*/
     unsigned i;
 
     d_print(2, "Call: 0x%08x\n", this->reg_restore_32(EIP).get_DWORD());
-//    if(!this->started || this->finished) return 0x0;
 
-    /* if we are waiting for something, ignore (except wanted functions) */
-    /* we need to check ret */
+    /* decision about emission */
+
+    d_print(2, "Decision about emission\n");
     if(info->waiting != 0x0)
     {
-        /* wanted */
+        /* we are waiting for return */ 
+        d_print(2, "We are waiting for return \n");
         if((s != 0x0) && (s->wanted))
         {
+            /* wanted */
             d_print(1, "Got wanted!\n");
+            decision_emit = DECISION_EMIT_NESTED;
+        }
+        else
+        {
+            /* not wanted */
+            d_print(2, "We are waiting and we do not want\n");
+            decision_emit = DECISION_NO_EMIT;
+        }
+
+    }
+    else
+    {
+        d_print(2, "We are not waiting\n");
+
+        current = this->reg_restore_32(EIP);
+
+        if(!this->check_loop_2(info))
+        {
+            /* we are traversing known loop, do not want this, we wait for next */
+            d_print(2, "We are traversing known loop\n");
+            decision_emit = DECISION_NO_EMIT;
+        }
+        else
+        {
+            /* we are not traversing a fully known loop, we want this */
+            d_print(2, "We are not traversing known loop, we want this\n");
+            decision_emit = DECISION_EMIT;
+        }
+    }
+            
+    /* decision about diving */
+    d_print(2, "Decision about diving\n");
+    if(info->waiting != 0x0)
+    {
+        d_print(2, "We are waiting, not diving\n");
+        decision_dive = DECISION_NO_DIVE;
+    }
+    else
+    {
+        d_print(2, "We are not waiting, checking for symbol\n");
+        if(s != 0x0)
+        {
+            d_print(2, "We have symbol\n");
+            if(s->included)
+            {
+                d_print(2, "The symbol is included, we dive\n");
+                decision_dive = DECISION_DIVE;
+            }
+            else
+            {
+                d_print(2, "The symbol is not included, we do not dive\n");
+                decision_dive = DECISION_NO_DIVE;
+            }
+            
+        }
+        else
+        {
+            d_print(2, "We do not have symbol\n");
+            if(this->check_addr_blacklist(target))
+            {
+                /* target is blacklisted, we do not dive*/
+                d_print(2, "Target is blacklisted, we do not dive\n");
+                decision_dive = DECISION_NO_DIVE;
+            }
+            else
+            {
+                /* target is not blacklisted, we dive */
+                d_print(2, "Target is blacklisted, we dive\n");
+                decision_dive = DECISION_DIVE;
+            }
+        }
+    }
+
+    /* decision about layout */
+    d_print(2, "Decision about layout\n");
+
+    if(s != 0x0)
+    {
+        /* we have symbol */
+        d_print(2, "We have symbol\n");
+        if(s->wanted)
+        {
+            d_print(2, "We have wanted symbol\n");
+            decision_template = DECISION_LAYOUT_SYMBOL_WANTED;
+        }
+        else
+        {
+            d_print(2, "Symbol is not wanted\n");
+            decision_template = DECISION_LAYOUT_SYMBOL;
+        }
+    }
+    else
+    {
+        d_print(2, "We do not have symbol\n");
+        decision_template = DECISION_LAYOUT_REGULAR;
+    }
+
+    d_print(2, "Executing decisions\n");
+
+    if(decision_emit == DECISION_EMIT)
+    {
+        d_print(2, "Emitting\n");
+
+        if(decision_dive == DECISION_DIVE)
+        {
+            d_print(2, "Emitting diving\n");
+        
+            if(decision_template == DECISION_LAYOUT_SYMBOL_WANTED)
+            {
+                /* we assume we have symbol */
+                if(this->enumerate) sprintf(out_line, "[x] (%d)0x%08x call %s!%s", this->current_instr_count ,this->current_eip, s->lib_name, s->func_name);
+                else sprintf(out_line, "[x] 0x%08x call %s!%s", this->current_eip, s->lib_name, s->func_name);
+                print_call(info, out_line, colors[CODE_RED]);
+            }
+            else if(decision_template == DECISION_LAYOUT_SYMBOL)
+            {
+                /* we assume we have symbol */
+                if(this->enumerate) sprintf(out_line, "(%d)0x%08x call %s!%s", this->current_instr_count ,this->current_eip, s->lib_name, s->func_name);
+                else sprintf(out_line, "0x%08x call %s!%s", this->current_eip, s->lib_name, s->func_name);
+                print_call(info, out_line, colors[CODE_BLUE]);
+            }
+            else
+            {
+                /* regular emission with dive */
+                if(this->enumerate) sprintf(out_line, "(%d)0x%08x call 0x%08x", this->current_instr_count ,this->current_eip, target);
+                else sprintf(out_line, "0x%08x call 0x%08x", this->current_eip, target);
+                print_call(info, out_line, colors[CODE_BLACK]);
+            }
+        }
+        else
+        {
+            d_print(2, "Emitting not diving\n");
+
+            if(decision_template == DECISION_LAYOUT_SYMBOL_WANTED)
+            {
+                /* we assume we have symbol */
+                if(this->enumerate) sprintf(out_line, "[x] (%d)0x%08x call %s!%s", this->current_instr_count ,this->current_eip, s->lib_name, s->func_name);
+                else sprintf(out_line, "[x] 0x%08x call %s!%s", this->current_eip, s->lib_name, s->func_name);
+                print_empty_call(info, out_line, colors[CODE_RED]);
+            }
+            else if(decision_template == DECISION_LAYOUT_SYMBOL)
+            {
+                /* we assume we have symbol */
+                if(this->enumerate) sprintf(out_line, "(%d)0x%08x call %s!%s", this->current_instr_count ,this->current_eip, s->lib_name, s->func_name);
+                else sprintf(out_line, "0x%08x call %s!%s", this->current_eip, s->lib_name, s->func_name);
+                print_empty_call(info, out_line, colors[CODE_BLUE]);
+            }
+            else
+            {
+                /* regular emission with dive */
+                if(this->enumerate) sprintf(out_line, "(%d)0x%08x call 0x%08x", this->current_instr_count ,this->current_eip, target);
+                else sprintf(out_line, "0x%08x call 0x%08x", this->current_eip, target);
+                print_empty_call(info, out_line, colors[CODE_BLACK]);
+            }
+        
+        }
+        
+        /* log emission */
+        for(i=GRAPH_START; i< info->call_level; i++)
+        {
+            d_print(1, " ");
+        }
+    
+        d_print(1, "[0x%08x] (%d)0x%08x call 0x%08x, pos: %d, small: %d, ignored: %d: \n", 
+                this->cur_tid, this->current_instr_count, this->current_eip, target, 
+                this->ctx_info[this->tids[this->cur_tid]].call_level, 
+                this->ctx_info[this->tids[this->cur_tid]].call_level_smallest, 
+                this->ctx_info[this->tids[this->cur_tid]].call_level_ignored, 
+                this->ctx_info[this->tids[this->cur_tid]].call_level_largest);
+
+    }
+    else if(decision_emit == DECISION_EMIT_NESTED)
+    {
+        d_print(2, "Emitting nested\n");
+
+        if(decision_template == DECISION_LAYOUT_SYMBOL_WANTED)
+        {
+            /* we assume we have symbol */
             sprintf(out_line, "...");
             print_call(info, out_line, colors[CODE_RED]);
             if(this->enumerate) sprintf(out_line, "[x] (%d)0x%08x call %s!%s", this->current_instr_count ,this->current_eip, s->lib_name, s->func_name);
@@ -906,133 +1054,82 @@ int taint_x86::handle_call(CONTEXT_INFO* info)
             print_call(info, out_line, colors[CODE_RED]);
             print_ret(info);
             print_ret(info);
-            return 0x0;
-        }
-        else
-            return 0x0;
-        /* ignored */
-    }
-
-    //d_print(1, "Pushing: 0x%08x\n", next);
-    current = this->reg_restore_32(EIP);
-    //if(check_loop(info, this->current_eip, target)) return 0x0;
-
-    /* prepare name */
-    if(s != 0x0)
-    {
-        d_print(1, "Check wanted\n");
-        if(s->wanted)
-        {
-            d_print(1, "Got wanted\n");
-            if(this->enumerate) sprintf(out_line, "[x] (%d)0x%08x call %s!%s", this->current_instr_count ,this->current_eip, s->lib_name, s->func_name);
-            else sprintf(out_line, "[x] 0x%08x call %s!%s", this->current_eip, s->lib_name, s->func_name);
-            color = CODE_RED;
         }
         else
         {
+            /* we assume we have symbol */
+            sprintf(out_line, "...");
+            print_call(info, out_line, colors[CODE_BLACK]);
             if(this->enumerate) sprintf(out_line, "(%d)0x%08x call %s!%s", this->current_instr_count ,this->current_eip, s->lib_name, s->func_name);
             else sprintf(out_line, "0x%08x call %s!%s", this->current_eip, s->lib_name, s->func_name);
-            color = CODE_BLUE;
+            print_call(info, out_line, colors[CODE_BLACK]);
+            print_ret(info);
+            print_ret(info);
+        
         }
+
+        /* log emission */
+        for(i=GRAPH_START; i< info->call_level; i++)
+        {
+            d_print(1, " ");
+        }
+    
+        d_print(1, "[0x%08x] (%d)0x%08x call 0x%08x, pos: %d, small: %d, ignored: %d: \n", 
+                this->cur_tid, this->current_instr_count, this->current_eip, target, 
+                this->ctx_info[this->tids[this->cur_tid]].call_level, 
+                this->ctx_info[this->tids[this->cur_tid]].call_level_smallest, 
+                this->ctx_info[this->tids[this->cur_tid]].call_level_ignored, 
+                this->ctx_info[this->tids[this->cur_tid]].call_level_largest);
     }
     else
     {
-        if(this->enumerate) sprintf(out_line, "(%d)0x%08x call 0x%08x", this->current_instr_count ,this->current_eip, target);
-        else sprintf(out_line, "0x%08x call 0x%08x", this->current_eip, target);
-        color = CODE_BLACK;
+        d_print(2, "Not emitting\n");
     }
 
-    for(i=GRAPH_START; i< info->graph_pos; i++)
-        d_print(1, " ");
-
-    d_print(1, "[0x%08x] (%d)0x%08x call 0x%08x, pos: %d, small: %d, ignored: %d: \n", this->cur_tid, this->current_instr_count, this->current_eip, target, this->ctx_info[this->tids[this->cur_tid]].graph_pos, this->ctx_info[this->tids[this->cur_tid]].graph_pos_smallest, this->ctx_info[this->tids[this->cur_tid]].graph_pos_ignored, this->ctx_info[this->tids[this->cur_tid]].graph_pos_largest);
-/*
-    if(target == 0x0c389660)
+    if(decision_dive == DECISION_DIVE)
     {
-//        d_err_print("Here\n");
-        //getchar();
+        d_print(2, "Diving!\n");
+        this->dive(info, target, next);
     }
-*/
-    /* if its blacklisted, we become waiting */
-    if(this->check_addr_blacklist(target))
-    {
-        //print_empty_call(info->graph_file, out_line, colors[color]);
-        print_empty_call(info, out_line, colors[color]);
-        info->waiting = next;
-    }
-
-    // put these in order
-    /* if lib call, we become waiting */
-    if(s != 0x0)
-    {
-        if(s->included == 0x0)
-        {
-            print_empty_call(info, out_line, colors[color]);
-            info->waiting = next;
-        }
-        else if(info->graph_pos > GRAPH_START + this->depth)
-        {
-            if(color == CODE_BLACK) color = CODE_GREEN;
-            //print_empty_call(info->graph_file, out_line, colors[color]);
-            print_empty_call(info, out_line, colors[color]);
-            info->waiting = next;
-        }
-        /* we dive */
-        else
-        {
-            //print_call(info->graph_file, out_line, colors[color]);
-            print_call(info, out_line, colors[color]);
-            info->rets[info->graph_pos] = next;
-            info->graph_pos++;
-    
-            unsigned i;
-    
-            d_print(1, "[0x%08x] Ret table:\n", this->cur_tid);
-            for(i=info->graph_pos_smallest; i<info->graph_pos; i++)
-            {
-                d_print(1, "[0x%08x] 0x%08x\n", this->cur_tid, this->ctx_info[this->tids[this->cur_tid]].rets[i]);
-            }
-        }
-    }
-    /* if maximum depth has been reached, we become waiting */
-    else if(info->graph_pos > GRAPH_START + this->depth)
-    {
-        if(color == CODE_BLACK) color = CODE_GREEN;
-        //print_empty_call(info->graph_file, out_line, colors[color]);
-        print_empty_call(info, out_line, colors[color]);
-        info->waiting = next;
-    }
-    /* we dive */
     else
     {
-        //print_call(info->graph_file, out_line, colors[color]);
-        print_call(info, out_line, colors[color]);
-        info->rets[info->graph_pos] = next;
-        info->graph_pos++;
-        info->entry[info->graph_pos] = target;
-
-        /* prepare loop detection structures */
-        info->call_src_register_idx[info->graph_pos] = 0x0;
-        info->loop_start[info->graph_pos] = NO_LOOP;
-
-        unsigned i;
-
-        for(i=0x0; i<MAX_LOOP_ADDRS; i++)
-        {
-            info->call_src_register[info->graph_pos][i][0] = 0x0;
-            info->call_src_register[info->graph_pos][i][1] = 0x0;
-        }
-
-        /* other stuff */ 
-
-        d_print(1, "[0x%08x] Ret table:\n", this->cur_tid);
-        for(i=info->graph_pos_smallest; i<info->graph_pos; i++)
-        {
-            d_print(1, "[0x%08x] 0x%08x\n", this->cur_tid, this->ctx_info[this->tids[this->cur_tid]].rets[i]);
-        }
+        d_print(2, "Not diving!\n");
+        if(info->waiting == 0x0) info->waiting = next;
     }
+        
     return 0x0;
 }
+
+int taint_x86::dive(CONTEXT_INFO* info, OFFSET target, OFFSET next)
+{
+    info->rets[info->call_level] = next;
+    info->call_level++;
+    info->entry[info->call_level] = target;
+
+    /* prepare loop detection structures */
+    info->call_src_register_idx[info->call_level] = 0x0;
+    info->loop_start[info->call_level] = NO_LOOP;
+
+    unsigned i;
+
+    for(i=0x0; i<MAX_LOOP_ADDRS; i++)
+    {
+        info->call_src_register[info->call_level][i][0] = 0x0;
+        info->call_src_register[info->call_level][i][1] = 0x0;
+    }
+
+    /* other stuff */ 
+
+    d_print(1, "[0x%08x] Ret table:\n", this->cur_tid);
+    for(i=info->call_level_smallest; i<info->call_level; i++)
+    {
+        d_print(1, "[0x%08x] 0x%08x\n", this->cur_tid, this->ctx_info[this->tids[this->cur_tid]].rets[i]);
+    }
+
+    return 0x0;
+}
+
+
 
 int taint_x86::check_rets(OFFSET ret)
 {
@@ -1054,31 +1151,46 @@ int taint_x86::handle_ret(CONTEXT_INFO* cur_ctx, OFFSET eip)
     /* new begins */
 
     /* ignored rets */
-    if(cur_ctx->waiting != 0x0) return 0x0;
+    if(cur_ctx->waiting != 0x0) 
+    {
+        d_print(2, "We are waiting\n");
+        return 0x0;
+    }
+    else if(cur_ctx->before_waiting)
+    {
+        d_print(2, "We just matched waiting\n");
+        return 0x0;
+    }
+    else
+    {
+        d_print(2, "We are not waiting\n");
+    }
 
 
     /* check surface */
 
-    d_print(1, "<<%d>>", cur_ctx->graph_pos);
+    d_print(1, "<<%d>>", cur_ctx->call_level);
 
-    if(cur_ctx->graph_pos == 0x0) return -1;
+    if(cur_ctx->call_level == 0x0) return -1;
         
     /* close loops at this level if open */
 
-    for(i; i<cur_ctx->loop_pos[cur_ctx->graph_pos]; i++)
+    /*
+    for(i; i<cur_ctx->loop_pos[cur_ctx->call_level]; i++)
     {
         exit_loop(cur_ctx);
     }
+    */
 
-        for(i = cur_ctx->graph_pos-1; i >= cur_ctx->graph_pos_smallest; i--)
+        for(i = cur_ctx->call_level-1; i >= cur_ctx->call_level_smallest; i--)
         {
             if(abs(cur_ctx->rets[i] - eip) < 0x5)
             {
-                diff = cur_ctx->graph_pos - i;
+                diff = cur_ctx->call_level - i;
                 d_print(1, "[0x%08x] (%d) Matched ret 0x%08x on pos: %d, handling diff: %d\n", this->cur_tid, this->current_instr_count, cur_ctx->rets[i], i, diff);
 
                 /* fix pos */
-                //cur_ctx->graph_pos = i;
+                //cur_ctx->call_level = i;
 
                 /* write*/
                 for(j=0x0; j<diff; j++)
@@ -1090,66 +1202,33 @@ int taint_x86::handle_ret(CONTEXT_INFO* cur_ctx, OFFSET eip)
 
                     for(k = 0x0; k < MAX_LOOP_ADDRS; k++)
                     {
-                        cur_ctx->call_src_register[cur_ctx->graph_pos][k][0] = 0x0;
-                        cur_ctx->call_src_register[cur_ctx->graph_pos][k][1] = 0x0;
+                        cur_ctx->call_src_register[cur_ctx->call_level][k][0] = 0x0;
+                        cur_ctx->call_src_register[cur_ctx->call_level][k][1] = 0x0;
                     }
 
-                    cur_ctx->loop_start[cur_ctx->graph_pos] = NO_LOOP; /* clear loop start index */
+                    cur_ctx->loop_start[cur_ctx->call_level] = NO_LOOP; /* clear loop start index */
 
-                    cur_ctx->graph_pos--;
+                    cur_ctx->call_level--;
                     print_ret(cur_ctx);
                 }
             return 0x0;
             }
         }
-            //if((cur_ctx->graph_pos <= 0x0) && cur_ctx->returning) 
 
         /* handle under surface */
-        if(cur_ctx->graph_pos == cur_ctx->graph_pos_smallest) //we have to use all stacked rets
+        if(cur_ctx->call_level == cur_ctx->call_level_smallest) //we have to use all stacked rets
         {
                 /* pos */
-                d_print(1, "[0x%08x] Unmatched ret 0x%08x on pos: %d\n", this->cur_tid, eip, cur_ctx->graph_pos);
-                cur_ctx->graph_pos--;
+                d_print(1, "[0x%08x] Unmatched ret 0x%08x on pos: %d\n", this->cur_tid, eip, cur_ctx->call_level);
+                cur_ctx->call_level--;
                 print_ret(cur_ctx);
                 
                 /* smallest */
-//                if(cur_ctx->graph_pos_smallest > cur_ctx->graph_pos) cur_ctx->graph_pos_smallest = cur_ctx->graph_pos;
-                cur_ctx->graph_pos_smallest--;
+                cur_ctx->call_level_smallest--;
         }
 
     /* new ends */
     return 0x0;
-    /*
-    DWORD esp = this->reg_restore_32(ESP).get_DWORD();
-    DWORD_t ret = 0x0;
-    this->restore_32(esp, ret);
-
-    int i;
-    for(i=GRAPH_START; i< info->graph_pos; i++)
-        d_print(1, " ");
-
-    d_print(1, "[0x%08x] ret, pos: %d, small: %d, ignored: %d: ", this->cur_tid, info->graph_pos, info->graph_pos_smallest, info->graph_pos_ignored);
-
-    d_print(1, "[0x%08x] Writing out\n", this->cur_tid);
-    print_ret(info->graph_file);
-    if(info->graph_pos < info->graph_pos_smallest) info->graph_pos_smallest = info->graph_pos;
-    info->graph_pos_ignored--;
-    info->graph_pos --;
-    if(info->graph_pos < info->graph_pos_smallest) info->graph_pos_smallest = info->graph_pos;
-//    info->ret_idx --;
-
-    if(info->graph_pos_ignored <0) info->graph_pos_ignored = 0;
-    if(info->graph_pos <0) info->graph_pos = 0;
-
-        d_print(1, "[0x%08x] Ret table:\n", this->cur_tid);
-        for(i=0x0; i<info->graph_pos; i++)
-        {
-            d_print(1, "[0x%08x] 0x%08x\n", this->cur_tid, info->rets[i]);
-        }
-    //getchar();
-//    d_print(1, "pos: %d\n", info->graph_pos);
-    return 0x0;
-*/
 }
 
 inline int taint_x86::verify_oob_offset(OFFSET off, OFFSET size)
@@ -1587,6 +1666,7 @@ int taint_x86::pre_execute_instruction(DWORD eip)
         /* stop waiting */
         d_print(1, "[0x%08x] Waiting: 0x%08x, eip: 0x%08x\n", this->cur_tid, cur_info->waiting, eip);
         cur_info->waiting = 0x0;
+        cur_info->before_waiting = 0x1;
     }
 
     this->current_instr_length = 0x0;
@@ -1740,12 +1820,21 @@ int taint_x86::post_execute_instruction(DWORD eip)
             d_print(1, "Eip: 0x%08x, this->end_addr: 0x%08x, finishing\n", eip, this->end_addr);
         }
     }
+
+#ifdef DEBUG_PRINT_CONTEXT
+    this->print_context();
+#endif
+
+#ifdef DEBUG_PRINT_STACK
+    this->print_stack(1, 5);
+#endif
+
     return 0x0;
 }
 
 int taint_x86::execute_instruction(DWORD eip, DWORD tid)
 {
-    d_print(2, "Inst: 0x%08x, count: %d\n", eip, this->current_instr_count);
+    d_print(2, "[0x%08x] Inst: 0x%08x, count: %d\n", this->cur_tid, eip, this->current_instr_count);
     int ret = 0x0;
 
     this->cur_tid = tid;
@@ -1897,21 +1986,21 @@ int taint_x86::finish()
     for(i=0x0; i<this->tid_count; i++)
     {
         cur_tid = &this->ctx_info[i];
-        open = cur_tid->graph_pos - cur_tid->graph_pos_smallest;
+        open = cur_tid->call_level - cur_tid->call_level_smallest;
         d_print(1, "[0x%08x] Left with %d nodes open\n", cur_tid->tid, open);
         sprintf(out_line, "<!-- test -->\n");
         fwrite(out_line, strlen(out_line), 0x1, cur_tid->graph_file);
 
-        d_print(1, "[0x%08x] First: %d - %d = %d\n", GRAPH_START, cur_tid->graph_pos_smallest, abs(GRAPH_START - cur_tid->graph_pos_smallest));
+        d_print(1, "[0x%08x] First: %d - %d = %d\n", GRAPH_START, cur_tid->call_level_smallest, abs(GRAPH_START - cur_tid->call_level_smallest));
 
-        diff_first = abs(GRAPH_START - cur_tid->graph_pos_smallest);
+        diff_first = abs(GRAPH_START - cur_tid->call_level_smallest);
         diff_last = open;
 
         d_print(1, "[0x%08x] Diff_last: %d\n", cur_tid->tid, diff_last);
             for(j=0x0; j < diff_last; j++)
             {
                 //print_ret(cur_tid->graph_file);
-                cur_tid->graph_pos--;
+                cur_tid->call_level--;
                 print_ret(cur_tid);
             }
 
@@ -1922,10 +2011,10 @@ int taint_x86::finish()
         sprintf(out_line, "<map version=\"1.0.1\">\n<node TEXT=\"start\">\n");
         fwrite(out_line, strlen(out_line), 0x1, cur_tid->graph_file);
 
-                cur_tid->graph_pos--;
+                cur_tid->call_level--;
             for(j=0x0; j < diff_first; j++)
             {
-                cur_tid->graph_pos++;
+                cur_tid->call_level++;
                 print_call(cur_tid, "unknown", colors[CODE_BLACK]);
                 //print_call(cur_tid->graph_file, "unknown", colors[CODE_BLACK]);
             }
@@ -2007,14 +2096,14 @@ int taint_x86::add_thread(CONTEXT_info ctx_info)
         sprintf(graph_filename, "TID_%08X.mm", ctx_info.thread_id);
         d_print(1, "Creating graph file: %s\n", graph_filename);
         this->ctx_info[this->tid_count].graph_file = fopen(graph_filename, "w");
-        this->ctx_info[this->tid_count].graph_pos = GRAPH_START; //for call trace
-        this->ctx_info[this->tid_count].graph_pos_smallest = GRAPH_START; //for call trace
+        this->ctx_info[this->tid_count].call_level = GRAPH_START; //for call trace
+        this->ctx_info[this->tid_count].call_level_smallest = GRAPH_START; //for call trace
         this->ctx_info[this->tid_count].waiting = 0x0; //for call trace
 
         /* clear loop structures */
-        unsigned graph_pos;
-        graph_pos = this->ctx_info[this->tid_count].graph_pos;
-        this->ctx_info[this->tid_count].loop_start[graph_pos] = NO_LOOP;
+        unsigned call_level;
+        call_level = this->ctx_info[this->tid_count].call_level;
+        this->ctx_info[this->tid_count].loop_start[call_level] = NO_LOOP;
 
         this->ctx_info[this->tid_count].tid = ctx_info.thread_id;
         //update lookup table
@@ -2048,7 +2137,7 @@ int taint_x86::add_thread(CONTEXT_info ctx_info)
    
     //for graphs
 
-    //info->graph_pos_largest = 0x3; 
+    //info->call_level_largest = 0x3; 
 
     //this->print_context(this->cur_tid);
 
@@ -2315,8 +2404,8 @@ int taint_x86::del_thread(DWORD tid)
 
     // close remaining nodes
 
-    if(this->ctx_info[tid].graph_pos <0) this->ctx_info[tid].graph_pos = 0;
-    for(i=0x0; i<this->ctx_info[tid].graph_pos; i++)
+    if(this->ctx_info[tid].call_level <0) this->ctx_info[tid].call_level = 0;
+    for(i=0x0; i<this->ctx_info[tid].call_level; i++)
         print_ret(this->ctx_info[tid].graph_file);
 
     sprintf(out_line, "</node></map>\n");
@@ -2325,7 +2414,7 @@ int taint_x86::del_thread(DWORD tid)
     //print thread head
     sprintf(out_line, "call unknown");
 
-    for(i=0x0; i<-this->ctx_info[tid].graph_pos_smallest ; i++)
+    for(i=0x0; i<-this->ctx_info[tid].call_level_smallest ; i++)
         print_call(this->ctx_info[tid].graph_file, out_line, "0xffffffff");
 
     fclose(this->ctx_info[tid].graph_file);
@@ -2344,8 +2433,8 @@ int taint_x86::del_thread_srsly(DWORD tid)
 
     // close remaining nodes
 /*
-    if(this->ctx_info[tid].graph_pos <0) this->ctx_info[tid].graph_pos = 0;
-    for(i=0x0; i<this->ctx_info[this->tids[tid]].graph_pos; i++)
+    if(this->ctx_info[tid].call_level <0) this->ctx_info[tid].call_level = 0;
+    for(i=0x0; i<this->ctx_info[this->tids[tid]].call_level; i++)
         print_ret(this->ctx_info[this->tids[tid]].graph_file);
 
     sprintf(out_line, "</node></map>\n");
@@ -2354,7 +2443,7 @@ int taint_x86::del_thread_srsly(DWORD tid)
     //print thread head
     sprintf(out_line, "call unknown");
 
-    for(i=0x0; i<-this->ctx_info[this->tids[tid]].graph_pos_smallest ; i++)
+    for(i=0x0; i<-this->ctx_info[this->tids[tid]].call_level_smallest ; i++)
         print_call(this->ctx_info[this->tids[tid]].graph_file, out_line, "0xffffffff");
 */
     fclose(this->ctx_info[this->tids[tid]].graph_file);
@@ -10672,7 +10761,7 @@ int taint_x86::r_retn(BYTE_t*)
         this->cur_info->returning = 0x3;
 
     /*
-    if(this->ctx_info[this->tids[this->cur_tid]].graph_pos <= 0x0)
+    if(this->ctx_info[this->tids[this->cur_tid]].call_level <= 0x0)
         this->handle_ret(this->cur_info);
     */
     OFFSET offset;
@@ -10716,7 +10805,7 @@ int taint_x86::r_ret(BYTE_t*)
         this->cur_info->returning = 0x3;
 
     /*
-    if(this->ctx_info[this->tids[this->cur_tid]].graph_pos <= 0x0)
+    if(this->ctx_info[this->tids[this->cur_tid]].call_level <= 0x0)
         this->handle_ret(this->cur_info);
     */
     DWORD_t ret;

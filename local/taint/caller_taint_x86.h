@@ -30,8 +30,8 @@ Change of endiannes takes place when reading and writing to memory (to_mem, from
 #include <errno.h>
 
 // compile-time options and parameters
-#define ANALYZE_JUMPS 1
-#define ANALYZE_LOOPS 1
+#define ANALYZE_JUMPS 
+//#define ANALYZE_LOOPS 
 #define NO_LOOP 0xffffffff
 
 #define MAX_NAME 0x100
@@ -40,7 +40,7 @@ Change of endiannes takes place when reading and writing to memory (to_mem, from
 #define MAX_LIB_COUNT 0x100
 #define MAX_THREADS 0x100
 #define MAX_THREAD_NUMBER 0x1000
-#define MAX_RETS 200
+#define MAX_CALL_LEVELS 200
 #define GRAPH_START 100
 #define MAX_LOOP_ADDRS 0x10
 //#define MAX_THREADS 0x1000000
@@ -2257,31 +2257,32 @@ typedef struct _CONTEXT_INFO
     OFFSET seg_map[0x6];
 
     /* graph handling */
-    DWORD graph_pos;
-    DWORD graph_pos_smallest;
-    DWORD graph_pos_largest;
-    DWORD graph_pos_ignored;
+    DWORD call_level;
+    DWORD call_level_smallest;
+    DWORD call_level_largest;
+    DWORD call_level_ignored;
     FILE* graph_file;
     OFFSET waiting;
 
-    /* ret handling */ 
-    DWORD rets[MAX_RETS];
+    /* call level handling */ 
+    DWORD rets[MAX_CALL_LEVELS];
     unsigned ret_idx;
     char returning;
     char before_returning;
+    char before_waiting;
     char calling;
     OFFSET target;
     OFFSET next;
-    OFFSET entry[MAX_RETS];
+    OFFSET entry[MAX_CALL_LEVELS];
 
     /* loops handling */
-    OFFSET call_src_register[MAX_RETS][MAX_LOOP_ADDRS][2];
-    unsigned call_src_register_idx[MAX_RETS];
-    unsigned loop_start[MAX_RETS];
+    OFFSET call_src_register[MAX_CALL_LEVELS][MAX_LOOP_ADDRS][2];
+    unsigned call_src_register_idx[MAX_CALL_LEVELS];
+    unsigned loop_start[MAX_CALL_LEVELS];
 
     /* new loop handling */
-    unsigned loop_pos[MAX_RETS];
-    LOOP_FENCE* cur_fence[MAX_RETS];
+    unsigned loop_pos[MAX_CALL_LEVELS];
+    LOOP_FENCE* cur_fence[MAX_CALL_LEVELS];
 
 } CONTEXT_INFO;
 
@@ -3073,6 +3074,13 @@ class taint_x86
     int execute_instruction_at_eip(DWORD, DWORD);
     int finish();
     int verify_t_context(int);
+
+    /* graph prints */
+
+    void print_call(CONTEXT_INFO*, char*, const char*);
+    void print_empty_call(CONTEXT_INFO*, char*, const char*);
+    void print_ret(CONTEXT_INFO*);
+    int dive(CONTEXT_INFO*, OFFSET, OFFSET);
 
     int print_err_all_contexts();
     int print_err_all_t_contexts();
