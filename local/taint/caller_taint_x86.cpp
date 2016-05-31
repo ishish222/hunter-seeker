@@ -1158,6 +1158,7 @@ int taint_x86::handle_ret(CONTEXT_INFO* cur_ctx, OFFSET eip)
     }
     else if(cur_ctx->before_waiting)
     {
+        cur_ctx->before_waiting = 0x0;
         d_print(2, "We just matched waiting\n");
         return 0x0;
     }
