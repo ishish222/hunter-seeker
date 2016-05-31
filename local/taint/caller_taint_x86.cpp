@@ -1998,7 +1998,6 @@ int taint_x86::finish()
         d_print(1, "Closing 0x%08x\n", cur_tid->tid);
         open = cur_tid->call_level - cur_tid->call_level_smallest;
         d_print(1, "[0x%08x] Left with %d nodes open\n", cur_tid->tid, open);
-        sprintf(out_line, "<!-- test -->\n");
         fwrite(out_line, strlen(out_line), 0x1, cur_tid->graph_file);
 
         d_print(1, "[0x%08x] First: %d - %d = %d\n", cur_tid->tid, cur_tid->call_level_smallest, abs(GRAPH_START - cur_tid->call_level_smallest));
@@ -2010,7 +2009,7 @@ int taint_x86::finish()
         for(j=0x0; j < diff_last; j++)
         {
 #ifdef ANALYZE_LOOPS
-            for(k; k<cur_tid->loop_pos[cur_tid->call_level]; k++)
+            for(k = 0x0; k<cur_tid->loop_pos[cur_tid->call_level]; k++)
             {
                 exit_loop(cur_tid);
             }
@@ -2020,7 +2019,7 @@ int taint_x86::finish()
         }
 
 #ifdef ANALYZE_LOOPS
-        for(k; k<cur_tid->loop_pos[cur_tid->call_level]; k++)
+        for(k = 0x0; k<cur_tid->loop_pos[cur_tid->call_level]; k++)
         {
             exit_loop(cur_tid);
         }
