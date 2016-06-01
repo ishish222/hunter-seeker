@@ -1,0 +1,27 @@
+lacznosc 1:
+ssh -L 5901:10.8.0.14:5901 ish@korrino.com
+ssh -L 5902:10.8.0.14:5902 ish@korrino.com
+ssh -L 5903:10.8.0.14:5903 ish@korrino.com
+ssh -L 5904:10.8.0.14:5904 ish@korrino.com
+ssh -L 5905:10.8.0.14:5905 ish@korrino.com
+ssh -L 5906:10.8.0.14:5906 ish@korrino.com
+ssh -L 5907:10.8.0.14:5907 ish@korrino.com
+ssh -L 5908:10.8.0.14:5908 ish@korrino.com
+ssh -L 5909:10.8.0.14:5909 ish@korrino.com
+ssh -L 5910:10.8.0.14:5910 ish@korrino.com
+ssh -L 5911:10.8.0.14:5911 ish@korrino.com
+
+lacznosc 2:
+openvpn openvpn.conf
+
+
+dodawanie symboli:
+cat /home/hs1/hs2-current-deploy/trace-tools/client/lists/wanted.txt >> last_instr_all.txt          # najpierw te, ktore chcemy rozpoznawac
+cat /home/hs1/hs2-current-deploy/trace-tools/client/lists/blacklists.txt >> last_instr_all.txt 
+cat /home/hs1/hs2-current-deploy/trace-tools/client/lists/included.txt >> last_instr_all.txt 
+cat /home/hs1/hs2-current-deploy/trace-tools/client/lists/symbols.txt >> last_instr_all.txt         # aktualne symbole!
+cat last_instr_0.txt >> last_instr_all.txt                                                          # instrukcje
+
+lub:
+
+cat /home/hs1/hs2-current-deploy/trace-tools/client/lists/list_1.txt >> last_instr_all.txt
