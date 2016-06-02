@@ -24,6 +24,7 @@ def get_additional_options():
     parser.add_option("", "--prefix",     dest="prefix", help="Prefix for trace", default="last")
     parser.add_option("", "--logpath",    dest="log_path", help="Log path for trace", default="\\\\10.0.2.4\\qemu\\last_log.txt")
     parser.add_option("", "--limit",      dest="instr_limit", help="Instruction limit", default="0")
+    parser.add_option("", "--descriptor", dest="descriptor", help="Instruction limit", default="default.txt")
 
     (options.additional_options, args) = parser.parse_args()
 
@@ -80,6 +81,42 @@ def trace_sample2():
 #        fout.write(buf)
 #
 #    fout.close()            
+
+
+def trace_sample2_2():
+    # sledzenie wykonania probki ze wskazaniem deskryptora
+
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+    additional = options.additional_options
+
+    try:
+        sample_path = globs.state.samples_list.pop()
+    except Exception, e:
+        print e
+        globs.state.samples_exhausted = True
+        return
+
+    sample_file = os.path.basename(sample_path)
+    test_path = options.settings.prepare_sample(sample_path)
+    test_file = os.path.basename(test_path)
+
+    os.spawnv(os.P_WAIT, "/usr/bin/sudo", ["sudo", "mkdir", "-p", options.settings.qemu_shared_folder+"/"+additional.out_dir2])
+    os.spawnv(os.P_WAIT, "/usr/bin/sudo", ["sudo", "chown", options.settings.hs_user, options.settings.qemu_shared_folder+"/"+additional.out_dir2])
+
+    if(options.walk_start == None):
+        write_socket(options.s, "trace3 e:\\server\\b.exe e:\\samples\\shared\\%s e:\\samples\\shared\\%s %s %s %s %s" % (test_file, additional.descriptor, additional.out_dir+additional.out_dir2, additional.prefix, additional.log_path, additional.instr_limit))
+    else:
+        pass
+
+    options.settings.runner_0(options, [test_file])
+    options.log.write("%s: " % test_file)
+    options.log.flush()
+    
+    print "Waiting for instruction"
+    while True:
+        pass
 
 
 def configure_port():
