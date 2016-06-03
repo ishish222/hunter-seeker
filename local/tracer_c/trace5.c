@@ -1,107 +1,35 @@
-#define LIB_VER_W7
+#include "trace5.h"
 
-#ifdef LIB_VER_W7
-#define _WIN32_WINNT 0x0700
-#endif 
+/* implemented functions */
 
-#include <stdio.h>
-#include <windows.h>
-#include "WinBase.h"
-#include <TlHelp32.h>
-#include "winternl.h"
+/* add_readsign */
 
-#define buf_size 0x100000
-#define SS_FLAGS 0x100
-#define CLEAR_SS_FLAGS 0xfffffeff
-#define MEM_DUMP
-#define MAX_NAME 0x200
-#define MAX_LINE 0x100
-#define MAX_HANDLERS 0x100000
-#define MAX_SYSCALL_OUT_ARGS 0x10
-#define MAX_SYSCALL_ENTRIES  0x10000
-#define MAX_HOOKS 0x50
+int add_roadsign(void* data)
+{
+    ROADSIGN* sign;
 
-/* functions offsets in respective libs */
-#define EXIT_PROCESS_OFF 0x52acf
+    sign = (ROADSIGN*)data;
 
-#ifdef LIB_VER_WXP // WINXPSP2
-#define NTDLL_OFF               0x7c900000
-#define NTREADFILE_OFF_1        0xe27c
-#define NTREADFILE_OFF_2        0xe288
-#define NTMAPVIEWOFSECTION_1    0xdc55
-#define NTMAPVIEWOFSECTION_2    0xdc61
-#define NTSYSENTER_OFF          0xeb8b
-#define NTSYSRET_OFF            0xeb94
-#endif
+    /* add breakpoint & handler */
 
-#ifdef LIB_VER_W7 // WIN7
-
-/* ntdll addresses */
-#define NTDLL_OFF               0x7c900000
-#define NTREADFILE_OFF_1        0x45700
-#define NTREADFILE_OFF_2        0x4570c
-#define NTMAPVIEWOFSECTION_1    0x45070
-#define NTMAPVIEWOFSECTION_2    0x4507c
-#define NTSYSENTER_OFF          0x464f0
-#define NTSYSRET_OFF            0x464f4
-
-/* kernelbase addresses */
-#define KERNELBASE_OFF          0xdce0000
-#define ISDEBUGGER_OFF_1        0x21f8f
-#define ISDEBUGGER_OFF_2        0x21f9c
-#define CREATETHREAD_OFF        0x319c7
-//#define CREATETHREAD_OFF        0xbb2f
-#endif
-
-#define STATUS_ANY 0xff00ff00
+    return 0x0;
+}
 
 char process_fname[0x200];
 char spawned = 0x0;
 FILE* log;
 char started = 0x0;
-
-#define WATCH_LIMIT 0x100
-
-#define REG_DEBUG 1
-#define REG_DEBUG_INTERVAL 4999
-#define INSTRUCTION_INTERVAL 10000000
-#define INSTRUCTION_SMALL_INTERVAL 10000
-
 unsigned long long instr_count;
 char instr_count_s[0x20];
 unsigned long long instr_limit;
 unsigned long long instr_dbg;
 int full_log = 0x0;
-
 DWORD scan_on;
 unsigned scan_count;
-
-typedef struct _READ_RECORD
-{
-    HANDLE handle;
-    void* from;
-    void* to;
-    SIZE_T size;
-    SIZE_T* read;
-} READ_RECORD;
-
 READ_RECORD last_read_record;
-
-typedef struct _WATCHED
-{
-    DWORD off;
-    int hit;
-    int scan;
-    int count;
-    long long unsigned instr;
-} WATCHED;
-
 WATCHED watched[WATCH_LIMIT];
-
-
 HANDLE procHandle;
 HANDLE file_handle;
-
 DWORD addr_st, addr_end;
 DWORD sysenter_esp;
 DWORD sysenter_no;
@@ -116,7 +44,6 @@ HANDLE eventLock, eventUnlock;
 HANDLE mutex;
 PROCESS_INFORMATION pi;
 STARTUPINFO si;
-
 char path[0x200];
 char cur_path[0x200];
 int path_i;
@@ -124,12 +51,9 @@ char dumpPath[0x200];
 char iniPath[0x200];
 char modPath[0x200];
 wchar_t filePath[0x200];
-
-//char line[0x100];
 char instr[0x60];
 int last_eip = 0x0;
 DWORD last_tid = 0x0;
-
 const wchar_t* target_lib = L"ntdll.dll";
 DWORD target_lib_off = 0x0;
 const char* target_call = "NtCreateFile";
@@ -138,7 +62,6 @@ DWORD target_off = 0x0;
 CREATE_PROCESS_DEBUG_INFO cpdi;
 int myPID = 0x0;
 int myTID = 0x0;
-
 DWORD img_base;
 DWORD nt1_off;
 DWORD nt2_off;
@@ -146,122 +69,35 @@ DWORD nt3_off;
 DWORD nt4_off;
 DWORD sysenter_off;
 DWORD sysret_off;
-
-#define LOCATION_CONST          0x0
-#define LOCATION_STACK          0x1
-#define LOCATION_ADDR_STACK     0x2
-#define LOCATION_ADDR_ADDR_STACK     0x3
-#define LOCATION_REG            0x4
-#define LOCATION_MEM            0x5
-#define LOCATION_END            0x6
-
-typedef struct OUT_ARGUMENT_
-{
-    DWORD off;
-    DWORD size;
-    char off_location;
-    char size_location;
-    DWORD eax_val_success;
-} OUT_ARGUMENT;
-
 OUT_ARGUMENT last_arg = {0x0, 0x0, LOCATION_END, LOCATION_END, 0x0};
-
-typedef struct OUT_LOCATION_
-{
-    DWORD off;
-    DWORD size;
-} OUT_LOCATION;
-
 OUT_LOCATION last_location = {0x0, 0x0};
-
 OUT_ARGUMENT syscall_out_args[MAX_SYSCALL_ENTRIES][MAX_SYSCALL_OUT_ARGS];
 OUT_LOCATION syscall_out_args_dump_list[MAX_SYSCALL_OUT_ARGS];
-
 DWORD buffer_addr;
 DWORD size_addr;
-
-typedef struct _CREATE_THREAD_DEBUG_INFO2
-{
-    CREATE_THREAD_DEBUG_INFO u;
-    DWORD tid;
-} CREATE_THREAD_DEBUG_INFO2;
-
-typedef struct _THREAD_ENTRY
-{
-    char alive;
-    char open;
-    char created;
-    HANDLE handle;
-} THREAD_ENTRY;
-
 CREATE_THREAD_DEBUG_INFO2 threads[0x100000000];
-
 THREAD_ENTRY threads2[0x100000000];
 DWORD thread_list[0x1000];
 DWORD thread_count = 0x0;
-
-#define MAX_NAME 0x200
-#define MAX_LIBS 0x200
-
-typedef struct _LIB_ENTRY
-{
-    char alive;
-    DWORD lib_addr;
-    char lib_name[MAX_NAME];
-} LIB_ENTRY;
-
 DWORD lib_count = 0x0;
 LIB_ENTRY libs[MAX_LIBS];
-
-typedef void (*handler_routine)(void*);
 int add_breakpoint(DWORD addr, handler_routine handler);
 DWORD find_lib(char* name);
 BOOL WINAPI HandlerRoutine(_In_ DWORD dwCtrlType);
 SIZE_T dump_mem(FILE*, void*, SIZE_T);
-
-typedef struct _HANDLER
-{
-    handler_routine handler;
-    char enabled;
-} HANDLER;
-
-typedef struct _HOOK
-{
-    DWORD offset;
-    char libname[0x50];
-    handler_routine handler;
-} HOOK;
-
 HOOK hooks[MAX_HOOKS];
 unsigned hook_count = 0x0;
-
-typedef struct _bpt
-{
-    DWORD addr;
-    char saved_byte;
-//    handler_routine handler;    
-    char enabled;
-    HANDLER handlers[MAX_HANDLERS];
-    unsigned handler_count;
-    char isHook;
-} bpt;
-
 bpt my_bpt[0x30];
 int my_bpt_count = 0x0;
-
 bool res = 0x0;
 char* prefix;
 DEBUG_EVENT de;
 DWORD status = DBG_CONTINUE;
-
 DWORD tids[0x100];
 int tid_count = 0x0;
-
 char* blacklist_lib[] = {"kernel32.dll", "ntdll.dll", "user32.dll"};
 DWORD blacklist_addr[] = {};
-
-int unset_ss(DWORD);
-int set_ss(DWORD);
+char line2[MAX_LINE];
 
 int d_print(const char* format, ...)
 {
@@ -299,32 +135,8 @@ FILE* configure_file()
     }
     return f;
 } 
-/*
-int add_to_buffer(char* line)
-{
-    int written, size;
 
-    WaitForSingleObject(mutex, INFINITE);
 
-    size = strlen(line);
-//    if((index + size)  > buf_size)
-    if(1) //until this is fixed
-    {
-        SetEvent(eventLock);
-        WaitForSingleObject(eventUnlock, INFINITE);
-        index = 0;
-    }
-
-    written = sprintf(buffer + index, "%s", line);
-
-    if(written>0)
-        index += written;
-
-    ReleaseMutex(mutex);
-
-}
-*/
-char line2[MAX_LINE];
 
 int add_to_buffer(char* line)
 {
@@ -366,54 +178,10 @@ void read_memory(HANDLE handle, void* from, void* to, SIZE_T size, SIZE_T* read)
     ReadProcessMemory(handle, from, to, size, read);
 }
 
-/*
-void read_memory_2(void* data)
-{
-    ReadProcessMemory(last_read_record.handle, last_read_record.from, last_read_record.to, last_read_record.size, last_read_record.read);
-}
-
-DWORD read_memory(HANDLE handle, void* from, void* to, SIZE_T size, SIZE_T* read)
-{
-    DWORD eip;
-
-    set_ss(0x0);
-    unset_ss(last_tid);
-
-    last_read_record.handle = handle;
-    last_read_record.from = from;
-    last_read_record.to = to;
-    last_read_record.size = size;
-    last_read_record.read = read;
-
-    //breakpoint on current address
-
-    d_print("Breakpoint 4 refreshment: 0x%08x\n", last_eip);
-    add_breakpoint(last_eip, read_memory_2);
-
-    set_ss(0x0);
-    return 0x0;
-}
-*/
-
-
 int dec_eip(DWORD id)
 {
     int i;
     HANDLE myHandle = (HANDLE)-0x1;
-/*
-    for(i=0x0; i< thread_count; i++)
-        if(threads[i].tid == id)
-        {
-            myHandle = threads[i].u.hThread;
-            break;
-        }
-
-    if(myHandle == (HANDLE)-0x1) return 0x1;
-
-    d_print("Found, decreasing\n");
-*/
-
-    //myHandle = OpenThread(THREAD_GET_CONTEXT |THREAD_SET_CONTEXT | THREAD_ALL_ACCESS, 0x0, id);
     myHandle = threads2[id].handle;
     CONTEXT ctx;
     ctx.ContextFlags = CONTEXT_CONTROL;
@@ -426,7 +194,6 @@ int dec_eip(DWORD id)
     d_print("after: 0x%08x\n", ctx.Eip);
     SetThreadContext(myHandle, &ctx);
 
-    //CloseHandle(myHandle);
     return 0x0;
 }
 
@@ -1970,8 +1737,8 @@ int parse_descriptor(char* path)
     while(fgets(desc_line, 80, desc_file) != NULL)
     {
         printf("Line: %s\n", desc_line);
-        sprintf(line, "# desc: %s\n", desc_line);
-        add_to_buffer(line);
+        sprintf(line2, "# desc: %s\n", desc_line);
+        add_to_buffer(line2);
     }
 
     return 0x0;
