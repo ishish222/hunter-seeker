@@ -114,6 +114,16 @@ typedef struct ROADSIGN_
     char sign[4];
 } ROADSIGN;
 
+/* other structures */
+typedef struct _READ_RECORD
+{
+    HANDLE handle;
+    void* from;
+    void* to;
+    SIZE_T size;
+    SIZE_T* read;
+} READ_RECORD;
+
 typedef struct TRACE_CONFIG_EXTENDED_
 {
     FUNCTION functions[MAX_FUNCTIONS];
@@ -144,6 +154,8 @@ typedef struct TRACE_CONFIG_
     HANDLE mutex;
 
     /* communication */
+    unsigned port;
+    char host[MAX_NAME];
     HANDLE pipe;
 
     /* replace this */
@@ -271,16 +283,6 @@ typedef struct _LIB_ENTRY
     DWORD lib_addr;
     char lib_name[MAX_NAME];
 } LIB_ENTRY;
-
-/* other structures */
-typedef struct _READ_RECORD
-{
-    HANDLE handle;
-    void* from;
-    void* to;
-    SIZE_T size;
-    SIZE_T* read;
-} READ_RECORD;
 
 typedef struct _WATCHED
 {

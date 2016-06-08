@@ -1,4 +1,10 @@
 #include "trace5.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include "winsock2.h"
+//#include <winsock.h>
+
+//#pragma comment(lib,"ws2_32.lib") //Winsock Library
 
 /* implemented functions */
 
@@ -1744,7 +1750,49 @@ int parse_descriptor(char* path)
     return 0x0;
 }
 
+/* new main routine */
+
+TRACE_CONFIG* my_trace;
+
 int main(int argc, char** argv)
+{
+    if(argc < 3)
+    {
+        printf("You need do provide host and port\n");
+        return -1;
+    }
+
+    if(strlen(argv[1]) > MAX_NAME) return -1;
+    if(strlen(argv[2]) > MAX_NAME) return -1;
+
+    my_trace = (TRACE_CONFIG*)malloc(sizeof(TRACE_CONFIG));
+    if(my_trace == 0x0)
+    {
+        printf("Unable to allocate trace config\n");
+        return -1;
+    }
+
+    strcpy(my_trace->host, argv[1]);
+    my_trace->port = atoi(argv[2]);
+
+    /* Windows sockets */
+
+    WSADATA wsa;
+    
+    printf("\nInitialising Winsock...");
+    if (WSAStartup(MAKEWORD(2,2),&wsa) != 0)
+    {
+        printf("Failed. Error Code : %d",WSAGetLastError());
+        return 1;
+    }
+     
+    printf("Initialised.");
+
+    return 0x0;
+}
+
+
+int main2(int argc, char** argv)
 {
     unsigned i, j;
     scan_on = 0x0;
