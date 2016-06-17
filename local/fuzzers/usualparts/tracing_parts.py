@@ -28,6 +28,42 @@ def get_additional_options():
 
     (options.additional_options, args) = parser.parse_args()
 
+def spawn_internal_controller():
+    options = globs.state.options
+
+    rs("lclick", options.m)
+    rs("python_spawn_internal_controller", options.m)
+
+def reset_tracer_controller_status():
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+    
+    state.tracers = []
+    state.tracers_count = 0
+    return
+
+def start_tracer():
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+    
+    write_socket(options.s, "spawn_tracer");
+    read_socket(options.s)
+
+    print(state.lastResponse)
+
+    # register controller on success
+    options.state.tracers[options.state.tracers_count] = state.lastResponse
+    options.state.tracers_count += 1
+
+def stop_tracer_controller():
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+    
+    write_socket(options.s, "spawn_tracer");
+    return
 
 def trace_sample2():
     # sledzenie wykonania probki w zakresie wybranych adresow

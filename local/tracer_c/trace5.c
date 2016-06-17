@@ -2,6 +2,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "winsock2.h"
+
+#define TRACE_CONTROLLER_IP "127.0.0.1"
+#define TRACE_CONTROLLER_PORT 12341
 //#include <winsock.h>
 
 //#pragma comment(lib,"ws2_32.lib") //Winsock Library
@@ -1750,6 +1753,14 @@ int parse_descriptor(char* path)
     return 0x0;
 }
 
+/* new routines */
+
+int handle_cmd(char* cmd)
+{
+    printf("%s\n", cmd);
+    return 0x0;
+}
+
 /* new main routine */
 
 TRACE_CONFIG* my_trace;
@@ -1778,6 +1789,8 @@ int main(int argc, char** argv)
     /* Windows sockets */
 
     WSADATA wsa;
+    SOCKET s;    
+    struct sockaddr_in server;
     
     printf("\nInitialising Winsock...");
     if (WSAStartup(MAKEWORD(2,2),&wsa) != 0)
@@ -1787,6 +1800,40 @@ int main(int argc, char** argv)
     }
      
     printf("Initialised.");
+
+    /* Connect to socket */
+
+    if((s = socket(AF_INET , SOCK_STREAM , 0 )) == INVALID_SOCKET)
+    {
+        printf("Could not create socket : %d" , WSAGetLastError());
+    }
+
+    printf("Socket created.\n");
+
+    /* Creating backconnect */
+    server.sin_addr.s_addr = inet_addr(TRACE_CONTROLLER_IP);
+    server.sin_family = AF_INET;
+    server.sin_port = htons(TRACE_CONTROLLER_PORT);
+ 
+    if (connect(s , (struct sockaddr *)&server , sizeof(server)) < 0)
+    {
+        printf("connect error");
+        return 1;
+    }
+     
+    printf("Connected.\n");
+
+    /* handle commands in loop */
+
+    char cmd[MAX_LINE];
+    unsigned recv_size;
+
+    while((recv_size = recv(s , cmd, 2000 , 0)) == SOCKET_ERROR)
+    {
+        if(!strcmp(cmd, "quit")) 
+            break;
+        handle_cmd(cmd);
+    }
 
     return 0x0;
 }
