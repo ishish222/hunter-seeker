@@ -49,13 +49,22 @@ def start_tracer():
     status = globs.state.status
     
     write_socket(options.s, "spawn_tracer");
-    read_socket(options.s)
+    response, _, _ = read_socket(options.s)
 
-    print(state.lastResponse)
+    print(response)
 
     # register controller on success
-    options.state.tracers[options.state.tracers_count] = state.lastResponse
-    options.state.tracers_count += 1
+    print('Current tracers: %s, tracer count: %d' % (state.tracers, state.tracers_count))
+    state.tracers.append(response)
+    state.tracers_count += 1
+
+def spawn_tracer_controller():
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+    
+    write_socket(options.s, "start_trace_controller");
+    return
 
 def stop_tracer_controller():
     options = globs.state.options

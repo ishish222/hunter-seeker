@@ -214,6 +214,32 @@ def read_socket(s):
 def read_socket_q(s):
     options = globs.state.options
 
+    lastResponse = ""
+    status = ""
+    reqScript = ""
+    data = ""
+
+    while True:
+        data += s.recv(options.settings.buffer_size)
+        
+        if(data[-6:] == "-=OK=-"): 
+            lastResponse = data[:-6]
+            break
+
+    # find status
+    off = data.find("Status: ")
+    if(off != -1):
+        status = data[off+8:off+10]
+        if(status == "SR"):
+            scOff = data.find("Script: ")
+            lineEnd = data[scOff+8:].find("\n")
+            reqScript = data[scOff+8:scOff+8+lineEnd]
+
+    return (lastResponse, status, reqScript)
+
+def read_socket_q_deprecated(s):
+    options = globs.state.options
+
     status = ""
     data = ""
 

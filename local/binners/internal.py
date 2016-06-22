@@ -26,8 +26,8 @@ else:
 
 def getPipe(name):
 #    dlog("In getPipe", 2)
-    ph = win32file.CreateFile(name, win32file.GENERIC_READ | win32file.GENERIC_WRITE | win32pipe.PIPE_TYPE_MESSAGE, 0, None, win32file.OPEN_EXISTING, 0, None)
-    return ph
+    ext_pipe = win32file.CreateFile(name, win32file.GENERIC_READ | win32file.GENERIC_WRITE | win32pipe.PIPE_TYPE_MESSAGE, 0, None, win32file.OPEN_EXISTING, 0, None)
+    return ext_pipe
 
 def readPipe(pipe):
     data = ""
@@ -51,23 +51,23 @@ def handle_crash():
 #    global crash_bin
 #    global crash_reason
 
-#    e_addr = main_binner.crash_bin.last_crash.exception_address
+#    e_addr = crash_bin.last_crash.exception_address
 
     #create dossier
 #    if(reason == "hc"):
 #        crash_reason = "hc"
-#        writePipe("Probable crash reason: hc (crash info needs reinterpretation)\n")
-#        writePipe("")
+#        writePipe(ext_pipe, "Probable crash reason: hc (crash info needs reinterpretation)\n")
+#        writePipe(ext_pipe, "")
 #    if((disasm(dbg, e_addr) == "[INVALID]") or (get_module(dbg, e_addr) == "[INVALID]")):
 #        crash_reason = "uaf"
-#        main_binner.writePipe("Probable crash reason: uaf\n")
-#        main_binner.writePipe("")
+#        writePipe(ext_pipe, "Probable crash reason: uaf\n")
+#        writePipe(ext_pipe, "")
 #    else:
 #        crash_reason = "unk"
 #
 #    print("5")
-#    main_binner.writePipe(crash_bin.crash_synopsis())
-#    main_binner.get_synopsis()
+#    writePipe(ext_pipe, crash_bin.crash_synopsis())
+#    get_synopsis()
 #    data = 
 #
 #    return DBG_CONTINUE
@@ -110,39 +110,39 @@ def verify():
     time.sleep(5)
 
 def process_status_queue(satisfying = None):
-    global main_binner
+    global ext_pipe
     global status
 
     status = ""
     satisfied = False
     
-    while(not main_binner.status.empty()):
-        main_binner.dlog("Queue size before get: %d" % main_binner.status.qsize())
-        item = main_binner.status.get()
-        main_binner.dlog("Queue size after get : %d" % main_binner.status.qsize())
+    while(not status.empty()):
+        dlog("Queue size before get: %d" % status.qsize())
+        item = status.get()
+        dlog("Queue size after get : %d" % status.qsize())
         status = item[1]
-        main_binner.dlog("Processing %s" % status)
+        dlog("Processing %s" % status)
         if(status == "TO"):
-            if(main_binner.prev_status == "MA"):
+            if(prev_status == "MA"):
                 status = "PTO"
-            if(main_binner.prev_status == "TO"):
+            if(prev_status == "TO"):
                 status = "PTO"
-            if(main_binner.prev_status == "RD"):
+            if(prev_status == "RD"):
                 status = "PTO"
         if(status == "EX"):
-            main_binner.writePipe("Status: %s\n" % status)
-            main_binner.writePipe("Encountered exception: %s\n" % item[2])
-            main_binner.ok()
+            writePipe(ext_pipe, "Status: %s\n" % status)
+            writePipe(ext_pipe, "Encountered exception: %s\n" % item[2])
+            ok(ext_pipe)
         if(status == "SR"):
-            main_binner.dlog("Requested script: %s" % item[2])
-            main_binner.writePipe("Status: %s\n" % status)
-            main_binner.writePipe("Script: %s\n" % item[2])
-            main_binner.ok()
+            dlog("Requested script: %s" % item[2])
+            writePipe(ext_pipe, "Status: %s\n" % status)
+            writePipe(ext_pipe, "Script: %s\n" % item[2])
+            ok(ext_pipe)
             # time for reaction to SR
-            main_binner.start_debuggers("Script execution")
-            main_binner.readPipe()
-            main_binner.stop_debuggers("Script execution finished") #could add statuses into queue
-            main_binner.dlog("Queue size after script: %d" % main_binner.status.qsize())
+            start_debuggers("Script execution")
+            readPipe()
+            stop_debuggers("Script execution finished") #could add statuses into queue
+            dlog("Queue size after script: %d" % status.qsize())
             continue
 
         print("Got status: %s " % status)
@@ -154,7 +154,7 @@ def process_status_queue(satisfying = None):
                 print("Status %s is not satisfying" % status)
                 print("Satisfying statuses:")
                 print(satisfying)
-        main_binner.prev_status = status
+        prev_status = status
 
     return satisfied
 
@@ -162,14 +162,15 @@ def window_check(hwnd, lParam):
     global window_name
     global found
 
-    writePipe(win32gui.GetWindowText(hwnd))
+    writePipe(ext_pipe, win32gui.GetWindowText(hwnd))
     if(win32gui.GetWindowText(hwnd).find(window_name) != -1):
         found = True
 
 ### binner commands
 def execute(cmds):
-    global main_binner
+    global ext_pipe
     global status
+    global trace_controller
 
     cmd = cmds[0]
     args = " ".join(cmds[1:])
@@ -177,12 +178,12 @@ def execute(cmds):
 #    try:
     if(True):
         if(cmd == "settle"):
-            main_binner.status = ""
+            status = ""
     
             watchThread = Thread(target = watchThread_routine, args=(float(cmds[1]),))
             watchThread.start()
-            main_binner.start_debuggers()
-            main_binner.ok()
+            start_debuggers()
+            ok(ext_pipe)
 
         if(cmd == "windowExists"):
             global window_name
@@ -194,21 +195,21 @@ def execute(cmds):
             win32gui.EnumWindows(window_check, None)
 
             if(found == True):
-                main_binner.writePipe("FOUND")
+                writePipe(ext_pipe, "FOUND")
             else:
-                main_binner.writePipe("NOT FOUND")
-            main_binner.ok()
+                writePipe(ext_pipe, "NOT FOUND")
+            ok(ext_pipe)
 
         if(cmd == "getCPUUsage"):
             from functions import getCPU
             val = getCPU()
-            main_binner.writePipe("Usage: %d\n" % val)
-            main_binner.ok()
+            writePipe(ext_pipe, "Usage: %d\n" % val)
+            ok(ext_pipe)
 
         if(cmd == "cooldown"):
             from functions import getCPU
 
-            main_binner.writePipe("Waiting for cooldown\n")
+            writePipe(ext_pipe, "Waiting for cooldown\n")
             cool_count = 5
             cool_level = 10
             cool_wait = 1
@@ -217,14 +218,14 @@ def execute(cmds):
             while(count < cool_count):
                 time.sleep(cool_wait)
                 val = getCPU()
-                main_binner.writePipe("CPU usage: %d\n" % val)
+                writePipe(ext_pipe, "CPU usage: %d\n" % val)
                 if val < cool_level:
                     count = count+1
                 else:
                     count = 0
 
-            main_binner.writePipe("We're cool\n")
-            main_binner.ok()
+            writePipe(ext_pipe, "We're cool\n")
+            ok(ext_pipe)
 
         if(cmd == "cooldown2"):
             from functions import getCPU
@@ -234,22 +235,22 @@ def execute(cmds):
             cool_level = int(cool_level)
             cool_wait = 5
 
-            main_binner.writePipe("Waiting for cooldown: level %d, count %d\n" % (cool_level, cool_count))
+            writePipe(ext_pipe, "Waiting for cooldown: level %d, count %d\n" % (cool_level, cool_count))
             print("Waiting for cooldown: level %d, count %d\n" % (cool_level, cool_count))
 
             count = 0
             while(count < cool_count):
                 time.sleep(cool_wait)
                 val = getCPU()
-                main_binner.writePipe("CPU usage: %d\n" % val)
+                writePipe(ext_pipe, "CPU usage: %d\n" % val)
                 print 'val: %d, cool_level: %d' % (val, cool_level)
                 if val < cool_level:
                     count = count+1
                 else:
                     count = 0
 
-            main_binner.writePipe("We're cool\n")
-            main_binner.ok()
+            writePipe(ext_pipe, "We're cool\n")
+            ok(ext_pipe)
 
         if(cmd == "cooldown3"):
             from functions import getCPU
@@ -259,29 +260,29 @@ def execute(cmds):
             cool_level = int(cool_level)
             cool_wait = 1
 
-            main_binner.writePipe("Waiting for cooldown: level %d, count %d\n" % (cool_level, cool_count))
+            writePipe(ext_pipe, "Waiting for cooldown: level %d, count %d\n" % (cool_level, cool_count))
             print("Waiting for cooldown: level %d, count %d\n" % (cool_level, cool_count))
 
             count = 0
             while(count < cool_count):
                 time.sleep(cool_wait)
                 val = getCPU()
-                main_binner.writePipe("CPU usage: %d\n" % val)
+                writePipe(ext_pipe, "CPU usage: %d\n" % val)
                 print 'val: %d, cool_level: %d' % (val, cool_level)
                 if val < cool_level:
                     count = count+1
                 else:
                     count = 0
 
-            main_binner.writePipe("We're cool\n")
-            main_binner.ok()
+            writePipe(ext_pipe, "We're cool\n")
+            ok(ext_pipe)
 
         elif(cmd == "testAll"):
             for sample in glob("e:\\samples\\shared\\*.*"):
-                main_binner.attach_st_markers()
-                main_binner.loop_debuggers(invocation = "powershell -command \"& { invoke-expression %s }\"" % sample)
+                attach_st_markers()
+                loop_debuggers(invocation = "powershell -command \"& { invoke-expression %s }\"" % sample)
                 while(process_status_queue(["ST", "CR", "TO", "CR"]) != True):
-                    main_binner.loop_debuggers()
+                    loop_debuggers()
                 if(status == "TO"):
                     print("ST TO")
                     continue
@@ -291,30 +292,30 @@ def execute(cmds):
     
                 print("Status: %s" % status)
     
-                main_binner.detach_st_markers()
-                main_binner.attach_end_markers()
+                detach_st_markers()
+                attach_end_markers()
     
     #            process_status_queue()
-    #            main_binner.loop_debuggers(settings.wait_sleep)
+    #            loop_debuggers(settings.wait_sleep)
                 while(process_status_queue(["MA", "CR", "TO"]) != True):
-                    main_binner.loop_debuggers(settings.wait_sleep)
+                    loop_debuggers(settings.wait_sleep)
                 if(status == "CR"):
                     print("CRrrrrrrrrrr")
                     break
     
                 print("Status: %s" % status)
 
-                main_binner.detach_end_markers()
-                main_binner.attach_rd_markers()
+                detach_end_markers()
+                attach_rd_markers()
                 # time for reaction to test end
-                main_binner.start_debuggers("Closing execution")
-                main_binner.readPipe()
-                main_binner.stop_debuggers("Closing execution finished")
+                start_debuggers("Closing execution")
+                readPipe()
+                stop_debuggers("Closing execution finished")
     
-    #            main_binner.loop_debuggers()
+    #            loop_debuggers()
                 if(settings.needs_ready):
                     while(process_status_queue(["RD", "CR", "TO"]) != True):
-                        main_binner.loop_debuggers()
+                        loop_debuggers()
                     if(status == "TO"):
                         print("RD TO")
                         continue
@@ -322,90 +323,90 @@ def execute(cmds):
                         print("CRrrrrrrrrrr")
                         break
     
-            main_binner.writePipe("Done")
-            main_binner.ok()
-            main_binner.detach_rd_markers()
+            writePipe(ext_pipe, "Done")
+            ok(ext_pipe)
+            detach_rd_markers()
 
 ### test a file
 
         elif(cmd == "openFile"):
             settings.runner(args)
-            main_binner.ok()
+            ok(ext_pipe)
             return
 
 ### test a file
 
         elif(cmd == "testFile"):
-            main_binner.attach_st_markers()
+            attach_st_markers()
 
-            main_binner.loop_debuggers(invocation_args=args)
+            loop_debuggers(invocation_args=args)
             while(process_status_queue(["ST", "CR", "PTO"]) != True):
-                main_binner.loop_debuggers(settings.wait_sleep)
+                loop_debuggers(settings.wait_sleep)
             if(status == "CR"):
 #                dlog("Processing CR1")
-                main_binner.get_ea()
-                main_binner.test_bin_dir()
-                main_binner.save_synopsis(args)
-                main_binner.save_sample(args)
-                main_binner.writePipe("Status: CR")
-                main_binner.ok()
+                get_ea()
+                test_bin_dir()
+                save_synopsis(args)
+                save_sample(args)
+                writePipe(ext_pipe, "Status: CR")
+                ok(ext_pipe)
                 return
 
-            main_binner.writePipe("Status: %s" % status)
-            main_binner.ok()
+            writePipe(ext_pipe, "Status: %s" % status)
+            ok(ext_pipe)
             print "Send: %s" % status
 
-            main_binner.detach_st_markers()
-            main_binner.attach_end_markers()
+            detach_st_markers()
+            attach_end_markers()
 
             while(process_status_queue(["MA", "CR", "TO", "PTO"]) != True):
-                main_binner.loop_debuggers(settings.wait_sleep)
+                loop_debuggers(settings.wait_sleep)
             if(status == "CR"):
 #                dlog("Processing CR2")
                 print "CR handling 1"
-                main_binner.get_ea()
-                main_binner.test_bin_dir()
-                main_binner.save_synopsis(args)
-                main_binner.save_sample(args)
+                get_ea()
+                test_bin_dir()
+                save_synopsis(args)
+                save_sample(args)
 #                dlog("Hereeeeeee")
                 print "CR handling 2"
-                main_binner.writePipe("Status: CR")
-                main_binner.ok()
+                writePipe(ext_pipe, "Status: CR")
+                ok(ext_pipe)
                 print "Send: %s" % status
                 return
 
-            main_binner.writePipe("Status: %s" % status)
-            main_binner.ok()
+            writePipe(ext_pipe, "Status: %s" % status)
+            ok(ext_pipe)
 
-            main_binner.detach_end_markers()
+            detach_end_markers()
             if(settings.needs_ready):
-                main_binner.attach_rd_markers()
+                attach_rd_markers()
             # time for reaction to test end
-            main_binner.start_debuggers("Closing execution")
-            main_binner.readPipe()
-            main_binner.stop_debuggers("Closing execution finished")
+            start_debuggers("Closing execution")
+            readPipe()
+            stop_debuggers("Closing execution finished")
 
-#            main_binner.loop_debuggers()
+#            loop_debuggers()
             if(settings.needs_ready):
                 while(process_status_queue(["RD", "CR", "PTO"]) != True):
-                    main_binner.loop_debuggers(settings.wait_sleep)
+                    loop_debuggers(settings.wait_sleep)
             else:
                 process_status_queue(["RD", "CR", "PTO"])
                 if(status != "CR"): status = "RD"
 
             if(status == "CR"):
 #                dlog("Processing CR3")
-                main_binner.get_ea()
-                main_binner.test_bin_dir()
-                main_binner.save_synopsis(args)
-                main_binner.save_sample(args)
-                main_binner.writePipe("Status: CR")
-                main_binner.ok()
+                get_ea()
+                test_bin_dir()
+                save_synopsis(args)
+                save_sample(args)
+                writePipe(ext_pipe, "Status: CR")
+                ok(ext_pipe)
                 return
 
-            main_binner.writePipe("Status: %s" % status)
-            main_binner.ok()
-            main_binner.detach_rd_markers()
+            writePipe(ext_pipe, "Status: %s" % status)
+            ok(ext_pipe)
+            detach_rd_markers()
 
 ### test a directory
 
@@ -415,137 +416,137 @@ def execute(cmds):
             cmds[2] = args2[3]
             print("0: %s\n1: %s\n2: %s\n" % (cmds[0], cmds[1], cmds[2]))
             real_target = cmds[2]
-            main_binner.attach_st_markers()
+            attach_st_markers()
 
-            main_binner.loop_debuggers(invocation_args=cmds[2])
+            loop_debuggers(invocation_args=cmds[2])
             while(process_status_queue(["ST", "CR", "PTO"]) != True):
-                main_binner.loop_debuggers(settings.wait_sleep)
+                loop_debuggers(settings.wait_sleep)
             if(status == "CR"):
 #                dlog("Processing CR1")
-                main_binner.get_ea()
-                main_binner.test_bin_dir()
-                main_binner.save_synopsis(args)
-                main_binner.save_sample(cmds[1])
-                main_binner.writePipe("Status: CR")
-                main_binner.ok()
+                get_ea()
+                test_bin_dir()
+                save_synopsis(args)
+                save_sample(cmds[1])
+                writePipe(ext_pipe, "Status: CR")
+                ok(ext_pipe)
                 return
 
-            main_binner.writePipe("Status: %s" % status)
-            main_binner.ok()
+            writePipe(ext_pipe, "Status: %s" % status)
+            ok(ext_pipe)
 
-            main_binner.detach_st_markers()
-            main_binner.attach_end_markers()
+            detach_st_markers()
+            attach_end_markers()
 
             while(process_status_queue(["MA", "CR", "TO", "PTO"]) != True):
-                main_binner.loop_debuggers(settings.wait_sleep)
+                loop_debuggers(settings.wait_sleep)
             if(status == "CR"):
 #                dlog("Processing CR2")
-                main_binner.get_ea()
-                main_binner.test_bin_dir()
-                main_binner.save_synopsis(args)
-                main_binner.save_sample(cmds[1])
+                get_ea()
+                test_bin_dir()
+                save_synopsis(args)
+                save_sample(cmds[1])
 #                dlog("Hereeeeeee")
-                main_binner.writePipe("Status: CR")
-                main_binner.ok()
+                writePipe(ext_pipe, "Status: CR")
+                ok(ext_pipe)
                 return
 
-            main_binner.writePipe("Status: %s" % status)
-            main_binner.ok()
+            writePipe(ext_pipe, "Status: %s" % status)
+            ok(ext_pipe)
 
-            main_binner.detach_end_markers()
+            detach_end_markers()
             if(settings.needs_ready):
-                main_binner.attach_rd_markers()
+                attach_rd_markers()
             # time for reaction to test end
-            main_binner.start_debuggers("Closing execution")
-            main_binner.readPipe()
-            main_binner.stop_debuggers("Closing execution finished")
+            start_debuggers("Closing execution")
+            readPipe()
+            stop_debuggers("Closing execution finished")
 
-#            main_binner.loop_debuggers()
+#            loop_debuggers()
             if(settings.needs_ready):
                 while(process_status_queue(["RD", "CR", "PTO"]) != True):
-                    main_binner.loop_debuggers(settings.wait_sleep)
+                    loop_debuggers(settings.wait_sleep)
             else:
                 process_status_queue(["RD", "CR", "PTO"])
                 if(status != "CR"): status = "RD"
 
             if(status == "CR"):
 #                dlog("Processing CR3")
-                main_binner.get_ea()
-                main_binner.test_bin_dir()
-                main_binner.save_synopsis(args)
-                main_binner.save_sample(cmds[1])
-                main_binner.writePipe("Status: CR")
-                main_binner.ok()
+                get_ea()
+                test_bin_dir()
+                save_synopsis(args)
+                save_sample(cmds[1])
+                writePipe(ext_pipe, "Status: CR")
+                ok(ext_pipe)
                 return
 
-            main_binner.writePipe("Status: %s" % status)
-            main_binner.ok()
-            main_binner.detach_rd_markers()
+            writePipe(ext_pipe, "Status: %s" % status)
+            ok(ext_pipe)
+            detach_rd_markers()
 
 ### trace a file by name
 
         elif(cmd == "trace3"):
             filee = args
             print("Tracing %s" % (filee))
-            main_binner.spawn(args)
-            main_binner.writePipe("OK")
-            main_binner.ok()
+            spawn(args)
+            writePipe(ext_pipe, "OK")
+            ok(ext_pipe)
         
 ### trace a file by PID & wait for sample
 
         elif(cmd == "trace4"):
             filee = args
             print("Tracing %s" % (filee))
-            main_binner.spawn(args)
-            main_binner.writePipe("OK")
-            main_binner.ok()
+            spawn(args)
+            writePipe(ext_pipe, "OK")
+            ok(ext_pipe)
         
         elif(cmd == "trace"):
             filee = args
             print("Tracing %s" % (filee))
             
-            main_binner.take_a_trace("%s" % 'NU')
+            take_a_trace("%s" % 'NU')
 
             print "About to release debugger"
-            main_binner.loop_debuggers(invocation_args=filee)
+            loop_debuggers(invocation_args=filee)
             while(process_status_queue(["WS"]) != True):
-                main_binner.loop_debuggers()
+                loop_debuggers()
             if(status == "CR"):
                 # CR before ST
-                main_binner.writePipe("Status: CR")
-                main_binner.ok()
+                writePipe(ext_pipe, "Status: CR")
+                ok(ext_pipe)
                 return
 
             print "About to release debugger"
 
             print "here2"
-            main_binner.writePipe("Status: %s" % status)
-            main_binner.ok()
+            writePipe(ext_pipe, "Status: %s" % status)
+            ok(ext_pipe)
 
             while(process_status_queue(["WE", "CR"]) != True):
-                main_binner.loop_debuggers()
+                loop_debuggers()
             if(status == "CR"):
                 # CR before ST
-                main_binner.writePipe("Status: CR")
-                main_binner.ok()
+                writePipe(ext_pipe, "Status: CR")
+                ok(ext_pipe)
                 return
 
-            main_binner.writePipe("Status: %s" % status)
-            main_binner.ok()
+            writePipe(ext_pipe, "Status: %s" % status)
+            ok(ext_pipe)
 
             if(settings.needs_ready):
-                main_binner.attach_rd_markers()
+                attach_rd_markers()
             # time for reaction to test end
-            main_binner.start_debuggers("Closing execution")
-            main_binner.readPipe()
-            main_binner.stop_debuggers("Closing execution finished")
+            start_debuggers("Closing execution")
+            readPipe()
+            stop_debuggers("Closing execution finished")
 
             print "here3"
-#            main_binner.loop_debuggers()
+#            loop_debuggers()
             if(settings.needs_ready):
                 while(process_status_queue(["RD", "CR", "PTO"]) != True):
                     print "waiting for RD"
-                    main_binner.loop_debuggers(settings.wait_sleep)
+                    loop_debuggers(settings.wait_sleep)
                     print "got sth"
             else:
                 process_status_queue(["RD", "CR", "PTO"])
@@ -553,75 +554,75 @@ def execute(cmds):
 
             if(status == "CR"):
 #                dlog("Processing CR3")
-                main_binner.get_ea()
-                main_binner.test_bin_dir()
-                main_binner.save_synopsis(args)
-                main_binner.save_sample(args)
-                main_binner.writePipe("Status: CR")
-                main_binner.ok()
+                get_ea()
+                test_bin_dir()
+                save_synopsis(args)
+                save_sample(args)
+                writePipe(ext_pipe, "Status: CR")
+                ok(ext_pipe)
                 return
 
             if(settings.needs_ready):
-                main_binner.writePipe("Status: %s" % status)
-                main_binner.ok()
-                main_binner.detach_rd_markers()
+                writePipe(ext_pipe, "Status: %s" % status)
+                ok(ext_pipe)
+                detach_rd_markers()
 
         elif(cmd == "detachdebugger"):
-            main_binner.detach_all()
+            detach_all()
             print("Detached")
-            main_binner.ok()
+            ok(ext_pipe)
 
         elif(cmd == "trace2"):
             print args
             filee, pid = args.split(' ')
             print("Tracing %s" % (filee))
             
-            main_binner.take_a_trace2("%s" % pid)
+            take_a_trace2("%s" % pid)
 
             settings.runner(filee)
-            main_binner.ok()
+            ok(ext_pipe)
             return
             
 
-            main_binner.loop_debuggers(invocation_args=filee)
+            loop_debuggers(invocation_args=filee)
             while(process_status_queue(["WS"]) != True):
-                main_binner.loop_debuggers()
+                loop_debuggers()
             if(status == "CR"):
                 # CR before ST
-                main_binner.writePipe("Status: CR")
-                main_binner.ok()
+                writePipe(ext_pipe, "Status: CR")
+                ok(ext_pipe)
                 return
 
             print "About to release debugger"
 
             print "here2"
-            main_binner.writePipe("Status: %s" % status)
-            main_binner.ok()
+            writePipe(ext_pipe, "Status: %s" % status)
+            ok(ext_pipe)
 
             while(process_status_queue(["WE", "CR"]) != True):
-                main_binner.loop_debuggers()
+                loop_debuggers()
             if(status == "CR"):
                 # CR before ST
-                main_binner.writePipe("Status: CR")
-                main_binner.ok()
+                writePipe(ext_pipe, "Status: CR")
+                ok(ext_pipe)
                 return
 
-            main_binner.writePipe("Status: %s" % status)
-            main_binner.ok()
+            writePipe(ext_pipe, "Status: %s" % status)
+            ok(ext_pipe)
 
             if(settings.needs_ready):
-                main_binner.attach_rd_markers()
+                attach_rd_markers()
             # time for reaction to test end
-            main_binner.start_debuggers("Closing execution")
-            main_binner.readPipe()
-            main_binner.stop_debuggers("Closing execution finished")
+            start_debuggers("Closing execution")
+            readPipe()
+            stop_debuggers("Closing execution finished")
 
             print "here3"
-#            main_binner.loop_debuggers()
+#            loop_debuggers()
             if(settings.needs_ready):
                 while(process_status_queue(["RD", "CR", "PTO"]) != True):
                     print "waiting for RD"
-                    main_binner.loop_debuggers(settings.wait_sleep)
+                    loop_debuggers(settings.wait_sleep)
                     print "got sth"
             else:
                 process_status_queue(["RD", "CR", "PTO"])
@@ -629,18 +630,18 @@ def execute(cmds):
 
             if(status == "CR"):
 #                dlog("Processing CR3")
-                main_binner.get_ea()
-                main_binner.test_bin_dir()
-                main_binner.save_synopsis(args)
-                main_binner.save_sample(args)
-                main_binner.writePipe("Status: CR")
-                main_binner.ok()
+                get_ea()
+                test_bin_dir()
+                save_synopsis(args)
+                save_sample(args)
+                writePipe(ext_pipe, "Status: CR")
+                ok(ext_pipe)
                 return
 
             if(settings.needs_ready):
-                main_binner.writePipe("Status: %s" % status)
-                main_binner.ok()
-                main_binner.detach_rd_markers()
+                writePipe(ext_pipe, "Status: %s" % status)
+                ok(ext_pipe)
+                detach_rd_markers()
 
 ### walk a file
 
@@ -648,48 +649,48 @@ def execute(cmds):
             print "here1"
             filee, depth, gf_file = args.split(" ")
             depth = int(depth)
-            print("Walking %s for %d levels, generating graph into %s" % (filee, depth, gf_file))
+            print("Walking %s for %d levels, generating graext_pipe into %s" % (filee, depth, gf_file))
             
-            main_binner.take_a_walk("%s %s" % (depth, gf_file))
+            take_a_walk("%s %s" % (depth, gf_file))
             time.sleep(2)
 
-            main_binner.loop_debuggers(invocation_args=filee)
+            loop_debuggers(invocation_args=filee)
             while(process_status_queue(["WS"]) != True):
-                main_binner.loop_debuggers()
+                loop_debuggers()
             if(status == "CR"):
                 # CR before ST
-                main_binner.writePipe("Status: CR")
-                main_binner.ok()
+                writePipe(ext_pipe, "Status: CR")
+                ok(ext_pipe)
                 return
 
             print "here2"
-            main_binner.writePipe("Status: %s" % status)
-            main_binner.ok()
+            writePipe(ext_pipe, "Status: %s" % status)
+            ok(ext_pipe)
 
             while(process_status_queue(["WE", "CR"]) != True):
-                main_binner.loop_debuggers()
+                loop_debuggers()
             if(status == "CR"):
                 # CR before ST
-                main_binner.writePipe("Status: CR")
-                main_binner.ok()
+                writePipe(ext_pipe, "Status: CR")
+                ok(ext_pipe)
                 return
 
-            main_binner.writePipe("Status: %s" % status)
-            main_binner.ok()
+            writePipe(ext_pipe, "Status: %s" % status)
+            ok(ext_pipe)
 
             if(settings.needs_ready):
-                main_binner.attach_rd_markers()
+                attach_rd_markers()
             # time for reaction to test end
-            main_binner.start_debuggers("Closing execution")
-            main_binner.readPipe()
-            main_binner.stop_debuggers("Closing execution finished")
+            start_debuggers("Closing execution")
+            readPipe()
+            stop_debuggers("Closing execution finished")
 
             print "here3"
-#            main_binner.loop_debuggers()
+#            loop_debuggers()
             if(settings.needs_ready):
                 while(process_status_queue(["RD", "CR", "PTO"]) != True):
                     print "waiting for RD"
-                    main_binner.loop_debuggers(settings.wait_sleep)
+                    loop_debuggers(settings.wait_sleep)
                     print "got sth"
             else:
                 process_status_queue(["RD", "CR", "PTO"])
@@ -697,64 +698,64 @@ def execute(cmds):
 
             if(status == "CR"):
 #                dlog("Processing CR3")
-                main_binner.get_ea()
-                main_binner.test_bin_dir()
-                main_binner.save_synopsis(args)
-                main_binner.save_sample(args)
-                main_binner.writePipe("Status: CR")
-                main_binner.ok()
+                get_ea()
+                test_bin_dir()
+                save_synopsis(args)
+                save_sample(args)
+                writePipe(ext_pipe, "Status: CR")
+                ok(ext_pipe)
                 return
 
             if(settings.needs_ready):
-                main_binner.writePipe("Status: %s" % status)
-                main_binner.ok()
-                main_binner.detach_rd_markers()
+                writePipe(ext_pipe, "Status: %s" % status)
+                ok(ext_pipe)
+                detach_rd_markers()
 
 ### walk a file from new addr
 
         elif(cmd == "walk2"):
             filee, depth, gf_file, addr = args.split(" ")
             depth = int(depth)
-            print("Walking %s for %d levels, generating graph into %s" % (filee, depth, gf_file))
+            print("Walking %s for %d levels, generating graext_pipe into %s" % (filee, depth, gf_file))
             
-            main_binner.take_a_walk2("%s %s %s" % (depth, gf_file, addr))
+            take_a_walk2("%s %s %s" % (depth, gf_file, addr))
             time.sleep(2)
 
-            main_binner.loop_debuggers(invocation_args=filee)
+            loop_debuggers(invocation_args=filee)
             while(process_status_queue(["WS"]) != True):
-                main_binner.loop_debuggers()
+                loop_debuggers()
             if(status == "CR"):
                 # CR before ST
-                main_binner.writePipe("Status: CR")
-                main_binner.ok()
+                writePipe(ext_pipe, "Status: CR")
+                ok(ext_pipe)
                 return
 
-            main_binner.writePipe("Status: %s" % status)
-            main_binner.ok()
+            writePipe(ext_pipe, "Status: %s" % status)
+            ok(ext_pipe)
 
             while(process_status_queue(["WE", "CR"]) != True):
-                main_binner.loop_debuggers()
+                loop_debuggers()
             if(status == "CR"):
                 # CR before ST
-                main_binner.writePipe("Status: CR")
-                main_binner.ok()
+                writePipe(ext_pipe, "Status: CR")
+                ok(ext_pipe)
                 return
 
-            main_binner.writePipe("Status: %s" % status)
-            main_binner.ok()
+            writePipe(ext_pipe, "Status: %s" % status)
+            ok(ext_pipe)
 
             if(settings.needs_ready):
-                main_binner.attach_rd_markers()
+                attach_rd_markers()
             # time for reaction to test end
-            main_binner.start_debuggers("Closing execution")
-            main_binner.readPipe()
-            main_binner.stop_debuggers("Closing execution finished")
+            start_debuggers("Closing execution")
+            readPipe()
+            stop_debuggers("Closing execution finished")
 
-#            main_binner.loop_debuggers()
+#            loop_debuggers()
             if(settings.needs_ready):
                 while(process_status_queue(["RD", "CR", "PTO"]) != True):
                     print "waiting for RD"
-                    main_binner.loop_debuggers(settings.wait_sleep)
+                    loop_debuggers(settings.wait_sleep)
                     print "got sth"
             else:
                 process_status_queue(["RD", "CR", "PTO"])
@@ -762,168 +763,168 @@ def execute(cmds):
 
             if(status == "CR"):
 #                dlog("Processing CR3")
-                main_binner.get_ea()
-                main_binner.test_bin_dir()
-                main_binner.save_synopsis(args)
-                main_binner.save_sample(args)
-                main_binner.writePipe("Status: CR")
-                main_binner.ok()
+                get_ea()
+                test_bin_dir()
+                save_synopsis(args)
+                save_sample(args)
+                writePipe(ext_pipe, "Status: CR")
+                ok(ext_pipe)
                 return
 
             if(settings.needs_ready):
-                main_binner.writePipe("Status: %s" % status)
-                main_binner.ok()
-                main_binner.detach_rd_markers()
+                writePipe(ext_pipe, "Status: %s" % status)
+                ok(ext_pipe)
+                detach_rd_markers()
 
         elif(cmd == "walk3"):
             filee, depth, gf_file, addr = args.split(" ")
             depth = int(depth)
-            print("Walking %s for %d levels, generating graph into %s" % (filee, depth, gf_file))
+            print("Walking %s for %d levels, generating graext_pipe into %s" % (filee, depth, gf_file))
             
-            main_binner.take_a_walk2("%s %s %s" % (depth, gf_file, addr))
+            take_a_walk2("%s %s %s" % (depth, gf_file, addr))
             time.sleep(2)
 
-            main_binner.loop_debuggers(invocation_args=filee)
+            loop_debuggers(invocation_args=filee)
             while(process_status_queue(["WS"]) != True):
-                main_binner.loop_debuggers()
+                loop_debuggers()
             if(status == "CR"):
                 # CR before ST
-                main_binner.writePipe("Status: CR")
-                main_binner.ok()
+                writePipe(ext_pipe, "Status: CR")
+                ok(ext_pipe)
                 return
 
-            main_binner.writePipe("Status: %s" % status)
-            main_binner.ok()
+            writePipe(ext_pipe, "Status: %s" % status)
+            ok(ext_pipe)
 
             while(process_status_queue(["WE"]) != True):
-                main_binner.loop_debuggers()
+                loop_debuggers()
             if(status == "CR"):
                 # CR before ST
-                main_binner.writePipe("Status: CR")
-                main_binner.ok()
+                writePipe(ext_pipe, "Status: CR")
+                ok(ext_pipe)
                 return
 
-            main_binner.writePipe("Status: %s" % status)
-            main_binner.ok()
+            writePipe(ext_pipe, "Status: %s" % status)
+            ok(ext_pipe)
 
             if(settings.needs_ready):
-                main_binner.attach_rd_markers()
+                attach_rd_markers()
             # time for reaction to test end
-            main_binner.start_debuggers("Closing execution")
-            main_binner.readPipe()
-            main_binner.stop_debuggers("Closing execution finished")
+            start_debuggers("Closing execution")
+            readPipe()
+            stop_debuggers("Closing execution finished")
 
-#            main_binner.loop_debuggers()
+#            loop_debuggers()
             if(settings.needs_ready):
                 while(process_status_queue(["RD", "CR", "PTO"]) != True):
-                    main_binner.loop_debuggers(settings.wait_sleep)
+                    loop_debuggers(settings.wait_sleep)
             else:
                 process_status_queue(["RD", "CR", "PTO"])
                 if(status != "CR"): status = "RD"
 
             if(status == "CR"):
 #                dlog("Processing CR3")
-                main_binner.get_ea()
-                main_binner.test_bin_dir()
-                main_binner.save_synopsis(args)
-                main_binner.save_sample(args)
-                main_binner.writePipe("Status: CR")
-                main_binner.ok()
+                get_ea()
+                test_bin_dir()
+                save_synopsis(args)
+                save_sample(args)
+                writePipe(ext_pipe, "Status: CR")
+                ok(ext_pipe)
                 return
 
-            main_binner.writePipe("Status: %s" % status)
-            main_binner.ok()
-            main_binner.detach_rd_markers()
+            writePipe(ext_pipe, "Status: %s" % status)
+            ok(ext_pipe)
+            detach_rd_markers()
 
 ### other
 
         elif(cmd == "observe"):
 #            dlog("In observe")
-            main_binner.stop_debuggers()
-            main_binner.attach_st_markers()
-            main_binner.attach_end_markers()
-            main_binner.loop_debuggers(invocation = "powershell -command \"& { invoke-expression d:\\samples\\shared\\%s }\"" % args)
+            stop_debuggers()
+            attach_st_markers()
+            attach_end_markers()
+            loop_debuggers(invocation = "powershell -command \"& { invoke-expression d:\\samples\\shared\\%s }\"" % args)
             # waiting for ST
-            main_binner.attach_bp_handler()
-            main_binner.attach_ss_handler()
-            main_binner.dump_modules()
-            main_binner.dump_threads()
-            main_binner.track_all_threads()
-            main_binner.start_tracking_all_threads()
-            main_binner.loop_debuggers()
+            attach_bp_handler()
+            attach_ss_handler()
+            dump_modules()
+            dump_threads()
+            track_all_threads()
+            start_tracking_all_threads()
+            loop_debuggers()
             #waiting for END
-            main_binner.stop_tracking_all_threads()
+            stop_tracking_all_threads()
 
         elif(cmd == "testReactMarkers"):
 #            dlog("In testReactMarkers", 2)
-            main_binner.attach_st_markers()
-            main_binner.loop_debuggers(invocation = "powershell -command \"& { invoke-expression d:\\samples\\shared\\%s }\"" % args)
-            main_binner.detach_st_markers()
-            main_binner.attach_end_markers()
-            main_binner.attach_react_markers()
+            attach_st_markers()
+            loop_debuggers(invocation = "powershell -command \"& { invoke-expression d:\\samples\\shared\\%s }\"" % args)
+            detach_st_markers()
+            attach_end_markers()
+            attach_react_markers()
             status == ""
             while(status != "MA"):
-                main_binner.loop_debuggers()
-                status = main_binner.status.get()[1]
+                loop_debuggers()
+                status = status.get()[1]
                 if(status == "SR"):
-                    main_binner.writePipe("Status: SR\n Script: %s\n" % main_binner.reqScript)
-                    main_binner.ok()
+                    writePipe(ext_pipe, "Status: SR\n Script: %s\n" % reqScript)
+                    ok(ext_pipe)
 #                    dlog("Verified SR marker")
                 # react
-            main_binner.detach_react_markers()
-            main_binner.detach_end_markers()
-            main_binner.ok()
+            detach_react_markers()
+            detach_end_markers()
+            ok(ext_pipe)
 
         elif(cmd == "testStEndMarkers"):
 #            dlog("In testStEndMarkers", 2)
 
             # ST markers
-            main_binner.attach_st_markers()
-            main_binner.loop_debuggers(invocation = "powershell -command \"& { invoke-expression d:\\samples\\shared\\%s }\"" % args)
+            attach_st_markers()
+            loop_debuggers(invocation = "powershell -command \"& { invoke-expression d:\\samples\\shared\\%s }\"" % args)
             while(process_status_queue(["ST"]) != True):
-                main_binner.loop_debuggers()
-#            main_binner.writePipe("Verified ST marker\n")
+                loop_debuggers()
+#            writePipe(ext_pipe, "Verified ST marker\n")
 #            dlog("Verified ST marker")
-            main_binner.writePipe("Status: %s" % status)
-            main_binner.ok()
-            main_binner.detach_st_markers()
+            writePipe(ext_pipe, "Status: %s" % status)
+            ok(ext_pipe)
+            detach_st_markers()
 
             # END markers
-            main_binner.attach_end_markers()
-            main_binner.loop_debuggers(settings.wait_sleep)
+            attach_end_markers()
+            loop_debuggers(settings.wait_sleep)
             while(process_status_queue(["MA", "CR", "TO"]) != True):
-                main_binner.loop_debuggers(settings.wait_sleep)
+                loop_debuggers(settings.wait_sleep)
 #            dlog("Verified END marker")
-            main_binner.writePipe("Status: %s" % status)
-            main_binner.ok()
-            main_binner.detach_end_markers()
+            writePipe(ext_pipe, "Status: %s" % status)
+            ok(ext_pipe)
+            detach_end_markers()
 
 
-            main_binner.attach_rd_markers()
-            main_binner.loop_debuggers()
+            attach_rd_markers()
+            loop_debuggers()
             while(process_status_queue(["RD"]) != True):
-                main_binner.loop_debuggers()
-            main_binner.writePipe("Status: %s" % status)
-            main_binner.ok()
+                loop_debuggers()
+            writePipe(ext_pipe, "Status: %s" % status)
+            ok(ext_pipe)
 #            dlog("Verified RD marker")
-            main_binner.detach_rd_markers()
+            detach_rd_markers()
 
         elif(cmd == "openserialport"):
 #            dlog("In getSynopsis", 2)
             try:
-                ph2 = serial.Serial(1)
+                ext_pipe2 = serial.Serial(1)
             except Exception:
                 print "No second serial"
-            ph2.write("test-=OK=-") 
+            ext_pipe2.write("test-=OK=-") 
             print("done")
-            main_binner.ok()
+            ok(ext_pipe)
 
         elif(cmd == "getSynopsis"):
 #            dlog("In getSynopsis", 2)
-            main_binner.writePipe(main_binner.last_data)
-            main_binner.ok()
-#            main_binner.get_synopsis()
-#            main_binner.ok()
+            writePipe(ext_pipe, last_data)
+            ok(ext_pipe)
+#            get_synopsis()
+#            ok(ext_pipe)
 
         # TODO: sprawdz ktore logi gdzie maja isc
         elif(cmd == "logStart"):
@@ -934,169 +935,173 @@ def execute(cmds):
 #            else:
 #                startLog(log_file)
             startLog(args)
-            main_binner.start_log("%s" % (args))
-            main_binner.ok()
+            start_log("%s" % (args))
+            ok(ext_pipe)
 
         # TODO: sprawdz ktore logi gdzie maja isc
         elif(cmd == "logStop"):
             stopLog()
-            main_binner.stop_log()
-            main_binner.ok()
+            stop_log()
+            ok(ext_pipe)
     
         elif(cmd == "ps"):
-            for (ppid, pid, name) in main_binner.enumerate_processes_custom():
-                main_binner.writePipe("0x%x 0x%x %s\n" % (ppid, pid, name))
-            main_binner.ok()
+            for (ppid, pid, name) in enumerate_processes_custom():
+                writePipe(ext_pipe, "0x%x 0x%x %s\n" % (ppid, pid, name))
+            ok(ext_pipe)
 
         elif(cmd == "listTebs"):
-            main_binner.list_tebs()
-            main_binner.ok()
+            list_tebs()
+            ok(ext_pipe)
 
         elif(cmd == "cbEip"):
-            main_binner.writePipe("0x%x" % main_binner.crash_bin.last_crash.exception_address)
-            main_binner.ok()
+            writePipe(ext_pipe, "0x%x" % crash_bin.last_crash.exception_address)
+            ok(ext_pipe)
 
         elif(cmd == "cbCrashSynopsis"):
-            main_binner.writePipe(main_binner.crash_bin.crash_synopsis())
-            main_binner.ok()
+            writePipe(ext_pipe, crash_bin.crash_synopsis())
+            ok(ext_pipe)
     
         elif(cmd == "cbReason"):
-            main_binner.writePipe(main_binner.crash_reason)
-            main_binner.ok()
+            writePipe(ext_pipe, crash_reason)
+            ok(ext_pipe)
     
         elif(cmd == "cbStackUnwind"):
-            for call_frame in main_binner.crash_bin.last_crash.stack_unwind:
-                main_binner.writePipe(call_frame + "\n")
-            main_binner.ok()
+            for call_frame in crash_bin.last_crash.stack_unwind:
+                writePipe(ext_pipe, call_frame + "\n")
+            ok(ext_pipe)
 
         # TODO: sprawdz, czy dziala!
         elif(cmd == "attachBinner"):
             imagename = args
-            for (pid, name) in main_binner.enumerate_processes():
+            for (pid, name) in enumerate_processes():
                 if imagename in name:
 #                    try:
                     if True:
-#                        main_binner.dlog("[*] Attaching to %s (%d)" % (name, pid))
-                        main_binner.attach(pid)
+#                        dlog("[*] Attaching to %s (%d)" % (name, pid))
+                        attach(pid)
 #                    except Exception, e:
 #                        dlog("[!] Problem attaching to %s" % name)
 #                        dlog(e)
                     continue
 
-            main_binner.writePipe("Attached to " + str(args))
-            main_binner.ok()
+            writePipe(ext_pipe, "Attached to " + str(args))
+            ok(ext_pipe)
 
         elif(cmd == "killHost"):
-            main_binner.terminate_processes()
-            main_binner.ok()
+            terminate_processes()
+            ok(ext_pipe)
     
         elif(cmd == "installHandlers"):
-            main_binner.attach_react_markers()
-            main_binner.attach_ex_handler()
-            main_binner.attach_av_handler()
-            main_binner.ok()
+            attach_react_markers()
+            attach_ex_handler()
+            attach_av_handler()
+            ok(ext_pipe)
 
         elif(cmd == "installMarkerAddrs"):
 #            for ma_addr in settings.ma_addrs:
-#                main_binner.writePipe("Installing bad at " + cmds[1])
+#                writePipe(ext_pipe, "Installing bad at " + cmds[1])
 #                dbg.bp_set(ma_addr, handler = bad_handler)
             # will do automatically on process attach
-            main_binner.ok()
+            ok(ext_pipe)
 
         elif(cmd == "setupWaitSleep"):
-            main_binner.writePipe("Setting wait sleep to: {0}\n".format(cmds[1]))
+            writePipe(ext_pipe, "Setting wait sleep to: {0}\n".format(cmds[1]))
             settings.wait_sleep = float(cmds[1])
-            main_binner.ok()
+            ok(ext_pipe)
     
         elif(cmd == "setupSlowdown"):
-            main_binner.writePipe("Setting slowdown to: {0}\n".format(cmds[1]))
+            writePipe(ext_pipe, "Setting slowdown to: {0}\n".format(cmds[1]))
             settings.slowdown = float(cmds[1])
-            main_binner.ok()
+            ok(ext_pipe)
     
         elif(cmd == "setupMarkers"):
-            main_binner.writePipe("Setting up markers\n")
+            writePipe(ext_pipe, "Setting up markers\n")
 #            settings.ma_addrs += resolve_rvas(dbg, settings.ma_rvas)
 #            settings.ma_st_addrs += resolve_rvas(dbg, settings.ma_st_rvas)
 #            settings.ma_end_addrs += resolve_rvas(dbg, settings.ma_end_rvas)
             # will do automatically on process attach
-#            main_binner.writePipe("Marker list: {0}\n".format(main_binner.markers))
-#            main_binner.writePipe("ST marker list: {0}\n".format(main_binner.st_markers))
-#            main_binner.writePipe("END marker list: {0}\n".format(main_binner.end_markers))
-#            main_binner.writePipe("REACT marker list: {0}\n".format(main_binner.end_markers))
-            main_binner.ok()
+#            writePipe(ext_pipe, "Marker list: {0}\n".format(markers))
+#            writePipe(ext_pipe, "ST marker list: {0}\n".format(st_markers))
+#            writePipe(ext_pipe, "END marker list: {0}\n".format(end_markers))
+#            writePipe(ext_pipe, "REACT marker list: {0}\n".format(end_markers))
+            ok(ext_pipe)
 
         elif(cmd == "runFile"):
             settings.runner(args)
-            main_binner.ok()
+            ok(ext_pipe)
 
         elif(cmd == "binTest"):
 #            dlog("binTest")
-            main_binner.writePipe("Communication with binner is working")
-            main_binner.ok()
+            writePipe(ext_pipe, "Communication with binner is working")
+            ok(ext_pipe)
         
         elif(cmd == "checkReady"):
-            main_binner.writePipe("Status: RD")
-            main_binner.ok()
+            writePipe(ext_pipe, "Status: RD")
+            ok(ext_pipe)
 
         elif(cmd == "spawn"):
             print("Spawning: %s" % args)
-            main_binner.spawn(args)
-            main_binner.writePipe("OK")
-            main_binner.ok()
+            spawn(args)
+            writePipe(ext_pipe, "OK")
+            ok(ext_pipe)
 
         elif(cmd == "startBinner"):
-            main_binner.writePipe("OK")
-            main_binner.ok()
+            writePipe(ext_pipe, "OK")
+            ok(ext_pipe)
 
         elif(cmd == "kill"):
             print("Killing %s" % args)
             call("taskkill /F /IM %s" % args)
-            main_binner.writePipe("OK")
-            main_binner.ok()
+            writePipe(ext_pipe, "OK")
+            ok(ext_pipe)
 
         elif(cmd == "killExplorer"):
             print("Killing explorer")
             call("taskkill /F /IM explorer.exe")
-            main_binner.writePipe("OK")
-            main_binner.ok()
+            writePipe(ext_pipe, "OK")
+            writePipe(log_pipe, "Killed explorer")
+            ok(ext_pipe)
 
         elif(cmd == "release"):
-            main_binner.writePipe("Releasing")
-            main_binner.ok()
-            main_binner.start_debuggers()
+            writePipe(ext_pipe, "Releasing")
+            ok(ext_pipe)
+            start_debuggers()
 
         elif(cmd == "start_profiling"):
-            main_binner.start_profiling()
+            start_profiling()
 
         elif(cmd == "dump_stats"):
-            main_binner.dump_stats(args)
+            dump_stats(args)
 
         elif(cmd == "quit"):
-            main_binner.close_logs()
+            close_logs()
 
 ### tracer info
-        elif(cmd == "spawn tracer"):
+        elif(cmd == "spawn_tracer"):
             new_tracer = trace_controller.spawn_tracer()
-            writePipe("Started: %d" % new_tracer);
+            writePipe(ext_pipe, "Started: %d" % new_tracer);
+            writePipe(log_pipe, "Started: %d" % new_tracer);
+            ok(ext_pipe)
 
-        elif(cmd == "close tracer"):
+        elif(cmd == "close_tracer"):
             trace_controller.close_tracer(args)
-            ok()
+            ok(ext_pipe)
 
         elif(cmd == "start_trace_controller"):
-            trace_controller = TraceController.TraceController(ph)
-            ok()
+            trace_controller = TraceController.TraceController(ext_pipe)
+            ok(ext_pipe)
 
 #    except Exception, e:
 #        print(e)
 #        while True:
 #            pass
-#        main_binner.ok()
+#        ok(ext_pipe)
 
 ### main loop
 
 def internal_routine():
-    global ph
+    global ext_pipe
+    global log_pipe
     global main_binner
     global trace_controller
 
@@ -1111,20 +1116,14 @@ def internal_routine():
 Hunter-Seeker
 """
     print(logo)
-    print("0")
-    ph = serial.Serial(0)
-    ph.write("internal commander")
-    print("1")
-    ph.write("-=OK=-")
-    print("2")
-
-#    import select
+    ext_pipe = serial.Serial(0)
+    log_pipe = serial.Serial(1)
+    ext_pipe.write("-=OK=-")
+    log_pipe.write("test")
+    ok(log_pipe)
 
     while True:
-#        inputready, outputready, exceptready = select.select(pipes.values(), [], [], 1)
-#        if(inputready == []):
-#            continue
-        cmd = readPipe(ph)
+        cmd = readPipe(ext_pipe)
         cmds = cmd.split(" ")
         execute(cmds)
         if(cmd == "quit"):

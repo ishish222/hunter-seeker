@@ -26,7 +26,7 @@ Start.consequence = dm.PrintLogo
 
 WaitForever.name = "Waiting forever"
 WaitForever.consequence = dm.ShutdownSequence
-WaitForever.consequence = usualparts.other_parts.wait_for_keypress
+WaitForever.executing_routine = usualparts.other_parts.wait_for_keypress
 
 SpawnTrace.name = "Trace sample"
 SpawnTrace.consequence = WaitForever
@@ -47,7 +47,7 @@ GetAdditionalOptions.executing_routine = usualparts.tracing_parts.get_additional
 #dm.DiskGlob.consequence = dm.StartQemuLoad
 dm.GetOptions.consequence = RevertClean
 #dm.BinnerKillExplorer.consequence = dm.Cooldown # skip spawning app
-dm.TracerSpawn.consequence = WaitForever
+dm.SpawnTracer.consequence = WaitForever
 
 #dm.ShutdownSequence.consequence = ShutdownKillHost
 #dm.Cooldown.consequence = SpawnTrace

@@ -186,13 +186,14 @@ def get_options():
 
     qemu_args += ['-monitor', "unix:%s" % settings.machines[options.fuzzbox_name]['monitor']]
     qemu_args += ['-serial', "unix:%s" % settings.machines[options.fuzzbox_name]['serial']]
+    qemu_args += ['-serial', "unix:%s" % settings.machines[options.fuzzbox_name]['serial']+'-log']
     qemu_args += ['-serial', "file:%s" % settings.machines[options.fuzzbox_name]['serial']+'3']
     qemu_args += ['-smp', str(options.smp)]
     
     if(settings.qemu_env != None):
         for exp in settings.qemu_env:
             os.environ[exp[0]] = exp[1]
-    print os.environ
+#    print os.environ
 #        qemu_args.insert(0, settings.qemu_env)
     
 
@@ -215,6 +216,7 @@ def get_options():
     options.fuzzbox_timeout = float(options.wait_sleep*options.to_mult_factor)
     options.init_timeout = float(options.init_timeout)
     options.walk_level = float(options.walk_level)
+    options.shutting_down = False
 
     # for additional parsing
     options.parser = parser

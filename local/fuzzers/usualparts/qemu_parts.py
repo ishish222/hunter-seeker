@@ -19,7 +19,7 @@ def qemu_prepare_pipes():
 
     options.ms = common.prepare_monitor(options.ms_path)
     options.ss = common.prepare_serial(options.ss_path)
-    options.ss2 = common.prepare_serial(options.ss_path + '2')
+    options.ss_log = common.prepare_serial(options.ss_path + '-log')
 
 
 def qemu_ready():
@@ -50,6 +50,27 @@ def qemu_prepare(options, state):
 
     state.stats = statistics(options.metric_res)
 
+
+def log_loop(args):
+    from select import select
+    options = globs.state.options
+    
+    log_data = ""
+
+    while(options.shutting_down != True):
+        ready, _, _ = select([options.s_log], [], [])
+        log_data, _, _ = common.read_socket_q(options.s_log)
+        options.log_file.write(log_data+'\n')
+        
+
+def qemu_connect_log():
+    from threading import Thread
+
+    options = globs.state.options
+    options.s_log, _ = options.ss_log.accept()
+    options.log_file = open("%s/internal.log" % options.settings.log_dir, "w+", 0)
+    options.log_thread = Thread(target = log_loop, args = (10,))
+    options.log_thread.start()
 
 def qemu_start_full():
     options = globs.state.options

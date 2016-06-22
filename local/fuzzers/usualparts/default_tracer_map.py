@@ -39,7 +39,8 @@ ScriptRun = statemachine.State()
 UpdateStats = statemachine.State()
 HandleCrash = statemachine.State()
 ResetTracers = statemachine.State()
-TracerSpawn = statemachine.State()
+SpawnTracer = statemachine.State()
+SpawnTracerController = statemachine.State()
 
 PreparePipes = statemachine.State()
 RefreshSamples = statemachine.State()
@@ -62,10 +63,11 @@ BinnerConfigure = statemachine.State()
 Cooldown = statemachine.State()
 BinnerSpawnApp = statemachine.State()
 BinnerSpawn = statemachine.State()
-BinnerKillExplorer = statemachine.State()
+KillExplorer = statemachine.State()
 IsSocketConnected = statemachine.State()
 QemuConnectDevSocket = statemachine.State()
-BinnerSpawnPythonServer = statemachine.State()
+SpawnInternalController = statemachine.State()
+QemuConnectLog = statemachine.State()
 QemuMountDisks = statemachine.State()
 StartQemuFull = statemachine.State()
 StartQemuLoad = statemachine.State()
@@ -226,26 +228,34 @@ BinnerSpawnApp.name = "Binner spawning application"
 BinnerSpawnApp.consequence = Cooldown
 BinnerSpawnApp.executing_routine = usualparts.binner_parts.binner_spawn_app
 
-TracerSpawn.name = "Spawning tracer"
-TracerSpawn.consequence = BinnerSpawnApp
-TracerSpawn.executing_routine = usualparts.tracing_parts.start_tracer
+SpawnTracer.name = "Spawning tracer"
+SpawnTracer.consequence = BinnerSpawnApp
+SpawnTracer.executing_routine = usualparts.tracing_parts.start_tracer
+
+SpawnTracerController.name = "Spawning trace controller"
+SpawnTracerController.consequence = SpawnTracer
+SpawnTracerController.executing_routine = usualparts.tracing_parts.spawn_tracer_controller
 
 ResetTracers.name = "Resetting tracers structures"
-ResetTracers.consequence = TracerSpawn
+ResetTracers.consequence = SpawnTracerController
 ResetTracers.executing_routine = usualparts.tracing_parts.reset_tracer_controller_status
 
-BinnerKillExplorer.name = "Killing explorer"
-BinnerKillExplorer.consequence = TracerSpawn
-BinnerKillExplorer.executing_routine = usualparts.binner_parts.binner_kill_explorer
+KillExplorer.name = "Killing explorer"
+KillExplorer.consequence = ResetTracers
+KillExplorer.executing_routine = usualparts.binner_parts.binner_kill_explorer
+
+QemuConnectLog.name = "Connecting log socket"
+QemuConnectLog.consequence = KillExplorer
+QemuConnectLog.executing_routine = usualparts.qemu_parts.qemu_connect_log
 
 def is_socket_connected():
     options = globs.state.options
     state = globs.state
 
     if(state.initialized == True):    
-        return BinnerKillExplorer
+        return QemuConnectLog
     else:
-        return BinnerSpawnPythonServer
+        return SpawnInternalController
 
 IsSocketConnected.name = "Checking socket connection"
 IsSocketConnected.consequence = None
@@ -257,12 +267,14 @@ QemuConnectDevSocket.executing_routine = usualparts.qemu_parts.qemu_connect_dev_
 QemuConnectDevSocket.trans_error_handler = usualparts.other_parts.wait_10_seconds
 QemuConnectDevSocket.acceptable_error_count = 100
 
-BinnerSpawnPythonServer.name = "Spawning internal controller"
-BinnerSpawnPythonServer.consequence = QemuConnectDevSocket
-BinnerSpawnPythonServer.executing_routine = usualparts.tracing_parts.spawn_internal_controller
+SpawnInternalController.name = "Spawning internal controller"
+SpawnInternalController.consequence = QemuConnectDevSocket
+SpawnInternalController.executing_routine = usualparts.tracing_parts.spawn_internal_controller
+
 
 QemuMountDisks.name = "Mounting qemu disks"
-QemuMountDisks.consequence = BinnerSpawnPythonServer
+QemuMountDisks.consequence = SpawnInternalController
+#QemuMountDisks.consequence = QemuConnectLog
 QemuMountDisks.executing_routine = usualparts.qemu_parts.qemu_mount_disks
 
 StartQemuFull.name = "Perform full Qemu start"

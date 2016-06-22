@@ -47,10 +47,10 @@ def defined(name):
 ### binner class
 
 class TraceController(object):
-    def __init__(self, ph):
+    def __init__(self, ext_pipe):
         self.start_mutex = NamedMutex("StartMutex", True)
         self.stop_mutex = NamedMutex("StopMutex", True)
-        self.ph = ph
+        self.ext_pipe = ext_pipe
         self.test_lock = Lock()
         self.loop_lock = Lock()
         self.loop_lock.acquire()
@@ -116,12 +116,12 @@ class TraceController(object):
     def writePipe(self, data):
         self.dlog("Writing to pipe: %s" % data, 3)
 #        print("Writing to pipe: %s" % data)
-        self.ph.write(data)
+        self.ext_pipe.write(data)
 
     def readPipe(self):
         data = ""
         while True:
-            data += self.ph.read(1)
+            data += self.ext_pipe.read(1)
             
             if(data[-6:] == "-=OK=-"): 
                 break
