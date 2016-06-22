@@ -19,6 +19,11 @@ from glob import glob
 PIPE_NAME = "\\\\.\\pipe\\control"
 PIPE_BUFF_SIZE = 4096
 
+class SerialWrap(serial.Serial):
+    def write(self, data):
+        super(SerialWrap, self).write(data)
+        super(SerialWrap, self).write('-=OK=-')
+
 if(defined("settings.log_file")):
     log_file = settings.log_file
 else:
@@ -1099,6 +1104,7 @@ def execute(cmds):
 
 ### main loop
 
+
 def internal_routine():
     global ext_pipe
     global log_pipe
@@ -1117,10 +1123,13 @@ Hunter-Seeker
 """
     print(logo)
     ext_pipe = serial.Serial(0)
-    log_pipe = serial.Serial(1)
+    log_pipe = SerialWrap(1)
     ext_pipe.write("-=OK=-")
-    log_pipe.write("test")
-    ok(log_pipe)
+    log_pipe.write("Starting internal log")
+    log_pipe.write("Attempt to redirect stderr")
+    import sys
+    sys.stdout = log_pipe
+    sys.stderr = log_pipe
 
     while True:
         cmd = readPipe(ext_pipe)
