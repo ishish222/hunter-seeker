@@ -1767,6 +1767,12 @@ TRACE_CONFIG* my_trace;
 
 int main(int argc, char** argv)
 {
+    printf("main\n");
+
+    int i = 0;
+    for(i=0;i<argc;i++)
+        printf("%d - %s\n", i, argv[i]);
+
     if(argc < 3)
     {
         printf("You need do provide host and port\n");
@@ -1783,6 +1789,7 @@ int main(int argc, char** argv)
         return -1;
     }
 
+    printf("2\n");
     strcpy(my_trace->host, argv[1]);
     my_trace->port = atoi(argv[2]);
 
@@ -1826,18 +1833,27 @@ int main(int argc, char** argv)
     /* handle commands in loop */
 
     char cmd[MAX_LINE];
-    unsigned recv_size;
+    DWORD recv_size;
+    DWORD flags;
 
-    while((recv_size = recv(s , cmd, 2000 , 0)) == SOCKET_ERROR)
+    u_long iMode = 1;
+    ioctlsocket(s, FIONBIO, &iMode);
+
+    while(1)
     {
-        if(!strcmp(cmd, "quit")) 
-            break;
-        handle_cmd(cmd);
+        recv_size = 0x0;
+        WSARecv(s, (LPWSABUF)cmd, 1, (LPDWORD)recv_size, (LPDWORD)flags, 0x0, 0x0);
+        if(recv_size >0)
+        {
+            if(!strcmp(cmd, "quit")) 
+                break;
+            handle_cmd(cmd);
+        }
+
     }
 
     return 0x0;
 }
-
 
 int main2(int argc, char** argv)
 {

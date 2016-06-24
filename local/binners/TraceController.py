@@ -359,7 +359,7 @@ class TraceController(object):
 
     def spawn_tracer(self):
         print("Spawning tracer")
-        self.tracers.append(Popen(["e:\\server\\b.exe", "127.0.0.1", "12341"], shell=True))
+        Popen(["e:\\server\\b.exe", "127.0.0.1", "12341"], shell=True)
         sock, addr = self.main_socket.accept()
         self.trace_sockets.append(sock)
         self.trace_count += 1

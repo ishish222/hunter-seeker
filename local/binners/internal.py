@@ -21,7 +21,7 @@ PIPE_BUFF_SIZE = 4096
 
 class SerialWrap(serial.Serial):
     def write(self, data):
-        super(SerialWrap, self).write(data)
+        super(SerialWrap, self).write(data+'\n')
         super(SerialWrap, self).write('-=OK=-')
 
 if(defined("settings.log_file")):
@@ -1122,9 +1122,9 @@ def internal_routine():
 Hunter-Seeker
 """
     print(logo)
-    ext_pipe = serial.Serial(0)
+    ext_pipe = SerialWrap(0)
     log_pipe = SerialWrap(1)
-    ext_pipe.write("-=OK=-")
+    ext_pipe.write('')
     log_pipe.write("Starting internal log")
     log_pipe.write("Attempt to redirect stderr")
     import sys
@@ -1135,6 +1135,7 @@ Hunter-Seeker
         cmd = readPipe(ext_pipe)
         cmds = cmd.split(" ")
         execute(cmds)
+        log_pipe.write("CMD executed")
         if(cmd == "quit"):
             break
 

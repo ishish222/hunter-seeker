@@ -58,10 +58,11 @@ def log_loop(args):
     log_data = ""
 
     while(options.shutting_down != True):
-        ready, _, _ = select([options.s_log], [], [])
+        ready, _, _ = select([options.s_log], [], [], 5)
         log_data, _, _ = common.read_socket_q(options.s_log)
-        options.log_file.write(log_data+'\n')
-        
+        options.log_file.write(log_data)
+
+    options.log_file.write('finishing\n')
 
 def qemu_connect_log():
     from threading import Thread
@@ -252,6 +253,7 @@ def temu_poweroff_no_revert():
         pass
     print("[Powering off]")
     rs("powerdown", options.m)
+    options.shutting_down = True
     time.sleep(options.shutdown_wait)
     options.m = None
     print("Last batch: %s" % options.tmp_disk_img)
