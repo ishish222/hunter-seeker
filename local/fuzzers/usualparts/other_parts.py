@@ -216,7 +216,12 @@ def get_options():
     options.fuzzbox_timeout = float(options.wait_sleep*options.to_mult_factor)
     options.init_timeout = float(options.init_timeout)
     options.walk_level = float(options.walk_level)
-    options.shutting_down = False
+
+
+    from threading import Event
+
+    options.shutting_down = Event()
+    options.threads = list()
 
     # for additional parsing
     options.parser = parser
@@ -229,8 +234,8 @@ def get_options():
 
 def sigkill_handler(signum, frame):
     options = globs.state.options
+
     print "Detected sigkill from user"
-    options.shutting_down = True
     raise statemachine.MachineExit
     return
 
@@ -238,8 +243,6 @@ def register_signals():
     import signal
     import common
     # przeszkadza jednak, nie mozna zakonczyc czasem
-#    signal.signal(signal.SIGINT, sigkill_handler)
-#    signal.signal(signal.SIGTERM, sigkill_handler)
     signal.signal(signal.SIGUSR1, sigkill_handler)
     signal.signal(signal.SIGHUP, sigkill_handler)
 

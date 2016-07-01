@@ -51,16 +51,20 @@ def qemu_prepare(options, state):
     state.stats = statistics(options.metric_res)
 
 
-def log_loop(args):
+def log_loop(arg1, shutdown):
     from select import select
     options = globs.state.options
     
     log_data = ""
 
-    while(options.shutting_down != True):
-        ready, _, _ = select([options.s_log], [], [], 5)
+    while not(shutdown.is_set()):
+        options.log_file.write('%s\n' % options.shutting_down.is_set())
+        ready, _, _ = select([options.s_log], [], [], 5.0)
+        if not(ready):
+            continue
         log_data, _, _ = common.read_socket_q(options.s_log)
         options.log_file.write(log_data)
+        shutdown.wait(0.1)
 
     options.log_file.write('finishing\n')
 
@@ -70,8 +74,9 @@ def qemu_connect_log():
     options = globs.state.options
     options.s_log, _ = options.ss_log.accept()
     options.log_file = open("%s/internal.log" % options.settings.log_dir, "w+", 0)
-    options.log_thread = Thread(target = log_loop, args = (10,))
+    options.log_thread = Thread(target = log_loop, args = (10, options.shutting_down))
     options.log_thread.start()
+    options.threads.append(options.log_thread)
 
 def qemu_start_full():
     options = globs.state.options
@@ -263,6 +268,8 @@ def temu_poweroff_no_revert():
 def poweroff_no_revert():
     options = globs.state.options
     
+    options.shutting_down.set()
+
     write_socket(options.s, "logStop")
     common.del_mountpoint(options)
 
@@ -281,6 +288,7 @@ def poweroff_no_revert():
     print("[Powering off]")
     rs("powerdown", options.m)
     time.sleep(options.shutdown_wait)
+    print("Shutdown: %s" % options.shutting_down.is_set())
     options.m = None
     print("Last batch: %s" % options.tmp_disk_img)
     print("Last saved: %s" % options.saved_disk_img)

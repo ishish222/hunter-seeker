@@ -1080,6 +1080,7 @@ def execute(cmds):
 
         elif(cmd == "quit"):
             close_logs()
+            log_pipe.write("quit")
 
 ### tracer info
         elif(cmd == "spawn_tracer"):
