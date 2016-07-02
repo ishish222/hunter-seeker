@@ -11,6 +11,24 @@ report = common.report
 write_socket = common.write_socket
 read_socket = common.read_socket
 
+def get_sample_options():
+    options = globs.state.options
+    parser = options.parser
+
+    parser.add_option("", "--sample-file",dest="sample_file", help="Starting module for trace", default="none.exe")
+    parser.add_option("", "--sample-process",dest="sample_process", help="Starting module for trace", default="None")
+    parser.add_option("", "--smod",       dest="st_mod", help="Starting module for trace", default="0x0")
+    parser.add_option("", "--emod",       dest="end_mod", help="Ending module for trace", default="kernel32.dll")
+    parser.add_option("", "--saddr",      dest="st_addr", help="Starting address for trace", default="0x1b7c")
+    parser.add_option("", "--eaddr",      dest="end_addr", help="Ending address for trace", default="0x52acf")
+    parser.add_option("", "--odir",       dest="out_dir", help="Out dir for trace", default="\\\\10.0.2.4\\qemu\\")
+    parser.add_option("", "--odir2",      dest="out_dir2", help="Appendix for trace output", default="last")
+    parser.add_option("", "--prefix",     dest="prefix", help="Prefix for trace", default="last")
+    parser.add_option("", "--logpath",    dest="log_path", help="Log path for trace", default="\\\\10.0.2.4\\qemu\\last_log.txt")
+    parser.add_option("", "--limit",      dest="instr_limit", help="Instruction limit", default="0")
+
+    (options.sample_options, args) = parser.parse_args()
+
 def get_additional_options():
     options = globs.state.options
     parser = options.parser
