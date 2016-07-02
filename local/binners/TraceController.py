@@ -61,6 +61,7 @@ class TraceController(object):
         self.tracers = []
         self.trace_count = 0
         self.trace_sockets = []
+        self.trace_active = 0
 
         self.sockets = {}
         self.init_dbg = pydbg()
@@ -130,6 +131,14 @@ class TraceController(object):
     def ok(self):
         time.sleep(0.1)
         self.writePipe("-=OK=-")
+
+    def send_command_active(self, cmd):
+        self.dlog("Sending: %s to tracer no: %d" % (cmd, self.trace_active), 3)
+        try:
+            self.write_debugger(self.trace_sockets[self.trace_active], cmd)
+        except Exception:
+            print("Failed to send %s to tracer no: %d" % (cmd, self.trace_active))
+        self.dlog("Sent: %s to tracer no: %d" % (cmd, self.trace_active), 3)
 
     def send_command(self, cmd):
         self.dlog("Sending: %s" % cmd, 3)
@@ -362,9 +371,16 @@ class TraceController(object):
         Popen(["e:\\server\\b.exe", "127.0.0.1", "12341"], shell=True)
         sock, addr = self.main_socket.accept()
         self.trace_sockets.append(sock)
+        self.trace_active = self.trace_count
         self.trace_count += 1
         print("Tracer synced")
         return self.trace_count-1
+
+    def activate_prev_tracer(self):
+        self.trace_active = self.trace_active - 1
+
+    def activate_next_tracer(self):
+        self.trace_active = self.trace_active - 1
 
 # modify
     def attach(self, pid):
@@ -399,6 +415,16 @@ class TraceController(object):
 
     def enumerate_processes_custom(self):
         return self.init_dbg.enumerate_processes_custom()
+
+
+# markers stuff
+    def configure_marker_st(self, mod, addr):
+        self.send_command_active("M1 %s %s" % (mod, addr))
+        return
+
+    def configure_marker_end(self, mod, addr):
+        self.send_command_active("M2 %s %s" % (mod, addr))
+        return
 
     def attach_all_markers(self):
         self.attach_markers()
@@ -591,3 +617,10 @@ class TraceController(object):
     def dump_stats(self, fname):
         self.send_command("RD%s%s" % (fname, end))
 
+    def set_sample_file(self, filee):
+        self.send_command_active("SN %s" % filee)
+        return 
+
+    def set_sample_pname(self, pname):
+        self.send_command_active("SP %s" % pname)
+        return 

@@ -36,7 +36,10 @@ def stateful_routine():
         print "=> Current state: [%s]" % current_state.name
         if(current_state.consequence != None):
             try:
-                current_state.executing_routine()
+                if(hasattr(current_state, "args")):
+                    current_state.executing_routine(current_state.args)
+                else:
+                    current_state.executing_routine()
             except statemachine.MachineError:
                 print "Got state transition error"
                 if(current_state.attempts < current_state.acceptable_error_count):

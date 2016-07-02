@@ -1083,6 +1083,30 @@ def execute(cmds):
             log_pipe.write("quit")
 
 ### tracer info
+        elif(cmd == "tc_avtivate_prev"):
+            trace_controller.activate_prev_tracer()
+            ok(ext_pipe)
+
+        elif(cmd == "tc_avtivate_next"):
+            trace_controller.activate_next_tracer()
+            ok(ext_pipe)
+
+        elif(cmd == "tracer_configure_sample_file"):
+            trace_controller.set_sample_file(args)
+            ok(ext_pipe)
+
+        elif(cmd == "tracer_configure_sample_pname"):
+            trace_controller.set_sample_pname(args)
+            ok(ext_pipe)
+
+        elif(cmd == "tracer_configure_marker_st"):
+            trace_controller.configure_marker_st(args[0], args[1])
+            ok(ext_pipe)
+
+        elif(cmd == "tracer_configure_marker_end"):
+            trace_controller.configure_marker_end(args[0], args[1])
+            ok(ext_pipe)
+
         elif(cmd == "spawn_tracer"):
             new_tracer = trace_controller.spawn_tracer()
             writePipe(ext_pipe, "Started: %d" % new_tracer);
