@@ -108,7 +108,8 @@ class TraceController(object):
                 return
             if(level > self.log_level):
                 return
-            self.last_log_file.write("[%s] %s\n" % (timestamp(), data))
+#            self.last_log_file.write("[%s] %s\n" % (timestamp(), data))
+            print("[%s] %s\n" % (timestamp(), data))
 
     def ddlog(self, data, level=0):
         #pass to regular log facility
@@ -624,3 +625,8 @@ class TraceController(object):
     def set_sample_pname(self, pname):
         self.send_command_active("SP %s" % pname)
         return 
+
+    def print_sth(self, data):
+        self.send_command_active("PR %s" % data)
+        return 
+

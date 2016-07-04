@@ -1816,18 +1816,30 @@ int main(int argc, char** argv)
     }
 
     printf("Socket created.\n");
+    u_long iMode = 0;
+
+    unsigned iResult;
+
+    iResult = ioctlsocket(s, FIONBIO, &iMode);
+    if (iResult != NO_ERROR) printf("ioctlsocket failed with error: %ld\n", iResult);
 
     /* Creating backconnect */
     server.sin_addr.s_addr = inet_addr(TRACE_CONTROLLER_IP);
     server.sin_family = AF_INET;
     server.sin_port = htons(TRACE_CONTROLLER_PORT);
  
+    iResult = ioctlsocket(s, FIONBIO, &iMode);
+    if (iResult != NO_ERROR) printf("ioctlsocket failed with error: %ld\n", iResult);
+
     if (connect(s , (struct sockaddr *)&server , sizeof(server)) < 0)
     {
         printf("connect error");
         return 1;
     }
      
+    iResult = ioctlsocket(s, FIONBIO, &iMode);
+    if (iResult != NO_ERROR) printf("ioctlsocket failed with error: %ld\n", iResult);
+
     printf("Connected.\n");
 
     /* handle commands in loop */
@@ -1836,13 +1848,12 @@ int main(int argc, char** argv)
     DWORD recv_size;
     DWORD flags;
 
-    u_long iMode = 1;
-    ioctlsocket(s, FIONBIO, &iMode);
-
     while(1)
     {
         recv_size = 0x0;
-        WSARecv(s, (LPWSABUF)cmd, 1, (LPDWORD)recv_size, (LPDWORD)flags, 0x0, 0x0);
+        iResult = recv(s, cmd, MAX_LINE-1, 0);
+//        WSARecv(s, (LPWSABUF)cmd, 1, (LPDWORD)recv_size, (LPDWORD)flags, 0x0, 0x0);
+        printf("Got cmd: %s\n", cmd);
         if(recv_size >0)
         {
             if(!strcmp(cmd, "quit")) 

@@ -1107,6 +1107,10 @@ def execute(cmds):
             trace_controller.configure_marker_end(args[0], args[1])
             ok(ext_pipe)
 
+        elif(cmd == "tracer_print"):
+            trace_controller.print_sth(args)
+            ok(ext_pipe)
+
         elif(cmd == "spawn_tracer"):
             new_tracer = trace_controller.spawn_tracer()
             writePipe(ext_pipe, "Started: %d" % new_tracer);
