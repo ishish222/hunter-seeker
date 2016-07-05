@@ -134,6 +134,8 @@ class TraceController(object):
         self.writePipe("-=OK=-")
 
     def send_command_active(self, cmd):
+        cmd = cmd + "-=OK=-"
+
         self.dlog("Sending: %s to tracer no: %d" % (cmd, self.trace_active), 3)
         try:
             self.write_debugger(self.trace_sockets[self.trace_active], cmd)

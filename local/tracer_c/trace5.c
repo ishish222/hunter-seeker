@@ -1845,21 +1845,37 @@ int main(int argc, char** argv)
     /* handle commands in loop */
 
     char cmd[MAX_LINE];
+    unsigned cmd_len;
+
+    char recv_buf[MAX_LINE];
+
     DWORD recv_size;
     DWORD flags;
 
     while(1)
     {
-        recv_size = 0x0;
-        iResult = recv(s, cmd, MAX_LINE-1, 0);
-//        WSARecv(s, (LPWSABUF)cmd, 1, (LPDWORD)recv_size, (LPDWORD)flags, 0x0, 0x0);
-        printf("Got cmd: %s\n", cmd);
-        if(recv_size >0)
+        strcpy(cmd, "");
+        strcpy(recv_buf, "");
+        cmd_len = 0x0;
+
+        while(1)
         {
-            if(!strcmp(cmd, "quit")) 
-                break;
-            handle_cmd(cmd);
+            recv_size = recv(s, recv_buf, MAX_LINE-1, 0);
+
+            strcat(cmd, recv_buf);
+            cmd_len += recv_size;
+
+            if(!strncmp(cmd+cmd_len-6, "-=OK=-", 6)) break;
+            printf("Got part: %s\n", cmd);
+            printf("Finish: %s\n", cmd+cmd_len-6);
         }
+
+        cmd[cmd_len-6] = 0x0;
+        printf("Got cmd: %s\n", cmd);
+
+        if(!strcmp(cmd, "quit")) 
+            break;
+        handle_cmd(cmd);
 
     }
 
