@@ -31,6 +31,17 @@ def trace_controller_activate_next_tracer():
 
     return
 
+def tracer_configure_dir():
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+    
+    if(options.sample_options.sample_file != "None"):
+        write_socket(options.s, "tracer_configure_research_dir %s" % options.sample_options.research_dir);
+        response, _, _ = read_socket(options.s)
+
+    return
+
 def tracer_configure_sample():
     options = globs.state.options
     state = globs.state

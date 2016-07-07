@@ -143,7 +143,7 @@ typedef struct TRACE_CONFIG_
     PROCESS_INFORMATION pi;
     STARTUPINFO si;
     CREATE_PROCESS_DEBUG_INFO cpdi;
-    char process_name[MAX_NAME];
+    unsigned PID;
     
     /* handles */
     HANDLE procHandle;
@@ -191,6 +191,9 @@ typedef struct TRACE_CONFIG_
     char iniPath[0x200];
     char modPath[0x200];
     wchar_t filePath[0x200];
+    char research_dir[MAX_LINE];
+    char sample_path[MAX_LINE];
+    char process_fname[MAX_NAME];
    
     /* offsets */
     DWORD img_base;

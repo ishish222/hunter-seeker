@@ -624,8 +624,16 @@ class TraceController(object):
         self.send_command_active("SN %s" % filee)
         return 
 
+    def set_research_dir(self, filee):
+        self.send_command_active("SD %s" % filee)
+        return 
+
     def set_sample_pname(self, pname):
         self.send_command_active("SP %s" % pname)
+        return 
+
+    def debug_sample(self):
+        self.send_command_active("sd")
         return 
 
     def print_sth(self, data):

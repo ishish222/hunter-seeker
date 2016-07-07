@@ -13,6 +13,8 @@
 
 /* add_readsign */
 
+TRACE_CONFIG* my_trace;
+
 int add_roadsign(void* data)
 {
     ROADSIGN* sign;
@@ -1700,11 +1702,11 @@ int add_breakpoint(DWORD addr, handler_routine handler)
 }
 void start_trace_fname()
 {
-    d_print("Creating process: %s\n", process_fname);
+    d_print("Creating process: %s\n", my_trace->process_fname);
 
-    CreateProcess(process_fname, 0x0, 0x0, 0x0, 0x0, DEBUG_ONLY_THIS_PROCESS, 0x0, 0x0, &si, &pi);
+    CreateProcess(my_trace->process_fname, 0x0, 0x0, 0x0, 0x0, DEBUG_ONLY_THIS_PROCESS, 0x0, 0x0, &my_trace->si, &my_trace->pi);
 
-    myPID = pi.dwProcessId;
+    my_trace->PID = pi.dwProcessId;
 }
 
 void start_trace_pid()
@@ -1758,16 +1760,62 @@ int parse_descriptor(char* path)
 int handle_cmd(char* cmd)
 {
     printf("%s\n", cmd);
+
+    if(cmd[0x0] == 'S' && cmd[0x1] == 'N')
+    {
+        strcpy(my_trace->sample_path, cmd+3);
+        printf("Sample path set to: %s\n", my_trace->sample_path);    
+    }
+    else if(cmd[0x0] == 'S' && cmd[0x1] == 'D')
+    {
+        strcpy(my_trace->research_dir, cmd+3);
+        printf("Research dir set to: %s\n", my_trace->research_dir);
+    }
+    else if(cmd[0x0] == 'M' && cmd[0x1] == '1')
+    {
+        char* mod;
+        OFFSET off;
+
+        mod = strtok(cmd, " ");
+        mod = strtok(0x0, " ");
+        off = strtol(strtok(0x0, " "), 0x0, 0x10);
+
+        printf("Start marker fixed at: %s:0x%08x\n", mod, off);
+    }
+    else if(cmd[0x0] == 'M' && cmd[0x1] == '2')
+    {
+        char* mod;
+        OFFSET off;
+
+        mod = strtok(cmd, " ");
+        mod = strtok(0x0, " ");
+        off = strtol(strtok(0x0, " "), 0x0, 0x10);
+
+        printf("End marker fixed at: %s:0x%08x\n", mod, off);
+    }
+    else if(cmd[0x0] == 's' && cmd[0x1] == 'd')
+    {
+        strcpy(my_trace->process_fname, my_trace->research_dir);
+        strcat(my_trace->process_fname, "\\");
+        strcat(my_trace->process_fname, my_trace->sample_path);
+
+        printf("Starting debugging: %s\n", my_trace->process_fname);
+
+        start_trace_fname();
+
+        printf("Started debugging, got PID: %d\n", my_trace->PID);
+    }
+    else
+    {
+    }
+
     return 0x0;
 }
 
 /* new main routine */
 
-TRACE_CONFIG* my_trace;
-
 int main(int argc, char** argv)
 {
-    printf("main\n");
 
     int i = 0;
     for(i=0;i<argc;i++)
@@ -1789,7 +1837,6 @@ int main(int argc, char** argv)
         return -1;
     }
 
-    printf("2\n");
     strcpy(my_trace->host, argv[1]);
     my_trace->port = atoi(argv[2]);
 
@@ -1806,7 +1853,7 @@ int main(int argc, char** argv)
         return 1;
     }
      
-    printf("Initialised.");
+    printf("Initialised\n");
 
     /* Connect to socket */
 
@@ -1815,7 +1862,7 @@ int main(int argc, char** argv)
         printf("Could not create socket : %d" , WSAGetLastError());
     }
 
-    printf("Socket created.\n");
+    printf("Socket created\n");
     u_long iMode = 0;
 
     unsigned iResult;
@@ -1840,7 +1887,7 @@ int main(int argc, char** argv)
     iResult = ioctlsocket(s, FIONBIO, &iMode);
     if (iResult != NO_ERROR) printf("ioctlsocket failed with error: %ld\n", iResult);
 
-    printf("Connected.\n");
+    printf("Connected\n");
 
     /* handle commands in loop */
 

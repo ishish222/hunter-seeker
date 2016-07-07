@@ -1095,16 +1095,26 @@ def execute(cmds):
             trace_controller.set_sample_file(args)
             ok(ext_pipe)
 
+        elif(cmd == "tracer_configure_research_dir"):
+            trace_controller.set_research_dir(args)
+            ok(ext_pipe)
+
         elif(cmd == "tracer_configure_sample_pname"):
             trace_controller.set_sample_pname(args)
             ok(ext_pipe)
 
         elif(cmd == "tracer_configure_marker_st"):
-            trace_controller.configure_marker_st(args[0], args[1])
+            mod, addr = args.split(" ")
+            trace_controller.configure_marker_st(mod, addr)
             ok(ext_pipe)
 
         elif(cmd == "tracer_configure_marker_end"):
-            trace_controller.configure_marker_end(args[0], args[1])
+            mod, addr = args.split(" ")
+            trace_controller.configure_marker_end(mod, addr)
+            ok(ext_pipe)
+
+        elif(cmd == "tracer_debug_sample"):
+            trace_controller.debug_sample()
             ok(ext_pipe)
 
         elif(cmd == "tracer_print"):

@@ -18,7 +18,9 @@ SpawnTrace = statemachine.State()
 RevertClean = statemachine.State()
 WaitForever = statemachine.State()
 TracerConfigureMarkers = statemachine.State()
+TracerConfigureDir= statemachine.State()
 TracerConfigureSample = statemachine.State()
+TracerDebugSample = statemachine.State()
 
 DefaultShutdown = dm.ShutdownSequence
 
@@ -31,13 +33,20 @@ WaitForever.name = "Waiting forever"
 WaitForever.consequence = dm.ShutdownSequence
 WaitForever.executing_routine = usualparts.other_parts.wait_for_keypress
 
+TracerDebugSample.name = "Debugging sample"
+TracerDebugSample.consequence = WaitForever
+TracerDebugSample.executing_routine = usualparts.tracer_parts.tracer_debug_sample
+
 TracerConfigureMarkers.name = "Configuring markers"
-TracerConfigureMarkers.consequence = WaitForever
+TracerConfigureMarkers.consequence = TracerDebugSample
 TracerConfigureMarkers.executing_routine = usualparts.tracer_parts.tracer_configure_marker_st_end
 
+TracerConfigureDir.name = "Configuring dir"
+TracerConfigureDir.consequence = TracerConfigureMarkers
+TracerConfigureDir.executing_routine = usualparts.tracer_parts.tracer_configure_dir
 
 TracerConfigureSample.name = "Configuring sample"
-TracerConfigureSample.consequence = TracerConfigureMarkers
+TracerConfigureSample.consequence = TracerConfigureDir
 TracerConfigureSample.executing_routine = usualparts.tracer_parts.tracer_configure_sample
 
 SpawnTrace.name = "Trace sample"
