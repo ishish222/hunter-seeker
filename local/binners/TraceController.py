@@ -143,6 +143,12 @@ class TraceController(object):
             print("Failed to send %s to tracer no: %d" % (cmd, self.trace_active))
         self.dlog("Sent: %s to tracer no: %d" % (cmd, self.trace_active), 3)
 
+    def recv_report_active(self):
+        try:
+            self.read_debugger(self.trace_sockets[self.trace_active])
+        except Exception:
+            print("Failed to send %s to tracer no: %d" % (cmd, self.trace_active))
+
     def send_command(self, cmd):
         self.dlog("Sending: %s" % cmd, 3)
         for pid in self.debuggers:
@@ -173,8 +179,28 @@ class TraceController(object):
             self.dlog(self.read_debugger(dbg))
             self.read_debugger(dbg)
 
-#TODO: debugger/tracer reactions should be encapsulated & forwarded to fuzzer without intervention
     def read_debugger(self, dbg_socket):
+        self.last_report = ""
+        self.last_answer = ""
+        data = ""
+        while True:
+            r, _, _ = select((dbg_socket, ), [], [], 0)
+            if(r == []): break
+            data = dbg_socket.recv(2)
+            self.last_report += data
+            self.last_answer += data
+            if(self.last_report == 'BP' or self.last_report == 'IN'):
+                long_data = ""
+                while True:
+                    long_data += dbg_socket.recv(1)
+                    if(long_data[-6:] == end): 
+                        self.last_data = long_data[:-6]
+                        self.last_answer += self.last_data
+                        break
+                self.reqScript += long_data
+                self.status.put((statusPri[status], status, self.reqScript))
+
+    def read_debugger2(self, dbg_socket):
         self.last_answer = ""
         data = ""
         while True:
@@ -634,6 +660,17 @@ class TraceController(object):
 
     def debug_sample(self):
         self.send_command_active("sd")
+        return 
+
+    def debug_continue(self):
+        self.send_command_active("cn")
+        self.recv_report_active()
+        return 
+
+    def list_tebs(self):
+        self.send_command_active("lt")
+        # receive list
+        # send list
         return 
 
     def print_sth(self, data):

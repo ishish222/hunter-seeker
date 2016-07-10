@@ -1117,6 +1117,15 @@ def execute(cmds):
             trace_controller.debug_sample()
             ok(ext_pipe)
 
+        elif(cmd == "tracer_debug_continue"):
+            trace_controller.debug_continue()
+            writePipe(ext_pipe, "Got report: %s" % trace_controller.last_report)
+            ok(ext_pipe)
+
+        elif(cmd == "tracer_list_tebs"):
+            trace_controller.list_tebs()
+            ok(ext_pipe)
+
         elif(cmd == "tracer_print"):
             trace_controller.print_sth(args)
             ok(ext_pipe)

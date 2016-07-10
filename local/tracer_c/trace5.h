@@ -85,6 +85,15 @@
 #define STATUS_DBG_SCANNED  0x4
 #define STATUS_DBG_STOPPED  0x5
 
+/* tracer reports */
+
+#define REPORT_PROCESS_CREATED  0x0
+#define REPORT_PROCESS_EXIT     0x1
+#define REPORT_ST_BREAKPOINT    0x2
+#define REPORT_END_BREAKPOINT   0x3
+#define REPORT_BREAKPOINT       0x4
+#define REPORT_EXCEPTION        0x5
+
 /* tracer configuration */
 
 typedef int (*reaction_routine)(void* args);
@@ -171,9 +180,12 @@ typedef struct TRACE_CONFIG_
     unsigned long long instr_dbg;
     unsigned long long instr_limit;
     unsigned long long scan_count; /*scan_count*/
+    unsigned long long thread_count;
 
     /* last events */
     READ_RECORD last_read_record;
+    DEBUG_EVENT last_event;
+    EXCEPTION_RECORD last_exception;
 
     char verbose; /*full_log*/
     char buffer[BUFF_SIZE];

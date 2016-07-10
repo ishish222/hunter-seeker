@@ -79,6 +79,26 @@ def tracer_debug_sample():
 
     return
 
+def tracer_debug_continue():
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+    
+    write_socket(options.s, "tracer_debug_continue");
+    response, _, _ = read_socket(options.s)
+
+    return
+
+def tracer_list_tebs():
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+    
+    write_socket(options.s, "tracer_list_tebs");
+    response, _, _ = read_socket(options.s)
+
+    return
+
 def tracer_list_tids():
     options = globs.state.options
     state = globs.state

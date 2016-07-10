@@ -1757,6 +1757,204 @@ int parse_descriptor(char* path)
 
 /* new routines */
 
+/* TODO: continuing for some time */
+int continue_routine()
+{
+    int status;
+
+    while(1)
+    {
+
+        status = DBG_CONTINUE;
+        WaitForDebugEvent(&my_trace->last_event, INFINITE);
+        d_print("dwDebugEventCode: 0x%08x\n", my_trace->last_event.dwDebugEventCode);
+
+
+       switch(my_trace->last_event.dwDebugEventCode)
+        {
+            case CREATE_PROCESS_DEBUG_EVENT:
+                /* this is not our responsibility, inform TracerController and wait for orders */
+                /* get process info */
+                my_trace->cpdi = my_trace->last_event.u.CreateProcessInfo;
+
+                /* register main thread (does this not belong to other event code? */
+                register_thread(my_trace->last_event.dwThreadId, my_trace->last_event.u.CreateProcessInfo.hThread);
+
+                /*TODO: inform TracerConrtoller*/
+
+/*
+                //configure breakpoints
+                if(strstr(mod_st, "0x0"))
+                {
+                    printf("Main module: 0x%08x\n", (DWORD)my_trace->last_event.u.CreateProcessInfo.lpBaseOfImage);
+                    add_breakpoint(addr_st + (DWORD)my_trace->last_event.u.CreateProcessInfo.lpBaseOfImage, bp_callback);
+                }
+
+                if(strstr(mod_end, "0x0"))
+                {
+                    printf("Main module: 0x%08x\n", (DWORD)my_trace->last_event.u.CreateProcessInfo.lpBaseOfImage);
+                    img_base = (DWORD)my_trace->last_event.u.CreateProcessInfo.lpBaseOfImage;
+                }
+                //unset_ss(0x0);
+*/
+                return REPORT_PROCESS_CREATED;
+                break;
+
+            case EXCEPTION_DEBUG_EVENT:
+                status = DBG_EXCEPTION_NOT_HANDLED;
+                my_trace->last_exception = my_trace->last_event.u.Exception.ExceptionRecord;
+
+                if(my_trace->last_exception.ExceptionCode != EXCEPTION_SINGLE_STEP)
+                {
+                    d_print("Exception: 0x%08x\n", my_trace->last_exception.ExceptionCode);
+                    d_print("at: 0x%08x\n", my_trace->last_exception.ExceptionAddress);
+                    d_print("First chance: 0x%08x\n", my_trace->last_event.u.Exception.dwFirstChance);
+                }
+
+                switch(my_trace->last_exception.ExceptionCode)
+                {
+                    case EXCEPTION_SINGLE_STEP:
+                        /* we are authorized to handle this */
+
+                        ss_callback((void*)&my_trace->last_event);
+                        set_ss(my_trace->last_event.dwThreadId);
+                        status = DBG_CONTINUE;
+                        break;
+                
+                    case EXCEPTION_BREAKPOINT:
+                        /* this is not our responsibility, inform TracerController and wait for orders */
+                        ss_callback((void*)&my_trace->last_event);
+                        /*
+                        handle_breakpoint((DWORD)er.ExceptionAddress, &my_trace->last_event);
+                        status = DBG_CONTINUE;
+                        */
+                        /* add detection of specific breakpoints */
+                        return REPORT_BREAKPOINT;
+                        break;
+                    default:
+                        /* this is not our responsibility, inform TracerController and wait for orders */
+                        register_exception(my_trace->last_event.dwThreadId, my_trace->last_exception);
+                        ss_callback((void*)&my_trace->last_event);
+                        set_ss(my_trace->last_event.dwThreadId);
+                        //my_trace->last_event.u.Exception.dwFirstChance = 0x0;
+                        //del_breakpoint(sysenter_off);
+                        //unset_ss(my_trace->last_event.dwThreadId);
+                        //full_log = 1;
+                        //status = DBG_EXCEPTION_NOT_HANDLED;
+                        return REPORT_EXCEPTION;
+                        break;
+                }
+                break;
+
+            case CREATE_THREAD_DEBUG_EVENT: 
+                /* we are authorized to handle this */
+
+                register_thread(my_trace->last_event.dwThreadId, my_trace->last_event.u.CreateThread.hThread);
+                set_ss(my_trace->last_event.dwThreadId);
+                status = DBG_CONTINUE;
+                break;
+
+            case LOAD_DLL_DEBUG_EVENT:
+                /* we are authorized to handle this */
+
+                d_print("Handle: 0x%08x\n", my_trace->last_event.u.LoadDll.hFile);
+                register_lib(my_trace->last_event.u.LoadDll);
+                d_print("Addr: 0x%08x\n", libs[lib_count-1].lib_addr);
+
+#ifdef LIB_VER_W7
+                GetFinalPathNameByHandleA(my_trace->last_event.u.LoadDll.hFile, libs[lib_count].lib_name, MAX_NAME, VOLUME_NAME_NONE);
+#endif
+
+                d_print("Testing for start lib, compairng: %s & %s\n", libs[lib_count].lib_name, mod_st);
+                if(strstr(libs[lib_count].lib_name, mod_st))
+                {
+                    d_print("Match!\n");
+                    add_breakpoint(addr_st + find_lib(mod_st), bp_callback);
+                }
+//                if(strstr(libs[lib_count-1].lib_name, mod_end))
+//                {
+//                }
+
+                /* handle hooks */
+
+                unsigned j;
+                for(j = 0x0; j<hook_count; j++)
+                {
+#ifdef LIB_VER_W7
+                    d_print("%s - %s\n",  libs[lib_count-1].lib_name, hooks[j].libname);
+                    if(strstr(libs[lib_count-1].lib_name, hooks[j].libname))
+#endif
+#ifdef LIB_VER_WXP
+                    /* todo */
+#endif
+                    {
+                        add_breakpoint((DWORD)(hooks[j].offset + my_trace->last_event.u.LoadDll.lpBaseOfDll), hooks[j].handler);
+                        d_print("Adding hook: %d\n", j);
+                    }
+                }
+
+#ifdef LIB_VER_W7
+                if(strstr(libs[lib_count-1].lib_name, "ntdll.dll"))
+#endif
+#ifdef LIB_VER_WXP
+                if(libs[lib_count-1].lib_addr == NTDLL_OFF)
+#endif
+                {
+                    d_print("ntdll loaded\n");
+#ifdef LIB_VER_W7
+                    nt1_off = find_lib("ntdll.dll") + NTMAPVIEWOFSECTION_1;
+                    nt2_off = find_lib("ntdll.dll") + NTMAPVIEWOFSECTION_2;
+                    nt3_off = find_lib("ntdll.dll") + NTREADFILE_OFF_1;
+                    nt4_off = find_lib("ntdll.dll") + NTREADFILE_OFF_2;
+                    sysenter_off = find_lib("ntdll.dll") + NTSYSENTER_OFF;
+                    sysret_off = find_lib("ntdll.dll") + NTSYSRET_OFF;
+#endif
+#ifdef LIB_VER_WXP
+                    nt1_off = NTDLL_OFF + NTMAPVIEWOFSECTION_1;
+                    nt2_off = NTDLL_OFF + NTMAPVIEWOFSECTION_2;
+                    nt3_off = NTDLL_OFF + NTREADFILE_OFF_1;
+                    nt4_off = NTDLL_OFF + NTREADFILE_OFF_2;
+                    sysenter_off = NTDLL_OFF + NTSYSENTER_OFF;
+                    sysret_off = NTDLL_OFF + NTSYSRET_OFF;
+#endif
+                }
+                break;
+
+            case UNLOAD_DLL_DEBUG_EVENT:
+                /* we are authorized to handle this */
+
+                deregister_lib(my_trace->last_event.u.UnloadDll);
+                break;
+
+            case EXIT_THREAD_DEBUG_EVENT:
+                /* we are authorized to handle this */
+
+                d_print("Exiting thread\n");
+                deregister_thread(my_trace->last_event.dwThreadId, my_trace->last_event.u.CreateThread.hThread);
+                threads2[my_trace->last_event.dwThreadId].alive = 0x0;
+
+                if(threads2[my_trace->last_event.dwThreadId].handle != 0x0) 
+                    CloseHandle(threads2[my_trace->last_event.dwThreadId].handle);
+
+                threads2[my_trace->last_event.dwThreadId].handle = 0x0;
+                threads2[my_trace->last_event.dwThreadId].open = 0x0;
+                break;
+
+            case EXIT_PROCESS_DEBUG_EVENT:
+                /* this is not our responsibility, inform TracerController and wait for orders */
+
+                d_print("Exiting process\n");
+                /*
+                HandlerRoutine(0x0);
+                */
+                return REPORT_PROCESS_EXIT;
+                break;
+
+        }
+        ContinueDebugEvent(my_trace->last_event.dwProcessId, my_trace->last_event.dwThreadId, status);
+    }
+}
+
 int handle_cmd(char* cmd)
 {
     printf("%s\n", cmd);
@@ -1803,12 +2001,37 @@ int handle_cmd(char* cmd)
 
         start_trace_fname();
 
+        my_trace->status = STATUS_CONFIGURED; /* move to other */
+
         printf("Started debugging, got PID: %d\n", my_trace->PID);
+    }
+    else if(cmd[0x0] == 'l' && cmd[0x1] == 't')
+    {
+        if(my_trace->status != STATUS_CONFIGURED)
+        {
+            printf("Trace is not prepared\n");
+            goto ret;
+        }
+    
+    }
+    else if(cmd[0x0] == 'c' && cmd[0x1] == 'n')
+    {
+        unsigned report;
+        if(my_trace->status != STATUS_CONFIGURED)
+        {
+            printf("Trace is not prepared\n");
+            goto ret;
+        }
+        printf("Continuing\n");
+        report = continue_routine();
+        printf("Sending report: 0x%08x\n", report);
+        /* TODO: send report */
     }
     else
     {
     }
 
+    ret:
     return 0x0;
 }
 
@@ -1837,8 +2060,12 @@ int main(int argc, char** argv)
         return -1;
     }
 
+    /* Initial trace config */
+    my_trace->thread_count = 0x0;
+
     strcpy(my_trace->host, argv[1]);
     my_trace->port = atoi(argv[2]);
+
 
     /* Windows sockets */
 
