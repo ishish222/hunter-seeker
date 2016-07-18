@@ -193,7 +193,7 @@ int dec_eip(DWORD id)
 {
     int i;
     HANDLE myHandle = (HANDLE)-0x1;
-    myHandle = threads2[id].handle;
+    myHandle = my_trace->threads[id].handle;
     CONTEXT ctx;
     ctx.ContextFlags = CONTEXT_CONTROL;
     if(GetThreadContext(myHandle, &ctx) == 0x0)
@@ -228,6 +228,12 @@ void deserialize_exception(EXCEPTION_RECORD* er, char* buffer)
         );
 
     return;
+}
+
+void serialize_thread(THREAD_ENTRY* thread, char* buffer)
+{
+    sprintf(buffer, "0x%08x,0x%08x,0x%08x", thread->tid, thread->handle, thread->alive);
+
 }
 
 void serialize_context(CONTEXT ctx, LDT_ENTRY* ldt, char* buffer)
@@ -327,37 +333,43 @@ void register_thread(DWORD tid, HANDLE handle)
     if(handle == 0x0) 
         handle = OpenThread(THREAD_GET_CONTEXT |THREAD_SET_CONTEXT | THREAD_ALL_ACCESS, 0x0, tid);
 
-    if(threads2[tid].created)
+    DWORD tid_pos;
+
+    if(my_trace->thread_map[tid] == -1)
     {
-        // do not create new, update this one
-        d_print("Updating: TID 0x%08x, handle 0x%08x\n", tid, handle);
-        threads2[tid].alive = 0x1;
-        threads2[tid].handle = handle;
+        tid_pos = my_trace->thread_count;
+        
+        my_trace->threads[tid_pos].alive = 0x1;
+        my_trace->threads[tid_pos].handle = handle;
+        my_trace->threads[tid_pos].open = 0x1;
+        my_trace->threads[tid_pos].created = 0x1;
+        my_trace->threads[tid_pos].tid = tid;
+    
+        //if(my_trace->threads[tid_pos].handle == 0x0) 
+        d_print("Registering: TID 0x%08x, handle 0x%08x\n", tid, handle);
+
+        my_trace->thread_map[tid] = tid_pos;
+        my_trace->thread_count ++;
+
+        sprintf(line, "# Thread count: 0x%08x\n", my_trace->thread_count);
+        add_to_buffer(line);
     }
     else
     {
-        
-        threads2[tid].alive = 0x1;
-        threads2[tid].handle = handle;
-        threads2[tid].open = 0x1;
-        threads2[tid].created = 0x1;
-    
-        //if(threads2[tid].handle == 0x0) 
-        d_print("Registering: TID 0x%08x, handle 0x%08x\n", tid, handle);
+        tid_pos = my_trace->thread_map[tid];
 
-        thread_list[thread_count] = tid;
-        thread_count ++;
-
-        sprintf(line, "# Thread count: 0x%08x\n", thread_count);
-        add_to_buffer(line);
+        // do not create new, update this one
+        d_print("Updating: TID 0x%08x, handle 0x%08x\n", tid, handle);
+        my_trace->threads[tid_pos].alive = 0x1;
+        my_trace->threads[tid_pos].handle = handle;
     }
 
-    d_print("Registering TID: 0x%08x with handle: 0x%08x, new thread count: 0x%x\n", tid, threads2[tid].handle, thread_count);
+    d_print("Registering TID: 0x%08x with handle: 0x%08x, new thread count: 0x%x\n", tid, my_trace->threads[tid_pos].handle, my_trace->thread_count);
 
     ctx.ContextFlags = CONTEXT_FULL;
 
     //write info about thread registration
-    GetThreadContext(threads2[tid].handle, &ctx);
+    GetThreadContext(my_trace->threads[tid_pos].handle, &ctx);
 
     getSelectorEntries(handle, ctx, ldt);
 /*
@@ -391,12 +403,15 @@ int register_thread_debug(DWORD tid, HANDLE handle)
     if(handle == 0x0) 
         handle = OpenThread(THREAD_GET_CONTEXT |THREAD_SET_CONTEXT | THREAD_ALL_ACCESS, 0x0, tid);
 
-   // d_print("Registering TID: 0x%08x with handle: 0x%08x, new thread count: 0x%x\n", tid, threads2[tid].handle, thread_count);
+   // d_print("Registering TID: 0x%08x with handle: 0x%08x, new thread count: 0x%x\n", tid, my_trace->threads[tid_pos].handle, my_trace->thread_count);
 
     ctx.ContextFlags = CONTEXT_FULL;
 
+    DWORD tid_pos;
+    tid_pos = my_trace->thread_map[tid];
+
     //write info about thread registration
-    GetThreadContext(threads2[tid].handle, &ctx);
+    GetThreadContext(my_trace->threads[tid_pos].handle, &ctx);
     getSelectorEntries(handle, ctx, ldt);
 
 
@@ -418,19 +433,22 @@ void deregister_thread(DWORD tid, HANDLE handle)
     if(handle == 0x0) 
         handle = OpenThread(THREAD_GET_CONTEXT |THREAD_SET_CONTEXT | THREAD_ALL_ACCESS, 0x0, tid);
 
-    threads2[tid].alive = 0x0;
-    threads2[tid].handle = handle;
-    threads2[tid].open = 0x1;
+    DWORD tid_pos;
+    tid_pos = my_trace->thread_map[tid];
 
-    //if(threads2[tid].handle == 0x0) 
+    my_trace->threads[tid_pos].alive = 0x0;
+    my_trace->threads[tid_pos].handle = handle;
+    my_trace->threads[tid_pos].open = 0x1;
+
+    //if(my_trace->threads[tid_pos].handle == 0x0) 
     d_print("Deregistering: TID 0x%08x, handle 0x%08x\n", tid, handle);
 
-    d_print("Deregistering TID: 0x%08x with handle: 0x%08x, new thread count: 0x%x\n", tid, threads2[tid].handle, thread_count);
+    d_print("Deregistering TID: 0x%08x with handle: 0x%08x, new thread count: 0x%x\n", tid, my_trace->threads[tid_pos].handle, my_trace->thread_count);
 
     ctx.ContextFlags = CONTEXT_FULL;
 
     //write info about thread registration
-    GetThreadContext(threads2[tid].handle, &ctx);
+    GetThreadContext(my_trace->threads[tid_pos].handle, &ctx);
 
     getSelectorEntries(handle, ctx, ldt);
     /*
@@ -452,11 +470,11 @@ void deregister_thread(DWORD tid, HANDLE handle)
 
     /* not necessary, could be reused for reregistration */
     /*
-    if(threads2[tid].handle != 0x0) 
-        CloseHandle(threads2[tid].handle);
+    if(my_trace->threads[tid_pos].handle != 0x0) 
+        CloseHandle(my_trace->threads[tid_pos].handle);
 
-    threads2[tid].handle = 0x0;
-    threads2[tid].open = 0x0;
+    my_trace->threads[tid_pos].handle = 0x0;
+    my_trace->threads[tid_pos].open = 0x0;
     */
     return;
 }
@@ -464,13 +482,17 @@ void deregister_thread(DWORD tid, HANDLE handle)
 void deregister_thread2(DWORD tid)
 {
     char line[MAX_LINE];
-    if(threads2[tid].handle != 0x0) 
-        CloseHandle(threads2[tid].handle);
+    DWORD tid_pos;
+    tid_pos = my_trace->thread_map[tid];
 
-    threads2[tid].handle = 0x0;
-    threads2[tid].open = 0x0;
 
-    d_print("Deregistering TID: 0x%08x with handle: 0x%08x\n", tid, threads2[tid].handle);
+    if(my_trace->threads[tid_pos].handle != 0x0) 
+        CloseHandle(my_trace->threads[tid_pos].handle);
+
+    my_trace->threads[tid_pos].handle = 0x0;
+    my_trace->threads[tid_pos].open = 0x0;
+
+    d_print("Deregistering TID: 0x%08x with handle: 0x%08x\n", tid, my_trace->threads[tid_pos].handle);
     sprintf(line, "DT,0x%08x\n", tid);
  
     add_to_buffer(line);
@@ -561,20 +583,20 @@ void ntmap_1_callback(void* data)
 
     int i = 0x0;
 
-    for(i = 0x0; i<thread_count; i++)
+    for(i = 0x0; i<my_trace->thread_count; i++)
     {
-        if(threads2[thread_list[i]].alive)
-        d_print("TID: 0x%08x, handle: 0x%08x\n", thread_list[i], threads2[thread_list[i]].handle);
+        if(my_trace->threads[thread_list[i]].alive)
+        d_print("TID: 0x%08x, handle: 0x%08x\n", thread_list[i], my_trace->threads[thread_list[i]].handle);
 
     }
 
     HANDLE myHandle = (HANDLE)-0x1;
     DWORD esp = 0x0;
 //    myHandle = OpenThread(THREAD_GET_CONTEXT |THREAD_SET_CONTEXT | THREAD_ALL_ACCESS, 0x0, de->dwThreadId);
-    myHandle = threads2[de->dwThreadId].handle;
+    myHandle = my_trace->threads[de->dwThreadId].handle;
     d_print("Handle: %x\n", myHandle);
-    d_print("Handle in threads2: %x\n", threads2[de->dwThreadId]);
-//    myHandle = threads2[de->dwThreadId].handle;
+    d_print("Handle in my_trace->threads: %x\n", my_trace->threads[de->dwThreadId]);
+//    myHandle = my_trace->threads[de->dwThreadId].handle;
     CONTEXT ctx;
     ctx.ContextFlags = CONTEXT_FULL;
     if(GetThreadContext(myHandle, &ctx) == 0x0) 
@@ -637,9 +659,12 @@ void sysenter_callback(void* data)
     DWORD tid = de->dwThreadId;
     unsigned i;
 
+    DWORD tid_pos;
+    tid_pos = my_trace->thread_map[tid];
+
     CONTEXT ctx;
     ctx.ContextFlags = CONTEXT_FULL;
-    if(GetThreadContext(threads2[tid].handle, &ctx) == 0x0) 
+    if(GetThreadContext(my_trace->threads[tid_pos].handle, &ctx) == 0x0) 
     {
         d_print("Failed to get context, error: 0x%08x\n", GetLastError());
         return;
@@ -649,7 +674,7 @@ void sysenter_callback(void* data)
     sysenter_esp = ctx.Esp;
 
 //    d_print("Deregister thread @ SYSENTER: %08x\n", tid);
-    deregister_thread(tid, threads2[tid].handle);
+    deregister_thread(tid, my_trace->threads[tid_pos].handle);
     add_breakpoint(sysret_off, sysret_callback);
     add_breakpoint(sysret_off, sysret_refresh);
     set_ss(0x0);
@@ -664,9 +689,11 @@ void sysret_callback(void* data)
     DWORD size, read, off, size_wrote;
     unsigned i;
     char line[MAX_LINE];
+    DWORD tid_pos;
+    tid_pos = my_trace->thread_map[tid];
 
 //    d_print("Register thread @ SYSRET: %08x\n", tid);
-    register_thread(tid, threads2[tid].handle);
+    register_thread(tid, my_trace->threads[tid_pos].handle);
 
     // dump 0x50 bytes from stack
     /*
@@ -679,7 +706,7 @@ void sysret_callback(void* data)
     // prepare dump list
     CONTEXT ctx;
     ctx.ContextFlags = CONTEXT_FULL;
-    if(GetThreadContext(threads2[tid].handle, &ctx) == 0x0) 
+    if(GetThreadContext(my_trace->threads[tid_pos].handle, &ctx) == 0x0) 
     {
         d_print("Failed to get context, error: 0x%08x\n", GetLastError());
         return;
@@ -992,13 +1019,13 @@ int register_all_threads()
         { 
             if( te32.th32OwnerProcessID == myPID)
                 {
-                    threads2[te32.th32ThreadID].alive = 0x1;
-                    threads2[te32.th32ThreadID].handle = OpenThread(THREAD_GET_CONTEXT |THREAD_SET_CONTEXT | THREAD_ALL_ACCESS, 0x0, te32.th32ThreadID);
-                    threads2[te32.th32ThreadID].open = 0x1;
+                    my_trace->threads[te32.th32ThreadID].alive = 0x1;
+                    my_trace->threads[te32.th32ThreadID].handle = OpenThread(THREAD_GET_CONTEXT |THREAD_SET_CONTEXT | THREAD_ALL_ACCESS, 0x0, te32.th32ThreadID);
+                    my_trace->threads[te32.th32ThreadID].open = 0x1;
 
-                    thread_list[thread_count] = te32.th32ThreadID;
-                    thread_count ++;
-                    d_print("Registering TID: 0x%08x with handle: 0x%08x, new thread count: 0x%x\n", te32.th32ThreadID, threads2[thread_count].handle, thread_count);
+                    thread_list[my_trace->thread_count] = te32.th32ThreadID;
+                    my_trace->thread_count ++;
+                    d_print("Registering TID: 0x%08x with handle: 0x%08x, new thread count: 0x%x\n", te32.th32ThreadID, my_trace->threads[my_trace->thread_count].handle, my_trace->thread_count);
  
                 }
  
@@ -1020,7 +1047,7 @@ int verify_ss(DWORD tid)
 
     if(tid == 0x0)
     {
-        for(i = 0x0; i< thread_count; i++)
+        for(i = 0x0; i< my_trace->thread_count; i++)
         {
             cur_tid = thread_list[i];
             verify_ss(cur_tid);
@@ -1030,7 +1057,7 @@ int verify_ss(DWORD tid)
     {
         HANDLE tHandle;
         ctx.ContextFlags = CONTEXT_CONTROL;
-//        tHandle = threads2[tid].handle;
+//        tHandle = my_trace->threads[tid_pos].handle;
 //        if(!tHandle) return -1;
         tHandle = OpenThread(THREAD_GET_CONTEXT |THREAD_SET_CONTEXT | THREAD_ALL_ACCESS, 0x0, tid);
 
@@ -1057,7 +1084,7 @@ int unset_ss(DWORD tid)
 
     if(tid == 0x0)
     {
-        for(i = 0x0; i< thread_count; i++)
+        for(i = 0x0; i< my_trace->thread_count; i++)
         {
             cur_tid = thread_list[i];
             unset_ss(cur_tid);
@@ -1068,7 +1095,7 @@ int unset_ss(DWORD tid)
         HANDLE tHandle;
         ctx.ContextFlags = CONTEXT_CONTROL;
         tHandle = OpenThread(THREAD_GET_CONTEXT |THREAD_SET_CONTEXT | THREAD_ALL_ACCESS, 0x0, tid);
-        //tHandle = threads2[tid].handle;
+        //tHandle = my_trace->threads[tid_pos].handle;
         if(!tHandle) return -1;
 
         GetThreadContext(tHandle, &ctx);
@@ -1090,7 +1117,7 @@ int set_ss(DWORD tid)
 
     if(tid == 0x0)
     {
-        for(i = 0x0; i< thread_count; i++)
+        for(i = 0x0; i< my_trace->thread_count; i++)
         {
             cur_tid = thread_list[i];
             set_ss(cur_tid);
@@ -1101,7 +1128,7 @@ int set_ss(DWORD tid)
         HANDLE tHandle;
         ctx.ContextFlags = CONTEXT_CONTROL;
         tHandle = OpenThread(THREAD_GET_CONTEXT |THREAD_SET_CONTEXT | THREAD_ALL_ACCESS, 0x0, tid);
-        //tHandle = threads2[tid].handle;
+        //tHandle = my_trace->threads[tid_pos].handle;
         if(!tHandle) return -1;
 
         GetThreadContext(tHandle, &ctx);
@@ -1118,7 +1145,7 @@ void check_debug(DWORD eip, long long unsigned i_count, DWORD id)
 {
     unsigned i;
     HANDLE myHandle = (HANDLE)-0x1;
-    myHandle = threads2[id].handle;
+    myHandle = my_trace->threads[id].handle;
 
     for(i=0x0; i < WATCH_LIMIT; i++)
     {
@@ -1168,6 +1195,8 @@ void ss_callback(void* data)
     char line[MAX_LINE];
 
     char bytes[0x2];
+    DWORD tid_pos;
+    tid_pos = my_trace->thread_map[tid];
 
     if(!started) return;
 
@@ -1187,7 +1216,7 @@ void ss_callback(void* data)
         //printf("Scan is on\n");
         if(scan_count < REG_DEBUG_INTERVAL)
         {
-            register_thread_debug(tid, threads2[tid].handle);
+            register_thread_debug(tid, my_trace->threads[tid_pos].handle);
             scan_count ++;
         }
         else
@@ -1205,7 +1234,7 @@ void ss_callback(void* data)
             if(!(instr_count % REG_DEBUG_INTERVAL))
             {
                 d_print("Debug interval\n");
-                register_thread_debug(tid, threads2[tid].handle);
+                register_thread_debug(tid, my_trace->threads[tid_pos].handle);
             }
         }
     }
@@ -1215,7 +1244,7 @@ void ss_callback(void* data)
 
     if(1)
     {
-        if(register_thread_debug(tid, threads2[tid].handle) <= 0x0)
+        if(register_thread_debug(tid, my_trace->threads[tid_pos].handle) <= 0x0)
         {
             d_print("Error writing to file: 0x%x\n", GetLastError());
             exit(1);
@@ -1439,8 +1468,11 @@ void bp_callback(void* data)
 
     DWORD tid = de->dwThreadId;
 
-    deregister_thread(tid, threads2[tid].handle);
-    register_thread(tid, threads2[tid].handle);
+    DWORD tid_pos;
+    tid_pos = my_trace->thread_map[tid];
+
+    deregister_thread(tid, my_trace->threads[tid_pos].handle);
+    register_thread(tid, my_trace->threads[tid_pos].handle);
 
     dump_memory();
 
@@ -1464,19 +1496,19 @@ void bp_callback(void* data)
 BOOL WINAPI HandlerRoutine(_In_ DWORD dwCtrlType)
 {
     unsigned int i;
-    DWORD tid;
+    DWORD tid_pos;
 
     d_print("Detected ctrl-c\n");
     
     d_print("Deregistering threads\n");
 
-    for(i=0x0; i<thread_count; i++)
+    for(i=0x0; i<my_trace->thread_count; i++)
     {
-        tid = thread_list[i];
-        if(threads2[tid].alive == 0x1) 
+        tid_pos = i;
+        if(my_trace->threads[tid_pos].alive == 0x1) 
         {
-            d_print("Deregistering: 0x%08x\n", tid);
-            deregister_thread(tid, threads2[tid].handle);
+            d_print("Deregistering: 0x%08x\n", my_trace->threads[tid_pos].tid);
+            deregister_thread(my_trace->threads[tid_pos].tid, my_trace->threads[tid_pos].handle);
         }
     }
 
@@ -1702,11 +1734,18 @@ int add_breakpoint(DWORD addr, handler_routine handler)
 }
 void start_trace_fname()
 {
+    BOOL res;
+
     d_print("Creating process: %s\n", my_trace->process_fname);
 
-    CreateProcess(my_trace->process_fname, 0x0, 0x0, 0x0, 0x0, DEBUG_ONLY_THIS_PROCESS, 0x0, 0x0, &my_trace->si, &my_trace->pi);
+    res = CreateProcess(my_trace->process_fname, 0x0, 0x0, 0x0, 0x0, DEBUG_ONLY_THIS_PROCESS, 0x0, 0x0, &my_trace->si, &my_trace->pi);
 
-    my_trace->PID = pi.dwProcessId;
+    if(res == 0x0)
+    {
+        d_print("Error creating process: 0x%08x\n", GetLastError());
+    }
+
+    my_trace->PID = my_trace->pi.dwProcessId;
 }
 
 void start_trace_pid()
@@ -1757,20 +1796,87 @@ int parse_descriptor(char* path)
 
 /* new routines */
 
-/* TODO: continuing for some time */
-int continue_routine()
+int send_report()
 {
-    int status;
+    char rep_chars[3];
+    char rep_chars2[] = "-=OK=-";
+    char line2[MAX_LINE];
 
-    while(1)
+    switch(my_trace->report_code)
     {
+        case REPORT_CONTINUE:
+            strcpy(rep_chars, "RC");
+            break;
+        
+        case REPORT_PROCESS_CREATED:
+            strcpy(rep_chars, "RR");
+            break;
+        
+        case REPORT_PROCESS_EXIT:
+            strcpy(rep_chars, "RX");
+            break;
+        
+        case REPORT_ST_BREAKPOINT:
+            strcpy(rep_chars, "RS");
+            break;
+        
+        case REPORT_END_BREAKPOINT:
+            strcpy(rep_chars, "RD");
+            break;
+        
+        case REPORT_BREAKPOINT:
+            strcpy(rep_chars, "RB");
+            break;
+        
+        case REPORT_EXCEPTION:
+            strcpy(rep_chars, "RE");
+            break;
+        
+        case REPORT_INFO:
+            strcpy(rep_chars, "RI");
+            break;
+        
+        case REPORT_NOTHING:
+            strcpy(rep_chars, "RN");
+            break;
+    }
 
-        status = DBG_CONTINUE;
-        WaitForDebugEvent(&my_trace->last_event, INFINITE);
-        d_print("dwDebugEventCode: 0x%08x\n", my_trace->last_event.dwDebugEventCode);
+    strcpy(line2, rep_chars);
+    strcat(line2, my_trace->report_buffer);
+    strcat(line2, rep_chars2);
+
+    printf("Sending: %s, %d bytes\n", line2, strlen(line2));
+ 
+    send(my_trace->socket, line2, strlen(line2), 0x0);
 
 
-       switch(my_trace->last_event.dwDebugEventCode)
+    return 0x0;
+}
+
+int list_tebs()
+{
+    printf("Listings TEBs\n");
+    unsigned i;
+    char buffer2[MAX_LINE];
+
+    my_trace->report_code = REPORT_INFO;
+
+    printf("Currently have %d threads\n", my_trace->thread_count);
+
+    for(i = 0x0; i< my_trace->thread_count; i++)
+    {
+        serialize_thread(&my_trace->threads[i], buffer2);
+        strcat(my_trace->report_buffer, buffer2);
+    //    strcat(my_trace->report_buffer, "\n");
+    }
+    printf("Reporting: %s\n", my_trace->report_buffer);
+
+    return 0x0;
+}
+
+int process_last_event()
+{
+        switch(my_trace->last_event.dwDebugEventCode)
         {
             case CREATE_PROCESS_DEBUG_EVENT:
                 /* this is not our responsibility, inform TracerController and wait for orders */
@@ -1818,7 +1924,8 @@ int continue_routine()
 
                         ss_callback((void*)&my_trace->last_event);
                         set_ss(my_trace->last_event.dwThreadId);
-                        status = DBG_CONTINUE;
+                        my_trace->last_win_status = DBG_CONTINUE;
+                        return REPORT_CONTINUE;
                         break;
                 
                     case EXCEPTION_BREAKPOINT:
@@ -1851,7 +1958,8 @@ int continue_routine()
 
                 register_thread(my_trace->last_event.dwThreadId, my_trace->last_event.u.CreateThread.hThread);
                 set_ss(my_trace->last_event.dwThreadId);
-                status = DBG_CONTINUE;
+                my_trace->last_win_status = DBG_CONTINUE;
+                return REPORT_CONTINUE;
                 break;
 
             case LOAD_DLL_DEBUG_EVENT:
@@ -1918,12 +2026,14 @@ int continue_routine()
                     sysret_off = NTDLL_OFF + NTSYSRET_OFF;
 #endif
                 }
+                my_trace->last_win_status = DBG_CONTINUE;
                 break;
 
             case UNLOAD_DLL_DEBUG_EVENT:
                 /* we are authorized to handle this */
 
                 deregister_lib(my_trace->last_event.u.UnloadDll);
+                return REPORT_CONTINUE;
                 break;
 
             case EXIT_THREAD_DEBUG_EVENT:
@@ -1931,13 +2041,14 @@ int continue_routine()
 
                 d_print("Exiting thread\n");
                 deregister_thread(my_trace->last_event.dwThreadId, my_trace->last_event.u.CreateThread.hThread);
-                threads2[my_trace->last_event.dwThreadId].alive = 0x0;
+                my_trace->threads[my_trace->last_event.dwThreadId].alive = 0x0;
 
-                if(threads2[my_trace->last_event.dwThreadId].handle != 0x0) 
-                    CloseHandle(threads2[my_trace->last_event.dwThreadId].handle);
+                if(my_trace->threads[my_trace->last_event.dwThreadId].handle != 0x0) 
+                    CloseHandle(my_trace->threads[my_trace->last_event.dwThreadId].handle);
 
-                threads2[my_trace->last_event.dwThreadId].handle = 0x0;
-                threads2[my_trace->last_event.dwThreadId].open = 0x0;
+                my_trace->threads[my_trace->last_event.dwThreadId].handle = 0x0;
+                my_trace->threads[my_trace->last_event.dwThreadId].open = 0x0;
+                my_trace->last_win_status = DBG_CONTINUE;
                 break;
 
             case EXIT_PROCESS_DEBUG_EVENT:
@@ -1951,13 +2062,60 @@ int continue_routine()
                 break;
 
         }
-        ContinueDebugEvent(my_trace->last_event.dwProcessId, my_trace->last_event.dwThreadId, status);
+
+}
+
+int get_pending_events()
+{
+    int last_report;
+
+    while(1)
+    {
+
+        status = DBG_CONTINUE;
+        WaitForDebugEvent(&my_trace->last_event, 0x0);
+
+        if(my_trace->last_event.dwDebugEventCode == 0x0) return REPORT_NOTHING;
+
+        d_print("dwDebugEventCode: 0x%08x\n", my_trace->last_event.dwDebugEventCode);
+
+        last_report = process_last_event();
+        if(last_report != REPORT_CONTINUE) break;
+
+        ContinueDebugEvent(my_trace->last_event.dwProcessId, my_trace->last_event.dwThreadId, my_trace->last_win_status);
     }
+
+    return last_report;
+}
+
+/* TODO: continuing for some time */
+int continue_routine(DWORD time)
+{
+    int last_report;
+
+    while(1)
+    {
+
+        status = DBG_CONTINUE;
+        WaitForDebugEvent(&my_trace->last_event, time);
+
+        d_print("dwDebugEventCode: 0x%08x\n", my_trace->last_event.dwDebugEventCode);
+
+        last_report = process_last_event();
+        if(last_report != REPORT_CONTINUE) break;
+
+        ContinueDebugEvent(my_trace->last_event.dwProcessId, my_trace->last_event.dwThreadId, my_trace->last_win_status);
+    }
+
+    return last_report;
 }
 
 int handle_cmd(char* cmd)
 {
     printf("%s\n", cmd);
+
+    my_trace->report_code = REPORT_NOTHING;
+    strcpy(my_trace->report_buffer, "");
 
     if(cmd[0x0] == 'S' && cmd[0x1] == 'N')
     {
@@ -1993,6 +2151,8 @@ int handle_cmd(char* cmd)
     }
     else if(cmd[0x0] == 's' && cmd[0x1] == 'd')
     {
+        unsigned report;
+
         strcpy(my_trace->process_fname, my_trace->research_dir);
         strcat(my_trace->process_fname, "\\");
         strcat(my_trace->process_fname, my_trace->sample_path);
@@ -2004,6 +2164,8 @@ int handle_cmd(char* cmd)
         my_trace->status = STATUS_CONFIGURED; /* move to other */
 
         printf("Started debugging, got PID: %d\n", my_trace->PID);
+        report = get_pending_events();
+        printf("Sending report: 0x%08x\n", report);
     }
     else if(cmd[0x0] == 'l' && cmd[0x1] == 't')
     {
@@ -2012,6 +2174,9 @@ int handle_cmd(char* cmd)
             printf("Trace is not prepared\n");
             goto ret;
         }
+
+        list_tebs();
+        send_report();   
     
     }
     else if(cmd[0x0] == 'c' && cmd[0x1] == 'n')
@@ -2023,9 +2188,29 @@ int handle_cmd(char* cmd)
             goto ret;
         }
         printf("Continuing\n");
-        report = continue_routine();
+        report = continue_routine(INFINITE);
         printf("Sending report: 0x%08x\n", report);
         /* TODO: send report */
+//        send_report();   
+    }
+    else if(cmd[0x0] == 'c' && cmd[0x1] == 'N')
+    {
+        unsigned report;
+        DWORD time;
+
+        strtok(cmd, " ");
+        time = strtol(strtok(0x0, " "), 0x0, 0x10);
+
+        if(my_trace->status != STATUS_CONFIGURED)
+        {
+            printf("Trace is not prepared\n");
+            goto ret;
+        }
+        printf("Continuing\n");
+        report = continue_routine(time);
+        printf("Sending report: 0x%08x\n", report);
+        /* TODO: send report */
+//        send_report();   
     }
     else
     {
@@ -2033,6 +2218,18 @@ int handle_cmd(char* cmd)
 
     ret:
     return 0x0;
+}
+
+int init_trace(TRACE_CONFIG* trace, char* host, short port)
+{
+    /* Initial trace config */
+    my_trace->thread_count = 0x0;
+
+    strcpy(my_trace->host, host);
+    my_trace->port = port;
+
+    memset(my_trace->thread_map, -1, sizeof(my_trace->thread_map));
+
 }
 
 /* new main routine */
@@ -2060,11 +2257,7 @@ int main(int argc, char** argv)
         return -1;
     }
 
-    /* Initial trace config */
-    my_trace->thread_count = 0x0;
-
-    strcpy(my_trace->host, argv[1]);
-    my_trace->port = atoi(argv[2]);
+    init_trace(my_trace, argv[1], atoi(argv[2]));
 
 
     /* Windows sockets */
@@ -2111,6 +2304,8 @@ int main(int argc, char** argv)
         return 1;
     }
      
+    my_trace->socket = s;
+
     iResult = ioctlsocket(s, FIONBIO, &iMode);
     if (iResult != NO_ERROR) printf("ioctlsocket failed with error: %ld\n", iResult);
 
@@ -2149,6 +2344,7 @@ int main(int argc, char** argv)
 
         if(!strcmp(cmd, "quit")) 
             break;
+        
         handle_cmd(cmd);
 
     }
@@ -2605,7 +2801,7 @@ int main2(int argc, char** argv)
 
     CreateThread(0x0, 0x0, (LPTHREAD_START_ROUTINE)&writer, 0x0, 0x0, &threadId);
 
-    thread_count = 0x0;
+    my_trace->thread_count = 0x0;
     while(1)
     {
         status = DBG_CONTINUE;
@@ -2765,13 +2961,13 @@ int main2(int argc, char** argv)
             case EXIT_THREAD_DEBUG_EVENT:
                 d_print("Exiting thread\n");
                 deregister_thread(de.dwThreadId, de.u.CreateThread.hThread);
-                threads2[de.dwThreadId].alive = 0x0;
+                my_trace->threads[de.dwThreadId].alive = 0x0;
 
-                if(threads2[de.dwThreadId].handle != 0x0) 
-                    CloseHandle(threads2[de.dwThreadId].handle);
+                if(my_trace->threads[de.dwThreadId].handle != 0x0) 
+                    CloseHandle(my_trace->threads[de.dwThreadId].handle);
 
-                threads2[de.dwThreadId].handle = 0x0;
-                threads2[de.dwThreadId].open = 0x0;
+                my_trace->threads[de.dwThreadId].handle = 0x0;
+                my_trace->threads[de.dwThreadId].open = 0x0;
                 break;
 
             case EXIT_PROCESS_DEBUG_EVENT:

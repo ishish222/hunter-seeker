@@ -392,7 +392,7 @@
       <data key="d6">
         <y:ShapeNode>
           <y:Geometry height="30.0" width="211.0" x="154.0" y="1512.5"/>
-          <y:Fill color="#00FF00" transparent="false"/>
+          <y:Fill color="#FFCC00" transparent="false"/>
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
           <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="17.96875" modelName="custom" textColor="#000000" visible="true" width="126.98828125" x="42.005859375" y="6.015625">TracerDebugSample<y:LabelModel>
               <y:SmartNodeLabelModel distance="4.0"/>
@@ -545,7 +545,7 @@
       <data key="d6">
         <y:ShapeNode>
           <y:Geometry height="30.0" width="211.0" x="154.0" y="1573.4367741935484"/>
-          <y:Fill color="#00FF00" transparent="false"/>
+          <y:Fill color="#FFCC00" transparent="false"/>
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
           <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="17.96875" modelName="custom" textColor="#000000" visible="true" width="96.490234375" x="57.2548828125" y="6.015625">TracerContinue<y:LabelModel>
               <y:SmartNodeLabelModel distance="4.0"/>

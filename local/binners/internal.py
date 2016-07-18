@@ -22,7 +22,7 @@ PIPE_BUFF_SIZE = 4096
 class SerialWrap(serial.Serial):
     def write(self, data):
         super(SerialWrap, self).write(data+'\n')
-        super(SerialWrap, self).write('-=OK=-')
+#        super(SerialWrap, self).write('-=OK=-')
 
 if(defined("settings.log_file")):
     log_file = settings.log_file
@@ -44,7 +44,8 @@ def readPipe(pipe):
     return data[:-6]
 
 def writePipe(pipe, data):
-    pipe.write(data + "-=OK=-")
+#    pipe.write(data + "-=OK=-")
+    pipe.write(data)
 
 def ok(pipe):
     pipe.write("-=OK=-")
@@ -108,7 +109,7 @@ def dlog(data, level=0):
 
     if(logStarted == False):
         return
-    logf.write(data)
+    logf.write("[internal]: %s" % data)
 
 def verify():
 #    dlog("Please verify process")
@@ -1057,14 +1058,13 @@ def execute(cmds):
         elif(cmd == "kill"):
             print("Killing %s" % args)
             call("taskkill /F /IM %s" % args)
-            writePipe(ext_pipe, "OK")
+            writePipe(ext_pipe, "kill OK")
             ok(ext_pipe)
 
         elif(cmd == "killExplorer"):
-            print("Killing explorer")
             call("taskkill /F /IM explorer.exe")
-            writePipe(ext_pipe, "OK")
             writePipe(log_pipe, "Killed explorer")
+            writePipe(ext_pipe, "killExplorer OK")
             ok(ext_pipe)
 
         elif(cmd == "release"):
@@ -1085,63 +1085,85 @@ def execute(cmds):
 ### tracer info
         elif(cmd == "tc_avtivate_prev"):
             trace_controller.activate_prev_tracer()
+            writePipe(ext_pipe, "tc_avtivate_prev OK")
             ok(ext_pipe)
 
         elif(cmd == "tc_avtivate_next"):
             trace_controller.activate_next_tracer()
+            writePipe(ext_pipe, "tc_avtivate_next OK")
             ok(ext_pipe)
 
         elif(cmd == "tracer_configure_sample_file"):
             trace_controller.set_sample_file(args)
+            writePipe(ext_pipe, "tracer_configure_sample_file OK")
             ok(ext_pipe)
 
         elif(cmd == "tracer_configure_research_dir"):
             trace_controller.set_research_dir(args)
+            writePipe(ext_pipe, "tracer_configure_research_dir OK")
             ok(ext_pipe)
 
         elif(cmd == "tracer_configure_sample_pname"):
             trace_controller.set_sample_pname(args)
+            writePipe(ext_pipe, "tracer_configure_sample_pname OK")
             ok(ext_pipe)
 
         elif(cmd == "tracer_configure_marker_st"):
             mod, addr = args.split(" ")
             trace_controller.configure_marker_st(mod, addr)
+            writePipe(ext_pipe, "tracer_configure_marker_st OK")
             ok(ext_pipe)
 
         elif(cmd == "tracer_configure_marker_end"):
             mod, addr = args.split(" ")
             trace_controller.configure_marker_end(mod, addr)
+            writePipe(ext_pipe, "tracer_configure_marker_end OK")
             ok(ext_pipe)
 
         elif(cmd == "tracer_debug_sample"):
             trace_controller.debug_sample()
+            writePipe(ext_pipe, "tracer_debug_sample OK")
             ok(ext_pipe)
 
         elif(cmd == "tracer_debug_continue"):
             trace_controller.debug_continue()
             writePipe(ext_pipe, "Got report: %s" % trace_controller.last_report)
+            writePipe(ext_pipe, "tracer_debug_continue OK")
+            ok(ext_pipe)
+
+        elif(cmd == "tracer_debug_continue_time"):
+            trace_controller.debug_continue_time(args)
+            writePipe(ext_pipe, "Got report: %s" % trace_controller.last_report)
+            writePipe(ext_pipe, "tracer_debug_continue_time OK")
             ok(ext_pipe)
 
         elif(cmd == "tracer_list_tebs"):
             trace_controller.list_tebs()
+            trace_controller.dlog("Writing to ext pipe: %s" % trace_controller.last_answer)
+            writePipe(ext_pipe, "%s" % trace_controller.last_answer)
+            writePipe(ext_pipe, "tracer_list_tebs OK")
             ok(ext_pipe)
 
         elif(cmd == "tracer_print"):
             trace_controller.print_sth(args)
+            writePipe(ext_pipe, "tracer_print OK")
             ok(ext_pipe)
 
         elif(cmd == "spawn_tracer"):
             new_tracer = trace_controller.spawn_tracer()
             writePipe(ext_pipe, "Started: %d" % new_tracer);
             writePipe(log_pipe, "Started: %d" % new_tracer);
+            writePipe(ext_pipe, "spawn_tracer OK");
             ok(ext_pipe)
 
         elif(cmd == "close_tracer"):
             trace_controller.close_tracer(args)
+            writePipe(ext_pipe, "close_tracer OK")
             ok(ext_pipe)
 
         elif(cmd == "start_trace_controller"):
             trace_controller = TraceController.TraceController(ext_pipe)
+            writePipe(ext_pipe, "start_trace_controller OK")
             ok(ext_pipe)
 
 #    except Exception, e:
@@ -1172,9 +1194,12 @@ Hunter-Seeker
     print(logo)
     ext_pipe = SerialWrap(0)
     log_pipe = SerialWrap(1)
-    ext_pipe.write('')
-    log_pipe.write("Starting internal log")
-    log_pipe.write("Attempt to redirect stderr")
+    # signal ext_pipe connection
+    writePipe(ext_pipe, 'Ext_pipe connected')
+    ok(ext_pipe)
+    # signal log_pipe connection
+    writePipe(log_pipe, 'Log_pipe connected')
+    ok(log_pipe)
     import sys
     sys.stdout = log_pipe
     sys.stderr = log_pipe

@@ -22,7 +22,7 @@ import os
 from mutex_2 import NamedMutex
 
 statusPri = {'SR' : 1, 'SL' : 1, 'CR' : 0, 'TO' : 2, 'MA' : 2, 'RD' : 2, 'ST' : 2, 'WS' : 2, 'WE' : 2, 'EX' : 1}
-end = "=[OK]="
+end = "-=OK=-"
 
 ### functions
 # unable to move cause settings module is not visible
@@ -50,7 +50,7 @@ class TraceController(object):
     def __init__(self, ext_pipe):
         self.start_mutex = NamedMutex("StartMutex", True)
         self.stop_mutex = NamedMutex("StopMutex", True)
-        self.ext_pipe = ext_pipe
+        #self.ext_pipe = ext_pipe
         self.test_lock = Lock()
         self.loop_lock = Lock()
         self.loop_lock.acquire()
@@ -77,6 +77,7 @@ class TraceController(object):
         self.dbg_line = ""
         self.last_crashed = None
         self.last_answer = ""
+        self.last_report = ""
        
         self.status = PriorityQueue()
         self.reqScript = ""
@@ -109,13 +110,14 @@ class TraceController(object):
             if(level > self.log_level):
                 return
 #            self.last_log_file.write("[%s] %s\n" % (timestamp(), data))
-            print("[%s] %s\n" % (timestamp(), data))
+            print("[TracerController]: %s: %s\n" % (timestamp(), data))
 
     def ddlog(self, data, level=0):
         #pass to regular log facility
         self.dlog("%s" % data, level)
 
     def writePipe(self, data):
+        return
         self.dlog("Writing to pipe: %s" % data, 3)
 #        print("Writing to pipe: %s" % data)
         self.ext_pipe.write(data)
@@ -144,10 +146,16 @@ class TraceController(object):
         self.dlog("Sent: %s to tracer no: %d" % (cmd, self.trace_active), 3)
 
     def recv_report_active(self):
+        print('recv_report_active')
         try:
             self.read_debugger(self.trace_sockets[self.trace_active])
-        except Exception:
-            print("Failed to send %s to tracer no: %d" % (cmd, self.trace_active))
+        except Exception as inst:
+            print("Failed to receive from tracer no: %d" % (self.trace_active))
+            print(type(inst))
+            print(inst.args)
+            print(inst)
+        self.dlog("Read: %s from tracer no: %d" % (self.last_answer, self.trace_active), 3)
+        return self.last_report
 
     def send_command(self, cmd):
         self.dlog("Sending: %s" % cmd, 3)
@@ -183,13 +191,35 @@ class TraceController(object):
         self.last_report = ""
         self.last_answer = ""
         data = ""
+        part = ""
+
+        data = dbg_socket.recv(2)
+        self.last_report += data
+
+        while True:
+            part = ''
+            part = dbg_socket.recv(1)
+            if(part == False): continue
+    
+            data += part    
+
+            self.dlog(data)
+            self.dlog('Comparing x%sx and x-=OK=-x' % (data[-6:]))
+            print('Comparing x%sx and x-=OK=-x' % (data[-6:]))
+            if(data[-6:] == '-=OK=-'):
+                break
+
+        self.last_answer = data[:-6]
+        self.dlog(' Received: %s - %s' % (self.last_report, self.last_answer))
+            
+        '''
         while True:
             r, _, _ = select((dbg_socket, ), [], [], 0)
             if(r == []): break
             data = dbg_socket.recv(2)
             self.last_report += data
             self.last_answer += data
-            if(self.last_report == 'BP' or self.last_report == 'IN'):
+            if(self.last_report == 'BP' or self.last_report == 'RI'):
                 long_data = ""
                 while True:
                     long_data += dbg_socket.recv(1)
@@ -199,6 +229,7 @@ class TraceController(object):
                         break
                 self.reqScript += long_data
                 self.status.put((statusPri[status], status, self.reqScript))
+        '''
 
     def read_debugger2(self, dbg_socket):
         self.last_answer = ""
@@ -341,10 +372,12 @@ class TraceController(object):
         else:
             self.send_command("S1")
 
+    '''
     def list_tebs(self):
         for pid in self.debuggers:
             dlog("Listing TEBs for %s" % pid)
             yield self.debuggers[pid].list_tebs()
+    '''
 
     def detach_all(self):
         print("detaching")
@@ -664,13 +697,20 @@ class TraceController(object):
 
     def debug_continue(self):
         self.send_command_active("cn")
-        self.recv_report_active()
+#        self.recv_report_active()
+        return 
+
+    def debug_continue_time(self, time):
+        self.send_command_active("cN %s" % time)
+#        self.recv_report_active()
         return 
 
     def list_tebs(self):
+        print 'listing tebs'
         self.send_command_active("lt")
-        # receive list
-        # send list
+        print 'recv1'
+        self.recv_report_active()
+        print 'recv2'
         return 
 
     def print_sth(self, data):

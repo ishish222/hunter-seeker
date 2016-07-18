@@ -23,6 +23,7 @@
 #define MAX_HOOKS 0x50
 #define MAX_FUNCTIONS 0x100
 #define MAX_MARKERS 0x50
+#define MAX_THREADS 0x100
 
 /* functions offsets in respective libs */
 #define EXIT_PROCESS_OFF 0x52acf
@@ -87,12 +88,15 @@
 
 /* tracer reports */
 
-#define REPORT_PROCESS_CREATED  0x0
-#define REPORT_PROCESS_EXIT     0x1
-#define REPORT_ST_BREAKPOINT    0x2
-#define REPORT_END_BREAKPOINT   0x3
-#define REPORT_BREAKPOINT       0x4
-#define REPORT_EXCEPTION        0x5
+#define REPORT_CONTINUE         0x0
+#define REPORT_PROCESS_CREATED  0x1
+#define REPORT_PROCESS_EXIT     0x2
+#define REPORT_ST_BREAKPOINT    0x3
+#define REPORT_END_BREAKPOINT   0x4
+#define REPORT_BREAKPOINT       0x5
+#define REPORT_EXCEPTION        0x6
+#define REPORT_INFO             0x7
+#define REPORT_NOTHING          0x99
 
 /* tracer configuration */
 
@@ -133,6 +137,15 @@ typedef struct _READ_RECORD
     SIZE_T* read;
 } READ_RECORD;
 
+typedef struct _THREAD_ENTRY
+{
+    DWORD tid;
+    char alive;
+    char open;
+    char created;
+    HANDLE handle;
+} THREAD_ENTRY;
+
 typedef struct TRACE_CONFIG_EXTENDED_
 {
     FUNCTION functions[MAX_FUNCTIONS];
@@ -158,6 +171,11 @@ typedef struct TRACE_CONFIG_
     HANDLE procHandle;
     HANDLE file_handle;
 
+    /* threads */
+
+    DWORD thread_map[0x1000000];
+    THREAD_ENTRY threads[MAX_THREADS];
+
     /* synchronization */ 
     HANDLE eventLock, eventUnlock;
     HANDLE mutex;
@@ -166,6 +184,8 @@ typedef struct TRACE_CONFIG_
     unsigned port;
     char host[MAX_NAME];
     HANDLE pipe;
+    DWORD report_code;
+    char report_buffer[BUFF_SIZE];
 
     /* replace this */
     char spawned;
@@ -186,6 +206,7 @@ typedef struct TRACE_CONFIG_
     READ_RECORD last_read_record;
     DEBUG_EVENT last_event;
     EXCEPTION_RECORD last_exception;
+    int last_win_status;
 
     char verbose; /*full_log*/
     char buffer[BUFF_SIZE];
@@ -194,6 +215,7 @@ typedef struct TRACE_CONFIG_
     FILE* log;
     FILE* file;
     FILE* modifications;
+    SOCKET socket;
 
     /* paths */
     char path[0x200];
@@ -251,14 +273,6 @@ typedef struct _CREATE_THREAD_DEBUG_INFO2
     CREATE_THREAD_DEBUG_INFO u;
     DWORD tid;
 } CREATE_THREAD_DEBUG_INFO2;
-
-typedef struct _THREAD_ENTRY
-{
-    char alive;
-    char open;
-    char created;
-    HANDLE handle;
-} THREAD_ENTRY;
 
 typedef void (*handler_routine)(void*);
 int add_breakpoint(DWORD addr, handler_routine handler);

@@ -191,8 +191,7 @@ def read_socket(s):
     data = ""
 
     while True:
-        data += s.recv(options.settings.buffer_size)
-        
+        data += s.recv(1)
         if(data[-6:] == "-=OK=-"): 
             lastResponse = data[:-6]
             break
@@ -206,9 +205,7 @@ def read_socket(s):
             lineEnd = data[scOff+8:].find("\n")
             reqScript = data[scOff+8:scOff+8+lineEnd]
 
-    print(timestamp())
-    print("" + str(data[:-6]))
-    print("")
+    print("%s %s" % (timestamp(), lastResponse))
     return (lastResponse, status, reqScript)
 
 def read_socket_q(s):
@@ -220,7 +217,7 @@ def read_socket_q(s):
     data = ""
 
     while True:
-        data += s.recv(options.settings.buffer_size)
+        data += s.recv(1)
         
         if(data[-6:] == "-=OK=-"): 
             lastResponse = data[:-6]
@@ -235,6 +232,7 @@ def read_socket_q(s):
             lineEnd = data[scOff+8:].find("\n")
             reqScript = data[scOff+8:scOff+8+lineEnd]
 
+#    print("%s %s" % (timestamp(), lastResponse))
     return (lastResponse, status, reqScript)
 
 def read_socket_q_deprecated(s):
