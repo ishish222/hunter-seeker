@@ -409,7 +409,7 @@
       <data key="d6">
         <y:ShapeNode>
           <y:Geometry height="30.0" width="211.0" x="154.0" y="1689.372258064516"/>
-          <y:Fill color="#00FF00" transparent="false"/>
+          <y:Fill color="#FFCC00" transparent="false"/>
           <y:BorderStyle color="#000000" type="line" width="1.0"/>
           <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="17.96875" modelName="custom" textColor="#000000" visible="true" width="88.041015625" x="61.4794921875" y="6.015625">TracerListTids<y:LabelModel>
               <y:SmartNodeLabelModel distance="4.0"/>
@@ -840,7 +840,6 @@
       </data>
     </edge>
     <edge id="e31" source="n31" target="n23">
-      <data key="d9"/>
       <data key="d10">
         <y:GenericEdge configuration="com.yworks.edge.framed">
           <y:Path sx="0.0" sy="0.0" tx="0.0" ty="0.0"/>

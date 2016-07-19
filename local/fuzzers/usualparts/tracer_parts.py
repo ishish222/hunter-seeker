@@ -49,11 +49,15 @@ def tracer_configure_sample():
     
     if(options.sample_options.sample_file != "none.exe"):
         write_socket(options.s, "tracer_configure_sample_file %s" % options.sample_options.sample_file);
+        print('send1 , waiting')
         response, _, _ = read_socket(options.s)
+        print('got it ')
 
     if(options.sample_options.sample_process != "None"):
         write_socket(options.s, "tracer_configure_sample_pname %s" % options.sample_options.sample_process);
+        print('send2 , waiting')
         response, _, _ = read_socket(options.s)
+        print('got it ')
 
     return
 
@@ -142,12 +146,12 @@ def tracer_write_memory():
 
     return
 
-def tracer_read_register():
+def tracer_read_register(args):
     options = globs.state.options
     state = globs.state
     status = globs.state.status
     
-    write_socket(options.s, "tracer_read_register");
+    write_socket(options.s, "tracer_read_register %s" % args);
     response, _, _ = read_socket(options.s)
 
     return

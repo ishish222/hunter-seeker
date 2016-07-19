@@ -1144,6 +1144,11 @@ def execute(cmds):
             writePipe(ext_pipe, "tracer_list_tebs OK")
             ok(ext_pipe)
 
+        elif(cmd == "tracer_read_register"):
+            trace_controller.read_register(args)
+            writePipe(ext_pipe, "%s" % trace_controller.last_answer)
+            ok(ext_pipe)
+
         elif(cmd == "tracer_print"):
             trace_controller.print_sth(args)
             writePipe(ext_pipe, "tracer_print OK")

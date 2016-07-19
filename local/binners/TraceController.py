@@ -706,11 +706,13 @@ class TraceController(object):
         return 
 
     def list_tebs(self):
-        print 'listing tebs'
         self.send_command_active("lt")
-        print 'recv1'
         self.recv_report_active()
-        print 'recv2'
+        return 
+
+    def read_register(self, reg):
+        self.send_command_active("RR%s" % reg)
+        self.recv_report_active()
         return 
 
     def print_sth(self, data):

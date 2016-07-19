@@ -75,7 +75,7 @@ def qemu_connect_log():
     options.s_log, _ = options.ss_log.accept()
     options.log_file = open("%s/internal.log" % options.settings.log_dir, "w+", 0)
     options.log_thread = Thread(target = log_loop, args = (10, options.shutting_down))
-#    options.log_thread.start()
+    options.log_thread.start()
     options.threads.append(options.log_thread)
 
 def qemu_start_full():
