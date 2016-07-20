@@ -20,6 +20,7 @@ import os
 from shutil import copyfile, copytree
 import os
 from mutex_2 import NamedMutex
+from Tracer import Tracer
 
 statusPri = {'SR' : 1, 'SL' : 1, 'CR' : 0, 'TO' : 2, 'MA' : 2, 'RD' : 2, 'ST' : 2, 'WS' : 2, 'WE' : 2, 'EX' : 1}
 end = "-=OK=-"
@@ -61,7 +62,10 @@ class TraceController(object):
         self.tracers = []
         self.trace_count = 0
         self.trace_sockets = []
-        self.trace_active = 0
+
+        # active stuff
+        self.tracer_active_id = 0
+        self.tracer_active = None
 
         self.sockets = {}
         self.init_dbg = pydbg()
@@ -138,19 +142,18 @@ class TraceController(object):
     def send_command_active(self, cmd):
         cmd = cmd + "-=OK=-"
 
-        self.dlog("Sending: %s to tracer no: %d" % (cmd, self.trace_active), 3)
+        self.dlog("Sending: %s to tracer no: %d" % (cmd, self.tracer_active_id), 3)
         try:
-            self.write_debugger(self.trace_sockets[self.trace_active], cmd)
+            self.write_debugger(self.tracer_active.socket, cmd)
         except Exception:
-            print("Failed to send %s to tracer no: %d" % (cmd, self.trace_active))
-        self.dlog("Sent: %s to tracer no: %d" % (cmd, self.trace_active), 3)
+            print("Failed to send %s to tracer no: %d" % (cmd, self.tracer_active_id))
+        self.dlog("Sent: %s to tracer no: %d" % (cmd, self.tracer_active_id), 3)
 
     def recv_report_active(self):
-        print('recv_report_active')
         try:
-            self.read_debugger(self.trace_sockets[self.trace_active])
+            self.read_debugger(self.tracer_active.socket)
         except Exception as inst:
-            print("Failed to receive from tracer no: %d" % (self.trace_active))
+            print("Failed to receive from tracer no: %d" % (self.tracer_active_id))
             print(type(inst))
             print(inst.args)
             print(inst)
@@ -426,23 +429,34 @@ class TraceController(object):
 
     def close_tracer(self, idd):
         print("Closing tracer")
-        self.trace_sockets[idd].send("EX")
+        self.tracers[idd]
 
     def spawn_tracer(self):
         print("Spawning tracer")
         Popen(["e:\\server\\b.exe", "127.0.0.1", "12341"], shell=True)
         sock, addr = self.main_socket.accept()
-        self.trace_sockets.append(sock)
+        self.tracers.append(Tracer())
         self.trace_active = self.trace_count
+        self.tracers[self.trace_active].socket = sock
+        self.tracers[self.trace_active].addr = addr
+        self.tracers[self.trace_active].active_tid_id = 0
         self.trace_count += 1
         print("Tracer synced")
         return self.trace_count-1
 
+    def activate_prev_tid(self):
+        self.tracer_active.active_tid_id = self.tracer_active.active_tid_id - 1
+
+    def activate_next_tid(self):
+        self.tracer_active.active_tid_id = self.tracer_active.active_tid_id + 1
+
     def activate_prev_tracer(self):
-        self.trace_active = self.trace_active - 1
+        self.tracer_active_id = (self.trace_active_id + 1) % self.trace_count
+        self.tracer_active = self.tracers[self.trace_active_id]
 
     def activate_next_tracer(self):
-        self.trace_active = self.trace_active - 1
+        self.tracer_active_id = (self.trace_active_id + 1) % self.trace_count
+        self.tracer_active = self.tracers[self.trace_active_id]
 
 # modify
     def attach(self, pid):

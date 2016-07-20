@@ -24,6 +24,7 @@ TracerDebugSample = statemachine.State()
 TracerDebugContinue = statemachine.State()
 TracerDebugContinue1s = statemachine.State()
 ListTebs = statemachine.State()
+ReadEAX = statemachine.State()
 
 DefaultShutdown = dm.ShutdownSequence
 
@@ -36,8 +37,13 @@ WaitForever.name = "Waiting forever"
 WaitForever.consequence = dm.ShutdownSequence
 WaitForever.executing_routine = usualparts.other_parts.wait_for_keypress
 
+ReadEAX.name = "Reading EAX"
+ReadEAX.consequence = WaitForever
+ReadEAX.args = "EAX"
+ReadEAX.executing_routine = usualparts.tracer_parts.tracer_read_register
+
 ListTebs.name = "Listing TEBs"
-ListTebs.consequence = WaitForever
+ListTebs.consequence = ReadEAX
 ListTebs.executing_routine = usualparts.tracer_parts.tracer_list_tebs
 
 TracerDebugContinue1s.name = "Debugging sample"

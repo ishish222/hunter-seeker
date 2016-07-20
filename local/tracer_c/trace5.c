@@ -1874,6 +1874,23 @@ int list_tebs()
     return 0x0;
 }
 
+int read_register(char* reg_id)
+{
+    unsigned i;
+    char buffer2[MAX_LINE];
+
+    my_trace->report_code = REPORT_INFO;
+
+    printf("Currently have %d threads\n", my_trace->thread_count);
+
+    
+
+    //    strcat(my_trace->report_buffer, buffer2);
+    //printf("Reporting: %s\n", my_trace->report_buffer);
+
+    return 0x0;
+}
+
 int process_last_event()
 {
         switch(my_trace->last_event.dwDebugEventCode)
@@ -2176,6 +2193,17 @@ int handle_cmd(char* cmd)
         }
 
         list_tebs();
+        send_report();   
+    
+    }
+    else if(cmd[0x0] == 'R' && cmd[0x1] == 'R')
+    {
+        if(my_trace->status != STATUS_CONFIGURED)
+        {
+            printf("Trace is not prepared\n");
+            goto ret;
+        }
+
         send_report();   
     
     }

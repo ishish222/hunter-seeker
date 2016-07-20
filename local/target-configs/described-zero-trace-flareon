@@ -22,4 +22,5 @@ s:binners/debugger.py
 s:binners/functions.py
 s:binners/internal.py
 s:binners/TraceController.py
+s:binners/Tracer.py
 s:binners/mutex_2.py
