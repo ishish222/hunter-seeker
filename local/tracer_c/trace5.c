@@ -1874,19 +1874,34 @@ int list_tebs()
     return 0x0;
 }
 
-int read_register(char* reg_id)
+int read_context(DWORD tid_id, CONTEXT* ctx)
 {
-    unsigned i;
+    HANDLE myHandle;
+
+    myHandle = my_trace->threads[tid_id].handle;
+    ctx->ContextFlags = CONTEXT_CONTROL;
+    if(GetThreadContext(myHandle, ctx) == 0x0)
+    {
+        d_print("Failed to get context, error: 0x%08x\n", GetLastError());
+    }
+
+    return 0x0;
+}
+
+int read_register(DWORD tid_id, char* reg)
+{
+    CONTEXT ctx;
     char buffer2[MAX_LINE];
 
     my_trace->report_code = REPORT_INFO;
-
-    printf("Currently have %d threads\n", my_trace->thread_count);
-
     
+    read_context(tid_id, &ctx);
 
-    //    strcat(my_trace->report_buffer, buffer2);
-    //printf("Reporting: %s\n", my_trace->report_buffer);
+    if(!strcmp(reg, "EAX"))
+    {
+        sprintf(buffer2, "%08x", ctx.Eax);
+        strcpy(my_trace->report_buffer, buffer2);
+    }
 
     return 0x0;
 }
@@ -2198,12 +2213,20 @@ int handle_cmd(char* cmd)
     }
     else if(cmd[0x0] == 'R' && cmd[0x1] == 'R')
     {
+        unsigned tid_id;
+        char* reg;
+
         if(my_trace->status != STATUS_CONFIGURED)
         {
             printf("Trace is not prepared\n");
             goto ret;
         }
 
+        reg = strtok(cmd, " ");
+        tid_id = strtol(strtok(0x0, " "), 0x0, 0x10);
+        reg = strtok(0x0, " ");
+
+        read_register(tid_id, reg);
         send_report();   
     
     }

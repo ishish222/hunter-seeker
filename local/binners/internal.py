@@ -1146,7 +1146,8 @@ def execute(cmds):
 
         elif(cmd == "tracer_read_register"):
             trace_controller.read_register(args)
-            writePipe(ext_pipe, "%s" % trace_controller.last_answer)
+            writePipe(ext_pipe, "%s\n" % trace_controller.last_answer)
+            writePipe(ext_pipe, "tracer_read_register OK");
             ok(ext_pipe)
 
         elif(cmd == "tracer_print"):

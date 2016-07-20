@@ -729,15 +729,16 @@ class TraceController(object):
 
     def list_tebs(self):
         self.send_command_active("lt")
-        self.recv_report_active()
+        self.last_report, self.last_answer = self.recv_report_active()
         return 
 
     def read_register(self, reg):
-        self.send_command_active("RR%s" % reg)
-        self.recv_report_active()
+#        self.send_command_active("RR%s" % reg)
+        self.tracer_active.read_register(reg)
+        self.last_report, self.last_answer = self.recv_report_active()
         return 
 
     def print_sth(self, data):
-        self.send_command_active("PR %s" % data)
+        self.last_report, self.last_answer = self.recv_report_active()
         return 
 
