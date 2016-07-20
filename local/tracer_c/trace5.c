@@ -2363,12 +2363,12 @@ int main(int argc, char** argv)
             cmd_len += recv_size;
 
             if(!strncmp(cmd+cmd_len-6, "-=OK=-", 6)) break;
-            printf("Got part: %s\n", cmd);
-            printf("Finish: %s\n", cmd+cmd_len-6);
+           // printf("Got part: %s\n", cmd);
+           // printf("Finish: %s\n", cmd+cmd_len-6);
         }
 
         cmd[cmd_len-6] = 0x0;
-        printf("Got cmd: %s\n", cmd);
+        //printf("Got cmd: %s\n", cmd);
 
         if(!strcmp(cmd, "quit")) 
             break;

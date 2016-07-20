@@ -140,6 +140,13 @@ class TraceController(object):
         self.writePipe("-=OK=-")
 
     def send_command_active(self, cmd):
+        self.tracer_active.send_command(cmd)
+
+    def recv_report_active(self):
+        self.tracer_active.recv_report()
+        return (self.tracer_active.last_report, self.tracer_active.last_answer)
+        
+    def send_command_active2(self, cmd):
         cmd = cmd + "-=OK=-"
 
         self.dlog("Sending: %s to tracer no: %d" % (cmd, self.tracer_active_id), 3)
@@ -149,7 +156,7 @@ class TraceController(object):
             print("Failed to send %s to tracer no: %d" % (cmd, self.tracer_active_id))
         self.dlog("Sent: %s to tracer no: %d" % (cmd, self.tracer_active_id), 3)
 
-    def recv_report_active(self):
+    def recv_report_active2(self):
         try:
             self.read_debugger(self.tracer_active.socket)
         except Exception as inst:
@@ -207,8 +214,6 @@ class TraceController(object):
             data += part    
 
             self.dlog(data)
-            self.dlog('Comparing x%sx and x-=OK=-x' % (data[-6:]))
-            print('Comparing x%sx and x-=OK=-x' % (data[-6:]))
             if(data[-6:] == '-=OK=-'):
                 break
 
@@ -434,12 +439,15 @@ class TraceController(object):
     def spawn_tracer(self):
         print("Spawning tracer")
         Popen(["e:\\server\\b.exe", "127.0.0.1", "12341"], shell=True)
-        sock, addr = self.main_socket.accept()
+        socket, addr = self.main_socket.accept()
         self.tracers.append(Tracer())
-        self.trace_active = self.trace_count
-        self.tracers[self.trace_active].socket = sock
-        self.tracers[self.trace_active].addr = addr
-        self.tracers[self.trace_active].active_tid_id = 0
+        self.tracer_active_id = self.trace_count
+        self.tracer_active = self.tracers[self.tracer_active_id]
+        self.tracer_active.socket = socket
+        self.tracer_active.addr = addr
+        self.tracer_active.active_tid_id = 0
+        self.tracer_active.my_id = self.tracer_active_id
+        self.tracer_active.controller = self
         self.trace_count += 1
         print("Tracer synced")
         return self.trace_count-1
