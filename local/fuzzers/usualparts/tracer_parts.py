@@ -112,31 +112,36 @@ def tracer_list_tebs():
     response, _, _ = read_socket(options.s)
     print('Received: %s' % response)
 
-
     return
 
 
-def tracer_print_stack():
+def tracer_read_stack():
     options = globs.state.options
     state = globs.state
     status = globs.state.status
     
-    write_socket(options.s, "tracer_print_stack");
+    write_socket(options.s, "tracer_read_stack");
     response, _, _ = read_socket(options.s)
 
     return
 
-def tracer_read_memory():
+def tracer_read_dword(args=0x0):
     options = globs.state.options
     state = globs.state
     status = globs.state.status
-    
-    write_socket(options.s, "tracer_read_memory");
+
+    # id source is null, use last ret
+    if(args == None):
+        args = int(globs.state.ret[3:11], 0x10)
+
+    write_socket(options.s, "tracer_read_dword 0x%08x" % args);
     response, _, _ = read_socket(options.s)
+
+    globs.state.ret = response
 
     return
 
-def tracer_write_memory():
+def tracer_write_dword():
     options = globs.state.options
     state = globs.state
     status = globs.state.status
@@ -146,13 +151,15 @@ def tracer_write_memory():
 
     return
 
-def tracer_read_register(args):
+def tracer_read_register(args="EIP"):
     options = globs.state.options
     state = globs.state
     status = globs.state.status
     
     write_socket(options.s, "tracer_read_register %s" % args);
     response, _, _ = read_socket(options.s)
+
+    globs.state.ret = response
 
     return
 

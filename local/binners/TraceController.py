@@ -732,6 +732,11 @@ class TraceController(object):
         self.last_report, self.last_answer = self.recv_report_active()
         return 
 
+    def read_dword(self, args):
+        self.tracer_active.read_dword(args)
+        self.last_report, self.last_answer = self.recv_report_active()
+        return 
+
     def read_register(self, reg):
 #        self.send_command_active("RR%s" % reg)
         self.tracer_active.read_register(reg)

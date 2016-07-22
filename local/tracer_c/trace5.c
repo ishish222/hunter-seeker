@@ -1888,6 +1888,34 @@ int read_context(DWORD tid_id, CONTEXT* ctx)
     return 0x0;
 }
 
+int read_dword(DWORD tid_id, char* addr)
+{
+    CONTEXT ctx;
+    DWORD data;
+    DWORD read;
+    HANDLE handle;
+
+    char buffer2[MAX_LINE];
+
+    OFFSET off = strtol(addr, 0x0, 0x10);
+    handle = my_trace->threads[tid_id].handle;
+    
+    read_memory(handle, (void*)off, &data, 0x4, &read);
+    
+    if(read != 0x4)
+    {
+        sprintf(buffer2, "%08x", data);
+        strcpy(my_trace->report_buffer, buffer2);
+    }
+    else {
+        sprintf(buffer2, "Error");
+        strcpy(my_trace->report_buffer, buffer2);
+    }
+
+    return 0x0;
+}
+
+
 int read_register(DWORD tid_id, char* reg)
 {
     CONTEXT ctx;
@@ -1900,6 +1928,16 @@ int read_register(DWORD tid_id, char* reg)
     if(!strcmp(reg, "EAX"))
     {
         sprintf(buffer2, "%08x", ctx.Eax);
+        strcpy(my_trace->report_buffer, buffer2);
+    }
+    else if(!strcmp(reg, "ESP"))
+    {
+        sprintf(buffer2, "%08x", ctx.Esp);
+        strcpy(my_trace->report_buffer, buffer2);
+    }
+    else if(!strcmp(reg, "EIP"))
+    {
+        sprintf(buffer2, "%08x", ctx.Eip);
         strcpy(my_trace->report_buffer, buffer2);
     }
 
@@ -2208,6 +2246,27 @@ int handle_cmd(char* cmd)
         }
 
         list_tebs();
+        send_report();   
+    
+    }
+    else if(cmd[0x0] == 'R' && cmd[0x1] == 'M')
+    {
+        unsigned tid_id;
+        char* addr;
+
+        if(my_trace->status != STATUS_CONFIGURED)
+        {
+            printf("Trace is not prepared\n");
+            goto ret;
+        }
+
+        addr = strtok(cmd, " ");
+        tid_id = strtol(strtok(0x0, " "), 0x0, 0x10);
+        addr = strtok(0x0, " ");
+
+        printf("Reading TID id: 0x%08x, addr: 0x%08x\n", tid_id, addr);
+
+        read_dword(tid_id, addr);
         send_report();   
     
     }
