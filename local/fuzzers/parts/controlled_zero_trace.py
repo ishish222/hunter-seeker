@@ -25,8 +25,12 @@ TracerDebugContinue = statemachine.State()
 TracerDebugContinue1s = statemachine.State()
 ListTebs = statemachine.State()
 ReadEAX = statemachine.State()
+ReadESP2 = statemachine.State()
+ReadESP3 = statemachine.State()
 ReadStack = statemachine.State()
 ReadMemory = statemachine.State()
+ReadMemory2 = statemachine.State()
+WriteMemory = statemachine.State()
 
 DefaultShutdown = dm.ShutdownSequence
 
@@ -39,8 +43,28 @@ WaitForever.name = "Waiting forever"
 WaitForever.consequence = dm.ShutdownSequence
 WaitForever.executing_routine = usualparts.other_parts.wait_for_keypress
 
+ReadMemory2.name = "Reading Memory"
+ReadMemory2.consequence = WaitForever
+ReadMemory2.args = None
+ReadMemory2.executing_routine = usualparts.tracer_parts.tracer_read_dword
+
+ReadESP3.name = "Reading ESP"
+ReadESP3.consequence = ReadMemory2
+ReadESP3.args = "ESP"
+ReadESP3.executing_routine = usualparts.tracer_parts.tracer_read_register
+
+WriteMemory.name = "Writing Memory"
+WriteMemory.consequence = ReadESP3
+WriteMemory.args = (None, 0xffffffff)
+WriteMemory.executing_routine = usualparts.tracer_parts.tracer_write_dword
+
+ReadESP2.name = "Reading ESP"
+ReadESP2.consequence = WriteMemory
+ReadESP2.args = "ESP"
+ReadESP2.executing_routine = usualparts.tracer_parts.tracer_read_register
+
 ReadMemory.name = "Reading Memory"
-ReadMemory.consequence = WaitForever
+ReadMemory.consequence = ReadESP2
 ReadMemory.args = None
 ReadMemory.executing_routine = usualparts.tracer_parts.tracer_read_dword
 

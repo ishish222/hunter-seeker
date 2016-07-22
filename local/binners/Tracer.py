@@ -65,4 +65,7 @@ class Tracer(object):
         self.send_command('RR %d %s' % (self.active_tid_id, reg))
 
     def read_dword(self, args):
-        self.send_command('RM %d %s' % (self.active_tid_id, args))
+        self.send_command('RM %s' % (args))
+
+    def write_dword(self, args):
+        self.send_command('WM %s' % (args))

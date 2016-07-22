@@ -186,7 +186,31 @@ void sysret_refresh(void* data)
 
 void read_memory(HANDLE handle, void* from, void* to, SIZE_T size, SIZE_T* read)
 {
-    ReadProcessMemory(handle, from, to, size, read);
+    DWORD ret;
+    printf("read_memory, handle: 0x%08x\n", my_trace->procHandle);
+    ret = ReadProcessMemory(my_trace->procHandle, from, to, size, read);
+
+    if(!ret)
+    {
+        printf("Error: 0x%08x\n", GetLastError());
+    }
+}
+
+void write_memory(HANDLE handle, void* to, void* from, SIZE_T size, SIZE_T* written)
+{
+    DWORD oldProt;
+    DWORD ret;
+    
+    printf("write_memory, handle: 0x%08x\n", my_trace->procHandle);
+    VirtualProtectEx(my_trace->procHandle, to, 0x4, PAGE_EXECUTE_READWRITE, &oldProt);
+    ret = WriteProcessMemory(my_trace->procHandle, to, from, size, written);
+
+    if(!ret)
+    {
+        printf("Error: 0x%08x\n", GetLastError());
+    }
+
+    VirtualProtectEx(my_trace->procHandle, to, 0x4, oldProt, &oldProt);
 }
 
 int dec_eip(DWORD id)
@@ -1888,7 +1912,33 @@ int read_context(DWORD tid_id, CONTEXT* ctx)
     return 0x0;
 }
 
-int read_dword(DWORD tid_id, char* addr)
+int write_dword(DWORD addr, DWORD val)
+{
+    CONTEXT ctx;
+    DWORD read;
+    HANDLE handle;
+
+    char buffer2[MAX_LINE];
+
+    handle = my_trace->procHandle;
+    
+    write_memory(my_trace->procHandle, (void*)addr, (void*)&val, 0x4, &read);
+    
+    if(read == 0x4)
+    {
+        sprintf(buffer2, "DWORD written");
+        strcpy(my_trace->report_buffer, buffer2);
+    }
+    else 
+    {
+        sprintf(buffer2, "Error");
+        strcpy(my_trace->report_buffer, buffer2);
+    }
+
+    return 0x0;
+}
+
+int read_dword(DWORD addr)
 {
     CONTEXT ctx;
     DWORD data;
@@ -1897,12 +1947,11 @@ int read_dword(DWORD tid_id, char* addr)
 
     char buffer2[MAX_LINE];
 
-    OFFSET off = strtol(addr, 0x0, 0x10);
-    handle = my_trace->threads[tid_id].handle;
+    handle = my_trace->procHandle;
     
-    read_memory(handle, (void*)off, &data, 0x4, &read);
+    read_memory(my_trace->procHandle, (void*)addr, (void*)&data, 0x4, &read);
     
-    if(read != 0x4)
+    if(read == 0x4)
     {
         sprintf(buffer2, "%08x", data);
         strcpy(my_trace->report_buffer, buffer2);
@@ -1952,6 +2001,7 @@ int process_last_event()
                 /* this is not our responsibility, inform TracerController and wait for orders */
                 /* get process info */
                 my_trace->cpdi = my_trace->last_event.u.CreateProcessInfo;
+                my_trace->procHandle = my_trace->cpdi.hProcess;
 
                 /* register main thread (does this not belong to other event code? */
                 register_thread(my_trace->last_event.dwThreadId, my_trace->last_event.u.CreateProcessInfo.hThread);
@@ -2251,8 +2301,8 @@ int handle_cmd(char* cmd)
     }
     else if(cmd[0x0] == 'R' && cmd[0x1] == 'M')
     {
-        unsigned tid_id;
-        char* addr;
+        DWORD addr;
+        char* cmd_;
 
         if(my_trace->status != STATUS_CONFIGURED)
         {
@@ -2260,13 +2310,34 @@ int handle_cmd(char* cmd)
             goto ret;
         }
 
-        addr = strtok(cmd, " ");
-        tid_id = strtol(strtok(0x0, " "), 0x0, 0x10);
-        addr = strtok(0x0, " ");
+        cmd_ = strtok(cmd, " ");
+        addr = strtol(strtok(0x0, " "), 0x0, 0x10);
 
-        printf("Reading TID id: 0x%08x, addr: 0x%08x\n", tid_id, addr);
+        printf("Reading addr: 0x%08x\n", addr);
 
-        read_dword(tid_id, addr);
+        read_dword(addr);
+        send_report();   
+    
+    }
+    else if(cmd[0x0] == 'W' && cmd[0x1] == 'M')
+    {
+        char* cmd_;
+        DWORD addr;
+        DWORD val;
+
+        if(my_trace->status != STATUS_CONFIGURED)
+        {
+            printf("Trace is not prepared\n");
+            goto ret;
+        }
+
+        cmd_ = strtok(cmd, " ");
+        addr = strtol(strtok(0x0, " "), 0x0, 0x10);
+        val = strtol(strtok(0x0, " "), 0x0, 0x10);
+
+        printf("Writing addr: 0x%08x with 0x%08x\n", addr, val);
+
+        write_dword(addr, val);
         send_report();   
     
     }

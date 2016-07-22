@@ -141,12 +141,16 @@ def tracer_read_dword(args=0x0):
 
     return
 
-def tracer_write_dword():
+def tracer_write_dword(args):
     options = globs.state.options
     state = globs.state
     status = globs.state.status
     
-    write_socket(options.s, "tracer_write_memory");
+    # id source is null, use last ret
+    if(args[0] == None):
+        args = (int(globs.state.ret[3:11], 0x10), args[1])
+
+    write_socket(options.s, "tracer_write_dword 0x%08x 0x%08x" % args);
     response, _, _ = read_socket(options.s)
 
     return
