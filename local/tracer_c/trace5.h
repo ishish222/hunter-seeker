@@ -25,6 +25,7 @@
 #define MAX_MARKERS 0x50
 #define MAX_THREADS 0x100
 #define MAX_LIBS 0x50
+#define MAX_BREAKPOINTS 0x50
 
 /* functions offsets in respective libs */
 #define EXIT_PROCESS_OFF 0x52acf
@@ -148,10 +149,30 @@ typedef struct MARKER_
 {
     char lib_name[MAX_NAME];
     OFFSET lib_offset;
+    OFFSET real_offset;
     OFFSET offset;
     char id[3];
     char active;
 } MARKER;
+
+typedef void (*handler_routine)(void*);
+
+typedef struct _HANDLER
+{
+    handler_routine handler;
+    char enabled;
+} HANDLER;
+
+typedef struct BREAKPOINT_
+{
+    DWORD addr;
+    char saved_byte;
+//    handler_routine handler;    
+    char enabled;
+    HANDLER handlers[MAX_HANDLERS];
+    unsigned handler_count;
+    char isHook;
+} BREAKPOINT;
 
 typedef struct REACTION_
 {
@@ -201,7 +222,7 @@ typedef struct TRACE_CONFIG_EXTENDED_
 typedef struct _LIB_ENTRY
 {
     char loaded;
-    DWORD lib_addr;
+    DWORD lib_offset;
     char lib_name[MAX_NAME];
 } LIB_ENTRY;
 
@@ -230,6 +251,9 @@ typedef struct TRACE_CONFIG_
     HANDLE eventLock, eventUnlock;
     HANDLE mutex;
 
+    /* breakpoints */
+    BREAKPOINT breakpoints[MAX_BREAKPOINTS];
+
     /* communication */
     unsigned port;
     char host[MAX_NAME];
@@ -251,6 +275,8 @@ typedef struct TRACE_CONFIG_
     unsigned long long instr_limit;
     unsigned long long scan_count; /*scan_count*/
     unsigned long long thread_count;
+    unsigned long long lib_count;
+    unsigned long long bpt_count;
 
     /* last events */
     READ_RECORD last_read_record;
@@ -336,30 +362,12 @@ DWORD find_lib(char* name);
 BOOL WINAPI HandlerRoutine(_In_ DWORD dwCtrlType);
 SIZE_T dump_mem(FILE*, void*, SIZE_T);
 
-typedef struct _HANDLER
-{
-    handler_routine handler;
-    char enabled;
-} HANDLER;
-
 typedef struct _HOOK
 {
     DWORD offset;
     char libname[0x50];
     handler_routine handler;
 } HOOK;
-
-
-typedef struct _bpt
-{
-    DWORD addr;
-    char saved_byte;
-//    handler_routine handler;    
-    char enabled;
-    HANDLER handlers[MAX_HANDLERS];
-    unsigned handler_count;
-    char isHook;
-} bpt;
 
 typedef struct _WATCHED
 {

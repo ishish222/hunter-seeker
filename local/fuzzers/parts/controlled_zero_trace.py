@@ -17,6 +17,7 @@ GetSampleOptions = statemachine.State()
 SpawnTrace = statemachine.State()
 RevertClean = statemachine.State()
 WaitForever = statemachine.State()
+WaitKeypress = statemachine.State()
 TracerConfigureMarkers = statemachine.State()
 TracerActivateMarkers = statemachine.State()
 TracerConfigureInDir= statemachine.State()
@@ -106,8 +107,12 @@ TracerDebugContinue1s2.name = "Get the rest of events"
 TracerDebugContinue1s2.consequence = TracerDebugContinue1s3
 TracerDebugContinue1s2.executing_routine = usualparts.tracer_parts.tracer_debug_continue
 
+WaitKeypress.name = "Waiting for ketpress"
+WaitKeypress.consequence = TracerDebugContinue1s2
+WaitKeypress.executing_routine = usualparts.other_parts.wait_for_keypress
+
 TracerDebugContinue1s.name = "Get PROCESS_CREATED"
-TracerDebugContinue1s.consequence = TracerDebugContinue1s2
+TracerDebugContinue1s.consequence = WaitKeypress
 TracerDebugContinue1s.executing_routine = usualparts.tracer_parts.tracer_debug_continue_1_second
 
 TracerDebugSample.name = "Debugging sample"
