@@ -18,15 +18,12 @@ SpawnTrace = statemachine.State()
 RevertClean = statemachine.State()
 WaitForever = statemachine.State()
 TracerConfigureMarkers = statemachine.State()
-TracerActivateMarkers = statemachine.State()
 TracerConfigureInDir= statemachine.State()
 TracerConfigureOutDir= statemachine.State()
 TracerConfigureSample = statemachine.State()
 TracerDebugSample = statemachine.State()
 TracerDebugContinue = statemachine.State()
 TracerDebugContinue1s = statemachine.State()
-TracerDebugContinue1s2 = statemachine.State()
-TracerDebugContinue1s3 = statemachine.State()
 ListTebs = statemachine.State()
 ReadEAX = statemachine.State()
 ReadESP2 = statemachine.State()
@@ -98,35 +95,23 @@ ListTebs.name = "Listing TEBs"
 ListTebs.consequence = ReadEAX
 ListTebs.executing_routine = usualparts.tracer_parts.tracer_list_tebs
 
-TracerDebugContinue1s3.name = "Get the rest of events"
-TracerDebugContinue1s3.consequence = ListTebs
-TracerDebugContinue1s3.executing_routine = usualparts.tracer_parts.tracer_debug_continue_1_second
-
-TracerDebugContinue1s2.name = "Get the rest of events"
-TracerDebugContinue1s2.consequence = TracerDebugContinue1s3
-TracerDebugContinue1s2.executing_routine = usualparts.tracer_parts.tracer_debug_continue
-
-TracerDebugContinue1s.name = "Get PROCESS_CREATED"
-TracerDebugContinue1s.consequence = TracerDebugContinue1s2
+TracerDebugContinue1s.name = "Debugging sample"
+TracerDebugContinue1s.consequence = ListTebs
 TracerDebugContinue1s.executing_routine = usualparts.tracer_parts.tracer_debug_continue_1_second
 
 TracerDebugSample.name = "Debugging sample"
 TracerDebugSample.consequence = TracerDebugContinue1s
 TracerDebugSample.executing_routine = usualparts.tracer_parts.tracer_debug_sample
 
-TracerActivateMarkers.name = "Activate markers"
-TracerActivateMarkers.consequence = TracerDebugSample
-TracerActivateMarkers.executing_routine = usualparts.tracer_parts.tracer_activate_markers
-
 TracerConfigureMarkers.name = "Configuring markers"
-TracerConfigureMarkers.consequence = TracerActivateMarkers
-TracerConfigureMarkers.executing_routine = usualparts.tracer_parts.tracer_configure_markers
+TracerConfigureMarkers.consequence = TracerDebugSample
+TracerConfigureMarkers.executing_routine = usualparts.tracer_parts.tracer_configure_marker_st_end
 
-TracerConfigureInDir.name = "Configuring in dir"
+TracerConfigureInDir.name = "Configuring dir"
 TracerConfigureInDir.consequence = TracerConfigureMarkers
 TracerConfigureInDir.executing_routine = usualparts.tracer_parts.tracer_configure_in_dir
 
-TracerConfigureOutDir.name = "Configuring out dir"
+TracerConfigureOutDir.name = "Configuring dir"
 TracerConfigureOutDir.consequence = TracerConfigureInDir
 TracerConfigureOutDir.executing_routine = usualparts.tracer_parts.tracer_configure_out_dir
 

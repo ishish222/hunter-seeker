@@ -31,14 +31,26 @@ def trace_controller_activate_next_tracer():
 
     return
 
-def tracer_configure_dir():
+def tracer_configure_in_dir():
     options = globs.state.options
     state = globs.state
     status = globs.state.status
     
     if(options.sample_options.sample_file != "None"):
-        write_socket(options.s, "tracer_configure_research_dir %s" % options.sample_options.research_dir);
+        write_socket(options.s, "tracer_configure_in_dir %s" % options.sample_options.research_dir);
         response, _, _ = read_socket(options.s)
+
+    return
+
+def tracer_configure_out_dir():
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+    
+#TODO
+#    if(options.sample_options.sample_file != "None"):
+#        write_socket(options.s, "tracer_configure_research_out_dir %s" % options.sample_options.research_dir);
+#        response, _, _ = read_socket(options.s)
 
     return
 
@@ -49,15 +61,31 @@ def tracer_configure_sample():
     
     if(options.sample_options.sample_file != "none.exe"):
         write_socket(options.s, "tracer_configure_sample_file %s" % options.sample_options.sample_file);
-        print('send1 , waiting')
         response, _, _ = read_socket(options.s)
-        print('got it ')
 
     if(options.sample_options.sample_process != "None"):
         write_socket(options.s, "tracer_configure_sample_pname %s" % options.sample_options.sample_process);
-        print('send2 , waiting')
         response, _, _ = read_socket(options.s)
-        print('got it ')
+
+    return
+
+def tracer_configure_markers():
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+    
+    write_socket(options.s, "tracer_configure_markers %s" % (options.sample_options.markers));
+    response, _, _ = read_socket(options.s)
+
+    return
+
+def tracer_activate_markers():
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+    
+    write_socket(options.s, "tracer_activate_markers");
+    response, _, _ = read_socket(options.s)
 
     return
 
@@ -110,17 +138,15 @@ def tracer_list_tebs():
     
     write_socket(options.s, "tracer_list_tebs");
     response, _, _ = read_socket(options.s)
-    print('Received: %s' % response)
 
     return
 
-
-def tracer_read_stack():
+def tracer_read_stack(args = 5):
     options = globs.state.options
     state = globs.state
     status = globs.state.status
     
-    write_socket(options.s, "tracer_read_stack");
+    write_socket(options.s, "tracer_read_stack %d" % args);
     response, _, _ = read_socket(options.s)
 
     return
@@ -167,12 +193,12 @@ def tracer_read_register(args="EIP"):
 
     return
 
-def tracer_write_register():
+def tracer_write_register(args):
     options = globs.state.options
     state = globs.state
     status = globs.state.status
     
-    write_socket(options.s, "tracer_write_register");
+    write_socket(options.s, "tracer_write_register %s 0x%08x" % args);
     response, _, _ = read_socket(options.s)
 
     return

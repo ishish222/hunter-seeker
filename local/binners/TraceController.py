@@ -703,32 +703,46 @@ class TraceController(object):
 
     def set_sample_file(self, filee):
         self.send_command_active("SN %s" % filee)
+        self.last_report, self.last_answer = self.recv_report_active()
         return 
 
-    def set_research_dir(self, filee):
+    def configure_in_dir(self, filee):
         self.send_command_active("SD %s" % filee)
+        self.last_report, self.last_answer = self.recv_report_active()
         return 
 
     def set_sample_pname(self, pname):
         self.send_command_active("SP %s" % pname)
+        self.last_report, self.last_answer = self.recv_report_active()
         return 
 
     def debug_sample(self):
         self.send_command_active("sd")
+        self.last_report, self.last_answer = self.recv_report_active()
         return 
 
     def debug_continue(self):
         self.send_command_active("cn")
-#        self.recv_report_active()
+        self.last_report, self.last_answer = self.recv_report_active()
         return 
 
     def debug_continue_time(self, time):
         self.send_command_active("cN %s" % time)
-#        self.recv_report_active()
+        self.last_report, self.last_answer = self.recv_report_active()
         return 
 
     def list_tebs(self):
         self.send_command_active("lt")
+        self.last_report, self.last_answer = self.recv_report_active()
+        return 
+
+    def configure_markers(self, markers):
+        self.send_command_active("cm %s" % markers)
+        self.last_report, self.last_answer = self.recv_report_active()
+        return 
+
+    def activate_markers(self):
+        self.send_command_active("am")
         self.last_report, self.last_answer = self.recv_report_active()
         return 
 
@@ -742,11 +756,22 @@ class TraceController(object):
         self.last_report, self.last_answer = self.recv_report_active()
         return 
 
-    def read_register(self, reg):
-#        self.send_command_active("RR%s" % reg)
-        self.tracer_active.read_register(reg)
+    def read_register(self, args):
+        self.tracer_active.read_register(args)
         self.last_report, self.last_answer = self.recv_report_active()
         return 
+
+    def write_register(self, args):
+        self.tracer_active.write_register(args)
+        self.last_report, self.last_answer = self.recv_report_active()
+        return 
+
+    def read_stack(self, args):
+        self.tracer_active.read_stack(args)
+        self.last_report, self.last_answer = self.recv_report_active()
+        return 
+
+
 
     def print_sth(self, data):
         self.last_report, self.last_answer = self.recv_report_active()

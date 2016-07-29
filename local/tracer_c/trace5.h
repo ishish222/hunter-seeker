@@ -24,6 +24,7 @@
 #define MAX_FUNCTIONS 0x100
 #define MAX_MARKERS 0x50
 #define MAX_THREADS 0x100
+#define MAX_LIBS 0x50
 
 /* functions offsets in respective libs */
 #define EXIT_PROCESS_OFF 0x52acf
@@ -96,7 +97,42 @@
 #define REPORT_BREAKPOINT       0x5
 #define REPORT_EXCEPTION        0x6
 #define REPORT_INFO             0x7
+#define REPORT_EXCEPTION_NH     0x8
 #define REPORT_NOTHING          0x99
+
+/* tracer commands */
+
+#define CMD_SET_NAME            "SN"
+#define CMD_SET_IN_DIRECTORY    "SD"
+#define CMD_SET_OUT_DIRECTORY   "Sd"
+#define CMD_SET_MARKER_1        "M1"
+#define CMD_SET_MARKER_2        "M2"
+#define CMD_START_DEBUG         "sd"
+#define CMD_LIST_TEBS           "lt"
+#define CMD_READ_MEMORY         "RM"
+#define CMD_WRITE_MEMORY        "WM"
+#define CMD_READ_REGISTER       "RR"
+#define CMD_WRITE_REGISTER      "WR"
+#define CMD_READ_STACK          "RS"
+#define CMD_CONTINUE            "cn"
+#define CMD_CONTINUE_TIME       "cN"
+
+/* unimplemented */
+#define CMD_ACTIVATE_MARKERS    "AM"
+#define CMD_SET_LIMIT           "SL"
+#define CMD_SET_TRACE_NAME      "ST"
+#define CMD_SET_DUMP_NAME       "sD"
+#define CMD_INFO_NAME           "SI"
+#define CMD_ENABLE_TRACE        "ET"
+#define CMD_ENABLE_DBG_TRACE    "ED"
+#define CMD_DISABLE_TRACE       "DT"
+#define CMD_CONFIGURE_MARKERS   "cm"
+#define CMD_ACTIVATE_MARKERS    "am"
+
+#define CMD_ROUTINE_1           "R1"
+#define CMD_ROUTINE_2           "R2"
+#define CMD_ROUTINE_3           "R3"
+#define CMD_ROUTINE_4           "R4"
 
 /* tracer configuration */
 
@@ -111,7 +147,10 @@ typedef struct FUNCTION_
 typedef struct MARKER_
 {
     char lib_name[MAX_NAME];
+    OFFSET lib_offset;
     OFFSET offset;
+    char id[3];
+    char active;
 } MARKER;
 
 typedef struct REACTION_
@@ -158,6 +197,14 @@ typedef struct TRACE_CONFIG_EXTENDED_
     unsigned signs_count;
 } TRACE_CONFIG_EXTENDED;
 
+/* tracking libraries */
+typedef struct _LIB_ENTRY
+{
+    char loaded;
+    DWORD lib_addr;
+    char lib_name[MAX_NAME];
+} LIB_ENTRY;
+
 typedef struct TRACE_CONFIG_
 {
     /* basic stuff */
@@ -175,6 +222,9 @@ typedef struct TRACE_CONFIG_
 
     DWORD thread_map[0x1000000];
     THREAD_ENTRY threads[MAX_THREADS];
+
+    /* libraries */
+    LIB_ENTRY libs[MAX_LIBS];
 
     /* synchronization */ 
     HANDLE eventLock, eventUnlock;
@@ -207,6 +257,8 @@ typedef struct TRACE_CONFIG_
     DEBUG_EVENT last_event;
     EXCEPTION_RECORD last_exception;
     int last_win_status;
+    OFFSET last_eip;
+    DWORD last_tid;
 
     char verbose; /*full_log*/
     char buffer[BUFF_SIZE];
@@ -218,14 +270,15 @@ typedef struct TRACE_CONFIG_
     SOCKET socket;
 
     /* paths */
-    char path[0x200];
-    char cur_path[0x200];
+    char path[MAX_LINE];
+    char cur_path[MAX_LINE];
     int path_i;
-    char dumpPath[0x200];
-    char iniPath[0x200];
-    char modPath[0x200];
-    wchar_t filePath[0x200];
+    char dumpPath[MAX_LINE];
+    char iniPath[MAX_LINE];
+    char modPath[MAX_LINE];
+    wchar_t filePath[MAX_LINE];
     char research_dir[MAX_LINE];
+    char out_dir[MAX_LINE];
     char sample_path[MAX_LINE];
     char process_fname[MAX_NAME];
    
@@ -239,6 +292,9 @@ typedef struct TRACE_CONFIG_
     DWORD sysret_off;
 
     /* markers */
+    MARKER markers[MAX_MARKERS];
+    unsigned marker_count;
+
     MARKER st_markers[MAX_MARKERS];
     MARKER end_marker[MAX_MARKERS];
 
@@ -305,14 +361,6 @@ typedef struct _bpt
     char isHook;
 } bpt;
 
-/* tracking libraries */
-typedef struct _LIB_ENTRY
-{
-    char alive;
-    DWORD lib_addr;
-    char lib_name[MAX_NAME];
-} LIB_ENTRY;
-
 typedef struct _WATCHED
 {
     DWORD off;
@@ -328,3 +376,5 @@ int unset_ss(DWORD);
 int set_ss(DWORD);
 int d_print(const char* format, ...);
 FILE* configure_file();
+
+

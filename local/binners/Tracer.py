@@ -64,8 +64,16 @@ class Tracer(object):
     def read_register(self, reg):
         self.send_command('RR %d %s' % (self.active_tid_id, reg))
 
+    def write_register(self, args):
+        self.dlog('%s' % args)
+        self.send_command('WR %d %s' % (self.active_tid_id, args))
+
     def read_dword(self, args):
         self.send_command('RM %s' % (args))
 
     def write_dword(self, args):
         self.send_command('WM %s' % (args))
+
+    def read_stack(self, args):
+        self.send_command('RS %d %s' % (self.active_tid_id, args))
+
