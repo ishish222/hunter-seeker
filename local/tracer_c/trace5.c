@@ -258,6 +258,11 @@ void serialize_thread(THREAD_ENTRY* thread, char* buffer)
 
 }
 
+void serialize_lib(LIB_ENTRY* lib, char* buffer)
+{
+    sprintf(buffer, "0x%08x,%s", lib->lib_offset, lib->lib_name);
+}
+
 void serialize_context(CONTEXT ctx, LDT_ENTRY* ldt, char* buffer)
 {
     sprintf(buffer, "0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x", 
@@ -535,7 +540,7 @@ char* find_file(char* path)
         if(path[i] == '\\') last = path+i;
     }
 
-    return last;
+    return last+1;
 }
 
 void register_lib(LOAD_DLL_DEBUG_INFO info)
@@ -1854,6 +1859,28 @@ int send_report()
     return 0x0;
 }
 
+int list_libs()
+{
+    printf("Listings TEBs\n");
+    unsigned i;
+    char buffer2[MAX_LINE];
+
+    my_trace->report_code = REPORT_INFO;
+
+    printf("Currently have %d libs\n", my_trace->lib_count);
+    strcpy(my_trace->report_buffer, "");
+
+    for(i = 0x0; i< my_trace->thread_count; i++)
+    {
+        serialize_lib(&my_trace->libs[i], buffer2);
+        strcat(my_trace->report_buffer, buffer2);
+        //strcat(my_trace->report_buffer, "x");
+    }
+    printf("Reporting: %s\n", my_trace->report_buffer);
+
+    return 0x0;
+}
+
 int list_tebs()
 {
     printf("Listings TEBs\n");
@@ -2624,6 +2651,18 @@ int handle_cmd(char* cmd)
         }
 
         list_tebs();
+        send_report();   
+    
+    }
+    else if(!strncmp(cmd, CMD_LIST_LIBS, 2))
+    {
+        if(my_trace->status != STATUS_CONFIGURED)
+        {
+            printf("Trace is not prepared\n");
+            goto ret;
+        }
+
+        list_libs();
         send_report();   
     
     }

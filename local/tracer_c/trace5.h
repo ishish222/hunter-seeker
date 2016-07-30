@@ -110,6 +110,7 @@
 #define CMD_SET_MARKER_2        "M2"
 #define CMD_START_DEBUG         "sd"
 #define CMD_LIST_TEBS           "lt"
+#define CMD_LIST_LIBS           "ll"
 #define CMD_READ_MEMORY         "RM"
 #define CMD_WRITE_MEMORY        "WM"
 #define CMD_READ_REGISTER       "RR"

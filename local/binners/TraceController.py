@@ -736,6 +736,11 @@ class TraceController(object):
         self.last_report, self.last_answer = self.recv_report_active()
         return 
 
+    def list_libs(self):
+        self.send_command_active("ll")
+        self.last_report, self.last_answer = self.recv_report_active()
+        return 
+
     def configure_markers(self, markers):
         self.send_command_active("cm %s" % markers)
         self.last_report, self.last_answer = self.recv_report_active()

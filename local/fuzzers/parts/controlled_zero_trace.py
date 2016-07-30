@@ -18,6 +18,9 @@ SpawnTrace = statemachine.State()
 RevertClean = statemachine.State()
 WaitForever = statemachine.State()
 WaitKeypress = statemachine.State()
+WaitKeypress2 = statemachine.State()
+ListLibs1 = statemachine.State()
+ListLibs2 = statemachine.State()
 TracerConfigureMarkers = statemachine.State()
 TracerActivateMarkers = statemachine.State()
 TracerConfigureInDir= statemachine.State()
@@ -103,16 +106,28 @@ TracerDebugContinue1s3.name = "Get the rest of events"
 TracerDebugContinue1s3.consequence = ListTebs
 TracerDebugContinue1s3.executing_routine = usualparts.tracer_parts.tracer_debug_continue_1_second
 
+WaitKeypress2.name = "Waiting for ketpress2"
+WaitKeypress2.consequence = TracerDebugContinue1s3
+WaitKeypress2.executing_routine = usualparts.other_parts.wait_for_keypress
+
+ListLibs2.name = "Listing libs"
+ListLibs2.consequence = WaitKeypress2
+ListLibs2.executing_routine = usualparts.tracer_parts.tracer_list_libs
+
 TracerDebugContinue1s2.name = "Get the rest of events"
-TracerDebugContinue1s2.consequence = TracerDebugContinue1s3
+TracerDebugContinue1s2.consequence = ListLibs2
 TracerDebugContinue1s2.executing_routine = usualparts.tracer_parts.tracer_debug_continue
 
 WaitKeypress.name = "Waiting for ketpress"
 WaitKeypress.consequence = TracerDebugContinue1s2
 WaitKeypress.executing_routine = usualparts.other_parts.wait_for_keypress
 
+ListLibs1.name = "Listing libs"
+ListLibs1.consequence = WaitKeypress
+ListLibs1.executing_routine = usualparts.tracer_parts.tracer_list_libs
+
 TracerDebugContinue1s.name = "Get PROCESS_CREATED"
-TracerDebugContinue1s.consequence = WaitKeypress
+TracerDebugContinue1s.consequence = ListLibs1
 TracerDebugContinue1s.executing_routine = usualparts.tracer_parts.tracer_debug_continue_1_second
 
 TracerDebugSample.name = "Debugging sample"
