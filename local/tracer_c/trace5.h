@@ -224,6 +224,7 @@ typedef struct _LIB_ENTRY
     char loaded;
     DWORD lib_offset;
     char lib_name[MAX_NAME];
+    char lib_path[MAX_NAME];
 } LIB_ENTRY;
 
 typedef struct TRACE_CONFIG_
@@ -285,6 +286,7 @@ typedef struct TRACE_CONFIG_
     int last_win_status;
     OFFSET last_eip;
     DWORD last_tid;
+    MARKER* last_marker;
 
     char verbose; /*full_log*/
     char buffer[BUFF_SIZE];

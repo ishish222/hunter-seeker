@@ -520,6 +520,23 @@ void deregister_thread2(DWORD tid)
     return;
 }
 
+char* find_file(char* path)
+{
+    char* ptr;
+    char* last;
+    unsigned len, i;
+
+    len = strlen(path);
+
+    ptr = path;
+    
+    for(i = 0x0; i<len; i++)
+    {
+        if(path[i] == '\\') last = path+i;
+    }
+
+    return last;
+}
 
 void register_lib(LOAD_DLL_DEBUG_INFO info)
 {
@@ -528,12 +545,16 @@ void register_lib(LOAD_DLL_DEBUG_INFO info)
     unsigned size = 0;
 
 #ifdef LIB_VER_W7
-    GetFinalPathNameByHandleA(info.hFile, my_trace->libs[my_trace->lib_count].lib_name, MAX_NAME, VOLUME_NAME_NONE);
+    d_print("Trying to resolve\n");
+    GetFinalPathNameByHandleA(my_trace->last_event.u.LoadDll.hFile, my_trace->libs[my_trace->lib_count].lib_path, MAX_NAME, VOLUME_NAME_NONE);
+    d_print("Resolved 0x%08x to %s\n", my_trace->last_event.u.LoadDll.hFile, my_trace->libs[my_trace->lib_count].lib_path);
+    strcpy(my_trace->libs[my_trace->lib_count].lib_name, find_file(my_trace->libs[my_trace->lib_count].lib_path));
 #endif
 #ifdef LIB_VER_WXP
     strcpy(my_trace->libs[mt_trace->lib_count].lib_name, "UNKNOWN");
+    strcpy(my_trace->libs[mt_trace->lib_count].lib_path, "UNKNOWN");
 #endif
-//    d_print("Name pointer: %p, len: 0x%08x\n", libs[my_trace->lib_count].lib_name, strlen(libs[my_trace->lib_count].lib_name));
+    d_print("Name pointer: %p, len: 0x%08x\n", libs[my_trace->lib_count].lib_name, strlen(libs[my_trace->lib_count].lib_name));
 
     my_trace->libs[my_trace->lib_count].lib_offset = (DWORD)info.lpBaseOfDll;
     d_print("RL,0x%08x,%s\n", my_trace->libs[my_trace->lib_count].lib_offset, libs[my_trace->lib_count].lib_name);
@@ -2154,7 +2175,7 @@ void marker_handler(void* data)
         if((OFFSET)my_trace->last_exception.ExceptionAddress == my_trace->markers[i].real_offset)
         {
             d_print("Marker %s hit!\n", my_trace->markers[i].id);
-            strcpy(my_trace->report_buffer, my_trace->markers[i].id);
+            my_trace->last_marker = &my_trace->markers[i];
         }
     }
 
@@ -2232,7 +2253,6 @@ int process_last_event()
                             {
                                 /* this is our, we need to handle & report */
                                 handle_breakpoint((DWORD)my_trace->last_exception.ExceptionAddress, &de);
-                                printf("our\n");
                                 return REPORT_BREAKPOINT;
                             }
                         }
@@ -2266,10 +2286,6 @@ int process_last_event()
 
                 register_lib(my_trace->last_event.u.LoadDll);
 
-#ifdef LIB_VER_W7
-                d_print("Trying to resolve\n");
-                GetFinalPathNameByHandleA(my_trace->last_event.u.LoadDll.hFile, my_trace->libs[my_trace->lib_count].lib_name, MAX_NAME, VOLUME_NAME_NONE);
-#endif
                 /* writing activated markers */
                 unsigned i;
 
@@ -2388,16 +2404,15 @@ int get_pending_events()
             break;
             
         case REPORT_BREAKPOINT:
-            sprintf(buffer2, "REPORT_BREAKPOINT\n");
+            sprintf(buffer2, "%s\n", my_trace->last_marker->id);
             break;
             
         case REPORT_EXCEPTION:
             sprintf(buffer2, "REPORT_EXCEPTION\n");
             break;
     }
-    strcat(my_trace->report_buffer, buffer2);
-    printf("%s", my_trace->report_buffer);
 
+    printf("%s", my_trace->report_buffer);
     my_trace->report_code = last_report;
 
     return last_report;
@@ -2450,7 +2465,7 @@ int continue_routine(DWORD time)
             break;
             
         case REPORT_BREAKPOINT:
-            sprintf(buffer2, "REPORT_BREAKPOINT\n");
+            sprintf(buffer2, "%s\n", my_trace->last_marker->id);
             break;
             
         case REPORT_EXCEPTION:
