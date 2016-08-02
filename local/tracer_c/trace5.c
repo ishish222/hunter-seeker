@@ -1806,7 +1806,7 @@ int send_report()
 {
     char rep_chars[3];
     char rep_chars2[] = "-=OK=-";
-    char line2[MAX_LINE];
+    char line2[BUFF_SIZE];
 
     switch(my_trace->report_code)
     {
@@ -1847,6 +1847,8 @@ int send_report()
             break;
     }
 
+    printf("buffer: %s, %d bytes\n", my_trace->report_buffer, strlen(my_trace->report_buffer));
+
     strcpy(line2, rep_chars);
     strcat(line2, my_trace->report_buffer);
     strcat(line2, rep_chars2);
@@ -1854,7 +1856,7 @@ int send_report()
     printf("Sending: %s, %d bytes\n", line2, strlen(line2));
  
     send(my_trace->socket, line2, strlen(line2), 0x0);
-
+    printf("Sent.\n");
 
     return 0x0;
 }
@@ -2048,6 +2050,18 @@ int write_word(DWORD addr, char* data)
     return 0x0;
 }
 
+int read_dword_q(DWORD addr)
+{
+    DWORD data;
+    DWORD read;
+
+    char buffer2[MAX_LINE];
+
+    read_memory(my_trace->procHandle, (void*)addr, (void*)&data, 0x4, &read);
+    return data;
+}
+
+
 int read_dword(DWORD addr)
 {
     DWORD data;
@@ -2176,19 +2190,19 @@ int read_stack(DWORD tid_id, DWORD count)
 
     unsigned pos;
 
-    memset(my_trace->report_buffer, 0x0, sizeof(my_trace->report_buffer));
+    memset(my_trace->report_buffer, 0x0, BUFF_SIZE);
 
-    printf("Before\n");
-    printf("x%sx\n", my_trace->report_buffer);
     for(pos = 0x0; pos<count; pos++, esp+=0x4)
     {
-        data = read_dword(esp);
-        printf("0x%08x:0x%08x\n", esp, data);
+        data = read_dword_q(esp);
         memset(buffer2, 0x0, sizeof(buffer2));
         sprintf(buffer2, "0x%08x:0x%08x", esp, data);
+//        printf("Adding line: %s\n", buffer2);
         strcat(my_trace->report_buffer, buffer2);
-        printf("%s", my_trace->report_buffer);
+        strcat(my_trace->report_buffer, "\n");
+//        printf("new buffer: %p - %s\n", my_trace->report_buffer, my_trace->report_buffer);
     }
+    printf("new buffer: %p - %s\n", my_trace->report_buffer, my_trace->report_buffer);
 
     return 0x0;
 }
@@ -2999,12 +3013,13 @@ int main(int argc, char** argv)
         }
 
         cmd[cmd_len-6] = 0x0;
-        //printf("Got cmd: %s\n", cmd);
+        printf("Got cmd: %s\n", cmd);
 
         if(!strcmp(cmd, "quit")) 
             break;
         
         handle_cmd(cmd);
+        printf("Handled\n");
 
     }
 

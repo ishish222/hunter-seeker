@@ -41,6 +41,7 @@ ReadMemory2 = statemachine.State()
 WriteMemory = statemachine.State()
 WriteEAX = statemachine.State()
 ReadEAX2 = statemachine.State()
+ReadEAX3 = statemachine.State()
 
 DefaultShutdown = dm.ShutdownSequence
 
@@ -57,6 +58,11 @@ ReadStack.name = "Reading stack"
 ReadStack.consequence = WaitForever
 ReadStack.args = 10
 ReadStack.executing_routine = usualparts.tracer_parts.tracer_read_stack
+
+ReadEAX3.name = "Reading EAX"
+ReadEAX3.consequence = WaitForever
+ReadEAX3.args = "EAX"
+ReadEAX3.executing_routine = usualparts.tracer_parts.tracer_read_register
 
 ReadEAX2.name = "Reading EAX"
 ReadEAX2.consequence = ReadStack

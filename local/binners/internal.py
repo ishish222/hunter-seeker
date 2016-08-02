@@ -1206,7 +1206,7 @@ def execute(cmds):
             writePipe(ext_pipe, "%s\n" % trace_controller.last_answer)
             writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
             writePipe(ext_pipe, "tracer_read_stack OK")
-            writeReport(trace_controller)
+            #writeReport(trace_controller)
             ok(ext_pipe)
 
         elif(cmd == "tracer_print"):
