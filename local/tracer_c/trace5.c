@@ -1847,23 +1847,18 @@ int send_report()
             break;
     }
 
-    printf("buffer: %s, %d bytes\n", my_trace->report_buffer, strlen(my_trace->report_buffer));
-
     strcpy(line2, rep_chars);
     strcat(line2, my_trace->report_buffer);
     strcat(line2, rep_chars2);
 
-    printf("Sending: %s, %d bytes\n", line2, strlen(line2));
- 
     send(my_trace->socket, line2, strlen(line2), 0x0);
-    printf("Sent.\n");
 
     return 0x0;
 }
 
 int list_libs()
 {
-    printf("Listings TEBs\n");
+    printf("Listing LIBs\n");
     unsigned i;
     char buffer2[MAX_LINE];
 

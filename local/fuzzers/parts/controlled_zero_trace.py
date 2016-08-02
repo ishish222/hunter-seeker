@@ -21,6 +21,7 @@ WaitKeypress = statemachine.State()
 WaitKeypress2 = statemachine.State()
 ListLibs1 = statemachine.State()
 ListLibs2 = statemachine.State()
+ListLibs3 = statemachine.State()
 TracerConfigureMarkers = statemachine.State()
 TracerActivateMarkers = statemachine.State()
 TracerConfigureInDir= statemachine.State()
@@ -29,6 +30,7 @@ TracerConfigureSample = statemachine.State()
 TracerDebugSample = statemachine.State()
 TracerDebugContinue = statemachine.State()
 TracerDebugContinue1s = statemachine.State()
+TracerDebugContinue3s = statemachine.State()
 TracerDebugContinue1s2 = statemachine.State()
 TracerDebugContinue1s3 = statemachine.State()
 ListTebs = statemachine.State()
@@ -54,15 +56,18 @@ WaitForever.name = "Waiting forever"
 WaitForever.consequence = dm.ShutdownSequence
 WaitForever.executing_routine = usualparts.other_parts.wait_for_keypress
 
+ListLibs3.name = "Listing libs"
+ListLibs3.consequence = WaitForever
+ListLibs3.executing_routine = usualparts.tracer_parts.tracer_list_libs
+
+TracerDebugContinue3s.name = "Wait for all libs"
+TracerDebugContinue3s.consequence = ListLibs3
+TracerDebugContinue3s.executing_routine = usualparts.tracer_parts.tracer_debug_continue_10_seconds
+
 ReadStack.name = "Reading stack"
-ReadStack.consequence = WaitForever
+ReadStack.consequence = TracerDebugContinue3s
 ReadStack.args = 10
 ReadStack.executing_routine = usualparts.tracer_parts.tracer_read_stack
-
-ReadEAX3.name = "Reading EAX"
-ReadEAX3.consequence = WaitForever
-ReadEAX3.args = "EAX"
-ReadEAX3.executing_routine = usualparts.tracer_parts.tracer_read_register
 
 ReadEAX2.name = "Reading EAX"
 ReadEAX2.consequence = ReadStack
