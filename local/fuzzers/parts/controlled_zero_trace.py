@@ -44,6 +44,8 @@ WriteMemory = statemachine.State()
 WriteEAX = statemachine.State()
 ReadEAX2 = statemachine.State()
 ReadEAX3 = statemachine.State()
+ListMarkers = statemachine.State()
+ListBpts = statemachine.State()
 
 DefaultShutdown = dm.ShutdownSequence
 
@@ -52,12 +54,29 @@ DefaultShutdown = dm.ShutdownSequence
 Start.name = "Start"
 Start.consequence = dm.PrintLogo
 
+def decision():
+    import globs
+    options = globs.state.options
+
+    print globs.state.ret
+
+    return WaitForever
+
 WaitForever.name = "Waiting forever"
-WaitForever.consequence = dm.ShutdownSequence
+WaitForever.consequence = None
+WaitForever.choosing_consequence = decision
 WaitForever.executing_routine = usualparts.other_parts.wait_for_keypress
 
+ListMarkers.name = "Listing markers"
+ListMarkers.consequence = WaitForever
+ListMarkers.executing_routine = usualparts.tracer_parts.tracer_list_markers
+
+ListBpts.name = "Listing bpts"
+ListBpts.consequence = ListMarkers
+ListBpts.executing_routine = usualparts.tracer_parts.tracer_list_bpts
+
 ListLibs3.name = "Listing libs"
-ListLibs3.consequence = WaitForever
+ListLibs3.consequence = ListBpts
 ListLibs3.executing_routine = usualparts.tracer_parts.tracer_list_libs
 
 TracerDebugContinue3s.name = "Wait for all libs"
@@ -65,7 +84,8 @@ TracerDebugContinue3s.consequence = ListLibs3
 TracerDebugContinue3s.executing_routine = usualparts.tracer_parts.tracer_debug_continue_10_seconds
 
 ReadStack.name = "Reading stack"
-ReadStack.consequence = TracerDebugContinue3s
+#ReadStack.consequence = TracerDebugContinue3s
+ReadStack.consequence = ListLibs3
 ReadStack.args = 10
 ReadStack.executing_routine = usualparts.tracer_parts.tracer_read_stack
 
@@ -118,7 +138,8 @@ TracerDebugContinue1s3.consequence = ListTebs
 TracerDebugContinue1s3.executing_routine = usualparts.tracer_parts.tracer_debug_continue_1_second
 
 WaitKeypress2.name = "Waiting for ketpress2"
-WaitKeypress2.consequence = TracerDebugContinue1s3
+#WaitKeypress2.consequence = TracerDebugContinue1s3
+WaitKeypress2.consequence = ListTebs
 WaitKeypress2.executing_routine = usualparts.other_parts.wait_for_keypress
 
 ListLibs2.name = "Listing libs"

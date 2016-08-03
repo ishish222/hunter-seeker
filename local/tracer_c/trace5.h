@@ -111,6 +111,8 @@
 #define CMD_START_DEBUG         "sd"
 #define CMD_LIST_TEBS           "lt"
 #define CMD_LIST_LIBS           "ll"
+#define CMD_LIST_MARKERS        "lm"
+#define CMD_LIST_BPTS           "lb"
 #define CMD_READ_MEMORY         "RM"
 #define CMD_WRITE_MEMORY        "WM"
 #define CMD_READ_REGISTER       "RR"

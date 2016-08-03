@@ -731,6 +731,16 @@ class TraceController(object):
         self.last_report, self.last_answer = self.recv_report_active()
         return 
 
+    def list_bpts(self):
+        self.send_command_active("lb")
+        self.last_report, self.last_answer = self.recv_report_active()
+        return 
+
+    def list_markers(self):
+        self.send_command_active("lm")
+        self.last_report, self.last_answer = self.recv_report_active()
+        return 
+
     def list_tebs(self):
         self.send_command_active("lt")
         self.last_report, self.last_answer = self.recv_report_active()

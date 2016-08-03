@@ -372,7 +372,7 @@ void register_thread(DWORD tid, HANDLE handle)
         my_trace->threads[tid_pos].tid = tid;
     
         //if(my_trace->threads[tid_pos].handle == 0x0) 
-        d_print("Registering: TID 0x%08x, handle 0x%08x\n", tid, handle);
+        //d_print("Registering: TID 0x%08x, handle 0x%08x\n", tid, handle);
 
         my_trace->thread_map[tid] = tid_pos;
         my_trace->thread_count ++;
@@ -385,12 +385,12 @@ void register_thread(DWORD tid, HANDLE handle)
         tid_pos = my_trace->thread_map[tid];
 
         // do not create new, update this one
-        d_print("Updating: TID 0x%08x, handle 0x%08x\n", tid, handle);
+        //d_print("Updating: TID 0x%08x, handle 0x%08x\n", tid, handle);
         my_trace->threads[tid_pos].alive = 0x1;
         my_trace->threads[tid_pos].handle = handle;
     }
 
-    d_print("Registering TID: 0x%08x with handle: 0x%08x, new thread count: 0x%x\n", tid, my_trace->threads[tid_pos].handle, my_trace->thread_count);
+    //d_print("Registering TID: 0x%08x with handle: 0x%08x, new thread count: 0x%x\n", tid, my_trace->threads[tid_pos].handle, my_trace->thread_count);
 
     ctx.ContextFlags = CONTEXT_FULL;
 
@@ -450,7 +450,7 @@ int register_thread_debug(DWORD tid, HANDLE handle)
 
 void deregister_thread(DWORD tid, HANDLE handle)
 {
-    d_print("Deregistering: TID 0x%08x, handle 0x%08x\n", tid, handle);
+    //d_print("Deregistering: TID 0x%08x, handle 0x%08x\n", tid, handle);
     char line2[0x200];
     char line[MAX_LINE];
     CONTEXT ctx;
@@ -467,9 +467,9 @@ void deregister_thread(DWORD tid, HANDLE handle)
     my_trace->threads[tid_pos].open = 0x1;
 
     //if(my_trace->threads[tid_pos].handle == 0x0) 
-    d_print("Deregistering: TID 0x%08x, handle 0x%08x\n", tid, handle);
+    //d_print("Deregistering: TID 0x%08x, handle 0x%08x\n", tid, handle);
 
-    d_print("Deregistering TID: 0x%08x with handle: 0x%08x, new thread count: 0x%x\n", tid, my_trace->threads[tid_pos].handle, my_trace->thread_count);
+    //d_print("Deregistering TID: 0x%08x with handle: 0x%08x, new thread count: 0x%x\n", tid, my_trace->threads[tid_pos].handle, my_trace->thread_count);
 
     ctx.ContextFlags = CONTEXT_FULL;
 
@@ -518,7 +518,7 @@ void deregister_thread2(DWORD tid)
     my_trace->threads[tid_pos].handle = 0x0;
     my_trace->threads[tid_pos].open = 0x0;
 
-    d_print("Deregistering TID: 0x%08x with handle: 0x%08x\n", tid, my_trace->threads[tid_pos].handle);
+    //d_print("Deregistering TID: 0x%08x with handle: 0x%08x\n", tid, my_trace->threads[tid_pos].handle);
     sprintf(line, "DT,0x%08x\n", tid);
  
     add_to_buffer(line);
@@ -543,6 +543,42 @@ char* find_file(char* path)
     return last+1;
 }
 
+void marker_handler(void* data)
+{
+    unsigned i;
+
+    for(i = 0x0; i< my_trace->marker_count; i++)
+    {
+        if((OFFSET)my_trace->last_exception.ExceptionAddress == my_trace->markers[i].real_offset)
+        {
+            d_print("Marker %s hit!\n", my_trace->markers[i].id);
+            my_trace->last_marker = &my_trace->markers[i];
+        }
+    }
+
+    return;
+}
+
+int update_markers(LIB_ENTRY* lib)
+{
+    unsigned i;
+
+    d_print("Updating markers for %s\n", lib->lib_name);
+
+    for(i = 0x0; i< my_trace->marker_count; i++)
+    {
+        if(strstr(my_trace->markers[i].lib_name, lib->lib_name))
+        {
+            d_print("Should register marker at: 0x%08x:0x%08x\n", lib->lib_offset, my_trace->markers[i].offset);
+            my_trace->markers[i].lib_offset = lib->lib_offset;
+            my_trace->markers[i].real_offset = my_trace->markers[i].lib_offset + my_trace->markers[i].offset;
+            add_breakpoint(my_trace->markers[i].real_offset, marker_handler);
+        }
+    }
+
+    return 0x0;
+}
+
 void register_lib(LOAD_DLL_DEBUG_INFO info)
 {
     char path[MAX_NAME];
@@ -550,23 +586,26 @@ void register_lib(LOAD_DLL_DEBUG_INFO info)
     unsigned size = 0;
 
 #ifdef LIB_VER_W7
-    d_print("Trying to resolve\n");
+    //d_print("Trying to resolve\n");
     GetFinalPathNameByHandleA(my_trace->last_event.u.LoadDll.hFile, my_trace->libs[my_trace->lib_count].lib_path, MAX_NAME, VOLUME_NAME_NONE);
-    d_print("Resolved 0x%08x to %s\n", my_trace->last_event.u.LoadDll.hFile, my_trace->libs[my_trace->lib_count].lib_path);
+    //d_print("Resolved 0x%08x to %s\n", my_trace->last_event.u.LoadDll.hFile, my_trace->libs[my_trace->lib_count].lib_path);
     strcpy(my_trace->libs[my_trace->lib_count].lib_name, find_file(my_trace->libs[my_trace->lib_count].lib_path));
 #endif
 #ifdef LIB_VER_WXP
     strcpy(my_trace->libs[mt_trace->lib_count].lib_name, "UNKNOWN");
     strcpy(my_trace->libs[mt_trace->lib_count].lib_path, "UNKNOWN");
 #endif
-    d_print("Name pointer: %p, len: 0x%08x\n", libs[my_trace->lib_count].lib_name, strlen(libs[my_trace->lib_count].lib_name));
+    //d_print("Name pointer: %p, len: 0x%08x\n", libs[my_trace->lib_count].lib_name, strlen(libs[my_trace->lib_count].lib_name));
 
     my_trace->libs[my_trace->lib_count].lib_offset = (DWORD)info.lpBaseOfDll;
-    d_print("RL,0x%08x,%s\n", my_trace->libs[my_trace->lib_count].lib_offset, libs[my_trace->lib_count].lib_name);
+    //d_print("RL,0x%08x,%s\n", my_trace->libs[my_trace->lib_count].lib_offset, libs[my_trace->lib_count].lib_name);
     sprintf(line, "RL,0x%08x,%s\n", my_trace->libs[my_trace->lib_count].lib_offset, libs[my_trace->lib_count].lib_name);
 
     my_trace->libs[lib_count].loaded = 0x1;
+    //update_markers(&my_trace->libs[lib_count]);
+
     my_trace->lib_count++;
+
 
     add_to_buffer(line);
     return;
@@ -647,10 +686,10 @@ void ntmap_1_callback(void* data)
     d_print("ESP: %p\n", ctx.Esp);
 
     tmp = ctx.Esp + (0x3 * 0x4);
-    read_memory(cpdi.hProcess, (void*)(tmp), (void*)&buffer_addr, 0x4, &read);
+    read_memory(my_trace->cpdi.hProcess, (void*)(tmp), (void*)&buffer_addr, 0x4, &read);
 
     tmp = ctx.Esp + (0x7 * 0x4);
-    read_memory(cpdi.hProcess, (void*)(tmp), (void*)&size_addr, 0x4, &read);
+    read_memory(my_trace->cpdi.hProcess, (void*)(tmp), (void*)&size_addr, 0x4, &read);
 
     d_print("off: 0x%08x, size: 0x%08x\n", buffer_addr, size_addr);
 
@@ -665,8 +704,8 @@ void ntmap_2_callback(void* data)
 
     DWORD offset, size, size_wrote, read;
 
-    read_memory(cpdi.hProcess, (void*)(buffer_addr), (void*)&offset, 0x4, &read);
-    read_memory(cpdi.hProcess, (void*)(size_addr), (void*)&size, 0x4, &read);
+    read_memory(my_trace->cpdi.hProcess, (void*)(buffer_addr), (void*)&offset, 0x4, &read);
+    read_memory(my_trace->cpdi.hProcess, (void*)(size_addr), (void*)&size, 0x4, &read);
 
     d_print("Block 0x%08x - 0x%08x, 0x%08x bytes\n", offset, offset + size, size);
 
@@ -796,7 +835,7 @@ void sysret_callback(void* data)
                     break;
                 case LOCATION_MEM:
                     arg_addr = syscall_out_args[sysenter_no][i].off;
-                    read_memory(cpdi.hProcess, (void*)arg_addr, (void*)&arg_val, 0x4, &read);
+                    read_memory(my_trace->cpdi.hProcess, (void*)arg_addr, (void*)&arg_val, 0x4, &read);
                     d_print("0x%08x: 0x%08x\n", arg_addr, arg_val);
                     if(arg_val == 0x0) break;
                     d_print("Arg off: 0x%08x\n", arg_val);
@@ -814,7 +853,7 @@ void sysret_callback(void* data)
                 case LOCATION_ADDR_STACK:
                     arg_addr = sysenter_esp + 0x8;
                     arg_addr += syscall_out_args[sysenter_no][i].off * 0x4;
-                    read_memory(cpdi.hProcess, (void*)arg_addr, (void*)&arg_val, 0x4, &read);
+                    read_memory(my_trace->cpdi.hProcess, (void*)arg_addr, (void*)&arg_val, 0x4, &read);
                     d_print("0x%08x: 0x%08x\n", arg_addr, arg_val);
                     if(arg_val == 0x0) break;
                     d_print("Arg off: 0x%08x\n", arg_val);
@@ -823,10 +862,10 @@ void sysret_callback(void* data)
                 case LOCATION_ADDR_ADDR_STACK:
                     arg_addr = sysenter_esp + 0x8;
                     arg_addr += syscall_out_args[sysenter_no][i].off * 0x4;
-                    read_memory(cpdi.hProcess, (void*)arg_addr, (void*)&arg_val, 0x4, &read);
+                    read_memory(my_trace->cpdi.hProcess, (void*)arg_addr, (void*)&arg_val, 0x4, &read);
                     d_print("0x%08x: 0x%08x\n", arg_addr, arg_val);
                     arg_addr = arg_val;
-                    read_memory(cpdi.hProcess, (void*)arg_addr, (void*)&arg_val, 0x4, &read);
+                    read_memory(my_trace->cpdi.hProcess, (void*)arg_addr, (void*)&arg_val, 0x4, &read);
                     d_print("0x%08x: 0x%08x\n", arg_addr, arg_val);
                     if(arg_val == 0x0) break;
                     d_print("Arg off: 0x%08x\n", arg_val);
@@ -850,7 +889,7 @@ void sysret_callback(void* data)
                     break;
                 case LOCATION_MEM:
                     arg_addr = syscall_out_args[sysenter_no][i].size;
-                    read_memory(cpdi.hProcess, (void*)arg_addr, (void*)&arg_val, 0x4, &read);
+                    read_memory(my_trace->cpdi.hProcess, (void*)arg_addr, (void*)&arg_val, 0x4, &read);
                     d_print("0x%08x: 0x%08x\n", arg_addr, arg_val);
                     d_print("Arg size: 0x%08x\n", arg_val);
                     syscall_out_args_dump_list[i].size = arg_val;
@@ -858,7 +897,7 @@ void sysret_callback(void* data)
                 case LOCATION_STACK:
                     arg_addr = sysenter_esp + 0x8;
                     arg_addr += syscall_out_args[sysenter_no][i].size * 0x4;
-                    read_memory(cpdi.hProcess, (void*)arg_addr, (void*)&arg_val, 0x4, &read);
+                    read_memory(my_trace->cpdi.hProcess, (void*)arg_addr, (void*)&arg_val, 0x4, &read);
                     d_print("0x%08x: 0x%08x\n", arg_addr, arg_val);
                     d_print("Arg size: 0x%08x\n", arg_val);
                     syscall_out_args_dump_list[i].size = arg_val;
@@ -866,10 +905,10 @@ void sysret_callback(void* data)
                 case LOCATION_ADDR_STACK:
                     arg_addr = sysenter_esp + 0x8;
                     arg_addr += syscall_out_args[sysenter_no][i].size * 0x4;
-                    read_memory(cpdi.hProcess, (void*)arg_addr, (void*)&arg_val, 0x4, &read);
+                    read_memory(my_trace->cpdi.hProcess, (void*)arg_addr, (void*)&arg_val, 0x4, &read);
                     d_print("0x%08x: 0x%08x\n", arg_addr, arg_val);
                     arg_addr = arg_val;
-                    read_memory(cpdi.hProcess, (void*)arg_addr, (void*)&arg_val, 0x4, &read);
+                    read_memory(my_trace->cpdi.hProcess, (void*)arg_addr, (void*)&arg_val, 0x4, &read);
                     d_print("0x%08x: 0x%08x\n", arg_addr, arg_val);
                     d_print("Arg size: 0x%08x\n", arg_val);
                     syscall_out_args_dump_list[i].size = arg_val;
@@ -898,9 +937,9 @@ void sysret_callback(void* data)
         {
             arg_addr = sysenter_esp + 0x8;
             arg_addr += syscall_out_args[sysenter_no][i].size * 0x4;
-            read_memory(cpdi.hProcess, (void*)arg_addr, (void*)&arg_val, 0x4, &read);
+            read_memory(my_trace->cpdi.hProcess, (void*)arg_addr, (void*)&arg_val, 0x4, &read);
             arg_addr = arg_val;
-            read_memory(cpdi.hProcess, (void*)arg_addr, (void*)&file_handle, 0x4, &read);
+            read_memory(my_trace->cpdi.hProcess, (void*)arg_addr, (void*)&file_handle, 0x4, &read);
 
             d_print("Hunting for reads from: 0x%08x\n", file_handle);
         }
@@ -954,7 +993,7 @@ DWORD get_stack(HANDLE tHandle, unsigned index)
         esp += 0x4;
     }
 
-    ReadProcessMemory(cpdi.hProcess, (void*)(esp), (void*)&val, 0x4, &read);
+    ReadProcessMemory(my_trace->cpdi.hProcess, (void*)(esp), (void*)&val, 0x4, &read);
     
     return val;
 }
@@ -1065,7 +1104,7 @@ int register_all_threads()
 
                     thread_list[my_trace->thread_count] = te32.th32ThreadID;
                     my_trace->thread_count ++;
-                    d_print("Registering TID: 0x%08x with handle: 0x%08x, new thread count: 0x%x\n", te32.th32ThreadID, my_trace->threads[my_trace->thread_count].handle, my_trace->thread_count);
+                    //d_print("Registering TID: 0x%08x with handle: 0x%08x, new thread count: 0x%x\n", te32.th32ThreadID, my_trace->threads[my_trace->thread_count].handle, my_trace->thread_count);
  
                 }
  
@@ -1561,29 +1600,29 @@ int del_breakpoint_idx(unsigned my_bpt_idx)
 {
     DWORD oldProt;
     char bpt_char = '\xcc';
-/*
-    VirtualProtectEx(cpdi.hProcess, (void*)(my_trace->breakpoints[my_bpt_idx].addr), 0x1, PAGE_EXECUTE_READWRITE, &oldProt);
 
-    ReadProcessMemory(cpdi.hProcess, (void*)(my_trace->breakpoints[my_trace->bpt_count].addr), (void*)(&bpt_char), 0x1, 0x0);
-    WriteProcessMemory(cpdi.hProcess, (void*)(my_trace->breakpoints[my_bpt_idx].addr), &(my_trace->breakpoints[my_bpt_idx].saved_byte), 0x1, 0x0);
+    VirtualProtectEx(my_trace->cpdi.hProcess, (void*)(my_trace->breakpoints[my_bpt_idx].addr), 0x1, PAGE_EXECUTE_READWRITE, &oldProt);
 
-    VirtualProtectEx(cpdi.hProcess, (void*)(my_trace->breakpoints[my_bpt_idx].addr), 0x1, oldProt, &oldProt);
-*/
+    ReadProcessMemory(my_trace->cpdi.hProcess, (void*)(my_trace->breakpoints[my_trace->bpt_count].addr), (void*)(&bpt_char), 0x1, 0x0);
+    WriteProcessMemory(my_trace->cpdi.hProcess, (void*)(my_trace->breakpoints[my_bpt_idx].addr), &(my_trace->breakpoints[my_bpt_idx].saved_byte), 0x1, 0x0);
+
+    VirtualProtectEx(my_trace->cpdi.hProcess, (void*)(my_trace->breakpoints[my_bpt_idx].addr), 0x1, oldProt, &oldProt);
+
     my_trace->breakpoints[my_bpt_idx].enabled = 0x0;
     return 0x0;
 }
 
 int del_breakpoint_handler(unsigned bp_idx, unsigned handler_idx)
 {
-    //d_print("del_h\n");
+    d_print("del_h\n");
     my_trace->breakpoints[bp_idx].handlers[handler_idx].enabled = 0x0;
     return 0x0;
 }
 
 int del_breakpoint(DWORD addr)
 {
-    //d_print("del_b\n");
-    //d_print("Deleting breakpoint at: 0x%08x\n", addr);
+    d_print("del_b\n");
+    d_print("Deleting breakpoint at: 0x%08x\n", addr);
 
     DWORD oldProt;
     char bpt_char = '\xcc';
@@ -1599,12 +1638,7 @@ int del_breakpoint(DWORD addr)
 
     if(my_bpt_idx == -0x1) return 0x1;
 
-    VirtualProtectEx(cpdi.hProcess, (void*)(my_trace->breakpoints[my_bpt_idx].addr), 0x1, PAGE_EXECUTE_READWRITE, &oldProt);
-
-    ReadProcessMemory(cpdi.hProcess, (void*)(my_trace->breakpoints[my_trace->bpt_count].addr), (void*)(&bpt_char), 0x1, 0x0);
-    WriteProcessMemory(cpdi.hProcess, (void*)(my_trace->breakpoints[my_bpt_idx].addr), &(my_trace->breakpoints[my_bpt_idx].saved_byte), 0x1, 0x0);
-
-    VirtualProtectEx(cpdi.hProcess, (void*)(my_trace->breakpoints[my_bpt_idx].addr), 0x1, oldProt, &oldProt);
+    del_breakpoint_idx(my_bpt_idx);
     my_trace->breakpoints[my_bpt_idx].enabled = 0x0;
 
     return 0x0;
@@ -1680,7 +1714,7 @@ int handle_breakpoint(DWORD addr, void* data)
 
 int add_breakpoint_handler(unsigned idx, handler_routine handler)
 {
-    //d_print("add_h\n");
+    d_print("add_h\n");
     unsigned cur_idx;
 
     d_print("Adding handler @ 0x%08x\n", my_trace->breakpoints[idx].addr);
@@ -1694,7 +1728,7 @@ int add_breakpoint_handler(unsigned idx, handler_routine handler)
 
 int add_breakpoint(DWORD addr, handler_routine handler)
 {
-    //d_print("add_b\n");
+    d_print("add_b\n");
     int i;
     int my_bpt_index;
 
@@ -1856,6 +1890,49 @@ int send_report()
     return 0x0;
 }
 
+int list_markers()
+{
+    printf("Listing markers\n");
+    unsigned i;
+    char buffer2[MAX_LINE];
+
+    my_trace->report_code = REPORT_INFO;
+
+    strcpy(my_trace->report_buffer, "");
+
+    for(i = 0x0; i< my_trace->marker_count; i++)
+    {
+        sprintf(buffer2, "%s: 0x%08x\n", my_trace->markers[i].id, my_trace->markers[i].real_offset);
+        strcat(my_trace->report_buffer, buffer2);
+        strcat(my_trace->report_buffer, "\n");
+    }
+
+    return 0x0;
+}
+
+
+int list_bpts()
+{
+    printf("Listing BPTs\n");
+    unsigned i;
+    char buffer2[MAX_LINE];
+
+    my_trace->report_code = REPORT_INFO;
+
+    strcpy(my_trace->report_buffer, "");
+
+    for(i = 0x0; i< my_trace->bpt_count; i++)
+    {
+        sprintf(buffer2, "0x%08x\n", my_trace->breakpoints[i].addr);
+        strcat(my_trace->report_buffer, buffer2);
+        strcat(my_trace->report_buffer, "\n");
+    }
+
+    return 0x0;
+}
+
+
+
 int list_libs()
 {
     printf("Listing LIBs\n");
@@ -1867,11 +1944,11 @@ int list_libs()
     printf("Currently have %d libs\n", my_trace->lib_count);
     strcpy(my_trace->report_buffer, "");
 
-    for(i = 0x0; i< my_trace->thread_count; i++)
+    for(i = 0x0; i< my_trace->lib_count; i++)
     {
         serialize_lib(&my_trace->libs[i], buffer2);
         strcat(my_trace->report_buffer, buffer2);
-        //strcat(my_trace->report_buffer, "x");
+        strcat(my_trace->report_buffer, "\n");
     }
     printf("Reporting: %s\n", my_trace->report_buffer);
 
@@ -2202,22 +2279,6 @@ int read_stack(DWORD tid_id, DWORD count)
     return 0x0;
 }
 
-void marker_handler(void* data)
-{
-    unsigned i;
-
-    for(i = 0x0; i< my_trace->marker_count; i++)
-    {
-        if((OFFSET)my_trace->last_exception.ExceptionAddress == my_trace->markers[i].real_offset)
-        {
-            d_print("Marker %s hit!\n", my_trace->markers[i].id);
-            my_trace->last_marker = &my_trace->markers[i];
-        }
-    }
-
-    return;
-}
-
 int process_last_event()
 {
         printf("process_last_event: 0x%08x\n", my_trace->last_event.dwDebugEventCode);
@@ -2328,7 +2389,7 @@ int process_last_event()
                 d_print("Checking markers\n");
                 for(i = 0x0; i< my_trace->marker_count; i++)
                 {
-//                    d_print("Comparing _%s_ and _%s_\n", my_trace->markers[i].lib_name, my_trace->libs[lib_count-1].lib_name);
+                    d_print("Comparing _%s_ and _%s_\n", my_trace->markers[i].lib_name, my_trace->libs[my_trace->lib_count-1].lib_name);
                     if(strlen(my_trace->markers[i].lib_name) == 0x0)
                     {
                         if(my_trace->markers[i].lib_offset == my_trace->libs[my_trace->lib_count-1].lib_offset)
@@ -2339,7 +2400,7 @@ int process_last_event()
                             add_breakpoint(my_trace->markers[i].real_offset, marker_handler);
                         }
                     }
-                    else if(!strcmp(my_trace->markers[i].lib_name, my_trace->libs[lib_count-1].lib_name))
+                    else if(!strcmp(my_trace->markers[i].lib_name, my_trace->libs[my_trace->lib_count-1].lib_name))
                     {
                         d_print("Should write marker for %s\n", my_trace->markers[i].lib_name);
                         my_trace->markers[i].lib_offset = my_trace->libs[my_trace->lib_count-1].lib_offset;
@@ -2414,7 +2475,7 @@ int get_pending_events()
         WaitForDebugEvent(&(my_trace->last_event), 0x0);
         if(my_trace->last_event.dwDebugEventCode == 0x0) return REPORT_NOTHING;
 
-        d_print("get_pending_events: dwDebugEventCode: 0x%08x\n", my_trace->last_event.dwDebugEventCode);
+        //d_print("get_pending_events: dwDebugEventCode: 0x%08x\n", my_trace->last_event.dwDebugEventCode);
 
         last_report = process_last_event();
         if(last_report == REPORT_CONTINUE)
@@ -2460,7 +2521,7 @@ int continue_routine(DWORD time)
     int last_report;
     char buffer2[MAX_LINE];
 
-    d_print("Continuing: PID: 0x%08x, TID: 0x%08x\n", my_trace->last_event.dwProcessId, my_trace->last_event.dwThreadId);
+    //d_print("Continuing: PID: 0x%08x, TID: 0x%08x\n", my_trace->last_event.dwProcessId, my_trace->last_event.dwThreadId);
     if(my_trace->last_event.dwProcessId == 0x0)
     {
         ContinueDebugEvent(my_trace->pi.dwProcessId, my_trace->pi.dwThreadId, DBG_CONTINUE);
@@ -2475,7 +2536,7 @@ int continue_routine(DWORD time)
 
         WaitForDebugEvent(&(my_trace->last_event), time);
 
-        d_print("continue_routine: dwDebugEventCode: 0x%08x\n", my_trace->last_event.dwDebugEventCode);
+        //d_print("continue_routine: dwDebugEventCode: 0x%08x\n", my_trace->last_event.dwDebugEventCode);
 
         last_report = process_last_event();
         if(last_report == REPORT_CONTINUE)
@@ -2660,6 +2721,30 @@ int handle_cmd(char* cmd)
         }
 
         list_tebs();
+        send_report();   
+    
+    }
+    else if(!strncmp(cmd, CMD_LIST_MARKERS, 2))
+    {
+        if(my_trace->status != STATUS_CONFIGURED)
+        {
+            printf("Trace is not prepared\n");
+            goto ret;
+        }
+
+        list_markers();
+        send_report();   
+    
+    }
+    else if(!strncmp(cmd, CMD_LIST_BPTS, 2))
+    {
+        if(my_trace->status != STATUS_CONFIGURED)
+        {
+            printf("Trace is not prepared\n");
+            goto ret;
+        }
+
+        list_bpts();
         send_report();   
     
     }
@@ -3008,13 +3093,13 @@ int main(int argc, char** argv)
         }
 
         cmd[cmd_len-6] = 0x0;
-        printf("Got cmd: %s\n", cmd);
+//        printf("Got cmd: %s\n", cmd);
 
         if(!strcmp(cmd, "quit")) 
             break;
         
         handle_cmd(cmd);
-        printf("Handled\n");
+//        printf("Handled\n");
 
     }
 
@@ -3483,7 +3568,7 @@ int main2(int argc, char** argv)
         switch(de.dwDebugEventCode)
         {
             case CREATE_PROCESS_DEBUG_EVENT:
-                cpdi = de.u.CreateProcessInfo;
+                my_trace->cpdi = de.u.CreateProcessInfo;
 
                 // register main thread
                 register_thread(de.dwThreadId, de.u.CreateProcessInfo.hThread);

@@ -141,6 +141,26 @@ def tracer_debug_continue_10_seconds():
 
     return
 
+def tracer_list_markers():
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+    
+    write_socket(options.s, "tracer_list_markers");
+    response, _, _ = read_socket(options.s)
+
+    return
+
+def tracer_list_bpts():
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+    
+    write_socket(options.s, "tracer_list_bpts");
+    response, _, _ = read_socket(options.s)
+
+    return
+
 def tracer_list_libs():
     options = globs.state.options
     state = globs.state
