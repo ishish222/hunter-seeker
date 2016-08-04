@@ -18,6 +18,8 @@ def get_sample_options():
     parser.add_option("", "--sample-file",dest="sample_file", help="Starting module for trace", default="none.exe")
     parser.add_option("", "--sample-process",dest="sample_process", help="Starting module for trace", default="None")
     parser.add_option("", "--research-dir",dest="research_dir", help="Starting module for trace", default="None")
+    parser.add_option("", "--out-dir",    dest="out_dir", help="Starting module for trace", default="None")
+    parser.add_option("", "--out-prefix", dest="out_prefix", help="Starting module for trace", default="None")
     parser.add_option("", "--smod",       dest="st_mod", help="Starting module for trace", default="0x0")
     parser.add_option("", "--emod",       dest="end_mod", help="Ending module for trace", default="kernel32.dll")
     parser.add_option("", "--saddr",      dest="st_addr", help="Starting address for trace", default="0x1b7c")

@@ -39,7 +39,9 @@ def tracer_configure_in_dir():
     if(options.sample_options.sample_file != "None"):
         write_socket(options.s, "tracer_configure_in_dir %s" % options.sample_options.research_dir);
         response, _, _ = read_socket(options.s)
-
+    else:
+        print "Error, no research dir"
+        exit(1)
     return
 
 def tracer_configure_out_dir():
@@ -47,11 +49,25 @@ def tracer_configure_out_dir():
     state = globs.state
     status = globs.state.status
     
-#TODO
-#    if(options.sample_options.sample_file != "None"):
-#        write_socket(options.s, "tracer_configure_research_out_dir %s" % options.sample_options.research_dir);
-#        response, _, _ = read_socket(options.s)
+    if(options.sample_options.sample_file != "None"):
+        write_socket(options.s, "tracer_configure_out_dir %s" % options.sample_options.out_dir);
+        response, _, _ = read_socket(options.s)
+    else:
+        print "Error, no research dir"
+        exit(1)
+    return
 
+def tracer_configure_out_prefix():
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+    
+    if(options.sample_options.sample_file != "None"):
+        write_socket(options.s, "tracer_configure_out_prefix %s" % options.sample_options.out_prefix);
+        response, _, _ = read_socket(options.s)
+    else:
+        print "Error, no research dir"
+        exit(1)
     return
 
 def tracer_configure_sample():

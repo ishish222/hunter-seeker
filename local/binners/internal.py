@@ -1107,6 +1107,18 @@ def execute(cmds):
             writePipe(ext_pipe, "tracer_configure_in_dir OK")
             ok(ext_pipe)
 
+        elif(cmd == "tracer_configure_out_dir"):
+            trace_controller.configure_out_dir(args)
+            writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
+            writePipe(ext_pipe, "tracer_configure_out_dir OK")
+            ok(ext_pipe)
+
+        elif(cmd == "tracer_configure_out_prefix"):
+            trace_controller.configure_out_prefix(args)
+            writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
+            writePipe(ext_pipe, "tracer_configure_out_prefix OK")
+            ok(ext_pipe)
+
         elif(cmd == "tracer_configure_markers"):
             trace_controller.configure_markers(args)
             writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))

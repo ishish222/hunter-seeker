@@ -13,58 +13,24 @@
 
 /* add_readsign */
 
+int reload_out_file();
 TRACE_CONFIG* my_trace;
-
-int add_roadsign(void* data)
-{
-    ROADSIGN* sign;
-
-    sign = (ROADSIGN*)data;
-
-    /* add breakpoint & handler */
-
-    return 0x0;
-}
-
-char process_fname[0x200];
 char spawned = 0x0;
 FILE* log;
 char started = 0x0;
-unsigned long long instr_count;
 char instr_count_s[0x20];
-unsigned long long instr_limit;
-unsigned long long instr_dbg;
 int full_log = 0x0;
 DWORD scan_on;
 unsigned scan_count;
 READ_RECORD last_read_record;
 WATCHED watched[WATCH_LIMIT];
-HANDLE procHandle;
 HANDLE file_handle;
-DWORD addr_st, addr_end;
 DWORD sysenter_esp;
 DWORD sysenter_no;
-char mod_st[MAX_NAME];
-char mod_end[MAX_NAME];
-HANDLE pipe;
 FILE* file;
-FILE* modifications;
 char buffer[buf_size];
 int index = 0;
-HANDLE eventLock, eventUnlock;
-HANDLE mutex;
-PROCESS_INFORMATION pi;
-STARTUPINFO si;
-char path[0x200];
-char cur_path[0x200];
-int path_i;
-char dumpPath[0x200];
-char iniPath[0x200];
-char modPath[0x200];
-wchar_t filePath[0x200];
 char instr[0x60];
-int last_eip = 0x0;
-DWORD last_tid = 0x0;
 const wchar_t* target_lib = L"ntdll.dll";
 DWORD target_lib_off = 0x0;
 const char* target_call = "NtCreateFile";
@@ -87,23 +53,11 @@ OUT_LOCATION syscall_out_args_dump_list[MAX_SYSCALL_OUT_ARGS];
 DWORD buffer_addr;
 DWORD size_addr;
 CREATE_THREAD_DEBUG_INFO2 threads[0x100000000];
-THREAD_ENTRY threads2[0x100000000];
-DWORD thread_list[0x1000];
-DWORD thread_count = 0x0;
-DWORD lib_count = 0x0;
-LIB_ENTRY libs[MAX_LIBS];
 int add_breakpoint(DWORD addr, handler_routine handler);
 DWORD find_lib(char* name);
 BOOL WINAPI HandlerRoutine(_In_ DWORD dwCtrlType);
 SIZE_T dump_mem(FILE*, void*, SIZE_T);
-HOOK hooks[MAX_HOOKS];
-unsigned hook_count = 0x0;
-bool res = 0x0;
-char* prefix;
-DEBUG_EVENT de;
-DWORD status = DBG_CONTINUE;
-DWORD tids[0x100];
-int tid_count = 0x0;
+
 char* blacklist_lib[] = {"kernel32.dll", "ntdll.dll", "user32.dll"};
 DWORD blacklist_addr[] = {};
 char line2[MAX_LINE];
@@ -129,32 +83,14 @@ int d_print(const char* format, ...)
 }
 
 
-FILE* configure_file()
-{
-    FILE* f;
-    
-    sprintf(cur_path, "%s_%d.txt", path, path_i);
-    d_print("Writing instructions to %s\n", cur_path);
-    
-
-    f = fopen(cur_path, "w+");
-    if(f == 0x0)
-    {
-        d_print("Error opening file %s: 0x%08x\n", cur_path, GetLastError());
-    }
-    return f;
-} 
-
-
-
 int add_to_buffer(char* line)
 {
     DWORD written;
     written = 0x0;
 //    sprintf(line2, "%s\n", line);
     //written = fwrite(line2, strlen(line2), 1, file);
-    written = fwrite(line, strlen(line), 1, my_trace->file);
-    fflush(my_trace->file);
+    written = fwrite(line, strlen(line), 1, my_trace->trace);
+    fflush(my_trace->trace);
     return written;
 }
 
@@ -177,8 +113,8 @@ void sysret_refresh(void* data)
 {
 
     d_print("Refreshing\n");
-    d_print("Unsetting SS for 0x%08x\n", last_tid);
-    unset_ss(last_tid);
+    d_print("Unsetting SS for 0x%08x\n", my_trace->last_tid);
+    unset_ss(my_trace->last_tid);
     set_ss(0x0);
 }
 
@@ -599,9 +535,9 @@ void register_lib(LOAD_DLL_DEBUG_INFO info)
 
     my_trace->libs[my_trace->lib_count].lib_offset = (DWORD)info.lpBaseOfDll;
     //d_print("RL,0x%08x,%s\n", my_trace->libs[my_trace->lib_count].lib_offset, libs[my_trace->lib_count].lib_name);
-    sprintf(line, "RL,0x%08x,%s\n", my_trace->libs[my_trace->lib_count].lib_offset, libs[my_trace->lib_count].lib_name);
+    sprintf(line, "RL,0x%08x,%s\n", my_trace->libs[my_trace->lib_count].lib_offset, my_trace->libs[my_trace->lib_count].lib_name);
 
-    my_trace->libs[lib_count].loaded = 0x1;
+    my_trace->libs[my_trace->lib_count].loaded = 0x1;
     //update_markers(&my_trace->libs[lib_count]);
 
     my_trace->lib_count++;
@@ -656,6 +592,7 @@ void ntmap_1_callback(void* data)
 
     DWORD tmp;
     DWORD read;
+    DWORD tid;
 
 
     d_print("Thread: %08x\n", de->dwThreadId);
@@ -664,8 +601,9 @@ void ntmap_1_callback(void* data)
 
     for(i = 0x0; i<my_trace->thread_count; i++)
     {
-        if(my_trace->threads[thread_list[i]].alive)
-        d_print("TID: 0x%08x, handle: 0x%08x\n", thread_list[i], my_trace->threads[thread_list[i]].handle);
+        tid = my_trace->thread_map[i];
+        if(my_trace->threads[tid].alive)
+        d_print("TID: 0x%08x, handle: 0x%08x\n", tid, my_trace->threads[tid].handle);
 
     }
 
@@ -709,7 +647,7 @@ void ntmap_2_callback(void* data)
 
     d_print("Block 0x%08x - 0x%08x, 0x%08x bytes\n", offset, offset + size, size);
 
-    size_wrote = dump_mem(modifications, (void*)offset, size);
+    size_wrote = dump_mem(my_trace->mods, (void*)offset, size);
     if(size_wrote == size)
     {
         sprintf(line, "UP,0x%08x,0x%08x\n", offset, size);
@@ -777,7 +715,7 @@ void sysret_callback(void* data)
     // dump 0x50 bytes from stack
     /*
     d_print("Block 0x%08x - 0x%08x, 0x%08x bytes\n", sysenter_esp, sysenter_esp + 0x50, 0x50);
-    size = dump_mem(modifications, (void*)sysenter_esp, 0x50);
+    size = dump_mem(my_trace->mods, (void*)sysenter_esp, 0x50);
     sprintf(line, "UP,0x%08x,0x%08x", sysenter_esp, 0x50);
     add_to_buffer(line);
 */
@@ -794,22 +732,22 @@ void sysret_callback(void* data)
 
     /*
     for(i = 0x0; i<MAX_SYSCALL_OUT_ARGS; i++)
-            syscall_out_args_dump_list[i].off = last_location.off;
+            my_trace->syscall_out_args_dump_list[i].off = last_location.off;
     */
 
     d_print("[[Syscall: 0x%08x @ 0x%08x]]\n", sysenter_no, ctx.Eip);
     for(i = 0x0; i<MAX_SYSCALL_OUT_ARGS; i++)
     {
         d_print("Arg no: 0x%02x\n", i);
-        if(syscall_out_args[sysenter_no][i].off_location == last_arg.off_location) 
+        if(my_trace->syscall_out_args[sysenter_no][i].off_location == last_arg.off_location) 
         {
             d_print("Last arg, finishing\n");
             break;
         }
-        if(syscall_out_args[sysenter_no][i].eax_val_success != STATUS_ANY)
+        if(my_trace->syscall_out_args[sysenter_no][i].eax_val_success != STATUS_ANY)
         {
             d_print("Arg not any\n");
-            if(syscall_out_args[sysenter_no][i].eax_val_success != ctx.Eax) 
+            if(my_trace->syscall_out_args[sysenter_no][i].eax_val_success != ctx.Eax) 
             {
                 d_print("Wrong EAX\n");
                 continue;
@@ -826,42 +764,42 @@ void sysret_callback(void* data)
             d_print("ESP: 0x%08x\n", sysenter_esp);
 
             // decide offset
-            switch(syscall_out_args[sysenter_no][i].off_location)
+            switch(my_trace->syscall_out_args[sysenter_no][i].off_location)
             {
                 case LOCATION_CONST:
-                    syscall_out_args_dump_list[i].off = syscall_out_args[sysenter_no][i].off;
-                    arg_val = syscall_out_args_dump_list[i].off;
+                    my_trace->syscall_out_args_dump_list[i].off = my_trace->syscall_out_args[sysenter_no][i].off;
+                    arg_val = my_trace->syscall_out_args_dump_list[i].off;
                     d_print("Arg off: 0x%08x\n", arg_val);
                     break;
                 case LOCATION_MEM:
-                    arg_addr = syscall_out_args[sysenter_no][i].off;
+                    arg_addr = my_trace->syscall_out_args[sysenter_no][i].off;
                     read_memory(my_trace->cpdi.hProcess, (void*)arg_addr, (void*)&arg_val, 0x4, &read);
                     d_print("0x%08x: 0x%08x\n", arg_addr, arg_val);
                     if(arg_val == 0x0) break;
                     d_print("Arg off: 0x%08x\n", arg_val);
-                    syscall_out_args_dump_list[i].off = arg_val;
+                    my_trace->syscall_out_args_dump_list[i].off = arg_val;
                     break;
                 case LOCATION_STACK:
                     arg_addr = sysenter_esp + 0x8;
-                    arg_addr += syscall_out_args[sysenter_no][i].off * 0x4;
+                    arg_addr += my_trace->syscall_out_args[sysenter_no][i].off * 0x4;
                     arg_val = arg_addr;
                     d_print("0x%08x: 0x%08x\n", arg_addr, arg_val);
                     d_print("Arg off: 0x%08x\n", arg_val);
                     if(arg_val == 0x0) break;
-                    syscall_out_args_dump_list[i].off = arg_val;
+                    my_trace->syscall_out_args_dump_list[i].off = arg_val;
                     break;
                 case LOCATION_ADDR_STACK:
                     arg_addr = sysenter_esp + 0x8;
-                    arg_addr += syscall_out_args[sysenter_no][i].off * 0x4;
+                    arg_addr += my_trace->syscall_out_args[sysenter_no][i].off * 0x4;
                     read_memory(my_trace->cpdi.hProcess, (void*)arg_addr, (void*)&arg_val, 0x4, &read);
                     d_print("0x%08x: 0x%08x\n", arg_addr, arg_val);
                     if(arg_val == 0x0) break;
                     d_print("Arg off: 0x%08x\n", arg_val);
-                    syscall_out_args_dump_list[i].off = arg_val;
+                    my_trace->syscall_out_args_dump_list[i].off = arg_val;
                     break;
                 case LOCATION_ADDR_ADDR_STACK:
                     arg_addr = sysenter_esp + 0x8;
-                    arg_addr += syscall_out_args[sysenter_no][i].off * 0x4;
+                    arg_addr += my_trace->syscall_out_args[sysenter_no][i].off * 0x4;
                     read_memory(my_trace->cpdi.hProcess, (void*)arg_addr, (void*)&arg_val, 0x4, &read);
                     d_print("0x%08x: 0x%08x\n", arg_addr, arg_val);
                     arg_addr = arg_val;
@@ -869,7 +807,7 @@ void sysret_callback(void* data)
                     d_print("0x%08x: 0x%08x\n", arg_addr, arg_val);
                     if(arg_val == 0x0) break;
                     d_print("Arg off: 0x%08x\n", arg_val);
-                    syscall_out_args_dump_list[i].off = arg_val;
+                    my_trace->syscall_out_args_dump_list[i].off = arg_val;
                     break;
             }
 
@@ -880,44 +818,44 @@ void sysret_callback(void* data)
             d_print("Locating size\n");
 
             // decide size
-            switch(syscall_out_args[sysenter_no][i].size_location)
+            switch(my_trace->syscall_out_args[sysenter_no][i].size_location)
             {
                 case LOCATION_CONST:
-                    syscall_out_args_dump_list[i].size = syscall_out_args[sysenter_no][i].size;
-                    arg_val = syscall_out_args_dump_list[i].size;
+                    my_trace->syscall_out_args_dump_list[i].size = my_trace->syscall_out_args[sysenter_no][i].size;
+                    arg_val = my_trace->syscall_out_args_dump_list[i].size;
                     d_print("Arg size: 0x%08x\n", arg_val);
                     break;
                 case LOCATION_MEM:
-                    arg_addr = syscall_out_args[sysenter_no][i].size;
+                    arg_addr = my_trace->syscall_out_args[sysenter_no][i].size;
                     read_memory(my_trace->cpdi.hProcess, (void*)arg_addr, (void*)&arg_val, 0x4, &read);
                     d_print("0x%08x: 0x%08x\n", arg_addr, arg_val);
                     d_print("Arg size: 0x%08x\n", arg_val);
-                    syscall_out_args_dump_list[i].size = arg_val;
+                    my_trace->syscall_out_args_dump_list[i].size = arg_val;
                     break;
                 case LOCATION_STACK:
                     arg_addr = sysenter_esp + 0x8;
-                    arg_addr += syscall_out_args[sysenter_no][i].size * 0x4;
+                    arg_addr += my_trace->syscall_out_args[sysenter_no][i].size * 0x4;
                     read_memory(my_trace->cpdi.hProcess, (void*)arg_addr, (void*)&arg_val, 0x4, &read);
                     d_print("0x%08x: 0x%08x\n", arg_addr, arg_val);
                     d_print("Arg size: 0x%08x\n", arg_val);
-                    syscall_out_args_dump_list[i].size = arg_val;
+                    my_trace->syscall_out_args_dump_list[i].size = arg_val;
                     break;
                 case LOCATION_ADDR_STACK:
                     arg_addr = sysenter_esp + 0x8;
-                    arg_addr += syscall_out_args[sysenter_no][i].size * 0x4;
+                    arg_addr += my_trace->syscall_out_args[sysenter_no][i].size * 0x4;
                     read_memory(my_trace->cpdi.hProcess, (void*)arg_addr, (void*)&arg_val, 0x4, &read);
                     d_print("0x%08x: 0x%08x\n", arg_addr, arg_val);
                     arg_addr = arg_val;
                     read_memory(my_trace->cpdi.hProcess, (void*)arg_addr, (void*)&arg_val, 0x4, &read);
                     d_print("0x%08x: 0x%08x\n", arg_addr, arg_val);
                     d_print("Arg size: 0x%08x\n", arg_val);
-                    syscall_out_args_dump_list[i].size = arg_val;
+                    my_trace->syscall_out_args_dump_list[i].size = arg_val;
                     break;
             }
 
             size = arg_val;
 
-            size_wrote = dump_mem(modifications, (void*)off, size);
+            size_wrote = dump_mem(my_trace->mods, (void*)off, size);
             if(size_wrote == size)
             {
                 d_print("[Out argument: 0x%08x, size: 0x%08x]\n", off, size);
@@ -936,7 +874,7 @@ void sysret_callback(void* data)
         if(file_handle == 0x0) 
         {
             arg_addr = sysenter_esp + 0x8;
-            arg_addr += syscall_out_args[sysenter_no][i].size * 0x4;
+            arg_addr += my_trace->syscall_out_args[sysenter_no][i].size * 0x4;
             read_memory(my_trace->cpdi.hProcess, (void*)arg_addr, (void*)&arg_val, 0x4, &read);
             arg_addr = arg_val;
             read_memory(my_trace->cpdi.hProcess, (void*)arg_addr, (void*)&file_handle, 0x4, &read);
@@ -947,10 +885,10 @@ void sysret_callback(void* data)
 
     if(sysenter_no == 0x111) // ReadFile
     {
-        if(file_handle == (HANDLE)syscall_out_args_dump_list[0].off)
+        if(file_handle == (HANDLE)my_trace->syscall_out_args_dump_list[0].off)
         {
             // our file, enter taint
-            sprintf(line, "RN,0x%08x,0x%08x\n", syscall_out_args_dump_list[3].off, syscall_out_args_dump_list[3].size);
+            sprintf(line, "RN,0x%08x,0x%08x\n", my_trace->syscall_out_args_dump_list[3].off, my_trace->syscall_out_args_dump_list[3].size);
             add_to_buffer(line);
             d_print("Marked taint: 0x%08x,0x%08x\n", off, size);
         }
@@ -1102,7 +1040,7 @@ int register_all_threads()
                     my_trace->threads[te32.th32ThreadID].handle = OpenThread(THREAD_GET_CONTEXT |THREAD_SET_CONTEXT | THREAD_ALL_ACCESS, 0x0, te32.th32ThreadID);
                     my_trace->threads[te32.th32ThreadID].open = 0x1;
 
-                    thread_list[my_trace->thread_count] = te32.th32ThreadID;
+                    my_trace->thread_map[my_trace->thread_count] = te32.th32ThreadID;
                     my_trace->thread_count ++;
                     //d_print("Registering TID: 0x%08x with handle: 0x%08x, new thread count: 0x%x\n", te32.th32ThreadID, my_trace->threads[my_trace->thread_count].handle, my_trace->thread_count);
  
@@ -1128,7 +1066,7 @@ int verify_ss(DWORD tid)
     {
         for(i = 0x0; i< my_trace->thread_count; i++)
         {
-            cur_tid = thread_list[i];
+            cur_tid = my_trace->thread_map[i];
             verify_ss(cur_tid);
         }
     }
@@ -1239,7 +1177,7 @@ void check_debug(DWORD eip, long long unsigned i_count, DWORD id)
         if((watched[i].off == eip) || (watched[i].instr == i_count))
         {
             d_print("Offhit: %08x\n", eip);
-            d_print("Instr_no: %lld\n", instr_count);
+            d_print("Instr_no: %lld\n", my_trace->instr_count);
 //            if(watched[i-1].hit || (i == 0x0))
             if(watched[i].hit <= watched[i].count)
             {
@@ -1305,9 +1243,7 @@ void ss_callback(void* data)
 
     if(!(my_trace->instr_count % INSTRUCTION_INTERVAL) && my_trace->instr_count>0x0)
     {
-        fclose(my_trace->file);
-        path_i++;
-        my_trace->file = configure_file();
+        reload_out_file();
     }
 
     my_trace->instr_count++;
@@ -1441,11 +1377,10 @@ void dump_memory()
 {
     SIZE_T addr;
     SIZE_T read;
-    FILE* f;
 
     d_print("dumping mem start\n");
 #ifdef MEM_DUMP
-    f = fopen(my_trace->dumpPath, "wb");
+    my_trace->dump = fopen(my_trace->out_dump, "wb");
 
     MEMORY_BASIC_INFORMATION mbi;
     
@@ -1458,16 +1393,16 @@ void dump_memory()
 //        if(mbi.State == MEM_COMMIT && (mbi.Type == MEM_MAPPED || mbi.Type == MEM_PRIVATE) && page_accessible(mbi))
         if(mbi.State == MEM_COMMIT && page_accessible(mbi))
         {
-            read = dump_mem(f, mbi.BaseAddress, mbi.RegionSize);
+            read = dump_mem(my_trace->dump, mbi.BaseAddress, mbi.RegionSize);
         }
         else
         {
-            read = dump_zeros(f, mbi.RegionSize);
+            read = dump_zeros(my_trace->dump, mbi.RegionSize);
         }
 
     }
 
-    fclose(f);
+    fclose(my_trace->dump);
 #endif
     d_print("dumping mem end\n");
 }
@@ -1496,6 +1431,7 @@ void end_callback(void* data)
 
 }
 
+/*
 void bp_callback(void* data)
 {
     char line[MAX_LINE];
@@ -1537,6 +1473,7 @@ void bp_callback(void* data)
     ss_callback(data);
 
 }
+*/
 
 BOOL WINAPI HandlerRoutine(_In_ DWORD dwCtrlType)
 {
@@ -1558,19 +1495,19 @@ BOOL WINAPI HandlerRoutine(_In_ DWORD dwCtrlType)
     }
 
     d_print("Deregistering libs\n");
-    for(i=0x0; i<lib_count; i++)
+    for(i=0x0; i<my_trace->lib_count; i++)
     {
-        if(libs[i].loaded == 0x1) 
+        if(my_trace->libs[i].loaded == 0x1) 
         {
             deregister_lib(i);
         }
     }
 
 
-    WritePrivateProfileString("general", "instruction count", itoa(instr_count, instr_count_s, 10), iniPath);
+    WritePrivateProfileString("general", "instruction count", itoa(my_trace->instr_count, instr_count_s, 10), my_trace->out_ini);
 
-    SetEvent(eventLock);
-    WaitForSingleObject(eventUnlock, INFINITE);
+    SetEvent(my_trace->eventLock);
+    WaitForSingleObject(my_trace->eventUnlock, INFINITE);
     exit(1);
 
 }
@@ -1579,14 +1516,14 @@ DWORD WINAPI writer(LPVOID lpParam)
 {
     while(1)
     {
-        WaitForSingleObject(eventLock, INFINITE);
-        ResetEvent(eventLock);
-        fwrite(buffer, index, 1, file);
-        fflush(file);
+        WaitForSingleObject(my_trace->eventLock, INFINITE);
+        ResetEvent(my_trace->eventLock);
+        fwrite(buffer, index, 1, my_trace->trace);
+        fflush(my_trace->trace);
         //fwrite("# Flushed\n", strlen("# Flushed\n"), 1, file);
-        fflush(file);
+        fflush(my_trace->trace);
 //        d_print("Flushed\n");
-        SetEvent(eventUnlock);
+        SetEvent(my_trace->eventUnlock);
     }
 }
 
@@ -1683,6 +1620,7 @@ int handle_breakpoint(DWORD addr, void* data)
             d_print("Removing\n");
             del_breakpoint(addr);
             handled:
+            if(my_trace->breakpoints[my_bpt_idx].handler_count == 0x0) del_breakpoint(addr);
             dec_eip(de->dwThreadId);
         }
     }
@@ -1804,11 +1742,11 @@ DWORD find_lib(char* name)
     unsigned i;
     DWORD ret= 0x0;
 
-    for(i=0x0; i<lib_count; i++)
+    for(i=0x0; i<my_trace->lib_count; i++)
     {
-        if(strstr(libs[i].lib_name, name))
+        if(strstr(my_trace->libs[i].lib_name, name))
         {
-            ret = libs[i].lib_offset;
+            ret = my_trace->libs[i].lib_offset;
             break;
         }
     }
@@ -2281,6 +2219,8 @@ int read_stack(DWORD tid_id, DWORD count)
 
 int process_last_event()
 {
+    unsigned status;
+
         printf("process_last_event: 0x%08x\n", my_trace->last_event.dwDebugEventCode);
         switch(my_trace->last_event.dwDebugEventCode)
         {
@@ -2349,7 +2289,7 @@ int process_last_event()
                             if(my_trace->markers[i].real_offset == bp_addr)
                             {
                                 /* this is our, we need to handle & report */
-                                handle_breakpoint((DWORD)my_trace->last_exception.ExceptionAddress, &de);
+                                handle_breakpoint((DWORD)my_trace->last_exception.ExceptionAddress, &my_trace->last_event);
                                 return REPORT_BREAKPOINT;
                             }
                         }
@@ -2455,6 +2395,7 @@ int get_pending_events()
 {
     int last_report;
     char buffer2[MAX_NAME];
+    unsigned status;
 
     //memset(&my_trace->last_event, 0x0, sizeof(my_trace->last_event));
 
@@ -2528,6 +2469,7 @@ int continue_routine(DWORD time)
 {
     int last_report;
     char buffer2[MAX_LINE];
+    unsigned status;
 
     //d_print("Continuing: PID: 0x%08x, TID: 0x%08x\n", my_trace->last_event.dwProcessId, my_trace->last_event.dwThreadId);
     if(my_trace->last_event.dwProcessId == 0x0)
@@ -2656,6 +2598,25 @@ int parse_markers(char* str)
 
 }
 
+int reload_out_file()
+{
+    char buffer2[MAX_LINE];
+
+    fclose(my_trace->trace);
+
+    my_trace->out_postfix++;
+
+    strcpy(buffer2, "");
+    sprintf(buffer2, "%s\\%s_%d.out", my_trace->out_dir, my_trace->out_prefix, my_trace->out_postfix);
+    strcpy(my_trace->out_trace, buffer2);
+
+    my_trace->trace = fopen(my_trace->out_trace, "w+");
+
+    d_print("Setting out file to: %s\n", my_trace->out_trace);
+
+    return 0x0;
+}
+
 int handle_cmd(char* cmd)
 {
     printf("%s\n", cmd);
@@ -2667,20 +2628,113 @@ int handle_cmd(char* cmd)
 
     if(!strncmp(cmd, CMD_SET_NAME, 2))
     {
-        strcpy(my_trace->sample_path, cmd+3);
-        printf("Sample path set to: %s\n", my_trace->sample_path);    
+        strcpy(my_trace->in_sample_path, cmd+3);
+        printf("Sample path set to: %s\n", my_trace->in_sample_path);    
         send_report();
     }
     else if(!strncmp(cmd, CMD_SET_IN_DIRECTORY, 2))
     {
-        strcpy(my_trace->research_dir, cmd+3);
-        printf("Research dir set to: %s\n", my_trace->research_dir);
+        strcpy(my_trace->in_research_dir, cmd+3);
+        printf("Research dir set to: %s\n", my_trace->in_research_dir);
         send_report();
     }
     else if(!strncmp(cmd, CMD_SET_OUT_DIRECTORY, 2))
     {
         strcpy(my_trace->out_dir, cmd+3);
         printf("Out dir set to: %s\n", my_trace->out_dir);
+        send_report();
+    }
+    else if(!strncmp(cmd, CMD_SET_OUT_PREFIX, 2))
+    {
+        strcpy(my_trace->out_prefix, cmd+3);
+        printf("Out prefix set to: %s\n", my_trace->out_prefix);
+        send_report();
+    }
+    else if(!strncmp(cmd, CMD_SET_LIMIT, 2))
+    {
+        my_trace->instr_limit = strtol(cmd+3, 0x0, 10);
+        printf("Trace limit set to: %d\n", my_trace->instr_limit);
+        send_report();
+    }
+    else if(!strncmp(cmd, CMD_SET_TRACE_NAME, 2))
+    {
+        /* deprecated, its auotmated
+        strcpy(my_trace->out_trace, cmd+3);
+        */
+        printf("Trace name set to: %s\n", my_trace->out_trace);
+        send_report();
+    }
+    else if(!strncmp(cmd, CMD_SET_DUMP_NAME, 2))
+    {
+        /* deprecated, its auotmated
+        strcpy(my_trace->out_dump, cmd+3);
+        */
+        printf("Dump name set to: %s\n", my_trace->out_dump);
+        send_report();
+    }
+    else if(!strncmp(cmd, CMD_INFO_NAME, 2))
+    {
+        /* deprecated, its auotmated
+        strcpy(my_trace->iniPath, cmd+3);
+        */
+        printf("Info name set to: %s\n", my_trace->out_ini);
+        send_report();
+    }
+    else if(!strncmp(cmd, CMD_PREPARE_TRACE, 2))
+    {
+        char buffer2[MAX_LINE];
+
+        if((my_trace->out_dir == 0x0) || (my_trace->out_prefix == 0x0)) 
+        {
+            printf("Error, out dir not set");
+            exit(-1);
+        }
+
+        /* configure out paths */
+        /* trace */ 
+        my_trace->out_postfix = -1;
+        reload_out_file();
+
+        /* dump */ 
+        strcpy(buffer2, "");
+        sprintf(buffer2, "%s\\%s.dump", my_trace->out_dir, my_trace->out_prefix);
+        strcpy(my_trace->out_dump, buffer2);
+        d_print("Dump file: %s\n", my_trace->out_dump);
+        
+        /* mods */ 
+        strcpy(buffer2, "");
+        sprintf(buffer2, "%s\\%s.mod", my_trace->out_dir, my_trace->out_prefix);
+        strcpy(my_trace->out_mods, buffer2);
+        my_trace->mods = fopen(my_trace->out_mods, "wb");
+        d_print("Mods file: %s\n", my_trace->out_dump);
+        
+        /* ini */ 
+        strcpy(buffer2, "");
+        sprintf(buffer2, "%s\\%s.ini", my_trace->out_dir, my_trace->out_prefix);
+        strcpy(my_trace->out_ini, buffer2);
+        my_trace->ini = fopen(my_trace->out_ini, "w");
+        d_print("Ini file: %s\n", my_trace->out_dump);
+    
+        my_trace->status = STATUS_CONFIGURED;
+    }
+    else if(!strncmp(cmd, CMD_ENABLE_TRACE, 2))
+    {
+        my_trace->status = STATUS_DBG_STARTED;
+        ss_callback((void*)&my_trace->last_event);
+        printf("Tracing enabled\n");
+        send_report();
+    }
+    else if(!strncmp(cmd, CMD_ENABLE_DBG_TRACE, 2))
+    {
+        my_trace->status = STATUS_DBG_SCANNED;
+        ss_callback((void*)&my_trace->last_event);
+        printf("Tracing debugged enabled\n");
+        send_report();
+    }
+    else if(!strncmp(cmd, CMD_DISABLE_TRACE, 2))
+    {
+        my_trace->status = STATUS_DBG_STOPPED;
+        printf("Tracing disabled\n");
         send_report();
     }
     else if(!strncmp(cmd, CMD_SET_MARKER_1, 2))
@@ -2711,9 +2765,9 @@ int handle_cmd(char* cmd)
     {
         unsigned report;
 
-        strcpy(my_trace->process_fname, my_trace->research_dir);
+        strcpy(my_trace->process_fname, my_trace->in_research_dir);
         strcat(my_trace->process_fname, "\\");
-        strcat(my_trace->process_fname, my_trace->sample_path);
+        strcat(my_trace->process_fname, my_trace->in_sample_path);
 
         printf("Starting debugging: %s\n", my_trace->process_fname);
 
@@ -2919,48 +2973,6 @@ int handle_cmd(char* cmd)
         }
         send_report();
     }
-    else if(!strncmp(cmd, CMD_SET_LIMIT, 2))
-    {
-        my_trace->instr_limit = strtol(cmd+3, 0x0, 10);
-        printf("Trace limit set to: %d\n", my_trace->instr_limit);
-        send_report();
-    }
-    else if(!strncmp(cmd, CMD_SET_TRACE_NAME, 2))
-    {
-        strcpy(my_trace->research_dir, cmd+3);
-        printf("Trace name set to: %s\n", my_trace->filePath);
-        send_report();
-    }
-    else if(!strncmp(cmd, CMD_SET_DUMP_NAME, 2))
-    {
-        strcpy(my_trace->dumpPath, cmd+3);
-        printf("Dump name set to: %s\n", my_trace->dumpPath);
-        send_report();
-    }
-    else if(!strncmp(cmd, CMD_INFO_NAME, 2))
-    {
-        strcpy(my_trace->iniPath, cmd+3);
-        printf("Info name set to: %s\n", my_trace->iniPath);
-        send_report();
-    }
-    else if(!strncmp(cmd, CMD_ENABLE_TRACE, 2))
-    {
-        my_trace->status = STATUS_DBG_STARTED;
-        printf("Tracing enabled\n");
-        send_report();
-    }
-    else if(!strncmp(cmd, CMD_ENABLE_DBG_TRACE, 2))
-    {
-        my_trace->status = STATUS_DBG_SCANNED;
-        printf("Tracing debugged enabled\n");
-        send_report();
-    }
-    else if(!strncmp(cmd, CMD_DISABLE_TRACE, 2))
-    {
-        my_trace->status = STATUS_DBG_STOPPED;
-        printf("Tracing disabled\n");
-        send_report();
-    }
     else if(!strncmp(cmd, CMD_ROUTINE_1, 2))
     {
         /* TODO: implement */    
@@ -2988,13 +3000,338 @@ int init_trace(TRACE_CONFIG* trace, char* host, short port)
     my_trace->eventLock = CreateEvent(0x0, 0x0, 0x0, 0x0);
     my_trace->eventUnlock = CreateEvent(0x0, 0x0, 0x0, 0x0);
 
-    my_trace->file = configure_file();
 }
 
 int try_resolve_marker(MARKER* m)
 {
 
     return 0x0;
+}
+
+/* configure syscalls */
+
+int configure_syscalls()
+{
+    unsigned i,j;
+
+    /* syscall out args table */
+
+    for(i=0x0; i<MAX_SYSCALL_ENTRIES; i++)
+        for(j=0x0;j<MAX_SYSCALL_OUT_ARGS; j++)
+            my_trace->syscall_out_args[i][j].off_location = LOCATION_END;
+
+#ifdef LIB_VER_WXP
+    // ZwAllocateVirtualMemory
+    my_trace->syscall_out_args[0x11][0] = {0x1, 0x4, LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY}; 
+    my_trace->syscall_out_args[0x11][1] = {0x3, 0x4, LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
+    my_trace->syscall_out_args[0x11][2] = {0x1, 0x3, LOCATION_ADDR_ADDR_STACK, LOCATION_ADDR_STACK, 0}; 
+    my_trace->syscall_out_args[0x11][3] = last_arg;
+   
+    // ZwClose
+    my_trace->syscall_out_args[0x19][0] = last_arg;
+
+    // ZwCreateFile
+    my_trace->syscall_out_args[0x25][0] = {0x0, 0x4, LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
+    my_trace->syscall_out_args[0x25][1] = {0x3, sizeof(IO_STATUS_BLOCK), LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
+    my_trace->syscall_out_args[0x25][2] = last_arg;
+
+    // ZwCreateSection 
+    my_trace->syscall_out_args[0x32][0] = {0x0, 0x4, LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
+    my_trace->syscall_out_args[0x32][1] = last_arg;
+   
+    // ZwFreeVirtualMemory
+    my_trace->syscall_out_args[0x53][0] = {0x1, 0x2, LOCATION_ADDR_ADDR_STACK, LOCATION_ADDR_STACK, 0};
+    my_trace->syscall_out_args[0x53][1] = {0x1, 0x4, LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
+    my_trace->syscall_out_args[0x53][2] = {0x2, 0x4, LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
+    my_trace->syscall_out_args[0x53][3] = last_arg;
+
+    // ZwMapViewOfSection
+    my_trace->syscall_out_args[0x6c][0] = {0x2, 0x6, LOCATION_ADDR_ADDR_STACK, LOCATION_ADDR_STACK, 0};
+    my_trace->syscall_out_args[0x6c][1] = {0x2, 0x4, LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
+    my_trace->syscall_out_args[0x6c][2] = {0x5, 0x8, LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
+    my_trace->syscall_out_args[0x6c][3] = {0x6, 0x4, LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
+    my_trace->syscall_out_args[0x6c][4] = last_arg;
+
+    // NtOpenFile
+    my_trace->syscall_out_args[0x74][0] = {0x0, 0x4, LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
+    my_trace->syscall_out_args[0x74][1] = {0x3, sizeof(IO_STATUS_BLOCK), LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
+    my_trace->syscall_out_args[0x74][2] = last_arg;
+
+    // ZwOpenKey
+    my_trace->syscall_out_args[0x77][0] = {0x0, 0x4, LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
+    my_trace->syscall_out_args[0x77][1] = last_arg;
+
+    // ZwOpenProcessToken
+    my_trace->syscall_out_args[0x7b][0] = {0x2, 0x4, LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
+    my_trace->syscall_out_args[0x7b][1] = last_arg;
+
+    // ZwOpenSection
+    my_trace->syscall_out_args[0x7d][0] = {0x0, 0x4, LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
+    my_trace->syscall_out_args[0x7d][1] = last_arg;
+
+    // ZwProtectVirtualMemory
+    my_trace->syscall_out_args[0x89][0] = {0x1, 0x4, LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
+    my_trace->syscall_out_args[0x89][1] = {0x3, 0x4, LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
+    my_trace->syscall_out_args[0x89][2] = {0x4, 0x4, LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
+    my_trace->syscall_out_args[0x89][3] = last_arg;
+
+    // NtQueryAttributesFile
+    my_trace->syscall_out_args[0x8b][0] = {0x0, sizeof(FILE_BASIC_INFORMATION), LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
+    my_trace->syscall_out_args[0x8b][1] = last_arg;
+
+    // ZwQueryInformationProcess
+    my_trace->syscall_out_args[0x9a][0] = {0x4, 0x4, LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
+    my_trace->syscall_out_args[0x9a][1] = {0x2, 0x3, LOCATION_ADDR_STACK, LOCATION_ADDR_STACK, 0};
+    my_trace->syscall_out_args[0x9a][2] = last_arg;
+
+    // ZwQueryInformationToken
+    my_trace->syscall_out_args[0x9c][0] = {0x4, 0x4, LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
+    my_trace->syscall_out_args[0x9c][1] = {0x2, 0x4, LOCATION_ADDR_STACK, LOCATION_ADDR_STACK, 0};
+    my_trace->syscall_out_args[0x9c][2] = last_arg;
+
+    // NtQueryPerformanceCounter
+    my_trace->syscall_out_args[0xa5][0] = {0x0, 0x8, LOCATION_ADDR_STACK, LOCATION_ADDR_STACK, STATUS_ANY};
+    my_trace->syscall_out_args[0xa5][1] = {0x1, 0x8, LOCATION_ADDR_STACK, LOCATION_ADDR_STACK, STATUS_ANY};
+    my_trace->syscall_out_args[0xa5][2] = last_arg;
+
+    // NtQuerySection
+    // TODO: check 1st
+    my_trace->syscall_out_args[0xa7][0] = {0x2, 0x4, LOCATION_ADDR_ADDR_STACK, LOCATION_ADDR_STACK, STATUS_ANY};
+    my_trace->syscall_out_args[0xa7][1] = {0x4, 0x4, LOCATION_ADDR_STACK, LOCATION_ADDR_STACK, 0};
+    my_trace->syscall_out_args[0xa7][2] = last_arg;
+
+
+    // ZwQuerySystemInformation
+    my_trace->syscall_out_args[0xad][0] = {0x1, 0x2, LOCATION_ADDR_STACK, LOCATION_STACK, 0};
+    my_trace->syscall_out_args[0xad][1] = {0x3, 0x4, LOCATION_ADDR_STACK, LOCATION_CONST, 0};
+    my_trace->syscall_out_args[0xad][2] = last_arg;
+
+    // ZwQueryValueKey
+    my_trace->syscall_out_args[0xb1][0] = {0x3, 0x5, LOCATION_ADDR_STACK, LOCATION_ADDR_STACK, 0};
+    my_trace->syscall_out_args[0xb1][1] = {0x3, 0x4, LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
+    my_trace->syscall_out_args[0xb1][2] = {0x5, 0x4, LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
+    my_trace->syscall_out_args[0xb1][3] = last_arg;
+
+    // ZwReadFile
+    my_trace->syscall_out_args[0xb7][0] = {0x4, sizeof(IO_STATUS_BLOCK), LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
+    my_trace->syscall_out_args[0xb7][1] = {0x5, 0x4, LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
+    my_trace->syscall_out_args[0xb7][2] = {0x5, 0x6, LOCATION_ADDR_STACK, LOCATION_STACK, 0};
+    my_trace->syscall_out_args[0xb7][3] = last_arg;
+
+    // ZwRequestWaitReplyPort
+    my_trace->syscall_out_args[0xc8][0] = {0x2, 0x148, LOCATION_ADDR_STACK, LOCATION_CONST, 0x0};
+    my_trace->syscall_out_args[0xc8][1] = last_arg;
+
+    // ZwUnmapViewOfSection
+    my_trace->syscall_out_args[0x101][0] = last_arg;
+
+    // ZwTraceControl
+/*
+    my_trace->syscall_out_args[0x177][0] = {0x3, 0x4, LOCATION_ADDR_ADDR_STACK, LOCATION_ADDR_STACK, 0x0};
+    my_trace->syscall_out_args[0x177][1] = {0x3, 0x4, LOCATION_ADDR_STACK, LOCATION_CONST, 0x0};
+    my_trace->syscall_out_args[0x177][2] = {0x5, 0x4, LOCATION_ADDR_STACK, LOCATION_CONST, 0x0};
+    my_trace->syscall_out_args[0x177][3] = last_arg;
+*/
+    // ZwWriteVirtualMemory
+    my_trace->syscall_out_args[0x115][0] = {0x4, 0x4, LOCATION_ADDR_STACK, LOCATION_CONST, 0x0};
+    my_trace->syscall_out_args[0x115][1] = last_arg;
+#endif
+    
+#ifdef LIB_VER_W7 
+    // ZwAllocateVirtualMemory
+    my_trace->syscall_out_args[0x13][0] = {0x1, 0x4, LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY}; 
+    my_trace->syscall_out_args[0x13][1] = {0x3, 0x4, LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
+    my_trace->syscall_out_args[0x13][2] = {0x1, 0x3, LOCATION_ADDR_ADDR_STACK, LOCATION_ADDR_STACK, 0}; 
+    my_trace->syscall_out_args[0x13][3] = last_arg;
+   
+    // ZwClose
+    my_trace->syscall_out_args[0x32][0] = last_arg;
+
+    // 0x40
+
+    // ZwCreateFile
+    my_trace->syscall_out_args[0x42][0] = {0x0, 0x4, LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
+    my_trace->syscall_out_args[0x42][1] = {0x3, sizeof(IO_STATUS_BLOCK), LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
+    my_trace->syscall_out_args[0x42][2] = last_arg;
+
+    // ZwCreateSection 
+    my_trace->syscall_out_args[0x54][0] = {0x0, 0x4, LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
+    my_trace->syscall_out_args[0x54][1] = last_arg;
+  
+    // ZwDeviceIoControlFile (not verified)
+    my_trace->syscall_out_args[0x6b][0] = {0x4, sizeof(IO_STATUS_BLOCK), LOCATION_ADDR_STACK, LOCATION_CONST, 0x0};
+    my_trace->syscall_out_args[0x6b][1] = {0x8, 0x9, LOCATION_ADDR_ADDR_STACK, LOCATION_ADDR_STACK, 0x0};
+    my_trace->syscall_out_args[0x6b][2] = last_arg;
+ 
+    // ZwFreeVirtualMemory
+    my_trace->syscall_out_args[0x83][0] = {0x1, 0x2, LOCATION_ADDR_ADDR_STACK, LOCATION_ADDR_STACK, 0};
+    my_trace->syscall_out_args[0x83][1] = {0x1, 0x4, LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
+    my_trace->syscall_out_args[0x83][2] = {0x2, 0x4, LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
+    my_trace->syscall_out_args[0x83][3] = last_arg;
+
+    // ZwMapViewOfSection
+    my_trace->syscall_out_args[0xa8][0] = {0x2, 0x6, LOCATION_ADDR_ADDR_STACK, LOCATION_ADDR_STACK, 0};
+    my_trace->syscall_out_args[0xa8][1] = {0x2, 0x4, LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
+    my_trace->syscall_out_args[0xa8][2] = {0x5, 0x8, LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
+    my_trace->syscall_out_args[0xa8][3] = {0x6, 0x4, LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
+    my_trace->syscall_out_args[0xa8][4] = last_arg;
+
+    // ZwOpenDirectoryObject
+    my_trace->syscall_out_args[0xaf][0] = {0x0, 0x4, LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
+    my_trace->syscall_out_args[0xaf][1] = last_arg;
+
+    // NtOpenFile
+    my_trace->syscall_out_args[0xb3][0] = {0x0, 0x4, LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
+    my_trace->syscall_out_args[0xb3][1] = {0x3, sizeof(IO_STATUS_BLOCK), LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
+    my_trace->syscall_out_args[0xb3][2] = last_arg;
+
+    // ZwOpenKey
+    my_trace->syscall_out_args[0xb6][0] = {0x0, 0x4, LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
+    my_trace->syscall_out_args[0xb6][1] = last_arg;
+
+    // ZwRegisterThreadTerminatePort
+    my_trace->syscall_out_args[0xbb][0] = last_arg;
+
+    // ZwOpenProcessToken
+    my_trace->syscall_out_args[0xbf][0] = {0x2, 0x4, LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
+    my_trace->syscall_out_args[0xbf][1] = last_arg;
+
+    // c0
+
+    // ZwOpenSection
+    my_trace->syscall_out_args[0xc2][0] = {0x0, 0x4, LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
+    my_trace->syscall_out_args[0xc2][1] = last_arg;
+
+    // ZwOpenSymbolicLinkObject
+    my_trace->syscall_out_args[0xc5][0] = {0x0, 0x4, LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
+    my_trace->syscall_out_args[0xc5][1] = last_arg;
+
+    // ZwProtectVirtualMemory
+    my_trace->syscall_out_args[0xd7][0] = {0x1, 0x4, LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
+    my_trace->syscall_out_args[0xd7][1] = {0x3, 0x4, LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
+    my_trace->syscall_out_args[0xd7][2] = {0x4, 0x4, LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
+    my_trace->syscall_out_args[0xd7][3] = last_arg;
+
+    // NtQueryAttributesFile
+    my_trace->syscall_out_args[0xd9][0] = {0x0, sizeof(FILE_BASIC_INFORMATION), LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
+    my_trace->syscall_out_args[0xd9][1] = last_arg;
+
+    // NtQueryDefaultLocale
+    my_trace->syscall_out_args[0xdd][0] = {0x1, sizeof(LCID), LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
+    my_trace->syscall_out_args[0xdd][1] = last_arg;
+
+    // ZwQueryDirectoryFile
+    my_trace->syscall_out_args[0xdf][0] = {0x4, sizeof(IO_STATUS_BLOCK), LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
+    my_trace->syscall_out_args[0xdf][1] = {0x5, 0x6, LOCATION_ADDR_STACK, LOCATION_STACK, STATUS_ANY};
+    my_trace->syscall_out_args[0xdf][2] = last_arg;
+
+    // ZwQueryInformationFile
+    my_trace->syscall_out_args[0xe7][0] = {0x1, sizeof(IO_STATUS_BLOCK), LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
+    my_trace->syscall_out_args[0xe7][1] = {0x2, 0x3, LOCATION_ADDR_STACK, LOCATION_STACK, 0};
+    my_trace->syscall_out_args[0xe7][2] = last_arg;
+
+    // ZwQueryInformationProcess
+    my_trace->syscall_out_args[0xea][0] = {0x4, 0x4, LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
+    my_trace->syscall_out_args[0xea][1] = {0x2, 0x3, LOCATION_ADDR_STACK, LOCATION_ADDR_STACK, 0};
+    my_trace->syscall_out_args[0xea][2] = last_arg;
+
+    // ZwQueryInformationToken
+    my_trace->syscall_out_args[0xed][0] = {0x4, 0x4, LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
+    my_trace->syscall_out_args[0xed][1] = {0x2, 0x4, LOCATION_ADDR_STACK, LOCATION_ADDR_STACK, 0};
+    my_trace->syscall_out_args[0xed][2] = last_arg;
+
+    // NtQueryPerformanceCounter
+    my_trace->syscall_out_args[0xfb][0] = {0x0, 0x8, LOCATION_ADDR_STACK, LOCATION_ADDR_STACK, STATUS_ANY};
+    my_trace->syscall_out_args[0xfb][1] = {0x1, 0x8, LOCATION_ADDR_STACK, LOCATION_ADDR_STACK, STATUS_ANY};
+    my_trace->syscall_out_args[0xfb][2] = last_arg;
+
+    // NtQuerySection
+    // TODO: check 1st
+    my_trace->syscall_out_args[0xfe][0] = {0x2, 0x4, LOCATION_ADDR_ADDR_STACK, LOCATION_ADDR_STACK, STATUS_ANY};
+    my_trace->syscall_out_args[0xfe][1] = {0x4, 0x4, LOCATION_ADDR_STACK, LOCATION_ADDR_STACK, 0};
+    my_trace->syscall_out_args[0xfe][2] = last_arg;
+
+
+    // ZwQuerySystemInformation
+    my_trace->syscall_out_args[0x105][0] = {0x1, 0x2, LOCATION_ADDR_STACK, LOCATION_STACK, 0};
+    my_trace->syscall_out_args[0x105][1] = {0x3, 0x4, LOCATION_ADDR_STACK, LOCATION_CONST, 0};
+    my_trace->syscall_out_args[0x105][2] = last_arg;
+
+    // NtQuerySystemTime
+    my_trace->syscall_out_args[0x107][0] = {0x0, sizeof(LARGE_INTEGER), LOCATION_ADDR_STACK, LOCATION_CONST, 0};
+    my_trace->syscall_out_args[0x107][1] = last_arg;
+
+    // ZwQueryValueKey
+    my_trace->syscall_out_args[0x10a][0] = {0x3, 0x5, LOCATION_ADDR_STACK, LOCATION_ADDR_STACK, 0};
+    my_trace->syscall_out_args[0x10a][1] = {0x3, 0x4, LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
+    my_trace->syscall_out_args[0x10a][2] = {0x5, 0x4, LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
+    my_trace->syscall_out_args[0x10a][3] = last_arg;
+
+    // ZwQueryVolumeInformationFile
+    my_trace->syscall_out_args[0x10c][0] = {0x1, sizeof(IO_STATUS_BLOCK), LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
+    my_trace->syscall_out_args[0x10c][1] = {0x2, 0x3, LOCATION_ADDR_STACK, LOCATION_STACK, STATUS_ANY};
+    my_trace->syscall_out_args[0x10c][2] = last_arg;
+
+    // ZwReadFile
+    my_trace->syscall_out_args[0x111][0] = {0x0, 0x4, LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
+    my_trace->syscall_out_args[0x111][1] = {0x4, sizeof(IO_STATUS_BLOCK), LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
+    my_trace->syscall_out_args[0x111][2] = {0x5, 0x4, LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
+    my_trace->syscall_out_args[0x111][3] = {0x5, 0x6, LOCATION_ADDR_STACK, LOCATION_STACK, 0};
+    my_trace->syscall_out_args[0x111][4] = last_arg;
+
+    // ZwRequestWaitReplyPort
+    my_trace->syscall_out_args[0x12b][0] = {0x1, 0x180, LOCATION_ADDR_STACK, LOCATION_CONST, 0x0};
+    my_trace->syscall_out_args[0x12b][1] = {0x2, 0x180, LOCATION_ADDR_STACK, LOCATION_CONST, 0x0};
+    my_trace->syscall_out_args[0x12b][2] = last_arg;
+
+    // ZwSetInformationFile
+    my_trace->syscall_out_args[0x149][0] = {0x1, sizeof(IO_STATUS_BLOCK), LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
+    my_trace->syscall_out_args[0x149][1] = last_arg;
+
+    // ZwTraceControl
+    my_trace->syscall_out_args[0x177][0] = {0x3, 0x4, LOCATION_ADDR_STACK, LOCATION_CONST, 0x0};
+    my_trace->syscall_out_args[0x177][1] = {0x5, 0x4, LOCATION_ADDR_STACK, LOCATION_CONST, 0x0};
+    my_trace->syscall_out_args[0x177][2] = last_arg;
+
+    // ZwUnmapViewOfSection
+    my_trace->syscall_out_args[0x181][0] = last_arg;
+
+    // NtWaitForSingleObject
+    my_trace->syscall_out_args[0x187][0] = last_arg;
+
+    // ZwWriteVirtualMemory
+    my_trace->syscall_out_args[0x18f][0] = {0x4, 0x4, LOCATION_ADDR_STACK, LOCATION_CONST, 0x0};
+    my_trace->syscall_out_args[0x18f][1] = last_arg;
+
+    // Xara:
+    // 10e8 114e 1197 114e 11a4 11bb 11c4 11c6 11de 11e8 11ea 11ef 11f2 1203 1212 1214 1232 1233 1242
+
+    // calc:
+    // 1208
+    // 118b
+    // 1193
+    // 1169
+    // 11be
+    // 11bb
+    // 11a9
+    // 114d
+    // 1253
+    // 10e4
+    // 11a4
+    // 10b0
+    // 114e
+    // 11cf
+    // 112a
+    // 112f
+    // 1203
+    // 1232
+    // 11ea
+    // 1133
+    // 
+
+#endif
+
+    return 0x0;    
 }
 
 /* new main routine */
@@ -3118,639 +3455,4 @@ int main(int argc, char** argv)
     return 0x0;
 }
 
-int main2(int argc, char** argv)
-{
-    unsigned i, j;
-    scan_on = 0x0;
-    instr_count = 0x1;
-    instr_limit= 0x0;
-    instr_dbg = 0x0;
-    char descriptor_file[MAX_LINE];
-    
-
-    if(argc < 5)
-    {
-		printf("You need to provide PID, descriptor, out path and a prefix\n");
-		printf("Or: filename, descriptor, out path and a prefix\n");
-		return -1;
-    }
-
-    path_i = 0x0;
-
-    eventLock = CreateEvent(0x0, 0x0, 0x0, 0x0);
-    eventUnlock = CreateEvent(0x0, 0x0, 0x0, 0x0);
-    mutex = CreateMutex(0x0, 0x0, 0x0);
-
-    strcpy(descriptor_file, argv[2]);
-    parse_descriptor(descriptor_file);
-
-    return 0x0;
-
-    strcpy(mod_st, argv[2]);
-    addr_st = strtol(argv[3], 0x0, 0x10);
-    strcpy(mod_end, argv[4]);
-	addr_end = strtol(argv[5], 0x0, 0x10);
-    prefix = argv[7];
-
-    if(argc > 8)
-    {
-        log = fopen(argv[8], "w+");
-    }
-
-    if(argc > 9)
-    {
-        instr_limit = strtol(argv[9], 0x0, 10);
-    }
-
-    sprintf(path, "%s\\%s_%s", argv[6], prefix, "instr");
-    sprintf(iniPath, "%s\\%s_%s.ini", argv[6], prefix, "ini");
-    sprintf(dumpPath, "%s\\%s_%s.bin", argv[6], prefix, "dump");
-    sprintf(modPath, "%s\\%s_%s.bin", argv[6], prefix, "mods");
-
-    SetConsoleCtrlHandler(HandlerRoutine, TRUE);
-
-    /* hooks */
-
-    /* isdebuggerpresent */
-    hooks[0x0].offset = ISDEBUGGER_OFF_1;
-    strcpy(hooks[0x0].libname, "KernelBase.dll");
-    hooks[0x0].handler = isdebuggerpresent_callback_1;
-
-    /* */
-    hooks[0x1].offset = CREATETHREAD_OFF;
-    strcpy(hooks[0x1].libname, "KernelBase.dll");
-    hooks[0x1].handler = createthread_callback;
-
-    /* sysenter */
-    /*
-    hooks[0x0].offset = NTSYSENTER_OFF;
-    strcpy(hooks[0x0].libname, "ntdll.dll");
-    hooks[0x0].handler = sysenter_callback;
-    */
-
-    hook_count = 0x1;
-
-    for(i=0x0; i<WATCH_LIMIT; i++)
-    {
-        watched[i].off = 0x0;
-        watched[i].instr = 0x0;
-        watched[i].hit = 0x0;
-        watched[i].count = 0x0;
-        watched[i].scan = 0x0;
-    }
-
-    i = 0x0;
-/*
-    watched[i++].instr = 350000; watched[0].scan = 1;
-    watched[i++].instr = 355000; watched[1].scan = 1;
-    watched[i++].instr = 360000; watched[2].scan = 1;
-    watched[i++].instr = 365000; watched[3].scan = 1;
-    watched[i++].instr = 370000; watched[4].scan = 1;
-    watched[i++].instr = 375000; watched[5].scan = 1;
-    watched[i++].instr = 380000; watched[6].scan = 1;
-    watched[i++].instr = 385000; watched[7].scan = 1;
-    watched[i++].instr = 390000; watched[8].scan = 1;
-    watched[i++].instr = 395000; watched[9].scan = 1;
-    watched[i++].instr = 2475000; watched[10].scan = 1;
-    watched[i++].instr = 2480000; watched[11].scan = 1;
-    watched[i++].instr = 2485000; watched[12].scan = 1;
-    watched[i++].instr = 4215000; watched[13].scan = 1;
-    watched[i++].instr = 4220000; watched[14].scan = 1;
-    watched[i++].instr = 4225000; watched[15].scan = 1;
-    watched[i++].instr = 4230000; watched[16].scan = 1;
-    watched[i++].instr = 4235000; watched[17].scan = 1;
-    watched[i++].instr = 4240000; watched[18].scan = 1;
-    watched[i++].instr = 4245000; watched[19].scan = 1;
-    watched[i++].instr = 4250000; watched[20].scan = 1;
-    watched[i++].off = 0x7387ad31;
-*/
-    file = configure_file();
-    modifications = fopen(modPath, "wb+");
-
-    DWORD threadId = 0x0;
-    DWORD main_addr = 0x0;
-    char main_addr_str[0x20];
-
-    WritePrivateProfileString("general", "dumpPath", dumpPath, iniPath);
-    WritePrivateProfileString("general", "instrPath", path, iniPath);
-
-    /* syscall out args table */
-
-    for(i=0x0; i<MAX_SYSCALL_ENTRIES; i++)
-        for(j=0x0;j<MAX_SYSCALL_OUT_ARGS; j++)
-            syscall_out_args[i][j].off_location = LOCATION_END;
-
-    /* instructions on handling memory modifications made by sysenter */
-    
-#ifdef LIB_VER_WXP
-    // ZwAllocateVirtualMemory
-    syscall_out_args[0x11][0] = {0x1, 0x4, LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY}; 
-    syscall_out_args[0x11][1] = {0x3, 0x4, LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
-    syscall_out_args[0x11][2] = {0x1, 0x3, LOCATION_ADDR_ADDR_STACK, LOCATION_ADDR_STACK, 0}; 
-    syscall_out_args[0x11][3] = last_arg;
-   
-    // ZwClose
-    syscall_out_args[0x19][0] = last_arg;
-
-    // ZwCreateFile
-    syscall_out_args[0x25][0] = {0x0, 0x4, LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
-    syscall_out_args[0x25][1] = {0x3, sizeof(IO_STATUS_BLOCK), LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
-    syscall_out_args[0x25][2] = last_arg;
-
-    // ZwCreateSection 
-    syscall_out_args[0x32][0] = {0x0, 0x4, LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
-    syscall_out_args[0x32][1] = last_arg;
-   
-    // ZwFreeVirtualMemory
-    syscall_out_args[0x53][0] = {0x1, 0x2, LOCATION_ADDR_ADDR_STACK, LOCATION_ADDR_STACK, 0};
-    syscall_out_args[0x53][1] = {0x1, 0x4, LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
-    syscall_out_args[0x53][2] = {0x2, 0x4, LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
-    syscall_out_args[0x53][3] = last_arg;
-
-    // ZwMapViewOfSection
-    syscall_out_args[0x6c][0] = {0x2, 0x6, LOCATION_ADDR_ADDR_STACK, LOCATION_ADDR_STACK, 0};
-    syscall_out_args[0x6c][1] = {0x2, 0x4, LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
-    syscall_out_args[0x6c][2] = {0x5, 0x8, LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
-    syscall_out_args[0x6c][3] = {0x6, 0x4, LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
-    syscall_out_args[0x6c][4] = last_arg;
-
-    // NtOpenFile
-    syscall_out_args[0x74][0] = {0x0, 0x4, LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
-    syscall_out_args[0x74][1] = {0x3, sizeof(IO_STATUS_BLOCK), LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
-    syscall_out_args[0x74][2] = last_arg;
-
-    // ZwOpenKey
-    syscall_out_args[0x77][0] = {0x0, 0x4, LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
-    syscall_out_args[0x77][1] = last_arg;
-
-    // ZwOpenProcessToken
-    syscall_out_args[0x7b][0] = {0x2, 0x4, LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
-    syscall_out_args[0x7b][1] = last_arg;
-
-    // ZwOpenSection
-    syscall_out_args[0x7d][0] = {0x0, 0x4, LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
-    syscall_out_args[0x7d][1] = last_arg;
-
-    // ZwProtectVirtualMemory
-    syscall_out_args[0x89][0] = {0x1, 0x4, LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
-    syscall_out_args[0x89][1] = {0x3, 0x4, LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
-    syscall_out_args[0x89][2] = {0x4, 0x4, LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
-    syscall_out_args[0x89][3] = last_arg;
-
-    // NtQueryAttributesFile
-    syscall_out_args[0x8b][0] = {0x0, sizeof(FILE_BASIC_INFORMATION), LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
-    syscall_out_args[0x8b][1] = last_arg;
-
-    // ZwQueryInformationProcess
-    syscall_out_args[0x9a][0] = {0x4, 0x4, LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
-    syscall_out_args[0x9a][1] = {0x2, 0x3, LOCATION_ADDR_STACK, LOCATION_ADDR_STACK, 0};
-    syscall_out_args[0x9a][2] = last_arg;
-
-    // ZwQueryInformationToken
-    syscall_out_args[0x9c][0] = {0x4, 0x4, LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
-    syscall_out_args[0x9c][1] = {0x2, 0x4, LOCATION_ADDR_STACK, LOCATION_ADDR_STACK, 0};
-    syscall_out_args[0x9c][2] = last_arg;
-
-    // NtQueryPerformanceCounter
-    syscall_out_args[0xa5][0] = {0x0, 0x8, LOCATION_ADDR_STACK, LOCATION_ADDR_STACK, STATUS_ANY};
-    syscall_out_args[0xa5][1] = {0x1, 0x8, LOCATION_ADDR_STACK, LOCATION_ADDR_STACK, STATUS_ANY};
-    syscall_out_args[0xa5][2] = last_arg;
-
-    // NtQuerySection
-    // TODO: check 1st
-    syscall_out_args[0xa7][0] = {0x2, 0x4, LOCATION_ADDR_ADDR_STACK, LOCATION_ADDR_STACK, STATUS_ANY};
-    syscall_out_args[0xa7][1] = {0x4, 0x4, LOCATION_ADDR_STACK, LOCATION_ADDR_STACK, 0};
-    syscall_out_args[0xa7][2] = last_arg;
-
-
-    // ZwQuerySystemInformation
-    syscall_out_args[0xad][0] = {0x1, 0x2, LOCATION_ADDR_STACK, LOCATION_STACK, 0};
-    syscall_out_args[0xad][1] = {0x3, 0x4, LOCATION_ADDR_STACK, LOCATION_CONST, 0};
-    syscall_out_args[0xad][2] = last_arg;
-
-    // ZwQueryValueKey
-    syscall_out_args[0xb1][0] = {0x3, 0x5, LOCATION_ADDR_STACK, LOCATION_ADDR_STACK, 0};
-    syscall_out_args[0xb1][1] = {0x3, 0x4, LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
-    syscall_out_args[0xb1][2] = {0x5, 0x4, LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
-    syscall_out_args[0xb1][3] = last_arg;
-
-    // ZwReadFile
-    syscall_out_args[0xb7][0] = {0x4, sizeof(IO_STATUS_BLOCK), LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
-    syscall_out_args[0xb7][1] = {0x5, 0x4, LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
-    syscall_out_args[0xb7][2] = {0x5, 0x6, LOCATION_ADDR_STACK, LOCATION_STACK, 0};
-    syscall_out_args[0xb7][3] = last_arg;
-
-    // ZwRequestWaitReplyPort
-    syscall_out_args[0xc8][0] = {0x2, 0x148, LOCATION_ADDR_STACK, LOCATION_CONST, 0x0};
-    syscall_out_args[0xc8][1] = last_arg;
-
-    // ZwUnmapViewOfSection
-    syscall_out_args[0x101][0] = last_arg;
-
-    // ZwTraceControl
-/*
-    syscall_out_args[0x177][0] = {0x3, 0x4, LOCATION_ADDR_ADDR_STACK, LOCATION_ADDR_STACK, 0x0};
-    syscall_out_args[0x177][1] = {0x3, 0x4, LOCATION_ADDR_STACK, LOCATION_CONST, 0x0};
-    syscall_out_args[0x177][2] = {0x5, 0x4, LOCATION_ADDR_STACK, LOCATION_CONST, 0x0};
-    syscall_out_args[0x177][3] = last_arg;
-*/
-    // ZwWriteVirtualMemory
-    syscall_out_args[0x115][0] = {0x4, 0x4, LOCATION_ADDR_STACK, LOCATION_CONST, 0x0};
-    syscall_out_args[0x115][1] = last_arg;
-#endif
-    
-#ifdef LIB_VER_W7 
-    // ZwAllocateVirtualMemory
-    syscall_out_args[0x13][0] = {0x1, 0x4, LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY}; 
-    syscall_out_args[0x13][1] = {0x3, 0x4, LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
-    syscall_out_args[0x13][2] = {0x1, 0x3, LOCATION_ADDR_ADDR_STACK, LOCATION_ADDR_STACK, 0}; 
-    syscall_out_args[0x13][3] = last_arg;
-   
-    // ZwClose
-    syscall_out_args[0x32][0] = last_arg;
-
-    // 0x40
-
-    // ZwCreateFile
-    syscall_out_args[0x42][0] = {0x0, 0x4, LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
-    syscall_out_args[0x42][1] = {0x3, sizeof(IO_STATUS_BLOCK), LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
-    syscall_out_args[0x42][2] = last_arg;
-
-    // ZwCreateSection 
-    syscall_out_args[0x54][0] = {0x0, 0x4, LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
-    syscall_out_args[0x54][1] = last_arg;
-  
-    // ZwDeviceIoControlFile (not verified)
-    syscall_out_args[0x6b][0] = {0x4, sizeof(IO_STATUS_BLOCK), LOCATION_ADDR_STACK, LOCATION_CONST, 0x0};
-    syscall_out_args[0x6b][1] = {0x8, 0x9, LOCATION_ADDR_ADDR_STACK, LOCATION_ADDR_STACK, 0x0};
-    syscall_out_args[0x6b][2] = last_arg;
- 
-    // ZwFreeVirtualMemory
-    syscall_out_args[0x83][0] = {0x1, 0x2, LOCATION_ADDR_ADDR_STACK, LOCATION_ADDR_STACK, 0};
-    syscall_out_args[0x83][1] = {0x1, 0x4, LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
-    syscall_out_args[0x83][2] = {0x2, 0x4, LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
-    syscall_out_args[0x83][3] = last_arg;
-
-    // ZwMapViewOfSection
-    syscall_out_args[0xa8][0] = {0x2, 0x6, LOCATION_ADDR_ADDR_STACK, LOCATION_ADDR_STACK, 0};
-    syscall_out_args[0xa8][1] = {0x2, 0x4, LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
-    syscall_out_args[0xa8][2] = {0x5, 0x8, LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
-    syscall_out_args[0xa8][3] = {0x6, 0x4, LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
-    syscall_out_args[0xa8][4] = last_arg;
-
-    // ZwOpenDirectoryObject
-    syscall_out_args[0xaf][0] = {0x0, 0x4, LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
-    syscall_out_args[0xaf][1] = last_arg;
-
-    // NtOpenFile
-    syscall_out_args[0xb3][0] = {0x0, 0x4, LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
-    syscall_out_args[0xb3][1] = {0x3, sizeof(IO_STATUS_BLOCK), LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
-    syscall_out_args[0xb3][2] = last_arg;
-
-    // ZwOpenKey
-    syscall_out_args[0xb6][0] = {0x0, 0x4, LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
-    syscall_out_args[0xb6][1] = last_arg;
-
-    // ZwRegisterThreadTerminatePort
-    syscall_out_args[0xbb][0] = last_arg;
-
-    // ZwOpenProcessToken
-    syscall_out_args[0xbf][0] = {0x2, 0x4, LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
-    syscall_out_args[0xbf][1] = last_arg;
-
-    // c0
-
-    // ZwOpenSection
-    syscall_out_args[0xc2][0] = {0x0, 0x4, LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
-    syscall_out_args[0xc2][1] = last_arg;
-
-    // ZwOpenSymbolicLinkObject
-    syscall_out_args[0xc5][0] = {0x0, 0x4, LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
-    syscall_out_args[0xc5][1] = last_arg;
-
-    // ZwProtectVirtualMemory
-    syscall_out_args[0xd7][0] = {0x1, 0x4, LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
-    syscall_out_args[0xd7][1] = {0x3, 0x4, LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
-    syscall_out_args[0xd7][2] = {0x4, 0x4, LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
-    syscall_out_args[0xd7][3] = last_arg;
-
-    // NtQueryAttributesFile
-    syscall_out_args[0xd9][0] = {0x0, sizeof(FILE_BASIC_INFORMATION), LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
-    syscall_out_args[0xd9][1] = last_arg;
-
-    // NtQueryDefaultLocale
-    syscall_out_args[0xdd][0] = {0x1, sizeof(LCID), LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
-    syscall_out_args[0xdd][1] = last_arg;
-
-    // ZwQueryDirectoryFile
-    syscall_out_args[0xdf][0] = {0x4, sizeof(IO_STATUS_BLOCK), LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
-    syscall_out_args[0xdf][1] = {0x5, 0x6, LOCATION_ADDR_STACK, LOCATION_STACK, STATUS_ANY};
-    syscall_out_args[0xdf][2] = last_arg;
-
-    // ZwQueryInformationFile
-    syscall_out_args[0xe7][0] = {0x1, sizeof(IO_STATUS_BLOCK), LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
-    syscall_out_args[0xe7][1] = {0x2, 0x3, LOCATION_ADDR_STACK, LOCATION_STACK, 0};
-    syscall_out_args[0xe7][2] = last_arg;
-
-    // ZwQueryInformationProcess
-    syscall_out_args[0xea][0] = {0x4, 0x4, LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
-    syscall_out_args[0xea][1] = {0x2, 0x3, LOCATION_ADDR_STACK, LOCATION_ADDR_STACK, 0};
-    syscall_out_args[0xea][2] = last_arg;
-
-    // ZwQueryInformationToken
-    syscall_out_args[0xed][0] = {0x4, 0x4, LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
-    syscall_out_args[0xed][1] = {0x2, 0x4, LOCATION_ADDR_STACK, LOCATION_ADDR_STACK, 0};
-    syscall_out_args[0xed][2] = last_arg;
-
-    // NtQueryPerformanceCounter
-    syscall_out_args[0xfb][0] = {0x0, 0x8, LOCATION_ADDR_STACK, LOCATION_ADDR_STACK, STATUS_ANY};
-    syscall_out_args[0xfb][1] = {0x1, 0x8, LOCATION_ADDR_STACK, LOCATION_ADDR_STACK, STATUS_ANY};
-    syscall_out_args[0xfb][2] = last_arg;
-
-    // NtQuerySection
-    // TODO: check 1st
-    syscall_out_args[0xfe][0] = {0x2, 0x4, LOCATION_ADDR_ADDR_STACK, LOCATION_ADDR_STACK, STATUS_ANY};
-    syscall_out_args[0xfe][1] = {0x4, 0x4, LOCATION_ADDR_STACK, LOCATION_ADDR_STACK, 0};
-    syscall_out_args[0xfe][2] = last_arg;
-
-
-    // ZwQuerySystemInformation
-    syscall_out_args[0x105][0] = {0x1, 0x2, LOCATION_ADDR_STACK, LOCATION_STACK, 0};
-    syscall_out_args[0x105][1] = {0x3, 0x4, LOCATION_ADDR_STACK, LOCATION_CONST, 0};
-    syscall_out_args[0x105][2] = last_arg;
-
-    // NtQuerySystemTime
-    syscall_out_args[0x107][0] = {0x0, sizeof(LARGE_INTEGER), LOCATION_ADDR_STACK, LOCATION_CONST, 0};
-    syscall_out_args[0x107][1] = last_arg;
-
-    // ZwQueryValueKey
-    syscall_out_args[0x10a][0] = {0x3, 0x5, LOCATION_ADDR_STACK, LOCATION_ADDR_STACK, 0};
-    syscall_out_args[0x10a][1] = {0x3, 0x4, LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
-    syscall_out_args[0x10a][2] = {0x5, 0x4, LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
-    syscall_out_args[0x10a][3] = last_arg;
-
-    // ZwQueryVolumeInformationFile
-    syscall_out_args[0x10c][0] = {0x1, sizeof(IO_STATUS_BLOCK), LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
-    syscall_out_args[0x10c][1] = {0x2, 0x3, LOCATION_ADDR_STACK, LOCATION_STACK, STATUS_ANY};
-    syscall_out_args[0x10c][2] = last_arg;
-
-    // ZwReadFile
-    syscall_out_args[0x111][0] = {0x0, 0x4, LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
-    syscall_out_args[0x111][1] = {0x4, sizeof(IO_STATUS_BLOCK), LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
-    syscall_out_args[0x111][2] = {0x5, 0x4, LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
-    syscall_out_args[0x111][3] = {0x5, 0x6, LOCATION_ADDR_STACK, LOCATION_STACK, 0};
-    syscall_out_args[0x111][4] = last_arg;
-
-    // ZwRequestWaitReplyPort
-    syscall_out_args[0x12b][0] = {0x1, 0x180, LOCATION_ADDR_STACK, LOCATION_CONST, 0x0};
-    syscall_out_args[0x12b][1] = {0x2, 0x180, LOCATION_ADDR_STACK, LOCATION_CONST, 0x0};
-    syscall_out_args[0x12b][2] = last_arg;
-
-    // ZwSetInformationFile
-    syscall_out_args[0x149][0] = {0x1, sizeof(IO_STATUS_BLOCK), LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
-    syscall_out_args[0x149][1] = last_arg;
-
-    // ZwTraceControl
-    syscall_out_args[0x177][0] = {0x3, 0x4, LOCATION_ADDR_STACK, LOCATION_CONST, 0x0};
-    syscall_out_args[0x177][1] = {0x5, 0x4, LOCATION_ADDR_STACK, LOCATION_CONST, 0x0};
-    syscall_out_args[0x177][2] = last_arg;
-
-    // ZwUnmapViewOfSection
-    syscall_out_args[0x181][0] = last_arg;
-
-    // NtWaitForSingleObject
-    syscall_out_args[0x187][0] = last_arg;
-
-    // ZwWriteVirtualMemory
-    syscall_out_args[0x18f][0] = {0x4, 0x4, LOCATION_ADDR_STACK, LOCATION_CONST, 0x0};
-    syscall_out_args[0x18f][1] = last_arg;
-
-    // Xara:
-    // 10e8 114e 1197 114e 11a4 11bb 11c4 11c6 11de 11e8 11ea 11ef 11f2 1203 1212 1214 1232 1233 1242
-
-    // calc:
-    // 1208
-    // 118b
-    // 1193
-    // 1169
-    // 11be
-    // 11bb
-    // 11a9
-    // 114d
-    // 1253
-    // 10e4
-    // 11a4
-    // 10b0
-    // 114e
-    // 11cf
-    // 112a
-    // 112f
-    // 1203
-    // 1232
-    // 11ea
-    // 1133
-    // 
-
-#endif
-
-    myPID = strtol(argv[1], 0x0, 10);
-    if(myPID == 0x0)
-    {
-        spawned = 1;
-        strcpy(process_fname, argv[1]);
-        start_trace_fname();
-    }
-    else
-    {
-        start_trace_pid();
-    }
-
-    CreateThread(0x0, 0x0, (LPTHREAD_START_ROUTINE)&writer, 0x0, 0x0, &threadId);
-
-    my_trace->thread_count = 0x0;
-    while(1)
-    {
-        status = DBG_CONTINUE;
-
-        WaitForDebugEvent(&de, INFINITE);
-        
-        if(full_log)
-            d_print("dwDebugEventCode: 0x%08x\n", de.dwDebugEventCode);
-        
-        switch(de.dwDebugEventCode)
-        {
-            case CREATE_PROCESS_DEBUG_EVENT:
-                my_trace->cpdi = de.u.CreateProcessInfo;
-
-                // register main thread
-                register_thread(de.dwThreadId, de.u.CreateProcessInfo.hThread);
-
-                //configure breakpoints
-                if(strstr(mod_st, "0x0"))
-                {
-                    printf("Main module: 0x%08x\n", (DWORD)de.u.CreateProcessInfo.lpBaseOfImage);
-                    add_breakpoint(addr_st + (DWORD)de.u.CreateProcessInfo.lpBaseOfImage, bp_callback);
-                }
-
-                if(strstr(mod_end, "0x0"))
-                {
-                    printf("Main module: 0x%08x\n", (DWORD)de.u.CreateProcessInfo.lpBaseOfImage);
-                    img_base = (DWORD)de.u.CreateProcessInfo.lpBaseOfImage;
-                }
-                //unset_ss(0x0);
-                break;
-
-            case EXCEPTION_DEBUG_EVENT:
-                EXCEPTION_RECORD er;
-                status = DBG_EXCEPTION_NOT_HANDLED;
-                er = de.u.Exception.ExceptionRecord;
-/*
-                if(full_log)
-                {
-                    d_print("Exception: 0x%08x\n", er.ExceptionCode);
-                    d_print("at: 0x%08x\n", er.ExceptionAddress);
-                    d_print("First chance: 0x%08x\n", de.u.Exception.dwFirstChance);
-                }
-*/
-                switch(er.ExceptionCode)
-                {
-                    case EXCEPTION_SINGLE_STEP:
-                        ss_callback((void*)&de);
-                        //verify_ss(0x0);
-                        //set_ss(de.dwThreadId);
-                        //verify_ss(0x0);
-                        status = DBG_CONTINUE;
-                        //if(full_log) status = DBG_EXCEPTION_NOT_HANDLED;
-                        break;
-                
-                    case EXCEPTION_BREAKPOINT:
-                        ss_callback((void*)&de);
-                        handle_breakpoint((DWORD)er.ExceptionAddress, &de);
-                        //verify_ss(0x0);
-                        //set_ss(de.dwThreadId);
-                        //verify_ss(0x0);
-                        status = DBG_CONTINUE;
-                        //if(full_log) status = DBG_EXCEPTION_NOT_HANDLED;
-                        break;
-                    default:
-                        register_exception(de.dwThreadId, er);
-                        //de.u.Exception.dwFirstChance = 0x0;
-                        //del_breakpoint(sysenter_off);
-                        //unset_ss(de.dwThreadId);
-                        //full_log = 1;
-                        ss_callback((void*)&de);
-                        //verify_ss(0x0);
-                        //set_ss(de.dwThreadId);
-                        //verify_ss(0x0);
-                        status = DBG_EXCEPTION_NOT_HANDLED;
-                        break;
-                }
-                /*
-                if(er.ExceptionCode != EXCEPTION_SINGLE_STEP && er.ExceptionCode != EXCEPTION_BREAKPOINT)
-                    d_print("Will continue with status: 0x%08x\n", status);
-                */
-                break;
-
-            case CREATE_THREAD_DEBUG_EVENT: 
-                register_thread(de.dwThreadId, de.u.CreateThread.hThread);
-                //set_ss(de.dwThreadId);
-                break;
-
-            case LOAD_DLL_DEBUG_EVENT:
-                d_print("Handle: 0x%08x\n", de.u.LoadDll.hFile);
-                register_lib(de.u.LoadDll);
-                d_print("Addr: 0x%08x\n", libs[lib_count-1].lib_offset);
-
-#ifdef LIB_VER_W7
-                GetFinalPathNameByHandleA(de.u.LoadDll.hFile, libs[lib_count].lib_name, MAX_NAME, VOLUME_NAME_NONE);
-#endif
-
-                d_print("Testing for start lib, compairng: %s & %s\n", libs[lib_count].lib_name, mod_st);
-                if(strstr(libs[lib_count].lib_name, mod_st))
-                {
-                    d_print("Match!\n");
-                    add_breakpoint(addr_st + find_lib(mod_st), bp_callback);
-                }
-//                if(strstr(libs[lib_count-1].lib_name, mod_end))
-//                {
-//                }
-
-                /* handle hooks */
-
-                unsigned j;
-                for(j = 0x0; j<hook_count; j++)
-                {
-#ifdef LIB_VER_W7
-                    d_print("%s - %s\n",  libs[lib_count-1].lib_name, hooks[j].libname);
-                    if(strstr(libs[lib_count-1].lib_name, hooks[j].libname))
-#endif
-#ifdef LIB_VER_WXP
-                    /* todo */
-#endif
-                    {
-                        add_breakpoint((DWORD)(hooks[j].offset + de.u.LoadDll.lpBaseOfDll), hooks[j].handler);
-                        d_print("Adding hook: %d\n", j);
-                    }
-                }
-
-#ifdef LIB_VER_W7
-                if(strstr(libs[lib_count-1].lib_name, "ntdll.dll"))
-#endif
-#ifdef LIB_VER_WXP
-                if(libs[lib_count-1].lib_offset == NTDLL_OFF)
-#endif
-                {
-                    d_print("ntdll loaded\n");
-#ifdef LIB_VER_W7
-                    nt1_off = find_lib("ntdll.dll") + NTMAPVIEWOFSECTION_1;
-                    nt2_off = find_lib("ntdll.dll") + NTMAPVIEWOFSECTION_2;
-                    nt3_off = find_lib("ntdll.dll") + NTREADFILE_OFF_1;
-                    nt4_off = find_lib("ntdll.dll") + NTREADFILE_OFF_2;
-                    sysenter_off = find_lib("ntdll.dll") + NTSYSENTER_OFF;
-                    sysret_off = find_lib("ntdll.dll") + NTSYSRET_OFF;
-#endif
-#ifdef LIB_VER_WXP
-                    nt1_off = NTDLL_OFF + NTMAPVIEWOFSECTION_1;
-                    nt2_off = NTDLL_OFF + NTMAPVIEWOFSECTION_2;
-                    nt3_off = NTDLL_OFF + NTREADFILE_OFF_1;
-                    nt4_off = NTDLL_OFF + NTREADFILE_OFF_2;
-                    sysenter_off = NTDLL_OFF + NTSYSENTER_OFF;
-                    sysret_off = NTDLL_OFF + NTSYSRET_OFF;
-#endif
-                }
-                break;
-
-            case UNLOAD_DLL_DEBUG_EVENT:
-                deregister_lib(de.u.UnloadDll);
-                break;
-
-            case EXIT_THREAD_DEBUG_EVENT:
-                d_print("Exiting thread\n");
-                deregister_thread(de.dwThreadId, de.u.CreateThread.hThread);
-                my_trace->threads[de.dwThreadId].alive = 0x0;
-
-                if(my_trace->threads[de.dwThreadId].handle != 0x0) 
-                    CloseHandle(my_trace->threads[de.dwThreadId].handle);
-
-                my_trace->threads[de.dwThreadId].handle = 0x0;
-                my_trace->threads[de.dwThreadId].open = 0x0;
-                break;
-
-            case EXIT_PROCESS_DEBUG_EVENT:
-                d_print("Exiting process\n");
-                HandlerRoutine(0x0);
-                break;
-
-        }
-
-        ContinueDebugEvent(de.dwProcessId, de.dwThreadId, status);
-    }
-
-
-    CloseHandle(file);
-    CloseHandle(modifications);
-    if(log) fclose(log);
-
-    return 0;
-}
 

@@ -106,6 +106,8 @@
 #define CMD_SET_NAME            "SN"
 #define CMD_SET_IN_DIRECTORY    "SD"
 #define CMD_SET_OUT_DIRECTORY   "Sd"
+#define CMD_SET_OUT_PREFIX      "Sp"
+#define CMD_PREPARE_TRACE       "PT"
 #define CMD_SET_MARKER_1        "M1"
 #define CMD_SET_MARKER_2        "M2"
 #define CMD_START_DEBUG         "sd"
@@ -230,6 +232,22 @@ typedef struct _LIB_ENTRY
     char lib_path[MAX_NAME];
 } LIB_ENTRY;
 
+/* handling syscalls */
+typedef struct OUT_ARGUMENT_
+{
+    DWORD off;
+    DWORD size;
+    char off_location;
+    char size_location;
+    DWORD eax_val_success;
+} OUT_ARGUMENT;
+
+typedef struct OUT_LOCATION_
+{
+    DWORD off;
+    DWORD size;
+} OUT_LOCATION;
+
 typedef struct TRACE_CONFIG_
 {
     /* basic stuff */
@@ -296,23 +314,32 @@ typedef struct TRACE_CONFIG_
 
     /* output streams */
     FILE* log;
-    FILE* file;
-    FILE* modifications;
+    FILE* trace;
+    FILE* mods;
+    FILE* dump;
+    FILE* ini;
     SOCKET socket;
 
     /* paths */
     char path[MAX_LINE];
     char cur_path[MAX_LINE];
     int path_i;
-    char dumpPath[MAX_LINE];
-    char iniPath[MAX_LINE];
-    char modPath[MAX_LINE];
-    wchar_t filePath[MAX_LINE];
-    char research_dir[MAX_LINE];
+
+    char in_research_dir[MAX_LINE];
+    char in_sample_path[MAX_LINE];
+
     char out_dir[MAX_LINE];
-    char sample_path[MAX_LINE];
+    char out_prefix[MAX_LINE];
+    unsigned out_postfix;
+
+    char out_trace[MAX_LINE];
+    char out_dump[MAX_LINE];
+    char out_ini[MAX_LINE];
+    char out_mods[MAX_LINE];
+
     char process_fname[MAX_NAME];
    
+    
     /* offsets */
     DWORD img_base;
     DWORD nt1_off;
@@ -336,23 +363,13 @@ typedef struct TRACE_CONFIG_
     /* functions & reactions */
     TRACE_CONFIG_EXTENDED* extended;
 
+    /* handling syscalls */
+    OUT_ARGUMENT last_arg = {0x0, 0x0, LOCATION_END, LOCATION_END, 0x0};
+    OUT_LOCATION last_location = {0x0, 0x0};
+    OUT_ARGUMENT syscall_out_args[MAX_SYSCALL_ENTRIES][MAX_SYSCALL_OUT_ARGS];
+    OUT_LOCATION syscall_out_args_dump_list[MAX_SYSCALL_OUT_ARGS];
+
 } TRACE_CONFIG;
-
-/* handling syscalls */
-typedef struct OUT_ARGUMENT_
-{
-    DWORD off;
-    DWORD size;
-    char off_location;
-    char size_location;
-    DWORD eax_val_success;
-} OUT_ARGUMENT;
-
-typedef struct OUT_LOCATION_
-{
-    DWORD off;
-    DWORD size;
-} OUT_LOCATION;
 
 /* debugging structures */
 typedef struct _CREATE_THREAD_DEBUG_INFO2

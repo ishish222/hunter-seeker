@@ -711,6 +711,16 @@ class TraceController(object):
         self.last_report, self.last_answer = self.recv_report_active()
         return 
 
+    def configure_out_dir(self, filee):
+        self.send_command_active("Sd %s" % filee)
+        self.last_report, self.last_answer = self.recv_report_active()
+        return 
+
+    def configure_out_prefix(self, filee):
+        self.send_command_active("Sp %s" % filee)
+        self.last_report, self.last_answer = self.recv_report_active()
+        return 
+
     def set_sample_pname(self, pname):
         self.send_command_active("SP %s" % pname)
         self.last_report, self.last_answer = self.recv_report_active()

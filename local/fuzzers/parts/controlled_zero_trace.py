@@ -24,8 +24,9 @@ ListLibs2 = statemachine.State()
 ListLibs3 = statemachine.State()
 TracerConfigureMarkers = statemachine.State()
 TracerActivateMarkers = statemachine.State()
-TracerConfigureInDir= statemachine.State()
-TracerConfigureOutDir= statemachine.State()
+TracerConfigureInDir = statemachine.State()
+TracerConfigureOutDir = statemachine.State()
+TracerConfigureOutPrefix = statemachine.State()
 TracerConfigureSample = statemachine.State()
 TracerDebugSample = statemachine.State()
 TracerDebugContinue = statemachine.State()
@@ -189,8 +190,12 @@ TracerConfigureInDir.name = "Configuring in dir"
 TracerConfigureInDir.consequence = TracerConfigureMarkers
 TracerConfigureInDir.executing_routine = usualparts.tracer_parts.tracer_configure_in_dir
 
+TracerConfigureOutPrefix.name = "Configuring out prefix"
+TracerConfigureOutPrefix.consequence = TracerConfigureInDir
+TracerConfigureOutPrefix.executing_routine = usualparts.tracer_parts.tracer_configure_out_prefix
+
 TracerConfigureOutDir.name = "Configuring out dir"
-TracerConfigureOutDir.consequence = TracerConfigureInDir
+TracerConfigureOutDir.consequence = TracerConfigureOutPrefix
 TracerConfigureOutDir.executing_routine = usualparts.tracer_parts.tracer_configure_out_dir
 
 TracerConfigureSample.name = "Configuring sample"
