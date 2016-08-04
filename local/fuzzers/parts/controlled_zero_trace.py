@@ -33,6 +33,7 @@ TracerDebugContinue1s = statemachine.State()
 TracerDebugContinue3s = statemachine.State()
 TracerDebugContinue1s2 = statemachine.State()
 TracerDebugContinue1s3 = statemachine.State()
+TracerDebugContinueInf = statemachine.State()
 ListTebs = statemachine.State()
 ReadEAX = statemachine.State()
 ReadESP2 = statemachine.State()
@@ -46,6 +47,7 @@ ReadEAX2 = statemachine.State()
 ReadEAX3 = statemachine.State()
 ListMarkers = statemachine.State()
 ListBpts = statemachine.State()
+Decision = statemachine.State()
 
 DefaultShutdown = dm.ShutdownSequence
 
@@ -55,16 +57,24 @@ Start.name = "Start"
 Start.consequence = dm.PrintLogo
 
 def decision():
-    import globs
     options = globs.state.options
 
+    print "received signal"
     print globs.state.ret
 
-    return WaitForever
+    return TracerDebugContinueInf
+
+Decision.name = "Making decision"
+Decision.consequence = None
+Decision.choosing_consequence = decision
+Decision.executing_routine = usualparts.other_parts.wait_for_keypress
+
+TracerDebugContinueInf.name = "Continuing"
+TracerDebugContinueInf.consequence = Decision
+TracerDebugContinueInf.executing_routine = usualparts.tracer_parts.tracer_debug_continue
 
 WaitForever.name = "Waiting forever"
-WaitForever.consequence = None
-WaitForever.choosing_consequence = decision
+WaitForever.consequence = TracerDebugContinueInf
 WaitForever.executing_routine = usualparts.other_parts.wait_for_keypress
 
 ListMarkers.name = "Listing markers"
@@ -138,12 +148,12 @@ TracerDebugContinue1s3.consequence = ListTebs
 TracerDebugContinue1s3.executing_routine = usualparts.tracer_parts.tracer_debug_continue_1_second
 
 WaitKeypress2.name = "Waiting for ketpress2"
-#WaitKeypress2.consequence = TracerDebugContinue1s3
 WaitKeypress2.consequence = ListTebs
 WaitKeypress2.executing_routine = usualparts.other_parts.wait_for_keypress
 
 ListLibs2.name = "Listing libs"
-ListLibs2.consequence = WaitKeypress2
+#ListLibs2.consequence = WaitKeypress2
+ListLibs2.consequence = ListTebs
 ListLibs2.executing_routine = usualparts.tracer_parts.tracer_list_libs
 
 TracerDebugContinue1s2.name = "Get the rest of events"
@@ -155,7 +165,8 @@ WaitKeypress.consequence = TracerDebugContinue1s2
 WaitKeypress.executing_routine = usualparts.other_parts.wait_for_keypress
 
 ListLibs1.name = "Listing libs"
-ListLibs1.consequence = WaitKeypress
+#ListLibs1.consequence = WaitKeypress
+ListLibs1.consequence = TracerDebugContinue1s2
 ListLibs1.executing_routine = usualparts.tracer_parts.tracer_list_libs
 
 TracerDebugContinue1s.name = "Get PROCESS_CREATED"

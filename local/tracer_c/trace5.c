@@ -2507,6 +2507,14 @@ int get_pending_events()
         case REPORT_EXCEPTION:
             sprintf(buffer2, "REPORT_EXCEPTION\n");
             break;
+
+        case REPORT_PROCESS_EXIT:
+            sprintf(buffer2, "REPORT_PROCESS_EXIT\n");
+            break;
+
+        default:
+            sprintf(buffer2, "REPORT_OTHER\n");
+            break;
     }
 
     printf("%s", my_trace->report_buffer);
@@ -2569,6 +2577,10 @@ int continue_routine(DWORD time)
             sprintf(buffer2, "REPORT_EXCEPTION\n");
             break;
         
+        case REPORT_PROCESS_EXIT:
+            sprintf(buffer2, "REPORT_PROCESS_EXIT\n");
+            break;
+
         default:
             sprintf(buffer2, "REPORT_OTHER\n");
             break;
