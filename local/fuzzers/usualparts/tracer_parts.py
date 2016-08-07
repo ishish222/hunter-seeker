@@ -19,6 +19,8 @@ def trace_controller_activate_prev_tracer():
     write_socket(options.s, "tc_avtivate_prev");
     response, _, _ = read_socket(options.s)
 
+    globs.state.ret = response
+
     return
 
 def trace_controller_activate_next_tracer():
@@ -28,6 +30,8 @@ def trace_controller_activate_next_tracer():
     
     write_socket(options.s, "tc_activate_next");
     response, _, _ = read_socket(options.s)
+
+    globs.state.ret = response
 
     return
 
@@ -42,6 +46,8 @@ def tracer_configure_in_dir():
     else:
         print "Error, no research dir"
         exit(1)
+    globs.state.ret = response
+
     return
 
 def tracer_configure_out_dir():
@@ -55,6 +61,8 @@ def tracer_configure_out_dir():
     else:
         print "Error, no research dir"
         exit(1)
+    globs.state.ret = response
+
     return
 
 def tracer_configure_out_prefix():
@@ -68,6 +76,8 @@ def tracer_configure_out_prefix():
     else:
         print "Error, no research dir"
         exit(1)
+    globs.state.ret = response
+
     return
 
 def tracer_configure_sample():
@@ -83,6 +93,8 @@ def tracer_configure_sample():
         write_socket(options.s, "tracer_configure_sample_pname %s" % options.sample_options.sample_process);
         response, _, _ = read_socket(options.s)
 
+    globs.state.ret = response
+
     return
 
 def tracer_configure_markers():
@@ -93,6 +105,8 @@ def tracer_configure_markers():
     write_socket(options.s, "tracer_configure_markers %s" % (options.sample_options.markers));
     response, _, _ = read_socket(options.s)
 
+    globs.state.ret = response
+
     return
 
 def tracer_activate_markers():
@@ -102,6 +116,8 @@ def tracer_activate_markers():
     
     write_socket(options.s, "tracer_activate_markers");
     response, _, _ = read_socket(options.s)
+
+    globs.state.ret = response
 
     return
 
@@ -115,6 +131,8 @@ def tracer_configure_marker_st_end():
     write_socket(options.s, "tracer_configure_marker_end %s %s" % (options.sample_options.end_mod, options.sample_options.end_addr));
     response, _, _ = read_socket(options.s)
 
+    globs.state.ret = response
+
     return
 
 def tracer_debug_sample():
@@ -124,6 +142,8 @@ def tracer_debug_sample():
     
     write_socket(options.s, "tracer_debug_sample");
     response, _, _ = read_socket(options.s)
+
+    globs.state.ret = response
 
     return
 
@@ -135,6 +155,8 @@ def tracer_debug_continue():
     write_socket(options.s, "tracer_debug_continue");
     response, _, _ = read_socket(options.s)
 
+    globs.state.ret = response
+
     return
 
 def tracer_debug_continue_1_second():
@@ -144,6 +166,8 @@ def tracer_debug_continue_1_second():
     
     write_socket(options.s, "tracer_debug_continue_time 1000");
     response, _, _ = read_socket(options.s)
+
+    globs.state.ret = response
 
     return
 
@@ -155,6 +179,8 @@ def tracer_debug_continue_10_seconds():
     write_socket(options.s, "tracer_debug_continue_time 10000");
     response, _, _ = read_socket(options.s)
 
+    globs.state.ret = response
+
     return
 
 def tracer_list_markers():
@@ -164,6 +190,8 @@ def tracer_list_markers():
     
     write_socket(options.s, "tracer_list_markers");
     response, _, _ = read_socket(options.s)
+
+    globs.state.ret = response
 
     return
 
@@ -175,6 +203,8 @@ def tracer_list_bpts():
     write_socket(options.s, "tracer_list_bpts");
     response, _, _ = read_socket(options.s)
 
+    globs.state.ret = response
+
     return
 
 def tracer_list_libs():
@@ -184,6 +214,8 @@ def tracer_list_libs():
     
     write_socket(options.s, "tracer_list_libs");
     response, _, _ = read_socket(options.s)
+
+    globs.state.ret = response
 
     return
 
@@ -195,6 +227,8 @@ def tracer_list_tebs():
     write_socket(options.s, "tracer_list_tebs");
     response, _, _ = read_socket(options.s)
 
+    globs.state.ret = response
+
     return
 
 def tracer_read_stack(args = 5):
@@ -204,6 +238,8 @@ def tracer_read_stack(args = 5):
     
     write_socket(options.s, "tracer_read_stack %d" % args);
     response, _, _ = read_socket(options.s)
+
+    globs.state.ret = response
 
     return
 
@@ -235,6 +271,8 @@ def tracer_write_dword(args):
     write_socket(options.s, "tracer_write_dword 0x%08x 0x%08x" % args);
     response, _, _ = read_socket(options.s)
 
+    globs.state.ret = response
+
     return
 
 def tracer_read_register(args="EIP"):
@@ -256,6 +294,8 @@ def tracer_write_register(args):
     
     write_socket(options.s, "tracer_write_register %s 0x%08x" % args);
     response, _, _ = read_socket(options.s)
+
+    globs.state.ret = response
 
     return
 

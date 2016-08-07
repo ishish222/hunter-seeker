@@ -1823,6 +1823,7 @@ int send_report()
     strcat(line2, my_trace->report_buffer);
     strcat(line2, rep_chars2);
 
+    d_print("Sending buffer: %s\n", line2);
     send(my_trace->socket, line2, strlen(line2), 0x0);
 
     return 0x0;
@@ -2255,13 +2256,6 @@ int process_last_event()
                 status = DBG_EXCEPTION_NOT_HANDLED;
                 my_trace->last_exception = my_trace->last_event.u.Exception.ExceptionRecord;
 
-                if(my_trace->last_exception.ExceptionCode != EXCEPTION_SINGLE_STEP)
-                {
-                    d_print("Exception: 0x%08x\n", my_trace->last_exception.ExceptionCode);
-                    d_print("at: 0x%08x\n", my_trace->last_exception.ExceptionAddress);
-                    d_print("First chance: 0x%08x\n", my_trace->last_event.u.Exception.dwFirstChance);
-                }
-
                 switch(my_trace->last_exception.ExceptionCode)
                 {
                     case EXCEPTION_SINGLE_STEP:
@@ -2391,6 +2385,49 @@ int process_last_event()
 
 }
 
+int create_report(int last_report)
+{
+    char buffer2[MAX_LINE];
+    char buffer3[MAX_LINE];
+
+    switch(last_report)
+    {
+        case REPORT_PROCESS_CREATED:
+            sprintf(buffer2, "REPORT_PROCESS_CREATED\n");
+            break;
+            
+        case REPORT_BREAKPOINT:
+            sprintf(buffer2, "%s\n", my_trace->last_marker->id);
+            break;
+            
+        case REPORT_EXCEPTION:
+            EXCEPTION_RECORD er;
+            er = my_trace->last_event.u.Exception.ExceptionRecord;
+
+            sprintf(buffer2, "REPORT_EXCEPTION\n");
+
+            sprintf(buffer3, "Exception: 0x%08x\n", er.ExceptionCode);            
+            strcat(buffer2, buffer3);
+            sprintf(buffer3, "at: 0x%08x\n", er.ExceptionAddress);
+            strcat(buffer2, buffer3);
+            sprintf(buffer3, "First chance: 0x%08x\n", my_trace->last_event.u.Exception.dwFirstChance);
+            strcat(buffer2, buffer3);
+
+            break;
+        
+        case REPORT_PROCESS_EXIT:
+            sprintf(buffer2, "REPORT_PROCESS_EXIT\n");
+            break;
+
+        default:
+            sprintf(buffer2, "REPORT_OTHER\n");
+            break;
+    }
+    strcpy(my_trace->report_buffer, buffer2);
+
+    return 0x0;
+}
+
 int get_pending_events()
 {
     int last_report;
@@ -2435,30 +2472,10 @@ int get_pending_events()
         ContinueDebugEvent(my_trace->last_event.dwProcessId, my_trace->last_event.dwThreadId, status);
     }
 
-    switch(last_report)
-    {
-        case REPORT_PROCESS_CREATED:
-            sprintf(buffer2, "REPORT_PROCESS_CREATED\n");
-            break;
-            
-        case REPORT_BREAKPOINT:
-            sprintf(buffer2, "%s\n", my_trace->last_marker->id);
-            break;
-            
-        case REPORT_EXCEPTION:
-            sprintf(buffer2, "REPORT_EXCEPTION\n");
-            break;
 
-        case REPORT_PROCESS_EXIT:
-            sprintf(buffer2, "REPORT_PROCESS_EXIT\n");
-            break;
+    create_report(last_report);
+    printf("Report buffer: %s\n", my_trace->report_buffer);
 
-        default:
-            sprintf(buffer2, "REPORT_OTHER\n");
-            break;
-    }
-
-    printf("%s", my_trace->report_buffer);
     my_trace->report_code = last_report;
 
     return last_report;
@@ -2505,30 +2522,8 @@ int continue_routine(DWORD time)
         ContinueDebugEvent(my_trace->last_event.dwProcessId, my_trace->last_event.dwThreadId, status);
     }
 
-    switch(last_report)
-    {
-        case REPORT_PROCESS_CREATED:
-            sprintf(buffer2, "REPORT_PROCESS_CREATED\n");
-            break;
-            
-        case REPORT_BREAKPOINT:
-            sprintf(buffer2, "%s\n", my_trace->last_marker->id);
-            break;
-            
-        case REPORT_EXCEPTION:
-            sprintf(buffer2, "REPORT_EXCEPTION\n");
-            break;
-        
-        case REPORT_PROCESS_EXIT:
-            sprintf(buffer2, "REPORT_PROCESS_EXIT\n");
-            break;
-
-        default:
-            sprintf(buffer2, "REPORT_OTHER\n");
-            break;
-    }
-    strcpy(my_trace->report_buffer, buffer2);
-    printf("%s", my_trace->report_buffer);
+    create_report(last_report);
+    printf("Report buffer: %s\n", my_trace->report_buffer);
 
     my_trace->report_code = last_report;
 
