@@ -11,6 +11,50 @@ report = common.report
 write_socket = common.write_socket
 read_socket = common.read_socket
 
+def tracer_prepare_trace():
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+    
+    write_socket(options.s, "tracer_prepare_trace");
+    response, _, _ = read_socket(options.s)
+
+    globs.state.ret = response
+    return
+
+def tracer_start_trace():
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+    
+    write_socket(options.s, "tracer_start_trace");
+    response, _, _ = read_socket(options.s)
+
+    globs.state.ret = response
+    return
+
+def tracer_start_trace_debug():
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+    
+    write_socket(options.s, "tracer_start_trace_debug");
+    response, _, _ = read_socket(options.s)
+
+    globs.state.ret = response
+    return
+
+def tracer_end_trace():
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+    
+    write_socket(options.s, "tracer_end_trace");
+    response, _, _ = read_socket(options.s)
+
+    globs.state.ret = response
+    return
+
 def trace_controller_activate_prev_tracer():
     options = globs.state.options
     state = globs.state

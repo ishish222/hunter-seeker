@@ -2,6 +2,7 @@
 SRC=$1
 DST=$2
 OFFSET=$3
+OFFSET=32256
 TMPDIR=$(mktemp -d)
 echo "Extrating from $SRC into $DST"
 mkdir -p $DST

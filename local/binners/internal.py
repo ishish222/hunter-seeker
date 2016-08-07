@@ -1171,6 +1171,30 @@ def execute(cmds):
             writePipe(ext_pipe, "tracer_debug_continue_time OK")
             ok(ext_pipe)
 
+        elif(cmd == "tracer_prepare_trace"):
+            trace_controller.prepare_trace()
+            writePipe(ext_pipe, "%s" % trace_controller.last_answer)
+            writePipe(ext_pipe, "tracer_start_trace OK")
+            ok(ext_pipe)
+
+        elif(cmd == "tracer_start_trace"):
+            trace_controller.start_trace()
+            writePipe(ext_pipe, "%s" % trace_controller.last_answer)
+            writePipe(ext_pipe, "tracer_start_trace OK")
+            ok(ext_pipe)
+
+        elif(cmd == "tracer_start_trace_debug"):
+            trace_controller.start_trace()
+            writePipe(ext_pipe, "%s" % trace_controller.last_answer)
+            writePipe(ext_pipe, "tracer_start_trace_debug OK")
+            ok(ext_pipe)
+
+        elif(cmd == "tracer_stop_trace"):
+            trace_controller.stop_trace()
+            writePipe(ext_pipe, "%s" % trace_controller.last_answer)
+            writePipe(ext_pipe, "tracer_stop_trace OK")
+            ok(ext_pipe)
+
         elif(cmd == "tracer_list_markers"):
             trace_controller.list_markers()
             writePipe(ext_pipe, "%s" % trace_controller.last_answer)

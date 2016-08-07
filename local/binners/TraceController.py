@@ -741,6 +741,26 @@ class TraceController(object):
         self.last_report, self.last_answer = self.recv_report_active()
         return 
 
+    def prepare_trace(self):
+        self.send_command_active("PT")
+        self.last_report, self.last_answer = self.recv_report_active()
+        return 
+
+    def start_trace(self):
+        self.send_command_active("ET")
+        self.last_report, self.last_answer = self.recv_report_active()
+        return 
+
+    def start_trace_debug(self):
+        self.send_command_active("ED")
+        self.last_report, self.last_answer = self.recv_report_active()
+        return 
+
+    def stop_trace(self):
+        self.send_command_active("DT")
+        self.last_report, self.last_answer = self.recv_report_active()
+        return 
+
     def list_bpts(self):
         self.send_command_active("lb")
         self.last_report, self.last_answer = self.recv_report_active()

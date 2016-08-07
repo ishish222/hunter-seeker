@@ -245,6 +245,7 @@ def register_signals():
     import signal
     import common
     # przeszkadza jednak, nie mozna zakonczyc czasem
+    signal.signal(signal.SIGINT, sigkill_handler)
     signal.signal(signal.SIGUSR1, sigkill_handler)
     signal.signal(signal.SIGHUP, sigkill_handler)
 

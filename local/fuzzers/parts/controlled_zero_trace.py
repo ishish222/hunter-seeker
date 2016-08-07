@@ -35,6 +35,8 @@ TracerDebugContinue3s = statemachine.State()
 TracerDebugContinue1s2 = statemachine.State()
 TracerDebugContinue1s3 = statemachine.State()
 TracerDebugContinueInf = statemachine.State()
+TracerStartTrace = statemachine.State()
+TracerEndTrace = statemachine.State()
 ListTebs = statemachine.State()
 ReadEAX = statemachine.State()
 ReadESP2 = statemachine.State()
@@ -50,6 +52,7 @@ ListMarkers = statemachine.State()
 ListBpts = statemachine.State()
 Decision = statemachine.State()
 TracerDebugContinueUnhandledInf = statemachine.State()
+TracerPrepareTrace = statemachine.State()
 
 DefaultShutdown = dm.ShutdownSequence
 
@@ -64,9 +67,21 @@ def decision():
     print "received signal"
     print globs.state.ret[1:3]
 
+    if(globs.state.ret[1:3] == "RR"):
+        print "Decision is: Continuing"
+        return TracerDebugContinueInf
+
     if(globs.state.ret[1:3] == "RE"):
         print "Decision is: Continuing UH"
         return TracerDebugContinueUnhandledInf
+
+    if(globs.state.ret[1:3] == "RB"):
+        if(globs.state.ret[3:5] == "ST"):
+            print "Decision is: StartTrace"
+            return TracerStartTrace
+        if(globs.state.ret[3:5] == "EN"):
+            print "Decision is: EndTrace"
+            return TracerEndTrace
 
     print "Decision is: Continuing"
     return TracerDebugContinueInf
@@ -85,112 +100,28 @@ TracerDebugContinueInf.name = "Continuing"
 TracerDebugContinueInf.consequence = Decision
 TracerDebugContinueInf.executing_routine = usualparts.tracer_parts.tracer_debug_continue
 
-WaitForever.name = "Waiting forever"
-WaitForever.consequence = TracerDebugContinueInf
-WaitForever.executing_routine = usualparts.other_parts.wait_for_keypress
+TracerStartTrace.name = "Starting trace"
+TracerStartTrace.consequence = TracerDebugContinueInf
+TracerStartTrace.executing_routine = usualparts.tracer_parts.tracer_start_trace_debug
 
-ListMarkers.name = "Listing markers"
-ListMarkers.consequence = WaitForever
-ListMarkers.executing_routine = usualparts.tracer_parts.tracer_list_markers
-
-ListBpts.name = "Listing bpts"
-ListBpts.consequence = ListMarkers
-ListBpts.executing_routine = usualparts.tracer_parts.tracer_list_bpts
-
-ListLibs3.name = "Listing libs"
-ListLibs3.consequence = ListBpts
-ListLibs3.executing_routine = usualparts.tracer_parts.tracer_list_libs
-
-TracerDebugContinue3s.name = "Wait for all libs"
-TracerDebugContinue3s.consequence = ListLibs3
-TracerDebugContinue3s.executing_routine = usualparts.tracer_parts.tracer_debug_continue_10_seconds
-
-ReadStack.name = "Reading stack"
-#ReadStack.consequence = TracerDebugContinue3s
-ReadStack.consequence = ListLibs3
-ReadStack.args = 10
-ReadStack.executing_routine = usualparts.tracer_parts.tracer_read_stack
-
-ReadEAX2.name = "Reading EAX"
-ReadEAX2.consequence = ReadStack
-ReadEAX2.args = "EAX"
-ReadEAX2.executing_routine = usualparts.tracer_parts.tracer_read_register
-
-WriteEAX.name = "Writing EAX"
-WriteEAX.consequence = ReadEAX2
-WriteEAX.args = ("EAX", 0x12345678)
-WriteEAX.executing_routine = usualparts.tracer_parts.tracer_write_register
-
-ReadMemory2.name = "Reading Memory"
-ReadMemory2.consequence = WriteEAX
-ReadMemory2.args = None
-ReadMemory2.executing_routine = usualparts.tracer_parts.tracer_read_dword
-
-ReadESP3.name = "Reading ESP"
-ReadESP3.consequence = ReadMemory2
-ReadESP3.args = "ESP"
-ReadESP3.executing_routine = usualparts.tracer_parts.tracer_read_register
-
-WriteMemory.name = "Writing Memory"
-WriteMemory.consequence = ReadESP3
-WriteMemory.args = (None, 0xffffffff)
-WriteMemory.executing_routine = usualparts.tracer_parts.tracer_write_dword
-
-ReadESP2.name = "Reading ESP"
-ReadESP2.consequence = WriteMemory
-ReadESP2.args = "ESP"
-ReadESP2.executing_routine = usualparts.tracer_parts.tracer_read_register
-
-ReadMemory.name = "Reading Memory"
-ReadMemory.consequence = ReadESP2
-ReadMemory.args = None
-ReadMemory.executing_routine = usualparts.tracer_parts.tracer_read_dword
-
-ReadEAX.name = "Reading ESP"
-ReadEAX.consequence = ReadMemory
-ReadEAX.args = "ESP"
-ReadEAX.executing_routine = usualparts.tracer_parts.tracer_read_register
-
-ListTebs.name = "Listing TEBs"
-ListTebs.consequence = ReadEAX
-ListTebs.executing_routine = usualparts.tracer_parts.tracer_list_tebs
-
-TracerDebugContinue1s3.name = "Get the rest of events"
-TracerDebugContinue1s3.consequence = ListTebs
-TracerDebugContinue1s3.executing_routine = usualparts.tracer_parts.tracer_debug_continue_1_second
-
-WaitKeypress2.name = "Waiting for ketpress2"
-WaitKeypress2.consequence = ListTebs
-WaitKeypress2.executing_routine = usualparts.other_parts.wait_for_keypress
-
-ListLibs2.name = "Listing libs"
-#ListLibs2.consequence = WaitKeypress2
-ListLibs2.consequence = ListTebs
-ListLibs2.executing_routine = usualparts.tracer_parts.tracer_list_libs
-
-TracerDebugContinue1s2.name = "Get the rest of events"
-TracerDebugContinue1s2.consequence = ListLibs2
-TracerDebugContinue1s2.executing_routine = usualparts.tracer_parts.tracer_debug_continue
+TracerEndTrace.name = "Ending trace"
+TracerEndTrace.consequence = TracerDebugContinueInf
+TracerEndTrace.executing_routine = usualparts.tracer_parts.tracer_end_trace
 
 WaitKeypress.name = "Waiting for ketpress"
-WaitKeypress.consequence = TracerDebugContinue1s2
+WaitKeypress.consequence = TracerDebugContinueInf
 WaitKeypress.executing_routine = usualparts.other_parts.wait_for_keypress
 
-ListLibs1.name = "Listing libs"
-#ListLibs1.consequence = WaitKeypress
-ListLibs1.consequence = TracerDebugContinue1s2
-ListLibs1.executing_routine = usualparts.tracer_parts.tracer_list_libs
-
-TracerDebugContinue1s.name = "Get PROCESS_CREATED"
-TracerDebugContinue1s.consequence = ListLibs1
-TracerDebugContinue1s.executing_routine = usualparts.tracer_parts.tracer_debug_continue_1_second
-
 TracerDebugSample.name = "Debugging sample"
-TracerDebugSample.consequence = TracerDebugContinue1s
+TracerDebugSample.consequence = WaitKeypress
 TracerDebugSample.executing_routine = usualparts.tracer_parts.tracer_debug_sample
 
+TracerPrepareTrace.name = "Activate markers"
+TracerPrepareTrace.consequence = TracerDebugSample
+TracerPrepareTrace.executing_routine = usualparts.tracer_parts.tracer_prepare_trace
+
 TracerActivateMarkers.name = "Activate markers"
-TracerActivateMarkers.consequence = TracerDebugSample
+TracerActivateMarkers.consequence = TracerPrepareTrace
 TracerActivateMarkers.executing_routine = usualparts.tracer_parts.tracer_activate_markers
 
 TracerConfigureMarkers.name = "Configuring markers"

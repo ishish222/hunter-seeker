@@ -150,8 +150,12 @@ void write_memory(HANDLE handle, void* to, void* from, SIZE_T size, SIZE_T* writ
 int dec_eip(DWORD id)
 {
     int i;
+    unsigned thread_idx;
     HANDLE myHandle = (HANDLE)-0x1;
-    myHandle = my_trace->threads[id].handle;
+
+    thread_idx = my_trace->thread_map[id];
+
+    myHandle = my_trace->threads[thread_idx].handle;
     CONTEXT ctx;
     ctx.ContextFlags = CONTEXT_CONTROL;
     if(GetThreadContext(myHandle, &ctx) == 0x0)
@@ -308,7 +312,7 @@ void register_thread(DWORD tid, HANDLE handle)
         my_trace->threads[tid_pos].tid = tid;
     
         //if(my_trace->threads[tid_pos].handle == 0x0) 
-        //d_print("Registering: TID 0x%08x, handle 0x%08x\n", tid, handle);
+        d_print("Registering: TID 0x%08x, handle 0x%08x\n", tid, handle);
 
         my_trace->thread_map[tid] = tid_pos;
         my_trace->thread_count ++;
@@ -321,7 +325,7 @@ void register_thread(DWORD tid, HANDLE handle)
         tid_pos = my_trace->thread_map[tid];
 
         // do not create new, update this one
-        //d_print("Updating: TID 0x%08x, handle 0x%08x\n", tid, handle);
+        d_print("Updating: TID 0x%08x, handle 0x%08x\n", tid, handle);
         my_trace->threads[tid_pos].alive = 0x1;
         my_trace->threads[tid_pos].handle = handle;
     }
@@ -1144,24 +1148,28 @@ int set_ss(DWORD tid)
         for(i = 0x0; i< my_trace->thread_count; i++)
         {
             /* set for all */
-            cur_tid = my_trace->thread_map[i];
+            cur_tid = my_trace->threads[i].tid;
+            d_print("Setting SS for TID: 0x%08x\n", cur_tid);
             set_ss(cur_tid);
         }
     }
     else
     {
+        d_print("Enabling SS\n");
         HANDLE tHandle;
         ctx.ContextFlags = CONTEXT_CONTROL;
         tHandle = OpenThread(THREAD_GET_CONTEXT |THREAD_SET_CONTEXT | THREAD_ALL_ACCESS, 0x0, tid);
-        //tHandle = my_trace->threads[tid_pos].handle;
-        if(!tHandle) return -1;
+        if(!tHandle) 
+        {
+            d_print("Failed to open TID: 0x%08x\n", tid);
+            return -1;
+        }
 
         GetThreadContext(tHandle, &ctx);
         ctx.EFlags |= SS_FLAGS;
-//        sprintf(line, "# Enabling trap for 0x%08x\n", tid);
-//        add_to_buffer(line);
         SetThreadContext(tHandle, &ctx);
         CloseHandle(tHandle);
+        d_print("Enabled SS\n");
     }
     return 0x0;
 }
@@ -1221,7 +1229,12 @@ void ss_callback(void* data)
     char bytes[0x2];
     DWORD tid_pos;
 
-    if((my_trace->status != STATUS_DBG_STARTED) && (my_trace->status != STATUS_DBG_SCANNED)) return;
+    eip = (DWORD)(de->u.Exception.ExceptionRecord.ExceptionAddress);
+        d_print("%p\n", eip);
+    if((my_trace->status != STATUS_DBG_STARTED) && (my_trace->status != STATUS_DBG_SCANNED)) 
+    {
+        return;
+    }
 
     tid = de->dwThreadId;
     tid_pos = my_trace->thread_map[tid];
@@ -1823,7 +1836,6 @@ int send_report()
     strcat(line2, my_trace->report_buffer);
     strcat(line2, rep_chars2);
 
-    d_print("Sending buffer: %s\n", line2);
     send(my_trace->socket, line2, strlen(line2), 0x0);
 
     return 0x0;
@@ -2260,7 +2272,6 @@ int process_last_event()
                 {
                     case EXCEPTION_SINGLE_STEP:
                         /* we are authorized to handle this */
-                        printf("SS\n");
                         ss_callback((void*)&my_trace->last_event);
                         set_ss(my_trace->last_event.dwThreadId);
                         my_trace->last_win_status = DBG_CONTINUE;
@@ -2279,7 +2290,7 @@ int process_last_event()
 
                         for(i = 0x0; i< my_trace->marker_count; i++)
                         {
-                            d_print("Comparing 0x%08x and 0x%08x\n", bp_addr, my_trace->markers[i].offset);
+                            d_print("Comparing 0x%08x and 0x%08x\n", bp_addr, my_trace->markers[i].real_offset);
                             if(my_trace->markers[i].real_offset == bp_addr)
                             {
                                 /* this is our, we need to handle & report */
@@ -2297,7 +2308,6 @@ int process_last_event()
                         /* this is not our responsibility, inform TracerController and wait for orders */
                         register_exception(my_trace->last_event.dwThreadId, my_trace->last_exception);
                         ss_callback((void*)&my_trace->last_event);
-                        //set_ss(my_trace->last_event.dwThreadId);
                         return REPORT_EXCEPTION;
                         break;
                 }
@@ -2307,7 +2317,6 @@ int process_last_event()
                 /* we are authorized to handle this */
 
                 register_thread(my_trace->last_event.dwThreadId, my_trace->last_event.u.CreateThread.hThread);
-                //set_ss(my_trace->last_event.dwThreadId);
                 my_trace->last_win_status = DBG_CONTINUE;
                 return REPORT_CONTINUE;
                 break;
@@ -2698,21 +2707,23 @@ int handle_cmd(char* cmd)
         sprintf(buffer2, "%s\\%s.mod", my_trace->out_dir, my_trace->out_prefix);
         strcpy(my_trace->out_mods, buffer2);
         my_trace->mods = fopen(my_trace->out_mods, "wb");
-        d_print("Mods file: %s\n", my_trace->out_dump);
+        d_print("Mods file: %s\n", my_trace->out_mods);
         
         /* ini */ 
         strcpy(buffer2, "");
         sprintf(buffer2, "%s\\%s.ini", my_trace->out_dir, my_trace->out_prefix);
         strcpy(my_trace->out_ini, buffer2);
         my_trace->ini = fopen(my_trace->out_ini, "w");
-        d_print("Ini file: %s\n", my_trace->out_dump);
+        d_print("Ini file: %s\n", my_trace->out_ini);
     
+        send_report();
         my_trace->status = STATUS_CONFIGURED;
     }
     else if(!strncmp(cmd, CMD_ENABLE_TRACE, 2))
     {
         my_trace->status = STATUS_DBG_STARTED;
         ss_callback((void*)&my_trace->last_event);
+        set_ss(0x0);
         printf("Tracing enabled\n");
         send_report();
     }
@@ -2772,48 +2783,24 @@ int handle_cmd(char* cmd)
     }
     else if(!strncmp(cmd, CMD_LIST_TEBS, 2))
     {
-        if(my_trace->status != STATUS_CONFIGURED)
-        {
-            printf("Trace is not prepared\n");
-            goto ret;
-        }
-
         list_tebs();
         send_report();   
     
     }
     else if(!strncmp(cmd, CMD_LIST_MARKERS, 2))
     {
-        if(my_trace->status != STATUS_CONFIGURED)
-        {
-            printf("Trace is not prepared\n");
-            goto ret;
-        }
-
         list_markers();
         send_report();   
     
     }
     else if(!strncmp(cmd, CMD_LIST_BPTS, 2))
     {
-        if(my_trace->status != STATUS_CONFIGURED)
-        {
-            printf("Trace is not prepared\n");
-            goto ret;
-        }
-
         list_bpts();
         send_report();   
     
     }
     else if(!strncmp(cmd, CMD_LIST_LIBS, 2))
     {
-        if(my_trace->status != STATUS_CONFIGURED)
-        {
-            printf("Trace is not prepared\n");
-            goto ret;
-        }
-
         list_libs();
         send_report();   
     
@@ -2822,12 +2809,6 @@ int handle_cmd(char* cmd)
     {
         DWORD addr;
         char* cmd_;
-
-        if(my_trace->status != STATUS_CONFIGURED)
-        {
-            printf("Trace is not prepared\n");
-            goto ret;
-        }
 
         cmd_ = strtok(cmd, " ");
         addr = strtol(strtok(0x0, " "), 0x0, 0x10);
@@ -2844,12 +2825,6 @@ int handle_cmd(char* cmd)
         DWORD addr;
         DWORD val;
 
-        if(my_trace->status != STATUS_CONFIGURED)
-        {
-            printf("Trace is not prepared\n");
-            goto ret;
-        }
-
         cmd_ = strtok(cmd, " ");
         addr = strtol(strtok(0x0, " "), 0x0, 0x10);
         val = strtol(strtok(0x0, " "), 0x0, 0x10);
@@ -2865,12 +2840,6 @@ int handle_cmd(char* cmd)
         unsigned tid_id;
         char* reg;
 
-        if(my_trace->status != STATUS_CONFIGURED)
-        {
-            printf("Trace is not prepared\n");
-            goto ret;
-        }
-
         reg = strtok(cmd, " ");
         tid_id = strtol(strtok(0x0, " "), 0x0, 0x10);
         reg = strtok(0x0, " ");
@@ -2884,12 +2853,6 @@ int handle_cmd(char* cmd)
         unsigned tid_id;
         char* reg;
         char* data;
-
-        if(my_trace->status != STATUS_CONFIGURED)
-        {
-            printf("Trace is not prepared\n");
-            goto ret;
-        }
 
         reg = strtok(cmd, " ");
         tid_id = strtol(strtok(0x0, " "), 0x0, 0x10);
@@ -2906,12 +2869,6 @@ int handle_cmd(char* cmd)
         unsigned tid_id;
         DWORD count;
 
-        if(my_trace->status != STATUS_CONFIGURED)
-        {
-            printf("Trace is not prepared\n");
-            goto ret;
-        }
-
         data = strtok(cmd, " ");
         tid_id = strtol(strtok(0x0, " "), 0x0, 0x10);
         count = strtol(strtok(0x0, " "), 0x0, 0x10);
@@ -2927,11 +2884,6 @@ int handle_cmd(char* cmd)
         strtok(cmd, " ");
         status = strtol(strtok(0x0, " "), 0x0, 0x10);
 
-        if(my_trace->status != STATUS_CONFIGURED)
-        {
-            printf("Trace is not prepared\n");
-            goto ret;
-        }
         continue_routine(INFINITE, status);
         send_report();   
     }
@@ -2945,11 +2897,6 @@ int handle_cmd(char* cmd)
         time = strtol(strtok(0x0, " "), 0x0, 0x10);
         status = strtol(strtok(0x0, " "), 0x0, 0x10);
 
-        if(my_trace->status != STATUS_CONFIGURED)
-        {
-            printf("Trace is not prepared\n");
-            goto ret;
-        }
         continue_routine(time, status);
         send_report();   
     }
