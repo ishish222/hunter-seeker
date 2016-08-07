@@ -49,6 +49,7 @@ ReadEAX3 = statemachine.State()
 ListMarkers = statemachine.State()
 ListBpts = statemachine.State()
 Decision = statemachine.State()
+TracerDebugContinueUnhandledInf = statemachine.State()
 
 DefaultShutdown = dm.ShutdownSequence
 
@@ -61,14 +62,24 @@ def decision():
     options = globs.state.options
 
     print "received signal"
-    print globs.state.ret
+    print globs.state.ret[1:3]
 
+    if(globs.state.ret[1:3] == "RE"):
+        print "Decision is: Continuing UH"
+        return TracerDebugContinueUnhandledInf
+
+    print "Decision is: Continuing"
     return TracerDebugContinueInf
 
 Decision.name = "Making decision"
 Decision.consequence = None
 Decision.choosing_consequence = decision
 Decision.executing_routine = usualparts.other_parts.wait_for_keypress
+
+TracerDebugContinueUnhandledInf.name = "Continuing UH"
+TracerDebugContinueUnhandledInf.consequence = Decision
+TracerDebugContinueUnhandledInf.args = globs.DBG_EXCEPTION_NOT_HANDLED
+TracerDebugContinueUnhandledInf.executing_routine = usualparts.tracer_parts.tracer_debug_continue
 
 TracerDebugContinueInf.name = "Continuing"
 TracerDebugContinueInf.consequence = Decision

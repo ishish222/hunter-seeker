@@ -731,13 +731,13 @@ class TraceController(object):
         self.last_report, self.last_answer = self.recv_report_active()
         return 
 
-    def debug_continue(self):
-        self.send_command_active("cn")
+    def debug_continue(self, args):
+        self.send_command_active("cn %s" % args)
         self.last_report, self.last_answer = self.recv_report_active()
         return 
 
-    def debug_continue_time(self, time):
-        self.send_command_active("cN %s" % time)
+    def debug_continue_time(self, args):
+        self.send_command_active("cN %s" % args)
         self.last_report, self.last_answer = self.recv_report_active()
         return 
 

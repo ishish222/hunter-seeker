@@ -147,36 +147,36 @@ def tracer_debug_sample():
 
     return
 
-def tracer_debug_continue():
+def tracer_debug_continue(args = globs.DEBUG_CONTINUE):
     options = globs.state.options
     state = globs.state
     status = globs.state.status
     
-    write_socket(options.s, "tracer_debug_continue");
+    write_socket(options.s, "tracer_debug_continue %x" % args);
     response, _, _ = read_socket(options.s)
 
     globs.state.ret = response
 
     return
 
-def tracer_debug_continue_1_second():
+def tracer_debug_continue_1_second(args = globs.DEBUG_CONTINUE):
     options = globs.state.options
     state = globs.state
     status = globs.state.status
     
-    write_socket(options.s, "tracer_debug_continue_time 1000");
+    write_socket(options.s, "tracer_debug_continue_time 1000 %x" % args);
     response, _, _ = read_socket(options.s)
 
     globs.state.ret = response
 
     return
 
-def tracer_debug_continue_10_seconds():
+def tracer_debug_continue_10_seconds(args = globs.DEBUG_CONTINUE):
     options = globs.state.options
     state = globs.state
     status = globs.state.status
     
-    write_socket(options.s, "tracer_debug_continue_time 10000");
+    write_socket(options.s, "tracer_debug_continue_time 10000 %x" % args);
     response, _, _ = read_socket(options.s)
 
     globs.state.ret = response

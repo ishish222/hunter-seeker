@@ -2434,8 +2434,6 @@ int get_pending_events()
     char buffer2[MAX_NAME];
     unsigned status;
 
-    //memset(&my_trace->last_event, 0x0, sizeof(my_trace->last_event));
-
     d_print("Continuing: PID: 0x%08x, TID: 0x%08x\n", my_trace->last_event.dwProcessId, my_trace->last_event.dwThreadId);
     if(my_trace->last_event.dwProcessId == 0x0)
     {
@@ -2452,8 +2450,6 @@ int get_pending_events()
 
         WaitForDebugEvent(&(my_trace->last_event), 0x0);
         if(my_trace->last_event.dwDebugEventCode == 0x0) return REPORT_NOTHING;
-
-        //d_print("get_pending_events: dwDebugEventCode: 0x%08x\n", my_trace->last_event.dwDebugEventCode);
 
         last_report = process_last_event();
         if(last_report == REPORT_CONTINUE)
@@ -2482,20 +2478,21 @@ int get_pending_events()
 }
 
 /* TODO: continuing for some time */
-int continue_routine(DWORD time)
+int continue_routine(DWORD time, unsigned stat)
 {
     int last_report;
     char buffer2[MAX_LINE];
     unsigned status;
 
-    //d_print("Continuing: PID: 0x%08x, TID: 0x%08x\n", my_trace->last_event.dwProcessId, my_trace->last_event.dwThreadId);
+    status = stat;
+
     if(my_trace->last_event.dwProcessId == 0x0)
     {
-        ContinueDebugEvent(my_trace->pi.dwProcessId, my_trace->pi.dwThreadId, DBG_CONTINUE);
+        ContinueDebugEvent(my_trace->pi.dwProcessId, my_trace->pi.dwThreadId, status);
     }
     else
     {
-        ContinueDebugEvent(my_trace->last_event.dwProcessId, my_trace->last_event.dwThreadId, DBG_CONTINUE);
+        ContinueDebugEvent(my_trace->last_event.dwProcessId, my_trace->last_event.dwThreadId, status);
     }
     d_print("Continuing\n");
     while(1)
@@ -2925,28 +2922,35 @@ int handle_cmd(char* cmd)
     else if(!strncmp(cmd, CMD_CONTINUE, 2))
     {
         unsigned report;
+        unsigned status;
+
+        strtok(cmd, " ");
+        status = strtol(strtok(0x0, " "), 0x0, 0x10);
+
         if(my_trace->status != STATUS_CONFIGURED)
         {
             printf("Trace is not prepared\n");
             goto ret;
         }
-        continue_routine(INFINITE);
+        continue_routine(INFINITE, status);
         send_report();   
     }
     else if(!strncmp(cmd, CMD_CONTINUE_TIME, 2))
     {
         unsigned report;
         DWORD time;
+        unsigned status;
 
         strtok(cmd, " ");
         time = strtol(strtok(0x0, " "), 0x0, 0x10);
+        status = strtol(strtok(0x0, " "), 0x0, 0x10);
 
         if(my_trace->status != STATUS_CONFIGURED)
         {
             printf("Trace is not prepared\n");
             goto ret;
         }
-        continue_routine(time);
+        continue_routine(time, status);
         send_report();   
     }
     else if(!strncmp(cmd, CMD_CONFIGURE_MARKERS, 2))

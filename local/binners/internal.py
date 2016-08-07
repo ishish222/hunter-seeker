@@ -1158,7 +1158,7 @@ def execute(cmds):
             ok(ext_pipe)
 
         elif(cmd == "tracer_debug_continue"):
-            trace_controller.debug_continue()
+            trace_controller.debug_continue(args)
             writePipe(ext_pipe, "%s" % trace_controller.last_answer)
             writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
             writePipe(ext_pipe, "tracer_debug_continue OK")

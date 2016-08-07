@@ -228,6 +228,7 @@ def get_options():
 
     #thats right bitches
     options.settings = settings
+
     globs.state.options = options
     globs.state.ret = ""
     return
