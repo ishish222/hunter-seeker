@@ -132,6 +132,7 @@
 #define CMD_ENABLE_TRACE        "ET"
 #define CMD_ENABLE_DBG_TRACE    "ED"
 #define CMD_DISABLE_TRACE       "DT"
+#define CMD_DUMP_MEMORY         "DM"
 #define CMD_CONFIGURE_MARKERS   "cm"
 #define CMD_ACTIVATE_MARKERS    "am"
 

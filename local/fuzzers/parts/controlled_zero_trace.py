@@ -53,6 +53,7 @@ ListBpts = statemachine.State()
 Decision = statemachine.State()
 TracerDebugContinueUnhandledInf = statemachine.State()
 TracerPrepareTrace = statemachine.State()
+DumpMemory = statemachine.State()
 
 DefaultShutdown = dm.ShutdownSequence
 
@@ -78,7 +79,7 @@ def decision():
     if(globs.state.ret[1:3] == "RB"):
         if(globs.state.ret[3:5] == "ST"):
             print "Decision is: StartTrace"
-            return TracerStartTrace
+            return DumpMemory
         if(globs.state.ret[3:5] == "EN"):
             print "Decision is: EndTrace"
             return TracerEndTrace
@@ -104,6 +105,10 @@ TracerStartTrace.name = "Starting trace"
 TracerStartTrace.consequence = TracerDebugContinueInf
 TracerStartTrace.executing_routine = usualparts.tracer_parts.tracer_start_trace_debug
 
+DumpMemory.name = "Dumping memory"
+DumpMemory.consequence = TracerStartTrace
+DumpMemory.executing_routine = usualparts.tracer_parts.tracer_dump_memory
+
 TracerEndTrace.name = "Ending trace"
 TracerEndTrace.consequence = DefaultShutdown
 TracerEndTrace.executing_routine = usualparts.tracer_parts.tracer_stop_trace
@@ -113,7 +118,7 @@ WaitKeypress.consequence = TracerDebugContinueInf
 WaitKeypress.executing_routine = usualparts.other_parts.wait_for_keypress
 
 TracerDebugSample.name = "Debugging sample"
-TracerDebugSample.consequence = WaitKeypress
+TracerDebugSample.consequence = TracerDebugContinueInf
 TracerDebugSample.executing_routine = usualparts.tracer_parts.tracer_debug_sample
 
 TracerPrepareTrace.name = "Activate markers"

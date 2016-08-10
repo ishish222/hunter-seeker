@@ -751,6 +751,11 @@ class TraceController(object):
         self.last_report, self.last_answer = self.recv_report_active()
         return 
 
+    def dump_memory(self):
+        self.send_command_active("DM")
+        self.last_report, self.last_answer = self.recv_report_active()
+        return 
+
     def start_trace_debug(self):
         self.send_command_active("ED")
         self.last_report, self.last_answer = self.recv_report_active()

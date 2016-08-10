@@ -22,6 +22,17 @@ def tracer_prepare_trace():
     globs.state.ret = response
     return
 
+def tracer_dump_memory():
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+    
+    write_socket(options.s, "tracer_dump_memory");
+    response, _, _ = read_socket(options.s)
+
+    globs.state.ret = response
+    return
+
 def tracer_start_trace():
     options = globs.state.options
     state = globs.state

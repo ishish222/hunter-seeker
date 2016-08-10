@@ -1227,7 +1227,7 @@ void ss_callback(void* data)
     DWORD tid_pos;
 
     eip = (DWORD)(de->u.Exception.ExceptionRecord.ExceptionAddress);
-        d_print("%p\n", eip);
+        //d_print("%p\n", eip);
     if((my_trace->status != STATUS_DBG_STARTED) && (my_trace->status != STATUS_DBG_SCANNED)) 
     {
         return;
@@ -1388,7 +1388,7 @@ void dump_memory()
     SIZE_T addr;
     SIZE_T read;
 
-    d_print("dumping mem start\n");
+    d_print("Dumping mem start\n");
 #ifdef MEM_DUMP
     my_trace->dump = fopen(my_trace->out_dump, "wb");
 
@@ -2231,7 +2231,7 @@ int process_last_event()
 {
     unsigned status;
 
-        printf("process_last_event: 0x%08x\n", my_trace->last_event.dwDebugEventCode);
+        //printf("process_last_event: 0x%08x\n", my_trace->last_event.dwDebugEventCode);
         switch(my_trace->last_event.dwDebugEventCode)
         {
             case CREATE_PROCESS_DEBUG_EVENT:
@@ -2756,6 +2756,11 @@ int handle_cmd(char* cmd)
         sprintf(line2, "END,0x%08x\n", my_trace->last_eip);
         add_to_buffer(line2);
 
+        send_report();
+    }
+    else if(!strncmp(cmd, CMD_DUMP_MEMORY, 2))
+    {
+        dump_memory();
         send_report();
     }
     else if(!strncmp(cmd, CMD_SET_MARKER_1, 2))
