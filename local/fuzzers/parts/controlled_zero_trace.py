@@ -105,8 +105,8 @@ TracerStartTrace.consequence = TracerDebugContinueInf
 TracerStartTrace.executing_routine = usualparts.tracer_parts.tracer_start_trace_debug
 
 TracerEndTrace.name = "Ending trace"
-TracerEndTrace.consequence = TracerDebugContinueInf
-TracerEndTrace.executing_routine = usualparts.tracer_parts.tracer_end_trace
+TracerEndTrace.consequence = DefaultShutdown
+TracerEndTrace.executing_routine = usualparts.tracer_parts.tracer_stop_trace
 
 WaitKeypress.name = "Waiting for ketpress"
 WaitKeypress.consequence = TracerDebugContinueInf

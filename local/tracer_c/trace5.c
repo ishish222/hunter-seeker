@@ -1149,13 +1149,11 @@ int set_ss(DWORD tid)
         {
             /* set for all */
             cur_tid = my_trace->threads[i].tid;
-            d_print("Setting SS for TID: 0x%08x\n", cur_tid);
             set_ss(cur_tid);
         }
     }
     else
     {
-        d_print("Enabling SS\n");
         HANDLE tHandle;
         ctx.ContextFlags = CONTEXT_CONTROL;
         tHandle = OpenThread(THREAD_GET_CONTEXT |THREAD_SET_CONTEXT | THREAD_ALL_ACCESS, 0x0, tid);
@@ -1169,7 +1167,6 @@ int set_ss(DWORD tid)
         ctx.EFlags |= SS_FLAGS;
         SetThreadContext(tHandle, &ctx);
         CloseHandle(tHandle);
-        d_print("Enabled SS\n");
     }
     return 0x0;
 }
@@ -2721,23 +2718,44 @@ int handle_cmd(char* cmd)
     }
     else if(!strncmp(cmd, CMD_ENABLE_TRACE, 2))
     {
+        char line2[MAX_LINE];
+
         my_trace->status = STATUS_DBG_STARTED;
         ss_callback((void*)&my_trace->last_event);
         set_ss(0x0);
         printf("Tracing enabled\n");
+
+        d_print("Starting @ 0x%08x\n", my_trace->last_eip);
+        sprintf(line2, "ST,0x%08x\n", my_trace->last_eip);
+        add_to_buffer(line2);
+
         send_report();
     }
     else if(!strncmp(cmd, CMD_ENABLE_DBG_TRACE, 2))
     {
+        char line2[MAX_LINE];
+
         my_trace->status = STATUS_DBG_SCANNED;
         ss_callback((void*)&my_trace->last_event);
         printf("Tracing debugged enabled\n");
+
+        d_print("Starting @ 0x%08x\n", my_trace->last_eip);
+        sprintf(line2, "ST,0x%08x\n", my_trace->last_eip);
+        add_to_buffer(line2);
+
         send_report();
     }
     else if(!strncmp(cmd, CMD_DISABLE_TRACE, 2))
     {
+        char line2[MAX_LINE];
+
         my_trace->status = STATUS_DBG_STOPPED;
         printf("Tracing disabled\n");
+
+        d_print("Ending @ 0x%08x\n", my_trace->last_eip);
+        sprintf(line2, "END,0x%08x\n", my_trace->last_eip);
+        add_to_buffer(line2);
+
         send_report();
     }
     else if(!strncmp(cmd, CMD_SET_MARKER_1, 2))

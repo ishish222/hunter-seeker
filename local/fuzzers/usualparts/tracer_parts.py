@@ -44,12 +44,12 @@ def tracer_start_trace_debug():
     globs.state.ret = response
     return
 
-def tracer_end_trace():
+def tracer_stop_trace():
     options = globs.state.options
     state = globs.state
     status = globs.state.status
     
-    write_socket(options.s, "tracer_end_trace");
+    write_socket(options.s, "tracer_stop_trace");
     response, _, _ = read_socket(options.s)
 
     globs.state.ret = response
