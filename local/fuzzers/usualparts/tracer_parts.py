@@ -238,6 +238,18 @@ def tracer_debug_continue_10_seconds(args = globs.DEBUG_CONTINUE):
 
     return
 
+def tracer_set_limit():
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+    
+    write_socket(options.s, "tracer_set_limit %d" % options.sample_options.sample_options.instr_limit);
+    response, _, _ = read_socket(options.s)
+
+    globs.state.ret = response
+
+    return
+
 def tracer_list_markers():
     options = globs.state.options
     state = globs.state

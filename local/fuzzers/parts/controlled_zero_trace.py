@@ -24,6 +24,7 @@ ListLibs2 = statemachine.State()
 ListLibs3 = statemachine.State()
 TracerConfigureMarkers = statemachine.State()
 TracerActivateMarkers = statemachine.State()
+TracerSetLimit = statemachine.State()
 TracerConfigureInDir = statemachine.State()
 TracerConfigureOutDir = statemachine.State()
 TracerConfigureOutPrefix = statemachine.State()
@@ -129,8 +130,12 @@ TracerPrepareTrace.name = "Activate markers"
 TracerPrepareTrace.consequence = TracerDebugSample
 TracerPrepareTrace.executing_routine = usualparts.tracer_parts.tracer_prepare_trace
 
+TracerSetLimit.name = "Setting limit"
+TracerSetLimit.consequence = TracerPrepareTrace
+TracerSetLimit.executing_routine = usualparts.tracer_parts.tracer_activate_markers
+
 TracerActivateMarkers.name = "Activate markers"
-TracerActivateMarkers.consequence = TracerPrepareTrace
+TracerActivateMarkers.consequence = TracerSetLimit
 TracerActivateMarkers.executing_routine = usualparts.tracer_parts.tracer_activate_markers
 
 TracerConfigureMarkers.name = "Configuring markers"

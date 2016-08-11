@@ -1177,6 +1177,11 @@ def execute(cmds):
             writePipe(ext_pipe, "tracer_start_trace OK")
             ok(ext_pipe)
 
+        elif(cmd == "tracer_set_limit"):
+            trace_controller.set_limit(args)
+            writePipe(ext_pipe, "tracer_set_limit OK")
+            ok(ext_pipe)
+
         elif(cmd == "tracer_dump_memory"):
             trace_controller.dump_memory()
             writePipe(ext_pipe, "tracer_dump_memory OK")
