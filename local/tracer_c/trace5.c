@@ -2599,8 +2599,8 @@ int parse_markers(char* str)
 int reload_out_file()
 {
     char buffer2[MAX_LINE];
+    char line2[MAX_LINE];
 
-    fclose(my_trace->trace);
 
     my_trace->out_postfix++;
 
@@ -2608,6 +2608,10 @@ int reload_out_file()
     sprintf(buffer2, "%s\\%s_%d.out", my_trace->out_dir, my_trace->out_prefix, my_trace->out_postfix);
     strcpy(my_trace->out_trace, buffer2);
 
+    sprintf(line2, "LF,%s\n", my_trace->out_trace);
+    add_to_buffer(line2);
+
+    fclose(my_trace->trace);
     my_trace->trace = fopen(my_trace->out_trace, "w+");
 
     d_print("Setting out file to: %s\n", my_trace->out_trace);

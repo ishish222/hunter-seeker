@@ -76,6 +76,10 @@ def decision():
         print "Decision is: Continuing UH"
         return TracerDebugContinueUnhandledInf
 
+    if(globs.state.ret[1:3] == "RX"):
+        print "Process is exiting, finishing up"
+        return TracerEndTrace
+
     if(globs.state.ret[1:3] == "RB"):
         if(globs.state.ret[3:5] == "ST"):
             print "Decision is: StartTrace"
