@@ -30,6 +30,7 @@ def get_sample_options():
     parser.add_option("", "--logpath",    dest="log_path", help="Log path for trace", default="\\\\10.0.2.4\\qemu\\last_log.txt")
     parser.add_option("", "--limit",      dest="instr_limit", help="Instruction limit", default="0")
     parser.add_option("", "--markers",    dest="markers", help="Instruction limit", default="0")
+    parser.add_option("", "--reactions",    dest="reactions", help="Instruction limit", default="0")
 
     (options.sample_options, args) = parser.parse_args()
 

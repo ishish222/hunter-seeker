@@ -82,6 +82,17 @@ int d_print(const char* format, ...)
     return 0x0;
 }
 
+void sample_routine_1(void* data)
+{
+    d_print("Sample routine 1\n");
+    return;
+}
+
+void sample_routine_2(void* data)
+{
+    d_print("Sample routine 2\n");
+    return;
+}
 
 int add_to_buffer(char* line)
 {
@@ -492,6 +503,12 @@ void marker_handler(void* data)
         if((OFFSET)my_trace->last_exception.ExceptionAddress == my_trace->markers[i].real_offset)
         {
             d_print("Marker %s hit!\n", my_trace->markers[i].id);
+
+            if(my_trace->markers[i].reaction != -1)
+            {
+                my_trace->reactions[my_trace->markers[i].reaction](0x0);
+            }
+
             my_trace->last_marker = &my_trace->markers[i];
         }
     }
@@ -2290,7 +2307,14 @@ int process_last_event()
                             d_print("Comparing 0x%08x and 0x%08x\n", bp_addr, my_trace->markers[i].real_offset);
                             if(my_trace->markers[i].real_offset == bp_addr)
                             {
-                                /* this is our, we need to handle & report */
+                                if(my_trace->markers[i].reaction != -1)
+                                {
+                                    /* this is our, automatic, we can handle */
+                                    handle_breakpoint((DWORD)my_trace->last_exception.ExceptionAddress, &my_trace->last_event);
+                                    return REPORT_CONTINUE;
+                                }
+
+                                /* this is our, not automatic, we need to handle & report */
                                 handle_breakpoint((DWORD)my_trace->last_exception.ExceptionAddress, &my_trace->last_event);
                                 return REPORT_BREAKPOINT;
                             }
@@ -2533,6 +2557,21 @@ int continue_routine(DWORD time, unsigned stat)
     return last_report;
 }
 
+int add_reaction(char* id, unsigned reaction)
+{
+    unsigned i;
+
+    for(i=0x0; i< my_trace->marker_count; i++)
+    {
+        if(!strncmp(my_trace->markers[i].id, id, 2))
+        {
+            my_trace->markers[i].reaction = reaction;
+        }    
+    }
+
+    return 0x0;
+}
+
 int add_marker(char* lib_name, OFFSET offset, char* id)
 {
     
@@ -2550,6 +2589,7 @@ int add_marker(char* lib_name, OFFSET offset, char* id)
     my_trace->markers[my_trace->marker_count].id[0x2] = 0x0;
     my_trace->markers[my_trace->marker_count].offset = offset;
     my_trace->markers[my_trace->marker_count].active = 0x0;
+    my_trace->markers[my_trace->marker_count].reaction = -1;
     printf("New marker: %s:0x%08x:%s\n", my_trace->markers[my_trace->marker_count].lib_name, my_trace->markers[my_trace->marker_count].offset, my_trace->markers[my_trace->marker_count].id);
     my_trace->marker_count ++;
 
@@ -2560,6 +2600,18 @@ int activate_marker(unsigned i)
 {
     my_trace->markers[i].active = 0x1;
     return 0x0;
+}
+
+int parse_reaction(char* str)
+{
+    char* id;
+    unsigned reaction;
+
+    id = strtok(str, ":");
+    reaction = strtol(strtok(0x0, "+"), 0x0, 0x10);
+
+    /* registering marker */
+    add_reaction(id, reaction);
 }
 
 int parse_marker(char* str)
@@ -2574,6 +2626,26 @@ int parse_marker(char* str)
 
     /* registering marker */
     add_marker(lib, strtol(off, 0x0, 0x10), id);
+}
+
+int parse_reactions(char* str)
+{
+    char* current;
+    char buf[MAX_NAME];
+
+    current = str;
+    while((current != 0x0) && (strlen(current) > 0x0))
+    {
+        strcpy(buf, current);
+        parse_reaction(buf);
+        current = strpbrk(current, "+");
+        if(current)
+            current++;
+    }
+
+    return 0x0;
+
+
 }
 
 int parse_markers(char* str)
@@ -2944,6 +3016,16 @@ int handle_cmd(char* cmd)
         strtok(cmd, " ");
         markers_str = strtok(0x0, " ");
         parse_markers(markers_str);
+        send_report();
+        
+    }
+    else if(!strncmp(cmd, CMD_CONFIGURE_REACTIONS, 2))
+    {
+        char* reactions_str;
+
+        strtok(cmd, " ");
+        reactions_str = strtok(0x0, " ");
+        parse_reactions(reactions_str);
         send_report();
         
     }
@@ -3344,6 +3426,9 @@ int main(int argc, char** argv)
 
     init_trace(my_trace, argv[1], atoi(argv[2]));
 
+    /*configure reactions */
+    my_trace->reactions[0] = &sample_routine_1;
+    my_trace->reactions[1] = &sample_routine_1;
 
     /* Windows sockets */
 

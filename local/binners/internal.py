@@ -1125,6 +1125,11 @@ def execute(cmds):
             writePipe(ext_pipe, "tracer_configure_markers OK")
             ok(ext_pipe)
 
+        elif(cmd == "tracer_register_reactions"):
+            trace_controller.register_reactions(args)
+            writePipe(ext_pipe, "tracer_register_reactions OK")
+            ok(ext_pipe)
+
         elif(cmd == "tracer_auto_st"):
             trace_controller.auto_st()
             writePipe(ext_pipe, "tracer_auto_st OK")

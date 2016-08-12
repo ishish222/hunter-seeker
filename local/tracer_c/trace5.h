@@ -134,6 +134,7 @@
 #define CMD_DISABLE_TRACE       "DT"
 #define CMD_DUMP_MEMORY         "DM"
 #define CMD_CONFIGURE_MARKERS   "cm"
+#define CMD_CONFIGURE_REACTIONS "cR"
 #define CMD_ACTIVATE_MARKERS    "am"
 #define CMD_AUTO_ST             "AS"
 
@@ -144,13 +145,13 @@
 
 /* tracer configuration */
 
-typedef int (*reaction_routine)(void* args);
-
+/*
 typedef struct FUNCTION_
 {
     char function_code[4];
     reaction_routine routine;    
 } FUNCTION;
+*/
 
 typedef struct MARKER_
 {
@@ -160,9 +161,11 @@ typedef struct MARKER_
     OFFSET offset;
     char id[3];
     char active;
+    unsigned reaction;
 } MARKER;
 
 typedef void (*handler_routine)(void*);
+typedef void (*reaction_routine)(void*);
 
 typedef struct _HANDLER
 {
@@ -181,17 +184,11 @@ typedef struct BREAKPOINT_
     char isHook;
 } BREAKPOINT;
 
-typedef struct REACTION_
-{
-    MARKER marker;
-    char function_code[4];
-    reaction_routine routine;    
-} REACTION;
-
 typedef struct ROADSIGN_
 {
     MARKER marker;
     char sign[4];
+    unsigned reaction;
 } ROADSIGN;
 
 /* other structures */
@@ -215,11 +212,12 @@ typedef struct _THREAD_ENTRY
 
 typedef struct TRACE_CONFIG_EXTENDED_
 {
+    /*
     FUNCTION functions[MAX_FUNCTIONS];
     unsigned functions_count;
-
-    REACTION reactions[MAX_FUNCTIONS];
-    unsigned reactions_count;
+    */
+    //REACTION reactions[MAX_FUNCTIONS];
+    //unsigned reactions_count;
 
     ROADSIGN signs;
     unsigned signs_count;
@@ -357,6 +355,9 @@ typedef struct TRACE_CONFIG_
 
     MARKER st_markers[MAX_MARKERS];
     MARKER end_marker[MAX_MARKERS];
+
+    /* reactions */
+    reaction_routine reactions[MAX_FUNCTIONS];
 
     /* syscall data */
     DWORD sysenter_esp;
