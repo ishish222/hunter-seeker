@@ -452,6 +452,22 @@ class TraceController(object):
         print("Tracer synced")
         return self.trace_count-1
 
+    def spawn_tracer_log(self):
+        print("Spawning tracer")
+        Popen(["e:\\server\\b.exe", "127.0.0.1", "12341", ">", "e:\\server\\log.txt"], shell=True)
+        socket, addr = self.main_socket.accept()
+        self.tracers.append(Tracer())
+        self.tracer_active_id = self.trace_count
+        self.tracer_active = self.tracers[self.tracer_active_id]
+        self.tracer_active.socket = socket
+        self.tracer_active.addr = addr
+        self.tracer_active.active_tid_id = 0
+        self.tracer_active.my_id = self.tracer_active_id
+        self.tracer_active.controller = self
+        self.trace_count += 1
+        print("Tracer synced")
+        return self.trace_count-1
+
     def activate_prev_tid(self):
         self.tracer_active.active_tid_id = self.tracer_active.active_tid_id - 1
 
@@ -798,6 +814,16 @@ class TraceController(object):
 
     def configure_markers(self, markers):
         self.send_command_active("cm %s" % markers)
+        self.last_report, self.last_answer = self.recv_report_active()
+        return 
+
+    def enable_reaction(self, idd):
+        self.send_command_active("eR %s" % idd)
+        self.last_report, self.last_answer = self.recv_report_active()
+        return 
+
+    def disable_reaction(self, idd):
+        self.send_command_active("dR %s" % idd)
         self.last_report, self.last_answer = self.recv_report_active()
         return 
 

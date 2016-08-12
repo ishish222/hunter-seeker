@@ -135,6 +135,8 @@
 #define CMD_DUMP_MEMORY         "DM"
 #define CMD_CONFIGURE_MARKERS   "cm"
 #define CMD_CONFIGURE_REACTIONS "cR"
+#define CMD_ENABLE_REACTION     "eR"
+#define CMD_DISABLE_REACTION    "dR"
 #define CMD_ACTIVATE_MARKERS    "am"
 #define CMD_AUTO_ST             "AS"
 
@@ -161,8 +163,16 @@ typedef struct MARKER_
     OFFSET offset;
     char id[3];
     char active;
-    unsigned reaction;
 } MARKER;
+
+typedef struct REACTION_
+{
+    char lib_name[MAX_NAME];
+    OFFSET lib_offset;
+    OFFSET real_offset;
+    OFFSET offset;
+    unsigned id;
+} REACTION;
 
 typedef void (*handler_routine)(void*);
 typedef void (*reaction_routine)(void*);
@@ -357,7 +367,9 @@ typedef struct TRACE_CONFIG_
     MARKER end_marker[MAX_MARKERS];
 
     /* reactions */
-    reaction_routine reactions[MAX_FUNCTIONS];
+    REACTION reactions[MAX_MARKERS];
+    unsigned reaction_count;
+    reaction_routine routines[MAX_FUNCTIONS];
 
     /* syscall data */
     DWORD sysenter_esp;

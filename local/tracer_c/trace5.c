@@ -62,6 +62,10 @@ char* blacklist_lib[] = {"kernel32.dll", "ntdll.dll", "user32.dll"};
 DWORD blacklist_addr[] = {};
 char line2[MAX_LINE];
 
+void marker_handler(void* data);
+void reaction_handler(void* data);
+int del_breakpoint(DWORD);
+
 int d_print(const char* format, ...)
 {
     va_list argptr;
@@ -92,6 +96,51 @@ void sample_routine_2(void* data)
 {
     d_print("Sample routine 2\n");
     return;
+}
+
+int enable_reaction(unsigned reaction)
+{
+    unsigned i;
+
+    for(i = 0x0; i< my_trace->reaction_count; i++)
+    {
+        if(my_trace->reactions[i].id == reaction)
+        {
+                my_trace->reactions[i].real_offset = my_trace->reactions[i].lib_offset + my_trace->reactions[i].offset;
+                add_breakpoint(my_trace->reactions[i].real_offset, reaction_handler);
+        }
+    }
+    return 0x0;
+}
+
+int disable_reaction(unsigned reaction)
+{
+    unsigned i;
+
+    for(i = 0x0; i< my_trace->reaction_count; i++)
+    {
+        if(my_trace->reactions[i].id== reaction)
+        {
+                my_trace->reactions[i].real_offset = my_trace->reactions[i].lib_offset + my_trace->reactions[i].offset;
+                del_breakpoint(my_trace->reactions[i].real_offset);
+        }
+    }
+    return 0x0;
+}
+
+int enable_marker(char* id)
+{
+    unsigned i;
+
+    for(i = 0x0; i< my_trace->marker_count; i++)
+    {
+        if(strstr(my_trace->markers[i].id, id))
+        {
+            my_trace->markers[i].real_offset = my_trace->markers[i].lib_offset + my_trace->markers[i].offset;
+            add_breakpoint(my_trace->markers[i].real_offset, marker_handler);
+        }
+    }
+    return 0x0;
 }
 
 int add_to_buffer(char* line)
@@ -494,6 +543,24 @@ char* find_file(char* path)
     return last+1;
 }
 
+void reaction_handler(void* data)
+{
+    unsigned i;
+
+    d_print("In reaction handler\n");
+
+    for(i = 0x0; i< my_trace->reaction_count; i++)
+    {
+        if((OFFSET)my_trace->last_exception.ExceptionAddress == my_trace->reactions[i].real_offset)
+        {
+            d_print("Reaction %d hit!\n", my_trace->reactions[i].id);
+            my_trace->routines[my_trace->reactions[i].id](data);
+        }
+    }
+
+    return;
+}
+
 void marker_handler(void* data)
 {
     unsigned i;
@@ -503,12 +570,6 @@ void marker_handler(void* data)
         if((OFFSET)my_trace->last_exception.ExceptionAddress == my_trace->markers[i].real_offset)
         {
             d_print("Marker %s hit!\n", my_trace->markers[i].id);
-
-            if(my_trace->markers[i].reaction != -1)
-            {
-                my_trace->reactions[my_trace->markers[i].reaction](0x0);
-            }
-
             my_trace->last_marker = &my_trace->markers[i];
         }
     }
@@ -692,6 +753,8 @@ void ntread_2_callback(void* data)
 
 void sysenter_callback(void* data)
 {
+    d_print("sysenter\n");
+
     DEBUG_EVENT* de;
     de = (DEBUG_EVENT*)data;
     DWORD tid = de->dwThreadId;
@@ -707,19 +770,23 @@ void sysenter_callback(void* data)
         d_print("Failed to get context, error: 0x%08x\n", GetLastError());
         return;
     }
-//    d_print("ESP: %p\n", ctx.Esp);
+    d_print("ESP: %p\n", ctx.Esp);
     sysenter_no = ctx.Eax;
     sysenter_esp = ctx.Esp;
 
 //    d_print("Deregister thread @ SYSENTER: %08x\n", tid);
     deregister_thread(tid, my_trace->threads[tid_pos].handle);
-    add_breakpoint(sysret_off, sysret_callback);
-    add_breakpoint(sysret_off, sysret_refresh);
+    enable_reaction(0x1);
+    enable_reaction(0x2);
+//    add_breakpoint(sysret_off, sysret_callback);
+//    add_breakpoint(sysret_off, sysret_refresh);
     set_ss(0x0);
 }
 
 void sysret_callback(void* data)
 {
+    d_print("sysret\n");
+
     DEBUG_EVENT* de;
     de = (DEBUG_EVENT*)data;
     DWORD tid = de->dwThreadId;
@@ -929,7 +996,8 @@ void sysret_callback(void* data)
     //add_to_buffer(line);
     
 
-    add_breakpoint(sysenter_off, sysenter_callback);
+    //add_breakpoint(sysenter_off, sysenter_callback);
+    enable_reaction(0x0);
     //sprintf(line, "# ret4");
     //add_to_buffer(line);
     
@@ -1619,10 +1687,9 @@ int handle_breakpoint(DWORD addr, void* data)
     int handler_count;
     int our_bp = 0x0;
 
-    d_print("Hnadling, my count: %d\n", my_trace->bpt_count);
     for(i = 0x0; i<my_trace->bpt_count; i++)
     {
-        d_print("checking: %d\n", i);
+        d_print("Breakpoint hit @ 0x%08x\nChecking BP%d\n", addr, i);
         if(my_trace->breakpoints[i].addr == addr) our_bp = 1;
         if((my_trace->breakpoints[i].addr == addr) && (my_trace->breakpoints[i].enabled == 0x1))
         {
@@ -2275,6 +2342,9 @@ int process_last_event()
                         add_breakpoint(my_trace->markers[ii].real_offset, marker_handler);
                     }
                 }
+
+                /* reactions do not seem appropriate */
+
                 return REPORT_PROCESS_CREATED;
                 break;
 
@@ -2302,19 +2372,23 @@ int process_last_event()
 
                         bp_addr = (OFFSET)my_trace->last_exception.ExceptionAddress;
 
+                        for(i = 0x0; i< my_trace->reaction_count; i++)
+                        {
+                            d_print("Comparing 0x%08x and 0x%08x\n", bp_addr, my_trace->reactions[i].real_offset);
+                            if(my_trace->reactions[i].real_offset == bp_addr)
+                            {
+                                /* this is our, automatic, we can handle */
+                                handle_breakpoint((DWORD)my_trace->last_exception.ExceptionAddress, &my_trace->last_event);
+                                return REPORT_CONTINUE;
+                            }
+                        }
+
                         for(i = 0x0; i< my_trace->marker_count; i++)
                         {
                             d_print("Comparing 0x%08x and 0x%08x\n", bp_addr, my_trace->markers[i].real_offset);
                             if(my_trace->markers[i].real_offset == bp_addr)
                             {
-                                if(my_trace->markers[i].reaction != -1)
-                                {
-                                    /* this is our, automatic, we can handle */
-                                    handle_breakpoint((DWORD)my_trace->last_exception.ExceptionAddress, &my_trace->last_event);
-                                    return REPORT_CONTINUE;
-                                }
-
-                                /* this is our, not automatic, we need to handle & report */
+                                /* this is our, we need to handle & report */
                                 handle_breakpoint((DWORD)my_trace->last_exception.ExceptionAddress, &my_trace->last_event);
                                 return REPORT_BREAKPOINT;
                             }
@@ -2370,6 +2444,28 @@ int process_last_event()
                         my_trace->markers[i].lib_offset = my_trace->libs[my_trace->lib_count-1].lib_offset;
                         my_trace->markers[i].real_offset = my_trace->markers[i].lib_offset + my_trace->markers[i].offset;
                         add_breakpoint(my_trace->markers[i].real_offset, marker_handler);
+                    }
+                
+                }
+
+                d_print("Checking reactions\n");
+                for(i = 0x0; i< my_trace->reaction_count; i++)
+                {
+                    d_print("Comparing _%s_ and _%s_\n", my_trace->reactions[i].lib_name, my_trace->libs[my_trace->lib_count-1].lib_name);
+                    if(strlen(my_trace->reactions[i].lib_name) == 0x0)
+                    {
+                        if(my_trace->reactions[i].lib_offset == my_trace->libs[my_trace->lib_count-1].lib_offset)
+                        {
+                            d_print("Should write reaction for 0x%08x:0x%08x\n", my_trace->reactions[i].lib_offset, my_trace->reactions[i].offset);
+                            my_trace->reactions[i].lib_offset = my_trace->libs[my_trace->lib_count-1].lib_offset;
+                            my_trace->reactions[i].real_offset = my_trace->reactions[i].lib_offset + my_trace->reactions[i].offset;
+                        }
+                    }
+                    else if(!strcmp(my_trace->reactions[i].lib_name, my_trace->libs[my_trace->lib_count-1].lib_name))
+                    {
+                        d_print("Should write reaction for %s\n", my_trace->reactions[i].lib_name);
+                        my_trace->reactions[i].lib_offset = my_trace->libs[my_trace->lib_count-1].lib_offset;
+                        my_trace->reactions[i].real_offset = my_trace->reactions[i].lib_offset + my_trace->reactions[i].offset;
                     }
                 
                 }
@@ -2557,17 +2653,23 @@ int continue_routine(DWORD time, unsigned stat)
     return last_report;
 }
 
-int add_reaction(char* id, unsigned reaction)
+int add_reaction(char* lib_name, OFFSET offset, unsigned id)
 {
-    unsigned i;
-
-    for(i=0x0; i< my_trace->marker_count; i++)
+    
+    if(lib_name[0] == '0' && lib_name[1] == 'x')
     {
-        if(!strncmp(my_trace->markers[i].id, id, 2))
-        {
-            my_trace->markers[i].reaction = reaction;
-        }    
+        my_trace->reactions[my_trace->reaction_count].lib_offset = strtol(lib_name, 0x0, 0x10);
+        strcpy(my_trace->reactions[my_trace->reaction_count].lib_name, "0x00000000");
     }
+    else
+    {
+        strcpy(my_trace->reactions[my_trace->reaction_count].lib_name, lib_name);
+    }
+    
+    my_trace->reactions[my_trace->reaction_count].id = id;
+    my_trace->reactions[my_trace->reaction_count].offset = offset;
+    printf("New reaction: %s:0x%08x:%x\n", my_trace->reactions[my_trace->reaction_count].lib_name, my_trace->reactions[my_trace->reaction_count].offset, my_trace->reactions[my_trace->reaction_count].id);
+    my_trace->reaction_count ++;
 
     return 0x0;
 }
@@ -2589,7 +2691,6 @@ int add_marker(char* lib_name, OFFSET offset, char* id)
     my_trace->markers[my_trace->marker_count].id[0x2] = 0x0;
     my_trace->markers[my_trace->marker_count].offset = offset;
     my_trace->markers[my_trace->marker_count].active = 0x0;
-    my_trace->markers[my_trace->marker_count].reaction = -1;
     printf("New marker: %s:0x%08x:%s\n", my_trace->markers[my_trace->marker_count].lib_name, my_trace->markers[my_trace->marker_count].offset, my_trace->markers[my_trace->marker_count].id);
     my_trace->marker_count ++;
 
@@ -2604,14 +2705,16 @@ int activate_marker(unsigned i)
 
 int parse_reaction(char* str)
 {
-    char* id;
-    unsigned reaction;
+    char* lib;
+    char* off;
+    unsigned id;
 
-    id = strtok(str, ":");
-    reaction = strtol(strtok(0x0, "+"), 0x0, 0x10);
+    lib = strtok(str, ":");
+    off = strtok(0x0, ":");
+    id = strtol(strtok(0x0, "+"), 0x0, 0x10);
 
     /* registering marker */
-    add_reaction(id, reaction);
+    add_reaction(lib, strtol(off, 0x0, 0x10), id);
 }
 
 int parse_marker(char* str)
@@ -2837,6 +2940,30 @@ int handle_cmd(char* cmd)
     else if(!strncmp(cmd, CMD_DUMP_MEMORY, 2))
     {
         dump_memory();
+        send_report();
+    }
+    else if(!strncmp(cmd, CMD_DISABLE_REACTION, 2))
+    {
+        char* mod;
+        unsigned id;
+
+        mod = strtok(cmd, " ");
+        id = strtol(strtok(0x0, " "), 0x0, 0x10);
+
+        printf("Enabling reaction no %d\n", id);
+        disable_reaction(id);
+        send_report();
+    }
+    else if(!strncmp(cmd, CMD_ENABLE_REACTION, 2))
+    {
+        char* mod;
+        unsigned id;
+
+        mod = strtok(cmd, " ");
+        id = strtol(strtok(0x0, " "), 0x0, 0x10);
+
+        printf("Enabling reaction no %d\n", id);
+        enable_reaction(id);
         send_report();
     }
     else if(!strncmp(cmd, CMD_SET_MARKER_1, 2))
@@ -3426,9 +3553,12 @@ int main(int argc, char** argv)
 
     init_trace(my_trace, argv[1], atoi(argv[2]));
 
-    /*configure reactions */
-    my_trace->reactions[0] = &sample_routine_1;
-    my_trace->reactions[1] = &sample_routine_1;
+    /*configure routines */
+    my_trace->routines[0x0] = &sysenter_callback;
+    my_trace->routines[0x1] = &sysret_callback;
+    my_trace->routines[0x2] = &sysret_refresh;
+    my_trace->routines[0x100] = &sample_routine_1;
+    my_trace->routines[0x101] = &sample_routine_1;
 
     /* Windows sockets */
 

@@ -1130,6 +1130,16 @@ def execute(cmds):
             writePipe(ext_pipe, "tracer_register_reactions OK")
             ok(ext_pipe)
 
+        elif(cmd == "tracer_enable_reaction"):
+            trace_controller.enable_reaction(args)
+            writePipe(ext_pipe, "tracer_enable_reaction OK")
+            ok(ext_pipe)
+
+        elif(cmd == "tracer_disable_reaction"):
+            trace_controller.disable_reaction(args)
+            writePipe(ext_pipe, "tracer_disable_reaction OK")
+            ok(ext_pipe)
+
         elif(cmd == "tracer_auto_st"):
             trace_controller.auto_st()
             writePipe(ext_pipe, "tracer_auto_st OK")
@@ -1290,6 +1300,14 @@ def execute(cmds):
             writePipe(ext_pipe, "Started: %d" % new_tracer)
             writePipe(log_pipe, "Started: %d" % new_tracer)
             writePipe(ext_pipe, "spawn_tracer OK")
+            ok(ext_pipe)
+
+        elif(cmd == "spawn_tracer_log"):
+            new_tracer = trace_controller.spawn_tracer_log()
+            writePipe(ext_pipe, "[Trace controller]: OK")
+            writePipe(ext_pipe, "Started: %d" % new_tracer)
+            writePipe(log_pipe, "Started: %d" % new_tracer)
+            writePipe(ext_pipe, "spawn_tracer_log OK")
             ok(ext_pipe)
 
         elif(cmd == "close_tracer"):
