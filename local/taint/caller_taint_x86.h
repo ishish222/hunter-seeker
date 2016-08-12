@@ -2457,6 +2457,7 @@ class taint_x86
     //int check_loop(CONTEXT_INFO*, OFFSET, OFFSET);
     int check_loop(CONTEXT_INFO*);
     int check_loop_2(CONTEXT_INFO*);
+    int check_collecting(CONTEXT_INFO*);
 
     /* dumping taint transfer history */
     int write_history(FILE*);

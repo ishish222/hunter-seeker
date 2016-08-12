@@ -801,6 +801,11 @@ class TraceController(object):
         self.last_report, self.last_answer = self.recv_report_active()
         return 
 
+    def auto_st(self):
+        self.send_command_active("AS")
+        self.last_report, self.last_answer = self.recv_report_active()
+        return 
+
     def read_dword(self, args):
         self.tracer_active.read_dword(args)
         self.last_report, self.last_answer = self.recv_report_active()

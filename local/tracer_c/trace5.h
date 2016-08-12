@@ -135,6 +135,7 @@
 #define CMD_DUMP_MEMORY         "DM"
 #define CMD_CONFIGURE_MARKERS   "cm"
 #define CMD_ACTIVATE_MARKERS    "am"
+#define CMD_AUTO_ST             "AS"
 
 #define CMD_ROUTINE_1           "R1"
 #define CMD_ROUTINE_2           "R2"

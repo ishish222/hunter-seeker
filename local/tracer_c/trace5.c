@@ -2539,7 +2539,7 @@ int add_marker(char* lib_name, OFFSET offset, char* id)
     if(lib_name[0] == '0' && lib_name[1] == 'x')
     {
         my_trace->markers[my_trace->marker_count].lib_offset = strtol(lib_name, 0x0, 0x10);
-        strcpy(my_trace->markers[my_trace->marker_count].lib_name, "");
+        strcpy(my_trace->markers[my_trace->marker_count].lib_name, "0x00000000");
     }
     else
     {
@@ -2608,7 +2608,7 @@ int reload_out_file()
     sprintf(buffer2, "%s\\%s_%d.out", my_trace->out_dir, my_trace->out_prefix, my_trace->out_postfix);
     strcpy(my_trace->out_trace, buffer2);
 
-    sprintf(line2, "LF,%s\n", my_trace->out_trace);
+    sprintf(line2, "LF,%s_%d.out\n", my_trace->out_prefix, my_trace->out_postfix);
     add_to_buffer(line2);
 
     fclose(my_trace->trace);
@@ -2926,6 +2926,16 @@ int handle_cmd(char* cmd)
 
         continue_routine(time, status);
         send_report();   
+    }
+    else if(!strncmp(cmd, CMD_AUTO_ST, 2))
+    {
+        char* markers_str;
+
+        add_marker("0x0", (OFFSET)(my_trace->cpdi.lpStartAddress), "ST");
+        my_trace->markers[my_trace->marker_count-1].real_offset = my_trace->markers[my_trace->marker_count-1].offset;
+        add_breakpoint(my_trace->markers[my_trace->marker_count-1].real_offset, marker_handler);
+        send_report();
+        
     }
     else if(!strncmp(cmd, CMD_CONFIGURE_MARKERS, 2))
     {

@@ -487,6 +487,8 @@ void taint_x86::print_call(CONTEXT_INFO* cur_ctx, char* line, const char* color)
     FILE* f = cur_ctx->graph_file;   
     unsigned i;
 
+    if(check_collecting(cur_ctx)) return;
+
     strcpy(out_line, "");
 
     for(i = GRAPH_START-GRAPH_OFF; i< cur_ctx->call_level; i++)
@@ -513,6 +515,8 @@ void taint_x86::print_empty_call(CONTEXT_INFO* cur_ctx, char* line, const char* 
     char out_line[MAX_NAME];
     char working_line[MAX_NAME];
     
+    if(check_collecting(cur_ctx)) return;
+
     strcpy(out_line, "");
     
     for(i = GRAPH_START-GRAPH_OFF; i< cur_ctx->call_level; i++)
@@ -529,6 +533,8 @@ void taint_x86::print_ret(CONTEXT_INFO* cur_ctx)
     FILE* f = cur_ctx->graph_file;   
     char out_line[MAX_NAME];
     unsigned i;
+
+    if(check_collecting(cur_ctx)) return;
 
     strcpy(out_line, "");
 
@@ -641,6 +647,22 @@ int taint_x86::exit_loop(CONTEXT_INFO* info)
     info->loop_pos[cur_call_level]--;
     info->cur_fence[cur_call_level] = 0x0;
     print_ret(info);
+}
+
+int taint_x86::check_collecting(CONTEXT_INFO* info)
+{
+    unsigned i;
+
+    d_print(1, "Entered collecting verification\n");
+
+    for(i = info->call_level; i >= info->call_level_smallest; i--)
+    {
+        d_print(1, "Veryfing level: %d\n", i);
+        if(info->cur_fence[i])
+            if(info->cur_fence[i]->collecting) return 0x1;
+    }
+
+    return 0x0;
 }
 
 int taint_x86::check_loop_2(CONTEXT_INFO* info)
@@ -865,6 +887,7 @@ int taint_x86::handle_call(CONTEXT_INFO* info)
     s = this->get_symbol(target);
     unsigned i;
 
+    d_print(1, "Call");
     d_print(2, "Call: 0x%08x\n", this->reg_restore_32(EIP).get_DWORD());
 
     /* decision about emission */
