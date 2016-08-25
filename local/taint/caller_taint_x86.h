@@ -2170,15 +2170,20 @@ class DWORD_t
 
 };
 
+#define FENCE_INACTIVE          0x0
+#define FENCE_ACTIVE            0x1
+#define FENCE_COLLECTING        0x2
+#define FENCE_NOT_COLLECTING    0x3
+#define FENCE_FINISHED          0x4
+
 typedef struct LOOP_FENCE_
 {
     OFFSET entry;
     OFFSET start;
     OFFSET limit;
 
-    unsigned cur_looped_addr;
-    OFFSET looped_addr[MAX_LOOP_ADDR];
     char collecting;
+    char status;
 
 } LOOP_FENCE;
 
@@ -2250,11 +2255,35 @@ typedef struct _EXCEPTION_INFO
     DWORD tid;
 } EXCEPTION_INFO;
 
+typedef struct _CALL_LEVEL
+{
+    DWORD ret;
+    OFFSET entry;
+    /* loops handling */
+
+    OFFSET call_src_register[MAX_LOOP_ADDRS][2];
+    unsigned call_src_register_idx;
+    unsigned loop_start;
+
+    /* new loop handling */
+    unsigned loop_pos;
+    LOOP_FENCE* cur_fence;
+
+    /* new new loop handling */
+    unsigned loop_addr_idx;
+    unsigned loop_limit;
+    OFFSET   loop_addr[MAX_LOOP_ADDR];
+    char     loop_status;
+
+} CALL_LEVEL;
+
 typedef struct _CONTEXT_INFO
 {
     DWORD tid;
     BYTE_t registers[REG_SIZE];
     OFFSET seg_map[0x6];
+
+    CALL_LEVEL levels[MAX_CALL_LEVELS];
 
     /* graph handling */
     DWORD call_level;
@@ -2265,7 +2294,6 @@ typedef struct _CONTEXT_INFO
     OFFSET waiting;
 
     /* call level handling */ 
-    DWORD rets[MAX_CALL_LEVELS];
     unsigned ret_idx;
     char returning;
     char before_returning;
@@ -2273,16 +2301,6 @@ typedef struct _CONTEXT_INFO
     char calling;
     OFFSET target;
     OFFSET next;
-    OFFSET entry[MAX_CALL_LEVELS];
-
-    /* loops handling */
-    OFFSET call_src_register[MAX_CALL_LEVELS][MAX_LOOP_ADDRS][2];
-    unsigned call_src_register_idx[MAX_CALL_LEVELS];
-    unsigned loop_start[MAX_CALL_LEVELS];
-
-    /* new loop handling */
-    unsigned loop_pos[MAX_CALL_LEVELS];
-    LOOP_FENCE* cur_fence[MAX_CALL_LEVELS];
 
 } CONTEXT_INFO;
 

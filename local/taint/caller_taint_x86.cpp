@@ -376,8 +376,8 @@ int taint_x86::add_fence(OFFSET entry, OFFSET start, OFFSET limit)
     this->loop_fences[this->loop_fences_count].entry = entry;
     this->loop_fences[this->loop_fences_count].start = start;
     this->loop_fences[this->loop_fences_count].limit = limit;
-    this->loop_fences[this->loop_fences_count].cur_looped_addr = 0x0;
-    this->loop_fences[this->loop_fences_count].collecting = 0x0;
+    //this->loop_fences[this->loop_fences_count].cur_looped_addr = 0x0;
+    //this->loop_fences[this->loop_fences_count].collecting = 0x0;
     this->loop_fences_count++;
     d_print(1, "Fence: 0x%08x - 0x%08x - 0x%08x\n", entry, start, limit);
 
@@ -487,7 +487,7 @@ void taint_x86::print_call(CONTEXT_INFO* cur_ctx, char* line, const char* color)
     FILE* f = cur_ctx->graph_file;   
     unsigned i;
 
-    if(check_collecting(cur_ctx)) return;
+//    if(check_collecting(cur_ctx)) return;
 
     strcpy(out_line, "");
 
@@ -515,7 +515,7 @@ void taint_x86::print_empty_call(CONTEXT_INFO* cur_ctx, char* line, const char* 
     char out_line[MAX_NAME];
     char working_line[MAX_NAME];
     
-    if(check_collecting(cur_ctx)) return;
+    //if(check_collecting(cur_ctx)) return;
 
     strcpy(out_line, "");
     
@@ -534,7 +534,7 @@ void taint_x86::print_ret(CONTEXT_INFO* cur_ctx)
     char out_line[MAX_NAME];
     unsigned i;
 
-    if(check_collecting(cur_ctx)) return;
+//    if(check_collecting(cur_ctx)) return;
 
     strcpy(out_line, "");
 
@@ -619,16 +619,20 @@ int taint_x86::enter_loop(CONTEXT_INFO* info)
     return 0;
 #endif
     char out_line[MAX_NAME];
+    FILE* f = info->graph_file;   
+
     unsigned cur_call_level;
     cur_call_level = this->cur_info->call_level;
 
     {
         d_print(1, "Entering loop\n");
-        sprintf(out_line, "[loop]");
-        print_call(info, out_line, colors[CODE_BLACK]);
+//        sprintf(out_line, "[loop]");
+//        print_call(info, out_line, colors[CODE_BLACK]);
+        sprintf(out_line, "<!-- started loop\n");
+        fwrite(out_line, strlen(out_line), 0x1, f);
     }
 
-    info->loop_pos[cur_call_level]++;
+    //info->loop_pos[cur_call_level]++;
 
 }
 
@@ -637,16 +641,19 @@ int taint_x86::exit_loop(CONTEXT_INFO* info)
 #ifndef ANALYZE_LOOPS
     return 0;
 #endif
-    unsigned cur_call_level;
-    cur_call_level = this->cur_info->call_level;
+    unsigned level;
+    char out_line[MAX_NAME];
+    FILE* f = info->graph_file;   
+    CALL_LEVEL* cur_level;
 
-    {
-        d_print(1, "Exiting loop\n");
-        this->cur_info->loop_start[cur_call_level] = NO_LOOP;
-    }
-    info->loop_pos[cur_call_level]--;
-    info->cur_fence[cur_call_level] = 0x0;
-    print_ret(info);
+    level = this->cur_info->call_level;
+
+    d_print(1, "Exiting loop\n");
+    cur_level->cur_fence = 0x0;
+    sprintf(out_line, "loop ended -->\n");
+    fwrite(out_line, strlen(out_line), 0x1, f);
+
+//    print_ret(info);
 }
 
 int taint_x86::check_collecting(CONTEXT_INFO* info)
@@ -658,13 +665,14 @@ int taint_x86::check_collecting(CONTEXT_INFO* info)
     for(i = info->call_level; i >= info->call_level_smallest; i--)
     {
         d_print(1, "Veryfing level: %d\n", i);
-        if(info->cur_fence[i])
-            if(info->cur_fence[i]->collecting) return 0x1;
+        if(info->levels[i].cur_fence)
+            if(info->levels[i].cur_fence->collecting) return 0x1;
     }
 
     return 0x0;
 }
 
+/* returns 1 if in loop, 0 otherwise */
 int taint_x86::check_loop_2(CONTEXT_INFO* info)
 {
 #ifndef ANALYZE_LOOPS
@@ -674,183 +682,76 @@ int taint_x86::check_loop_2(CONTEXT_INFO* info)
 
     OFFSET offset;
     unsigned cur_fence_idx;
+    unsigned cur_loop_addr_idx;
+    unsigned cur_loop_limit;
+    unsigned level;
     LOOP_FENCE* cur_fence;
+    CALL_LEVEL* cur_level;
+
+
+    level = info->call_level;
+    cur_level = &info->levels[level];
 
     offset = this->current_eip;
-    cur_fence = info->cur_fence[info->call_level];
-    d_print(1, "Fence for graph pos: %d: 0x%08x\n", info->call_level, cur_fence);
+    cur_fence = info->levels[level].cur_fence;
+
+    d_print(1, "Fence for graph pos: %d: 0x%08x\n", level, cur_fence);
 
     if(cur_fence != 0x0)
     {
 
         d_print(1, "---\nActive fence: \nEntry: \t0x%08x\nStart: \t0x%08x\nLimit: \t%d\n", cur_fence->entry, cur_fence->start, cur_fence->limit);
-        d_print(1, "Collecting: \t0x%08x\nCurrent looped addr: \t%d\n---\n", cur_fence->collecting, cur_fence->cur_looped_addr);
+//        d_print(1, "Collecting: \t0x%08x\nCurrent looped addr: \t%d\n---\n", cur_fence->collecting, info->cur_loop_addr);
+
+        /* on specific level, but not yet collecting */
+        if(cur_level->loop_status == FENCE_ACTIVE)
+        {
+            d_print(1, "Check for starting: %p - %p\n", cur_fence->start, offset);
+            if(cur_fence->start == offset)
+            {
+                d_print(1, "Starting collecting\n");
+                cur_level->loop_status = FENCE_COLLECTING;
+                enter_loop(info);
+            }
+        }
 
         /* in loop */
-        if(cur_fence->collecting)
+        if(cur_level->loop_status == FENCE_COLLECTING)
         {
             /* still collecting looped addrs */
-            cur_fence->looped_addr[cur_fence->cur_looped_addr] = offset;
-            cur_fence->cur_looped_addr++;
+            cur_loop_addr_idx   = cur_level->loop_addr_idx;
+            cur_loop_limit      = cur_level->loop_limit;
 
-            if(cur_fence->cur_looped_addr >= cur_fence->limit)
+            cur_level->loop_addr[cur_loop_addr_idx] = offset;
+            cur_loop_addr_idx ++;
+            cur_level->loop_addr_idx = cur_loop_addr_idx;
+
+            d_print(1, "Collected: %p\n", offset);
+            d_print(1, "Level %d collection: idx: %d, limit: %d\n", level, cur_level->loop_addr_idx, cur_level->loop_limit);
+
+            if(cur_loop_limit != 0x0)
+            if(cur_loop_addr_idx >= cur_loop_limit)
             {
                 /* collecting finished */
-                cur_fence->cur_looped_addr = 0x0;
-                cur_fence->collecting = 0x2;
+                cur_level->loop_addr_idx = 0x0;
+
+                cur_level->loop_status = FENCE_FINISHED;
+                exit_loop(info);
 
                 d_print(1, "Collected addrs:\n");
 
                 unsigned i;
-                for(i=0x0; i<cur_fence->limit; i++)
+                for(i=0x0; i<cur_loop_limit; i++)
                 {
-                    d_print(1, "0x%08x\n", cur_fence->looped_addr[i]);
+                    d_print(1, "0x%08x\n", cur_level->loop_addr[i]);
                 }
 
-            /* output event to graph */
-            return 0;
-            }
-        } 
-        else
-        {
-            /* collecting is finished, just track if we are still inside */
-            if(cur_fence->looped_addr[cur_fence->cur_looped_addr] != offset)
-            {
-                /* we left loop */
-                exit_loop(info);
-                return 1;
-            }
-            else 
-            {
-                /* we are traversing collected loop */
-                cur_fence->cur_looped_addr++;
-                cur_fence->cur_looped_addr %= cur_fence->limit;
+                /* output event to graph */
                 return 0;
             }
-        }
-
+            return 1;
+        } 
     }
-    else
-    {
-        /* we are not inside loop */
-
-        for(cur_fence_idx = 0x0; cur_fence_idx < MAX_LOOP_FENCES; cur_fence_idx++)
-        {
-            if(this->loop_fences[cur_fence_idx].entry != info->entry[info->call_level])
-                continue;
-    
-            if(this->loop_fences[cur_fence_idx].start == offset)
-            {
-                d_print(1, "Matched fence for: 0x%08x\n", offset);
-                /* we enter loop */ 
-                cur_fence = &this->loop_fences[cur_fence_idx];
-                info->cur_fence[info->call_level] = &this->loop_fences[cur_fence_idx];
-                cur_fence->looped_addr[cur_fence->cur_looped_addr] = offset;
-                cur_fence->cur_looped_addr++;
-                cur_fence->collecting = 0x1;
-                enter_loop(info);
-            }
-    
-        }
-        return 1;
-
-    }
-    return 0x0;
-}
-
-
-int taint_x86::check_loop(CONTEXT_INFO* info)
-{
-    unsigned cur_idx;
-    unsigned cur_pos;
-    unsigned call_level;
-    unsigned loop_idx, next_loop_idx;
-    OFFSET offset;
-    char got_loop;
-    got_loop = 0;
-
-    offset = this->current_eip;
-
-    call_level = this->cur_info->call_level;
-    cur_pos = this->cur_info->call_src_register_idx[call_level];
-
-    d_print(1, "Checking address for loop: 0x%08x\n", offset);
-    d_print(1, "Loop register @ level: %d:\n", call_level);
-
-    loop_idx = this->cur_info->loop_start[call_level];
-
-    if(loop_idx != NO_LOOP) 
-    {
-        /* we are currently in a loop */
-        next_loop_idx = (loop_idx +1) % MAX_LOOP_ADDRS;
-
-        if(this->cur_info->call_src_register[call_level][next_loop_idx][0] == offset)
-        {
-            /* continue loop - do nothing (do not exit, register event) */  
-            return 0x0;
-        }
-        else
-        {
-            /* loop does not continue, leave */ 
-            exit_loop(info);
-        }
-
-    }
-    else
-    {
-        /* we are currently not in a loop */
-        for(cur_idx = cur_pos; cur_idx != ((cur_pos+1) % MAX_LOOP_ADDRS);)
-        {
-    //        if((this->cur_info->call_src_register[call_level][cur_idx][0] == offset) && (this->cur_info->call_src_register[call_level][cur_idx][1] == target))
-            if((this->cur_info->call_src_register[call_level][cur_idx][0] == offset))
-            {
-    //            d_print(1, "0x%08x -> 0x%08x [x]\n", this->cur_info->call_src_register[call_level][cur_idx][0], this->cur_info->call_src_register[call_level][cur_idx][1]);
-                /* detected first repetition, register it and enter loop */
-                this->cur_info->loop_start[call_level] = cur_idx;
-                enter_loop(info);
-                got_loop = 1;
-                break;
-            }
-            else 
-            {
-                /* we did not detect repetition, we continue without checking */
-                d_print(1, "checked 0x%08x -> 0x%08x for loop\n", this->cur_info->call_src_register[call_level][cur_idx][0], this->cur_info->call_src_register[call_level][cur_idx][1]);
-            }
-    
-            cur_idx --;
-            cur_idx %= MAX_LOOP_ADDRS;
-        }
-    }
-    if(got_loop) return 0x1;
-
-    /* register current event for loop next check */
-
-    this->cur_info->call_src_register_idx[call_level]++;
-    this->cur_info->call_src_register_idx[call_level] %= MAX_LOOP_ADDRS;
-    this->cur_info->call_src_register[call_level][this->cur_info->call_src_register_idx[call_level]][0] = offset;
-//    this->cur_info->call_src_register[call_level][this->cur_info->call_src_register_idx[call_level]][1] = target;
-
-/*
-    d_print(1, "Loop register:\n");
-    for(cur_idx = this->call_src_register_idx; cur_idx != ((this->call_src_register_idx +1) % MAX_LOOP_ADDRS);)
-    {
-        d_print(1, "0x%08x\n", this->call_src_register[cur_idx]);
-        if(this->call_src_register[cur_idx] == offset) 
-        {
-            enter_loop(info);
-            return 0x1;
-        }
-        
-        cur_idx --;
-        cur_idx %= MAX_LOOP_ADDRS;
-    }
-
-    this->call_src_register[this->call_src_register_idx] = offset;
-    this->call_src_register_idx++;
-    this->call_src_register_idx %= MAX_LOOP_ADDRS;
-
-    exit_loop(info);
-*/
     return 0x0;
 }
 
@@ -917,7 +818,7 @@ int taint_x86::handle_call(CONTEXT_INFO* info)
 
         current = this->reg_restore_32(EIP);
 
-        if(!this->check_loop_2(info))
+        if(this->check_loop_2(info))
         {
             /* we are traversing known loop, do not want this, we wait for next */
             d_print(2, "We are traversing known loop\n");
@@ -1134,29 +1035,74 @@ int taint_x86::handle_call(CONTEXT_INFO* info)
 
 int taint_x86::dive(CONTEXT_INFO* info, OFFSET target, OFFSET next)
 {
-    info->rets[info->call_level] = next;
+    unsigned i, level;
+    CALL_LEVEL* prev_level;
+    CALL_LEVEL* cur_level;
+
+    /* things to do in previous level */
+    level = info->call_level;
+    prev_level = &info->levels[level];
+    prev_level->ret = next;
     info->call_level++;
-    info->entry[info->call_level] = target;
-    info->cur_fence[info->call_level] = 0x0;
 
-    /* prepare loop detection structures */
-    info->call_src_register_idx[info->call_level] = 0x0;
-    info->loop_start[info->call_level] = NO_LOOP;
+    /* OK, new level */
+    level = info->call_level;
+    cur_level = &info->levels[level];
 
-    unsigned i;
+    memset(cur_level, 0x0, sizeof(CALL_LEVEL));
 
+    cur_level->entry = target;
+
+    d_print(1, "Entry at level %d is: %p\n", level, cur_level->entry);
+    cur_level->cur_fence = 0x0;
+
+    /* prepare loop detection structures OBSOLETE
+    info->call_src_register_idx[level] = 0x0;
+    info->loop_start[level] = NO_LOOP;
+    */
+
+    /* if there is collecting going on on previous level, we do not check fences, we just collect */
+    if(prev_level->loop_status == FENCE_COLLECTING) 
+    {
+        cur_level->loop_status = FENCE_COLLECTING;
+    }
+    else if(prev_level->loop_status == FENCE_NOT_COLLECTING) 
+    {
+        cur_level->loop_status = FENCE_NOT_COLLECTING;
+    }
+    else
+    {
+        /* check fences for activation */
+        LOOP_FENCE* cur_fence;
+
+        for(i=0x0; i < this->loop_fences_count; i++)
+        {
+            cur_fence = &this->loop_fences[i];
+            if(cur_fence->entry == cur_level->entry)
+            {
+                cur_level->cur_fence = cur_fence;
+                cur_level->loop_status = FENCE_ACTIVE;
+                cur_level->loop_limit = cur_fence->limit;
+
+                d_print(1, "!!! Activated fence: 0x%08x - 0x%08x - 0x%08x\n", cur_fence->entry, cur_fence->start, cur_fence->limit);
+            }
+        }
+    }
+
+    /*
     for(i=0x0; i<MAX_LOOP_ADDRS; i++)
     {
-        info->call_src_register[info->call_level][i][0] = 0x0;
-        info->call_src_register[info->call_level][i][1] = 0x0;
+        info->call_src_register[level][i][0] = 0x0;
+        info->call_src_register[level][i][1] = 0x0;
     }
+    */
 
     /* other stuff */ 
 
     d_print(1, "[0x%08x] Ret table:\n", this->cur_tid);
     for(i=info->call_level_smallest; i<info->call_level; i++)
     {
-        d_print(1, "[0x%08x] 0x%08x\n", this->cur_tid, this->ctx_info[this->tids[this->cur_tid]].rets[i]);
+        d_print(1, "[0x%08x] 0x%08x\n", this->cur_tid, this->ctx_info[this->tids[this->cur_tid]].levels[i].ret);
     }
 
     return 0x0;
@@ -1209,17 +1155,17 @@ int taint_x86::handle_ret(CONTEXT_INFO* cur_ctx, OFFSET eip)
         
     /* close loops at this level if open */
 
-    for(i; i<cur_ctx->loop_pos[cur_ctx->call_level]; i++)
-    {
-        exit_loop(cur_ctx);
-    }
+ //   for(i; i<cur_ctx->loop_pos[cur_ctx->call_level]; i++)
+ //   {
+ //       exit_loop(cur_ctx);
+ //   }
 
         for(i = cur_ctx->call_level-1; i >= cur_ctx->call_level_smallest; i--)
         {
-            if(abs(cur_ctx->rets[i] - eip) < 0x5)
+            if(abs(cur_ctx->levels[i].ret - eip) < 0x5)
             {
                 diff = cur_ctx->call_level - i;
-                d_print(1, "[0x%08x] (%d) Matched ret 0x%08x on pos: %d, handling diff: %d\n", this->cur_tid, this->current_instr_count, cur_ctx->rets[i], i, diff);
+                d_print(1, "[0x%08x] (%d) Matched ret 0x%08x on pos: %d, handling diff: %d\n", this->cur_tid, this->current_instr_count, cur_ctx->levels[i].ret, i, diff);
 
                 /* fix pos */
                 //cur_ctx->call_level = i;
@@ -1230,6 +1176,7 @@ int taint_x86::handle_ret(CONTEXT_INFO* cur_ctx, OFFSET eip)
                     //print_ret(cur_ctx->graph_file);
 
                     /* clear loop registers  */
+                    /*
                     unsigned k;
 
                     for(k = 0x0; k < MAX_LOOP_ADDRS; k++)
@@ -1238,8 +1185,8 @@ int taint_x86::handle_ret(CONTEXT_INFO* cur_ctx, OFFSET eip)
                         cur_ctx->call_src_register[cur_ctx->call_level][k][1] = 0x0;
                     }
 
-                    cur_ctx->loop_start[cur_ctx->call_level] = NO_LOOP; /* clear loop start index */
-
+                    cur_ctx->loop_start[cur_ctx->call_level] = NO_LOOP;
+                    */
                     cur_ctx->call_level--;
                     print_ret(cur_ctx);
                 }
@@ -2031,22 +1978,26 @@ int taint_x86::finish()
         d_print(1, "[0x%08x] Diff_last: %d\n", cur_tid->tid, diff_last);
         for(j=0x0; j < diff_last; j++)
         {
+/*
 #ifdef ANALYZE_LOOPS
             for(k = 0x0; k<cur_tid->loop_pos[cur_tid->call_level]; k++)
             {
                 exit_loop(cur_tid);
             }
 #endif
+*/
             print_ret(cur_tid);
             cur_tid->call_level--;
         }
 
+/*
 #ifdef ANALYZE_LOOPS
         for(k = 0x0; k<cur_tid->loop_pos[cur_tid->call_level]; k++)
         {
             exit_loop(cur_tid);
         }
 #endif
+*/
 
         sprintf(out_line, "</node></map>\n");
         fwrite(out_line, strlen(out_line), 0x1, cur_tid->graph_file);
@@ -2147,7 +2098,7 @@ int taint_x86::add_thread(CONTEXT_info ctx_info)
         /* clear loop structures */
         unsigned call_level;
         call_level = this->ctx_info[this->tid_count].call_level;
-        this->ctx_info[this->tid_count].loop_start[call_level] = NO_LOOP;
+//        this->ctx_info[this->tid_count].loop_start[call_level] = NO_LOOP;
 
         this->ctx_info[this->tid_count].tid = ctx_info.thread_id;
         //update lookup table

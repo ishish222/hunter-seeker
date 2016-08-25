@@ -855,11 +855,13 @@ void sysret_callback(void* data)
             switch(my_trace->syscall_out_args[sysenter_no][i].off_location)
             {
                 case LOCATION_CONST:
+                    d_print("LOCATION_CONST\n");
                     my_trace->syscall_out_args_dump_list[i].off = my_trace->syscall_out_args[sysenter_no][i].off;
                     arg_val = my_trace->syscall_out_args_dump_list[i].off;
                     d_print("Arg off: 0x%08x\n", arg_val);
                     break;
                 case LOCATION_MEM:
+                    d_print("LOCATION_MEM\n");
                     arg_addr = my_trace->syscall_out_args[sysenter_no][i].off;
                     read_memory(my_trace->cpdi.hProcess, (void*)arg_addr, (void*)&arg_val, 0x4, &read);
                     d_print("0x%08x: 0x%08x\n", arg_addr, arg_val);
@@ -868,6 +870,7 @@ void sysret_callback(void* data)
                     my_trace->syscall_out_args_dump_list[i].off = arg_val;
                     break;
                 case LOCATION_STACK:
+                    d_print("LOCATION_STACK\n");
                     arg_addr = sysenter_esp + 0x8;
                     arg_addr += my_trace->syscall_out_args[sysenter_no][i].off * 0x4;
                     arg_val = arg_addr;
@@ -877,6 +880,7 @@ void sysret_callback(void* data)
                     my_trace->syscall_out_args_dump_list[i].off = arg_val;
                     break;
                 case LOCATION_ADDR_STACK:
+                    d_print("LOCATION_ADDR_STACK\n");
                     arg_addr = sysenter_esp + 0x8;
                     arg_addr += my_trace->syscall_out_args[sysenter_no][i].off * 0x4;
                     read_memory(my_trace->cpdi.hProcess, (void*)arg_addr, (void*)&arg_val, 0x4, &read);
@@ -886,6 +890,7 @@ void sysret_callback(void* data)
                     my_trace->syscall_out_args_dump_list[i].off = arg_val;
                     break;
                 case LOCATION_ADDR_ADDR_STACK:
+                    d_print("LOCATION_ADDR_ADDR_STACK\n");
                     arg_addr = sysenter_esp + 0x8;
                     arg_addr += my_trace->syscall_out_args[sysenter_no][i].off * 0x4;
                     read_memory(my_trace->cpdi.hProcess, (void*)arg_addr, (void*)&arg_val, 0x4, &read);
@@ -909,11 +914,13 @@ void sysret_callback(void* data)
             switch(my_trace->syscall_out_args[sysenter_no][i].size_location)
             {
                 case LOCATION_CONST:
+                    d_print("LOCATION_CONST\n");
                     my_trace->syscall_out_args_dump_list[i].size = my_trace->syscall_out_args[sysenter_no][i].size;
                     arg_val = my_trace->syscall_out_args_dump_list[i].size;
                     d_print("Arg size: 0x%08x\n", arg_val);
                     break;
                 case LOCATION_MEM:
+                    d_print("LOCATION_MEM\n");
                     arg_addr = my_trace->syscall_out_args[sysenter_no][i].size;
                     read_memory(my_trace->cpdi.hProcess, (void*)arg_addr, (void*)&arg_val, 0x4, &read);
                     d_print("0x%08x: 0x%08x\n", arg_addr, arg_val);
@@ -921,6 +928,7 @@ void sysret_callback(void* data)
                     my_trace->syscall_out_args_dump_list[i].size = arg_val;
                     break;
                 case LOCATION_STACK:
+                    d_print("LOCATION_STACK\n");
                     arg_addr = sysenter_esp + 0x8;
                     arg_addr += my_trace->syscall_out_args[sysenter_no][i].size * 0x4;
                     read_memory(my_trace->cpdi.hProcess, (void*)arg_addr, (void*)&arg_val, 0x4, &read);
@@ -929,6 +937,7 @@ void sysret_callback(void* data)
                     my_trace->syscall_out_args_dump_list[i].size = arg_val;
                     break;
                 case LOCATION_ADDR_STACK:
+                    d_print("LOCATION_ADDR_STACK\n");
                     arg_addr = sysenter_esp + 0x8;
                     arg_addr += my_trace->syscall_out_args[sysenter_no][i].size * 0x4;
                     read_memory(my_trace->cpdi.hProcess, (void*)arg_addr, (void*)&arg_val, 0x4, &read);
@@ -3208,6 +3217,8 @@ int configure_syscalls()
 
     /* syscall out args table */
 
+    d_print("Configuring syscall out args\n");
+
     for(i=0x0; i<MAX_SYSCALL_ENTRIES; i++)
         for(j=0x0;j<MAX_SYSCALL_OUT_ARGS; j++)
             my_trace->syscall_out_args[i][j].off_location = LOCATION_END;
@@ -3552,6 +3563,9 @@ int main(int argc, char** argv)
     }
 
     init_trace(my_trace, argv[1], atoi(argv[2]));
+
+    /*configure syscalls */
+    configure_syscalls();
 
     /*configure routines */
     my_trace->routines[0x0] = &sysenter_callback;
