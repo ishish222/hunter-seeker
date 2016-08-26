@@ -194,13 +194,15 @@ int register_fence(char* line, taint_x86* taint_eng)
     char* cmd;
     OFFSET entry;
     OFFSET start;
-    OFFSET end;
+    OFFSET size;
+    OFFSET count;
 
     cmd = strtok(line, ",");
     entry = strtol(strtok(0x0, ","), 0x0, 0x10);
     start = strtol(strtok(0x0, ","), 0x0, 0x10);
-    end = strtol(strtok(0x0, ","), 0x0, 0x10);
-    taint_eng->add_fence(entry, start, end);
+    size = strtol(strtok(0x0, ","), 0x0, 0x10);
+    count  = strtol(strtok(0x0, ","), 0x0, 0x10);
+    taint_eng->add_fence(entry, start, size, count);
 
     return 0x0;
 }

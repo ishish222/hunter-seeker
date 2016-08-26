@@ -2181,6 +2181,8 @@ typedef struct LOOP_FENCE_
     OFFSET entry;
     OFFSET start;
     OFFSET limit;
+    OFFSET struct_size;
+    OFFSET struct_count;
 
     char collecting;
     char status;
@@ -2272,6 +2274,8 @@ typedef struct _CALL_LEVEL
     /* new new loop handling */
     unsigned loop_addr_idx;
     unsigned loop_limit;
+    unsigned loop_struct_size;
+    unsigned loop_struct_count;
     OFFSET   loop_addr[MAX_LOOP_ADDR];
     char     loop_status;
 
@@ -2470,6 +2474,8 @@ class taint_x86
     LOOP_FENCE loop_fences[MAX_LOOP_FENCES]; 
     unsigned loop_fences_count;
     
+    int enter_loop_demo(CONTEXT_INFO*);
+    int exit_loop_demo(CONTEXT_INFO*);
     int enter_loop(CONTEXT_INFO*);
     int exit_loop(CONTEXT_INFO*);
     //int check_loop(CONTEXT_INFO*, OFFSET, OFFSET);
@@ -2986,7 +2992,7 @@ class taint_x86
     int add_wanted(char*);
     int add_wanted_e(DWORD);
     int add_wanted_i(unsigned);
-    int add_fence(OFFSET, OFFSET, OFFSET);
+    int add_fence(OFFSET, OFFSET, OFFSET, OFFSET);
     int check_lib_blacklist(LIB_INFO*);
     int check_addr_blacklist(OFFSET);
     int check_func_wanted(char*);

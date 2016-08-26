@@ -365,7 +365,7 @@ int taint_x86::add_wanted(char* str)
     return 0x0;
 }
 
-int taint_x86::add_fence(OFFSET entry, OFFSET start, OFFSET limit)
+int taint_x86::add_fence(OFFSET entry, OFFSET start, OFFSET struct_size, OFFSET struct_count)
 {
     if(this->loop_fences_count >= MAX_LOOP_FENCES)
     {
@@ -375,11 +375,11 @@ int taint_x86::add_fence(OFFSET entry, OFFSET start, OFFSET limit)
 
     this->loop_fences[this->loop_fences_count].entry = entry;
     this->loop_fences[this->loop_fences_count].start = start;
-    this->loop_fences[this->loop_fences_count].limit = limit;
-    //this->loop_fences[this->loop_fences_count].cur_looped_addr = 0x0;
-    //this->loop_fences[this->loop_fences_count].collecting = 0x0;
+    this->loop_fences[this->loop_fences_count].struct_size = struct_size;
+    this->loop_fences[this->loop_fences_count].struct_count = struct_count;
+    this->loop_fences[this->loop_fences_count].limit = struct_size * struct_count;
     this->loop_fences_count++;
-    d_print(1, "Fence: 0x%08x - 0x%08x - 0x%08x\n", entry, start, limit);
+    d_print(1, "Fence: Entry: 0x%08x Start: 0x%08x Size: 0x%08x Count: 0x%08x\n", entry, start, struct_size, struct_count);
 
     return 0x0;
 }
@@ -613,6 +613,49 @@ int taint_x86::handle_jmp(CONTEXT_INFO* info)
 }
 
 /* loop routines */ 
+int taint_x86::enter_loop_demo(CONTEXT_INFO* info)
+{
+#ifndef ANALYZE_LOOPS
+    return 0;
+#endif
+    char out_line[MAX_NAME];
+    FILE* f = info->graph_file;   
+
+    unsigned cur_call_level;
+    cur_call_level = this->cur_info->call_level;
+
+    {
+        d_print(1, "Entering loop demo\n");
+//        sprintf(out_line, "[loop]");
+//        print_call(info, out_line, colors[CODE_BLACK]);
+        sprintf(out_line, "<!-- started loop demo -->\n");
+        fwrite(out_line, strlen(out_line), 0x1, f);
+    }
+
+    //info->loop_pos[cur_call_level]++;
+
+}
+
+int taint_x86::exit_loop_demo(CONTEXT_INFO* info)
+{
+#ifndef ANALYZE_LOOPS
+    return 0;
+#endif
+    unsigned level;
+    char out_line[MAX_NAME];
+    FILE* f = info->graph_file;   
+    CALL_LEVEL* cur_level;
+
+    level = this->cur_info->call_level;
+
+    d_print(1, "Exiting loop demo\n");
+    cur_level->cur_fence = 0x0;
+    sprintf(out_line, "<!-- loop demo ended \n");
+    fwrite(out_line, strlen(out_line), 0x1, f);
+
+//    print_ret(info);
+}
+
 int taint_x86::enter_loop(CONTEXT_INFO* info)
 {
 #ifndef ANALYZE_LOOPS
@@ -628,7 +671,7 @@ int taint_x86::enter_loop(CONTEXT_INFO* info)
         d_print(1, "Entering loop\n");
 //        sprintf(out_line, "[loop]");
 //        print_call(info, out_line, colors[CODE_BLACK]);
-        sprintf(out_line, "<!-- started loop\n");
+        sprintf(out_line, "<!-- started loop -->\n");
         fwrite(out_line, strlen(out_line), 0x1, f);
     }
 
@@ -684,6 +727,8 @@ int taint_x86::check_loop_2(CONTEXT_INFO* info)
     unsigned cur_fence_idx;
     unsigned cur_loop_addr_idx;
     unsigned cur_loop_limit;
+    unsigned cur_loop_struct_size;
+    unsigned cur_loop_struct_count;
     unsigned level;
     LOOP_FENCE* cur_fence;
     CALL_LEVEL* cur_level;
@@ -701,7 +746,6 @@ int taint_x86::check_loop_2(CONTEXT_INFO* info)
     {
 
         d_print(1, "---\nActive fence: \nEntry: \t0x%08x\nStart: \t0x%08x\nLimit: \t%d\n", cur_fence->entry, cur_fence->start, cur_fence->limit);
-//        d_print(1, "Collecting: \t0x%08x\nCurrent looped addr: \t%d\n---\n", cur_fence->collecting, info->cur_loop_addr);
 
         /* on specific level, but not yet collecting */
         if(cur_level->loop_status == FENCE_ACTIVE)
@@ -712,22 +756,22 @@ int taint_x86::check_loop_2(CONTEXT_INFO* info)
                 d_print(1, "Starting collecting\n");
                 cur_level->loop_status = FENCE_COLLECTING;
                 enter_loop(info);
+                enter_loop_demo(info);
             }
         }
 
         /* in loop */
-        if(cur_level->loop_status == FENCE_COLLECTING)
-        {
-            /* still collecting looped addrs */
-            cur_loop_addr_idx   = cur_level->loop_addr_idx;
-            cur_loop_limit      = cur_level->loop_limit;
+        cur_loop_addr_idx   = cur_level->loop_addr_idx;
+        cur_loop_limit      = cur_level->loop_limit;
+        cur_loop_struct_size    = cur_level->loop_struct_size;
+        cur_loop_struct_count   = cur_level->loop_struct_count;
 
-            cur_level->loop_addr[cur_loop_addr_idx] = offset;
+        if(cur_level->loop_status == FENCE_NOT_COLLECTING)
+        {
             cur_loop_addr_idx ++;
             cur_level->loop_addr_idx = cur_loop_addr_idx;
 
-            d_print(1, "Collected: %p\n", offset);
-            d_print(1, "Level %d collection: idx: %d, limit: %d\n", level, cur_level->loop_addr_idx, cur_level->loop_limit);
+            d_print(1, "Not collected: %p\n", offset);
 
             if(cur_loop_limit != 0x0)
             if(cur_loop_addr_idx >= cur_loop_limit)
@@ -746,10 +790,27 @@ int taint_x86::check_loop_2(CONTEXT_INFO* info)
                     d_print(1, "0x%08x\n", cur_level->loop_addr[i]);
                 }
 
-                /* output event to graph */
-                return 0;
             }
-            return 1;
+            return 0;
+        }
+
+        if(cur_level->loop_status == FENCE_COLLECTING)
+        {
+            cur_level->loop_addr[cur_loop_addr_idx] = offset;
+            cur_loop_addr_idx ++;
+            cur_level->loop_addr_idx = cur_loop_addr_idx;
+
+            d_print(1, "Collected: %p\n", offset);
+            d_print(1, "Level %d collection: idx: %d, limit: %d\n", level, cur_level->loop_addr_idx, cur_level->loop_limit);
+
+            if(cur_loop_addr_idx > cur_loop_struct_size)
+            {
+                /* we collected enough for demonstration */
+                cur_level->loop_status = FENCE_NOT_COLLECTING;
+                exit_loop_demo(info);
+            }
+
+            return 0;
         } 
     }
     return 0x0;
@@ -1069,6 +1130,7 @@ int taint_x86::dive(CONTEXT_INFO* info, OFFSET target, OFFSET next)
     else if(prev_level->loop_status == FENCE_NOT_COLLECTING) 
     {
         cur_level->loop_status = FENCE_NOT_COLLECTING;
+        cur_level->loop_limit = 0x99999999;
     }
     else
     {
@@ -1083,6 +1145,8 @@ int taint_x86::dive(CONTEXT_INFO* info, OFFSET target, OFFSET next)
                 cur_level->cur_fence = cur_fence;
                 cur_level->loop_status = FENCE_ACTIVE;
                 cur_level->loop_limit = cur_fence->limit;
+                cur_level->loop_struct_size = cur_fence->struct_size;
+                cur_level->loop_struct_count = cur_fence->struct_count;
 
                 d_print(1, "!!! Activated fence: 0x%08x - 0x%08x - 0x%08x\n", cur_fence->entry, cur_fence->start, cur_fence->limit);
             }
