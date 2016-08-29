@@ -626,10 +626,10 @@ int taint_x86::enter_loop_demo(CONTEXT_INFO* info)
 
     {
         d_print(1, "Entering loop demo\n");
-//        sprintf(out_line, "[loop]");
-//        print_call(info, out_line, colors[CODE_BLACK]);
-        sprintf(out_line, "<!-- started loop demo -->\n");
-        fwrite(out_line, strlen(out_line), 0x1, f);
+        sprintf(out_line, "[loop]");
+        print_call(info, out_line, colors[CODE_BLACK]);
+//        sprintf(out_line, "<!-- started loop demo -->\n");
+//        fwrite(out_line, strlen(out_line), 0x1, f);
     }
 
     //info->loop_pos[cur_call_level]++;
@@ -650,10 +650,10 @@ int taint_x86::exit_loop_demo(CONTEXT_INFO* info)
 
     d_print(1, "Exiting loop demo\n");
     cur_level->cur_fence = 0x0;
-    sprintf(out_line, "<!-- loop demo ended \n");
-    fwrite(out_line, strlen(out_line), 0x1, f);
+//    sprintf(out_line, "<!-- loop demo ended \n");
+//    fwrite(out_line, strlen(out_line), 0x1, f);
 
-//    print_ret(info);
+    print_ret(info);
 }
 
 int taint_x86::enter_loop(CONTEXT_INFO* info)
@@ -671,8 +671,8 @@ int taint_x86::enter_loop(CONTEXT_INFO* info)
         d_print(1, "Entering loop\n");
 //        sprintf(out_line, "[loop]");
 //        print_call(info, out_line, colors[CODE_BLACK]);
-        sprintf(out_line, "<!-- started loop -->\n");
-        fwrite(out_line, strlen(out_line), 0x1, f);
+//        sprintf(out_line, "<!-- started loop -->\n");
+//        fwrite(out_line, strlen(out_line), 0x1, f);
     }
 
     //info->loop_pos[cur_call_level]++;
@@ -693,8 +693,8 @@ int taint_x86::exit_loop(CONTEXT_INFO* info)
 
     d_print(1, "Exiting loop\n");
     cur_level->cur_fence = 0x0;
-    sprintf(out_line, "loop ended -->\n");
-    fwrite(out_line, strlen(out_line), 0x1, f);
+//    sprintf(out_line, "loop ended -->\n");
+//    fwrite(out_line, strlen(out_line), 0x1, f);
 
 //    print_ret(info);
 }
@@ -827,6 +827,7 @@ int taint_x86::handle_call(CONTEXT_INFO* info)
     DWORD_t waiting;
     OFFSET target = info->target;
     OFFSET next = info->next;
+    CALL_LEVEL* cur_level;
 
     #define DECISION_NO_EMIT        0x0
     #define DECISION_EMIT           0x1
@@ -879,16 +880,20 @@ int taint_x86::handle_call(CONTEXT_INFO* info)
 
         current = this->reg_restore_32(EIP);
 
-        if(this->check_loop_2(info))
+        /* check for loop bypasses */
+        this->check_loop_2(info);
+        cur_level = &info->levels[info->call_level];
+
+        if(cur_level->loop_status == FENCE_NOT_COLLECTING)
         {
             /* we are traversing known loop, do not want this, we wait for next */
-            d_print(2, "We are traversing known loop\n");
+            d_print(2, "We are not collecting these calls\n");
             decision_emit = DECISION_NO_EMIT;
         }
         else
         {
             /* we are not traversing a fully known loop, we want this */
-            d_print(2, "We are not traversing known loop, we want this\n");
+            d_print(2, "We are not traversing known loop, we are in active fence before start or we are collecting . Either way we want this\n");
             decision_emit = DECISION_EMIT;
         }
     }
@@ -1252,7 +1257,10 @@ int taint_x86::handle_ret(CONTEXT_INFO* cur_ctx, OFFSET eip)
                     cur_ctx->loop_start[cur_ctx->call_level] = NO_LOOP;
                     */
                     cur_ctx->call_level--;
-                    print_ret(cur_ctx);
+                    if(cur_ctx->levels[cur_ctx->call_level].loop_status != FENCE_NOT_COLLECTING)
+                    {
+                        print_ret(cur_ctx);
+                    }
                 }
             return 0x0;
             }
