@@ -40,7 +40,7 @@ Change of endiannes takes place when reading and writing to memory (to_mem, from
 #define MAX_LIB_COUNT 0x100
 #define MAX_THREADS 0x100
 #define MAX_THREAD_NUMBER 0x1000
-#define MAX_CALL_LEVELS 200
+#define MAX_CALL_LEVELS 0x200
 #define GRAPH_START 100
 #define MAX_LOOP_ADDRS 0x10
 //#define MAX_THREADS 0x1000000
@@ -2287,7 +2287,7 @@ typedef struct _CONTEXT_INFO
     BYTE_t registers[REG_SIZE];
     OFFSET seg_map[0x6];
 
-    CALL_LEVEL levels[MAX_CALL_LEVELS];
+    CALL_LEVEL* levels;
 
     /* graph handling */
     DWORD call_level;
@@ -3106,6 +3106,7 @@ class taint_x86
     void print_empty_call(CONTEXT_INFO*, char*, const char*);
     void print_ret(CONTEXT_INFO*);
     int dive(CONTEXT_INFO*, OFFSET, OFFSET);
+    int surface(CONTEXT_INFO*);
 
     int print_err_all_contexts();
     int print_err_all_t_contexts();

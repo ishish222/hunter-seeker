@@ -796,7 +796,9 @@ int taint_x86::check_loop_2(CONTEXT_INFO* info)
 
         if(cur_level->loop_status == FENCE_COLLECTING)
         {
+            d_print(1, "1");
             cur_level->loop_addr[cur_loop_addr_idx] = offset;
+            d_print(1, "2");
             cur_loop_addr_idx ++;
             cur_level->loop_addr_idx = cur_loop_addr_idx;
 
@@ -1114,9 +1116,9 @@ int taint_x86::dive(CONTEXT_INFO* info, OFFSET target, OFFSET next)
     /* OK, new level */
     level = info->call_level;
     cur_level = &info->levels[level];
-
     memset(cur_level, 0x0, sizeof(CALL_LEVEL));
 
+//    cur_level->loop_addr = (OFFSET*)malloc(sizeof(OFFSET) * MAX_LOOP_ADDR);
     cur_level->entry = target;
 
     d_print(1, "Entry at level %d is: %p\n", level, cur_level->entry);
@@ -1177,7 +1179,17 @@ int taint_x86::dive(CONTEXT_INFO* info, OFFSET target, OFFSET next)
     return 0x0;
 }
 
+int taint_x86::surface(CONTEXT_INFO* info)
+{
+    CALL_LEVEL* cur_level;
+    
+    cur_level = &info->levels[info->call_level];
+    
+//    if(cur_level->loop_addr) free(cur_level->loop_addr);
+    info->call_level--;
 
+    return 0x0;
+}
 
 int taint_x86::check_rets(OFFSET ret)
 {
@@ -1256,11 +1268,12 @@ int taint_x86::handle_ret(CONTEXT_INFO* cur_ctx, OFFSET eip)
 
                     cur_ctx->loop_start[cur_ctx->call_level] = NO_LOOP;
                     */
-                    cur_ctx->call_level--;
+
                     if(cur_ctx->levels[cur_ctx->call_level].loop_status != FENCE_NOT_COLLECTING)
                     {
                         print_ret(cur_ctx);
                     }
+                    surface(cur_ctx);
                 }
             return 0x0;
             }
@@ -1271,8 +1284,11 @@ int taint_x86::handle_ret(CONTEXT_INFO* cur_ctx, OFFSET eip)
         {
                 /* pos */
                 d_print(1, "[0x%08x] Unmatched ret 0x%08x on pos: %d\n", this->cur_tid, eip, cur_ctx->call_level);
-                cur_ctx->call_level--;
-                print_ret(cur_ctx);
+                if(cur_ctx->levels[cur_ctx->call_level].loop_status != FENCE_NOT_COLLECTING)
+                {
+                    print_ret(cur_ctx);
+                }
+                surface(cur_ctx);
                 
                 /* smallest */
                 cur_ctx->call_level_smallest--;
@@ -1360,7 +1376,7 @@ void taint_x86::restore_32(DWORD_t off, DWORD_t& ret)
 void taint_x86::reg_store_32(OFFSET off, DWORD_t v, int tid)
 {
 #ifdef VERIFY_OOB
-    if(this->verify_oob_offset(off, this->mem_length) != 0x0) return;
+    if(this->verify_oob_offset(off, REG_SIZE) != 0x0) return;
 #endif
 
 #ifdef REVERSE_ANALYSIS
@@ -1383,7 +1399,7 @@ void taint_x86::reg_store_32(OFFSET off, DWORD_t v, int tid)
 DWORD_t taint_x86::reg_restore_32(OFFSET off, int tid)
 {
 #ifdef VERIFY_OOB
-    if(this->verify_oob_offset(off, this->mem_length) != 0x0) 
+    if(this->verify_oob_offset(off, REG_SIZE) != 0x0) 
     {
         return this->invalid_dword;
     }
@@ -1499,7 +1515,7 @@ void taint_x86::restore_16(DWORD_t off, WORD_t& ret)
 void taint_x86::reg_store_16(OFFSET off, WORD_t v, int tid)
 {
 #ifdef VERIFY_OOB
-    if(this->verify_oob_offset(off, this->mem_length) != 0x0) return;
+    if(this->verify_oob_offset(off, REG_SIZE) != 0x0) return;
 #endif
 
 #ifdef REVERSE_ANALYSIS
@@ -1519,7 +1535,7 @@ void taint_x86::reg_store_16(OFFSET off, WORD_t v, int tid)
 WORD_t taint_x86::reg_restore_16(OFFSET off, int tid)
 {
 #ifdef VERIFY_OOB
-    if(this->verify_oob_offset(off, this->mem_length) != 0x0) 
+    if(this->verify_oob_offset(off, REG_SIZE) != 0x0) 
     {
         return this->invalid_word;
     }
@@ -1575,7 +1591,7 @@ WORD_t taint_x86::reg_restore_16(DWORD_t off)
 void taint_x86::store_8(OFFSET off, BYTE_t v)
 {
 #ifdef VERIFY_OOB
-    if(this->verify_oob_offset(off, this->mem_length) != 0x0) return;
+    if(this->verify_oob_offset(off, REG_SIZE) != 0x0) return;
 #endif
 
     for(int i = 0x0; i< this->new_bpt_count; i++)
@@ -1594,7 +1610,7 @@ void taint_x86::store_8(OFFSET off, BYTE_t v)
 void taint_x86::restore_8(OFFSET off, BYTE_t& ret)
 {
 #ifdef VERIFY_OOB
-    if(this->verify_oob_offset(off, this->mem_length) != 0x0) 
+    if(this->verify_oob_offset(off, REG_SIZE) != 0x0) 
     {
         ret = this->invalid_byte;
         return;
@@ -2165,6 +2181,7 @@ int taint_x86::add_thread(CONTEXT_info ctx_info)
         this->ctx_info[this->tid_count].graph_file = fopen(graph_filename, "w");
         this->ctx_info[this->tid_count].call_level = GRAPH_START; //for call trace
         this->ctx_info[this->tid_count].call_level_smallest = GRAPH_START; //for call trace
+        this->ctx_info[this->tid_count].levels = (CALL_LEVEL*)malloc(sizeof(CALL_LEVEL)*MAX_CALL_LEVELS);
         this->ctx_info[this->tid_count].waiting = 0x0; //for call trace
 
         /* clear loop structures */
@@ -2463,7 +2480,11 @@ int taint_x86::del_thread(DWORD tid)
 {
     char out_line[MAX_NAME];
     unsigned int i, diff;
+    unsigned thread_idx;
 
+/*    thread_idx = this->tids[tid];
+    free(this->ctx_info[tid].levels);
+*/
 /*
     d_print(1, "Removing  thread: 0x%08x\n", tid);
     //tid = this->tids[tid];
@@ -2587,6 +2608,7 @@ int taint_x86::load_mem_from_file(char* path)
 
 int taint_x86::load_instr_from_file(char* path)
 {
+    if(path[strlen(path)-1] == 0xd) path[strlen(path)-1] = 0x0;
     d_print(1, "Loading instr file: %s\n", path);
     this->instr_file = fopen(path, "rb");
     if(this->instr_file == 0x0)
