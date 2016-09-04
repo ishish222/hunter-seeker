@@ -2993,6 +2993,7 @@ class taint_x86
     int add_wanted_e(DWORD);
     int add_wanted_i(unsigned);
     int add_fence(OFFSET, OFFSET, OFFSET, OFFSET);
+    int check_fence(CALL_LEVEL*);
     int check_lib_blacklist(LIB_INFO*);
     int check_addr_blacklist(OFFSET);
     int check_func_wanted(char*);

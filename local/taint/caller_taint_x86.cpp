@@ -852,7 +852,7 @@ int taint_x86::handle_call(CONTEXT_INFO* info)
     s = this->get_symbol(target);
     unsigned i;
 
-    d_print(1, "Call");
+    d_print(1, "Call\n");
     d_print(2, "Call: 0x%08x\n", this->reg_restore_32(EIP).get_DWORD());
 
     /* decision about emission */
@@ -1101,6 +1101,31 @@ int taint_x86::handle_call(CONTEXT_INFO* info)
     return 0x0;
 }
 
+int taint_x86::check_fence(CALL_LEVEL* cur_level)
+{
+    /* check fences for activation */
+    unsigned i;
+    LOOP_FENCE* cur_fence;
+
+    for(i=0x0; i < this->loop_fences_count; i++)
+    {
+        cur_fence = &this->loop_fences[i];
+        if(cur_fence->entry == cur_level->entry)
+        {
+            cur_level->cur_fence = cur_fence;
+            cur_level->loop_status = FENCE_ACTIVE;
+            cur_level->loop_limit = cur_fence->limit;
+            cur_level->loop_struct_size = cur_fence->struct_size;
+            cur_level->loop_struct_count = cur_fence->struct_count;
+
+            d_print(1, "!!! Activated fence: 0x%08x - 0x%08x - 0x%08x\n", cur_fence->entry, cur_fence->start, cur_fence->limit);
+        }
+    }
+
+    return 0x0;
+}
+
+
 int taint_x86::dive(CONTEXT_INFO* info, OFFSET target, OFFSET next)
 {
     unsigned i, level;
@@ -1141,32 +1166,8 @@ int taint_x86::dive(CONTEXT_INFO* info, OFFSET target, OFFSET next)
     }
     else
     {
-        /* check fences for activation */
-        LOOP_FENCE* cur_fence;
-
-        for(i=0x0; i < this->loop_fences_count; i++)
-        {
-            cur_fence = &this->loop_fences[i];
-            if(cur_fence->entry == cur_level->entry)
-            {
-                cur_level->cur_fence = cur_fence;
-                cur_level->loop_status = FENCE_ACTIVE;
-                cur_level->loop_limit = cur_fence->limit;
-                cur_level->loop_struct_size = cur_fence->struct_size;
-                cur_level->loop_struct_count = cur_fence->struct_count;
-
-                d_print(1, "!!! Activated fence: 0x%08x - 0x%08x - 0x%08x\n", cur_fence->entry, cur_fence->start, cur_fence->limit);
-            }
-        }
+        this->check_fence(cur_level);
     }
-
-    /*
-    for(i=0x0; i<MAX_LOOP_ADDRS; i++)
-    {
-        info->call_src_register[level][i][0] = 0x0;
-        info->call_src_register[level][i][1] = 0x0;
-    }
-    */
 
     /* other stuff */ 
 
@@ -2189,10 +2190,22 @@ int taint_x86::add_thread(CONTEXT_info ctx_info)
         call_level = this->ctx_info[this->tid_count].call_level;
 //        this->ctx_info[this->tid_count].loop_start[call_level] = NO_LOOP;
 
+        /* for graphs */
+        unsigned level;
+        CALL_LEVEL* cur_level;
+    
+        level = this->ctx_info[this->tid_count].call_level;
+        cur_level = &this->ctx_info[this->tid_count].levels[level];
+    
+        cur_level->entry = 0xffffffff;
+        this->check_fence(cur_level);
+
+        /* fnalize */
         this->ctx_info[this->tid_count].tid = ctx_info.thread_id;
         //update lookup table
         this->tids[ctx_info.thread_id] = this->tid_count;
         this->tid_count++;
+
     }
 
     this->update_watchpoints(ctx_info.thread_id);
@@ -2219,8 +2232,6 @@ int taint_x86::add_thread(CONTEXT_info ctx_info)
         info->seg_map[i] = addr;
     }
    
-    //for graphs
-
     //info->call_level_largest = 0x3; 
 
     //this->print_context(this->cur_tid);
