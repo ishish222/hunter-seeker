@@ -2413,7 +2413,7 @@ int process_last_event()
                     case EXCEPTION_BREAKPOINT:
                         /* this is not our responsibility, inform TracerController and wait for orders */
                         printf("BP\n");
-                        ss_callback((void*)&my_trace->last_event);
+//                        ss_callback((void*)&my_trace->last_event);
 
                         unsigned i;
                         OFFSET bp_addr;
