@@ -64,6 +64,7 @@ char line2[MAX_LINE];
 
 void marker_handler(void* data);
 void reaction_handler(void* data);
+void print_context(CONTEXT*);
 int del_breakpoint(DWORD);
 
 int d_print(const char* format, ...)
@@ -82,6 +83,7 @@ int d_print(const char* format, ...)
         vfprintf(stdout, format, argptr);
         va_end(argptr);
     }
+    fflush(stdout);
 
     return 0x0;
 }
@@ -92,9 +94,33 @@ void sample_routine_1(void* data)
     return;
 }
 
-void sample_routine_2(void* data)
+void zero_SF(void* data)
 {
-    d_print("Sample routine 2\n");
+    d_print("Zeroing SF\n");
+
+    int i;
+    unsigned id, thread_idx;
+    HANDLE myHandle = (HANDLE)-0x1;
+
+    id = my_trace->last_event.dwThreadId;
+    thread_idx = my_trace->thread_map[id];
+    myHandle = my_trace->threads[thread_idx].handle;
+
+    CONTEXT ctx;
+    ctx.ContextFlags = CONTEXT_CONTROL;
+    if(GetThreadContext(myHandle, &ctx) == 0x0)
+    {
+        d_print("Failed to get context, error: 0x%08x\n", GetLastError());
+    }
+    d_print("before zeroing: 0x%08x\n", ctx.EFlags);
+    /* zeroing */
+    print_context(&ctx);
+    ctx.EFlags &= CLEAR_SF_FLAGS;
+    d_print("after zeroing: 0x%08x\n", ctx.EFlags);
+    print_context(&ctx);
+
+    SetThreadContext(myHandle, &ctx);
+
     return;
 }
 
@@ -106,8 +132,8 @@ int enable_reaction(unsigned reaction)
     {
         if(my_trace->reactions[i].id == reaction)
         {
-                my_trace->reactions[i].real_offset = my_trace->reactions[i].lib_offset + my_trace->reactions[i].offset;
-                add_breakpoint(my_trace->reactions[i].real_offset, reaction_handler);
+            my_trace->reactions[i].real_offset = my_trace->reactions[i].lib_offset + my_trace->reactions[i].offset;
+            add_breakpoint(my_trace->reactions[i].real_offset, reaction_handler);
         }
     }
     return 0x0;
@@ -2354,6 +2380,19 @@ int process_last_event()
 
                 /* reactions do not seem appropriate */
 
+                d_print("Checking reactions\n");
+                for(ii = 0x0; ii< my_trace->reaction_count; ii++)
+                {
+                    d_print("Comparing _%s_ and _%s_\n", my_trace->reactions[ii].lib_name, "self");
+                    if(strstr(my_trace->reactions[ii].lib_name, "self"))
+                    {
+                        d_print("Should write reaction for %s\n", my_trace->reactions[ii].lib_name);
+                        my_trace->reactions[ii].lib_offset = (OFFSET)my_trace->cpdi.lpBaseOfImage;
+                        my_trace->reactions[ii].real_offset = my_trace->reactions[ii].lib_offset + my_trace->reactions[ii].offset;
+                    }
+                
+                }
+
                 return REPORT_PROCESS_CREATED;
                 break;
 
@@ -3572,7 +3611,7 @@ int main(int argc, char** argv)
     my_trace->routines[0x1] = &sysret_callback;
     my_trace->routines[0x2] = &sysret_refresh;
     my_trace->routines[0x100] = &sample_routine_1;
-    my_trace->routines[0x101] = &sample_routine_1;
+    my_trace->routines[0x101] = &zero_SF;
 
     /* Windows sockets */
 

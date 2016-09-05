@@ -14,7 +14,8 @@
 #define BUFF_SIZE 0x100000
 #define SS_FLAGS 0x100
 #define CLEAR_SS_FLAGS 0xfffffeff
-#define MEM_DUMP
+#define CLEAR_SF_FLAGS 0xffffff7f
+//#define MEM_DUMP
 #define MAX_NAME 0x200
 #define MAX_LINE 0x100
 #define MAX_HANDLERS 0x100000
