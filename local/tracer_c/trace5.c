@@ -94,6 +94,36 @@ void sample_routine_1(void* data)
     return;
 }
 
+void set_ZF(void* data)
+{
+    d_print("Setting ZF\n");
+
+    int i;
+    unsigned id, thread_idx;
+    HANDLE myHandle = (HANDLE)-0x1;
+
+    id = my_trace->last_event.dwThreadId;
+    thread_idx = my_trace->thread_map[id];
+    myHandle = my_trace->threads[thread_idx].handle;
+
+    CONTEXT ctx;
+    ctx.ContextFlags = CONTEXT_CONTROL;
+    if(GetThreadContext(myHandle, &ctx) == 0x0)
+    {
+        d_print("Failed to get context, error: 0x%08x\n", GetLastError());
+    }
+    d_print("before setting: 0x%08x\n", ctx.EFlags);
+    /* zeroing */
+    print_context(&ctx);
+    ctx.EFlags |= SET_ZF_FLAGS;
+    d_print("after setting: 0x%08x\n", ctx.EFlags);
+    print_context(&ctx);
+
+    SetThreadContext(myHandle, &ctx);
+
+    return;
+}
+
 void zero_SF(void* data)
 {
     d_print("Zeroing SF\n");
@@ -3612,6 +3642,7 @@ int main(int argc, char** argv)
     my_trace->routines[0x2] = &sysret_refresh;
     my_trace->routines[0x100] = &sample_routine_1;
     my_trace->routines[0x101] = &zero_SF;
+    my_trace->routines[0x102] = &set_ZF;
 
     /* Windows sockets */
 
