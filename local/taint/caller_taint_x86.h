@@ -34,25 +34,25 @@ Change of endiannes takes place when reading and writing to memory (to_mem, from
 #define ANALYZE_LOOPS 
 #define NO_LOOP 0xffffffff
 
-#define MAX_NAME 0x100
-#define MAX_SYMBOL_NAME 0x50
-#define MAX_SYMBOL_COUNT 0x1000000
-#define MAX_LIB_COUNT 0x100
-#define MAX_THREADS 0x100
-#define MAX_THREAD_NUMBER 0x1000
-#define MAX_CALL_LEVELS 0x200
-#define GRAPH_START 100
-#define MAX_LOOP_ADDRS 0x10
+#define MAX_NAME                0x100
+#define MAX_SYMBOL_NAME         0x50
+#define MAX_SYMBOL_COUNT        0x1000000
+#define MAX_LIB_COUNT           0x100
+#define MAX_THREADS             0x100
+#define MAX_THREAD_NUMBER       0x1000
+#define MAX_CALL_LEVELS         0x250
+#define GRAPH_START             100
+#define MAX_LOOP_ADDRS          0x10
 //#define MAX_THREADS 0x1000000
 #define MAX_PRPAGATIONS_OBSERVED 0x4000000
-#define MAX_TAINTS_OBSERVED 0x400
-#define MAX_EXCEPTIONS_COUNT 0x10000
-#define MAX_BREAKPOINTS 0x10
-#define MAX_ 0x10
-#define MAX_BLACKLIST 0x50
-#define MAX_WANTED 0x100
-#define MAX_LOOP_FENCES 0x10
-#define MAX_LOOP_ADDR 0x50
+#define MAX_TAINTS_OBSERVED     0x400
+#define MAX_EXCEPTIONS_COUNT    0x100
+#define MAX_BREAKPOINTS         0x10
+#define MAX_                    0x10
+#define MAX_BLACKLIST           0x50
+#define MAX_WANTED              0x100
+#define MAX_LOOP_FENCES         0x10
+#define MAX_LOOP_ADDR           0x50
 
 // deprecated
 #define MEM     0xff
@@ -2263,7 +2263,6 @@ typedef struct _CALL_LEVEL
     OFFSET entry;
     /* loops handling */
 
-    OFFSET call_src_register[MAX_LOOP_ADDRS][2];
     unsigned call_src_register_idx;
     unsigned loop_start;
 

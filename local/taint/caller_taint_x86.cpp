@@ -2055,10 +2055,9 @@ int taint_x86::finish()
     {
         cur_tid = &this->ctx_info[i];
         d_print(1, "Closing 0x%08x\n", cur_tid->tid);
+
         open = cur_tid->call_level - cur_tid->call_level_smallest;
         d_print(1, "[0x%08x] Left with %d nodes open\n", cur_tid->tid, open);
-        fwrite(out_line, strlen(out_line), 0x1, cur_tid->graph_file);
-
         d_print(1, "[0x%08x] First: %d - %d = %d\n", cur_tid->tid, cur_tid->call_level_smallest, abs(GRAPH_START - cur_tid->call_level_smallest));
 
         diff_first = abs(GRAPH_START - cur_tid->call_level_smallest);
@@ -2095,13 +2094,13 @@ int taint_x86::finish()
         sprintf(out_line, "<map version=\"1.0.1\">\n<node TEXT=\"start\">\n");
         fwrite(out_line, strlen(out_line), 0x1, cur_tid->graph_file);
 
-                cur_tid->call_level--;
-            for(j=0x0; j < diff_first; j++)
-            {
-                cur_tid->call_level++;
-                print_call(cur_tid, "unknown", colors[CODE_BLACK]);
-                //print_call(cur_tid->graph_file, "unknown", colors[CODE_BLACK]);
-            }
+        cur_tid->call_level--;
+        for(j=0x0; j < diff_first; j++)
+        {
+            cur_tid->call_level++;
+            print_call(cur_tid, "unknown", colors[CODE_BLACK]);
+        //print_call(cur_tid->graph_file, "unknown", colors[CODE_BLACK]);
+        }
     }
     return 0x0;    
 }

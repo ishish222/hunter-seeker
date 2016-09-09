@@ -900,15 +900,10 @@ int main(int argc, char** argv)
                     break;
 */
         }
-        if(instr_count == 0)
+        if(0)
+        if(instr_count == 3120238) 
         {
             fprintf(stderr, "Problem with instruction after %lld\n", last_instr_count);
-            getchar();
-        }
-        //if(instr_count == 342118) 
-        if(0) 
-        {
-            fprintf(stderr, "Problem...\n");
             getchar();
         }
 
