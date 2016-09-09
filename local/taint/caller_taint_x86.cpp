@@ -1188,6 +1188,7 @@ int taint_x86::surface(CONTEXT_INFO* info)
     
 //    if(cur_level->loop_addr) free(cur_level->loop_addr);
     info->call_level--;
+    if(info->call_level_smallest > info->call_level) info->call_level_smallest = info->call_level;
 
     return 0x0;
 }
@@ -1280,6 +1281,7 @@ int taint_x86::handle_ret(CONTEXT_INFO* cur_ctx, OFFSET eip)
             }
         }
 
+#ifdef UNMATCHED_RET_UNVALIDATES_STACK
         /* handle under surface */
         if(cur_ctx->call_level == cur_ctx->call_level_smallest) //we have to use all stacked rets
         {
@@ -1294,6 +1296,13 @@ int taint_x86::handle_ret(CONTEXT_INFO* cur_ctx, OFFSET eip)
                 /* smallest */
                 cur_ctx->call_level_smallest--;
         }
+#else
+    if(cur_ctx->levels[cur_ctx->call_level].loop_status != FENCE_NOT_COLLECTING)
+    {
+        print_ret(cur_ctx);
+    }
+    surface(cur_ctx);
+#endif
 
     /* new ends */
     return 0x0;
