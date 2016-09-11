@@ -1186,8 +1186,15 @@ int taint_x86::surface(CONTEXT_INFO* info)
     
     cur_level = &info->levels[info->call_level];
     
-//    if(cur_level->loop_addr) free(cur_level->loop_addr);
     info->call_level--;
+
+    if(info->call_level < 0x0) 
+    {
+        d_print(1, "Error, minimum available level reached");
+        d_print(1, "Rerun with larger max_level (-M <level>). Current setting is: 0x%08x\n", this->max_call_levels);
+        exit(-1);
+    }
+
     if(info->call_level_smallest > info->call_level) info->call_level_smallest = info->call_level;
 
     return 0x0;
@@ -1234,7 +1241,7 @@ int taint_x86::handle_ret(CONTEXT_INFO* cur_ctx, OFFSET eip)
 
     d_print(1, "<<%d>>", cur_ctx->call_level);
 
-    if(cur_ctx->call_level == 0x0) return -1;
+    if(cur_ctx->call_level <= 0x0) return -1;
         
     /* close loops at this level if open */
 
@@ -1281,7 +1288,7 @@ int taint_x86::handle_ret(CONTEXT_INFO* cur_ctx, OFFSET eip)
             }
         }
 
-#ifdef UNMATCHED_RET_UNVALIDATES_STACK
+#ifdef UNMATCHED_RET_INVALIDATES_STACK
         /* handle under surface */
         if(cur_ctx->call_level == cur_ctx->call_level_smallest) //we have to use all stacked rets
         {
@@ -2188,10 +2195,10 @@ int taint_x86::add_thread(CONTEXT_info ctx_info)
         sprintf(graph_filename, "TID_%08X.mm", ctx_info.thread_id);
         d_print(1, "Creating graph file: %s\n", graph_filename);
         this->ctx_info[this->tid_count].graph_file = fopen(graph_filename, "w");
-        this->ctx_info[this->tid_count].call_level = GRAPH_START; //for call trace
-        this->ctx_info[this->tid_count].call_level_smallest = GRAPH_START; //for call trace
-        this->ctx_info[this->tid_count].levels = (CALL_LEVEL*)malloc(sizeof(CALL_LEVEL)*MAX_CALL_LEVELS);
-        this->ctx_info[this->tid_count].waiting = 0x0; //for call trace
+        this->ctx_info[this->tid_count].call_level = (this->max_call_levels/3); // starting at level 1/3 of max_call_levels
+        this->ctx_info[this->tid_count].call_level_smallest = this->ctx_info[this->tid_count].call_level;
+        this->ctx_info[this->tid_count].levels = (CALL_LEVEL*)malloc(sizeof(CALL_LEVEL)*this->max_call_levels);
+        this->ctx_info[this->tid_count].waiting = 0x0;
 
         /* clear loop structures */
         unsigned call_level;
@@ -2208,12 +2215,16 @@ int taint_x86::add_thread(CONTEXT_info ctx_info)
         cur_level->entry = 0xffffffff;
         this->check_fence(cur_level);
 
+        /* output marker */
+        char out_line[MAX_NAME];
+        sprintf(out_line, "<node TEXT=\"[ENTRY]\"></node>");
+        fwrite(out_line, strlen(out_line), 0x1, this->ctx_info[this->tid_count].graph_file);
+
         /* fnalize */
         this->ctx_info[this->tid_count].tid = ctx_info.thread_id;
         //update lookup table
         this->tids[ctx_info.thread_id] = this->tid_count;
         this->tid_count++;
-
     }
 
     this->update_watchpoints(ctx_info.thread_id);

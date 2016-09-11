@@ -1125,6 +1125,11 @@ def execute(cmds):
             writePipe(ext_pipe, "tracer_configure_markers OK")
             ok(ext_pipe)
 
+        elif(cmd == "tracer_register_regions"):
+            trace_controller.register_regions(args)
+            writePipe(ext_pipe, "tracer_register_regions OK")
+            ok(ext_pipe)
+
         elif(cmd == "tracer_register_reactions"):
             trace_controller.register_reactions(args)
             writePipe(ext_pipe, "tracer_register_reactions OK")

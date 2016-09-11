@@ -807,6 +807,11 @@ class TraceController(object):
         self.last_report, self.last_answer = self.recv_report_active()
         return 
 
+    def register_regions(self, regions):
+        self.send_command_active("cr %s" % regions)
+        self.last_report, self.last_answer = self.recv_report_active()
+        return 
+
     def register_reactions(self, reactions):
         self.send_command_active("cR %s" % reactions)
         self.last_report, self.last_answer = self.recv_report_active()

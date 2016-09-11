@@ -66,6 +66,8 @@ void marker_handler(void* data);
 void reaction_handler(void* data);
 void print_context(CONTEXT*);
 int del_breakpoint(DWORD);
+int resolve_region(OUT_ARGUMENT*, OUT_LOCATION*);
+int add_to_buffer(char*);
 
 int d_print(const char* format, ...)
 {
@@ -150,6 +152,33 @@ void zero_SF(void* data)
     print_context(&ctx);
 
     SetThreadContext(myHandle, &ctx);
+
+    return;
+}
+
+void update_region(OUT_LOCATION* location)
+{
+    DWORD size_wrote;
+    char line[MAX_LINE];
+
+    size_wrote = dump_mem(my_trace->mods, (void*)location->off, location->size);
+    if(size_wrote == location->size)
+    {
+        d_print("[Updated location: 0x%08x, size: 0x%08x]\n", location->off, location->size);
+        sprintf(line, "UP,0x%08x,0x%08x\n", location->off, location->size);
+        add_to_buffer(line);
+    }
+
+    return;
+}
+
+void update_region_1(void* data)
+{
+    d_print("Updating region 1\n");
+    OUT_LOCATION location;
+    resolve_region(&my_trace->region_sel[0x1], &location);
+
+    update_region(&location);
 
     return;
 }
@@ -810,6 +839,7 @@ void ntread_2_callback(void* data)
 void sysenter_callback(void* data)
 {
     d_print("sysenter\n");
+    char line[MAX_LINE];
 
     DEBUG_EVENT* de;
     de = (DEBUG_EVENT*)data;
@@ -829,6 +859,9 @@ void sysenter_callback(void* data)
     d_print("ESP: %p\n", ctx.Esp);
     sysenter_no = ctx.Eax;
     sysenter_esp = ctx.Esp;
+
+    sprintf(line, "# Syscall no: 0x%08x, stack@ 0x%08x\n", sysenter_no, sysenter_esp);
+    add_to_buffer(line);
 
 //    d_print("Deregister thread @ SYSENTER: %08x\n", tid);
     deregister_thread(tid, my_trace->threads[tid_pos].handle);
@@ -897,7 +930,7 @@ void sysret_callback(void* data)
                 continue;
             }
         }
-        if(1)
+        if(0)
         {
             d_print("Locating buffer\n");
             arg_val = 0x0;
@@ -1016,6 +1049,13 @@ void sysret_callback(void* data)
                 add_to_buffer(line);
             }
         }
+
+        /* new update */
+
+        OUT_LOCATION location;
+        resolve_region(&my_trace->syscall_out_args[sysenter_no][i], &location);
+        update_region(&location);
+
     }
 
 
@@ -2089,9 +2129,12 @@ int write_context(DWORD tid_id, CONTEXT* ctx)
     return 0x0;
 }
 
-int read_context(DWORD tid_id, CONTEXT* ctx)
+int read_context(DWORD tid, CONTEXT* ctx)
 {
     HANDLE myHandle;
+    DWORD tid_id;
+
+    tid_id = my_trace->thread_map[tid];
 
     myHandle = my_trace->threads[tid_id].handle;
     ctx->ContextFlags = CONTEXT_FULL;
@@ -2752,6 +2795,155 @@ int add_reaction(char* lib_name, OFFSET offset, unsigned id)
     return 0x0;
 }
 
+int resolve_region(OUT_ARGUMENT* selector, OUT_LOCATION* location)
+{
+    d_print("Resolving region\n");
+    d_print("Locating buffer\n");
+
+    DWORD arg_val, arg_addr, arg_size, off, size, cur_esp;
+    DWORD read;
+    CONTEXT ctx;
+
+    read_context(my_trace->last_event.dwThreadId, &ctx);
+    cur_esp = ctx.Esp;
+
+    arg_val = 0x0;
+    arg_addr = 0x0;
+    off = 0x0;
+    size = 0x0;
+
+    d_print("ESP: 0x%08x\n", cur_esp);
+
+    /* resolve offset */
+    switch(selector->off_location)
+    {
+        case LOCATION_CONST:
+            d_print("LOCATION_CONST\n");
+            location->off = selector->off;
+            d_print("Arg off: 0x%08x\n", location->off);
+            break;
+        
+        case LOCATION_MEM:
+            d_print("LOCATION_MEM\n");
+            arg_addr = selector->off;
+            read_memory(my_trace->cpdi.hProcess, (void*)arg_addr, (void*)&arg_val, 0x4, &read);
+            d_print("0x%08x: 0x%08x\n", arg_addr, arg_val);
+            if(arg_val == 0x0) break;
+            d_print("Arg off: 0x%08x\n", arg_val);
+            location->off = arg_val;
+            break;
+
+        case LOCATION_STACK:
+            d_print("LOCATION_STACK\n");
+            arg_addr = cur_esp + 0x8;
+            arg_addr += selector->off * 0x4;
+            arg_val = arg_addr;
+            d_print("0x%08x: 0x%08x\n", arg_addr, arg_val);
+            d_print("Arg off: 0x%08x\n", arg_val);
+            if(arg_val == 0x0) break;
+            location->off = arg_val;
+            break;
+
+        case LOCATION_ADDR_STACK:
+            d_print("LOCATION_ADDR_STACK\n");
+            arg_addr = cur_esp + 0x8;
+            arg_addr += selector->off * 0x4;
+            read_memory(my_trace->cpdi.hProcess, (void*)arg_addr, (void*)&arg_val, 0x4, &read);
+            d_print("0x%08x: 0x%08x\n", arg_addr, arg_val);
+            if(arg_val == 0x0) break;
+            d_print("Arg off: 0x%08x\n", arg_val);
+            location->off = arg_val;
+            break;
+
+        case LOCATION_ADDR_ADDR_STACK:
+            d_print("LOCATION_ADDR_ADDR_STACK\n");
+            arg_addr = cur_esp + 0x8;
+            arg_addr += selector->off * 0x4;
+            read_memory(my_trace->cpdi.hProcess, (void*)arg_addr, (void*)&arg_val, 0x4, &read);
+            d_print("0x%08x: 0x%08x\n", arg_addr, arg_val);
+            arg_addr = arg_val;
+            read_memory(my_trace->cpdi.hProcess, (void*)arg_addr, (void*)&arg_val, 0x4, &read);
+            d_print("0x%08x: 0x%08x\n", arg_addr, arg_val);
+            if(arg_val == 0x0) break;
+            d_print("Arg off: 0x%08x\n", arg_val);
+            location->off = arg_val;
+            break;
+    }
+
+    if(arg_val == 0x0) return -1;
+    off = arg_val;
+    arg_val = 0x0;
+    arg_addr = 0x0;
+    d_print("Locating size\n");
+
+    /* resolve size */
+    switch(selector->size_location)
+    {
+        case LOCATION_CONST:
+            d_print("LOCATION_CONST\n");
+            location->size = selector->size;
+            arg_val = selector->size;
+            d_print("Arg size: 0x%08x\n", arg_val);
+            break;
+    
+        case LOCATION_MEM:
+            d_print("LOCATION_MEM\n");
+            arg_addr = selector->size;
+            read_memory(my_trace->cpdi.hProcess, (void*)arg_addr, (void*)&arg_val, 0x4, &read);
+            d_print("0x%08x: 0x%08x\n", arg_addr, arg_val);
+            d_print("Arg size: 0x%08x\n", arg_val);
+            location->size = arg_val;
+            break;
+
+        case LOCATION_STACK:
+            d_print("LOCATION_STACK\n");
+            arg_addr = cur_esp + 0x8;
+            arg_addr += selector->size * 0x4;
+            read_memory(my_trace->cpdi.hProcess, (void*)arg_addr, (void*)&arg_val, 0x4, &read);
+            d_print("0x%08x: 0x%08x\n", arg_addr, arg_val);
+            d_print("Arg size: 0x%08x\n", arg_val);
+            location->size = arg_val;
+            break;
+
+        case LOCATION_ADDR_STACK:
+            d_print("LOCATION_ADDR_STACK\n");
+            arg_addr = cur_esp + 0x8;
+            arg_addr += selector->size * 0x4;
+            read_memory(my_trace->cpdi.hProcess, (void*)arg_addr, (void*)&arg_val, 0x4, &read);
+            d_print("0x%08x: 0x%08x\n", arg_addr, arg_val);
+            arg_addr = arg_val;
+            read_memory(my_trace->cpdi.hProcess, (void*)arg_addr, (void*)&arg_val, 0x4, &read);
+            d_print("0x%08x: 0x%08x\n", arg_addr, arg_val);
+            d_print("Arg size: 0x%08x\n", arg_val);
+            location->size = arg_val;
+            break;
+    }
+
+    size = arg_val;
+    d_print("[Resolved location: 0x%08x, size: 0x%08x]\n", off, size);
+
+    return 0x0;
+}
+
+int add_region_sel(DWORD off, DWORD size, char off_location, char size_location)
+{
+    unsigned cur_region;
+
+    cur_region = my_trace->region_sel_count;
+
+    my_trace->region_sel[cur_region].off = off;
+    my_trace->region_sel[cur_region].size = size;
+    my_trace->region_sel[cur_region].off_location = off_location;
+    my_trace->region_sel[cur_region].size_location = size_location;
+
+    printf("Registered region id 0x%08x\n", cur_region);
+
+    cur_region++;
+    my_trace->region_sel_count = cur_region;
+
+    return 0x0;
+}
+
 int add_marker(char* lib_name, OFFSET offset, char* id)
 {
     
@@ -2793,6 +2985,41 @@ int parse_reaction(char* str)
 
     /* registering marker */
     add_reaction(lib, strtol(off, 0x0, 0x10), id);
+}
+
+int parse_region(char* str)
+{
+    char* off;
+    char* size;
+    char* label_off_location;
+    char* label_size_location;
+    char off_location;
+    char size_location;
+
+    off = strtok(str, ":");
+    size = strtok(0x0, ":");
+    label_off_location = strtok(0x0, ":");
+    label_size_location = strtok(0x0, "+");
+
+    if(!strcmp(label_off_location, "CONST")) off_location = LOCATION_CONST;
+    else if(!strcmp(label_off_location, "STACK")) off_location = LOCATION_STACK;
+    else if(!strcmp(label_off_location, "ADDR_STACK")) off_location = LOCATION_ADDR_STACK;
+    else if(!strcmp(label_off_location, "ADDR_ADDR_STACK")) off_location = LOCATION_ADDR_ADDR_STACK;
+    else if(!strcmp(label_off_location, "REG")) off_location = LOCATION_REG;
+    else if(!strcmp(label_off_location, "MEM")) off_location = LOCATION_MEM;
+    else if(!strcmp(label_off_location, "END")) off_location = LOCATION_END;
+    
+    if(!strcmp(label_size_location, "CONST")) size_location = LOCATION_CONST;
+    else if(!strcmp(label_size_location, "STACK")) size_location = LOCATION_STACK;
+    else if(!strcmp(label_size_location, "ADDR_STACK")) size_location = LOCATION_ADDR_STACK;
+    else if(!strcmp(label_size_location, "ADDR_ADDR_STACK")) size_location = LOCATION_ADDR_ADDR_STACK;
+    else if(!strcmp(label_size_location, "REG")) size_location = LOCATION_REG;
+    else if(!strcmp(label_size_location, "MEM")) size_location = LOCATION_MEM;
+    else if(!strcmp(label_size_location, "END")) size_location = LOCATION_END;
+    
+
+    /* registering marker */
+    add_region_sel(strtol(off, 0x0, 0x10), strtol(size, 0x0, 0x10), off_location, size_location);
 }
 
 int parse_marker(char* str)
@@ -2845,8 +3072,24 @@ int parse_markers(char* str)
     }
 
     return 0x0;
+}
 
+int parse_regions(char* str)
+{
+    char* current;
+    char buf[MAX_NAME];
 
+    current = str;
+    while((current != 0x0) && (strlen(current) > 0x0))
+    {
+        strcpy(buf, current);
+        parse_region(buf);
+        current = strpbrk(current, "+");
+        if(current)
+            current++;
+    }
+
+    return 0x0;
 }
 
 int reload_out_file()
@@ -3620,6 +3863,8 @@ int main(int argc, char** argv)
         printf("You need do provide host and port\n");
         return -1;
     }
+
+    printf("Version 2.0\n");
 
     if(strlen(argv[1]) > MAX_NAME) return -1;
     if(strlen(argv[2]) > MAX_NAME) return -1;

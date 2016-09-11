@@ -607,6 +607,7 @@ int main(int argc, char** argv)
     instr_limit = 0x0;
     last_instr_count = 0x0;
     instr_count = 0x0;
+    unsigned max_levels = 0x0;
 
     char* line;
     size_t len = 0;
@@ -619,10 +620,13 @@ int main(int argc, char** argv)
 
     /* started parsing args and preparing params */
 
-    while ((opt = getopt(argc, argv, "i:d:s:e:T:l:m:b:t:w:h:D:I")) != -1) 
+    while ((opt = getopt(argc, argv, "M:i:d:s:e:T:l:m:b:t:w:h:D:I")) != -1) 
     {
         switch (opt) 
         {
+            case 'M': 
+                max_levels = strtol(optarg, 0x0, 0x10);
+                break;
             case 'i': 
                 strcpy(instr_file_path, optarg); 
                 break;
@@ -708,6 +712,11 @@ int main(int argc, char** argv)
 
     taint_eng.bp_hit = 0x1;
     taint_eng.enumerate = enumerate;
+    if(max_levels) 
+    {
+        taint_eng.max_call_levels = max_levels;
+        printf("Setting max levels to: 0x%08x\n", max_levels);
+    }
  
     parse_mem_breakpoints(breakpoint_optarg, &taint_eng);
     parse_taint_breakpoints(breakpoint_t_optarg, &taint_eng);
@@ -900,8 +909,8 @@ int main(int argc, char** argv)
                     break;
 */
         }
-        if(0)
-        if(instr_count == 3120238) 
+//        if(0)
+        if(instr_count == 51883544) 
         {
             fprintf(stderr, "Problem with instruction after %lld\n", last_instr_count);
             getchar();

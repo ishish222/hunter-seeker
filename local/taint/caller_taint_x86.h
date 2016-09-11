@@ -32,6 +32,7 @@ Change of endiannes takes place when reading and writing to memory (to_mem, from
 // compile-time options and parameters
 #define ANALYZE_JUMPS 
 #define ANALYZE_LOOPS 
+//#define UNMATCHED_RET_INVALIDATES_STACK
 #define NO_LOOP 0xffffffff
 
 #define MAX_NAME                0x100
@@ -40,7 +41,7 @@ Change of endiannes takes place when reading and writing to memory (to_mem, from
 #define MAX_LIB_COUNT           0x100
 #define MAX_THREADS             0x100
 #define MAX_THREAD_NUMBER       0x1000
-#define MAX_CALL_LEVELS         0x250
+#define MAX_CALL_LEVELS         0x100
 #define GRAPH_START             100
 #define MAX_LOOP_ADDRS          0x10
 //#define MAX_THREADS 0x1000000
@@ -2370,6 +2371,7 @@ class taint_x86
     DWORD end_addr;
     OFFSET start_instr;
     OFFSET instr_limit;
+    unsigned max_call_levels;
 
     DWORD depth;
 
@@ -3448,6 +3450,9 @@ class taint_x86
         this->wanted_count = 0x0;
         this->wanted_count_i = 0x0;
         this->wanted_count_e = 0x0;
+
+        this->max_call_levels = MAX_CALL_LEVELS;
+
 /*
         this->propagations = (PROPAGATION*)malloc(sizeof(PROPAGATION)*MAX_PRPAGATIONS_OBSERVED);
         if(this->propagations == 0x0)

@@ -164,6 +164,18 @@ def tracer_register_reactions():
 
     return
 
+def tracer_register_regions():
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+    
+    write_socket(options.s, "tracer_register_regions %s" % (options.sample_options.regions));
+    response, _, _ = read_socket(options.s)
+
+    globs.state.ret = response
+
+    return
+
 def tracer_configure_markers():
     options = globs.state.options
     state = globs.state
