@@ -23,7 +23,7 @@
 #define MAX_SYSCALL_OUT_ARGS 0x10
 #define MAX_SYSCALL_ENTRIES  0x10000
 #define MAX_HOOKS 0x50
-#define MAX_FUNCTIONS 0x100
+#define MAX_FUNCTIONS 0x300
 #define MAX_MARKERS 0x50
 #define MAX_THREADS 0x100
 #define MAX_LIBS 0x50
@@ -138,6 +138,7 @@
 #define CMD_DUMP_MEMORY         "DM"
 #define CMD_CONFIGURE_MARKERS   "cm"
 #define CMD_CONFIGURE_REACTIONS "cR"
+#define CMD_CONFIGURE_REGIONS   "cr"
 #define CMD_ENABLE_REACTION     "eR"
 #define CMD_DISABLE_REACTION    "dR"
 #define CMD_ACTIVATE_MARKERS    "am"

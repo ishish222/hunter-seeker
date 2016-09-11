@@ -59,9 +59,11 @@ TracerDebugContinueUnhandledInf = statemachine.State()
 TracerPrepareTrace = statemachine.State()
 DumpMemory = statemachine.State()
 TracerRegisterReactions = statemachine.State()
+TracerRegisterRegions = statemachine.State()
 TracerEnableSysenter = statemachine.State()
 TracerEnableDebug1 = statemachine.State()
 TracerEnableDebug2 = statemachine.State()
+TracerEnableDebug3 = statemachine.State()
 
 DefaultShutdown = dm.ShutdownSequence
 
@@ -129,8 +131,13 @@ DumpMemory.name = "Dumping memory"
 DumpMemory.consequence = TracerStartTrace
 DumpMemory.executing_routine = usualparts.tracer_parts.tracer_dump_memory
 
+TracerEnableDebug3.name = "Enabling reaction 0x201"
+TracerEnableDebug3.consequence = DumpMemory
+TracerEnableDebug3.args = "0x201"
+TracerEnableDebug3.executing_routine = usualparts.tracer_parts.tracer_enable_reaction
+
 TracerEnableDebug2.name = "Enabling reaction"
-TracerEnableDebug2.consequence = DumpMemory
+TracerEnableDebug2.consequence = TracerEnableDebug3
 TracerEnableDebug2.args = "0x102"
 TracerEnableDebug2.executing_routine = usualparts.tracer_parts.tracer_enable_reaction
 
@@ -171,8 +178,12 @@ TracerRegisterReactions.name = "Registering reactions"
 TracerRegisterReactions.consequence = TracerActivateMarkers
 TracerRegisterReactions.executing_routine = usualparts.tracer_parts.tracer_register_reactions
 
+TracerRegisterRegions.name = "Registering reactions"
+TracerRegisterRegions.consequence = TracerRegisterReactions
+TracerRegisterRegions.executing_routine = usualparts.tracer_parts.tracer_register_regions
+
 TracerConfigureMarkers.name = "Configuring markers"
-TracerConfigureMarkers.consequence = TracerRegisterReactions
+TracerConfigureMarkers.consequence = TracerRegisterRegions
 TracerConfigureMarkers.executing_routine = usualparts.tracer_parts.tracer_configure_markers
 
 TracerConfigureInDir.name = "Configuring in dir"

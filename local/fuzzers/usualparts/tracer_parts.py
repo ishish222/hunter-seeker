@@ -157,6 +157,7 @@ def tracer_register_reactions():
     state = globs.state
     status = globs.state.status
     
+    if(options.sample_options.reactions == "0"): return
     write_socket(options.s, "tracer_register_reactions %s" % (options.sample_options.reactions));
     response, _, _ = read_socket(options.s)
 
@@ -169,6 +170,7 @@ def tracer_register_regions():
     state = globs.state
     status = globs.state.status
     
+    if(options.sample_options.regions == "0"): return
     write_socket(options.s, "tracer_register_regions %s" % (options.sample_options.regions));
     response, _, _ = read_socket(options.s)
 

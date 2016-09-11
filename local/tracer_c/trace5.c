@@ -68,6 +68,8 @@ void print_context(CONTEXT*);
 int del_breakpoint(DWORD);
 int resolve_region(OUT_ARGUMENT*, OUT_LOCATION*);
 int add_to_buffer(char*);
+int read_context(DWORD, CONTEXT*);
+int write_context(DWORD, CONTEXT*);
 
 int d_print(const char* format, ...)
 {
@@ -132,18 +134,11 @@ void zero_SF(void* data)
 
     int i;
     unsigned id, thread_idx;
-    HANDLE myHandle = (HANDLE)-0x1;
 
     id = my_trace->last_event.dwThreadId;
-    thread_idx = my_trace->thread_map[id];
-    myHandle = my_trace->threads[thread_idx].handle;
 
     CONTEXT ctx;
-    ctx.ContextFlags = CONTEXT_CONTROL;
-    if(GetThreadContext(myHandle, &ctx) == 0x0)
-    {
-        d_print("Failed to get context, error: 0x%08x\n", GetLastError());
-    }
+    read_context(id, &ctx);
     d_print("before zeroing: 0x%08x\n", ctx.EFlags);
     /* zeroing */
     print_context(&ctx);
@@ -151,7 +146,7 @@ void zero_SF(void* data)
     d_print("after zeroing: 0x%08x\n", ctx.EFlags);
     print_context(&ctx);
 
-    SetThreadContext(myHandle, &ctx);
+    write_context(id, &ctx);
 
     return;
 }
@@ -176,7 +171,7 @@ void update_region_1(void* data)
 {
     d_print("Updating region 1\n");
     OUT_LOCATION location;
-    resolve_region(&my_trace->region_sel[0x1], &location);
+    resolve_region(&my_trace->region_sel[0x0], &location);
 
     update_region(&location);
 
@@ -638,7 +633,7 @@ void reaction_handler(void* data)
     {
         if((OFFSET)my_trace->last_exception.ExceptionAddress == my_trace->reactions[i].real_offset)
         {
-            d_print("Reaction %d hit!\n", my_trace->reactions[i].id);
+            d_print("Reaction 0x%08x hit!\n", my_trace->reactions[i].id);
             my_trace->routines[my_trace->reactions[i].id](data);
         }
     }
@@ -2115,9 +2110,12 @@ int list_tebs()
     return 0x0;
 }
 
-int write_context(DWORD tid_id, CONTEXT* ctx)
+int write_context(DWORD tid, CONTEXT* ctx)
 {
     HANDLE myHandle;
+    DWORD tid_id;
+
+    tid_id = my_trace->thread_map[tid];
 
     myHandle = my_trace->threads[tid_id].handle;
     ctx->ContextFlags = CONTEXT_FULL;
@@ -2821,6 +2819,7 @@ int resolve_region(OUT_ARGUMENT* selector, OUT_LOCATION* location)
             d_print("LOCATION_CONST\n");
             location->off = selector->off;
             d_print("Arg off: 0x%08x\n", location->off);
+            arg_val = location->off;
             break;
         
         case LOCATION_MEM:
@@ -2989,26 +2988,60 @@ int parse_reaction(char* str)
 
 int parse_region(char* str)
 {
-    char* off;
-    char* size;
+    DWORD  off;
+    DWORD  size;
     char* label_off_location;
     char* label_size_location;
     char off_location;
     char size_location;
 
-    off = strtok(str, ":");
-    size = strtok(0x0, ":");
+    printf("Parsing region: %s\n", str);
+
+    off = strtol(strtok(str, ":"), 0x0, 0x10);
+    size = strtol(strtok(0x0, ":"), 0x0, 0x10);
     label_off_location = strtok(0x0, ":");
     label_size_location = strtok(0x0, "+");
 
-    if(!strcmp(label_off_location, "CONST")) off_location = LOCATION_CONST;
-    else if(!strcmp(label_off_location, "STACK")) off_location = LOCATION_STACK;
-    else if(!strcmp(label_off_location, "ADDR_STACK")) off_location = LOCATION_ADDR_STACK;
-    else if(!strcmp(label_off_location, "ADDR_ADDR_STACK")) off_location = LOCATION_ADDR_ADDR_STACK;
-    else if(!strcmp(label_off_location, "REG")) off_location = LOCATION_REG;
-    else if(!strcmp(label_off_location, "MEM")) off_location = LOCATION_MEM;
-    else if(!strcmp(label_off_location, "END")) off_location = LOCATION_END;
+    printf("Calculating off location\n");
+
+    if(!strcmp(label_off_location, "CONST")) 
+    {
+        off_location = LOCATION_CONST;
+        printf("Off location is CONST\n");
+    }
+    else if(!strcmp(label_off_location, "STACK")) 
+    {
+        off_location = LOCATION_STACK;
+        printf("Off location is STACK\n");
+    }
+    else if(!strcmp(label_off_location, "ADDR_STACK")) 
+    {
+        off_location = LOCATION_ADDR_STACK;
+        printf("Off location is ADDR_STACK\n");
+    }
+    else if(!strcmp(label_off_location, "ADDR_ADDR_STACK")) 
+    {
+        off_location = LOCATION_ADDR_ADDR_STACK;
+        printf("Off location is ADDR_ADDR_STACK\n");
+    }
+    else if(!strcmp(label_off_location, "REG")) 
+    {
+        off_location = LOCATION_REG;
+        printf("Off location is REG\n");
+    }
+    else if(!strcmp(label_off_location, "MEM")) 
+    {
+        off_location = LOCATION_MEM;
+        printf("Off location is MEM\n");
+    }
+    else if(!strcmp(label_off_location, "END")) 
+    {
+        off_location = LOCATION_CONST;
+        printf("Off location is END\n");
+    }
     
+    printf("Calculating size location\n");
+
     if(!strcmp(label_size_location, "CONST")) size_location = LOCATION_CONST;
     else if(!strcmp(label_size_location, "STACK")) size_location = LOCATION_STACK;
     else if(!strcmp(label_size_location, "ADDR_STACK")) size_location = LOCATION_ADDR_STACK;
@@ -3018,8 +3051,12 @@ int parse_region(char* str)
     else if(!strcmp(label_size_location, "END")) size_location = LOCATION_END;
     
 
+    printf("Adding region selector: 0x%08x, 0x%08x, 0x%02x, 0x%02x\n", off, size, off_location, size_location);
+
     /* registering marker */
-    add_region_sel(strtol(off, 0x0, 0x10), strtol(size, 0x0, 0x10), off_location, size_location);
+    add_region_sel(off, size, off_location, size_location);
+
+    return 0x0;
 }
 
 int parse_marker(char* str)
@@ -3477,6 +3514,16 @@ int handle_cmd(char* cmd)
         send_report();
         
     }
+    else if(!strncmp(cmd, CMD_CONFIGURE_REGIONS, 2))
+    {
+        char* str;
+
+        strtok(cmd, " ");
+        str = strtok(0x0, " ");
+        parse_regions(str);
+        send_report();
+        
+    }
     else if(!strncmp(cmd, CMD_ACTIVATE_MARKERS, 2))
     {
         unsigned i;
@@ -3888,6 +3935,7 @@ int main(int argc, char** argv)
     my_trace->routines[0x100] = &sample_routine_1;
     my_trace->routines[0x101] = &zero_SF;
     my_trace->routines[0x102] = &set_ZF;
+    my_trace->routines[0x201] = &update_region_1;
 
     /* Windows sockets */
 
