@@ -2999,11 +2999,11 @@ int parse_region(char* str)
     d_print("Parsing region: %s\n", str);
 
     off = strtol(strtok(str, ":"), 0x0, 0x10);
-    size = strtol(strtok(0x0, ":"), 0x0, 0x10);
     label_off_location = strtok(0x0, ":");
+    size = strtol(strtok(0x0, ":"), 0x0, 0x10);
     label_size_location = strtok(0x0, "+");
 
-    d_print("Calculating off location\n");
+    d_print("Calculating off location for data: 0x%08x:%s\n", off, label_off_location);
 
     if(!strcmp(label_off_location, "CONST")) 
     {
@@ -3041,7 +3041,7 @@ int parse_region(char* str)
         d_print("Off location is END\n");
     }
     
-    d_print("Calculating size location\n");
+    d_print("Calculating size location for data: 0x%08x:%s\n", size, label_size_location);
 
     if(!strcmp(label_size_location, "CONST")) size_location = LOCATION_CONST;
     else if(!strcmp(label_size_location, "STACK")) size_location = LOCATION_STACK;
@@ -3252,13 +3252,19 @@ int handle_cmd(char* cmd)
         d_print("Ini file: %s\n", my_trace->out_ini);
     
         /* log */ 
+        /* TODO:fix this
         strcpy(buffer2, "");
         sprintf(buffer2, "%s\\%s.log", my_trace->out_dir, my_trace->out_prefix);
         strcpy(my_trace->out_log, buffer2);
         my_trace->log = fopen(my_trace->out_log, "w");
-        log = my_trace->log;
         d_print("Log file: %s\n", my_trace->out_log);
-    
+        if(my_trace->log)
+        {
+            log = my_trace->log;
+        }
+        */
+
+
         send_report();
         my_trace->status = STATUS_CONFIGURED;
     }
