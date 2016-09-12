@@ -75,7 +75,17 @@ int d_print(const char* format, ...)
 {
     va_list argptr;
 
-    if(log)
+    if(my_trace != 0x0)
+    {
+        if(my_trace->log != 0x0)
+        {
+            va_start(argptr, format);
+            vfprintf(my_trace->log, format, argptr);
+            va_end(argptr);
+            fflush(my_trace->log);
+        }
+    }
+    else if(log)
     {
         va_start(argptr, format);
         vfprintf(log, format, argptr);
@@ -3252,18 +3262,11 @@ int handle_cmd(char* cmd)
         d_print("Ini file: %s\n", my_trace->out_ini);
     
         /* log */ 
-        /* TODO:fix this
         strcpy(buffer2, "");
         sprintf(buffer2, "%s\\%s.log", my_trace->out_dir, my_trace->out_prefix);
         strcpy(my_trace->out_log, buffer2);
         my_trace->log = fopen(my_trace->out_log, "w");
         d_print("Log file: %s\n", my_trace->out_log);
-        if(my_trace->log)
-        {
-            log = my_trace->log;
-        }
-        */
-
 
         send_report();
         my_trace->status = STATUS_CONFIGURED;
@@ -3926,7 +3929,7 @@ int main(int argc, char** argv)
         return -1;
     }
 
-    d_print("Version 2.0\n");
+    d_print("Version 3.0\n");
 
     if(strlen(argv[1]) > MAX_NAME) return -1;
     if(strlen(argv[2]) > MAX_NAME) return -1;

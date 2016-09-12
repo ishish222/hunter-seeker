@@ -1901,7 +1901,7 @@ int taint_x86::post_execute_instruction(DWORD eip)
         {
             this->finished = 0x1;
             this->aborted = 0x1;
-            d_print(1, "Eip: 0x%08x, this->end_addr: 0x%08x, finishing\n", eip, this->end_addr);
+            d_print(1, "Eip: 0x%08x, this->end_addr: 0x%08x, limit: %d, count: %d, finishing\n", eip, this->end_addr, this->instr_limit, this->current_instr_count);
         }
     }
 

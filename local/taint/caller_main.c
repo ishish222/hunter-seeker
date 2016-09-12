@@ -640,6 +640,7 @@ int main(int argc, char** argv)
                     start_instr = strtol(optarg, 0x0, 10);
                 break;
             case 'e': 
+                end_addr = -1;
                 if(optarg[0] == '0' && optarg[1] == 'x')
                     end_addr = strtol(optarg, 0x0, 0x10);
                 else 
