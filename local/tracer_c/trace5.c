@@ -80,14 +80,15 @@ int d_print(const char* format, ...)
         va_start(argptr, format);
         vfprintf(log, format, argptr);
         va_end(argptr);
+        fflush(log);
     }
     else
     {
         va_start(argptr, format);
         vfprintf(stdout, format, argptr);
         va_end(argptr);
+        fflush(stdout);
     }
-    fflush(stdout);
 
     return 0x0;
 }
@@ -266,7 +267,7 @@ void read_memory(HANDLE handle, void* from, void* to, SIZE_T size, SIZE_T* read)
 
     if(!ret)
     {
-        printf("Error: 0x%08x\n", GetLastError());
+        d_print("Error: 0x%08x\n", GetLastError());
     }
 }
 
@@ -281,7 +282,7 @@ void write_memory(HANDLE handle, void* to, void* from, SIZE_T size, SIZE_T* writ
 
     if(!ret)
     {
-        printf("Error: 0x%08x\n", GetLastError());
+        d_print("Error: 0x%08x\n", GetLastError());
     }
 
     VirtualProtectEx(my_trace->procHandle, to, 0x4, oldProt, &oldProt);
@@ -1958,7 +1959,7 @@ int parse_descriptor(char* path)
 //    while ((read = getline(&desc_line, &len, desc_file)) != -1) 
     while(fgets(desc_line, 80, desc_file) != NULL)
     {
-        printf("Line: %s\n", desc_line);
+        d_print("Line: %s\n", desc_line);
         sprintf(line2, "# desc: %s\n", desc_line);
         add_to_buffer(line2);
     }
@@ -2024,7 +2025,7 @@ int send_report()
 
 int list_markers()
 {
-    printf("Listing markers\n");
+    d_print("Listing markers\n");
     unsigned i;
     char buffer2[MAX_LINE];
 
@@ -2045,7 +2046,7 @@ int list_markers()
 
 int list_bpts()
 {
-    printf("Listing BPTs\n");
+    d_print("Listing BPTs\n");
     unsigned i;
     char buffer2[MAX_LINE];
 
@@ -2067,13 +2068,13 @@ int list_bpts()
 
 int list_libs()
 {
-    printf("Listing LIBs\n");
+    d_print("Listing LIBs\n");
     unsigned i;
     char buffer2[MAX_LINE];
 
     my_trace->report_code = REPORT_INFO;
 
-    printf("Currently have %d libs\n", my_trace->lib_count);
+    d_print("Currently have %d libs\n", my_trace->lib_count);
     strcpy(my_trace->report_buffer, "");
 
     for(i = 0x0; i< my_trace->lib_count; i++)
@@ -2082,20 +2083,20 @@ int list_libs()
         strcat(my_trace->report_buffer, buffer2);
         strcat(my_trace->report_buffer, "\n");
     }
-    printf("Reporting: %s\n", my_trace->report_buffer);
+    d_print("Reporting: %s\n", my_trace->report_buffer);
 
     return 0x0;
 }
 
 int list_tebs()
 {
-    printf("Listings TEBs\n");
+    d_print("Listings TEBs\n");
     unsigned i;
     char buffer2[MAX_LINE];
 
     my_trace->report_code = REPORT_INFO;
 
-    printf("Currently have %d threads\n", my_trace->thread_count);
+    d_print("Currently have %d threads\n", my_trace->thread_count);
 
     strcpy(my_trace->report_buffer, "");
 
@@ -2105,7 +2106,7 @@ int list_tebs()
     //    strcat(my_trace->report_buffer, buffer2);
         strcat(my_trace->report_buffer, "x");
     }
-    printf("Reporting: %s\n", my_trace->report_buffer);
+    d_print("Reporting: %s\n", my_trace->report_buffer);
 
     return 0x0;
 }
@@ -2407,12 +2408,12 @@ int read_stack(DWORD tid_id, DWORD count)
         data = read_dword_q(esp);
         memset(buffer2, 0x0, sizeof(buffer2));
         sprintf(buffer2, "0x%08x:0x%08x", esp, data);
-//        printf("Adding line: %s\n", buffer2);
+//        d_print("Adding line: %s\n", buffer2);
         strcat(my_trace->report_buffer, buffer2);
         strcat(my_trace->report_buffer, "\n");
-//        printf("new buffer: %p - %s\n", my_trace->report_buffer, my_trace->report_buffer);
+//        d_print("new buffer: %p - %s\n", my_trace->report_buffer, my_trace->report_buffer);
     }
-    printf("new buffer: %p - %s\n", my_trace->report_buffer, my_trace->report_buffer);
+    d_print("new buffer: %p - %s\n", my_trace->report_buffer, my_trace->report_buffer);
 
     return 0x0;
 }
@@ -2483,7 +2484,7 @@ int process_last_event()
                 
                     case EXCEPTION_BREAKPOINT:
                         /* this is not our responsibility, inform TracerController and wait for orders */
-                        printf("BP\n");
+                        d_print("BP\n");
 //                        ss_callback((void*)&my_trace->last_event);
 
                         unsigned i;
@@ -2514,11 +2515,11 @@ int process_last_event()
                         }
 
                         /* handle breakspoints that are not our */
-                        printf("not our\n");
+                        d_print("not our\n");
                         return REPORT_EXCEPTION_NH;
                         break;
                     default:
-                        printf("other\n");
+                        d_print("other\n");
                         /* this is not our responsibility, inform TracerController and wait for orders */
                         register_exception(my_trace->last_event.dwThreadId, my_trace->last_exception);
                         ss_callback((void*)&my_trace->last_event);
@@ -2715,7 +2716,7 @@ int get_pending_events()
 
 
     create_report(last_report);
-    printf("Report buffer: %s\n", my_trace->report_buffer);
+    d_print("Report buffer: %s\n", my_trace->report_buffer);
 
     my_trace->report_code = last_report;
 
@@ -2765,7 +2766,7 @@ int continue_routine(DWORD time, unsigned stat)
     }
 
     create_report(last_report);
-    printf("Report buffer: %s\n", my_trace->report_buffer);
+    d_print("Report buffer: %s\n", my_trace->report_buffer);
 
     my_trace->report_code = last_report;
 
@@ -2787,7 +2788,7 @@ int add_reaction(char* lib_name, OFFSET offset, unsigned id)
     
     my_trace->reactions[my_trace->reaction_count].id = id;
     my_trace->reactions[my_trace->reaction_count].offset = offset;
-    printf("New reaction: %s:0x%08x:%x\n", my_trace->reactions[my_trace->reaction_count].lib_name, my_trace->reactions[my_trace->reaction_count].offset, my_trace->reactions[my_trace->reaction_count].id);
+    d_print("New reaction: %s:0x%08x:%x\n", my_trace->reactions[my_trace->reaction_count].lib_name, my_trace->reactions[my_trace->reaction_count].offset, my_trace->reactions[my_trace->reaction_count].id);
     my_trace->reaction_count ++;
 
     return 0x0;
@@ -2935,7 +2936,7 @@ int add_region_sel(DWORD off, DWORD size, char off_location, char size_location)
     my_trace->region_sel[cur_region].off_location = off_location;
     my_trace->region_sel[cur_region].size_location = size_location;
 
-    printf("Registered region id 0x%08x\n", cur_region);
+    d_print("Registered region id 0x%08x\n", cur_region);
 
     cur_region++;
     my_trace->region_sel_count = cur_region;
@@ -2960,7 +2961,7 @@ int add_marker(char* lib_name, OFFSET offset, char* id)
     my_trace->markers[my_trace->marker_count].id[0x2] = 0x0;
     my_trace->markers[my_trace->marker_count].offset = offset;
     my_trace->markers[my_trace->marker_count].active = 0x0;
-    printf("New marker: %s:0x%08x:%s\n", my_trace->markers[my_trace->marker_count].lib_name, my_trace->markers[my_trace->marker_count].offset, my_trace->markers[my_trace->marker_count].id);
+    d_print("New marker: %s:0x%08x:%s\n", my_trace->markers[my_trace->marker_count].lib_name, my_trace->markers[my_trace->marker_count].offset, my_trace->markers[my_trace->marker_count].id);
     my_trace->marker_count ++;
 
     return 0x0;
@@ -2995,52 +2996,52 @@ int parse_region(char* str)
     char off_location;
     char size_location;
 
-    printf("Parsing region: %s\n", str);
+    d_print("Parsing region: %s\n", str);
 
     off = strtol(strtok(str, ":"), 0x0, 0x10);
     size = strtol(strtok(0x0, ":"), 0x0, 0x10);
     label_off_location = strtok(0x0, ":");
     label_size_location = strtok(0x0, "+");
 
-    printf("Calculating off location\n");
+    d_print("Calculating off location\n");
 
     if(!strcmp(label_off_location, "CONST")) 
     {
         off_location = LOCATION_CONST;
-        printf("Off location is CONST\n");
+        d_print("Off location is CONST\n");
     }
     else if(!strcmp(label_off_location, "STACK")) 
     {
         off_location = LOCATION_STACK;
-        printf("Off location is STACK\n");
+        d_print("Off location is STACK\n");
     }
     else if(!strcmp(label_off_location, "ADDR_STACK")) 
     {
         off_location = LOCATION_ADDR_STACK;
-        printf("Off location is ADDR_STACK\n");
+        d_print("Off location is ADDR_STACK\n");
     }
     else if(!strcmp(label_off_location, "ADDR_ADDR_STACK")) 
     {
         off_location = LOCATION_ADDR_ADDR_STACK;
-        printf("Off location is ADDR_ADDR_STACK\n");
+        d_print("Off location is ADDR_ADDR_STACK\n");
     }
     else if(!strcmp(label_off_location, "REG")) 
     {
         off_location = LOCATION_REG;
-        printf("Off location is REG\n");
+        d_print("Off location is REG\n");
     }
     else if(!strcmp(label_off_location, "MEM")) 
     {
         off_location = LOCATION_MEM;
-        printf("Off location is MEM\n");
+        d_print("Off location is MEM\n");
     }
     else if(!strcmp(label_off_location, "END")) 
     {
         off_location = LOCATION_CONST;
-        printf("Off location is END\n");
+        d_print("Off location is END\n");
     }
     
-    printf("Calculating size location\n");
+    d_print("Calculating size location\n");
 
     if(!strcmp(label_size_location, "CONST")) size_location = LOCATION_CONST;
     else if(!strcmp(label_size_location, "STACK")) size_location = LOCATION_STACK;
@@ -3051,7 +3052,7 @@ int parse_region(char* str)
     else if(!strcmp(label_size_location, "END")) size_location = LOCATION_END;
     
 
-    printf("Adding region selector: 0x%08x, 0x%08x, 0x%02x, 0x%02x\n", off, size, off_location, size_location);
+    d_print("Adding region selector: 0x%08x, 0x%08x, 0x%02x, 0x%02x\n", off, size, off_location, size_location);
 
     /* registering marker */
     add_region_sel(off, size, off_location, size_location);
@@ -3154,7 +3155,7 @@ int reload_out_file()
 
 int handle_cmd(char* cmd)
 {
-    printf("%s\n", cmd);
+    d_print("%s\n", cmd);
     char buffer2[MAX_NAME];
 
     my_trace->report_code = REPORT_NOTHING;
@@ -3164,31 +3165,31 @@ int handle_cmd(char* cmd)
     if(!strncmp(cmd, CMD_SET_NAME, 2))
     {
         strcpy(my_trace->in_sample_path, cmd+3);
-        printf("Sample path set to: %s\n", my_trace->in_sample_path);    
+        d_print("Sample path set to: %s\n", my_trace->in_sample_path);    
         send_report();
     }
     else if(!strncmp(cmd, CMD_SET_IN_DIRECTORY, 2))
     {
         strcpy(my_trace->in_research_dir, cmd+3);
-        printf("Research dir set to: %s\n", my_trace->in_research_dir);
+        d_print("Research dir set to: %s\n", my_trace->in_research_dir);
         send_report();
     }
     else if(!strncmp(cmd, CMD_SET_OUT_DIRECTORY, 2))
     {
         strcpy(my_trace->out_dir, cmd+3);
-        printf("Out dir set to: %s\n", my_trace->out_dir);
+        d_print("Out dir set to: %s\n", my_trace->out_dir);
         send_report();
     }
     else if(!strncmp(cmd, CMD_SET_OUT_PREFIX, 2))
     {
         strcpy(my_trace->out_prefix, cmd+3);
-        printf("Out prefix set to: %s\n", my_trace->out_prefix);
+        d_print("Out prefix set to: %s\n", my_trace->out_prefix);
         send_report();
     }
     else if(!strncmp(cmd, CMD_SET_LIMIT, 2))
     {
         my_trace->instr_limit = strtol(cmd+3, 0x0, 10);
-        printf("Trace limit set to: %d\n", my_trace->instr_limit);
+        d_print("Trace limit set to: %d\n", my_trace->instr_limit);
         send_report();
     }
     else if(!strncmp(cmd, CMD_SET_TRACE_NAME, 2))
@@ -3196,7 +3197,7 @@ int handle_cmd(char* cmd)
         /* deprecated, its auotmated
         strcpy(my_trace->out_trace, cmd+3);
         */
-        printf("Trace name set to: %s\n", my_trace->out_trace);
+        d_print("Trace name set to: %s\n", my_trace->out_trace);
         send_report();
     }
     else if(!strncmp(cmd, CMD_SET_DUMP_NAME, 2))
@@ -3204,7 +3205,7 @@ int handle_cmd(char* cmd)
         /* deprecated, its auotmated
         strcpy(my_trace->out_dump, cmd+3);
         */
-        printf("Dump name set to: %s\n", my_trace->out_dump);
+        d_print("Dump name set to: %s\n", my_trace->out_dump);
         send_report();
     }
     else if(!strncmp(cmd, CMD_INFO_NAME, 2))
@@ -3212,7 +3213,7 @@ int handle_cmd(char* cmd)
         /* deprecated, its auotmated
         strcpy(my_trace->iniPath, cmd+3);
         */
-        printf("Info name set to: %s\n", my_trace->out_ini);
+        d_print("Info name set to: %s\n", my_trace->out_ini);
         send_report();
     }
     else if(!strncmp(cmd, CMD_PREPARE_TRACE, 2))
@@ -3221,7 +3222,7 @@ int handle_cmd(char* cmd)
 
         if((my_trace->out_dir == 0x0) || (my_trace->out_prefix == 0x0)) 
         {
-            printf("Error, out dir not set");
+            d_print("Error, out dir not set");
             exit(-1);
         }
 
@@ -3268,7 +3269,7 @@ int handle_cmd(char* cmd)
         my_trace->status = STATUS_DBG_STARTED;
         ss_callback((void*)&my_trace->last_event);
         set_ss(0x0);
-        printf("Tracing enabled\n");
+        d_print("Tracing enabled\n");
 
         d_print("Starting @ 0x%08x\n", my_trace->last_eip);
         sprintf(line2, "ST,0x%08x\n", my_trace->last_eip);
@@ -3282,7 +3283,7 @@ int handle_cmd(char* cmd)
 
         my_trace->status = STATUS_DBG_SCANNED;
         ss_callback((void*)&my_trace->last_event);
-        printf("Tracing debugged enabled\n");
+        d_print("Tracing debugged enabled\n");
 
         d_print("Starting @ 0x%08x\n", my_trace->last_eip);
         sprintf(line2, "ST,0x%08x\n", my_trace->last_eip);
@@ -3295,7 +3296,7 @@ int handle_cmd(char* cmd)
         char line2[MAX_LINE];
 
         my_trace->status = STATUS_DBG_STOPPED;
-        printf("Tracing disabled\n");
+        d_print("Tracing disabled\n");
 
         d_print("Ending @ 0x%08x\n", my_trace->last_eip);
         sprintf(line2, "END,0x%08x\n", my_trace->last_eip);
@@ -3316,7 +3317,7 @@ int handle_cmd(char* cmd)
         mod = strtok(cmd, " ");
         id = strtol(strtok(0x0, " "), 0x0, 0x10);
 
-        printf("Enabling reaction no %d\n", id);
+        d_print("Enabling reaction no %d\n", id);
         disable_reaction(id);
         send_report();
     }
@@ -3328,7 +3329,7 @@ int handle_cmd(char* cmd)
         mod = strtok(cmd, " ");
         id = strtol(strtok(0x0, " "), 0x0, 0x10);
 
-        printf("Enabling reaction no %d\n", id);
+        d_print("Enabling reaction no %d\n", id);
         enable_reaction(id);
         send_report();
     }
@@ -3341,7 +3342,7 @@ int handle_cmd(char* cmd)
         mod = strtok(0x0, " ");
         off = strtol(strtok(0x0, " "), 0x0, 0x10);
 
-        printf("Start marker fixed at: %s:0x%08x\n", mod, off);
+        d_print("Start marker fixed at: %s:0x%08x\n", mod, off);
         send_report();
     }
     else if(!strncmp(cmd, CMD_SET_MARKER_2, 2))
@@ -3353,7 +3354,7 @@ int handle_cmd(char* cmd)
         mod = strtok(0x0, " ");
         off = strtol(strtok(0x0, " "), 0x0, 0x10);
 
-        printf("End marker fixed at: %s:0x%08x\n", mod, off);
+        d_print("End marker fixed at: %s:0x%08x\n", mod, off);
         send_report();
     }
     else if(!strncmp(cmd, CMD_START_DEBUG, 2))
@@ -3364,7 +3365,7 @@ int handle_cmd(char* cmd)
         strcat(my_trace->process_fname, "\\");
         strcat(my_trace->process_fname, my_trace->in_sample_path);
 
-        printf("Starting debugging: %s\n", my_trace->process_fname);
+        d_print("Starting debugging: %s\n", my_trace->process_fname);
 
         start_trace_fname();
 
@@ -3405,7 +3406,7 @@ int handle_cmd(char* cmd)
         cmd_ = strtok(cmd, " ");
         addr = strtol(strtok(0x0, " "), 0x0, 0x10);
 
-        printf("Reading addr: 0x%08x\n", addr);
+        d_print("Reading addr: 0x%08x\n", addr);
 
         read_dword(addr);
         send_report();   
@@ -3421,7 +3422,7 @@ int handle_cmd(char* cmd)
         addr = strtol(strtok(0x0, " "), 0x0, 0x10);
         val = strtol(strtok(0x0, " "), 0x0, 0x10);
 
-        printf("Writing addr: 0x%08x with 0x%08x\n", addr, val);
+        d_print("Writing addr: 0x%08x with 0x%08x\n", addr, val);
 
         write_dword(addr, val);
         send_report();   
@@ -3911,15 +3912,15 @@ int main(int argc, char** argv)
 
     int i = 0;
     for(i=0;i<argc;i++)
-        printf("%d - %s\n", i, argv[i]);
+        d_print("%d - %s\n", i, argv[i]);
 
     if(argc < 3)
     {
-        printf("You need do provide host and port\n");
+        d_print("You need do provide host and port\n");
         return -1;
     }
 
-    printf("Version 2.0\n");
+    d_print("Version 2.0\n");
 
     if(strlen(argv[1]) > MAX_NAME) return -1;
     if(strlen(argv[2]) > MAX_NAME) return -1;
@@ -3927,7 +3928,7 @@ int main(int argc, char** argv)
     my_trace = (TRACE_CONFIG*)malloc(sizeof(TRACE_CONFIG));
     if(my_trace == 0x0)
     {
-        printf("Unable to allocate trace config\n");
+        d_print("Unable to allocate trace config\n");
         return -1;
     }
 
@@ -3951,29 +3952,29 @@ int main(int argc, char** argv)
     SOCKET s;    
     struct sockaddr_in server;
     
-    printf("\nInitialising Winsock...");
+    d_print("\nInitialising Winsock...");
     if (WSAStartup(MAKEWORD(2,2),&wsa) != 0)
     {
-        printf("Failed. Error Code : %d",WSAGetLastError());
+        d_print("Failed. Error Code : %d",WSAGetLastError());
         return 1;
     }
      
-    printf("Initialised\n");
+    d_print("Initialised\n");
 
     /* Connect to socket */
 
     if((s = socket(AF_INET , SOCK_STREAM , 0 )) == INVALID_SOCKET)
     {
-        printf("Could not create socket : %d" , WSAGetLastError());
+        d_print("Could not create socket : %d" , WSAGetLastError());
     }
 
-    printf("Socket created\n");
+    d_print("Socket created\n");
     u_long iMode = 0;
 
     unsigned iResult;
 
     iResult = ioctlsocket(s, FIONBIO, &iMode);
-    if (iResult != NO_ERROR) printf("ioctlsocket failed with error: %ld\n", iResult);
+    if (iResult != NO_ERROR) d_print("ioctlsocket failed with error: %ld\n", iResult);
 
     /* Creating backconnect */
     server.sin_addr.s_addr = inet_addr(TRACE_CONTROLLER_IP);
@@ -3981,20 +3982,20 @@ int main(int argc, char** argv)
     server.sin_port = htons(TRACE_CONTROLLER_PORT);
  
     iResult = ioctlsocket(s, FIONBIO, &iMode);
-    if (iResult != NO_ERROR) printf("ioctlsocket failed with error: %ld\n", iResult);
+    if (iResult != NO_ERROR) d_print("ioctlsocket failed with error: %ld\n", iResult);
 
     if (connect(s , (struct sockaddr *)&server , sizeof(server)) < 0)
     {
-        printf("connect error");
+        d_print("connect error");
         return 1;
     }
      
     my_trace->socket = s;
 
     iResult = ioctlsocket(s, FIONBIO, &iMode);
-    if (iResult != NO_ERROR) printf("ioctlsocket failed with error: %ld\n", iResult);
+    if (iResult != NO_ERROR) d_print("ioctlsocket failed with error: %ld\n", iResult);
 
-    printf("Connected\n");
+    d_print("Connected\n");
 
     /* handle commands in loop */
 
@@ -4020,18 +4021,18 @@ int main(int argc, char** argv)
             cmd_len += recv_size;
 
             if(!strncmp(cmd+cmd_len-6, "-=OK=-", 6)) break;
-           // printf("Got part: %s\n", cmd);
-           // printf("Finish: %s\n", cmd+cmd_len-6);
+           // d_print("Got part: %s\n", cmd);
+           // d_print("Finish: %s\n", cmd+cmd_len-6);
         }
 
         cmd[cmd_len-6] = 0x0;
-//        printf("Got cmd: %s\n", cmd);
+//        d_print("Got cmd: %s\n", cmd);
 
         if(!strcmp(cmd, "quit")) 
             break;
         
         handle_cmd(cmd);
-//        printf("Handled\n");
+//        d_print("Handled\n");
 
     }
 
