@@ -162,12 +162,8 @@ TracerDebugSample.name = "Debugging sample"
 TracerDebugSample.consequence = TracerDebugContinueInf
 TracerDebugSample.executing_routine = usualparts.tracer_parts.tracer_debug_sample
 
-TracerPrepareTrace.name = "Activate markers"
-TracerPrepareTrace.consequence = TracerDebugSample
-TracerPrepareTrace.executing_routine = usualparts.tracer_parts.tracer_prepare_trace
-
 TracerSetLimit.name = "Setting limit"
-TracerSetLimit.consequence = TracerPrepareTrace
+TracerSetLimit.consequence = TracerDebugSample
 TracerSetLimit.executing_routine = usualparts.tracer_parts.tracer_activate_markers
 
 TracerActivateMarkers.name = "Activate markers"
@@ -186,8 +182,12 @@ TracerConfigureMarkers.name = "Configuring markers"
 TracerConfigureMarkers.consequence = TracerRegisterRegions
 TracerConfigureMarkers.executing_routine = usualparts.tracer_parts.tracer_configure_markers
 
+TracerPrepareTrace.name = "Prepare trace output"
+TracerPrepareTrace.consequence = TracerConfigureMarkers
+TracerPrepareTrace.executing_routine = usualparts.tracer_parts.tracer_prepare_trace
+
 TracerConfigureInDir.name = "Configuring in dir"
-TracerConfigureInDir.consequence = TracerConfigureMarkers
+TracerConfigureInDir.consequence = TracerPrepareTrace
 TracerConfigureInDir.executing_routine = usualparts.tracer_parts.tracer_configure_in_dir
 
 TracerConfigureOutPrefix.name = "Configuring out prefix"
