@@ -3250,6 +3250,14 @@ int handle_cmd(char* cmd)
         my_trace->ini = fopen(my_trace->out_ini, "w");
         d_print("Ini file: %s\n", my_trace->out_ini);
     
+        /* log */ 
+        strcpy(buffer2, "");
+        sprintf(buffer2, "%s\\%s.log", my_trace->out_dir, my_trace->out_prefix);
+        strcpy(my_trace->out_log, buffer2);
+        my_trace->log = fopen(my_trace->out_log, "w");
+        log = my_trace->log;
+        d_print("Log file: %s\n", my_trace->out_log);
+    
         send_report();
         my_trace->status = STATUS_CONFIGURED;
     }

@@ -350,6 +350,7 @@ typedef struct TRACE_CONFIG_
     char out_dump[MAX_LINE];
     char out_ini[MAX_LINE];
     char out_mods[MAX_LINE];
+    char out_log[MAX_LINE];
 
     char process_fname[MAX_NAME];
    
