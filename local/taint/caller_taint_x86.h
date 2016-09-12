@@ -2372,6 +2372,7 @@ class taint_x86
     OFFSET start_instr;
     OFFSET instr_limit;
     unsigned max_call_levels;
+    unsigned call_level_start;
 
     DWORD depth;
 
@@ -3452,6 +3453,8 @@ class taint_x86
         this->wanted_count_e = 0x0;
 
         this->max_call_levels = MAX_CALL_LEVELS;
+        this->call_level_start = this->max_call_levels/3;
+
 
 /*
         this->propagations = (PROPAGATION*)malloc(sizeof(PROPAGATION)*MAX_PRPAGATIONS_OBSERVED);

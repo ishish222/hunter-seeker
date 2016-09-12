@@ -715,6 +715,7 @@ int main(int argc, char** argv)
     if(max_levels) 
     {
         taint_eng.max_call_levels = max_levels;
+        taint_eng.call_level_start = max_levels/3;
         printf("Setting max levels to: 0x%08x\n", max_levels);
     }
  
@@ -909,7 +910,7 @@ int main(int argc, char** argv)
                     break;
 */
         }
-//        if(0)
+        if(0)
         if(instr_count == 51883544) 
         {
             fprintf(stderr, "Problem with instruction after %lld\n", last_instr_count);

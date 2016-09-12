@@ -491,7 +491,7 @@ void taint_x86::print_call(CONTEXT_INFO* cur_ctx, char* line, const char* color)
 
     strcpy(out_line, "");
 
-    for(i = GRAPH_START-GRAPH_OFF; i< cur_ctx->call_level; i++)
+    for(i = this->call_level_start-GRAPH_OFF; i< cur_ctx->call_level; i++)
         strcat(out_line, " ");
 
     /*
@@ -519,7 +519,7 @@ void taint_x86::print_empty_call(CONTEXT_INFO* cur_ctx, char* line, const char* 
 
     strcpy(out_line, "");
     
-    for(i = GRAPH_START-GRAPH_OFF; i< cur_ctx->call_level; i++)
+    for(i = this->call_level_start-GRAPH_OFF; i< cur_ctx->call_level; i++)
         strcat(out_line, " ");
     
     sprintf(working_line, "<node COLOR=\"%s\" CREATED=\"6666666666666\" FOLDED=\"true\" ID=\"ID_1208439975\" MODIFIED=\"6666666666666\" TEXT=\"%s\"></node>\n", color, line);
@@ -538,7 +538,7 @@ void taint_x86::print_ret(CONTEXT_INFO* cur_ctx)
 
     strcpy(out_line, "");
 
-    for(i = GRAPH_START-GRAPH_OFF; i< cur_ctx->call_level; i++)
+    for(i = this->call_level_start-GRAPH_OFF; i< cur_ctx->call_level; i++)
         strcat(out_line, " ");
 
 
@@ -1028,7 +1028,7 @@ int taint_x86::handle_call(CONTEXT_INFO* info)
         }
         
         /* log emission */
-        for(i=GRAPH_START; i< info->call_level; i++)
+        for(i=this->call_level_start; i< info->call_level; i++)
         {
             d_print(1, " ");
         }
@@ -1070,7 +1070,7 @@ int taint_x86::handle_call(CONTEXT_INFO* info)
         }
 
         /* log emission */
-        for(i=GRAPH_START; i< info->call_level; i++)
+        for(i=this->call_level_start; i< info->call_level; i++)
         {
             d_print(1, " ");
         }
@@ -2074,9 +2074,9 @@ int taint_x86::finish()
 
         open = cur_tid->call_level - cur_tid->call_level_smallest;
         d_print(1, "[0x%08x] Left with %d nodes open\n", cur_tid->tid, open);
-        d_print(1, "[0x%08x] First: %d - %d = %d\n", cur_tid->tid, cur_tid->call_level_smallest, abs(GRAPH_START - cur_tid->call_level_smallest));
+        d_print(1, "[0x%08x] First: %d - %d = %d\n", cur_tid->tid, cur_tid->call_level_smallest, abs(this->call_level_start - cur_tid->call_level_smallest));
 
-        diff_first = abs(GRAPH_START - cur_tid->call_level_smallest);
+        diff_first = abs(this->call_level_start - cur_tid->call_level_smallest);
         diff_last = open;
 
         d_print(1, "[0x%08x] Diff_last: %d\n", cur_tid->tid, diff_last);
