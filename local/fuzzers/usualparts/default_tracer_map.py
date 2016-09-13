@@ -253,7 +253,7 @@ def is_socket_connected():
     state = globs.state
 
     if(state.initialized == True):    
-        return QemuConnectLog
+        return KillExplorer
     else:
         return SpawnInternalController
 

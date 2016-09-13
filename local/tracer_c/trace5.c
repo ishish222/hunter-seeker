@@ -159,10 +159,13 @@ void update_region(OUT_LOCATION* location)
     DWORD size_wrote;
     char line[MAX_LINE];
 
+    sprintf(line, "# Current mod position: 0x%08x\n", ftell(my_trace->mods));
+
     size_wrote = dump_mem(my_trace->mods, (void*)location->off, location->size);
     if(size_wrote == location->size)
     {
         d_print("[Updated location: 0x%08x, size: 0x%08x]\n", location->off, location->size);
+        sprintf(line, "# Current mod position: 0x%08x\n", ftell(my_trace->mods));
         sprintf(line, "UP,0x%08x,0x%08x\n", location->off, location->size);
         add_to_buffer(line);
     }
@@ -628,7 +631,8 @@ char* find_file(char* path)
 
 void reaction_handler(void* data)
 {
-    unsigned i;
+    unsigned i, id;
+    char line[MAX_NAME];
 
     d_print("In reaction handler\n");
 
@@ -636,7 +640,13 @@ void reaction_handler(void* data)
     {
         if((OFFSET)my_trace->last_exception.ExceptionAddress == my_trace->reactions[i].real_offset)
         {
-            d_print("Reaction 0x%08x hit!\n", my_trace->reactions[i].id);
+            id = my_trace->reactions[i].id;
+            d_print("Reaction 0x%08x hit!\n", id);
+            if((id != 0x0) && (id != 0x1) && (id != 0x2))
+            {
+                sprintf(line, "# Reaction 0x%08x hit!\n", id);
+                add_to_buffer(line);
+            }
             my_trace->routines[my_trace->reactions[i].id](data);
         }
     }

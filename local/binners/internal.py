@@ -1063,7 +1063,7 @@ def execute(cmds):
 
         elif(cmd == "killExplorer"):
             call("taskkill /F /IM explorer.exe")
-            writePipe(log_pipe, "Killed explorer")
+            #writePipe(log_pipe, "Killed explorer")
             writePipe(ext_pipe, "killExplorer OK")
             ok(ext_pipe)
 
@@ -1080,7 +1080,7 @@ def execute(cmds):
 
         elif(cmd == "quit"):
             close_logs()
-            log_pipe.write("quit")
+            #log_pipe.write("quit")
 
 ### tracer info
         elif(cmd == "tc_avtivate_prev"):
@@ -1303,7 +1303,7 @@ def execute(cmds):
             new_tracer = trace_controller.spawn_tracer()
             writePipe(ext_pipe, "[Trace controller]: OK")
             writePipe(ext_pipe, "Started: %d" % new_tracer)
-            writePipe(log_pipe, "Started: %d" % new_tracer)
+            #writePipe(log_pipe, "Started: %d" % new_tracer)
             writePipe(ext_pipe, "spawn_tracer OK")
             ok(ext_pipe)
 
@@ -1311,7 +1311,7 @@ def execute(cmds):
             new_tracer = trace_controller.spawn_tracer_log()
             writePipe(ext_pipe, "[Trace controller]: OK")
             writePipe(ext_pipe, "Started: %d" % new_tracer)
-            writePipe(log_pipe, "Started: %d" % new_tracer)
+            #writePipe(log_pipe, "Started: %d" % new_tracer)
             writePipe(ext_pipe, "spawn_tracer_log OK")
             ok(ext_pipe)
 
@@ -1354,22 +1354,22 @@ Hunter-Seeker
 """
     print(logo)
     ext_pipe = SerialWrap(0)
-    log_pipe = SerialWrap(1)
+#    log_pipe = SerialWrap(1)
     # signal ext_pipe connection
     writePipe(ext_pipe, 'Ext_pipe connected')
     ok(ext_pipe)
     # signal log_pipe connection
-    writePipe(log_pipe, 'Log_pipe connected')
-    ok(log_pipe)
+#    #writePipe(log_pipe, 'Log_pipe connected')
+#    ok(log_pipe)
     import sys
-    sys.stdout = log_pipe
-    sys.stderr = log_pipe
+#    sys.stdout = log_pipe
+#    sys.stderr = log_pipe
 
     while True:
         cmd = readPipe(ext_pipe)
         cmds = cmd.split(" ")
         execute(cmds)
-        log_pipe.write("CMD executed")
+        #log_pipe.write("CMD executed")
         if(cmd == "quit"):
             break
 
