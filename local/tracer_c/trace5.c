@@ -74,13 +74,17 @@ int write_context(DWORD, CONTEXT*);
 int d_print(const char* format, ...)
 {
     va_list argptr;
+    char line[MAX_LINE];
+
     if(my_trace != 0x0)
     {
         if(my_trace->log != 0x0)
         {
             va_start(argptr, format);
-            vfprintf(my_trace->log, format, argptr);
+            //vfprintf(line, my_trace->log, format, argptr);
+            vsprintf(line, format, argptr);
             va_end(argptr);
+            fwrite(line, strlen(line), 1, my_trace->log);
 //            fflush(my_trace->log);
         }
     }
@@ -160,13 +164,15 @@ void update_region(OUT_LOCATION* location)
     char line[MAX_LINE];
 
     sprintf(line, "# Current mod position: 0x%08x\n", ftell(my_trace->mods));
+    add_to_buffer(line);
 
     size_wrote = dump_mem(my_trace->mods, (void*)location->off, location->size);
     if(size_wrote == location->size)
     {
         d_print("[Updated location: 0x%08x, size: 0x%08x]\n", location->off, location->size);
-        sprintf(line, "# Current mod position: 0x%08x\n", ftell(my_trace->mods));
         sprintf(line, "UP,0x%08x,0x%08x\n", location->off, location->size);
+        add_to_buffer(line);
+        sprintf(line, "# Current mod position: 0x%08x\n", ftell(my_trace->mods));
         add_to_buffer(line);
     }
 
