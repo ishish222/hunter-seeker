@@ -131,10 +131,10 @@ DumpMemory.name = "Dumping memory"
 DumpMemory.consequence = TracerStartTrace
 DumpMemory.executing_routine = usualparts.tracer_parts.tracer_dump_memory
 
-TracerEnableDebug3.name = "Enabling reaction 0x201"
+TracerEnableDebug3.name = "Enabling all reactions"
 TracerEnableDebug3.consequence = DumpMemory
-TracerEnableDebug3.args = "0x201"
-TracerEnableDebug3.executing_routine = usualparts.tracer_parts.tracer_enable_reaction
+#TracerEnableDebug3.args = "0x201"
+TracerEnableDebug3.executing_routine = usualparts.tracer_parts.tracer_enable_all_reactions
 
 TracerEnableDebug2.name = "Enabling reaction"
 TracerEnableDebug2.consequence = TracerEnableDebug3

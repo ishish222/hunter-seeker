@@ -70,6 +70,7 @@ int resolve_region(OUT_ARGUMENT*, OUT_LOCATION*);
 int add_to_buffer(char*);
 int read_context(DWORD, CONTEXT*);
 int write_context(DWORD, CONTEXT*);
+void write_memory(HANDLE , void* , void* , SIZE_T , SIZE_T* );
 
 int d_print(const char* format, ...)
 {
@@ -188,6 +189,36 @@ void update_region_1(void* data)
     update_region(&location);
 
     return;
+}
+
+void cry_antidebug_1(void* data)
+{
+    OFFSET addr = 0x40103e4;
+    DWORD wrote;
+    char val1 = 0x66;
+    char val2 = 0x66;
+
+    d_print("Modifying address: 0x%08x\n", addr);
+    write_memory(my_trace->procHandle, (void*)addr, (void*)&val1, 0x1, &wrote);
+    addr++;
+    write_memory(my_trace->procHandle, (void*)addr, (void*)&val2, 0x1, &wrote);
+    
+    return;
+}
+
+int enable_all_reactions()
+{
+    unsigned i;
+
+    for(i = 0x0; i< my_trace->reaction_count; i++)
+    {
+        if(my_trace->reactions[i].id != 0x0)
+        {
+            my_trace->reactions[i].real_offset = my_trace->reactions[i].lib_offset + my_trace->reactions[i].offset;
+            add_breakpoint(my_trace->reactions[i].real_offset, reaction_handler);
+        }
+    }
+    return 0x0;
 }
 
 int enable_reaction(unsigned reaction)
@@ -3338,6 +3369,12 @@ int handle_cmd(char* cmd)
         disable_reaction(id);
         send_report();
     }
+    else if(!strncmp(cmd, CMD_ENABLE_ALL_REACTIONS, 2))
+    {
+        d_print("Enabling all reactions\n");
+        enable_all_reactions();
+        send_report();
+    }
     else if(!strncmp(cmd, CMD_ENABLE_REACTION, 2))
     {
         char* mod;
@@ -3962,6 +3999,7 @@ int main(int argc, char** argv)
     my_trace->routines[0x101] = &zero_SF;
     my_trace->routines[0x102] = &set_ZF;
     my_trace->routines[0x201] = &update_region_1;
+    my_trace->routines[0x202] = &cry_antidebug_1;
 
     /* Windows sockets */
 

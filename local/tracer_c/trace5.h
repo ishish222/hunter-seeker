@@ -125,8 +125,6 @@
 #define CMD_READ_STACK          "RS"
 #define CMD_CONTINUE            "cn"
 #define CMD_CONTINUE_TIME       "cN"
-
-/* unimplemented */
 #define CMD_ACTIVATE_MARKERS    "AM"
 #define CMD_SET_LIMIT           "SL"
 #define CMD_SET_TRACE_NAME      "ST"
@@ -140,6 +138,7 @@
 #define CMD_CONFIGURE_REACTIONS "cR"
 #define CMD_CONFIGURE_REGIONS   "cr"
 #define CMD_ENABLE_REACTION     "eR"
+#define CMD_ENABLE_ALL_REACTIONS "eA"
 #define CMD_DISABLE_REACTION    "dR"
 #define CMD_ACTIVATE_MARKERS    "am"
 #define CMD_AUTO_ST             "AS"

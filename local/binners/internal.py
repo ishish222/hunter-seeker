@@ -1140,6 +1140,11 @@ def execute(cmds):
             writePipe(ext_pipe, "tracer_enable_reaction OK")
             ok(ext_pipe)
 
+        elif(cmd == "tracer_enable_all_reactions"):
+            trace_controller.enable_all_reactions()
+            writePipe(ext_pipe, "tracer_enable_all_reactions OK")
+            ok(ext_pipe)
+
         elif(cmd == "tracer_disable_reaction"):
             trace_controller.disable_reaction(args)
             writePipe(ext_pipe, "tracer_disable_reaction OK")
