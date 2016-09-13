@@ -74,7 +74,6 @@ int write_context(DWORD, CONTEXT*);
 int d_print(const char* format, ...)
 {
     va_list argptr;
-
     if(my_trace != 0x0)
     {
         if(my_trace->log != 0x0)
@@ -82,15 +81,8 @@ int d_print(const char* format, ...)
             va_start(argptr, format);
             vfprintf(my_trace->log, format, argptr);
             va_end(argptr);
-            fflush(my_trace->log);
+//            fflush(my_trace->log);
         }
-    }
-    else if(log)
-    {
-        va_start(argptr, format);
-        vfprintf(log, format, argptr);
-        va_end(argptr);
-        fflush(log);
     }
     else
     {
@@ -3241,6 +3233,13 @@ int handle_cmd(char* cmd)
         my_trace->out_postfix = -1;
         reload_out_file();
 
+        /* log */ 
+        strcpy(buffer2, "");
+        sprintf(buffer2, "%s\\%s.log", my_trace->out_dir, my_trace->out_prefix);
+        strcpy(my_trace->out_log, buffer2);
+        my_trace->log = fopen(my_trace->out_log, "w");
+        d_print("Log file: %s\n", my_trace->out_log);
+
         /* dump */ 
         strcpy(buffer2, "");
         sprintf(buffer2, "%s\\%s.dump", my_trace->out_dir, my_trace->out_prefix);
@@ -3261,13 +3260,6 @@ int handle_cmd(char* cmd)
         my_trace->ini = fopen(my_trace->out_ini, "w");
         d_print("Ini file: %s\n", my_trace->out_ini);
     
-        /* log */ 
-        strcpy(buffer2, "");
-        sprintf(buffer2, "%s\\%s.log", my_trace->out_dir, my_trace->out_prefix);
-        strcpy(my_trace->out_log, buffer2);
-        my_trace->log = fopen(my_trace->out_log, "w");
-        d_print("Log file: %s\n", my_trace->out_log);
-
         send_report();
         my_trace->status = STATUS_CONFIGURED;
     }
