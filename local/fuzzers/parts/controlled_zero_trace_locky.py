@@ -216,9 +216,9 @@ GetSampleOptions.executing_routine = usualparts.tracing_parts.get_sample_options
 
 ### relinking
 
-SpawnTracerLog.name = "Spawning tracer wo/log"
+SpawnTracerLog.name = "Spawning tracer w/log"
 SpawnTracerLog.consequence = TracerConfigureSample
-SpawnTracerLog.executing_routine = usualparts.tracing_parts.start_tracer
+SpawnTracerLog.executing_routine = usualparts.tracing_parts.start_tracer_log
 
 dm.GetOptions.consequence = GetSampleOptions
 dm.SpawnTracer.consequence = TracerConfigureSample

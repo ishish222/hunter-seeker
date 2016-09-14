@@ -77,16 +77,17 @@ int d_print(const char* format, ...)
     va_list argptr;
     char line[MAX_LINE];
 
-    if(my_trace != 0x0)
+    //if(my_trace != 0x0)
+    if(0x0)
     {
         if(my_trace->log != 0x0)
         {
             va_start(argptr, format);
-            //vfprintf(line, my_trace->log, format, argptr);
+            //vfd_print(line, my_trace->log, format, argptr);
             vsprintf(line, format, argptr);
             va_end(argptr);
             fwrite(line, strlen(line), 1, my_trace->log);
-//            fflush(my_trace->log);
+            fflush(my_trace->log);
         }
     }
     else
@@ -193,10 +194,10 @@ void update_region_1(void* data)
 
 void cry_antidebug_1(void* data)
 {
-    OFFSET addr = 0x40103e4;
+    OFFSET addr = 0x4103e4;
     DWORD wrote;
-    char val1 = 0x66;
-    char val2 = 0x66;
+    char val1 = 0xf9;
+    char val2 = 0x01;
 
     d_print("Modifying address: 0x%08x\n", addr);
     write_memory(my_trace->procHandle, (void*)addr, (void*)&val1, 0x1, &wrote);
@@ -304,7 +305,7 @@ void sysret_refresh(void* data)
 void read_memory(HANDLE handle, void* from, void* to, SIZE_T size, SIZE_T* read)
 {
     DWORD ret;
-    //printf("read_memory, handle: 0x%08x\n", my_trace->procHandle);
+    //d_print("read_memory, handle: 0x%08x\n", my_trace->procHandle);
     ret = ReadProcessMemory(my_trace->procHandle, from, to, size, read);
 
     if(!ret)
@@ -318,7 +319,7 @@ void write_memory(HANDLE handle, void* to, void* from, SIZE_T size, SIZE_T* writ
     DWORD oldProt;
     DWORD ret;
     
-    //printf("write_memory, handle: 0x%08x\n", my_trace->procHandle);
+    //d_print("write_memory, handle: 0x%08x\n", my_trace->procHandle);
     VirtualProtectEx(my_trace->procHandle, to, 0x4, PAGE_EXECUTE_READWRITE, &oldProt);
     ret = WriteProcessMemory(my_trace->procHandle, to, from, size, written);
 
@@ -540,7 +541,7 @@ void register_thread(DWORD tid, HANDLE handle)
 
 int register_thread_debug(DWORD tid, HANDLE handle)
 {
-    //printf("Debug registering: TID 0x%08x, handle 0x%08x\n", tid, handle);
+    //d_print("Debug registering: TID 0x%08x, handle 0x%08x\n", tid, handle);
     char line2[0x200];
     char line[MAX_LINE];
     CONTEXT ctx;
@@ -781,8 +782,8 @@ void deregister_lib(UNLOAD_DLL_DEBUG_INFO info)
     sprintf(line, "DL,0x%08x,%s\n", my_trace->libs[i].lib_offset, my_trace->libs[i].lib_name);
 
     my_trace->libs[i].loaded  = 0x0;
-    //printf(line);
-    //printf("\n");
+    //d_print(line);
+    //d_print("\n");
     add_to_buffer(line);
 
     return;
@@ -1850,7 +1851,7 @@ int handle_breakpoint(DWORD addr, void* data)
 
             for(j = handler_count-1; j>-1; j--)
             {
-                //printf("Enabled: %d\n", my_trace->breakpoints[my_bpt_idx].handlers[j].enabled);
+                //d_print("Enabled: %d\n", my_trace->breakpoints[my_bpt_idx].handlers[j].enabled);
                 if(my_trace->breakpoints[my_bpt_idx].handlers[j].enabled)
                 {
                     d_print("Executing last handler\n");
@@ -1869,28 +1870,6 @@ int handle_breakpoint(DWORD addr, void* data)
         }
     }
 
-
-    /* finished all handlers */
-/*
-    if((my_bpt_idx == -0x1) && (our_bp))
-    {
-        d_print("Removing\n");
-        del_breakpoint(addr);
-        dec_eip(de->dwThreadId);
-    }
-*/
-//    d_print("5\n");
-/*
-    if(my_trace->breakpoints[my_bpt_idx].enabled == 0x0)
-    {
-        return -0x1;
-    }
-
-*/
-
-
-    //enable ss
-    //set_ss(de->dwThreadId);
     return 0x0;
 }
 
@@ -2249,7 +2228,7 @@ int write_byte(DWORD addr, char* data)
 
     char buffer2[MAX_LINE];
 
-    data_b = strtol(data, 0x0, 0x10);
+    data_b = strtoul(data, 0x0, 0x10);
     write_memory(my_trace->procHandle, (void*)addr, (void*)&data_b, 0x1, &read);
 
     if(read == 0x1)
@@ -2294,7 +2273,7 @@ int write_word(DWORD addr, char* data)
 
     char buffer2[MAX_LINE];
 
-    data_w = strtol(data, 0x0, 0x10);
+    data_w = strtoul(data, 0x0, 0x10);
     write_memory(my_trace->procHandle, (void*)addr, (void*)&data_w, 0x2, &read);
 
     if(read == 0x2)
@@ -2352,7 +2331,7 @@ int write_dword(DWORD addr, char* data)
 
     char buffer2[MAX_LINE];
 
-    data_d = strtol(data, 0x0, 0x10);
+    data_d = strtoul(data, 0x0, 0x10);
     write_memory(my_trace->procHandle, (void*)addr, (void*)&data_d, 0x4, &read);
 
     if(read == 0x4)
@@ -2381,21 +2360,21 @@ int write_register(DWORD tid_id, char* reg, char* data)
 
     if(!strcmp(reg, "EAX"))
     {
-        data_d = strtol(data, 0x0, 0x10);
+        data_d = strtoul(data, 0x0, 0x10);
         ctx.Eax = data_d;
         write_context(tid_id, &ctx);
         strcpy(my_trace->report_buffer, buffer2);
     }
     else if(!strcmp(reg, "ESP"))
     {
-        data_d = strtol(data, 0x0, 0x10);
+        data_d = strtoul(data, 0x0, 0x10);
         ctx.Esp = data_d;
         write_context(tid_id, &ctx);
         strcpy(my_trace->report_buffer, buffer2);
     }
     else if(!strcmp(reg, "EIP"))
     {
-        data_d = strtol(data, 0x0, 0x10);
+        data_d = strtoul(data, 0x0, 0x10);
         ctx.Eip = data_d;
         write_context(tid_id, &ctx);
         strcpy(my_trace->report_buffer, buffer2);
@@ -2471,7 +2450,7 @@ int process_last_event()
 {
     unsigned status;
 
-        //printf("process_last_event: 0x%08x\n", my_trace->last_event.dwDebugEventCode);
+        //d_print("process_last_event: 0x%08x\n", my_trace->last_event.dwDebugEventCode);
         switch(my_trace->last_event.dwDebugEventCode)
         {
             case CREATE_PROCESS_DEBUG_EVENT:
@@ -2723,6 +2702,21 @@ int create_report(int last_report)
     return 0x0;
 }
 
+int handle_continue(DWORD pid, DWORD tid, unsigned status)
+{
+    /* turn on trap again */
+    /*
+    if((my_trace->status == STATUS_DBG_STARTED) || (my_trace->status == STATUS_DBG_SCANNED))
+    {
+        d_print("Enabling trap\n");
+        set_ss(0x0);
+        set_ss(tid);
+    }
+    */
+    ContinueDebugEvent(pid, tid, status);
+    return 0x0;
+}
+
 int get_pending_events()
 {
     int last_report;
@@ -2732,11 +2726,13 @@ int get_pending_events()
     d_print("Continuing: PID: 0x%08x, TID: 0x%08x\n", my_trace->last_event.dwProcessId, my_trace->last_event.dwThreadId);
     if(my_trace->last_event.dwProcessId == 0x0)
     {
-        ContinueDebugEvent(my_trace->pi.dwProcessId, my_trace->pi.dwThreadId, DBG_CONTINUE);
+//        ContinueDebugEvent(my_trace->pi.dwProcessId, my_trace->pi.dwThreadId, DBG_CONTINUE);
+        handle_continue(my_trace->pi.dwProcessId, my_trace->pi.dwThreadId, DBG_CONTINUE);
     }
     else
     {
-        ContinueDebugEvent(my_trace->last_event.dwProcessId, my_trace->last_event.dwThreadId, DBG_CONTINUE);
+//        ContinueDebugEvent(my_trace->last_event.dwProcessId, my_trace->last_event.dwThreadId, DBG_CONTINUE);
+        handle_continue(my_trace->last_event.dwProcessId, my_trace->last_event.dwThreadId, DBG_CONTINUE);
     }
     d_print("Continuing\n");
 
@@ -2760,7 +2756,8 @@ int get_pending_events()
             break;
         }
 
-        ContinueDebugEvent(my_trace->last_event.dwProcessId, my_trace->last_event.dwThreadId, status);
+        //ContinueDebugEvent(my_trace->last_event.dwProcessId, my_trace->last_event.dwThreadId, status);
+        handle_continue(my_trace->last_event.dwProcessId, my_trace->last_event.dwThreadId, status);
     }
 
 
@@ -2783,11 +2780,13 @@ int continue_routine(DWORD time, unsigned stat)
 
     if(my_trace->last_event.dwProcessId == 0x0)
     {
-        ContinueDebugEvent(my_trace->pi.dwProcessId, my_trace->pi.dwThreadId, status);
+        //ContinueDebugEvent(my_trace->pi.dwProcessId, my_trace->pi.dwThreadId, status);
+        handle_continue(my_trace->pi.dwProcessId, my_trace->pi.dwThreadId, status);
     }
     else
     {
-        ContinueDebugEvent(my_trace->last_event.dwProcessId, my_trace->last_event.dwThreadId, status);
+        //ContinueDebugEvent(my_trace->last_event.dwProcessId, my_trace->last_event.dwThreadId, status);
+        handle_continue(my_trace->last_event.dwProcessId, my_trace->last_event.dwThreadId, status);
     }
     d_print("Continuing\n");
     while(1)
@@ -2811,7 +2810,8 @@ int continue_routine(DWORD time, unsigned stat)
             break;
         }
 
-        ContinueDebugEvent(my_trace->last_event.dwProcessId, my_trace->last_event.dwThreadId, status);
+        //ContinueDebugEvent(my_trace->last_event.dwProcessId, my_trace->last_event.dwThreadId, status);
+        handle_continue(my_trace->last_event.dwProcessId, my_trace->last_event.dwThreadId, status);
     }
 
     create_report(last_report);
@@ -2827,7 +2827,7 @@ int add_reaction(char* lib_name, OFFSET offset, unsigned id)
     
     if(lib_name[0] == '0' && lib_name[1] == 'x')
     {
-        my_trace->reactions[my_trace->reaction_count].lib_offset = strtol(lib_name, 0x0, 0x10);
+        my_trace->reactions[my_trace->reaction_count].lib_offset = strtoul(lib_name, 0x0, 0x10);
         strcpy(my_trace->reactions[my_trace->reaction_count].lib_name, "0x00000000");
     }
     else
@@ -2998,7 +2998,7 @@ int add_marker(char* lib_name, OFFSET offset, char* id)
     
     if(lib_name[0] == '0' && lib_name[1] == 'x')
     {
-        my_trace->markers[my_trace->marker_count].lib_offset = strtol(lib_name, 0x0, 0x10);
+        my_trace->markers[my_trace->marker_count].lib_offset = strtoul(lib_name, 0x0, 0x10);
         strcpy(my_trace->markers[my_trace->marker_count].lib_name, "0x00000000");
     }
     else
@@ -3030,10 +3030,10 @@ int parse_reaction(char* str)
 
     lib = strtok(str, ":");
     off = strtok(0x0, ":");
-    id = strtol(strtok(0x0, "+"), 0x0, 0x10);
+    id = strtoul(strtok(0x0, "+"), 0x0, 0x10);
 
     /* registering marker */
-    add_reaction(lib, strtol(off, 0x0, 0x10), id);
+    add_reaction(lib, strtoul(off, 0x0, 0x10), id);
 }
 
 int parse_region(char* str)
@@ -3047,9 +3047,9 @@ int parse_region(char* str)
 
     d_print("Parsing region: %s\n", str);
 
-    off = strtol(strtok(str, ":"), 0x0, 0x10);
+    off = strtoul(strtok(str, ":"), 0x0, 0x10);
     label_off_location = strtok(0x0, ":");
-    size = strtol(strtok(0x0, ":"), 0x0, 0x10);
+    size = strtoul(strtok(0x0, ":"), 0x0, 0x10);
     label_size_location = strtok(0x0, "+");
 
     d_print("Calculating off location for data: 0x%08x:%s\n", off, label_off_location);
@@ -3120,7 +3120,7 @@ int parse_marker(char* str)
     id = strtok(0x0, "+");
 
     /* registering marker */
-    add_marker(lib, strtol(off, 0x0, 0x10), id);
+    add_marker(lib, strtoul(off, 0x0, 0x10), id);
 }
 
 int parse_reactions(char* str)
@@ -3237,7 +3237,7 @@ int handle_cmd(char* cmd)
     }
     else if(!strncmp(cmd, CMD_SET_LIMIT, 2))
     {
-        my_trace->instr_limit = strtol(cmd+3, 0x0, 10);
+        my_trace->instr_limit = strtoul(cmd+3, 0x0, 10);
         d_print("Trace limit set to: %d\n", my_trace->instr_limit);
         send_report();
     }
@@ -3363,7 +3363,7 @@ int handle_cmd(char* cmd)
         unsigned id;
 
         mod = strtok(cmd, " ");
-        id = strtol(strtok(0x0, " "), 0x0, 0x10);
+        id = strtoul(strtok(0x0, " "), 0x0, 0x10);
 
         d_print("Enabling reaction no %d\n", id);
         disable_reaction(id);
@@ -3381,7 +3381,7 @@ int handle_cmd(char* cmd)
         unsigned id;
 
         mod = strtok(cmd, " ");
-        id = strtol(strtok(0x0, " "), 0x0, 0x10);
+        id = strtoul(strtok(0x0, " "), 0x0, 0x10);
 
         d_print("Enabling reaction no %d\n", id);
         enable_reaction(id);
@@ -3394,7 +3394,7 @@ int handle_cmd(char* cmd)
 
         mod = strtok(cmd, " ");
         mod = strtok(0x0, " ");
-        off = strtol(strtok(0x0, " "), 0x0, 0x10);
+        off = strtoul(strtok(0x0, " "), 0x0, 0x10);
 
         d_print("Start marker fixed at: %s:0x%08x\n", mod, off);
         send_report();
@@ -3406,7 +3406,7 @@ int handle_cmd(char* cmd)
 
         mod = strtok(cmd, " ");
         mod = strtok(0x0, " ");
-        off = strtol(strtok(0x0, " "), 0x0, 0x10);
+        off = strtoul(strtok(0x0, " "), 0x0, 0x10);
 
         d_print("End marker fixed at: %s:0x%08x\n", mod, off);
         send_report();
@@ -3458,7 +3458,7 @@ int handle_cmd(char* cmd)
         char* cmd_;
 
         cmd_ = strtok(cmd, " ");
-        addr = strtol(strtok(0x0, " "), 0x0, 0x10);
+        addr = strtoul(strtok(0x0, " "), 0x0, 0x10);
 
         d_print("Reading addr: 0x%08x\n", addr);
 
@@ -3473,8 +3473,8 @@ int handle_cmd(char* cmd)
         DWORD val;
 
         cmd_ = strtok(cmd, " ");
-        addr = strtol(strtok(0x0, " "), 0x0, 0x10);
-        val = strtol(strtok(0x0, " "), 0x0, 0x10);
+        addr = strtoul(strtok(0x0, " "), 0x0, 0x10);
+        val = strtoul(strtok(0x0, " "), 0x0, 0x10);
 
         d_print("Writing addr: 0x%08x with 0x%08x\n", addr, val);
 
@@ -3488,7 +3488,7 @@ int handle_cmd(char* cmd)
         char* reg;
 
         reg = strtok(cmd, " ");
-        tid_id = strtol(strtok(0x0, " "), 0x0, 0x10);
+        tid_id = strtoul(strtok(0x0, " "), 0x0, 0x10);
         reg = strtok(0x0, " ");
 
         read_register(tid_id, reg);
@@ -3502,7 +3502,7 @@ int handle_cmd(char* cmd)
         char* data;
 
         reg = strtok(cmd, " ");
-        tid_id = strtol(strtok(0x0, " "), 0x0, 0x10);
+        tid_id = strtoul(strtok(0x0, " "), 0x0, 0x10);
         reg = strtok(0x0, " ");
         data = strtok(0x0, " ");
 
@@ -3517,8 +3517,8 @@ int handle_cmd(char* cmd)
         DWORD count;
 
         data = strtok(cmd, " ");
-        tid_id = strtol(strtok(0x0, " "), 0x0, 0x10);
-        count = strtol(strtok(0x0, " "), 0x0, 0x10);
+        tid_id = strtoul(strtok(0x0, " "), 0x0, 0x10);
+        count = strtoul(strtok(0x0, " "), 0x0, 0x10);
 
         read_stack(tid_id, count);
         send_report(); 
@@ -3526,11 +3526,14 @@ int handle_cmd(char* cmd)
     else if(!strncmp(cmd, CMD_CONTINUE, 2))
     {
         unsigned report;
-        unsigned status;
+        int status;
+        char* data;
 
-        strtok(cmd, " ");
-        status = strtol(strtok(0x0, " "), 0x0, 0x10);
+        data = strtok(cmd, " ");
+        data = strtok(0x0, " ");
+        status = strtoul(data, 0x0, 0x10);
 
+        d_print("Continuing with status: 0x%08x, DBG_NOT_HANDLED is: 0x%08x\n", status, DBG_EXCEPTION_NOT_HANDLED);
         continue_routine(INFINITE, status);
         send_report();   
     }
@@ -3541,8 +3544,8 @@ int handle_cmd(char* cmd)
         unsigned status;
 
         strtok(cmd, " ");
-        time = strtol(strtok(0x0, " "), 0x0, 0x10);
-        status = strtol(strtok(0x0, " "), 0x0, 0x10);
+        time = strtoul(strtok(0x0, " "), 0x0, 0x10);
+        status = strtoul(strtok(0x0, " "), 0x0, 0x10);
 
         continue_routine(time, status);
         send_report();   

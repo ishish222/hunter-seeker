@@ -455,6 +455,7 @@ class TraceController(object):
     def spawn_tracer_log(self):
         print("Spawning tracer")
         Popen(["e:\\server\\b.exe", "127.0.0.1", "12341", ">", "e:\\server\\log.txt"], shell=True)
+        #Popen(["e:\\server\\b.exe", "127.0.0.1", "12341", ">", "\\\\10.0.2.4\\qemu\\log.txt"], shell=True)
         socket, addr = self.main_socket.accept()
         self.tracers.append(Tracer())
         self.tracer_active_id = self.trace_count
