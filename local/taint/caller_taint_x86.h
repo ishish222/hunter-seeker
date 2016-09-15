@@ -41,7 +41,7 @@ Change of endiannes takes place when reading and writing to memory (to_mem, from
 #define MAX_LIB_COUNT           0x100
 #define MAX_THREADS             0x100
 #define MAX_THREAD_NUMBER       0x1000
-#define MAX_CALL_LEVELS         0x100
+#define MAX_CALL_LEVELS         0x200
 #define GRAPH_START             100
 #define MAX_LOOP_ADDRS          0x10
 //#define MAX_THREADS 0x1000000
@@ -2373,6 +2373,7 @@ class taint_x86
     OFFSET instr_limit;
     unsigned max_call_levels;
     unsigned call_level_start;
+    unsigned call_level_offset;
 
     DWORD depth;
 

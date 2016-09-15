@@ -713,12 +713,12 @@ int main(int argc, char** argv)
 
     taint_eng.bp_hit = 0x1;
     taint_eng.enumerate = enumerate;
-    if(max_levels) 
-    {
-        taint_eng.max_call_levels = max_levels;
-        taint_eng.call_level_start = max_levels/3;
-        printf("Setting max levels to: 0x%08x\n", max_levels);
-    }
+    if(max_levels == 0x0) max_levels = MAX_CALL_LEVELS;
+
+    taint_eng.max_call_levels = max_levels;
+    taint_eng.call_level_start = max_levels/3;
+    taint_eng.call_level_offset = max_levels/30;
+    printf("Setting max levels to: 0x%08x, start: 0x%08x, offset: 0x%08x\n", max_levels, taint_eng.call_level_start, taint_eng.call_level_offset);
  
     parse_mem_breakpoints(breakpoint_optarg, &taint_eng);
     parse_taint_breakpoints(breakpoint_t_optarg, &taint_eng);
@@ -912,7 +912,8 @@ int main(int argc, char** argv)
 */
         }
         if(0)
-        if(instr_count == 51883544) 
+        if(instr_count == 13700000) 
+        //if(instr_count == 13709825) 
         {
             fprintf(stderr, "Problem with instruction after %lld\n", last_instr_count);
             getchar();

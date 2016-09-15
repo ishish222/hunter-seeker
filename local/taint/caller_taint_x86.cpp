@@ -491,7 +491,7 @@ void taint_x86::print_call(CONTEXT_INFO* cur_ctx, char* line, const char* color)
 
     strcpy(out_line, "");
 
-    for(i = this->call_level_start-GRAPH_OFF; i< cur_ctx->call_level; i++)
+    for(i = this->call_level_start-this->call_level_offset; i< cur_ctx->call_level; i++)
         strcat(out_line, " ");
 
     /*
@@ -519,7 +519,7 @@ void taint_x86::print_empty_call(CONTEXT_INFO* cur_ctx, char* line, const char* 
 
     strcpy(out_line, "");
     
-    for(i = this->call_level_start-GRAPH_OFF; i< cur_ctx->call_level; i++)
+    for(i = this->call_level_start-this->call_level_offset; i< cur_ctx->call_level; i++)
         strcat(out_line, " ");
     
     sprintf(working_line, "<node COLOR=\"%s\" CREATED=\"6666666666666\" FOLDED=\"true\" ID=\"ID_1208439975\" MODIFIED=\"6666666666666\" TEXT=\"%s\"></node>\n", color, line);
@@ -538,7 +538,7 @@ void taint_x86::print_ret(CONTEXT_INFO* cur_ctx)
 
     strcpy(out_line, "");
 
-    for(i = this->call_level_start-GRAPH_OFF; i< cur_ctx->call_level; i++)
+    for(i = this->call_level_start-this->call_level_offset; i< cur_ctx->call_level; i++)
         strcat(out_line, " ");
 
 
@@ -785,7 +785,7 @@ int taint_x86::check_loop_2(CONTEXT_INFO* info)
                 d_print(1, "Collected addrs:\n");
 
                 unsigned i;
-                for(i=0x0; i<cur_loop_limit; i++)
+                for(i=0x0; i<cur_loop_struct_count; i++)
                 {
                     d_print(1, "0x%08x\n", cur_level->loop_addr[i]);
                 }
@@ -1250,7 +1250,7 @@ int taint_x86::handle_ret(CONTEXT_INFO* cur_ctx, OFFSET eip)
  //       exit_loop(cur_ctx);
  //   }
 
-        for(i = cur_ctx->call_level-1; i >= cur_ctx->call_level_smallest; i--)
+        for(i = cur_ctx->call_level-1; i >= cur_ctx->call_level_smallest, i > 0; i--)
         {
             if(abs(cur_ctx->levels[i].ret - eip) < 0x5)
             {
@@ -2198,6 +2198,12 @@ int taint_x86::add_thread(CONTEXT_info ctx_info)
         this->ctx_info[this->tid_count].call_level = (this->max_call_levels/3); // starting at level 1/3 of max_call_levels
         this->ctx_info[this->tid_count].call_level_smallest = this->ctx_info[this->tid_count].call_level;
         this->ctx_info[this->tid_count].levels = (CALL_LEVEL*)malloc(sizeof(CALL_LEVEL)*this->max_call_levels);
+        if(this->ctx_info[this->tid_count].levels == 0x0)
+        {
+            d_print(1, "Unable to allocate\n");
+            exit(-1);
+        }
+        memset(this->ctx_info[this->tid_count].levels, 0x0, sizeof(CALL_LEVEL)*this->max_call_levels);
         this->ctx_info[this->tid_count].waiting = 0x0;
 
         /* clear loop structures */
@@ -2217,7 +2223,13 @@ int taint_x86::add_thread(CONTEXT_info ctx_info)
 
         /* output marker */
         char out_line[MAX_NAME];
-        sprintf(out_line, "<node TEXT=\"[ENTRY]\"></node>");
+
+        strcpy(out_line, "");
+        for(i = this->call_level_start-this->call_level_offset; i< call_level; i++)
+            strcat(out_line, " ");
+        fwrite(out_line, strlen(out_line), 0x1, this->ctx_info[this->tid_count].graph_file);
+
+        sprintf(out_line, "<node TEXT=\"[ENTRY]\"></node>\n");
         fwrite(out_line, strlen(out_line), 0x1, this->ctx_info[this->tid_count].graph_file);
 
         /* fnalize */
