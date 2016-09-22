@@ -71,6 +71,8 @@ int add_to_buffer(char*);
 int read_context(DWORD, CONTEXT*);
 int write_context(DWORD, CONTEXT*);
 void write_memory(HANDLE , void* , void* , SIZE_T , SIZE_T* );
+int check_lib_loaded(char*);
+int enable_reaction(unsigned );
 
 int d_print(const char* format, ...)
 {
@@ -101,13 +103,13 @@ int d_print(const char* format, ...)
     return 0x0;
 }
 
-void sample_routine_1(void* data)
+void react_sample_routine_1(void* data)
 {
     d_print("Sample routine 1\n");
     return;
 }
 
-void set_ZF(void* data)
+void react_set_ZF(void* data)
 {
     d_print("Setting ZF\n");
 
@@ -137,7 +139,7 @@ void set_ZF(void* data)
     return;
 }
 
-void zero_SF(void* data)
+void react_zero_SF(void* data)
 {
     d_print("Zeroing SF\n");
 
@@ -181,7 +183,7 @@ void update_region(OUT_LOCATION* location)
     return;
 }
 
-void update_region_1(void* data)
+void react_update_region_1(void* data)
 {
     d_print("Updating region 1\n");
     OUT_LOCATION location;
@@ -192,7 +194,7 @@ void update_region_1(void* data)
     return;
 }
 
-void cry_antidebug_1(void* data)
+void react_cry_antidebug_1(void* data)
 {
     OFFSET addr = 0x4103e4;
     DWORD wrote;
@@ -207,16 +209,56 @@ void cry_antidebug_1(void* data)
     return;
 }
 
+void react_skip_on(void* data)
+{
+    char line[MAX_NAME]; 
+    DEBUG_EVENT* de;
+    de = (DEBUG_EVENT*)data;
+    DWORD tid = de->dwThreadId;
+
+    unset_ss(tid);
+    d_print("Skipping in TID: 0x%08x...\n", tid);
+
+    my_trace->threads[my_trace->thread_map[tid]].skipping = 0x1;
+
+    sprintf(line, "# Started skipping in TID: 0x%08x\n", tid);
+    add_to_buffer(line);
+
+    enable_reaction(0x204);
+
+    return;
+}
+
+void react_skip_off(void* data)
+{
+    char line[MAX_NAME]; 
+    DEBUG_EVENT* de;
+    de = (DEBUG_EVENT*)data;
+    DWORD tid = de->dwThreadId;
+
+    d_print("Finished skippingin TID: 0x%08x\n", tid);
+
+    my_trace->threads[my_trace->thread_map[tid]].skipping = 0x0;
+    set_ss(tid);
+
+    sprintf(line, "# Stopped skipping in TID: 0x%08x\n", tid);
+    add_to_buffer(line);
+
+    enable_reaction(0x203);
+
+    return;
+}
+
 int enable_all_reactions()
 {
     unsigned i;
 
     for(i = 0x0; i< my_trace->reaction_count; i++)
     {
-        if(my_trace->reactions[i].id != 0x0)
+        /* cannot compare id to 0x0, because we need reaction 0x0 :) */
+        if((my_trace->reactions[i].offset != 0x0) || (my_trace->reactions[i].lib_offset != 0x0))
         {
-            my_trace->reactions[i].real_offset = my_trace->reactions[i].lib_offset + my_trace->reactions[i].offset;
-            add_breakpoint(my_trace->reactions[i].real_offset, reaction_handler);
+            enable_reaction(my_trace->reactions[i].id);
         }
     }
     return 0x0;
@@ -225,13 +267,54 @@ int enable_all_reactions()
 int enable_reaction(unsigned reaction)
 {
     unsigned i;
+    unsigned lib_id;
 
     for(i = 0x0; i< my_trace->reaction_count; i++)
     {
+        /* locate reaction */
         if(my_trace->reactions[i].id == reaction)
         {
-            my_trace->reactions[i].real_offset = my_trace->reactions[i].lib_offset + my_trace->reactions[i].offset;
-            add_breakpoint(my_trace->reactions[i].real_offset, reaction_handler);
+            /* prevent multiple enabling */
+            if(my_trace->reactions[i].enabled) 
+            {
+                d_print("Reaction 0x%08x already enabled\n", reaction);
+                return 0x0;
+            }
+
+            /* first handle self */
+            if(!strcmpi(my_trace->reactions[i].lib_name, "self"))
+            {
+                /* resolve addr for reaction */
+                /* TODO: implement reaction w/o lib name */
+                my_trace->reactions[i].lib_offset = (OFFSET)my_trace->cpdi.lpBaseOfImage;
+                my_trace->reactions[i].real_offset = my_trace->reactions[i].lib_offset + my_trace->reactions[i].offset;
+
+                /* put breakpoint */
+                d_print("Writing bp for reaction: 0x%08x\n", reaction);
+                add_breakpoint(my_trace->reactions[i].real_offset, reaction_handler);
+                my_trace->reactions[i].enabled = 0x1;
+
+            }
+
+            /* first check if target lib is loaded */
+            else if((lib_id = check_lib_loaded(my_trace->reactions[i].lib_name)) != -1)
+            {
+                /* resolve addr for reaction */
+                /* TODO: implement reaction w/o lib name */
+                my_trace->reactions[i].lib_offset = my_trace->libs[lib_id].lib_offset;
+                my_trace->reactions[i].real_offset = my_trace->reactions[i].lib_offset + my_trace->reactions[i].offset;
+
+                /* put breakpoint */
+                d_print("Writing bp for reaction: 0x%08x\n", reaction);
+                add_breakpoint(my_trace->reactions[i].real_offset, reaction_handler);
+                my_trace->reactions[i].enabled = 0x1;
+
+            }
+            else
+            {
+                d_print("Pending reaction: 0x%08x\n", reaction);
+                my_trace->reactions[i].pending_enable = 0x1;
+            }
         }
     }
     return 0x0;
@@ -293,7 +376,7 @@ void print_context(CONTEXT* ctx)
     d_print("EIP:\t0x%08x\n", ctx->Eip);
 }
 
-void sysret_refresh(void* data)
+void react_sysret_refresh(void* data)
 {
 
     d_print("Refreshing\n");
@@ -686,6 +769,7 @@ void reaction_handler(void* data)
                 add_to_buffer(line);
             }
             my_trace->routines[my_trace->reactions[i].id](data);
+            my_trace->reactions[i].enabled = 0x0;
         }
     }
 
@@ -726,6 +810,31 @@ int update_markers(LIB_ENTRY* lib)
     }
 
     return 0x0;
+}
+
+int check_lib_loaded(char* lib_name)
+{
+    unsigned i;
+
+    if(!strcmpi(lib_name, "self"))
+    {
+        d_print("self is always loaded dummy\n");
+        return 0x1;
+    }
+
+    for(i = 0x0; i< my_trace->lib_count; i++)
+    {
+        if(!strcmpi(my_trace->libs[i].lib_name, lib_name))
+        {
+            if(my_trace->libs[i].loaded)
+            {
+                d_print("Lib %s is loaded\n", lib_name);
+                return i;
+            }
+        }
+    }
+
+    return -1;
 }
 
 void register_lib(LOAD_DLL_DEBUG_INFO info)
@@ -795,8 +904,8 @@ void ntmap_1_callback(void* data);
 void ntmap_2_callback(void* data);
 void ntread_1_callback(void* data);
 void ntread_2_callback(void* data);
-void sysenter_callback(void* data);
-void sysret_callback(void* data);
+void react_sysenter_callback(void* data);
+void react_sysret_callback(void* data);
 
 void ntmap_1_callback(void* data)
 {
@@ -882,7 +991,7 @@ void ntread_2_callback(void* data)
     add_breakpoint(nt3_off, ntread_1_callback);
 }
 
-void sysenter_callback(void* data)
+void react_sysenter_callback(void* data)
 {
     d_print("sysenter\n");
     char line[MAX_LINE];
@@ -913,12 +1022,12 @@ void sysenter_callback(void* data)
     deregister_thread(tid, my_trace->threads[tid_pos].handle);
     enable_reaction(0x1);
     enable_reaction(0x2);
-//    add_breakpoint(sysret_off, sysret_callback);
-//    add_breakpoint(sysret_off, sysret_refresh);
+//    add_breakpoint(sysret_off, react_sysret_callback);
+//    add_breakpoint(sysret_off, react_sysret_refresh);
     set_ss(0x0);
 }
 
-void sysret_callback(void* data)
+void react_sysret_callback(void* data)
 {
     d_print("sysret\n");
 
@@ -1147,7 +1256,7 @@ void sysret_callback(void* data)
     //add_to_buffer(line);
     
 
-    //add_breakpoint(sysenter_off, sysenter_callback);
+    //add_breakpoint(sysenter_off, react_sysenter_callback);
     enable_reaction(0x0);
     //sprintf(line, "# ret4");
     //add_to_buffer(line);
@@ -1378,6 +1487,10 @@ int set_ss(DWORD tid)
     CONTEXT ctx;
     int i, tid_pos;
     DWORD cur_tid;
+
+    /* avoid turning scanning on while skipping, e.g. during syscalls or reactions */
+    if(my_trace->threads[my_trace->thread_map[tid]].skipping == 0x1)
+        return 0x0;
 
     if(tid == 0x0)
     {
@@ -1705,7 +1818,7 @@ void bp_callback(void* data)
 
     //add_breakpoint(nt1_off, ntmap_1_callback);
     //add_breakpoint(nt3_off, ntread_1_callback);
-    add_breakpoint(sysenter_off, sysenter_callback);
+    add_breakpoint(sysenter_off, react_sysenter_callback);
     if(strstr(mod_end, "0x0"))
     {
         add_breakpoint(addr_end + img_base, end_callback);
@@ -2489,6 +2602,8 @@ int process_last_event()
                         d_print("Should write reaction for %s\n", my_trace->reactions[ii].lib_name);
                         my_trace->reactions[ii].lib_offset = (OFFSET)my_trace->cpdi.lpBaseOfImage;
                         my_trace->reactions[ii].real_offset = my_trace->reactions[ii].lib_offset + my_trace->reactions[ii].offset;
+                        if(my_trace->reactions[ii].pending_enable) enable_reaction(my_trace->reactions[ii].id);
+
                     }
                 
                 }
@@ -2599,21 +2714,28 @@ int process_last_event()
                 d_print("Checking reactions\n");
                 for(i = 0x0; i< my_trace->reaction_count; i++)
                 {
+                    /* locate reactions for loaded lib */
                     d_print("Comparing _%s_ and _%s_\n", my_trace->reactions[i].lib_name, my_trace->libs[my_trace->lib_count-1].lib_name);
                     if(strlen(my_trace->reactions[i].lib_name) == 0x0)
                     {
                         if(my_trace->reactions[i].lib_offset == my_trace->libs[my_trace->lib_count-1].lib_offset)
                         {
-                            d_print("Should write reaction for 0x%08x:0x%08x\n", my_trace->reactions[i].lib_offset, my_trace->reactions[i].offset);
+                            d_print("Checking if reaction for %s is pending\n", my_trace->reactions[i].lib_name);
+                            /*
                             my_trace->reactions[i].lib_offset = my_trace->libs[my_trace->lib_count-1].lib_offset;
                             my_trace->reactions[i].real_offset = my_trace->reactions[i].lib_offset + my_trace->reactions[i].offset;
+                            */
+                            if(my_trace->reactions[i].pending_enable) enable_reaction(my_trace->reactions[i].id);
                         }
                     }
                     else if(!strcmp(my_trace->reactions[i].lib_name, my_trace->libs[my_trace->lib_count-1].lib_name))
                     {
-                        d_print("Should write reaction for %s\n", my_trace->reactions[i].lib_name);
+                        d_print("Checking if reaction for %s is pending\n", my_trace->reactions[i].lib_name);
+                        /*
                         my_trace->reactions[i].lib_offset = my_trace->libs[my_trace->lib_count-1].lib_offset;
                         my_trace->reactions[i].real_offset = my_trace->reactions[i].lib_offset + my_trace->reactions[i].offset;
+                        */
+                        if(my_trace->reactions[i].pending_enable) enable_reaction(my_trace->reactions[i].id);
                     }
                 
                 }
@@ -2828,7 +2950,7 @@ int add_reaction(char* lib_name, OFFSET offset, unsigned id)
     if(lib_name[0] == '0' && lib_name[1] == 'x')
     {
         my_trace->reactions[my_trace->reaction_count].lib_offset = strtoul(lib_name, 0x0, 0x10);
-        strcpy(my_trace->reactions[my_trace->reaction_count].lib_name, "0x00000000");
+        strcpy(my_trace->reactions[my_trace->reaction_count].lib_name, "");
     }
     else
     {
@@ -3995,14 +4117,16 @@ int main(int argc, char** argv)
     configure_syscalls();
 
     /*configure routines */
-    my_trace->routines[0x0] = &sysenter_callback;
-    my_trace->routines[0x1] = &sysret_callback;
-    my_trace->routines[0x2] = &sysret_refresh;
-    my_trace->routines[0x100] = &sample_routine_1;
-    my_trace->routines[0x101] = &zero_SF;
-    my_trace->routines[0x102] = &set_ZF;
-    my_trace->routines[0x201] = &update_region_1;
-    my_trace->routines[0x202] = &cry_antidebug_1;
+    my_trace->routines[0x0] = &react_sysenter_callback;
+    my_trace->routines[0x1] = &react_sysret_callback;
+    my_trace->routines[0x2] = &react_sysret_refresh;
+    my_trace->routines[0x100] = &react_sample_routine_1;
+    my_trace->routines[0x101] = &react_zero_SF;
+    my_trace->routines[0x102] = &react_set_ZF;
+    my_trace->routines[0x201] = &react_update_region_1;
+    my_trace->routines[0x202] = &react_cry_antidebug_1;
+    my_trace->routines[0x203] = &react_skip_on;
+    my_trace->routines[0x204] = &react_skip_off;
 
     /* Windows sockets */
 
@@ -4013,7 +4137,7 @@ int main(int argc, char** argv)
     d_print("\nInitialising Winsock...");
     if (WSAStartup(MAKEWORD(2,2),&wsa) != 0)
     {
-        d_print("Failed. Error Code : %d",WSAGetLastError());
+        d_print("Failed. Error Code : %d", WSAGetLastError());
         return 1;
     }
      

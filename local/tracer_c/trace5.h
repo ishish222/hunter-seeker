@@ -175,6 +175,8 @@ typedef struct REACTION_
     OFFSET real_offset;
     OFFSET offset;
     unsigned id;
+    char pending_enable;
+    char enabled;
 } REACTION;
 
 typedef void (*handler_routine)(void*);
@@ -221,6 +223,7 @@ typedef struct _THREAD_ENTRY
     char open;
     char created;
     HANDLE handle;
+    char skipping;
 } THREAD_ENTRY;
 
 typedef struct TRACE_CONFIG_EXTENDED_
@@ -324,6 +327,10 @@ typedef struct TRACE_CONFIG_
 
     char verbose; /*full_log*/
     char buffer[BUFF_SIZE];
+
+    /* other options */
+
+    DWORD skipping_tid;
 
     /* output streams */
     FILE* log;

@@ -638,6 +638,7 @@ int main(int argc, char** argv)
                     start_addr = strtol(optarg, 0x0, 0x10);
                 else 
                     start_instr = strtol(optarg, 0x0, 10);
+                printf("start_addr: 0x%08x, start_instr: %d\n", start_addr, start_instr);
                 break;
             case 'e': 
                 end_addr = -1;
@@ -921,7 +922,7 @@ int main(int argc, char** argv)
 
         if(!(instr_count % INSTR_REPORT_INTERVAL))
         {
-            fprintf(stdout, "Processed %lld instructions, propagation count: %d\n", instr_count, taint_eng.current_propagation_count);
+            fprintf(stdout, "Processed %lld instructions\n", instr_count);
         }
 
     }

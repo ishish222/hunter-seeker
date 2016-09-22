@@ -1224,7 +1224,7 @@ def execute(cmds):
             ok(ext_pipe)
 
         elif(cmd == "tracer_start_trace_debug"):
-            trace_controller.start_trace()
+            trace_controller.start_trace_debug()
             writePipe(ext_pipe, "%s" % trace_controller.last_answer)
             writePipe(ext_pipe, "tracer_start_trace_debug OK")
             ok(ext_pipe)

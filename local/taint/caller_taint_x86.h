@@ -33,6 +33,8 @@ Change of endiannes takes place when reading and writing to memory (to_mem, from
 #define ANALYZE_JUMPS 
 #define ANALYZE_LOOPS 
 //#define UNMATCHED_RET_INVALIDATES_STACK
+#define UNMATCHED_RET_CREATES_CALL
+#define NOT_EMITTING_BLACKLISTED
 #define NO_LOOP 0xffffffff
 
 #define MAX_NAME                0x100
@@ -2374,6 +2376,8 @@ class taint_x86
     unsigned max_call_levels;
     unsigned call_level_start;
     unsigned call_level_offset;
+
+    unsigned counter;
 
     DWORD depth;
 

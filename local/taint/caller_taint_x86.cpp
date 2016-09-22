@@ -852,6 +852,12 @@ int taint_x86::handle_call(CONTEXT_INFO* info)
     s = this->get_symbol(target);
     unsigned i;
 
+    if((!this->started) || (this->finished))
+    {
+        d_print(1, "Not yet started\n");
+        return 0x0;
+    }
+
     d_print(1, "Call\n");
     d_print(2, "Call: 0x%08x\n", this->reg_restore_32(EIP).get_DWORD());
 
@@ -931,13 +937,16 @@ int taint_x86::handle_call(CONTEXT_INFO* info)
             if(this->check_addr_blacklist(target))
             {
                 /* target is blacklisted, we do not dive*/
-                d_print(2, "Target is blacklisted, we do not dive\n");
+                d_print(2, "Target 0x%08x is blacklisted, we do not dive\n", target);
                 decision_dive = DECISION_NO_DIVE;
+#ifdef NOT_EMITTING_BLACKLISTED
+                decision_emit = DECISION_NO_EMIT;
+#endif
             }
             else
             {
                 /* target is not blacklisted, we dive */
-                d_print(2, "Target is blacklisted, we dive\n");
+                d_print(2, "Target is not blacklisted, we dive\n");
                 decision_dive = DECISION_DIVE;
             }
         }
@@ -1216,6 +1225,9 @@ int taint_x86::check_rets(OFFSET ret)
 
 int taint_x86::handle_ret(CONTEXT_INFO* cur_ctx, OFFSET eip)
 {
+    if((!this->started) || (this->finished))
+        return 0x0;
+
     unsigned i,j,diff;
     /* new begins */
 
@@ -1289,6 +1301,21 @@ int taint_x86::handle_ret(CONTEXT_INFO* cur_ctx, OFFSET eip)
         }
 
 #ifdef UNMATCHED_RET_INVALIDATES_STACK
+        /* handle under surface */
+        if(cur_ctx->call_level == cur_ctx->call_level_smallest) //we have to use all stacked rets
+        {
+                /* pos */
+                d_print(1, "[0x%08x] Unmatched ret 0x%08x on pos: %d\n", this->cur_tid, eip, cur_ctx->call_level);
+                if(cur_ctx->levels[cur_ctx->call_level].loop_status != FENCE_NOT_COLLECTING)
+                {
+                    print_ret(cur_ctx);
+                }
+                surface(cur_ctx);
+                
+                /* smallest */
+                cur_ctx->call_level_smallest--;
+        }
+#elif ifdef UNMATCHED_RET_CREATES_CALL
         /* handle under surface */
         if(cur_ctx->call_level == cur_ctx->call_level_smallest) //we have to use all stacked rets
         {
@@ -1733,9 +1760,11 @@ int taint_x86::pre_execute_instruction(DWORD eip)
     /* graph start */
     if((this->start_addr == eip) || (this->current_instr_count == this->start_instr))
     {
-        d_print(1, "Staring\n");
+        d_print(1, "Got ST at 0x%08x, starting\n", eip);
         this->started = 0x1;
+//        this->counter = 0x0;
     }
+//    if(this->counter <0x10) this->counter++;
 
     this->cur_info = this->get_tid(this->cur_tid);
 
@@ -1918,7 +1947,7 @@ int taint_x86::post_execute_instruction(DWORD eip)
 
 int taint_x86::execute_instruction(DWORD eip, DWORD tid)
 {
-    d_print(2, "[0x%08x] Inst: 0x%08x, count: %d\n", this->cur_tid, eip, this->current_instr_count);
+    d_print(3, "[0x%08x] Inst: 0x%08x, count: %d\n", this->cur_tid, eip, this->current_instr_count);
     int ret = 0x0;
 
     this->cur_tid = tid;
@@ -1934,6 +1963,10 @@ int taint_x86::execute_instruction(DWORD eip, DWORD tid)
             
 
     this->current_instr_byte = &this->memory[eip];
+/*
+    if((this->started) && (this->counter <0x10))
+        d_print(1, "[0x%08x] 0x%08x: 0x%02x, count: %d\n", this->cur_tid, eip, *(this->current_instr_byte), this->current_instr_count);
+*/
     //this->current_instr_byte->set_BYTE_t(0xff); // taint executed?
     //this->current_propagation->instruction = eip;
     this->current_instr_length += 1;
@@ -10886,7 +10919,7 @@ int taint_x86::r_decode_execute_c1(BYTE_t* addr)
 
 int taint_x86::r_retn(BYTE_t*)
 {
-    d_print(2, "retn\n");
+    d_print(3, "retn\n");
 
     if(this->started && !this->finished)
         this->cur_info->returning = 0x3;
@@ -10919,7 +10952,7 @@ int taint_x86::r_retn(BYTE_t*)
     
     DWORD_t ret;
     ret = this->a_pop_32();
-    d_print(2, "Will return to: 0x%08x\n", ret.get_DWORD());
+    d_print(3, "Will return to: 0x%08x\n", ret.get_DWORD());
 
     this->reg_store_32(EIP, ret);
     this->current_instr_is_jump = 0x1;
@@ -10930,7 +10963,7 @@ int taint_x86::r_retn(BYTE_t*)
 
 int taint_x86::r_ret(BYTE_t*)
 {
-    d_print(2, "ret\n");
+    d_print(3, "ret\n");
 
     if(this->started && !this->finished)
         this->cur_info->returning = 0x3;
@@ -10941,7 +10974,7 @@ int taint_x86::r_ret(BYTE_t*)
     */
     DWORD_t ret;
     ret = this->a_pop_32();
-    d_print(2, "Will return to: 0x%08x\n", ret.get_DWORD());
+    d_print(3, "Will return to: 0x%08x\n", ret.get_DWORD());
 
     this->reg_store_32(EIP, ret);
     this->current_instr_is_jump = 0x1;
@@ -11215,6 +11248,7 @@ int taint_x86::r_call_rel(BYTE_t* instr_ptr)
 
     target_2 = ret_addr + *disp32p; //signed displacement & operand size
 //    this->handle_call(this->cur_info, target_2.get_DWORD(), ret_addr.get_DWORD());
+    d_print(1, "In call\n");
     if(this->started && !this->finished)
     {
         this->cur_info->target = target_2.get_DWORD();
@@ -11222,7 +11256,7 @@ int taint_x86::r_call_rel(BYTE_t* instr_ptr)
         this->cur_info->calling = 1;
     }
 
-    d_print(2, "ret_addr: 0x%08x, target: 0x%08x, target2: 0x%08x\n", ret_addr.get_DWORD(), target.get_DWORD(), target_2.get_DWORD());
+    d_print(3, "ret_addr: 0x%08x, target: 0x%08x, target2: 0x%08x\n", ret_addr.get_DWORD(), target.get_DWORD(), target_2.get_DWORD());
 
     a_push_32(ret_addr);
     
@@ -11250,7 +11284,7 @@ int taint_x86::r_jmp_rel_8(BYTE_t* instr_ptr)
     disp8p = (char*)&(disp8_reint);
     target_2 = ret_addr + *disp8p; //signed displacement & operand size
 
-    d_print(2, "ret_addr: 0x%08x, target: 0x%08x, target2: 0x%08x\n", ret_addr.get_DWORD(), target.get_BYTE(), target_2.get_DWORD());
+    d_print(3, "ret_addr: 0x%08x, target: 0x%08x, target2: 0x%08x\n", ret_addr.get_DWORD(), target.get_BYTE(), target_2.get_DWORD());
 
     if(this->started && !this->finished)
     {
@@ -11276,7 +11310,7 @@ int taint_x86::r_jmp_rel_16_32(BYTE_t* instr_ptr)
 
     a_push_32(ret_addr);
     
-    d_print(2, "ret_addr: 0x%08x, target: 0x%08x\n", ret_addr.get_DWORD(), target.get_DWORD());
+    d_print(3, "ret_addr: 0x%08x, target: 0x%08x\n", ret_addr.get_DWORD(), target.get_DWORD());
     this->reg_store_32(EIP, target);
     this->current_instr_is_jump = 0x1;
 
@@ -11339,7 +11373,7 @@ int taint_x86::r_jmp_rm_16_32(BYTE_t* instr_ptr)
 
     a_push_32(ret_addr);
     
-    d_print(2, "ret_addr: 0x%08x, target: 0x%08x\n", ret_addr.get_DWORD(), target.get_DWORD());
+    d_print(3, "ret_addr: 0x%08x, target: 0x%08x\n", ret_addr.get_DWORD(), target.get_DWORD());
     this->reg_store_32(EIP, target);
 
     this->attach_current_propagation_r_32(EIP);
@@ -16820,6 +16854,7 @@ int taint_x86::r_call_abs_near(BYTE_t* instr_ptr)
     d_print(3, "Adding 0x%02x to ret\n", this->current_instr_length);
 
     //this->handle_call(this->cur_info, target.get_DWORD(), ret_addr.get_DWORD());
+    d_print(1, "In call\n");
     if(this->started && !this->finished)
     {
         this->cur_info->target = target.get_DWORD();
@@ -16828,7 +16863,7 @@ int taint_x86::r_call_abs_near(BYTE_t* instr_ptr)
     }
 
     a_push_32(ret_addr);
-    d_print(2, "ret_addr: 0x%08x, target: 0x%08x\n", ret_addr.get_DWORD(), target.get_DWORD());
+    d_print(3, "ret_addr: 0x%08x, target: 0x%08x\n", ret_addr.get_DWORD(), target.get_DWORD());
     
     this->reg_store_32(EIP, target);
     this->current_instr_is_jump = 0x1;
@@ -16846,6 +16881,7 @@ int taint_x86::r_call_abs_far(BYTE_t* instr_ptr)
     ret_addr += 0x5;
 
     //this->handle_call(this->cur_info, target.get_DWORD(), ret_addr.get_DWORD());
+    d_print(1, "In call\n");
     if(this->started && !this->finished)
     {
         this->cur_info->target = target.get_DWORD();
@@ -16855,7 +16891,7 @@ int taint_x86::r_call_abs_far(BYTE_t* instr_ptr)
 
     a_push_32(ret_addr);
     
-    d_print(2, "ret_addr: 0x%08x, target: 0x%08x\n", ret_addr.get_DWORD(), target.get_DWORD());
+    d_print(3, "ret_addr: 0x%08x, target: 0x%08x\n", ret_addr.get_DWORD(), target.get_DWORD());
     this->reg_store_32(EIP, target);
     this->current_instr_is_jump = 0x1;
     return 0x0;
@@ -17584,7 +17620,7 @@ int taint_x86::verify_t_context(int tid)
 {
     if(!this->already_added(tid)) 
     {
-        d_print(2, "No such context: 0x%08x\n", tid);
+        d_print(3, "No such context: 0x%08x\n", tid);
         return 0x0;
     }
     if(this->reg_restore_32(EAX, tid).get_DWORD_t() == 0x0
@@ -17596,34 +17632,34 @@ int taint_x86::verify_t_context(int tid)
         && this->reg_restore_32(EBP, tid).get_DWORD_t() == 0x0
         && this->reg_restore_32(ESP, tid).get_DWORD_t() == 0x0
         && this->reg_restore_32(EIP, tid).get_DWORD_t() == 0x0)
-        d_print(2, "Context not flawed\n");
+        d_print(3, "Context not flawed\n");
     else
     {
-        d_print(2, "Context flawed 0x%08x:\n", tid);
-        d_print(2, "EAX: 0x%08x\n", this->reg_restore_32(EAX, tid).get_DWORD_t());
-        d_print(2, "EBX: 0x%08x\n", this->reg_restore_32(EBX, tid).get_DWORD_t());
-        d_print(2, "ECX: 0x%08x\n", this->reg_restore_32(ECX, tid).get_DWORD_t());
-        d_print(2, "EDX: 0x%08x\n", this->reg_restore_32(EDX, tid).get_DWORD_t());
-        d_print(2, "ESI: 0x%08x\n", this->reg_restore_32(ESI, tid).get_DWORD_t());
-        d_print(2, "EDI: 0x%08x\n", this->reg_restore_32(EDI, tid).get_DWORD_t());
-        d_print(2, "EBP: 0x%08x\n", this->reg_restore_32(EBP, tid).get_DWORD_t());
-        d_print(2, "ESP: 0x%08x\n", this->reg_restore_32(ESP, tid).get_DWORD_t());
-        d_print(2, "EIP: 0x%08x\n", this->reg_restore_32(EIP, tid).get_DWORD_t());
-        d_print(2, "EFL: 0x%08x\n", this->reg_restore_32(EFLAGS, tid).get_DWORD_t());
+        d_print(3, "Context flawed 0x%08x:\n", tid);
+        d_print(3, "EAX: 0x%08x\n", this->reg_restore_32(EAX, tid).get_DWORD_t());
+        d_print(3, "EBX: 0x%08x\n", this->reg_restore_32(EBX, tid).get_DWORD_t());
+        d_print(3, "ECX: 0x%08x\n", this->reg_restore_32(ECX, tid).get_DWORD_t());
+        d_print(3, "EDX: 0x%08x\n", this->reg_restore_32(EDX, tid).get_DWORD_t());
+        d_print(3, "ESI: 0x%08x\n", this->reg_restore_32(ESI, tid).get_DWORD_t());
+        d_print(3, "EDI: 0x%08x\n", this->reg_restore_32(EDI, tid).get_DWORD_t());
+        d_print(3, "EBP: 0x%08x\n", this->reg_restore_32(EBP, tid).get_DWORD_t());
+        d_print(3, "ESP: 0x%08x\n", this->reg_restore_32(ESP, tid).get_DWORD_t());
+        d_print(3, "EIP: 0x%08x\n", this->reg_restore_32(EIP, tid).get_DWORD_t());
+        d_print(3, "EFL: 0x%08x\n", this->reg_restore_32(EFLAGS, tid).get_DWORD_t());
     }
-    d_print(2, "\n");
+    d_print(3, "\n");
 
     DWORD eflags;
     eflags = this->reg_restore_32(EFLAGS).get_DWORD_t();
-    if(eflags & EFLAGS_CF) d_print(2, "CF\n");
-    if(eflags & EFLAGS_PF) d_print(2, "PF\n");
-    if(eflags & EFLAGS_AF) d_print(2, "AF\n");
-    if(eflags & EFLAGS_ZF) d_print(2, "ZF\n");
-    if(eflags & EFLAGS_SF) d_print(2, "SF\n");
-    if(eflags & EFLAGS_IF) d_print(2, "IF\n");
-    if(eflags & EFLAGS_DF) d_print(2, "DF\n");
-    if(eflags & EFLAGS_OF) d_print(2, "OF\n");
-    d_print(2, "\n");
+    if(eflags & EFLAGS_CF) d_print(3, "CF\n");
+    if(eflags & EFLAGS_PF) d_print(3, "PF\n");
+    if(eflags & EFLAGS_AF) d_print(3, "AF\n");
+    if(eflags & EFLAGS_ZF) d_print(3, "ZF\n");
+    if(eflags & EFLAGS_SF) d_print(3, "SF\n");
+    if(eflags & EFLAGS_IF) d_print(3, "IF\n");
+    if(eflags & EFLAGS_DF) d_print(3, "DF\n");
+    if(eflags & EFLAGS_OF) d_print(3, "OF\n");
+    d_print(3, "\n");
 }
 
 int taint_x86::print_all_stacks()
