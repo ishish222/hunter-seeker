@@ -117,7 +117,7 @@ TracerDebugContinueInf.executing_routine = usualparts.tracer_parts.tracer_debug_
 
 TracerStartTrace.name = "Starting trace"
 TracerStartTrace.consequence = TracerDebugContinueInf
-TracerStartTrace.executing_routine = usualparts.tracer_parts.tracer_start_trace_debug
+TracerStartTrace.executing_routine = usualparts.tracer_parts.tracer_start_trace
 
 TracerActivateMarkers2.name = "Activate markers"
 TracerActivateMarkers2.consequence = TracerDebugContinueInf

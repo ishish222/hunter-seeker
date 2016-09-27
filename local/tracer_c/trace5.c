@@ -190,7 +190,16 @@ void react_update_region_1(void* data)
     resolve_region(&my_trace->region_sel[0x0], &location);
 
     update_region(&location);
+    return;
+}
 
+void react_update_region_2(void* data)
+{
+    d_print("Updating region 2\n");
+    OUT_LOCATION location;
+    resolve_region(&my_trace->region_sel[0x1], &location);
+
+    update_region(&location);
     return;
 }
 
@@ -759,7 +768,7 @@ void reaction_handler(void* data)
 
     for(i = 0x0; i< my_trace->reaction_count; i++)
     {
-        if((OFFSET)my_trace->last_exception.ExceptionAddress == my_trace->reactions[i].real_offset)
+        if(((OFFSET)my_trace->last_exception.ExceptionAddress == my_trace->reactions[i].real_offset) && my_trace->reactions[i].enabled)
         {
             id = my_trace->reactions[i].id;
             d_print("Reaction 0x%08x hit!\n", id);
@@ -2602,7 +2611,8 @@ int process_last_event()
                         d_print("Should write reaction for %s\n", my_trace->reactions[ii].lib_name);
                         my_trace->reactions[ii].lib_offset = (OFFSET)my_trace->cpdi.lpBaseOfImage;
                         my_trace->reactions[ii].real_offset = my_trace->reactions[ii].lib_offset + my_trace->reactions[ii].offset;
-                        if(my_trace->reactions[ii].pending_enable) enable_reaction(my_trace->reactions[ii].id);
+                        //if(my_trace->reactions[ii].pending_enable) 
+                        enable_reaction(my_trace->reactions[ii].id); /* TODO: fix this - enabled reactions were not pending enable */
 
                     }
                 
@@ -4127,6 +4137,7 @@ int main(int argc, char** argv)
     my_trace->routines[0x202] = &react_cry_antidebug_1;
     my_trace->routines[0x203] = &react_skip_on;
     my_trace->routines[0x204] = &react_skip_off;
+    my_trace->routines[0x205] = &react_update_region_2;
 
     /* Windows sockets */
 
