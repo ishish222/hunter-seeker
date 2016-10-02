@@ -1908,7 +1908,7 @@ int add_breakpoint_handler(unsigned idx, handler_routine handler)
     d_print("add_h\n");
     unsigned cur_idx;
 
-    d_print("Adding handler @ 0x%08x\n", my_trace->breakpoints[idx].resolved_location);
+    d_print("Adding handler for %s\n", my_trace->breakpoints[idx].location_str);
     cur_idx = my_trace->breakpoints[idx].handler_count;
     my_trace->breakpoints[idx].handlers[cur_idx].handler = handler;
     my_trace->breakpoints[idx].handlers[cur_idx].enabled = 0x1;
@@ -1963,7 +1963,7 @@ int print_loc_desc(LOCATION_DESCRIPTOR_NEW* e)
     if(e == 0x0)
         return 0x0;
 
-    printf("%s ", e->op);
+    d_print("%s ", e->op);
     print_loc_desc(e->a1);
     print_loc_desc(e->a2);
     return 0x0;
@@ -1971,13 +1971,14 @@ int print_loc_desc(LOCATION_DESCRIPTOR_NEW* e)
 
 int print_loc_desc_rev(LOCATION_DESCRIPTOR_NEW* e)
 {
-    if(e == 0x0)
-        return 0x0;
+    d_print("In reccurence\n");
+
+    if(e == 0x0) return 0x0;
 
     print_loc_desc_rev(e->a1);
     print_loc_desc_rev(e->a2);
 
-    printf("%s\n", e->op);
+    d_print("%s\n", e->op);
 
     return 0x0;
 }
@@ -1996,6 +1997,8 @@ OFFSET resolve_loc_desc(LOCATION_DESCRIPTOR_NEW* d)
 
     if(d == 0x0)
         return 0x0;
+
+    d_print("Processing: %s\n", d->op);
 
     if(findany(d->op, "[+-"))
     {
@@ -2045,9 +2048,9 @@ OFFSET resolve_loc_desc(LOCATION_DESCRIPTOR_NEW* d)
         else
         {
             /* we assume it's library */
-            printf("Looking for lib: %s\n", d->op);
+            d_print("Looking for lib: %s\n", d->op);
             ret = find_lib(d->op);
-            printf("Found at: 0x%08x\n", ret);
+            d_print("Found at: 0x%08x\n", ret);
             if(ret == 0x0) ret = -1;
             return ret;
         }
@@ -2060,41 +2063,57 @@ LOCATION_DESCRIPTOR_NEW* parse_location_desc(char* str)
     LOCATION_DESCRIPTOR_NEW* neww;
 
     neww = (LOCATION_DESCRIPTOR_NEW*)malloc(sizeof(LOCATION_DESCRIPTOR_NEW));
+    neww->a1 = 0x0;
+    neww->a2 = 0x0;
+
+    if(!neww)
+    {
+        d_print("Out of memory\n");
+        return 0x0;
+    }
+
+    d_print("Creating new descriptor node\n");
 
     op = findany(str, "[+-");
 
     if(op == 0x0) 
     {
-        strcpy(neww->op, op);
+        d_print("No operators found, assuming leaf: %s\n", str);
+        strcpy(neww->op, str);
         return neww;
     }
 
     else
     {
-        if(*op == '[')
+        d_print("Found operator: %s\n", op);
+        
+        if(op[0] == '[')
         {
             strcpy(neww->op, "[");
+            op[0] = 0x0;
             neww->a1 = parse_location_desc(op+1);
             neww->a2 = 0x0;
             return neww;
         }
-        else if(*op == '+')
+        else if(op[0] == '+')
         {
             strcpy(neww->op, "+");
-            *op = 0x0;
+            op[0] = 0x0;
             neww->a1 = parse_location_desc(str);
             neww->a2 = parse_location_desc(op+1);
             return neww;
         }
-        else if(*op == '-')
+        else if(op[0] == '-')
         {
             strcpy(neww->op, "-");
-            *op = 0x0;
+            op[0] = 0x0;
             neww->a1 = parse_location_desc(str);
             neww->a2 = parse_location_desc(op+1);
             return neww;
         }
     }
+
+    d_print("Error\n");
 }
 
 int update_breakpoint(BREAKPOINT* bp)
@@ -2128,8 +2147,10 @@ BREAKPOINT* add_breakpoint(char* location_str, handler_routine handler)
     /* do we have this location descriptor? */
     for(i = 0x0; i<my_trace->bpt_count; i++)
     {
+        d_print("BP creation: compainrg _%s_ & _%s_", my_trace->breakpoints[i].location_str, location_str);
         if(!strcmp(my_trace->breakpoints[i].location_str, location_str))
         {
+            d_print("Found!\n");
             my_bpt_index = i;
         }
     }
@@ -2145,7 +2166,12 @@ BREAKPOINT* add_breakpoint(char* location_str, handler_routine handler)
         /* for identification */
         strcpy(my_trace->breakpoints[my_bpt_index].location_str, location_str);
 
+        d_print("Attempt to parse location string: %s\n", location_str);
         my_trace->breakpoints[my_bpt_index].location = parse_location_desc(location_str);
+
+        d_print("Parsed location string:");
+        print_loc_desc_rev(my_trace->breakpoints[my_bpt_index].location);
+
         my_trace->bpt_count ++;
     }
 
@@ -2154,7 +2180,7 @@ BREAKPOINT* add_breakpoint(char* location_str, handler_routine handler)
     /* add handler */
     add_breakpoint_handler(my_bpt_index, handler);
 
-    return 0x0;
+    return &my_trace->breakpoints[my_bpt_index];
 }
 
 
@@ -3246,7 +3272,10 @@ int add_region_sel(DWORD off, DWORD size, char off_location, char size_location)
 
 int add_e_reaction(char* loc_str, char* id)
 {
+    d_print("Trying to add reaction at: %s with id: %s\n", loc_str, id);
+
     strcpy(my_trace->e_reactions[my_trace->e_reaction_count].id, id);
+
     my_trace->e_reactions[my_trace->e_reaction_count].id[0x2] = 0x0;
     my_trace->e_reactions[my_trace->e_reaction_count].bp = add_breakpoint(loc_str, e_reaction_handler);
     my_trace->e_reactions[my_trace->e_reaction_count].bp->enabled = 0x0;
@@ -3353,6 +3382,8 @@ int parse_e_reaction(char* str)
 {
     char* loc_str;
     char* id;
+
+    d_print("Parsing until ;: %s\n", str);
 
     loc_str = strtok(str, ":");
     id = strtok(0x0, ";");
@@ -3805,6 +3836,7 @@ int handle_cmd(char* cmd)
 
         strtok(cmd, " ");
         e_reactions_str = strtok(0x0, " ");
+
         parse_e_reactions(e_reactions_str);
         send_report();
         
@@ -3815,6 +3847,7 @@ int handle_cmd(char* cmd)
 
         strtok(cmd, " ");
         i_reactions_str = strtok(0x0, " ");
+
         parse_i_reactions(i_reactions_str);
         send_report();
         
