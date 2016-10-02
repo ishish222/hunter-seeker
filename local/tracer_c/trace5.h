@@ -24,7 +24,7 @@
 #define MAX_SYSCALL_ENTRIES  0x10000
 #define MAX_HOOKS 0x50
 #define MAX_FUNCTIONS 0x300
-#define MAX_MARKERS 0x50
+#define MAX_EXTERNAL_REACTIONS 0x50
 #define MAX_THREADS 0x100
 #define MAX_LIBS 0x50
 #define MAX_BREAKPOINTS 0x50
@@ -111,12 +111,12 @@
 #define CMD_SET_OUT_DIRECTORY   "Sd"
 #define CMD_SET_OUT_PREFIX      "Sp"
 #define CMD_PREPARE_TRACE       "PT"
-#define CMD_SET_MARKER_1        "M1"
-#define CMD_SET_MARKER_2        "M2"
+#define CMD_SET_EXTERNAL_REACTION_1        "M1"
+#define CMD_SET_EXTERNAL_REACTION_2        "M2"
 #define CMD_START_DEBUG         "sd"
 #define CMD_LIST_TEBS           "lt"
 #define CMD_LIST_LIBS           "ll"
-#define CMD_LIST_MARKERS        "lm"
+#define CMD_LIST_EXTERNAL_REACTIONS        "lm"
 #define CMD_LIST_BPTS           "lb"
 #define CMD_READ_MEMORY         "RM"
 #define CMD_WRITE_MEMORY        "WM"
@@ -125,7 +125,7 @@
 #define CMD_READ_STACK          "RS"
 #define CMD_CONTINUE            "cn"
 #define CMD_CONTINUE_TIME       "cN"
-#define CMD_ACTIVATE_MARKERS    "AM"
+#define CMD_ACTIVATE_EXTERNAL_REACTIONS    "AM"
 #define CMD_SET_LIMIT           "SL"
 #define CMD_SET_TRACE_NAME      "ST"
 #define CMD_SET_DUMP_NAME       "sD"
@@ -134,13 +134,13 @@
 #define CMD_ENABLE_DBG_TRACE    "ED"
 #define CMD_DISABLE_TRACE       "DT"
 #define CMD_DUMP_MEMORY         "DM"
-#define CMD_CONFIGURE_MARKERS   "cm"
-#define CMD_CONFIGURE_REACTIONS "cR"
+#define CMD_CONFIGURE_EXTERNAL_REACTIONS   "cm"
+#define CMD_CONFIGURE_INTERNAL_REACTIONS "cR"
 #define CMD_CONFIGURE_REGIONS   "cr"
-#define CMD_ENABLE_REACTION     "eR"
-#define CMD_ENABLE_ALL_REACTIONS "eA"
-#define CMD_DISABLE_REACTION    "dR"
-#define CMD_ACTIVATE_MARKERS    "am"
+#define CMD_ENABLE_INTERNAL_REACTION     "eR"
+#define CMD_ENABLE_ALL_INTERNAL_REACTIONS "eA"
+#define CMD_DISABLE_INTERNAL_REACTION    "dR"
+#define CMD_ACTIVATE_EXTERNAL_REACTIONS    "am"
 #define CMD_AUTO_ST             "AS"
 
 #define CMD_ROUTINE_1           "R1"
@@ -158,7 +158,8 @@ typedef struct FUNCTION_
 } FUNCTION;
 */
 
-typedef struct MARKER_
+
+typedef struct EXTERNAL_REACTION_
 {
     char lib_name[MAX_NAME];
     OFFSET lib_offset;
@@ -166,9 +167,9 @@ typedef struct MARKER_
     OFFSET offset;
     char id[3];
     char active;
-} MARKER;
+} EXTERNAL_REACTION;
 
-typedef struct REACTION_
+typedef struct INTERNAL_REACTION_
 {
     char lib_name[MAX_NAME];
     OFFSET lib_offset;
@@ -177,7 +178,7 @@ typedef struct REACTION_
     unsigned id;
     char pending_enable;
     char enabled;
-} REACTION;
+} INTERNAL_REACTION;
 
 typedef void (*handler_routine)(void*);
 typedef void (*reaction_routine)(void*);
@@ -201,7 +202,7 @@ typedef struct BREAKPOINT_
 
 typedef struct ROADSIGN_
 {
-    MARKER marker;
+    EXTERNAL_REACTION marker;
     char sign[4];
     unsigned reaction;
 } ROADSIGN;
@@ -232,7 +233,7 @@ typedef struct TRACE_CONFIG_EXTENDED_
     FUNCTION functions[MAX_FUNCTIONS];
     unsigned functions_count;
     */
-    //REACTION reactions[MAX_FUNCTIONS];
+    //INTERNAL_REACTION reactions[MAX_FUNCTIONS];
     //unsigned reactions_count;
 
     ROADSIGN signs;
@@ -249,20 +250,20 @@ typedef struct _LIB_ENTRY
 } LIB_ENTRY;
 
 /* handling syscalls */
-typedef struct OUT_ARGUMENT_
+typedef struct LOCATION_DESCRIPTOR_
 {
     DWORD off;
     DWORD size;
     char off_location;
     char size_location;
     DWORD eax_val_success;
-} OUT_ARGUMENT;
+} LOCATION_DESCRIPTOR;
 
-typedef struct OUT_LOCATION_
+typedef struct LOCATION_
 {
     DWORD off;
     DWORD size;
-} OUT_LOCATION;
+} LOCATION;
 
 typedef struct TRACE_CONFIG_
 {
@@ -323,7 +324,7 @@ typedef struct TRACE_CONFIG_
     int last_win_status;
     OFFSET last_eip;
     DWORD last_tid;
-    MARKER* last_marker;
+    EXTERNAL_REACTION* last_marker;
 
     char verbose; /*full_log*/
     char buffer[BUFF_SIZE];
@@ -372,19 +373,19 @@ typedef struct TRACE_CONFIG_
     DWORD sysret_off;
 
     /* markers */
-    MARKER markers[MAX_MARKERS];
+    EXTERNAL_REACTION markers[MAX_EXTERNAL_REACTIONS];
     unsigned marker_count;
 
-    MARKER st_markers[MAX_MARKERS];
-    MARKER end_marker[MAX_MARKERS];
+    EXTERNAL_REACTION st_markers[MAX_EXTERNAL_REACTIONS];
+    EXTERNAL_REACTION end_marker[MAX_EXTERNAL_REACTIONS];
 
     /* reactions */
-    REACTION reactions[MAX_MARKERS];
+    INTERNAL_REACTION reactions[MAX_EXTERNAL_REACTIONS];
     unsigned reaction_count;
     reaction_routine routines[MAX_FUNCTIONS];
 
     /* regions */
-    OUT_ARGUMENT region_sel[MAX_REGIONS];
+    LOCATION_DESCRIPTOR region_sel[MAX_REGIONS];
     unsigned region_sel_count;
 
     /* syscall data */
@@ -395,10 +396,10 @@ typedef struct TRACE_CONFIG_
     TRACE_CONFIG_EXTENDED* extended;
 
     /* handling syscalls */
-    OUT_ARGUMENT last_arg = {0x0, 0x0, LOCATION_END, LOCATION_END, 0x0};
-    OUT_LOCATION last_location = {0x0, 0x0};
-    OUT_ARGUMENT syscall_out_args[MAX_SYSCALL_ENTRIES][MAX_SYSCALL_OUT_ARGS];
-    OUT_LOCATION syscall_out_args_dump_list[MAX_SYSCALL_OUT_ARGS];
+    LOCATION_DESCRIPTOR last_arg = {0x0, 0x0, LOCATION_END, LOCATION_END, 0x0};
+    LOCATION last_location = {0x0, 0x0};
+    LOCATION_DESCRIPTOR syscall_out_args[MAX_SYSCALL_ENTRIES][MAX_SYSCALL_OUT_ARGS];
+    LOCATION syscall_out_args_dump_list[MAX_SYSCALL_OUT_ARGS];
 
 } TRACE_CONFIG;
 

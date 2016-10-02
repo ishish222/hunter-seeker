@@ -46,10 +46,10 @@ DWORD nt3_off;
 DWORD nt4_off;
 DWORD sysenter_off;
 DWORD sysret_off;
-OUT_ARGUMENT last_arg = {0x0, 0x0, LOCATION_END, LOCATION_END, 0x0};
-OUT_LOCATION last_location = {0x0, 0x0};
-OUT_ARGUMENT syscall_out_args[MAX_SYSCALL_ENTRIES][MAX_SYSCALL_OUT_ARGS];
-OUT_LOCATION syscall_out_args_dump_list[MAX_SYSCALL_OUT_ARGS];
+LOCATION_DESCRIPTOR last_arg = {0x0, 0x0, LOCATION_END, LOCATION_END, 0x0};
+LOCATION last_location = {0x0, 0x0};
+LOCATION_DESCRIPTOR syscall_out_args[MAX_SYSCALL_ENTRIES][MAX_SYSCALL_OUT_ARGS];
+LOCATION syscall_out_args_dump_list[MAX_SYSCALL_OUT_ARGS];
 DWORD buffer_addr;
 DWORD size_addr;
 CREATE_THREAD_DEBUG_INFO2 threads[0x100000000];
@@ -66,7 +66,7 @@ void marker_handler(void* data);
 void reaction_handler(void* data);
 void print_context(CONTEXT*);
 int del_breakpoint(DWORD);
-int resolve_region(OUT_ARGUMENT*, OUT_LOCATION*);
+int resolve_region(LOCATION_DESCRIPTOR*, LOCATION*);
 int add_to_buffer(char*);
 int read_context(DWORD, CONTEXT*);
 int write_context(DWORD, CONTEXT*);
@@ -162,7 +162,7 @@ void react_zero_SF(void* data)
     return;
 }
 
-void update_region(OUT_LOCATION* location)
+void update_region(LOCATION* location)
 {
     DWORD size_wrote;
     char line[MAX_LINE];
@@ -186,7 +186,7 @@ void update_region(OUT_LOCATION* location)
 void react_update_region_1(void* data)
 {
     d_print("Updating region 1\n");
-    OUT_LOCATION location;
+    LOCATION location;
     resolve_region(&my_trace->region_sel[0x0], &location);
 
     update_region(&location);
@@ -196,7 +196,7 @@ void react_update_region_1(void* data)
 void react_update_region_2(void* data)
 {
     d_print("Updating region 2\n");
-    OUT_LOCATION location;
+    LOCATION location;
     resolve_region(&my_trace->region_sel[0x1], &location);
 
     update_region(&location);
@@ -1216,7 +1216,7 @@ void react_sysret_callback(void* data)
 
         /* new update */
 
-        OUT_LOCATION location;
+        LOCATION location;
         resolve_region(&my_trace->syscall_out_args[sysenter_no][i], &location);
         update_region(&location);
 
@@ -2975,7 +2975,7 @@ int add_reaction(char* lib_name, OFFSET offset, unsigned id)
     return 0x0;
 }
 
-int resolve_region(OUT_ARGUMENT* selector, OUT_LOCATION* location)
+int resolve_region(LOCATION_DESCRIPTOR* selector, LOCATION* location)
 {
     d_print("Resolving region\n");
     d_print("Locating buffer\n");
@@ -3489,7 +3489,7 @@ int handle_cmd(char* cmd)
         dump_memory();
         send_report();
     }
-    else if(!strncmp(cmd, CMD_DISABLE_REACTION, 2))
+    else if(!strncmp(cmd, CMD_DISABLE_INTERNAL_REACTION, 2))
     {
         char* mod;
         unsigned id;
@@ -3501,13 +3501,13 @@ int handle_cmd(char* cmd)
         disable_reaction(id);
         send_report();
     }
-    else if(!strncmp(cmd, CMD_ENABLE_ALL_REACTIONS, 2))
+    else if(!strncmp(cmd, CMD_ENABLE_ALL_INTERNAL_REACTIONS, 2))
     {
         d_print("Enabling all reactions\n");
         enable_all_reactions();
         send_report();
     }
-    else if(!strncmp(cmd, CMD_ENABLE_REACTION, 2))
+    else if(!strncmp(cmd, CMD_ENABLE_INTERNAL_REACTION, 2))
     {
         char* mod;
         unsigned id;
@@ -3519,7 +3519,7 @@ int handle_cmd(char* cmd)
         enable_reaction(id);
         send_report();
     }
-    else if(!strncmp(cmd, CMD_SET_MARKER_1, 2))
+    else if(!strncmp(cmd, CMD_SET_EXTERNAL_REACTION_1, 2))
     {
         char* mod;
         OFFSET off;
@@ -3531,7 +3531,7 @@ int handle_cmd(char* cmd)
         d_print("Start marker fixed at: %s:0x%08x\n", mod, off);
         send_report();
     }
-    else if(!strncmp(cmd, CMD_SET_MARKER_2, 2))
+    else if(!strncmp(cmd, CMD_SET_EXTERNAL_REACTION_2, 2))
     {
         char* mod;
         OFFSET off;
@@ -3566,7 +3566,7 @@ int handle_cmd(char* cmd)
         send_report();   
     
     }
-    else if(!strncmp(cmd, CMD_LIST_MARKERS, 2))
+    else if(!strncmp(cmd, CMD_LIST_EXTERNAL_REACTIONS, 2))
     {
         list_markers();
         send_report();   
@@ -3692,7 +3692,7 @@ int handle_cmd(char* cmd)
         send_report();
         
     }
-    else if(!strncmp(cmd, CMD_CONFIGURE_MARKERS, 2))
+    else if(!strncmp(cmd, CMD_CONFIGURE_EXTERNAL_REACTIONS, 2))
     {
         char* markers_str;
 
@@ -3702,7 +3702,7 @@ int handle_cmd(char* cmd)
         send_report();
         
     }
-    else if(!strncmp(cmd, CMD_CONFIGURE_REACTIONS, 2))
+    else if(!strncmp(cmd, CMD_CONFIGURE_INTERNAL_REACTIONS, 2))
     {
         char* reactions_str;
 
@@ -3722,7 +3722,7 @@ int handle_cmd(char* cmd)
         send_report();
         
     }
-    else if(!strncmp(cmd, CMD_ACTIVATE_MARKERS, 2))
+    else if(!strncmp(cmd, CMD_ACTIVATE_EXTERNAL_REACTIONS, 2))
     {
         unsigned i;
         for(i = 0x0; i<my_trace->marker_count; i++)
@@ -3760,7 +3760,7 @@ int init_trace(TRACE_CONFIG* trace, char* host, short port)
 
 }
 
-int try_resolve_marker(MARKER* m)
+int try_resolve_marker(EXTERNAL_REACTION* m)
 {
 
     return 0x0;
