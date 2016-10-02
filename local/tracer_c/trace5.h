@@ -24,7 +24,7 @@
 #define MAX_SYSCALL_ENTRIES  0x10000
 #define MAX_HOOKS 0x50
 #define MAX_FUNCTIONS 0x300
-#define MAX_EXTERNAL_REACTIONS 0x50
+#define MAX_E_REACTIONS 0x50
 #define MAX_THREADS 0x100
 #define MAX_LIBS 0x50
 #define MAX_BREAKPOINTS 0x50
@@ -111,12 +111,12 @@
 #define CMD_SET_OUT_DIRECTORY   "Sd"
 #define CMD_SET_OUT_PREFIX      "Sp"
 #define CMD_PREPARE_TRACE       "PT"
-#define CMD_SET_EXTERNAL_REACTION_1        "M1"
-#define CMD_SET_EXTERNAL_REACTION_2        "M2"
+#define CMD_SET_E_REACTION_1        "M1"
+#define CMD_SET_E_REACTION_2        "M2"
 #define CMD_START_DEBUG         "sd"
 #define CMD_LIST_TEBS           "lt"
 #define CMD_LIST_LIBS           "ll"
-#define CMD_LIST_EXTERNAL_REACTIONS        "lm"
+#define CMD_LIST_E_REACTIONS        "lm"
 #define CMD_LIST_BPTS           "lb"
 #define CMD_READ_MEMORY         "RM"
 #define CMD_WRITE_MEMORY        "WM"
@@ -125,7 +125,7 @@
 #define CMD_READ_STACK          "RS"
 #define CMD_CONTINUE            "cn"
 #define CMD_CONTINUE_TIME       "cN"
-#define CMD_ACTIVATE_EXTERNAL_REACTIONS    "AM"
+#define CMD_ACTIVATE_E_REACTIONS    "AM"
 #define CMD_SET_LIMIT           "SL"
 #define CMD_SET_TRACE_NAME      "ST"
 #define CMD_SET_DUMP_NAME       "sD"
@@ -134,13 +134,13 @@
 #define CMD_ENABLE_DBG_TRACE    "ED"
 #define CMD_DISABLE_TRACE       "DT"
 #define CMD_DUMP_MEMORY         "DM"
-#define CMD_CONFIGURE_EXTERNAL_REACTIONS   "cm"
-#define CMD_CONFIGURE_INTERNAL_REACTIONS "cR"
+#define CMD_CONFIGURE_E_REACTIONS   "cm"
+#define CMD_CONFIGURE_I_REACTIONS "cR"
 #define CMD_CONFIGURE_REGIONS   "cr"
-#define CMD_ENABLE_INTERNAL_REACTION     "eR"
-#define CMD_ENABLE_ALL_INTERNAL_REACTIONS "eA"
-#define CMD_DISABLE_INTERNAL_REACTION    "dR"
-#define CMD_ACTIVATE_EXTERNAL_REACTIONS    "am"
+#define CMD_ENABLE_I_REACTION     "eR"
+#define CMD_ENABLE_ALL_I_REACTIONS "eA"
+#define CMD_DISABLE_I_REACTION    "dR"
+#define CMD_ACTIVATE_E_REACTIONS    "am"
 #define CMD_AUTO_ST             "AS"
 
 #define CMD_ROUTINE_1           "R1"
@@ -154,34 +154,20 @@
 typedef struct FUNCTION_
 {
     char function_code[4];
-    reaction_routine routine;    
+    i_reaction_routine routine;    
 } FUNCTION;
 */
 
-
-typedef struct EXTERNAL_REACTION_
-{
-    char lib_name[MAX_NAME];
-    OFFSET lib_offset;
-    OFFSET real_offset;
-    OFFSET offset;
-    char id[3];
-    char active;
-} EXTERNAL_REACTION;
-
-typedef struct INTERNAL_REACTION_
-{
-    char lib_name[MAX_NAME];
-    OFFSET lib_offset;
-    OFFSET real_offset;
-    OFFSET offset;
-    unsigned id;
-    char pending_enable;
-    char enabled;
-} INTERNAL_REACTION;
-
 typedef void (*handler_routine)(void*);
 typedef void (*reaction_routine)(void*);
+
+typedef struct LOCATION_DESCRIPTOR_NEW_
+{
+    struct LOCATION_DESCRIPTOR_NEW_* a1;
+    struct LOCATION_DESCRIPTOR_NEW_* a2;
+    char op[MAX_NAME];
+
+} LOCATION_DESCRIPTOR_NEW;
 
 typedef struct _HANDLER
 {
@@ -191,18 +177,53 @@ typedef struct _HANDLER
 
 typedef struct BREAKPOINT_
 {
+    LOCATION_DESCRIPTOR_NEW* location;
+    char location_str[MAX_NAME];
+    OFFSET resolved_location;
+    char loaded;
+    char enabled;
+    char written;
+
+    HANDLER handlers[MAX_HANDLERS];
+    unsigned handler_count;
+
+    /* deprecated */
     DWORD addr;
     char saved_byte;
 //    handler_routine handler;    
-    char enabled;
-    HANDLER handlers[MAX_HANDLERS];
-    unsigned handler_count;
     char isHook;
 } BREAKPOINT;
 
+typedef struct E_REACTION_
+{
+    char id[3];
+//    char enabled;
+    BREAKPOINT* bp;
+
+    /* deprecated */
+    char lib_name[MAX_NAME];
+    OFFSET lib_offset;
+    OFFSET real_offset;
+    OFFSET offset;
+} E_REACTION;
+
+typedef struct I_REACTION_
+{
+    unsigned id;
+//    char enabled;
+    BREAKPOINT* bp;
+
+    /* deprecated */
+    char lib_name[MAX_NAME];
+    OFFSET lib_offset;
+    OFFSET real_offset;
+    OFFSET offset;
+    char pending_enable;
+} I_REACTION;
+
 typedef struct ROADSIGN_
 {
-    EXTERNAL_REACTION marker;
+    E_REACTION marker;
     char sign[4];
     unsigned reaction;
 } ROADSIGN;
@@ -233,7 +254,7 @@ typedef struct TRACE_CONFIG_EXTENDED_
     FUNCTION functions[MAX_FUNCTIONS];
     unsigned functions_count;
     */
-    //INTERNAL_REACTION reactions[MAX_FUNCTIONS];
+    //I_REACTION reactions[MAX_FUNCTIONS];
     //unsigned reactions_count;
 
     ROADSIGN signs;
@@ -324,7 +345,7 @@ typedef struct TRACE_CONFIG_
     int last_win_status;
     OFFSET last_eip;
     DWORD last_tid;
-    EXTERNAL_REACTION* last_marker;
+    E_REACTION* last_e_reaction;
 
     char verbose; /*full_log*/
     char buffer[BUFF_SIZE];
@@ -372,16 +393,13 @@ typedef struct TRACE_CONFIG_
     DWORD sysenter_off;
     DWORD sysret_off;
 
-    /* markers */
-    EXTERNAL_REACTION markers[MAX_EXTERNAL_REACTIONS];
-    unsigned marker_count;
+    /* e_reactions */
+    E_REACTION e_reactions[MAX_E_REACTIONS];
+    unsigned e_reaction_count;
 
-    EXTERNAL_REACTION st_markers[MAX_EXTERNAL_REACTIONS];
-    EXTERNAL_REACTION end_marker[MAX_EXTERNAL_REACTIONS];
-
-    /* reactions */
-    INTERNAL_REACTION reactions[MAX_EXTERNAL_REACTIONS];
-    unsigned reaction_count;
+    /* i_reactions */
+    I_REACTION i_reactions[MAX_E_REACTIONS];
+    unsigned i_reaction_count;
     reaction_routine routines[MAX_FUNCTIONS];
 
     /* regions */
@@ -411,6 +429,7 @@ typedef struct _CREATE_THREAD_DEBUG_INFO2
 } CREATE_THREAD_DEBUG_INFO2;
 
 typedef void (*handler_routine)(void*);
+//int add_breakpoint(DWORD addr, handler_routine handler);
 int add_breakpoint(DWORD addr, handler_routine handler);
 DWORD find_lib(char* name);
 BOOL WINAPI HandlerRoutine(_In_ DWORD dwCtrlType);
