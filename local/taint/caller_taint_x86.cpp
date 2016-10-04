@@ -1688,7 +1688,7 @@ void taint_x86::restore_8(DWORD_t off, BYTE_t& ret)
 void taint_x86::reg_store_8(OFFSET off, BYTE_t v, int tid)
 {
 #ifdef VERIFY_OOB
-    if(this->verify_oob_offset(off, this->mem_length) != 0x0) return;
+    if(this->verify_oob_offset(off, REG_SIZE) != 0x0) return;
 #endif
 
     CONTEXT_INFO* info;
@@ -1702,7 +1702,7 @@ void taint_x86::reg_store_8(OFFSET off, BYTE_t v, int tid)
 BYTE_t taint_x86::reg_restore_8(OFFSET off, int tid)
 {
 #ifdef VERIFY_OOB
-    if(this->verify_oob_offset(off, this->mem_length) != 0x0) 
+    if(this->verify_oob_offset(off, REG_SIZE) != 0x0) 
     {   
         return this->invalid_byte;
     }

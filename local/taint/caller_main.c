@@ -567,6 +567,13 @@ void handle_sigsegv(int signum)
     return;
 }
 
+void _pause()
+{
+    fprintf(stdout, "Press any key\n");
+    getchar();
+    return;
+}
+
 int main(int argc, char** argv)
 {
     char structured_buffer[STRUCTURED_BUFFER_LENGTH];
@@ -863,6 +870,9 @@ int main(int argc, char** argv)
 
             if(line[0] == 'F' && line[1] == 'E')
                 register_fence(line, &taint_eng);
+
+            if(line[0] == 'P' && line[1] == 'A')
+                _pause();
 
             if(line[0] == 'L' && line[1] == 'F')
                 load_file(line, &taint_eng);

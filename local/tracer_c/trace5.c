@@ -2147,7 +2147,7 @@ BREAKPOINT* add_breakpoint(char* location_str, handler_routine handler)
     /* do we have this location descriptor? */
     for(i = 0x0; i<my_trace->bpt_count; i++)
     {
-        d_print("BP creation: compainrg _%s_ & _%s_", my_trace->breakpoints[i].location_str, location_str);
+        d_print("BP creation: compainrg _%s_ & _%s_\n", my_trace->breakpoints[i].location_str, location_str);
         if(!strcmp(my_trace->breakpoints[i].location_str, location_str))
         {
             d_print("Found!\n");
@@ -3288,8 +3288,11 @@ int add_e_reaction(char* loc_str, char* id)
 
 int activate_e_reaction(unsigned i)
 {
+    d_print("Trying to activate e_reaction: 0x%02x\n", i);
     my_trace->e_reactions[i].bp->enabled = 0x1;
+    d_print("Updating breakpoint after activation of e_reaction: 0x%02x\n", i);
     update_breakpoint(my_trace->e_reactions[i].bp);
+    d_print("Finished activating e_reaction: 0x%02x\n", i);
     return 0x0;
 }
 
@@ -3827,7 +3830,9 @@ int handle_cmd(char* cmd)
         sprintf(my_str, "0x%08x", (OFFSET)(my_trace->cpdi.lpStartAddress));
 
         add_e_reaction(my_str, "ST");
+        d_print("Sending report\n");
         send_report();
+        d_print("Sending sent\n");
         
     }
     else if(!strncmp(cmd, CMD_CONFIGURE_E_REACTIONS, 2))
@@ -3837,6 +3842,7 @@ int handle_cmd(char* cmd)
         strtok(cmd, " ");
         e_reactions_str = strtok(0x0, " ");
 
+        d_print("Configuring e_reactions\n");
         parse_e_reactions(e_reactions_str);
         send_report();
         
@@ -3865,6 +3871,7 @@ int handle_cmd(char* cmd)
     else if(!strncmp(cmd, CMD_ACTIVATE_E_REACTIONS, 2))
     {
         unsigned i;
+        d_print("Activating e_reactions\n");
         for(i = 0x0; i<my_trace->e_reaction_count; i++)
         {
             activate_e_reaction(i);
@@ -4359,13 +4366,13 @@ int main(int argc, char** argv)
         }
 
         cmd[cmd_len-6] = 0x0;
-//        d_print("Got cmd: %s\n", cmd);
+        d_print("Got cmd: %s\n", cmd);
 
         if(!strcmp(cmd, "quit")) 
             break;
         
         handle_cmd(cmd);
-//        d_print("Handled\n");
+        d_print("Handled\n");
 
     }
 
