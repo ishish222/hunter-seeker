@@ -363,14 +363,23 @@ void react_sysret_refresh(void* data)
 
 void read_memory(HANDLE handle, void* from, void* to, SIZE_T size, SIZE_T* read)
 {
+    DWORD oldProt;
     DWORD ret;
-    //d_print("read_memory, handle: 0x%08x\n", my_trace->procHandle);
-    ret = ReadProcessMemory(my_trace->procHandle, from, to, size, read);
+
+    d_print("read_memory, handle: 0x%08x\n", handle);
+
+    VirtualProtectEx(handle, to, size, PAGE_EXECUTE_READWRITE, &oldProt);
+
+    ret = ReadProcessMemory(handle, from, to, size, read);
+
+    VirtualProtectEx(handle, to, size, oldProt, &oldProt);
 
     if(!ret)
     {
         d_print("Error: 0x%08x\n", GetLastError());
     }
+
+    return;
 }
 
 void write_memory(HANDLE handle, void* to, void* from, SIZE_T size, SIZE_T* written)
@@ -378,16 +387,17 @@ void write_memory(HANDLE handle, void* to, void* from, SIZE_T size, SIZE_T* writ
     DWORD oldProt;
     DWORD ret;
     
-    //d_print("write_memory, handle: 0x%08x\n", my_trace->procHandle);
-    VirtualProtectEx(my_trace->procHandle, to, 0x4, PAGE_EXECUTE_READWRITE, &oldProt);
-    ret = WriteProcessMemory(my_trace->procHandle, to, from, size, written);
+    d_print("write_memory, handle: 0x%08x\n", handle);
+    VirtualProtectEx(handle, to, size, PAGE_EXECUTE_READWRITE, &oldProt);
+
+    ret = WriteProcessMemory(handle, to, from, size, written);
 
     if(!ret)
     {
         d_print("Error: 0x%08x\n", GetLastError());
     }
 
-    VirtualProtectEx(my_trace->procHandle, to, 0x4, oldProt, &oldProt);
+    VirtualProtectEx(handle, to, size, oldProt, &oldProt);
 }
 
 int dec_eip(DWORD id)
@@ -1939,8 +1949,11 @@ int write_breakpoint(BREAKPOINT* bp)
 
     d_print("Adding breakpoint opcode @ 0x%08x\n", addr);
 
-    read_memory(my_trace->procHandle, (void*)addr, (void*)bp->saved_byte, 0x1, &read);
-    write_memory(my_trace->procHandle, (void*)addr, (void*)bpt_char, 0x1, &read);
+    read_memory(my_trace->procHandle, (void*)addr, (void*)&bp->saved_byte, 0x1, &read);
+    d_print("Before: 0x%02x\n", bp->saved_byte);
+    write_memory(my_trace->procHandle, (void*)addr, (void*)&bpt_char, 0x1, &read);
+    read_memory(my_trace->procHandle, (void*)addr, (void*)&bpt_char, 0x1, &read);
+    d_print("After: 0x%02x\n", bpt_char);
 /*
     VirtualProtectEx(my_trace->cpdi.hProcess, (void*)addr, 0x1, PAGE_EXECUTE_READWRITE, &oldProt);
 
@@ -1981,7 +1994,9 @@ int unwrite_breakpoint(BREAKPOINT* bp)
 
     addr = bp->resolved_location;
 
-    write_memory(my_trace->procHandle, (void*)addr, (void*)bp->saved_byte, 0x1, &wrote);
+    write_memory(my_trace->procHandle, (void*)addr, (void*)&bp->saved_byte, 0x1, &wrote);
+    read_memory(my_trace->procHandle, (void*)addr, (void*)&bpt_char, 0x1, &wrote);
+    d_print("After: 0x%02x\n", bpt_char);
     /*
     d_print("Removing  breakpoint opcode @ 0x%08x\n", addr);
 
@@ -2065,8 +2080,8 @@ OFFSET resolve_loc_desc(LOCATION_DESCRIPTOR_NEW* d)
         else if(!strcmp(d->op, "-"))
         {
             a1_r = resolve_loc_desc(d->a1);
-            if(a1_r == -1) return -1;
             a2_r = resolve_loc_desc(d->a2);
+            if(a1_r == -1) return -1;
             if(a2_r == -1) return -1;
             ret = a1_r - a2_r;
             return ret;
@@ -2074,8 +2089,8 @@ OFFSET resolve_loc_desc(LOCATION_DESCRIPTOR_NEW* d)
         else if(!strcmp(d->op, "+"))
         {
             a1_r = resolve_loc_desc(d->a1);
-            if(a1_r == -1) return -1;
             a2_r = resolve_loc_desc(d->a2);
+            if(a1_r == -1) return -1;
             if(a2_r == -1) return -1;
             ret = a1_r + a2_r;
             return ret;
@@ -2181,6 +2196,7 @@ LOCATION_DESCRIPTOR_NEW* parse_location_desc(char* str)
 int update_breakpoint(BREAKPOINT* bp)
 {
     OFFSET addr;
+    d_print("Trying to resolve BP addr\n");
     bp->resolved_location = addr = resolve_loc_desc(bp->location);
 
     if(addr == -1)
@@ -3904,6 +3920,7 @@ int handle_cmd(char* cmd)
         sprintf(my_str, "0x%08x", (OFFSET)(my_trace->cpdi.lpStartAddress));
 
         add_e_reaction(my_str, "ST");
+        enable_e_reaction("ST");
         send_report();
         
     }
@@ -4433,8 +4450,7 @@ int main(int argc, char** argv)
             cmd_len += recv_size;
 
             if(!strncmp(cmd+cmd_len-6, "-=OK=-", 6)) break;
-            d_print("Got part: %s\n", cmd);
-            //d_print("Finish: %s\n", cmd+cmd_len-6);
+            //d_print("Got part: %s\n", cmd);
         }
 
         cmd[cmd_len-6] = 0x0;
