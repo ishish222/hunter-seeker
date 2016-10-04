@@ -834,7 +834,7 @@ void register_lib(LOAD_DLL_DEBUG_INFO info)
     //d_print("Name pointer: %p, len: 0x%08x\n", libs[my_trace->lib_count].lib_name, strlen(libs[my_trace->lib_count].lib_name));
 
     my_trace->libs[my_trace->lib_count].lib_offset = (DWORD)info.lpBaseOfDll;
-    //d_print("RL,0x%08x,%s\n", my_trace->libs[my_trace->lib_count].lib_offset, libs[my_trace->lib_count].lib_name);
+    d_print("RL,0x%08x,%s\n", my_trace->libs[my_trace->lib_count].lib_offset, my_trace->libs[my_trace->lib_count].lib_name);
     sprintf(line, "RL,0x%08x,%s\n", my_trace->libs[my_trace->lib_count].lib_offset, my_trace->libs[my_trace->lib_count].lib_name);
 
     my_trace->libs[my_trace->lib_count].loaded = 0x1;
@@ -1808,6 +1808,7 @@ void default_handler(void *data)
 
 int del_breakpoint_idx(unsigned my_bpt_idx)
 {
+    /*
     DWORD oldProt;
     char bpt_char = '\xcc';
 
@@ -1818,6 +1819,9 @@ int del_breakpoint_idx(unsigned my_bpt_idx)
 
     VirtualProtectEx(my_trace->cpdi.hProcess, (void*)(my_trace->breakpoints[my_bpt_idx].addr), 0x1, oldProt, &oldProt);
 
+    my_trace->breakpoints[my_bpt_idx].enabled = 0x0;
+    */
+    unwrite_breakpoint(&my_trace->breakpoints[my_bpt_idx]);
     my_trace->breakpoints[my_bpt_idx].enabled = 0x0;
     return 0x0;
 }
@@ -1831,7 +1835,6 @@ int del_breakpoint_handler(unsigned bp_idx, unsigned handler_idx)
 
 int del_breakpoint(DWORD addr)
 {
-    d_print("del_b\n");
     d_print("Deleting breakpoint at: 0x%08x\n", addr);
 
     DWORD oldProt;
@@ -1846,7 +1849,11 @@ int del_breakpoint(DWORD addr)
             break;
         }
 
-    if(my_bpt_idx == -0x1) return 0x1;
+    if(my_bpt_idx == -0x1)
+    {
+        d_print("Unable to find breakpoint to delete\n");
+        return 0x1;
+    }
 
 //    del_breakpoint_idx(my_bpt_idx);
     unwrite_breakpoint(&my_trace->breakpoints[i]);
@@ -1891,8 +1898,10 @@ int handle_breakpoint(DWORD addr, void* data)
                     goto handled;
                 }
             }
-            d_print("Removing\n");
+            /*
+            d_print("No handlers, removing BP\n");
             del_breakpoint(addr);
+            */
 
             handled:
             if(my_trace->breakpoints[my_bpt_idx].handler_count == 0x0) del_breakpoint(addr);
@@ -1921,6 +1930,8 @@ int write_breakpoint(BREAKPOINT* bp)
 {
     OFFSET addr;
     DWORD oldProt;
+    DWORD read;
+    DWORD ret;
 
     char bpt_char = '\xcc';
 
@@ -1928,12 +1939,34 @@ int write_breakpoint(BREAKPOINT* bp)
 
     d_print("Adding breakpoint opcode @ 0x%08x\n", addr);
 
+    read_memory(my_trace->procHandle, (void*)addr, (void*)bp->saved_byte, 0x1, &read);
+    write_memory(my_trace->procHandle, (void*)addr, (void*)bpt_char, 0x1, &read);
+/*
     VirtualProtectEx(my_trace->cpdi.hProcess, (void*)addr, 0x1, PAGE_EXECUTE_READWRITE, &oldProt);
 
-    ReadProcessMemory(my_trace->cpdi.hProcess, (void*)addr, (void*)bp->saved_byte, 0x1, 0x0);
-    WriteProcessMemory(my_trace->cpdi.hProcess, (void*)addr, &bpt_char, 0x1, 0x0);
+    ret = ReadProcessMemory(my_trace->cpdi.hProcess, (void*)addr, (void*)bp->saved_byte, 0x1, &read);
+    
+    if(!ret)
+    {
+        d_print("Error: 0x%08x\n", GetLastError());
+    }
+
+    d_print("Before: 0x%02x\n", bp->saved_byte);
+
+    ret = WriteProcessMemory(my_trace->cpdi.hProcess, (void*)addr, &bpt_char, 0x1, &read);
+
+    if(!ret)
+    {
+        d_print("Error: 0x%08x\n", GetLastError());
+    }
+
+    ReadProcessMemory(my_trace->cpdi.hProcess, (void*)addr, (void*)bpt_char, 0x1, &read);
+
+    d_print("After: 0x%02x\n", bpt_char);
 
     VirtualProtectEx(my_trace->cpdi.hProcess, (void*)addr, 0x1, oldProt, 0x0);
+*/
+    bp->written = 0x1;
 
     return 0x0;
 }
@@ -1943,16 +1976,34 @@ int unwrite_breakpoint(BREAKPOINT* bp)
     OFFSET addr;
     DWORD oldProt;
     char bpt_char = '\xcc';
+    DWORD wrote;
+    DWORD ret;
 
     addr = bp->resolved_location;
 
+    write_memory(my_trace->procHandle, (void*)addr, (void*)bp->saved_byte, 0x1, &wrote);
+    /*
+    d_print("Removing  breakpoint opcode @ 0x%08x\n", addr);
+
     VirtualProtectEx(my_trace->cpdi.hProcess, (void*)addr, 0x1, PAGE_EXECUTE_READWRITE, &oldProt);
 
-    ReadProcessMemory(my_trace->cpdi.hProcess, (void*)addr, (void*)(&bpt_char), 0x1, 0x0);
-    WriteProcessMemory(my_trace->cpdi.hProcess, (void*)addr, &bp->saved_byte, 0x1, 0x0);
+    ReadProcessMemory(my_trace->cpdi.hProcess, (void*)addr, (void*)(&bpt_char), 0x1, &wrote);
+
+    d_print("Before: 0x%02x\n", bpt_char);
+
+    ret = WriteProcessMemory(my_trace->cpdi.hProcess, (void*)addr, &bp->saved_byte, 0x1, &wrote);
+
+    if(!ret)
+    {
+        d_print("Error: 0x%08x\n", GetLastError());
+    }
+
+    ReadProcessMemory(my_trace->cpdi.hProcess, (void*)addr, (void*)bpt_char, 0x1, &wrote);
+
+    d_print("After: 0x%02x\n", bpt_char);
 
     VirtualProtectEx(my_trace->cpdi.hProcess, (void*)addr, 0x1, oldProt, &oldProt);
-
+    */
     bp->written = 0x0;
     return 0x0;
 
@@ -2002,6 +2053,8 @@ OFFSET resolve_loc_desc(LOCATION_DESCRIPTOR_NEW* d)
 
     if(findany(d->op, "[+-"))
     {
+        /* not leaf, this is operation, we do recurrence */
+
         if(!strcmp(d->op, "["))
         {
             a1_r = resolve_loc_desc(d->a1);
@@ -2012,8 +2065,8 @@ OFFSET resolve_loc_desc(LOCATION_DESCRIPTOR_NEW* d)
         else if(!strcmp(d->op, "-"))
         {
             a1_r = resolve_loc_desc(d->a1);
-            a2_r = resolve_loc_desc(d->a2);
             if(a1_r == -1) return -1;
+            a2_r = resolve_loc_desc(d->a2);
             if(a2_r == -1) return -1;
             ret = a1_r - a2_r;
             return ret;
@@ -2021,8 +2074,8 @@ OFFSET resolve_loc_desc(LOCATION_DESCRIPTOR_NEW* d)
         else if(!strcmp(d->op, "+"))
         {
             a1_r = resolve_loc_desc(d->a1);
-            a2_r = resolve_loc_desc(d->a2);
             if(a1_r == -1) return -1;
+            a2_r = resolve_loc_desc(d->a2);
             if(a2_r == -1) return -1;
             ret = a1_r + a2_r;
             return ret;
@@ -2050,9 +2103,17 @@ OFFSET resolve_loc_desc(LOCATION_DESCRIPTOR_NEW* d)
             /* we assume it's library */
             d_print("Looking for lib: %s\n", d->op);
             ret = find_lib(d->op);
-            d_print("Found at: 0x%08x\n", ret);
-            if(ret == 0x0) ret = -1;
-            return ret;
+            if(ret != 0x0)
+            {
+                d_print("Found at: 0x%08x\n", ret);
+                return ret;
+            }
+            else if(ret == 0x0) 
+            {
+                d_print("Not found\n");
+                ret = -1;
+                return ret;
+            }
         }
     }
 }
@@ -2063,6 +2124,7 @@ LOCATION_DESCRIPTOR_NEW* parse_location_desc(char* str)
     LOCATION_DESCRIPTOR_NEW* neww;
 
     neww = (LOCATION_DESCRIPTOR_NEW*)malloc(sizeof(LOCATION_DESCRIPTOR_NEW));
+    memset(neww, 0x0, sizeof(LOCATION_DESCRIPTOR_NEW));
     neww->a1 = 0x0;
     neww->a2 = 0x0;
 
@@ -2121,7 +2183,12 @@ int update_breakpoint(BREAKPOINT* bp)
     OFFSET addr;
     bp->resolved_location = addr = resolve_loc_desc(bp->location);
 
-    if(addr != -1)
+    if(addr == -1)
+    {
+        d_print("Unable to resolve BP address, will not be updated at this time\n");
+        return 0x0;
+    }
+    else
     {
         if(bp->enabled)
         {
@@ -2130,10 +2197,15 @@ int update_breakpoint(BREAKPOINT* bp)
                 write_breakpoint(bp); /* in order to write breakpoint, it must be enabled and loaded*/
                 bp->written = 0x1;
             }
+            d_print("BP updated\n");
             return 0x1;
         }
+        else
+        {
+            d_print("BP not enabled, will not be updated at this time\n");
+            return 0x0;
+        }
     }
-    return 0x0;
 }
 
 BREAKPOINT* add_breakpoint(char* location_str, handler_routine handler)
@@ -2147,7 +2219,7 @@ BREAKPOINT* add_breakpoint(char* location_str, handler_routine handler)
     /* do we have this location descriptor? */
     for(i = 0x0; i<my_trace->bpt_count; i++)
     {
-        d_print("BP creation: compainrg _%s_ & _%s_\n", my_trace->breakpoints[i].location_str, location_str);
+        d_print("BP creation: comparing _%s_ & _%s_\n", my_trace->breakpoints[i].location_str, location_str);
         if(!strcmp(my_trace->breakpoints[i].location_str, location_str))
         {
             d_print("Found!\n");
@@ -2298,6 +2370,7 @@ int send_report()
     strcat(line2, my_trace->report_buffer);
     strcat(line2, rep_chars2);
 
+    d_print("Sending report: %s\n", line2);
     send(my_trace->socket, line2, strlen(line2), 0x0);
 
     return 0x0;
@@ -2717,7 +2790,7 @@ int process_last_event()
                 unsigned i;
 
                 /* Checking brakpoints */
-                d_print("Checking breakpoints\n");
+                d_print("Created process, checking breakpoints\n");
 
                 for(i = 0x0; i<my_trace->bpt_count; i++)
                 {
@@ -2777,7 +2850,7 @@ int process_last_event()
                 
                     case EXCEPTION_BREAKPOINT:
                         /* this is not our responsibility, inform TracerController and wait for orders */
-                        d_print("BP\n");
+                        d_print("Breakpoint hit!\n");
 //                        ss_callback((void*)&my_trace->last_event);
 
                         unsigned i;
@@ -2848,7 +2921,7 @@ int process_last_event()
                 register_lib(my_trace->last_event.u.LoadDll);
 
                 /* Checking brakpoints */
-                d_print("Checking breakpoints\n");
+                d_print("Loaded library, checking breakpoints\n");
 
                 for(i = 0x0; i<my_trace->bpt_count; i++)
                 {
@@ -3304,7 +3377,8 @@ int parse_i_reaction(char* str)
     loc_str = strtok(str, ":");
     id = strtoul(strtok(0x0, ";"), 0x0, 0x10);
 
-    /* registering e_reaction */
+    d_print("Parsing loc_str: %s\n", loc_str);
+    /* registering i_reaction */
     add_i_reaction(loc_str, id);
 }
 
@@ -3825,14 +3899,12 @@ int handle_cmd(char* cmd)
     else if(!strncmp(cmd, CMD_AUTO_ST, 2))
     {
         char* e_reactions_str;
-        char* my_str;
+        char my_str[MAX_NAME];
 
         sprintf(my_str, "0x%08x", (OFFSET)(my_trace->cpdi.lpStartAddress));
 
         add_e_reaction(my_str, "ST");
-        d_print("Sending report\n");
         send_report();
-        d_print("Sending sent\n");
         
     }
     else if(!strncmp(cmd, CMD_CONFIGURE_E_REACTIONS, 2))
@@ -4361,18 +4433,18 @@ int main(int argc, char** argv)
             cmd_len += recv_size;
 
             if(!strncmp(cmd+cmd_len-6, "-=OK=-", 6)) break;
-           // d_print("Got part: %s\n", cmd);
-           // d_print("Finish: %s\n", cmd+cmd_len-6);
+            d_print("Got part: %s\n", cmd);
+            //d_print("Finish: %s\n", cmd+cmd_len-6);
         }
 
         cmd[cmd_len-6] = 0x0;
-        d_print("Got cmd: %s\n", cmd);
+        //d_print("Got cmd: %s\n", cmd);
 
         if(!strcmp(cmd, "quit")) 
             break;
         
         handle_cmd(cmd);
-        d_print("Handled\n");
+        //d_print("Handled\n");
 
     }
 

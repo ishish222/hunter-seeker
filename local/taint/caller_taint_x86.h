@@ -32,8 +32,8 @@ Change of endiannes takes place when reading and writing to memory (to_mem, from
 // compile-time options and parameters
 #define ANALYZE_JUMPS 
 #define ANALYZE_LOOPS 
-//#define UNMATCHED_RET_INVALIDATES_STACK
-#define UNMATCHED_RET_CREATES_CALL
+#define UNMATCHED_RET_INVALIDATES_STACK
+//#define UNMATCHED_RET_CREATES_CALL
 #define NOT_EMITTING_BLACKLISTED
 #define NO_LOOP 0xffffffff
 

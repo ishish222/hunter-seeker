@@ -1315,7 +1315,7 @@ int taint_x86::handle_ret(CONTEXT_INFO* cur_ctx, OFFSET eip)
                 /* smallest */
                 cur_ctx->call_level_smallest--;
         }
-#elif ifdef UNMATCHED_RET_CREATES_CALL
+#elif defined(UNMATCHED_RET_CREATES_CALL)
         /* handle under surface */
         if(cur_ctx->call_level == cur_ctx->call_level_smallest) //we have to use all stacked rets
         {
