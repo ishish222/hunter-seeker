@@ -252,6 +252,18 @@ def tracer_enable_all_reactions():
 
     return
 
+def tracer_disable_all_reactions():
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+    
+    write_socket(options.s, "tracer_disable_all_reactions");
+    response, _, _ = read_socket(options.s)
+
+    globs.state.ret = response
+
+    return
+
 def tracer_enable_sysenter():
     options = globs.state.options
     state = globs.state
@@ -317,7 +329,8 @@ def tracer_set_limit():
     state = globs.state
     status = globs.state.status
     
-    write_socket(options.s, "tracer_set_limit %d" % options.sample_options.sample_options.instr_limit);
+    if(options.sample_options.instr_limit > 0x0):
+        write_socket(options.s, "tracer_set_limit %d" % options.sample_options.instr_limit);
     response, _, _ = read_socket(options.s)
 
     globs.state.ret = response

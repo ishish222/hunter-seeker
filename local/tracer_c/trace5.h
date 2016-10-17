@@ -16,7 +16,7 @@
 #define CLEAR_SS_FLAGS 0xfffffeff
 #define CLEAR_SF_FLAGS 0xffffff7f
 #define SET_ZF_FLAGS   0x00000040
-#define MEM_DUMP
+//#define MEM_DUMP
 #define MAX_NAME 0x200
 #define MAX_LINE 0x100
 #define MAX_HANDLERS 0x100000
@@ -199,6 +199,7 @@ typedef struct E_REACTION_
     char id[3];
 //    char enabled;
     BREAKPOINT* bp;
+    HANDLER* handler;
 
     /* deprecated */
     char lib_name[MAX_NAME];

@@ -819,7 +819,8 @@ class TraceController(object):
         return 
 
     def configure_markers(self, markers):
-        self.send_command_active("cm %s" % markers)
+#        self.send_command_active("cm %s" % markers)
+        self.send_command_active("cR %s" % markers)
         self.last_report, self.last_answer = self.recv_report_active()
         return 
 
@@ -830,6 +831,11 @@ class TraceController(object):
 
     def enable_all_reactions(self):
         self.send_command_active("eA")
+        self.last_report, self.last_answer = self.recv_report_active()
+        return 
+
+    def disable_all_reactions(self):
+        self.send_command_active("dA")
         self.last_report, self.last_answer = self.recv_report_active()
         return 
 

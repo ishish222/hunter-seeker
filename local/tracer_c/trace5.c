@@ -290,6 +290,7 @@ int enable_i_reaction(unsigned i_reaction)
         {
             d_print("Enabling reaction 0x%08x\n", i_reaction);
             my_trace->i_reactions[i].bp->enabled = 0x1;
+            my_trace->i_reactions[i].bp = add_breakpoint(my_trace->i_reactions[i].bp->location_str, i_reaction_handler);
             update_breakpoint(my_trace->i_reactions[i].bp);
         }
     }
@@ -323,6 +324,7 @@ int enable_e_reaction(char* id)
         {
             d_print("Enabling e_reaction %s\n", id);
             my_trace->e_reactions[i].bp->enabled = 0x1;
+            my_trace->e_reactions[i].bp = add_breakpoint(my_trace->e_reactions[i].bp->location_str, e_reaction_handler);
             update_breakpoint(my_trace->e_reactions[i].bp);
         }
     }
@@ -745,7 +747,7 @@ void i_reaction_handler(void* data)
     unsigned i, id;
     char line[MAX_NAME];
 
-    d_print("In i_reaction handler\n");
+    d_print("[i_reaction_handler]\n");
 
     for(i = 0x0; i< my_trace->i_reaction_count; i++)
     {
@@ -762,6 +764,8 @@ void i_reaction_handler(void* data)
             my_trace->i_reactions[i].bp->enabled = 0x0;
         }
     }
+
+    d_print("[i_reaction_handler ends]\n");
 
     return;
 }
@@ -953,6 +957,27 @@ void react_sysenter_callback(void* data)
     set_ss(0x0);
 }
 
+/*
+int reactivate_i_reaction(unsigned id)
+{
+    d_print("[reactivate_i_reaction]\n");
+
+    unsigned i;
+    DWORD ret = 0x0;
+
+    for(i = 0x0; i< my_trace->i_reaction_count; i++)
+    {
+        if(my_trace->i_reactions[i].id == id)
+        {
+            add_i_reaction(my_trace->i_reactions[i].bp->location_str, id);
+            ret = 0x1;
+        }
+    }
+
+    d_print("[reactivate_i_reaction ends]\n");
+    return ret;
+}
+*/
 void react_sysret_callback(void* data)
 {
     d_print("sysret\n");
@@ -1134,6 +1159,8 @@ void react_sysret_callback(void* data)
         /* new update */
 
         LOCATION location;
+
+        d_print("Resolving location\n");
         resolve_region(&my_trace->syscall_out_args[sysenter_no][i], &location);
         update_region(&location);
 
@@ -3417,7 +3444,7 @@ int parse_region(char* str)
     off = strtoul(strtok(str, ":"), 0x0, 0x10);
     label_off_location = strtok(0x0, ":");
     size = strtoul(strtok(0x0, ":"), 0x0, 0x10);
-    label_size_location = strtok(0x0, ";");
+    label_size_location = strtok(0x0, "+");
 
     d_print("Calculating off location for data: 0x%08x:%s\n", off, label_off_location);
 

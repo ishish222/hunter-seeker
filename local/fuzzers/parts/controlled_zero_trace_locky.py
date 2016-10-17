@@ -25,7 +25,7 @@ ListLibs2 = statemachine.State()
 ListLibs3 = statemachine.State()
 TracerConfigureMarkers = statemachine.State()
 TracerAutoSt = statemachine.State()
-TracerActivateMarkers = statemachine.State()
+DisableReactions = statemachine.State()
 TracerActivateMarkers2 = statemachine.State()
 TracerSetLimit = statemachine.State()
 TracerConfigureInDir = statemachine.State()
@@ -124,7 +124,7 @@ TracerActivateMarkers2.consequence = TracerDebugContinueInf
 TracerActivateMarkers2.executing_routine = usualparts.tracer_parts.tracer_activate_markers
 
 TracerAutoSt.name = "Setting auto ST marker"
-TracerAutoSt.consequence = TracerActivateMarkers2
+TracerAutoSt.consequence = TracerDebugContinueInf
 TracerAutoSt.executing_routine = usualparts.tracer_parts.tracer_auto_st
 
 DumpMemory.name = "Dumping memory"
@@ -142,13 +142,14 @@ TracerEnableDebug2.args = "0x102"
 TracerEnableDebug2.executing_routine = usualparts.tracer_parts.tracer_enable_reaction
 
 TracerEnableDebug1.name = "Enabling reaction"
-TracerEnableDebug1.consequence = TracerEnableDebug2
-TracerEnableDebug1.args = "0x101"
+TracerEnableDebug1.consequence = DumpMemory
+TracerEnableDebug1.args = "S1"
 TracerEnableDebug1.executing_routine = usualparts.tracer_parts.tracer_enable_reaction
 
 TracerEnableSysenter.name = "Enabling SYSENTER reaction"
 TracerEnableSysenter.consequence = TracerEnableDebug1
-TracerEnableSysenter.executing_routine = usualparts.tracer_parts.tracer_enable_sysenter
+TracerEnableSysenter.args = "S1"
+TracerEnableSysenter.executing_routine = usualparts.tracer_parts.tracer_enable_reaction
 
 TracerEndTrace.name = "Ending trace"
 TracerEndTrace.consequence = DefaultShutdown
@@ -164,17 +165,17 @@ TracerDebugSample.executing_routine = usualparts.tracer_parts.tracer_debug_sampl
 
 TracerSetLimit.name = "Setting limit"
 TracerSetLimit.consequence = TracerDebugSample
-TracerSetLimit.executing_routine = usualparts.tracer_parts.tracer_activate_markers
+TracerSetLimit.executing_routine = usualparts.tracer_parts.tracer_set_limit
 
-TracerActivateMarkers.name = "Activate markers"
-TracerActivateMarkers.consequence = TracerSetLimit
-TracerActivateMarkers.executing_routine = usualparts.tracer_parts.tracer_activate_markers
+DisableReactions.name = "Disabling all reactions"
+DisableReactions.consequence = TracerDebugSample
+DisableReactions.executing_routine = usualparts.tracer_parts.tracer_disable_all_reactions
 
 TracerRegisterReactions.name = "Registering reactions"
-TracerRegisterReactions.consequence = TracerActivateMarkers
+TracerRegisterReactions.consequence = DisableReactions
 TracerRegisterReactions.executing_routine = usualparts.tracer_parts.tracer_register_reactions
 
-TracerRegisterRegions.name = "Registering reactions"
+TracerRegisterRegions.name = "Registering regions"
 TracerRegisterRegions.consequence = TracerRegisterReactions
 TracerRegisterRegions.executing_routine = usualparts.tracer_parts.tracer_register_regions
 

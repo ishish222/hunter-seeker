@@ -34,6 +34,7 @@ def get_sample_options():
     parser.add_option("", "--regions",    dest="regions", help="Instruction limit", default="0")
 
     (options.sample_options, args) = parser.parse_args()
+    options.sample_options.instr_limit = int(options.sample_options.instr_limit)
 
 def get_additional_options():
     options = globs.state.options
