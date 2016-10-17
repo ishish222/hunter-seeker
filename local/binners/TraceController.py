@@ -476,12 +476,12 @@ class TraceController(object):
         self.tracer_active.active_tid_id = self.tracer_active.active_tid_id + 1
 
     def activate_prev_tracer(self):
-        self.tracer_active_id = (self.trace_active_id + 1) % self.trace_count
-        self.tracer_active = self.tracers[self.trace_active_id]
+        self.tracer_active_id = (self.tracer_active_id + 1) % self.trace_count
+        self.tracer_active = self.tracers[self.tracer_active_id]
 
     def activate_next_tracer(self):
-        self.tracer_active_id = (self.trace_active_id + 1) % self.trace_count
-        self.tracer_active = self.tracers[self.trace_active_id]
+        self.tracer_active_id = (self.tracer_active_id + 1) % self.trace_count
+        self.tracer_active = self.tracers[self.tracer_active_id]
 
 # modify
     def attach(self, pid):

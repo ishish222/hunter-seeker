@@ -135,7 +135,19 @@ def tracer_configure_out_prefix():
 
     return
 
-def tracer_release(args = None):
+def tracer_release_thread(args = None):
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+    
+    if(args == None):
+        args = globs.state.ret    
+
+    write_socket(options.s, "tracer_release_thread 0x%08x" % args);
+    response, _, _ = read_socket(options.s)
+
+    globs.state.ret = response
+
     return
 
 def tracer_configure_sample_pid(args = None):

@@ -104,13 +104,50 @@ DisableReactions2.executing_routine = usualparts.tracer_parts.tracer_disable_all
 
 TracerRelease = statemachine.State()
 TracerRelease.name = "Releasing"
-TracerRelease.executing_routine = usualparts.tracer_parts.tracer_release
+TracerRelease.executing_routine = usualparts.tracer_parts.tracer_release_thread
 
 TracerAutoSt2= statemachine.State()
 TracerAutoSt2.name = "Setting auto ST marker 2"
 TracerAutoSt2.executing_routine = usualparts.tracer_parts.tracer_auto_st
 
-TracerDebugSample2= statemachine.State()
+SelectPrev = statemachine.State()
+SelectPrev.name = "Selecting previous tracer"
+SelectPrev.executing_routine = usualparts.tracer_parts.trace_controller_activate_prev_tracer
+
+ReadESP3 = statemachine.State()
+ReadESP3.name = "Reading ESP"
+ReadESP3.args = "ESP"
+ReadESP3.executing_routine = usualparts.tracer_parts.tracer_read_register
+
+Adjust4 = statemachine.State()
+Adjust4.name = "Adjust to arg -1"
+Adjust4.args = 0x4 * -1
+Adjust4.executing_routine = usualparts.other_parts.adjust
+
+ReadArg_1 = statemachine.State()
+ReadArg_1.name = "Read argument -1"
+ReadArg_1.args = None
+ReadArg_1.executing_routine = usualparts.tracer_parts.tracer_read_dword
+
+Adjust5 = statemachine.State()
+Adjust5.name = "Adjust to arg 3"
+Adjust5.args = 0x4 * 3
+Adjust5.executing_routine = usualparts.other_parts.adjust
+
+ReadTID = statemachine.State()
+ReadTID.name = "Reading TID"
+ReadTID.executing_routine = usualparts.tracer_parts.tracer_read_dword
+
+TracerRelease = statemachine.State()
+TracerRelease.name = "Releasing thread"
+TracerRelease.args = None
+TracerRelease.executing_routine = usualparts.tracer_parts.tracer_release_thread
+
+SelectNext = statemachine.State()
+SelectNext.name = "Selecting next"
+SelectNext.executing_routine = usualparts.tracer_parts.trace_controller_activate_next_tracer
+
+TracerDebugSample2 = statemachine.State()
 TracerDebugSample2.name = "Debugging sample 2"
 TracerDebugSample2.executing_routine = usualparts.tracer_parts.tracer_debug_sample
 
@@ -141,11 +178,15 @@ TracerEndTrace.name = "Ending trace"
 TracerEndTrace.executing_routine = usualparts.tracer_parts.tracer_stop_trace
 
 
-#ListTebs = statemachine.State()
+ListTebs = statemachine.State()
+ListTebs.name = "Listing tebs"
+ListTebs.executing_routine = usualparts.tracer_parts.tracer_list_tebs
+
+
 #ReadEAX = statemachine.State()
 
 CreateSuspended = statemachine.State()
-ReadESP1.name = "Creating suspended"
+CreateSuspended.name = "Creating suspended"
 
 ReadESP1 = statemachine.State()
 ReadESP1.name = "Reading ESP"
@@ -379,8 +420,15 @@ TracerRegisterRegions2.consequence          = TracerRegisterReactions2
 TracerRegisterReactions2.consequence        = DisableReactions2
 DisableReactions2.consequence               = TracerDebugSample2
 TracerDebugSample2.consequence              = TracerAutoSt2
-TracerAutoSt2.consequence                   = TracerRelease
-TracerRelease.consequence                   = TracerDebugContinueInf
+TracerAutoSt2.consequence                   = SelectPrev
+SelectPrev.consequence                      = ReadESP3
+ReadESP3.consequence                        = Adjust4
+Adjust4.consequence                         = ReadArg_1
+ReadArg_1.consequence                       = Adjust5
+Adjust5.consequence                         = ReadTID
+ReadTID.consequence                         = TracerRelease
+TracerRelease.consequence                   = SelectNext
+SelectNext.consequence                      = TracerDebugContinueInf
 
 ## relinking 
 
