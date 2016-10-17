@@ -69,6 +69,51 @@ TracerConfigureOutPrefix = statemachine.State()
 TracerConfigureOutPrefix.name = "Configuring out prefix"
 TracerConfigureOutPrefix.executing_routine = usualparts.tracer_parts.tracer_configure_out_prefix
 
+TracerConfigureOutDir2= statemachine.State()
+TracerConfigureOutDir2.name = "Configuring out dir 2"
+TracerConfigureOutDir2.executing_routine = usualparts.tracer_parts.tracer_configure_out_dir
+
+TracerConfigureOutPrefix2= statemachine.State()
+TracerConfigureOutPrefix2.name = "Configuring out prefix 2"
+TracerConfigureOutPrefix2.executing_routine = usualparts.tracer_parts.tracer_configure_out_prefix
+
+TracerConfigureInDir2= statemachine.State()
+TracerConfigureInDir2.name = "Configuring in dir 2"
+TracerConfigureInDir2.executing_routine = usualparts.tracer_parts.tracer_configure_in_dir
+
+TracerPrepareTrace2= statemachine.State()
+TracerPrepareTrace2.name = "Prepare trace output 2"
+TracerPrepareTrace2.executing_routine = usualparts.tracer_parts.tracer_prepare_trace
+
+TracerConfigureMarkers2= statemachine.State()
+TracerConfigureMarkers2.name = "Configuring markers 2"
+TracerConfigureMarkers2.executing_routine = usualparts.tracer_parts.tracer_configure_markers
+
+
+TracerRegisterRegions2= statemachine.State()
+TracerRegisterRegions2.name = "Registering regions 2"
+TracerRegisterRegions2.executing_routine = usualparts.tracer_parts.tracer_register_regions
+
+TracerRegisterReactions2= statemachine.State()
+TracerRegisterReactions2.name = "Registering reactions 2"
+TracerRegisterReactions2.executing_routine = usualparts.tracer_parts.tracer_register_reactions
+
+DisableReactions2= statemachine.State()
+DisableReactions2.name = "Disabling all reactions 2"
+DisableReactions2.executing_routine = usualparts.tracer_parts.tracer_disable_all_reactions
+
+TracerRelease = statemachine.State()
+TracerRelease.name = "Releasing"
+TracerRelease.executing_routine = usualparts.tracer_parts.tracer_release
+
+TracerAutoSt2= statemachine.State()
+TracerAutoSt2.name = "Setting auto ST marker 2"
+TracerAutoSt2.executing_routine = usualparts.tracer_parts.tracer_auto_st
+
+TracerDebugSample2= statemachine.State()
+TracerDebugSample2.name = "Debugging sample 2"
+TracerDebugSample2.executing_routine = usualparts.tracer_parts.tracer_debug_sample
+
 TracerConfigureSample = statemachine.State()
 TracerConfigureSample.name = "Configuring sample"
 TracerConfigureSample.executing_routine = usualparts.tracer_parts.tracer_configure_sample
@@ -100,6 +145,7 @@ TracerEndTrace.executing_routine = usualparts.tracer_parts.tracer_stop_trace
 #ReadEAX = statemachine.State()
 
 CreateSuspended = statemachine.State()
+ReadESP1.name = "Creating suspended"
 
 ReadESP1 = statemachine.State()
 ReadESP1.name = "Reading ESP"
@@ -314,6 +360,7 @@ WriteCreationFlags.consequence  = EnableReactionC2
 EnableReactionC2.consequence    = TracerDebugContinueInf
 
 ### Decision: C2
+# We need second line in order to make release, after that we can use it in recurrence
 
 ReadProcessInfo.consequence                 = ReadESP2
 ReadESP2.consequence                        = Adjust2
@@ -322,21 +369,20 @@ ReadArg9.consequence                        = Adjust3
 Adjust3.consequence                         = ReadPID
 ReadPID.consequence                         = SpawnTracer2
 SpawnTracer2.consequence                    = TracerConfigureSample2
-TracerConfigureSample2.consequence           = TracerConfigureOutDir # dalej to samo xD tylko wczesniej trzeba odpauzowac 
-'''
-TracerConfigureOutDir.consequence           = TracerConfigureOutPrefix 
-TracerConfigureOutPrefix.consequence        = TracerConfigureInDir
-TracerConfigureInDir.consequence            = TracerPrepareTrace
-TracerPrepareTrace.consequence              = TracerConfigureMarkers
-TracerConfigureMarkers.consequence          = TracerRegisterRegions
-TracerRegisterRegions.consequence           = TracerRegisterReactions
-TracerRegisterReactions.consequence         = DisableReactions
-DisableReactions.consequence                = TracerDebugSample
-TracerDebugSample.consequence               = TracerDebugContinueInf
-'''
+TracerConfigureSample2.consequence          = TracerConfigureOutDir2
+TracerConfigureOutDir2.consequence          = TracerConfigureOutPrefix2
+TracerConfigureOutPrefix2.consequence       = TracerConfigureInDir2
+TracerConfigureInDir2.consequence           = TracerPrepareTrace2
+TracerPrepareTrace2.consequence             = TracerConfigureMarkers2
+TracerConfigureMarkers2.consequence         = TracerRegisterRegions2
+TracerRegisterRegions2.consequence          = TracerRegisterReactions2
+TracerRegisterReactions2.consequence        = DisableReactions2
+DisableReactions2.consequence               = TracerDebugSample2
+TracerDebugSample2.consequence              = TracerAutoSt2
+TracerAutoSt2.consequence                   = TracerRelease
+TracerRelease.consequence                   = TracerDebugContinueInf
 
 ## relinking 
 
 dm.SpawnTracer.consequence = TracerConfigureSample
-
 

@@ -3670,6 +3670,12 @@ int handle_cmd(char* cmd)
             exit(-1);
         }
 
+        /* TODO: make it nicer */
+        if(my_trace->in_sample_pid != 0x0)
+        {
+            sprintf(my_trace->out_prefix, "%08x", my_trace->in_sample_pid);
+        }
+
         /* configure out paths */
         /* trace */ 
         my_trace->out_postfix = -1;

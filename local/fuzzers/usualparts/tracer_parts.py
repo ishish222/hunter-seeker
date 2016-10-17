@@ -135,6 +135,9 @@ def tracer_configure_out_prefix():
 
     return
 
+def tracer_release(args = None):
+    return
+
 def tracer_configure_sample_pid(args = None):
     options = globs.state.options
     state = globs.state
