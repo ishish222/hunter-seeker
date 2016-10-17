@@ -142,6 +142,7 @@
 #define CMD_ENABLE_ALL_REACTIONS "eA"
 #define CMD_DISABLE_ALL_REACTIONS "dA"
 #define CMD_AUTO_ST             "AS"
+#define CMD_SET_ST             "SS"
 #define CMD_RELEASE_THREAD      "RE"
 
 #define CMD_ROUTINE_1           "R1"

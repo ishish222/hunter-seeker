@@ -220,6 +220,18 @@ def tracer_configure_markers():
 
     return
 
+def tracer_set_st(args):
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+    
+    write_socket(options.s, "tracer_set_st 0x%08x" % args);
+    response, _, _ = read_socket(options.s)
+
+    globs.state.ret = response
+
+    return
+
 def tracer_auto_st():
     options = globs.state.options
     state = globs.state

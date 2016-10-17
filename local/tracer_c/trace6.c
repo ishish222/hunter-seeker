@@ -3983,6 +3983,22 @@ int handle_cmd(char* cmd)
         continue_routine(time, status);
         send_report();   
     }
+    else if(!strncmp(cmd, CMD_SET_ST, 2))
+    {
+        char* e_reactions_str;
+        DWORD addr;
+        char my_str[MAX_NAME];
+
+        strtok(cmd, " ");
+
+        addr = strtoul(strtok(0x0, " "), 0x0, 0x10);
+        sprintf(my_str, "0x%08x", addr);
+
+        add_reaction(my_str, "ST", 0x0);
+        enable_reaction("ST");
+        send_report();
+        
+    }
     else if(!strncmp(cmd, CMD_AUTO_ST, 2))
     {
         char* e_reactions_str;

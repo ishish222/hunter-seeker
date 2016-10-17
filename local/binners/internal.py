@@ -1172,6 +1172,11 @@ def execute(cmds):
             writePipe(ext_pipe, "tracer_auto_st OK")
             ok(ext_pipe)
 
+        elif(cmd == "tracer_set_st"):
+            trace_controller.set_st(args)
+            writePipe(ext_pipe, "tracer_set_st OK")
+            ok(ext_pipe)
+
         elif(cmd == "tracer_activate_markers"):
             trace_controller.activate_markers()
             writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
