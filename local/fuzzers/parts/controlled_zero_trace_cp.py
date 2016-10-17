@@ -322,7 +322,7 @@ ReadArg9.consequence                        = Adjust3
 Adjust3.consequence                         = ReadPID
 ReadPID.consequence                         = SpawnTracer2
 SpawnTracer2.consequence                    = TracerConfigureSample2
-TracerConfigureSample.consequence           = TracerConfigureOutDir # dalej to samo xD tylko wczesniej trzeba odpauzowac 
+TracerConfigureSample2.consequence           = TracerConfigureOutDir # dalej to samo xD tylko wczesniej trzeba odpauzowac 
 '''
 TracerConfigureOutDir.consequence           = TracerConfigureOutPrefix 
 TracerConfigureOutPrefix.consequence        = TracerConfigureInDir
