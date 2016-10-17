@@ -136,6 +136,7 @@ Adjust5.executing_routine = usualparts.other_parts.adjust
 
 ReadTID = statemachine.State()
 ReadTID.name = "Reading TID"
+ReadTID.args = None
 ReadTID.executing_routine = usualparts.tracer_parts.tracer_read_dword
 
 TracerRelease = statemachine.State()
@@ -148,8 +149,8 @@ SelectNext.name = "Selecting next"
 SelectNext.executing_routine = usualparts.tracer_parts.trace_controller_activate_next_tracer
 
 TracerDebugSample2 = statemachine.State()
-TracerDebugSample2.name = "Debugging sample 2"
-TracerDebugSample2.executing_routine = usualparts.tracer_parts.tracer_debug_sample
+TracerDebugSample2.name = "Attaching sample 2"
+TracerDebugSample2.executing_routine = usualparts.tracer_parts.tracer_attach_sample
 
 TracerConfigureSample = statemachine.State()
 TracerConfigureSample.name = "Configuring sample"
@@ -185,6 +186,29 @@ ListTebs.executing_routine = usualparts.tracer_parts.tracer_list_tebs
 
 #ReadEAX = statemachine.State()
 
+CreateSuspendedThread = statemachine.State()
+CreateSuspendedThread.name = "Reading ESP"
+
+ReadESP6 = statemachine.State()
+ReadESP6.name = "Reading ESP"
+ReadESP6.args = "ESP"
+ReadESP6.executing_routine = usualparts.tracer_parts.tracer_read_register
+
+Adjust7 = statemachine.State()
+Adjust7.name = "Reading ESP"
+Adjust7.args = 0x0
+Adjust7.executing_routine = usualparts.other_parts.adjust
+
+WriteThreadCreationFlags = statemachine.State()
+WriteThreadCreationFlags.name = "Writing to suspend thread"
+WriteThreadCreationFlags.args = (None, 0x00000004)
+WriteThreadCreationFlags.executing_routine = usualparts.tracer_parts.tracer_write_dword
+
+EnableReactionC4 = statemachine.State()
+EnableReactionC4.name = "Enavling C4"
+EnableReactionC4.args = "C4"
+EnableReactionC4.executing_routine = usualparts.tracer_parts.tracer_enable_reaction
+
 CreateSuspended = statemachine.State()
 CreateSuspended.name = "Creating suspended"
 
@@ -208,11 +232,106 @@ EnableReactionC2.name = "Enabling reaction for spawned suspended process"
 EnableReactionC2.args = "C2"
 EnableReactionC2.executing_routine = usualparts.tracer_parts.tracer_enable_reaction
 
+ReadRemoteThreadInfo  = statemachine.State()
+ReadRemoteThreadInfo.name = "Reading remote thread info"
+
+ReadESP7 = statemachine.State()
+ReadESP7.name = "Reading ESP"
+ReadESP7.args = "ESP"
+ReadESP7.executing_routine = usualparts.tracer_parts.tracer_read_register
+
+Adjust8 = statemachine.State()
+Adjust8.name = "Reading ESP"
+Adjust8.args = 0x4 * 6 #?
+Adjust8.executing_routine = usualparts.other_parts.adjust
+
+ReadEP = statemachine.State()
+ReadEP.name = "Reading EntryPoint"
+ReadEP.args = None
+ReadEP.executing_routine = usualparts.tracer_parts.tracer_read_dword
+
+SpawnTracer3 = statemachine.State()
+SpawnTracer3.name = "Spawning next tracer"
+SpawnTracer3.executing_routine = usualparts.tracing_parts.start_tracer_log
+
+TracerConfigureSample3 = statemachine.State()
+TracerConfigureSample3.name = "Configuring sample PID"
+TracerConfigureSample3.args = None
+TracerConfigureSample3.executing_routine = usualparts.tracer_parts.tracer_configure_sample_pid
+
+TracerConfigureOutDir3 = statemachine.State()
+TracerConfigureOutDir3.name = "Configuring out dir 3"
+TracerConfigureOutDir3.executing_routine = usualparts.tracer_parts.tracer_configure_out_dir
+
+TracerConfigureOutPrefix3 = statemachine.State()
+TracerConfigureOutPrefix3.name = "Configuring out prefix 3"
+TracerConfigureOutPrefix3.executing_routine = usualparts.tracer_parts.tracer_configure_out_prefix
+
+TracerConfigureInDir3 = statemachine.State()
+TracerConfigureInDir3.name = "Configuring in dir 3"
+TracerConfigureInDir3.executing_routine = usualparts.tracer_parts.tracer_configure_in_dir
+
+TracerPrepareTrace3 = statemachine.State()
+TracerPrepareTrace3.name = "Prepare trace output 3"
+TracerPrepareTrace3.executing_routine = usualparts.tracer_parts.tracer_prepare_trace
+
+TracerConfigureMarkers3 = statemachine.State()
+TracerConfigureMarkers3.name = "Configuring markers 3"
+TracerConfigureMarkers3.executing_routine = usualparts.tracer_parts.tracer_configure_markers
+
+TracerRegisterRegions3 = statemachine.State()
+TracerRegisterRegions3.name = "Registering regions 3"
+TracerRegisterRegions3.executing_routine = usualparts.tracer_parts.tracer_register_regions
+
+TracerRegisterReactions3 = statemachine.State()
+TracerRegisterReactions3.name = "Registering reactions 3"
+TracerRegisterReactions3.executing_routine = usualparts.tracer_parts.tracer_register_reactions
+
+DisableReactions3 = statemachine.State()
+DisableReactions3.name = "Disabling all reactions 3"
+DisableReactions3.executing_routine = usualparts.tracer_parts.tracer_disable_all_reactions
+
+TracerDebugSample3 = statemachine.State()
+TracerDebugSample3.name = "Attaching sample 3"
+TracerDebugSample3.executing_routine = usualparts.tracer_parts.tracer_attach_sample
+
+SetST3 = statemachine.State()
+SetST3.name = "Setting ST"
+SetST3.args = None
+SetST3.executing_routine = usualparts.tracer_parts.tracer_set_st
+
+SelectPrev3 = statemachine.State()
+SelectPrev3.name = "Selecting previous tracer"
+SelectPrev3.executing_routine = usualparts.tracer_parts.trace_controller_activate_prev_tracer
+
+ReadESP8 = statemachine.State()
+ReadESP8.name = "Reading ESP"
+ReadESP8.args = "ESP"
+ReadESP8.executing_routine = usualparts.tracer_parts.tracer_read_register
+
+Adjust9 = statemachine.State()
+Adjust9.name = "Adjusting for argument ?"
+Adjust9.args = ?
+Adjust9.executing_routine = usualparts.other_parts.adjust
+
+ReadTID3 = statemachine.State()
+ReadTID3.name = "Reading TID"
+ReadTID3.args = None
+ReadTID3.executing_routine = usualparts.tracer_parts.tracer_read_dword
+
+TracerRelease2 = statemachine.State()
+TracerRelease2.name = "Releasing thread"
+TracerRelease2.args = None
+TracerRelease2.executing_routine = usualparts.tracer_parts.tracer_release_thread
+
+SelectNext3 = statemachine.State()
+SelectNext3.name = "Selecting next"
+SelectNext3.executing_routine = usualparts.tracer_parts.trace_controller_activate_next_tracer
 
 ReadProcessInfo = statemachine.State()
-ReadProcessInfo.name = "Reading ESP"
-ReadProcessInfo.args = "ESP"
-ReadProcessInfo.executing_routine = usualparts.tracer_parts.tracer_read_register
+ReadProcessInfo.name = "Reading process info"
+#ReadProcessInfo.args = "ESP" #TODO: chyba
+#ReadProcessInfo.executing_routine = usualparts.tracer_parts.tracer_read_register
 
 ReadESP2 = statemachine.State()
 ReadESP2.name = "Reading ESP"
@@ -401,7 +520,7 @@ WriteCreationFlags.consequence  = EnableReactionC2
 EnableReactionC2.consequence    = TracerDebugContinueInf
 
 ### Decision: C2
-# We need second line in order to make release, after that we can use it in recurrence
+# We need second pipeline in order to make release, after that we can use it in recurrence
 
 ReadProcessInfo.consequence                 = ReadESP2
 ReadESP2.consequence                        = Adjust2
@@ -429,6 +548,40 @@ Adjust5.consequence                         = ReadTID
 ReadTID.consequence                         = TracerRelease
 TracerRelease.consequence                   = SelectNext
 SelectNext.consequence                      = TracerDebugContinueInf
+
+### Decision: C3
+
+CreateSuspendedThread.consequence       = ReadESP6
+ReadESP6.consequence                    = Adjust7
+Adjust7.consequence                     = WriteThreadCreationFlags
+WriteThreadCreationFlags.consequence    = EnableReactionC4
+EnableReactionC4.consequence            = TracerDebugContinueInf
+
+
+### Decision: C4
+
+ReadRemoteThreadInfo.consequence                 = ReadESP7
+ReadESP7.consequence                        = Adjust8
+Adjust8.consequence                         = ReadEP
+ReadEP.consequence                         = SpawnTracer3
+SpawnTracer3.consequence                    = TracerConfigureSample3
+TracerConfigureSample3.consequence          = TracerConfigureOutDir3
+TracerConfigureOutDir3.consequence          = TracerConfigureOutPrefix3
+TracerConfigureOutPrefix3.consequence       = TracerConfigureInDir3
+TracerConfigureInDir3.consequence           = TracerPrepareTrace3
+TracerPrepareTrace3.consequence             = TracerConfigureMarkers3
+TracerConfigureMarkers3.consequence         = TracerRegisterRegions3
+TracerRegisterRegions3.consequence          = TracerRegisterReactions3
+TracerRegisterReactions3.consequence        = DisableReactions3
+DisableReactions3.consequence               = TracerDebugSample3
+TracerDebugSample3.consequence              = SetST3
+SetST3.consequence                          = SelectPrev3
+SelectPrev3.consequence                      = ReadESP8
+ReadESP8.consequence                        = Adjust9
+Adjust9.consequence                         = ReadTID3
+ReadTID3.consequence                         = TracerRelease2
+TracerRelease2.consequence                   = SelectNext3
+SelectNext3.consequence                      = TracerDebugContinueInf
 
 ## relinking 
 

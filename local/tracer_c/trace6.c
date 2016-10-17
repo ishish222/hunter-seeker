@@ -2295,11 +2295,10 @@ void start_trace_pid()
 {
     d_print("Attaching debugger\n");
 
-    if(DebugActiveProcess(myPID) != 0x0)
+    if(DebugActiveProcess(my_trace->in_sample_pid) != 0x0)
         d_print("Successfully attached to PID: 0x%x, handle: 0x%x\n", myPID);
     else 
         d_print("Attach failed\n");
-
 }
 
 DWORD find_lib(char* name)
@@ -2503,6 +2502,32 @@ int write_context(DWORD tid, CONTEXT* ctx)
     if(SetThreadContext(myHandle, ctx) == 0x0)
     {
         d_print("Failed to set context, error: 0x%08x\n", GetLastError());
+    }
+
+    return 0x0;
+}
+
+int release_thread(DWORD tid)
+{
+    HANDLE myHandle = (HANDLE)-0x1;
+    DWORD tid_id;
+    char buffer2[MAX_NAME];
+
+    d_print("Trying relese TID: 0x%08x\n", tid);
+
+    if((myHandle = OpenThread(tid, 0x0, THREAD_ALL_ACCESS)) == 0x0)
+    {
+        d_print("Failed to open thread, error: 0x%08x\n", GetLastError());
+        sprintf(buffer2, "Error: 0x%08x\n", GetLastError());
+        strcpy(my_trace->report_buffer, buffer2);
+    }
+
+
+    if(ResumeThread(myHandle) == -1)
+    {
+        d_print("Failed to resume thread, error: 0x%08x\n", GetLastError());
+        sprintf(buffer2, "Error: 0x%08x\n", GetLastError());
+        strcpy(my_trace->report_buffer, buffer2);
     }
 
     return 0x0;
@@ -3794,6 +3819,19 @@ int handle_cmd(char* cmd)
         enable_reaction(reaction_id);
         send_report();
     }
+    else if(!strncmp(cmd, CMD_ATTACH_DEBUG, 2))
+    {
+        unsigned report;
+
+        d_print("Starting debugging: 0x%08x\n", my_trace->in_sample_pid);
+
+        start_trace_fname();
+
+        my_trace->status = STATUS_CONFIGURED; /* move to other */
+
+        my_trace->report_code = get_pending_events();
+        send_report();   
+    }
     else if(!strncmp(cmd, CMD_START_DEBUG, 2))
     {
         unsigned report;
@@ -3862,6 +3900,18 @@ int handle_cmd(char* cmd)
         d_print("Writing addr: 0x%08x with 0x%08x\n", addr, val);
 
         write_dword(addr, val);
+        send_report();   
+    
+    }
+    else if(!strncmp(cmd, CMD_RELEASE_THREAD, 2))
+    {
+        unsigned tid_id;
+        char* reg;
+
+        reg = strtok(cmd, " ");
+        tid_id = strtoul(strtok(0x0, " "), 0x0, 0x10);
+
+        release_thread(tid_id);
         send_report();   
     
     }

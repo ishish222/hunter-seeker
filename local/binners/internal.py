@@ -1095,6 +1095,12 @@ def execute(cmds):
             writePipe(ext_pipe, "tc_avtivate_next OK")
             ok(ext_pipe)
 
+        elif(cmd == "tracer_release_thread"):
+            trace_controller.tracer_release_thread(args)
+            writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
+            writePipe(ext_pipe, "tracer_release_thread OK")
+            ok(ext_pipe)
+
         elif(cmd == "tracer_configure_sample_pid"):
             trace_controller.set_sample_pid(args)
             writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
@@ -1190,6 +1196,12 @@ def execute(cmds):
             trace_controller.configure_marker_end(mod, addr)
             writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
             writePipe(ext_pipe, "tracer_configure_marker_end OK")
+            ok(ext_pipe)
+
+        elif(cmd == "tracer_attach_sample"):
+            trace_controller.attach_sample()
+            writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
+            writePipe(ext_pipe, "tracer_attach_sample OK")
             ok(ext_pipe)
 
         elif(cmd == "tracer_debug_sample"):

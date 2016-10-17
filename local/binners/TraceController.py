@@ -748,6 +748,11 @@ class TraceController(object):
         self.last_report, self.last_answer = self.recv_report_active()
         return 
 
+    def attach_sample(self):
+        self.send_command_active("ad")
+        self.last_report, self.last_answer = self.recv_report_active()
+        return 
+
     def debug_sample(self):
         self.send_command_active("sd")
         self.last_report, self.last_answer = self.recv_report_active()
@@ -856,6 +861,11 @@ class TraceController(object):
 
     def auto_st(self):
         self.send_command_active("AS")
+        self.last_report, self.last_answer = self.recv_report_active()
+        return 
+
+    def tracer_release_thread(self, args):
+        self.send_command_active("RE")
         self.last_report, self.last_answer = self.recv_report_active()
         return 
 

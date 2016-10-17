@@ -306,6 +306,18 @@ def tracer_enable_sysenter():
 
     return
 
+def tracer_attach_sample():
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+    
+    write_socket(options.s, "tracer_attach_sample");
+    response, _, _ = read_socket(options.s)
+
+    globs.state.ret = response
+
+    return
+
 def tracer_debug_sample():
     options = globs.state.options
     state = globs.state

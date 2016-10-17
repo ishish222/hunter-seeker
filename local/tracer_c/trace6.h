@@ -115,6 +115,7 @@
 #define CMD_SET_E_REACTION_1        "M1"
 #define CMD_SET_E_REACTION_2        "M2"
 #define CMD_START_DEBUG         "sd"
+#define CMD_ATTACH_DEBUG        "ad"
 #define CMD_LIST_TEBS           "lt"
 #define CMD_LIST_LIBS           "ll"
 #define CMD_LIST_REACTIONS      "lm"
@@ -141,6 +142,7 @@
 #define CMD_ENABLE_ALL_REACTIONS "eA"
 #define CMD_DISABLE_ALL_REACTIONS "dA"
 #define CMD_AUTO_ST             "AS"
+#define CMD_RELEASE_THREAD      "RE"
 
 #define CMD_ROUTINE_1           "R1"
 #define CMD_ROUTINE_2           "R2"
