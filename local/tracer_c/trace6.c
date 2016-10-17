@@ -3609,7 +3609,7 @@ int handle_cmd(char* cmd)
     else if(!strncmp(cmd, CMD_SET_PID, 2))
     {
         my_trace->in_sample_pid = strtol(cmd+3, 0x0, 0x10);
-        d_print("Sample PID set to: %s\n", my_trace->in_sample_pid);
+        d_print("Sample PID set to: 0x%08x\n", my_trace->in_sample_pid);
         send_report();
     }
     else if(!strncmp(cmd, CMD_SET_IN_DIRECTORY, 2))

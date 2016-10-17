@@ -154,7 +154,7 @@ ReadPID.executing_routine = usualparts.tracer_parts.tracer_read_dword
 
 SpawnTracer2 = statemachine.State()
 SpawnTracer2.name = "Spawning second tracer"
-SpawnTracer2.executing_routine = usualparts.tracing_parts.start_tracer
+SpawnTracer2.executing_routine = usualparts.tracing_parts.start_tracer_log
 
 TracerConfigureSample2 = statemachine.State()
 TracerConfigureSample2.name = "Configuring sample PID"
