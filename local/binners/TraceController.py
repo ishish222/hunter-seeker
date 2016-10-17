@@ -718,6 +718,11 @@ class TraceController(object):
     def dump_stats(self, fname):
         self.send_command("RD%s%s" % (fname, end))
 
+    def set_sample_pid(self, pid):
+        self.send_command_active("SI %s" % pid)
+        self.last_report, self.last_answer = self.recv_report_active()
+        return 
+
     def set_sample_file(self, filee):
         self.send_command_active("SN %s" % filee)
         self.last_report, self.last_answer = self.recv_report_active()

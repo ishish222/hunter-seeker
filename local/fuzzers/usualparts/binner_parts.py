@@ -36,6 +36,17 @@ def binner_spawn():
     write_socket(options.s, "startBinner")
     read_socket(options.s)
 
+'''
+def binner_attach_app(args = None):
+    options = globs.state.options
+
+    if(args == None):
+        args = globs.state.ret
+
+    write_socket(options.s, "attach 0x%08x" % args)
+    read_socket(options.s)
+'''
+
 def binner_spawn_app():
     options = globs.state.options
 

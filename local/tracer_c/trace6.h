@@ -107,6 +107,7 @@
 /* tracer commands */
 
 #define CMD_SET_NAME            "SN"
+#define CMD_SET_PID             "SI"
 #define CMD_SET_IN_DIRECTORY    "SD"
 #define CMD_SET_OUT_DIRECTORY   "Sd"
 #define CMD_SET_OUT_PREFIX      "Sp"
@@ -323,6 +324,7 @@ typedef struct TRACE_CONFIG_
 
     char in_research_dir[MAX_LINE];
     char in_sample_path[MAX_LINE];
+    unsigned in_sample_pid;
 
     char out_dir[MAX_LINE];
     char out_prefix[MAX_LINE];

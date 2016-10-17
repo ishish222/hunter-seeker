@@ -87,6 +87,16 @@ def testdir(x):
 def testfile(x):
     return os.path.exists(x)
 
+def adjust(args):
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+    
+    globs.state.ret = globs.state.ret + args
+
+    return
+
+
 def get_options():
     from optparse import OptionParser
     import settings

@@ -2510,16 +2510,26 @@ int write_context(DWORD tid, CONTEXT* ctx)
 
 int read_context(DWORD tid, CONTEXT* ctx)
 {
-    HANDLE myHandle;
+    HANDLE myHandle = (HANDLE)-0x1;
     DWORD tid_id;
+    char buffer2[MAX_NAME];
+
+    if(tid == 0x0)
+    {
+        tid = my_trace->last_event.dwThreadId;
+    }
 
     tid_id = my_trace->thread_map[tid];
-
     myHandle = my_trace->threads[tid_id].handle;
+
+    d_print("Trying to get context of TID: 0x%08x, index: 0x%08x, handle: 0x%08x\n", tid, tid_id, myHandle);
+
     ctx->ContextFlags = CONTEXT_FULL;
     if(GetThreadContext(myHandle, ctx) == 0x0)
     {
         d_print("Failed to get context, error: 0x%08x\n", GetLastError());
+        sprintf(buffer2, "Error: 0x%08x\n", GetLastError());
+        strcpy(my_trace->report_buffer, buffer2);
     }
 
     return 0x0;
@@ -2535,6 +2545,7 @@ int write_dword(DWORD addr, DWORD val)
 
     handle = my_trace->procHandle;
     
+    d_print("Trying to write: 0x%08x @ %p, handle: 0x%08x\n", val, addr, my_trace->procHandle);
     write_memory(my_trace->procHandle, (void*)addr, (void*)&val, 0x4, &read);
     
     if(read == 0x4)
@@ -2544,9 +2555,11 @@ int write_dword(DWORD addr, DWORD val)
     }
     else 
     {
-        sprintf(buffer2, "Error");
+        sprintf(buffer2, "Error: 0x%08x\n", GetLastError());
         strcpy(my_trace->report_buffer, buffer2);
     }
+    read_memory(my_trace->procHandle, (void*)addr, (void*)&val, 0x4, &read);
+    d_print("New val @ %p: 0x%08x\n", addr, val);
 
     return 0x0;
 }
@@ -2660,7 +2673,9 @@ int read_dword(DWORD addr)
 
     char buffer2[MAX_LINE];
 
-    read_memory(my_trace->procHandle, (void*)addr, (void*)&data, 0x4, &read);
+    d_print("Trying to read: @ %p, handle: 0x%08x\n", addr, my_trace->cpdi.hProcess);
+    //read_memory(my_trace->procHandle, (void*)addr, (void*)&data, 0x4, &read);
+    read_memory(my_trace->cpdi.hProcess, (void*)addr, (void*)&data, 0x4, &read);
     
     if(read == 0x4)
     {
@@ -2668,23 +2683,25 @@ int read_dword(DWORD addr)
         strcpy(my_trace->report_buffer, buffer2);
     }
     else {
-        sprintf(buffer2, "Error");
+        sprintf(buffer2, "Error: 0x%08x", GetLastError());
         strcpy(my_trace->report_buffer, buffer2);
     }
 
     return data;
 }
 
-
+/*
 int write_dword(DWORD addr, char* data)
 {
     DWORD read;
-    DWORD  data_d;
+    DWORD data_d;
 
     char buffer2[MAX_LINE];
 
     data_d = strtoul(data, 0x0, 0x10);
-    write_memory(my_trace->procHandle, (void*)addr, (void*)&data_d, 0x4, &read);
+    d_print("Trying to write: 0x%08x @ %p, handle: 0x%08x\n", data_d, addr, my_trace->cpdi.hProcess);
+    write_memory(my_trace->cpdi.hProcess, (void*)addr, (void*)&data_d, 0x4, &read);
+//    write_memory(my_trace->procHandle, (void*)addr, (void*)&data_d, 0x4, &read);
 
     if(read == 0x4)
     {
@@ -2692,13 +2709,13 @@ int write_dword(DWORD addr, char* data)
         strcpy(my_trace->report_buffer, buffer2);
     }
     else {
-        sprintf(buffer2, "Error");
+        sprintf(buffer2, "Error: 0x%08x", GetLastError());
         strcpy(my_trace->report_buffer, buffer2);
     }
 
     return 0x0;
 }
-
+*/
 int write_register(DWORD tid_id, char* reg, char* data)
 {
     CONTEXT ctx;
@@ -2746,11 +2763,26 @@ int read_register(DWORD tid_id, char* reg)
 
     my_trace->report_code = REPORT_INFO;
     
+    if(tid_id == 0x0)
+    {
+        tid_id = my_trace->last_event.dwThreadId;
+    }
+
     read_context(tid_id, &ctx);
 
     if(!strcmp(reg, "EAX"))
     {
         sprintf(buffer2, "%08x", ctx.Eax);
+        strcpy(my_trace->report_buffer, buffer2);
+    }
+    if(!strcmp(reg, "EBX"))
+    {
+        sprintf(buffer2, "%08x", ctx.Ebx);
+        strcpy(my_trace->report_buffer, buffer2);
+    }
+    if(!strcmp(reg, "ECX"))
+    {
+        sprintf(buffer2, "%08x", ctx.Ecx);
         strcpy(my_trace->report_buffer, buffer2);
     }
     else if(!strcmp(reg, "ESP"))
@@ -3572,6 +3604,12 @@ int handle_cmd(char* cmd)
     {
         strcpy(my_trace->in_sample_path, cmd+3);
         d_print("Sample path set to: %s\n", my_trace->in_sample_path);    
+        send_report();
+    }
+    else if(!strncmp(cmd, CMD_SET_PID, 2))
+    {
+        my_trace->in_sample_pid = strtol(cmd+3, 0x0, 0x10);
+        d_print("Sample PID set to: %s\n", my_trace->in_sample_pid);
         send_report();
     }
     else if(!strncmp(cmd, CMD_SET_IN_DIRECTORY, 2))

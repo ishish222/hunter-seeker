@@ -1095,6 +1095,12 @@ def execute(cmds):
             writePipe(ext_pipe, "tc_avtivate_next OK")
             ok(ext_pipe)
 
+        elif(cmd == "tracer_configure_sample_pid"):
+            trace_controller.set_sample_pid(args)
+            writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
+            writePipe(ext_pipe, "tracer_configure_sample_pid OK")
+            ok(ext_pipe)
+
         elif(cmd == "tracer_configure_sample_file"):
             trace_controller.set_sample_file(args)
             writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
