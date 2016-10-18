@@ -1,6 +1,7 @@
 import statemachine
 import globs
 import os
+import Queue 
 
 options = globs.state.options
 
@@ -92,10 +93,20 @@ def adjust(args):
     state = globs.state
     status = globs.state.status
     
-    globs.state.ret = globs.state.ret + args
+    globs.state.stack.append(globs.state.stack.pop() + args)
 
     return
 
+def shift(args = 0):
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+    
+    globs.state.stack.append(globs.state.stack[args])
+
+    return
+
+    
 
 def get_options():
     from optparse import OptionParser
@@ -240,6 +251,7 @@ def get_options():
     options.settings = settings
 
     globs.state.options = options
+    globs.state.stack = []
     globs.state.ret = ""
     return
 

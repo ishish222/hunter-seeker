@@ -2296,7 +2296,7 @@ void start_trace_pid()
     d_print("Attaching debugger\n");
 
     if(DebugActiveProcess(my_trace->in_sample_pid) != 0x0)
-        d_print("Successfully attached to PID: 0x%x, handle: 0x%x\n", myPID);
+        d_print("Successfully attached to PID: 0x%x, handle: 0x%x\n", my_trace->in_sample_pid);
     else 
         d_print("Attach failed\n");
 }
@@ -3825,7 +3825,7 @@ int handle_cmd(char* cmd)
 
         d_print("Starting debugging: 0x%08x\n", my_trace->in_sample_pid);
 
-        start_trace_fname();
+        start_trace_pid();
 
         my_trace->status = STATUS_CONFIGURED; /* move to other */
 

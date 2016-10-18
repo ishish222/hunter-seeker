@@ -71,7 +71,7 @@ def trace_controller_activate_prev_tracer():
     state = globs.state
     status = globs.state.status
     
-    write_socket(options.s, "tc_avtivate_prev");
+    write_socket(options.s, "tc_activate_prev");
     response, _, _ = read_socket(options.s)
 
     globs.state.ret = response
@@ -141,7 +141,7 @@ def tracer_release_thread(args = None):
     status = globs.state.status
     
     if(args == None):
-        args = globs.state.ret    
+        args = globs.state.stack.pop()
 
     write_socket(options.s, "tracer_release_thread 0x%08x" % args);
     response, _, _ = read_socket(options.s)
@@ -156,7 +156,7 @@ def tracer_configure_sample_pid(args = None):
     status = globs.state.status
     
     if(args == None):
-        args = globs.state.ret    
+        args = globs.state.stack.pop()
 
     write_socket(options.s, "tracer_configure_sample_pid 0x%08x" % args);
     response, _, _ = read_socket(options.s)
@@ -458,12 +458,13 @@ def tracer_read_dword(args=0x0):
 
     # id source is null, use last ret
     if(args == None):
-        args = globs.state.ret
+        args = globs.state.stack.pop()
 
     write_socket(options.s, "tracer_read_dword 0x%08x" % args);
     response, _, _ = read_socket(options.s)
 
-    globs.state.ret = int(response[3:11], 0x10)
+    globs.state.stack.append(int(response[3:11], 0x10))
+    globs.state.ret = response
 
     return
 
@@ -474,7 +475,7 @@ def tracer_write_dword(args):
     
     # id source is null, use last ret
     if(args[0] == None):
-        args = (globs.state.ret, args[1])
+        args = (globs.state.stack.pop(), args[1])
 
     write_socket(options.s, "tracer_write_dword 0x%08x 0x%08x" % args);
     response, _, _ = read_socket(options.s)
@@ -491,7 +492,8 @@ def tracer_read_register(args="EIP"):
     write_socket(options.s, "tracer_read_register %s" % args);
     response, _, _ = read_socket(options.s)
 
-    globs.state.ret = int(response[3:11], 0x10)
+    globs.state.stack.append(int(response[3:11], 0x10))
+    globs.state.ret = response
 
     return
 

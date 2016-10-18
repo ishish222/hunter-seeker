@@ -1083,13 +1083,13 @@ def execute(cmds):
             #log_pipe.write("quit")
 
 ### tracer info
-        elif(cmd == "tc_avtivate_prev"):
+        elif(cmd == "tc_activate_prev"):
             trace_controller.activate_prev_tracer()
             writePipe(ext_pipe, "[internal]: OK")
             writePipe(ext_pipe, "tc_avtivate_prev OK")
             ok(ext_pipe)
 
-        elif(cmd == "tc_avtivate_next"):
+        elif(cmd == "tc_activate_next"):
             trace_controller.activate_next_tracer()
             writePipe(ext_pipe, "[internal]: OK")
             writePipe(ext_pipe, "tc_avtivate_next OK")

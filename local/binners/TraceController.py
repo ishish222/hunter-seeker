@@ -870,7 +870,7 @@ class TraceController(object):
         return 
 
     def tracer_release_thread(self, args):
-        self.send_command_active("RE")
+        self.send_command_active("RE %s" % args)
         self.last_report, self.last_answer = self.recv_report_active()
         return 
 

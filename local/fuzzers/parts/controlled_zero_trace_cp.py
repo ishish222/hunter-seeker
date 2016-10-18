@@ -106,9 +106,11 @@ TracerRelease = statemachine.State()
 TracerRelease.name = "Releasing"
 TracerRelease.executing_routine = usualparts.tracer_parts.tracer_release_thread
 
-TracerAutoSt2= statemachine.State()
-TracerAutoSt2.name = "Setting auto ST marker 2"
-TracerAutoSt2.executing_routine = usualparts.tracer_parts.tracer_auto_st
+SetST2= statemachine.State()
+SetST2.name = "Setting ST marker 2"
+SetST2.args = 0x22917363
+#SetST2.executing_routine = usualparts.tracer_parts.tracer_auto_st
+SetST2.executing_routine = usualparts.tracer_parts.tracer_set_st
 
 SelectPrev = statemachine.State()
 SelectPrev.name = "Selecting previous tracer"
@@ -148,9 +150,9 @@ SelectNext = statemachine.State()
 SelectNext.name = "Selecting next"
 SelectNext.executing_routine = usualparts.tracer_parts.trace_controller_activate_next_tracer
 
-TracerDebugSample2 = statemachine.State()
-TracerDebugSample2.name = "Attaching sample 2"
-TracerDebugSample2.executing_routine = usualparts.tracer_parts.tracer_attach_sample
+TracerAttach2 = statemachine.State()
+TracerAttach2.name = "Attaching sample 2"
+TracerAttach2.executing_routine = usualparts.tracer_parts.tracer_attach_sample
 
 TracerConfigureSample = statemachine.State()
 TracerConfigureSample.name = "Configuring sample"
@@ -245,9 +247,9 @@ DisableReactions3 = statemachine.State()
 DisableReactions3.name = "Disabling all reactions 3"
 DisableReactions3.executing_routine = usualparts.tracer_parts.tracer_disable_all_reactions
 
-TracerDebugSample3 = statemachine.State()
-TracerDebugSample3.name = "Attaching sample 3"
-TracerDebugSample3.executing_routine = usualparts.tracer_parts.tracer_attach_sample
+TracerAttach3 = statemachine.State()
+TracerAttach3.name = "Attaching sample 3"
+TracerAttach3.executing_routine = usualparts.tracer_parts.tracer_attach_sample
 
 SelectPrev3 = statemachine.State()
 SelectPrev3.name = "Selecting previous tracer 3"
@@ -323,6 +325,10 @@ ReadEP.name = "Reading EntryPoint"
 ReadEP.args = None
 ReadEP.executing_routine = usualparts.tracer_parts.tracer_read_dword
 
+Shift1 = statemachine.State()
+Shift1.name = "Shifting bottom arg to top"
+Shift1.executing_routine = usualparts.tracer_parts.tracer_read_dword
+
 SelectNext4 = statemachine.State()
 SelectNext4.name = "Selecting next 4"
 SelectNext4.executing_routine = usualparts.tracer_parts.trace_controller_activate_next_tracer
@@ -343,7 +349,7 @@ ReadESP8.executing_routine = usualparts.tracer_parts.tracer_read_register
 
 Adjust9 = statemachine.State()
 Adjust9.name = "Adjusting for argument ?"
-Adjust9.args = ?
+Adjust9.args = 0x4 * 1
 Adjust9.executing_routine = usualparts.other_parts.adjust
 
 ReadTID3 = statemachine.State()
@@ -527,6 +533,11 @@ def decision():
             ### C4 ###
             return CreateSuspendedThread
 
+        if(globs.state.ret[3:5] == "C5"):
+            print "Decision is: Reading spawned process information"
+            ### C5 ###
+            return CreateSuspendedThread
+
     print "Decision is: Continuing"
     return TracerDebugContinueInf
 
@@ -564,11 +575,16 @@ EnableReactionC2.consequence    = TracerDebugContinueInf
 ### Decision: C2
 # We need second pipeline in order to make release, after that we can use it in recurrence
 
-ReadProcessInfo.consequence                 = ReadESP2
+ReadProcessInfo.consequence                 = ReadESP3
+ReadESP3.consequence                        = Adjust4
+Adjust4.consequence                         = ReadArg_1
+ReadArg_1.consequence                       = Adjust5
+Adjust5.consequence                         = ReadTID # save TID
+ReadTID.consequence                         = ReadESP2
 ReadESP2.consequence                        = Adjust2
 Adjust2.consequence                         = ReadArg9
 ReadArg9.consequence                        = Adjust3
-Adjust3.consequence                         = ReadPID
+Adjust3.consequence                         = ReadPID # save PID
 ReadPID.consequence                         = SpawnTracer2
 SpawnTracer2.consequence                    = TracerConfigureSample2
 TracerConfigureSample2.consequence          = TracerConfigureOutDir2
@@ -579,25 +595,42 @@ TracerPrepareTrace2.consequence             = TracerConfigureMarkers2
 TracerConfigureMarkers2.consequence         = TracerRegisterRegions2
 TracerRegisterRegions2.consequence          = TracerRegisterReactions2
 TracerRegisterReactions2.consequence        = DisableReactions2
-DisableReactions2.consequence               = TracerDebugSample2
-TracerDebugSample2.consequence              = TracerAutoSt2
-TracerAutoSt2.consequence                   = SelectPrev
-SelectPrev.consequence                      = ReadESP3
-ReadESP3.consequence                        = Adjust4
-Adjust4.consequence                         = ReadArg_1
-ReadArg_1.consequence                       = Adjust5
-Adjust5.consequence                         = ReadTID
-ReadTID.consequence                         = TracerRelease
-TracerRelease.consequence                   = SelectNext
+DisableReactions2.consequence               = TracerAttach2 # load PID
+TracerAttach2.consequence                   = SetST2 
+SetST2.consequence                          = SelectPrev
+SelectPrev.consequence                      = TracerRelease # load TID
+TracerRelease.consequence                   = SelectNext 
 SelectNext.consequence                      = TracerDebugContinueInf
 
 ### Decision: C3
 # After OpenProcess
 
-GainPID.consequence                         = ReadESP10
+GetPID.consequence                          = ReadESP10 # save PID
 ReadESP10.consequence                       = Adjust10
 Adjust10.consequence                        = ReadPID2
-ReadPID2.consequence                        = SpawnTracer3
+ReadPID2.consequence                        = EnableReactionC4
+EnableReactionC4.consequence                = TracerDebugContinueInf
+
+
+### Decision: C4
+
+CreateSuspendedThread.consequence       = ReadESP6
+ReadESP6.consequence                    = Adjust7
+Adjust7.consequence                     = WriteThreadCreationFlags
+WriteThreadCreationFlags.consequence    = EnableReactionC5
+EnableReactionC5.consequence            = TracerDebugContinueInf
+
+
+### Decision: C5
+
+ReadRemoteThreadInfo.consequence            = ReadESP8 
+ReadESP8.consequence                        = Adjust9
+Adjust9.consequence                         = ReadTID3  # save TID 
+ReadTID3.consequence                        = ReadESP7
+ReadESP7.consequence                        = Adjust8
+Adjust8.consequence                         = ReadEP    # save EP
+ReadEP.consequence                          = Shift1    # PID to top
+Shift1.consequence                          = SpawnTracer3 
 SpawnTracer3.consequence                    = TracerConfigureSample3
 TracerConfigureSample3.consequence          = TracerConfigureOutDir3
 TracerConfigureOutDir3.consequence          = TracerConfigureOutPrefix3
@@ -607,37 +640,14 @@ TracerPrepareTrace3.consequence             = TracerConfigureMarkers3
 TracerConfigureMarkers3.consequence         = TracerRegisterRegions3
 TracerRegisterRegions3.consequence          = TracerRegisterReactions3
 TracerRegisterReactions3.consequence        = DisableReactions3
-DisableReactions3.consequence               = TracerDebugSample3
-TracerDebugSample3.consequence              = SelectPrev3
-SelectPrev3.consequence                     = EnableReactionC4
-EnableReactionC4.consequence                = TracerDebugContinueInf
+DisableReactions3.consequence               = TracerAttach3 # load PID
+TracerAttach3.consequence                   = SetST3 # load EP
+SetST3.consequence                          = SelectPrev4
+SelectPrev4.consequence                     = TracerRelease2 # load TID
+TracerRelease2.consequence                  = SelectNext3
+SelectNext3.consequence                     = TracerDebugContinueInf
 
-### Decision: C4
-
-CreateSuspendedThread.consequence       = ReadESP6
-ReadESP6.consequence                    = Adjust7
-Adjust7.consequence                     = WriteThreadCreationFlags
-WriteThreadCreationFlags.consequence    = ReadESP7
-#WriteThreadCreationFlags.consequence    = EnableReactionC5
-#EnableReactionC5.consequence            = TracerDebugContinueInf
-
-
-### Decision: C5
-
-#ReadRemoteThreadInfo.consequence    = ReadESP7
-ReadESP7.consequence                = Adjust8
-Adjust8.consequence                 = ReadEP
-ReadEP.consequence                  = SelectNext4
-SelectNext4.consequence             = SetST3
-SetST3.consequence                  = SelectPrev4
-SelectPrev4.consequence             = ReadESP8
-ReadESP8.consequence                = Adjust9
-Adjust9.consequence                 = ReadTID3
-ReadTID3.consequence                = TracerRelease2
-TracerRelease2.consequence          = SelectNext3
-SelectNext3.consequence             = TracerDebugContinueInf
-
-## relinking 
+## relinking from default trace program
 
 dm.SpawnTracer.consequence = TracerConfigureSample
 
