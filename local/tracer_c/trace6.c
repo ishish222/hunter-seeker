@@ -78,6 +78,7 @@ int unwrite_breakpoint(BREAKPOINT* bp);
 int update_breakpoint(BREAKPOINT* bp);
 OFFSET resolve_loc_desc(LOCATION_DESCRIPTOR_NEW* d);
 REACTION* find_reaction(char*);
+int read_dword(DWORD addr);
 
 int d_print(const char* format, ...)
 {
@@ -2101,10 +2102,10 @@ int unpaint(char* area, unsigned len)
         }
         else if(area[i]-3 == ']')
         {
-            if(count >= 1)  active = 0x1;
-            else            active = 0x0;
             if(active)      area[i]-=3;
             count--;
+            if(count >= 1)  active = 0x1;
+            else            active = 0x0;
         }
         else
         {
@@ -2134,9 +2135,13 @@ OFFSET resolve_loc_desc(LOCATION_DESCRIPTOR_NEW* d)
 
         if(!strcmp(d->op, "["))
         {
+            DWORD read;
             a1_r = resolve_loc_desc(d->a1);
             if(a1_r == -1) return -1;
             /* read_memory and calculate ret */
+            
+            read = read_dword(a1_r);
+            return read;
         }
         else if(!strcmp(d->op, "-"))
         {
@@ -2208,25 +2213,31 @@ LOCATION_DESCRIPTOR_NEW* parse_location_desc(char* str)
 
     d_print("Creating new descriptor node\n");
 
-    op = findany(str, "[+-");
+    paint(str, strlen(str));
+    op = findany(str, "+-");
 
     if(op == 0x0) 
     {
-        d_print("No operators found, assuming leaf: %s\n", str);
-        strcpy(neww->op, str);
-    }
-    else
-    {
-        d_print("Found operator: %s\n", op);
-        
-        if(op[0] == '[')
+        unpaint(str, strlen(str));
+        if((op = findany(str, "[")) != 0x0)
         {
             strcpy(neww->op, "[");
             op[0] = 0x0;
             neww->a1 = parse_location_desc(op+1);
             neww->a2 = 0x0;
         }
-        else if(op[0] == '+')
+        else
+        {
+            d_print("No operators found, assuming leaf: %s\n", str);
+            strcpy(neww->op, str);
+        }
+    }
+    else
+    {
+        unpaint(str, strlen(str));
+        d_print("Found operator: %s\n", op);
+        
+        if(op[0] == '+')
         {
             strcpy(neww->op, "+");
             op[0] = 0x0;
