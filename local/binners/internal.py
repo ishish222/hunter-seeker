@@ -1284,6 +1284,13 @@ def execute(cmds):
             writePipe(ext_pipe, "tracer_list_libs OK")
             ok(ext_pipe)
 
+        elif(cmd == "tracer_list_all_tebs"):
+            trace_controller.list_all_tebs()
+            writePipe(ext_pipe, "%s" % trace_controller.last_answer)
+            writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
+            writePipe(ext_pipe, "tracer_list_all_tebs OK")
+            ok(ext_pipe)
+
         elif(cmd == "tracer_list_tebs"):
             trace_controller.list_tebs()
             writePipe(ext_pipe, "%s" % trace_controller.last_answer)

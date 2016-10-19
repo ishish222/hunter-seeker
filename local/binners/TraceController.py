@@ -478,10 +478,12 @@ class TraceController(object):
     def activate_prev_tracer(self):
         self.tracer_active_id = (self.tracer_active_id + 1) % self.trace_count
         self.tracer_active = self.tracers[self.tracer_active_id]
+        print("Active tracer: %d out of %d" % (self.tracer_active_id, self.trace_count))
 
     def activate_next_tracer(self):
         self.tracer_active_id = (self.tracer_active_id + 1) % self.trace_count
         self.tracer_active = self.tracers[self.tracer_active_id]
+        print("Active tracer: %d out of %d" % (self.tracer_active_id, self.trace_count))
 
 # modify
     def attach(self, pid):
@@ -810,6 +812,11 @@ class TraceController(object):
 
     def list_tebs(self):
         self.send_command_active("lt")
+        self.last_report, self.last_answer = self.recv_report_active()
+        return 
+
+    def list_all_tebs(self):
+        self.send_command_active("la")
         self.last_report, self.last_answer = self.recv_report_active()
         return 
 

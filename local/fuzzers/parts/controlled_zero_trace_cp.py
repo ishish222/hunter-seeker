@@ -108,9 +108,9 @@ TracerRelease.executing_routine = usualparts.tracer_parts.tracer_release_thread
 
 SetST2= statemachine.State()
 SetST2.name = "Setting ST marker 2"
-SetST2.args = 0x22917363
+SetST2.args = "self+0x7363,A2,0x0"
 #SetST2.executing_routine = usualparts.tracer_parts.tracer_auto_st
-SetST2.executing_routine = usualparts.tracer_parts.tracer_set_st
+SetST2.executing_routine = usualparts.tracer_parts.tracer_add_reaction
 
 SelectPrev = statemachine.State()
 SelectPrev.name = "Selecting previous tracer"
@@ -307,6 +307,19 @@ EnableReactionC2.name = "Enabling reaction for spawned suspended process"
 EnableReactionC2.args = "C2"
 EnableReactionC2.executing_routine = usualparts.tracer_parts.tracer_enable_reaction
 
+EnableReactionC3 = statemachine.State()
+EnableReactionC3.name = "Enabling reaction for CreateRemoteThread"
+EnableReactionC3.args = "C3"
+EnableReactionC3.executing_routine = usualparts.tracer_parts.tracer_enable_reaction
+
+ListAllTebs1 = statemachine.State()
+ListAllTebs1.name = "Listing all TEBs"
+ListAllTebs1.executing_routine = usualparts.tracer_parts.tracer_list_all_tebs
+
+ListAllTebs2 = statemachine.State()
+ListAllTebs2.name = "Listing all TEBs 2"
+ListAllTebs2.executing_routine = usualparts.tracer_parts.tracer_list_all_tebs
+
 ReadRemoteThreadInfo  = statemachine.State()
 ReadRemoteThreadInfo.name = "Reading remote thread info"
 
@@ -471,7 +484,8 @@ TracerConfigureSample.consequence           = TracerConfigureOutDir
 TracerConfigureOutDir.consequence           = TracerConfigureOutPrefix
 TracerConfigureOutPrefix.consequence        = TracerConfigureInDir
 TracerConfigureInDir.consequence            = TracerPrepareTrace
-TracerPrepareTrace.consequence              = TracerConfigureMarkers
+#TracerPrepareTrace.consequence              = TracerConfigureMarkers
+TracerPrepareTrace.consequence              = TracerRegisterRegions
 TracerConfigureMarkers.consequence          = TracerRegisterRegions
 TracerRegisterRegions.consequence           = TracerRegisterReactions
 TracerRegisterReactions.consequence         = DisableReactions
@@ -504,6 +518,10 @@ def decision():
 
     if(globs.state.ret[1:3] == "RB"):
         if(globs.state.ret[3:5] == "ST"):
+            print "Decision is: StartTrace"
+            ### RB - ST ###
+            return TracerEnableSysenter
+        if(globs.state.ret[3:5] == "A2"):
             print "Decision is: StartTrace"
             ### RB - ST ###
             return TracerEnableSysenter
@@ -596,8 +614,10 @@ TracerConfigureMarkers2.consequence         = TracerRegisterRegions2
 TracerRegisterRegions2.consequence          = TracerRegisterReactions2
 TracerRegisterReactions2.consequence        = DisableReactions2
 DisableReactions2.consequence               = TracerAttach2 # load PID
-TracerAttach2.consequence                   = SetST2 
-SetST2.consequence                          = SelectPrev
+#TracerAttach2.consequence                   = SetST2 
+TracerAttach2.consequence                   = EnableReactionC3
+EnableReactionC3.consequence                = SelectPrev
+#SetST2.consequence                          = SelectPrev
 SelectPrev.consequence                      = TracerRelease # load TID
 TracerRelease.consequence                   = SelectNext 
 SelectNext.consequence                      = TracerDebugContinueInf

@@ -2048,6 +2048,75 @@ char* findany(char* s, char* keys)
     return *tmp == '\0' ? 0x0 : tmp;
 }
 
+int paint(char* area, unsigned len)
+{
+    unsigned i;
+    unsigned count = 0;
+    char active = 0x0;
+
+    for(i=0; i<len; i++)
+    {
+        if(area[i] == '[')
+        {
+            count++;
+            if(count >= 1)  active = 0x1;
+            else            active = 0x0;
+
+            if(active)      area[i]+=3;
+        }
+        else if(area[i] == ']')
+        {
+            if(active)      area[i]+=3;
+
+            count--;
+            if(count >= 1)  active = 0x1;
+            else            active = 0x0;
+        }
+        else
+        {
+            if(active)      area[i]+=3;
+        }
+
+        printf("%c", area[i]);
+    }
+    printf("\n");
+
+    return 0x0;
+}
+
+int unpaint(char* area, unsigned len)
+{
+    unsigned i;
+    unsigned count = 0;
+    char active = 0x0;
+
+    for(i=0; i<len; i++)
+    {
+        if(area[i]-3 == '[')
+        {
+            count++;
+            if(count >= 1)  active = 0x1;
+            else            active = 0x0;
+            if(active)      area[i]-=3;
+        }
+        else if(area[i]-3 == ']')
+        {
+            if(count >= 1)  active = 0x1;
+            else            active = 0x0;
+            if(active)      area[i]-=3;
+            count--;
+        }
+        else
+        {
+            if(active)      area[i]-=3;
+        }
+
+        printf("%c", area[i]);
+    }
+    printf("\n");
+    return 0x0;
+}
+
 OFFSET resolve_loc_desc(LOCATION_DESCRIPTOR_NEW* d)
 {
     d_print("[resolve_loc_desc]\n");
@@ -2507,6 +2576,44 @@ int write_context(DWORD tid, CONTEXT* ctx)
     return 0x0;
 }
 
+int list_all_tebs()
+{
+    char buffer2[MAX_NAME];
+
+    HANDLE hThreadSnap = INVALID_HANDLE_VALUE; 
+    THREADENTRY32 te32; 
+ 
+    // Take a snapshot of all running threads  
+    hThreadSnap = CreateToolhelp32Snapshot( TH32CS_SNAPTHREAD, 0 ); 
+    if( hThreadSnap == INVALID_HANDLE_VALUE ) 
+        return( FALSE ); 
+ 
+    // Fill in the size of the structure before using it. 
+    te32.dwSize = sizeof(THREADENTRY32 ); 
+ 
+    // Retrieve information about the first thread,
+    // and exit if unsuccessful
+    if( !Thread32First( hThreadSnap, &te32 ) ) 
+    {
+        d_print("Thread32First");  // Show cause of failure
+        CloseHandle( hThreadSnap );     // Must clean up the snapshot object!
+        return( FALSE );
+    }
+
+    // Now walk the thread list of the system,
+    // and display information about each thread
+    // associated with the specified process
+    do 
+    { 
+        sprintf(buffer2, "0x%08x - %08x\n", te32.th32OwnerProcessID, te32.th32ThreadID);
+        strcat(my_trace->report_buffer, buffer2);
+    } while( Thread32Next(hThreadSnap, &te32 ) );
+
+    //  Don't forget to clean up the snapshot object.
+    CloseHandle( hThreadSnap );
+    return 0x0;
+}
+
 int release_thread(DWORD tid)
 {
     HANDLE myHandle = (HANDLE)-0x1;
@@ -2515,7 +2622,7 @@ int release_thread(DWORD tid)
 
     d_print("Trying relese TID: 0x%08x\n", tid);
 
-    if((myHandle = OpenThread(tid, 0x0, THREAD_ALL_ACCESS)) == 0x0)
+    if((myHandle = OpenThread(THREAD_SUSPEND_RESUME, 0x0, tid)) == 0x0)
     {
         d_print("Failed to open thread, error: 0x%08x\n", GetLastError());
         sprintf(buffer2, "Error: 0x%08x\n", GetLastError());
@@ -3852,6 +3959,12 @@ int handle_cmd(char* cmd)
     else if(!strncmp(cmd, CMD_LIST_TEBS, 2))
     {
         list_tebs();
+        send_report();   
+    
+    }
+    else if(!strncmp(cmd, CMD_LIST_ALL_TEBS, 2))
+    {
+        list_all_tebs();
         send_report();   
     
     }
