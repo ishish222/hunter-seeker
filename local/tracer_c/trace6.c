@@ -2182,9 +2182,9 @@ OFFSET resolve_loc_desc(LOCATION_DESCRIPTOR_NEW* d)
             if(!strcmp(d->op, "ESP"))
             {
                 CONTEXT ctx;
-                d_print("Reading register ESP\n");
                 read_context(0x0, &ctx);
                 ret = ctx.Esp;
+                d_print("Reading register ESP: 0x%08x\n", ret);
             }
             else
             {
@@ -3008,7 +3008,8 @@ int process_last_event()
 
                 for(i = 0x0; i<my_trace->bpt_count; i++)
                 {
-                    update_breakpoint(&my_trace->breakpoints[i]);
+                    if(!my_trace->breakpoints[i].resolved_location)
+                        update_breakpoint(&my_trace->breakpoints[i]);
                 }
 
                 /*
@@ -3125,7 +3126,8 @@ int process_last_event()
 
                 for(i = 0x0; i<my_trace->bpt_count; i++)
                 {
-                    update_breakpoint(&my_trace->breakpoints[i]);
+                    if(!my_trace->breakpoints[i].resolved_location)
+                        update_breakpoint(&my_trace->breakpoints[i]);
                 }
 
                 /* writing activated e_reactions */
