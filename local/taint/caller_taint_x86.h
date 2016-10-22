@@ -32,12 +32,12 @@ Change of endiannes takes place when reading and writing to memory (to_mem, from
 // compile-time options and parameters
 #define ANALYZE_JUMPS 
 #define ANALYZE_LOOPS 
-#define UNMATCHED_RET_INVALIDATES_STACK
+//#define UNMATCHED_RET_INVALIDATES_STACK
 //#define UNMATCHED_RET_CREATES_CALL
 #define NOT_EMITTING_BLACKLISTED
 #define NO_LOOP 0xffffffff
 
-#define MAX_NAME                0x100
+#define MAX_NAME                0x200
 #define MAX_SYMBOL_NAME         0x50
 #define MAX_SYMBOL_COUNT        0x1000000
 #define MAX_LIB_COUNT           0x100
@@ -238,6 +238,15 @@ Change of endiannes takes place when reading and writing to memory (to_mem, from
 #define MODRM_SIZE_16    0x2
 #define MODRM_SIZE_32    0x3
 #define MODRM_SIZE_64    0x4
+
+/* options */
+#define OPTION_ANALYZE_JUMPS                    0x1
+#define OPTION_ANALYZE_LOOPS                    0x2
+#define OPTION_UNMATCHED_RET_INVALIDATES_STACK  0x4
+#define OPTION_UNMATCHED_RET_CREATES_CALL       0x8
+#define OPTION_NOT_EMITTING_BLACKLISTED         0x10
+#define OPTION_VERIFY_ROP_RETS                  0x20
+
 
 /*
 
@@ -2388,6 +2397,9 @@ class taint_x86
     /* memory parameters */
     BYTE_t* memory;
     DWORD mem_length;
+
+    /* analysis options */
+    DWORD options;
 
     BYTE_t invalid_byte;
     WORD_t invalid_word;

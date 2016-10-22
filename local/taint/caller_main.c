@@ -224,6 +224,48 @@ int load_file(char* line, taint_x86* taint_eng)
     return 0x0;
 }
 
+int parse_option(char* line, taint_x86* taint_eng)
+{
+    char* cmd;
+    char* option;
+
+    cmd = strtok(line, ",");
+    option = strtok(0x0, ",");
+    
+    option[strlen(option)-1] = 0x0;
+
+    printf("Setting analysis option: %s\n", option);
+
+    printf("Before: 0x%08x\n", taint_eng->options);
+    if(!strcmp(option, "ANALYZE_JUMPS"))
+    {
+        taint_eng->options |= OPTION_ANALYZE_JUMPS;
+    }
+    else if(!strcmp(option, "ANALYZE_LOOPS"))
+    {
+        taint_eng->options |= OPTION_ANALYZE_LOOPS;
+    }
+    else if(!strcmp(option, "UNMATCHED_RET_INVALIDATES_STACK"))
+    {
+        taint_eng->options |= OPTION_UNMATCHED_RET_INVALIDATES_STACK;
+    }
+    else if(!strcmp(option, "UNMATCHED_RET_CREATES_CALL"))
+    {
+        taint_eng->options |= OPTION_UNMATCHED_RET_CREATES_CALL;
+    }
+    else if(!strcmp(option, "NOT_EMITTING_BLACKLISTED"))
+    {
+        taint_eng->options |= OPTION_NOT_EMITTING_BLACKLISTED;
+    }
+    else if(!strcmp(option, "VERIFY_ROP_RETS"))
+    {
+        taint_eng->options |= OPTION_VERIFY_ROP_RETS;
+    }
+
+    printf("After: 0x%08x\n", taint_eng->options);
+    return 0x0;
+}
+
 
 int register_included(char* line, taint_x86* taint_eng)
 {
@@ -883,6 +925,9 @@ int main(int argc, char** argv)
 
             if(line[0] == 'F' && line[1] == 'I')
                 taint_eng.finished = 0x1;
+
+            if(line[0] == 'O' && line[1] == 'P')
+                parse_option(line, &taint_eng);
 
             if(line[0] == '#'); //comment
             

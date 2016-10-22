@@ -80,6 +80,9 @@ int taint_x86::handle_sigsegv()
 {
     
     d_print(1, "\n********* SEGMENTATION FAULT *********\n\n");
+    d_print(1, "Instruction no: %d\n", this->current_instr_count);
+    d_print(1, "EIP: 0x%08x\n", this->current_eip);
+    d_print(1, "Opcode: 0x%02x\n", this->current_instr_byte->get_BYTE());
 
     void *trace[32];
     size_t size, i;
@@ -97,9 +100,6 @@ int taint_x86::handle_sigsegv()
 
     d_print(1, "\n***************************************\n" );
 
-    d_print(1, "Instruction no: %d\n", this->current_instr_count);
-    d_print(1, "EIP: 0x%08x\n", this->current_eip);
-    d_print(1, "Opcode: 0x%02x\n", this->current_instr_byte->get_BYTE());
 
     exit(-1);  
     return 0x0;
@@ -549,10 +549,8 @@ void taint_x86::print_ret(CONTEXT_INFO* cur_ctx)
 /* precise jmp analysis */
 int taint_x86::handle_jmp(CONTEXT_INFO* info)
 {
-
-#ifndef ANALYZE_JUMPS
-    return 0x0;
-#endif
+    if(!this->options & OPTION_ANALYZE_JUMPS)
+        return 0x0;
 
     SYMBOL* s;
     char out_line[MAX_NAME];
@@ -615,9 +613,9 @@ int taint_x86::handle_jmp(CONTEXT_INFO* info)
 /* loop routines */ 
 int taint_x86::enter_loop_demo(CONTEXT_INFO* info)
 {
-#ifndef ANALYZE_LOOPS
-    return 0;
-#endif
+    if(!this->options & OPTION_ANALYZE_LOOPS)
+        return 0x0;
+
     char out_line[MAX_NAME];
     FILE* f = info->graph_file;   
 
@@ -638,9 +636,9 @@ int taint_x86::enter_loop_demo(CONTEXT_INFO* info)
 
 int taint_x86::exit_loop_demo(CONTEXT_INFO* info)
 {
-#ifndef ANALYZE_LOOPS
-    return 0;
-#endif
+    if(!this->options & OPTION_ANALYZE_LOOPS)
+        return 0x0;
+
     unsigned level;
     char out_line[MAX_NAME];
     FILE* f = info->graph_file;   
@@ -658,9 +656,9 @@ int taint_x86::exit_loop_demo(CONTEXT_INFO* info)
 
 int taint_x86::enter_loop(CONTEXT_INFO* info)
 {
-#ifndef ANALYZE_LOOPS
-    return 0;
-#endif
+    if(!this->options & OPTION_ANALYZE_LOOPS)
+        return 0x0;
+
     char out_line[MAX_NAME];
     FILE* f = info->graph_file;   
 
@@ -681,9 +679,9 @@ int taint_x86::enter_loop(CONTEXT_INFO* info)
 
 int taint_x86::exit_loop(CONTEXT_INFO* info)
 {
-#ifndef ANALYZE_LOOPS
-    return 0;
-#endif
+    if(!this->options & OPTION_ANALYZE_LOOPS)
+        return 0x0;
+
     unsigned level;
     char out_line[MAX_NAME];
     FILE* f = info->graph_file;   
@@ -718,10 +716,8 @@ int taint_x86::check_collecting(CONTEXT_INFO* info)
 /* returns 1 if in loop, 0 otherwise */
 int taint_x86::check_loop_2(CONTEXT_INFO* info)
 {
-#ifndef ANALYZE_LOOPS
-    return 1;
-#endif
-
+    if(!this->options & OPTION_ANALYZE_LOOPS)
+        return 0x0;
 
     OFFSET offset;
     unsigned cur_fence_idx;
@@ -939,9 +935,10 @@ int taint_x86::handle_call(CONTEXT_INFO* info)
                 /* target is blacklisted, we do not dive*/
                 d_print(2, "Target 0x%08x is blacklisted, we do not dive\n", target);
                 decision_dive = DECISION_NO_DIVE;
-#ifdef NOT_EMITTING_BLACKLISTED
-                decision_emit = DECISION_NO_EMIT;
-#endif
+                if(this->options & OPTION_NOT_EMITTING_BLACKLISTED)
+                {
+                    decision_emit = DECISION_NO_EMIT;
+                }
             }
             else
             {
@@ -1228,6 +1225,27 @@ int taint_x86::handle_ret(CONTEXT_INFO* cur_ctx, OFFSET eip)
     if((!this->started) || (this->finished))
         return 0x0;
 
+    d_print(1, "Handling ret\n");
+    /* verify if ret points to a symbol */
+    if(this->options & OPTION_VERIFY_ROP_RETS)
+    {
+        d_print(1, "[Checking for ROP ret]\n");
+        SYMBOL* s;
+        char out_line[MAX_NAME]; 
+        
+        d_print(1, "Searching for symbol: 0x%08x\n", eip);
+
+        s = this->get_symbol(eip);
+
+        if(s != 0x0)
+        {
+            if(this->enumerate) sprintf(out_line, "[x] (%d)0x%08x call %s!%s", this->current_instr_count, this->current_eip, s->lib_name, s->func_name);
+            else sprintf(out_line, "[x] 0x%08x call %s!%s", this->current_eip, s->lib_name, s->func_name);
+            print_empty_call(cur_ctx, out_line, colors[CODE_BLACK]);
+        }
+        d_print(1, "[Checking for ROP ret finishes]\n");
+    }
+
     unsigned i,j,diff;
     /* new begins */
 
@@ -1253,90 +1271,75 @@ int taint_x86::handle_ret(CONTEXT_INFO* cur_ctx, OFFSET eip)
 
     d_print(1, "<<%d>>", cur_ctx->call_level);
 
+    /*  */
+
     if(cur_ctx->call_level <= 0x0) return -1;
-        
-    /* close loops at this level if open */
 
- //   for(i; i<cur_ctx->loop_pos[cur_ctx->call_level]; i++)
- //   {
- //       exit_loop(cur_ctx);
- //   }
-
-        for(i = cur_ctx->call_level-1; i >= cur_ctx->call_level_smallest, i > 0; i--)
-        {
-            if(abs(cur_ctx->levels[i].ret - eip) < 0x5)
-            {
-                diff = cur_ctx->call_level - i;
-                d_print(1, "[0x%08x] (%d) Matched ret 0x%08x on pos: %d, handling diff: %d\n", this->cur_tid, this->current_instr_count, cur_ctx->levels[i].ret, i, diff);
-
-                /* fix pos */
-                //cur_ctx->call_level = i;
-
-                /* write*/
-                for(j=0x0; j<diff; j++)
-                {
-                    //print_ret(cur_ctx->graph_file);
-
-                    /* clear loop registers  */
-                    /*
-                    unsigned k;
-
-                    for(k = 0x0; k < MAX_LOOP_ADDRS; k++)
-                    {
-                        cur_ctx->call_src_register[cur_ctx->call_level][k][0] = 0x0;
-                        cur_ctx->call_src_register[cur_ctx->call_level][k][1] = 0x0;
-                    }
-
-                    cur_ctx->loop_start[cur_ctx->call_level] = NO_LOOP;
-                    */
-
-                    if(cur_ctx->levels[cur_ctx->call_level].loop_status != FENCE_NOT_COLLECTING)
-                    {
-                        print_ret(cur_ctx);
-                    }
-                    surface(cur_ctx);
-                }
-            return 0x0;
-            }
-        }
-
-#ifdef UNMATCHED_RET_INVALIDATES_STACK
-        /* handle under surface */
-        if(cur_ctx->call_level == cur_ctx->call_level_smallest) //we have to use all stacked rets
-        {
-                /* pos */
-                d_print(1, "[0x%08x] Unmatched ret 0x%08x on pos: %d\n", this->cur_tid, eip, cur_ctx->call_level);
-                if(cur_ctx->levels[cur_ctx->call_level].loop_status != FENCE_NOT_COLLECTING)
-                {
-                    print_ret(cur_ctx);
-                }
-                surface(cur_ctx);
-                
-                /* smallest */
-                cur_ctx->call_level_smallest--;
-        }
-#elif defined(UNMATCHED_RET_CREATES_CALL)
-        /* handle under surface */
-        if(cur_ctx->call_level == cur_ctx->call_level_smallest) //we have to use all stacked rets
-        {
-                /* pos */
-                d_print(1, "[0x%08x] Unmatched ret 0x%08x on pos: %d\n", this->cur_tid, eip, cur_ctx->call_level);
-                if(cur_ctx->levels[cur_ctx->call_level].loop_status != FENCE_NOT_COLLECTING)
-                {
-                    print_ret(cur_ctx);
-                }
-                surface(cur_ctx);
-                
-                /* smallest */
-                cur_ctx->call_level_smallest--;
-        }
-#else
-    if(cur_ctx->levels[cur_ctx->call_level].loop_status != FENCE_NOT_COLLECTING)
+    /* Ret matched */
+    for(i = cur_ctx->call_level-1; i >= cur_ctx->call_level_smallest, i > 0; i--)
     {
-        print_ret(cur_ctx);
+        if(abs(cur_ctx->levels[i].ret - eip) < 0x5)
+        {
+            diff = cur_ctx->call_level - i;
+            d_print(1, "[0x%08x] (%d) Matched ret 0x%08x on pos: %d, handling diff: %d\n", this->cur_tid, this->current_instr_count, cur_ctx->levels[i].ret, i, diff);
+            for(j=0x0; j<diff; j++)
+            {
+                if(cur_ctx->levels[cur_ctx->call_level].loop_status != FENCE_NOT_COLLECTING)
+                {
+                    print_ret(cur_ctx);
+                }
+                surface(cur_ctx);
+            }
+        return 0x0;
+        }
     }
-    surface(cur_ctx);
-#endif
+
+    /* ret unmatched */
+    if(this->options & OPTION_UNMATCHED_RET_INVALIDATES_STACK)
+    {
+        d_print(1, "Enabled: OPTION_UNMATCHED_RET_INVALIDATES_STACK\n");
+        /* handle under surface */
+        if(cur_ctx->call_level == cur_ctx->call_level_smallest) //we have to use all stacked rets
+        {
+                /* pos */
+                d_print(1, "[0x%08x] Unmatched ret 0x%08x on pos: %d\n", this->cur_tid, eip, cur_ctx->call_level);
+                if(cur_ctx->levels[cur_ctx->call_level].loop_status != FENCE_NOT_COLLECTING)
+                {
+                    print_ret(cur_ctx);
+                }
+                surface(cur_ctx);
+                
+                /* smallest */
+                cur_ctx->call_level_smallest--;
+        }
+    }
+    else if(this->options & OPTION_UNMATCHED_RET_CREATES_CALL)
+    {
+    /* handle under surface */
+        d_print(1, "Enabled: OPTION_UNMATCHED_RET_CREATES_CALL\n");
+        if(cur_ctx->call_level == cur_ctx->call_level_smallest) //we have to use all stacked rets
+        {
+                /* pos */
+                d_print(1, "[0x%08x] Unmatched ret 0x%08x on pos: %d\n", this->cur_tid, eip, cur_ctx->call_level);
+                if(cur_ctx->levels[cur_ctx->call_level].loop_status != FENCE_NOT_COLLECTING)
+                {
+                    print_ret(cur_ctx);
+                }
+                surface(cur_ctx);
+                
+                /* smallest */
+                cur_ctx->call_level_smallest--;
+        }
+    }
+    else
+    {
+        d_print(1, "Enabled: default\n");
+        if(cur_ctx->levels[cur_ctx->call_level].loop_status != FENCE_NOT_COLLECTING)
+        {
+            print_ret(cur_ctx);
+        }
+        surface(cur_ctx);
+    }
 
     /* new ends */
     return 0x0;

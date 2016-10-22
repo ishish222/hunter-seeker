@@ -79,6 +79,7 @@ int update_breakpoint(BREAKPOINT* bp);
 OFFSET resolve_loc_desc(LOCATION_DESCRIPTOR_NEW* d);
 REACTION* find_reaction(char*);
 int read_dword(DWORD addr);
+int read_register(DWORD tid_id, char* reg);
 
 int d_print(const char* format, ...)
 {
@@ -2177,17 +2178,28 @@ OFFSET resolve_loc_desc(LOCATION_DESCRIPTOR_NEW* d)
         }
         else
         {
-            /* we assume it's library */
-            d_print("Looking for lib: %s\n", d->op);
-            ret = find_lib(d->op);
-            if(ret != 0x0)
+            /* registers */
+            if(!strcmp(d->op, "ESP"))
             {
-                d_print("Found at: 0x%08x\n", ret);
+                CONTEXT ctx;
+                d_print("Reading register ESP\n");
+                read_context(0x0, &ctx);
+                ret = ctx.Esp;
             }
-            else if(ret == 0x0) 
+            else
             {
-                d_print("Not found\n");
-                ret = -1;
+                /* we assume it's library */
+                d_print("Looking for lib: %s\n", d->op);
+                ret = find_lib(d->op);
+                if(ret != 0x0)
+                {
+                    d_print("Found at: 0x%08x\n", ret);
+                }
+                else if(ret == 0x0) 
+                {
+                    d_print("Not found\n");
+                    ret = -1;
+                }
             }
         }
     }
