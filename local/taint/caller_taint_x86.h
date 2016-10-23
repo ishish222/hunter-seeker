@@ -2305,6 +2305,7 @@ typedef struct _CONTEXT_INFO
     DWORD call_level_smallest;
     DWORD call_level_largest;
     DWORD call_level_ignored;
+    char graph_filename[MAX_NAME];
     FILE* graph_file;
     OFFSET waiting;
 

@@ -946,7 +946,7 @@ void react_sysenter_callback(void* data)
     sysenter_no = ctx.Eax;
     sysenter_esp = ctx.Esp;
 
-    sprintf(line, "# Syscall no: 0x%08x, stack@ 0x%08x\n", sysenter_no, sysenter_esp);
+    sprintf(line, "# Syscall in TID: 0x%08x no: 0x%08x, stack@ 0x%08x\n", tid, sysenter_no, sysenter_esp);
     add_to_buffer(line);
 
     deregister_thread(tid, my_trace->threads[tid_pos].handle);
@@ -3889,6 +3889,7 @@ int handle_cmd(char* cmd)
 
         my_trace->status = STATUS_DBG_SCANNED;
         ss_callback((void*)&my_trace->last_event);
+        set_ss(0x0);
         d_print("Tracing debugged enabled\n");
 
         d_print("Starting @ 0x%08x\n", my_trace->last_eip);

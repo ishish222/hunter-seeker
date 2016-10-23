@@ -489,19 +489,13 @@ void taint_x86::print_call(CONTEXT_INFO* cur_ctx, char* line, const char* color)
 
 //    if(check_collecting(cur_ctx)) return;
 
+    d_print(1, "Printing call into: %s\n", cur_ctx->graph_filename);
+
     strcpy(out_line, "");
 
     for(i = this->call_level_start-this->call_level_offset; i< cur_ctx->call_level; i++)
         strcat(out_line, " ");
 
-    /*
-    sprintf(working_line, "<node COLOR=\"%s\" \
-                                CREATED=\"6666666666666\" \
-                                FOLDED=\"true\" \
-                                ID=\"ID_1208439975\" \
-                                MODIFIED=\"6666666666666\" \
-                                TEXT=\"%s\">\n", color, line);
-    */
     sprintf(working_line, "<node COLOR=\"%s\" CREATED=\"6666666666666\" FOLDED=\"true\" ID=\"ID_1208439975\" MODIFIED=\"6666666666666\" TEXT=\"%s\">\n", color, line);
 
     strcat(out_line, working_line);
@@ -515,7 +509,7 @@ void taint_x86::print_empty_call(CONTEXT_INFO* cur_ctx, char* line, const char* 
     char out_line[MAX_NAME];
     char working_line[MAX_NAME];
     
-    //if(check_collecting(cur_ctx)) return;
+    d_print(1, "Printing empty call into: %s\n", cur_ctx->graph_filename);
 
     strcpy(out_line, "");
     
@@ -534,7 +528,7 @@ void taint_x86::print_ret(CONTEXT_INFO* cur_ctx)
     char out_line[MAX_NAME];
     unsigned i;
 
-//    if(check_collecting(cur_ctx)) return;
+    d_print(1, "Printing empty call into: %s\n", cur_ctx->graph_filename);
 
     strcpy(out_line, "");
 
@@ -542,6 +536,7 @@ void taint_x86::print_ret(CONTEXT_INFO* cur_ctx)
         strcat(out_line, " ");
 
 
+    d_print(1, "Printing ret\n");
     strcat(out_line, "</node>\n");
     fwrite(out_line, strlen(out_line), 0x1, f);
 }
@@ -818,6 +813,7 @@ int taint_x86::check_loop_2(CONTEXT_INFO* info)
 
 int taint_x86::handle_call(CONTEXT_INFO* info)
 {
+    d_print(1, "[handle call]\n");
     SYMBOL* s;
     char out_line[MAX_NAME];
     char* func_name;
@@ -1104,6 +1100,7 @@ int taint_x86::handle_call(CONTEXT_INFO* info)
         if(info->waiting == 0x0) info->waiting = next;
     }
         
+    d_print(1, "[handle call finishes]\n");
     return 0x0;
 }
 
@@ -1225,7 +1222,8 @@ int taint_x86::handle_ret(CONTEXT_INFO* cur_ctx, OFFSET eip)
     if((!this->started) || (this->finished))
         return 0x0;
 
-    d_print(1, "Handling ret\n");
+    d_print(1, "[handle ret]\n");
+    d_print(1, "Eip: 0x%08x\n", eip);
     /* verify if ret points to a symbol */
     if(this->options & OPTION_VERIFY_ROP_RETS)
     {
@@ -1269,12 +1267,11 @@ int taint_x86::handle_ret(CONTEXT_INFO* cur_ctx, OFFSET eip)
 
     /* check surface */
 
-    d_print(1, "<<%d>>", cur_ctx->call_level);
-
-    /*  */
+    d_print(1, "We are on level: %d\n", cur_ctx->call_level);
 
     if(cur_ctx->call_level <= 0x0) return -1;
 
+    d_print(1, "Trying to match ret addr\n");
     /* Ret matched */
     for(i = cur_ctx->call_level-1; i >= cur_ctx->call_level_smallest, i > 0; i--)
     {
@@ -1342,6 +1339,7 @@ int taint_x86::handle_ret(CONTEXT_INFO* cur_ctx, OFFSET eip)
     }
 
     /* new ends */
+    d_print(1, "[handle ret finishes]\n");
     return 0x0;
 }
 
@@ -2221,16 +2219,16 @@ int taint_x86::add_thread(CONTEXT_info ctx_info)
 {
     DWORD already_added = 0x0;
     unsigned i;
-    char graph_filename[MAX_NAME];
+//    char graph_filename[MAX_NAME];
     char out_line[MAX_NAME];
 
     d_print(3, "Adding thread: 0x%08x\n", ctx_info.thread_id);
 
     if(!this->already_added(ctx_info.thread_id))
     {
-        sprintf(graph_filename, "TID_%08X.mm", ctx_info.thread_id);
-        d_print(1, "Creating graph file: %s\n", graph_filename);
-        this->ctx_info[this->tid_count].graph_file = fopen(graph_filename, "w");
+        sprintf(this->ctx_info[this->tid_count].graph_filename, "TID_%08X.mm", ctx_info.thread_id);
+        d_print(1, "Creating graph file: %s\n", this->ctx_info[this->tid_count].graph_filename);
+        this->ctx_info[this->tid_count].graph_file = fopen(this->ctx_info[this->tid_count].graph_filename, "w");
         this->ctx_info[this->tid_count].call_level = (this->max_call_levels/3); // starting at level 1/3 of max_call_levels
         this->ctx_info[this->tid_count].call_level_smallest = this->ctx_info[this->tid_count].call_level;
         this->ctx_info[this->tid_count].levels = (CALL_LEVEL*)malloc(sizeof(CALL_LEVEL)*this->max_call_levels);
