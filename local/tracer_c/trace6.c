@@ -2186,6 +2186,13 @@ OFFSET resolve_loc_desc(LOCATION_DESCRIPTOR_NEW* d)
                 ret = ctx.Esp;
                 d_print("Reading register ESP: 0x%08x\n", ret);
             }
+            else if(!strcmp(d->op, "EAX"))
+            {
+                CONTEXT ctx;
+                read_context(0x0, &ctx);
+                ret = ctx.Eax;
+                d_print("Reading register EAX: 0x%08x\n", ret);
+            }
             else
             {
                 /* we assume it's library */

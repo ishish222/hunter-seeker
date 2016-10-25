@@ -1247,23 +1247,6 @@ int taint_x86::handle_ret(CONTEXT_INFO* cur_ctx, OFFSET eip)
     unsigned i,j,diff;
     /* new begins */
 
-    /* ignored rets */
-    if(cur_ctx->waiting != 0x0) 
-    {
-        d_print(2, "We are waiting\n");
-        return 0x0;
-    }
-    else if(cur_ctx->before_waiting)
-    {
-        cur_ctx->before_waiting = 0x0;
-        d_print(2, "We just matched waiting\n");
-        return 0x0;
-    }
-    else
-    {
-        d_print(2, "We are not waiting\n");
-    }
-
 
     /* check surface */
 
@@ -1271,7 +1254,13 @@ int taint_x86::handle_ret(CONTEXT_INFO* cur_ctx, OFFSET eip)
 
     if(cur_ctx->call_level <= 0x0) return -1;
 
-    d_print(1, "Trying to match ret addr\n");
+    d_print(1, "[0x%08x] Ret table:\n", this->cur_tid);
+    for(i=cur_ctx->call_level_smallest; i<cur_ctx->call_level; i++)
+    {
+        d_print(1, "[0x%08x] 0x%08x\n", this->cur_tid, cur_ctx->levels[i].ret);
+    }
+
+    d_print(1, "Trying to match ret addr: 0x%08x\n", eip);
     /* Ret matched */
     for(i = cur_ctx->call_level-1; i >= cur_ctx->call_level_smallest, i > 0; i--)
     {
@@ -1287,8 +1276,27 @@ int taint_x86::handle_ret(CONTEXT_INFO* cur_ctx, OFFSET eip)
                 }
                 surface(cur_ctx);
             }
-        return 0x0;
+            if(cur_ctx->waiting != 0x0) cur_ctx->waiting = 0x0;
+            return 0x0;
         }
+    }
+
+    d_print(1, "Failed do match\n");
+    /* unmatched rets ignored rets */
+    if(cur_ctx->waiting != 0x0) 
+    {
+        d_print(2, "We are waiting\n");
+        return 0x0;
+    }
+    else if(cur_ctx->before_waiting)
+    {
+        cur_ctx->before_waiting = 0x0;
+        d_print(2, "We just matched waiting\n");
+        return 0x0;
+    }
+    else
+    {
+        d_print(2, "We are not waiting\n");
     }
 
     /* ret unmatched */
@@ -1331,11 +1339,14 @@ int taint_x86::handle_ret(CONTEXT_INFO* cur_ctx, OFFSET eip)
     else
     {
         d_print(1, "Enabled: default\n");
+        d_print(1, "ignoring\n");
+        /*
         if(cur_ctx->levels[cur_ctx->call_level].loop_status != FENCE_NOT_COLLECTING)
         {
             print_ret(cur_ctx);
         }
         surface(cur_ctx);
+        */
     }
 
     /* new ends */
@@ -2522,7 +2533,7 @@ int taint_x86::handle_exception(EXCEPTION_INFO info)
 {
     char out_line[MAX_NAME];
 
-    sprintf(out_line, "Exception %08x in TID %08x, instr. no: %d, eip: 0x%08x", info.er.ExceptionCode, info.tid, this->current_instr_count, info.er.ExceptionAddress);
+    sprintf(out_line, "[x] Exception %08x in TID %08x, instr. no: %d, eip: 0x%08x", info.er.ExceptionCode, info.tid, this->current_instr_count, info.er.ExceptionAddress);
     //print_empty_call(this->ctx_info[this->tids[this->cur_tid]].graph_file, out_line, colors[CODE_RED]);
     print_empty_call(&this->ctx_info[this->tids[this->cur_tid]], out_line, colors[CODE_RED]);
     return 0x0;
