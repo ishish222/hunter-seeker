@@ -295,14 +295,7 @@ int enable_reaction(char* reaction_id)
         {
             d_print("Enabling reaction %s\n", reaction_id);
             my_trace->reactions[i].enabled = 0x1;
-            /*
-            if(!my_trace->reactions[i].bp->written)
-            {
-                BREAKPOINT* bp;
-                d_print("Breakpoint has been deleted, writing again with location str: %s and reaction: %s\n", my_trace->reactions[i].bp->location_str, my_trace->reactions[i].reaction_id);
-                bp = add_breakpoint(my_trace->reactions[i].bp->location_str, &my_trace->reactions[i]);
-            }
-            */
+            
             BREAKPOINT* bp;
             bp = my_trace->reactions[i].bp;
             bp->enabled = 0x1; /* any reaction enabled makes bp enabled */
@@ -967,7 +960,6 @@ void react_sysret_callback(void* data)
     DWORD tid_pos;
     tid_pos = my_trace->thread_map[tid];
 
-//    d_print("Register thread @ SYSRET: %08x\n", tid);
     register_thread(tid, my_trace->threads[tid_pos].handle);
 
     // dump 0x50 bytes from stack
@@ -1637,17 +1629,7 @@ SIZE_T dump_zeros(FILE* f, SIZE_T len)
 
     return wrote_total;
 }
-/*
-SIZE_T dump_zeros(FILE* f, SIZE_T size)
-{
-    SIZE_T wrote;
-    char zeros[0x1];
-    unsigned i;
-    for(i=0x0; i<size; i++)
-    wrote += fwrite(zeros, 0x1, 0x1, f);
-    return wrote;
-}
-*/
+
 void dump_memory()
 {
     SIZE_T addr;
@@ -1706,50 +1688,6 @@ void end_callback(void* data)
 
 }
 
-/*
-void bp_callback(void* data)
-{
-    char line[MAX_LINE];
-    DEBUG_EVENT* de;
-    de = (DEBUG_EVENT*)data;
-
-    started = 1;
-
-    DWORD eip;
-    eip = (DWORD)de->u.Exception.ExceptionRecord.ExceptionAddress;
-
-    d_print("Starting @ 0x%08x\n", eip);
-    sprintf(line, "ST,0x%08x\n", eip);
-    add_to_buffer(line);
-
-    DWORD tid = de->dwThreadId;
-
-    DWORD tid_pos;
-    tid_pos = my_trace->thread_map[tid];
-
-    deregister_thread(tid, my_trace->threads[tid_pos].handle);
-    register_thread(tid, my_trace->threads[tid_pos].handle);
-
-    dump_memory();
-
-    //add_breakpoint(nt1_off, ntmap_1_callback);
-    //add_breakpoint(nt3_off, ntread_1_callback);
-    add_breakpoint(sysenter_off, react_sysenter_callback);
-    if(strstr(mod_end, "0x0"))
-    {
-        add_breakpoint(addr_end + img_base, end_callback);
-    }
-    else
-    {
-        add_breakpoint(addr_end + find_lib(mod_end), end_callback);
-    }
-
-    set_ss(0x0);
-    ss_callback(data);
-
-}
-*/
-
 BOOL WINAPI HandlerRoutine(_In_ DWORD dwCtrlType)
 {
     unsigned int i;
@@ -1795,9 +1733,6 @@ DWORD WINAPI writer(LPVOID lpParam)
         ResetEvent(my_trace->eventLock);
         fwrite(buffer, index, 1, my_trace->trace);
         fflush(my_trace->trace);
-        //fwrite("# Flushed\n", strlen("# Flushed\n"), 1, file);
-        fflush(my_trace->trace);
-//        d_print("Flushed\n");
         SetEvent(my_trace->eventUnlock);
     }
 }
@@ -1810,19 +1745,7 @@ void default_handler(void *data)
 
 int del_breakpoint_idx(unsigned my_bpt_idx)
 {
-    /*
-    DWORD oldProt;
-    char bpt_char = '\xcc';
-
-    VirtualProtectEx(my_trace->cpdi.hProcess, (void*)(my_trace->breakpoints[my_bpt_idx].addr), 0x1, PAGE_EXECUTE_READWRITE, &oldProt);
-
-    ReadProcessMemory(my_trace->cpdi.hProcess, (void*)(my_trace->breakpoints[my_trace->bpt_count].addr), (void*)(&bpt_char), 0x1, 0x0);
-    WriteProcessMemory(my_trace->cpdi.hProcess, (void*)(my_trace->breakpoints[my_bpt_idx].addr), &(my_trace->breakpoints[my_bpt_idx].saved_byte), 0x1, 0x0);
-
-    VirtualProtectEx(my_trace->cpdi.hProcess, (void*)(my_trace->breakpoints[my_bpt_idx].addr), 0x1, oldProt, &oldProt);
-
-    my_trace->breakpoints[my_bpt_idx].enabled = 0x0;
-    */
+    /* TODO: verify */
     unwrite_breakpoint(&my_trace->breakpoints[my_bpt_idx]);
     my_trace->breakpoints[my_bpt_idx].enabled = 0x0;
     return 0x0;
@@ -1850,7 +1773,6 @@ int del_breakpoint(DWORD addr)
         return 0x1;
     }
 
-//    del_breakpoint_idx(my_bpt_idx);
     unwrite_breakpoint(&my_trace->breakpoints[i]);
     my_trace->breakpoints[my_bpt_idx].enabled = 0x0;
 
@@ -1900,14 +1822,18 @@ int handle_breakpoint(DWORD addr, void* data)
                     my_trace->routines[cur_reaction->routine_id](data);
                 }
                 /* enable coupled */
-                if(cur_reaction->coupled_id[0] != 0x0)
+                unsigned k; 
+                for(k = 0; k< MAX_COUPLES; k++)
                 {
-                    d_print("Current reaction: %s\n", cur_reaction->reaction_id);
-                    d_print("Enabling coupled reaction: %s\n", cur_reaction->coupled_id);
-                    REACTION* coupled_reaction;
-                    coupled_reaction = find_reaction(cur_reaction->coupled_id);
-                    d_print("Found coupled reaction: %s\n", coupled_reaction->reaction_id);
-                    enable_reaction(coupled_reaction->reaction_id);
+                    if(cur_reaction->coupled_id[k][0] != 0x0)
+                    {
+                        d_print("Current reaction: %s\n", cur_reaction->reaction_id);
+                        d_print("Enabling coupled reaction: %s\n", cur_reaction->coupled_id[k]);
+                        REACTION* coupled_reaction;
+                        coupled_reaction = find_reaction(cur_reaction->coupled_id[k]);
+                        d_print("Found coupled reaction: %s\n", coupled_reaction->reaction_id);
+                        enable_reaction(coupled_reaction->reaction_id);
+                    }
                 }
             }
         }
@@ -1940,31 +1866,6 @@ int write_breakpoint(BREAKPOINT* bp)
     write_memory(my_trace->procHandle, (void*)addr, (void*)&bpt_char, 0x1, &read);
     read_memory(my_trace->procHandle, (void*)addr, (void*)&bpt_char, 0x1, &read);
     d_print("After: 0x%02x\n", bpt_char);
-/*
-    VirtualProtectEx(my_trace->cpdi.hProcess, (void*)addr, 0x1, PAGE_EXECUTE_READWRITE, &oldProt);
-
-    ret = ReadProcessMemory(my_trace->cpdi.hProcess, (void*)addr, (void*)bp->saved_byte, 0x1, &read);
-    
-    if(!ret)
-    {
-        d_print("Error: 0x%08x\n", GetLastError());
-    }
-
-    d_print("Before: 0x%02x\n", bp->saved_byte);
-
-    ret = WriteProcessMemory(my_trace->cpdi.hProcess, (void*)addr, &bpt_char, 0x1, &read);
-
-    if(!ret)
-    {
-        d_print("Error: 0x%08x\n", GetLastError());
-    }
-
-    ReadProcessMemory(my_trace->cpdi.hProcess, (void*)addr, (void*)bpt_char, 0x1, &read);
-
-    d_print("After: 0x%02x\n", bpt_char);
-
-    VirtualProtectEx(my_trace->cpdi.hProcess, (void*)addr, 0x1, oldProt, 0x0);
-*/
     bp->written = 0x1;
 
     d_print("[write_breakpoint ends]\n");
@@ -1985,28 +1886,6 @@ int unwrite_breakpoint(BREAKPOINT* bp)
     write_memory(my_trace->procHandle, (void*)addr, (void*)&bp->saved_byte, 0x1, &wrote);
     read_memory(my_trace->procHandle, (void*)addr, (void*)&bpt_char, 0x1, &wrote);
     d_print("After: 0x%02x\n", bpt_char);
-    /*
-    d_print("Removing  breakpoint opcode @ 0x%08x\n", addr);
-
-    VirtualProtectEx(my_trace->cpdi.hProcess, (void*)addr, 0x1, PAGE_EXECUTE_READWRITE, &oldProt);
-
-    ReadProcessMemory(my_trace->cpdi.hProcess, (void*)addr, (void*)(&bpt_char), 0x1, &wrote);
-
-    d_print("Before: 0x%02x\n", bpt_char);
-
-    ret = WriteProcessMemory(my_trace->cpdi.hProcess, (void*)addr, &bp->saved_byte, 0x1, &wrote);
-
-    if(!ret)
-    {
-        d_print("Error: 0x%08x\n", GetLastError());
-    }
-
-    ReadProcessMemory(my_trace->cpdi.hProcess, (void*)addr, (void*)bpt_char, 0x1, &wrote);
-
-    d_print("After: 0x%02x\n", bpt_char);
-
-    VirtualProtectEx(my_trace->cpdi.hProcess, (void*)addr, 0x1, oldProt, &oldProt);
-    */
     bp->written = 0x0;
 
     d_print("[unwrite_breakpoint ends]\n");
@@ -2126,7 +2005,7 @@ OFFSET resolve_loc_desc(LOCATION_DESCRIPTOR_NEW* d)
     OFFSET ret;
 
     if(d == 0x0)
-        return 0x0;
+        return -1;
 
     d_print("Processing: %s\n", d->op);
 
@@ -2192,6 +2071,48 @@ OFFSET resolve_loc_desc(LOCATION_DESCRIPTOR_NEW* d)
                 read_context(0x0, &ctx);
                 ret = ctx.Eax;
                 d_print("Reading register EAX: 0x%08x\n", ret);
+            }
+            else if(!strcmp(d->op, "EBX"))
+            {
+                CONTEXT ctx;
+                read_context(0x0, &ctx);
+                ret = ctx.Ebx;
+                d_print("Reading register EBX: 0x%08x\n", ret);
+            }
+            else if(!strcmp(d->op, "ECX"))
+            {
+                CONTEXT ctx;
+                read_context(0x0, &ctx);
+                ret = ctx.Ecx;
+                d_print("Reading register ECX: 0x%08x\n", ret);
+            }
+            else if(!strcmp(d->op, "EDX"))
+            {
+                CONTEXT ctx;
+                read_context(0x0, &ctx);
+                ret = ctx.Edx;
+                d_print("Reading register EDX: 0x%08x\n", ret);
+            }
+            else if(!strcmp(d->op, "ESI"))
+            {
+                CONTEXT ctx;
+                read_context(0x0, &ctx);
+                ret = ctx.Esi;
+                d_print("Reading register ESI: 0x%08x\n", ret);
+            }
+            else if(!strcmp(d->op, "EDI"))
+            {
+                CONTEXT ctx;
+                read_context(0x0, &ctx);
+                ret = ctx.Edi;
+                d_print("Reading register EDI: 0x%08x\n", ret);
+            }
+            else if(!strcmp(d->op, "EBP"))
+            {
+                CONTEXT ctx;
+                read_context(0x0, &ctx);
+                ret = ctx.Ebp;
+                d_print("Reading register EBP: 0x%08x\n", ret);
             }
             else
             {
@@ -2351,9 +2272,6 @@ BREAKPOINT* add_breakpoint(char* location_str, REACTION*  reaction)
 
         d_print("Attempt to parse location string: %s\n", location_str);
         my_trace->breakpoints[my_bpt_index].location = parse_location_desc(location_str);
-
-        //d_print("Parsed location string:\n");
-        //print_loc_desc_rev(my_trace->breakpoints[my_bpt_index].location);
 
         my_trace->bpt_count ++;
     }
@@ -2613,33 +2531,25 @@ int list_all_tebs()
     HANDLE hThreadSnap = INVALID_HANDLE_VALUE; 
     THREADENTRY32 te32; 
  
-    // Take a snapshot of all running threads  
     hThreadSnap = CreateToolhelp32Snapshot( TH32CS_SNAPTHREAD, 0 ); 
     if( hThreadSnap == INVALID_HANDLE_VALUE ) 
         return( FALSE ); 
  
-    // Fill in the size of the structure before using it. 
     te32.dwSize = sizeof(THREADENTRY32 ); 
  
-    // Retrieve information about the first thread,
-    // and exit if unsuccessful
     if( !Thread32First( hThreadSnap, &te32 ) ) 
     {
-        d_print("Thread32First");  // Show cause of failure
-        CloseHandle( hThreadSnap );     // Must clean up the snapshot object!
+        d_print("Thread32First");
+        CloseHandle( hThreadSnap );
         return( FALSE );
     }
 
-    // Now walk the thread list of the system,
-    // and display information about each thread
-    // associated with the specified process
     do 
     { 
         sprintf(buffer2, "0x%08x - %08x\n", te32.th32OwnerProcessID, te32.th32ThreadID);
         strcat(my_trace->report_buffer, buffer2);
     } while( Thread32Next(hThreadSnap, &te32 ) );
 
-    //  Don't forget to clean up the snapshot object.
     CloseHandle( hThreadSnap );
     return 0x0;
 }
@@ -2852,32 +2762,6 @@ int read_dword(DWORD addr)
     return data;
 }
 
-/*
-int write_dword(DWORD addr, char* data)
-{
-    DWORD read;
-    DWORD data_d;
-
-    char buffer2[MAX_LINE];
-
-    data_d = strtoul(data, 0x0, 0x10);
-    d_print("Trying to write: 0x%08x @ %p, handle: 0x%08x\n", data_d, addr, my_trace->cpdi.hProcess);
-    write_memory(my_trace->cpdi.hProcess, (void*)addr, (void*)&data_d, 0x4, &read);
-//    write_memory(my_trace->procHandle, (void*)addr, (void*)&data_d, 0x4, &read);
-
-    if(read == 0x4)
-    {
-        sprintf(buffer2, "DWORD written", data);
-        strcpy(my_trace->report_buffer, buffer2);
-    }
-    else {
-        sprintf(buffer2, "Error: 0x%08x", GetLastError());
-        strcpy(my_trace->report_buffer, buffer2);
-    }
-
-    return 0x0;
-}
-*/
 int write_register(DWORD tid_id, char* reg, char* data)
 {
     CONTEXT ctx;
@@ -2893,6 +2777,48 @@ int write_register(DWORD tid_id, char* reg, char* data)
     {
         data_d = strtoul(data, 0x0, 0x10);
         ctx.Eax = data_d;
+        write_context(tid_id, &ctx);
+        strcpy(my_trace->report_buffer, buffer2);
+    }
+    else if(!strcmp(reg, "EBX"))
+    {
+        data_d = strtoul(data, 0x0, 0x10);
+        ctx.Ebx = data_d;
+        write_context(tid_id, &ctx);
+        strcpy(my_trace->report_buffer, buffer2);
+    }
+    else if(!strcmp(reg, "ECX"))
+    {
+        data_d = strtoul(data, 0x0, 0x10);
+        ctx.Ecx = data_d;
+        write_context(tid_id, &ctx);
+        strcpy(my_trace->report_buffer, buffer2);
+    }
+    else if(!strcmp(reg, "EDX"))
+    {
+        data_d = strtoul(data, 0x0, 0x10);
+        ctx.Edx = data_d;
+        write_context(tid_id, &ctx);
+        strcpy(my_trace->report_buffer, buffer2);
+    }
+    else if(!strcmp(reg, "ESI"))
+    {
+        data_d = strtoul(data, 0x0, 0x10);
+        ctx.Esi = data_d;
+        write_context(tid_id, &ctx);
+        strcpy(my_trace->report_buffer, buffer2);
+    }
+    else if(!strcmp(reg, "EDI"))
+    {
+        data_d = strtoul(data, 0x0, 0x10);
+        ctx.Edi = data_d;
+        write_context(tid_id, &ctx);
+        strcpy(my_trace->report_buffer, buffer2);
+    }
+    else if(!strcmp(reg, "EBP"))
+    {
+        data_d = strtoul(data, 0x0, 0x10);
+        ctx.Ebp = data_d;
         write_context(tid_id, &ctx);
         strcpy(my_trace->report_buffer, buffer2);
     }
@@ -3015,43 +2941,12 @@ int process_last_event()
 
                 for(i = 0x0; i<my_trace->bpt_count; i++)
                 {
-                    if(!my_trace->breakpoints[i].resolved_location)
+                    d_print("bp: %s, resolved_location: 0x%08x\n", my_trace->breakpoints[i].location_str, my_trace->breakpoints[i].resolved_location);
+                    if(my_trace->breakpoints[i].resolved_location == -1)
+                    {
                         update_breakpoint(&my_trace->breakpoints[i]);
-                }
-
-                /*
-                d_print("Checking e_reactions\n");
-                unsigned ii;
-
-                for(ii = 0x0; ii< my_trace->e_reaction_count; ii++)
-                {
-                    if(strstr(my_trace->e_reactions[ii].lib_name, "self"))
-                    {
-                        d_print("Should register e_reaction at: 0x%08x:0x%08x\n", my_trace->cpdi.lpBaseOfImage, my_trace->e_reactions[ii].offset);
-                        my_trace->e_reactions[ii].lib_offset = (OFFSET)my_trace->cpdi.lpBaseOfImage;
-                        my_trace->e_reactions[ii].real_offset = my_trace->e_reactions[ii].lib_offset + my_trace->e_reactions[ii].offset;
-                        add_breakpoint(my_trace->e_reactions[ii].real_offset, e_reaction_handler);
                     }
                 }
-
-                */
-                /* i_reactions do not seem appropriate */
-                /*
-                d_print("Checking i_reactions\n");
-                for(ii = 0x0; ii< my_trace->i_reaction_count; ii++)
-                {
-                    d_print("Comparing _%s_ and _%s_\n", my_trace->i_reactions[ii].lib_name, "self");
-                    if(strstr(my_trace->i_reactions[ii].lib_name, "self"))
-                    {
-                        d_print("Should write i_reaction for %s\n", my_trace->i_reactions[ii].lib_name);
-                        my_trace->i_reactions[ii].lib_offset = (OFFSET)my_trace->cpdi.lpBaseOfImage;
-                        my_trace->i_reactions[ii].real_offset = my_trace->i_reactions[ii].lib_offset + my_trace->i_reactions[ii].offset;
-                        //if(my_trace->i_reactions[ii].pending_enable) 
-                        enable_i_reaction(my_trace->i_reactions[ii].id);
-
-                    }
-                }
-                */
 
                 return REPORT_PROCESS_CREATED;
                 break;
@@ -3071,7 +2966,7 @@ int process_last_event()
                         break;
                 
                     case EXCEPTION_BREAKPOINT:
-                        /* this is not our responsibility, inform TracerController and wait for orders */
+                        /* we are authorized to handle some cases */
 
                         unsigned i;
                         OFFSET bp_addr;
@@ -3079,7 +2974,6 @@ int process_last_event()
 
                         bp_addr = (OFFSET)my_trace->last_exception.ExceptionAddress;
                         d_print("Breakpoint hit! @ 0x%08x\n", bp_addr);
-
                         d_print("[BP handling]\n");
 
                         handled = 0x0;
@@ -3092,16 +2986,17 @@ int process_last_event()
                             {
                                 d_print("Handling breakpoint @ 0x%08x\n", bp_addr);
                                 handle_breakpoint((DWORD)my_trace->last_exception.ExceptionAddress, &my_trace->last_event);
-                                d_print("[BP handling ends]\n"); 
                                 handled = 0x1;
                             }
                         }
 
                         if(!handled)                        
                         {
-                            d_print("not our\n");
+                            d_print("This BP is not our, we pass it to the debugee\n");
                             my_trace->report_code = REPORT_EXCEPTION_NH;
                         }
+
+                        d_print("[BP handling ends]\n");
                         return my_trace->report_code;
                         break;
 
@@ -3133,59 +3028,13 @@ int process_last_event()
 
                 for(i = 0x0; i<my_trace->bpt_count; i++)
                 {
-                    if(!my_trace->breakpoints[i].resolved_location)
+                    d_print("bp: %s, resolved_location: 0x%08x\n", my_trace->breakpoints[i].location_str, my_trace->breakpoints[i].resolved_location);
+                    if(my_trace->breakpoints[i].resolved_location == -1)
+                    {
                         update_breakpoint(&my_trace->breakpoints[i]);
+                    }
                 }
 
-                /* writing activated e_reactions */
-                /*
-                unsigned i;
-
-                d_print("Checking e_reactions\n");
-                for(i = 0x0; i< my_trace->e_reaction_count; i++)
-                {
-                    d_print("Comparing _%s_ and _%s_\n", my_trace->e_reactions[i].lib_name, my_trace->libs[my_trace->lib_count-1].lib_name);
-                    if(strlen(my_trace->e_reactions[i].lib_name) == 0x0)
-                    {
-                        if(my_trace->e_reactions[i].lib_offset == my_trace->libs[my_trace->lib_count-1].lib_offset)
-                        {
-                            d_print("Should write e_reaction for 0x%08x:0x%08x\n", my_trace->e_reactions[i].lib_offset, my_trace->e_reactions[i].offset);
-                            my_trace->e_reactions[i].lib_offset = my_trace->libs[my_trace->lib_count-1].lib_offset;
-                            my_trace->e_reactions[i].real_offset = my_trace->e_reactions[i].lib_offset + my_trace->e_reactions[i].offset;
-                            add_breakpoint(my_trace->e_reactions[i].real_offset, e_reaction_handler);
-                        }
-                    }
-                    else if(!strcmp(my_trace->e_reactions[i].lib_name, my_trace->libs[my_trace->lib_count-1].lib_name))
-                    {
-                        d_print("Should write e_reaction for %s\n", my_trace->e_reactions[i].lib_name);
-                        my_trace->e_reactions[i].lib_offset = my_trace->libs[my_trace->lib_count-1].lib_offset;
-                        my_trace->e_reactions[i].real_offset = my_trace->e_reactions[i].lib_offset + my_trace->e_reactions[i].offset;
-                        add_breakpoint(my_trace->e_reactions[i].real_offset, e_reaction_handler);
-                    }
-                
-                }
-                */
-                /*
-                d_print("Checking i_reactions\n");
-                for(i = 0x0; i< my_trace->i_reaction_count; i++)
-                {
-                    d_print("Comparing _%s_ and _%s_\n", my_trace->i_reactions[i].lib_name, my_trace->libs[my_trace->lib_count-1].lib_name);
-                    if(strlen(my_trace->i_reactions[i].lib_name) == 0x0)
-                    {
-                        if(my_trace->i_reactions[i].lib_offset == my_trace->libs[my_trace->lib_count-1].lib_offset)
-                        {
-                            d_print("Checking if i_reaction for %s is pending\n", my_trace->i_reactions[i].lib_name);
-                            if(my_trace->i_reactions[i].pending_enable) enable_i_reaction(my_trace->i_reactions[i].id);
-                        }
-                    }
-                    else if(!strcmp(my_trace->i_reactions[i].lib_name, my_trace->libs[my_trace->lib_count-1].lib_name))
-                    {
-                        d_print("Checking if i_reaction for %s is pending\n", my_trace->i_reactions[i].lib_name);
-                        if(my_trace->i_reactions[i].pending_enable) enable_i_reaction(my_trace->i_reactions[i].id);
-                    }
-                
-                }
-                */
                 my_trace->last_win_status = DBG_CONTINUE;
                 return REPORT_CONTINUE;
                 break;
@@ -3217,14 +3066,9 @@ int process_last_event()
                 /* this is not our responsibility, inform TracerController and wait for orders */
 
                 d_print("Exiting process\n");
-                /*
-                HandlerRoutine(0x0);
-                */
                 return REPORT_PROCESS_EXIT;
                 break;
-
         }
-
 }
 
 int create_report(int last_report)
@@ -3273,6 +3117,7 @@ int create_report(int last_report)
 int handle_continue(DWORD pid, DWORD tid, unsigned status)
 {
     /* turn on trap again */
+    /* TODO: is this necessary? */
     /*
     if((my_trace->status == STATUS_DBG_STARTED) || (my_trace->status == STATUS_DBG_SCANNED))
     {
@@ -3561,9 +3406,17 @@ int add_couple(char* id, char* couple_id)
     d_print("[add_couple]\n");
     REACTION* target;
 
+    char my_couple[0x3];
+
+    my_couple[0] = couple_id[0];
+    my_couple[1] = couple_id[1];
+    my_couple[2] = 0;
+
     target = find_reaction(id);
-    strcpy(target->coupled_id, couple_id);
+    strcpy(target->coupled_id[target->couple_id_count], couple_id);
+    target->couple_id_count++;
     
+    d_print("Added couple: %s\n", my_couple);
     d_print("[add_couple ends]\n");
     return 0x0;
 }
@@ -3672,6 +3525,7 @@ int parse_reaction(char* str)
     char* loc_str;
     char* id;
     char* coupled_id;
+    char coupled_ids[MAX_NAME];
     unsigned rid;
 
     d_print("Parsing until ;: %s\n", str);
@@ -3680,17 +3534,21 @@ int parse_reaction(char* str)
     d_print("loc_str: %s\n", loc_str);
     id = strtok(0x0, ",");
     d_print("id: %s\n", id);
-    coupled_id = strstr(id, ":");
     rid = strtol(strtok(0x0, ";"), 0x0, 0x10);
     d_print("rid: 0x%02x\n", rid);
 
     /* registering e_reaction */
     add_reaction(loc_str, id, rid);
-    if(coupled_id)
+
+    coupled_id = strtok(id, ":");
+
+    d_print("coupled_id: %p, from %p\n", coupled_ids, coupled_id);
+
+    while((coupled_id = strtok(0x0, ":")) != 0x0)
     {
-        *coupled_id = 0x0;
-        coupled_id++;
-        d_print("coupled_id: %s\n", coupled_id);
+//        *coupled_id = 0x0;
+//        coupled_id++;
+        d_print("coupled_id_str: %s\n", coupled_id);
         add_couple(id, coupled_id);
     }
     d_print("[parse_reaction ends]\n");

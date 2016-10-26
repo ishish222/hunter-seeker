@@ -29,6 +29,7 @@
 #define MAX_LIBS 0x50
 #define MAX_BREAKPOINTS 0x50
 #define MAX_REGIONS 0x20
+#define MAX_COUPLES 0x10
 
 /* functions offsets in respective libs */
 #define EXIT_PROCESS_OFF 0x52acf
@@ -191,7 +192,9 @@ typedef struct BREAKPOINT_
 typedef struct REACTION_
 {
     char reaction_id[3];
-    char coupled_id[3];
+    char coupled_id[MAX_COUPLES][3];
+    unsigned couple_id_count;
+
     unsigned routine_id;
     char enabled;
     BREAKPOINT* bp;
