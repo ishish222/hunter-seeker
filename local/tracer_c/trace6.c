@@ -232,13 +232,18 @@ void react_skip_on(void* data)
     de = (DEBUG_EVENT*)data;
     DWORD tid = de->dwThreadId;
 
-    unset_ss(tid);
-    d_print("Skipping in TID: 0x%08x...\n", tid);
+    my_trace->threads[my_trace->thread_map[tid]].skipping += 0x1;
 
-    my_trace->threads[my_trace->thread_map[tid]].skipping = 0x1;
-
-    sprintf(line, "# Started skipping in TID: 0x%08x\n", tid);
+    sprintf(line, "# Increasing skipping in TID: 0x%08x @ %p\n", tid, (DWORD)my_trace->last_exception.ExceptionAddress);
     add_to_buffer(line);
+
+    if(my_trace->threads[my_trace->thread_map[tid]].skipping == 0x1)
+    {
+        unset_ss(tid);
+        d_print("Skipping in TID: 0x%08x...\n", tid);
+        sprintf(line, "# Started skipping in TID: 0x%08x\n", tid);
+        add_to_buffer(line);
+    }
 
     return;
 }
@@ -250,13 +255,19 @@ void react_skip_off(void* data)
     de = (DEBUG_EVENT*)data;
     DWORD tid = de->dwThreadId;
 
-    d_print("Finished skippingin TID: 0x%08x\n", tid);
+    my_trace->threads[my_trace->thread_map[tid]].skipping -= 0x1;
 
-    my_trace->threads[my_trace->thread_map[tid]].skipping = 0x0;
-    set_ss(tid);
-
-    sprintf(line, "# Stopped skipping in TID: 0x%08x\n", tid);
+    sprintf(line, "# Decreasing skipping in TID: 0x%08x @ %p\n", tid, (DWORD)my_trace->last_exception.ExceptionAddress);
     add_to_buffer(line);
+
+    if(my_trace->threads[my_trace->thread_map[tid]].skipping < 0x1)
+    {
+        d_print("Finished skippingin TID: 0x%08x\n", tid);
+        my_trace->threads[my_trace->thread_map[tid]].skipping = 0x0;
+        set_ss(tid);
+        sprintf(line, "# Stopped skipping in TID: 0x%08x\n", tid);
+        add_to_buffer(line);
+    }
 
     return;
 }
@@ -3970,7 +3981,7 @@ int handle_cmd(char* cmd)
         data = strtok(0x0, " ");
         status = strtoul(data, 0x0, 0x10);
 
-        d_print("Continuing with status: 0x%08x, DBG_NOT_HANDLED is: 0x%08x\n", status, DBG_EXCEPTION_NOT_HANDLED);
+        d_print("Continuing with status: 0x%08x\n", status);
         continue_routine(INFINITE, status);
         send_report();   
     }

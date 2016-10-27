@@ -29,7 +29,7 @@
 #define MAX_LIBS 0x50
 #define MAX_BREAKPOINTS 0x50
 #define MAX_REGIONS 0x20
-#define MAX_COUPLES 0x10
+#define MAX_COUPLES 0x20
 
 /* functions offsets in respective libs */
 #define EXIT_PROCESS_OFF 0x52acf
