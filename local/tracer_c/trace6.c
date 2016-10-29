@@ -146,6 +146,29 @@ void react_set_ZF(void* data)
     return;
 }
 
+void react_zero_ZF(void* data)
+{
+    d_print("Zeroing ZF\n");
+
+    int i;
+    unsigned id, thread_idx;
+
+    id = my_trace->last_event.dwThreadId;
+
+    CONTEXT ctx;
+    read_context(id, &ctx);
+    d_print("before zeroing: 0x%08x\n", ctx.EFlags);
+    /* zeroing */
+    print_context(&ctx);
+    ctx.EFlags &= CLEAR_ZF_FLAGS;
+    d_print("after zeroing: 0x%08x\n", ctx.EFlags);
+    print_context(&ctx);
+
+    write_context(id, &ctx);
+
+    return;
+}
+
 void react_zero_SF(void* data)
 {
     d_print("Zeroing SF\n");
@@ -4444,6 +4467,7 @@ int main(int argc, char** argv)
     my_trace->routines[0x100] = &react_sample_routine_1;
     my_trace->routines[0x101] = &react_zero_SF;
     my_trace->routines[0x102] = &react_set_ZF;
+    my_trace->routines[0x103] = &react_zero_ZF;
     my_trace->routines[0x201] = &react_update_region_1;
     my_trace->routines[0x202] = &react_cry_antidebug_1;
     my_trace->routines[0x203] = &react_skip_on;
