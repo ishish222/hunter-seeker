@@ -227,7 +227,7 @@ void react_cry_antidebug_1(void* data)
 
 void react_skip_on(void* data)
 {
-    char line[MAX_NAME]; 
+    char line[MAX_LINE]; 
     DEBUG_EVENT* de;
     de = (DEBUG_EVENT*)data;
     DWORD tid = de->dwThreadId;
@@ -250,7 +250,7 @@ void react_skip_on(void* data)
 
 void react_skip_off(void* data)
 {
-    char line[MAX_NAME]; 
+    char line[MAX_LINE]; 
     DEBUG_EVENT* de;
     de = (DEBUG_EVENT*)data;
     DWORD tid = de->dwThreadId;
@@ -841,13 +841,13 @@ int check_lib_loaded(char* lib_name)
 
 void register_lib(LOAD_DLL_DEBUG_INFO info)
 {
-    char path[MAX_NAME];
+    char path[MAX_LINE];
     char line[MAX_LINE];
     unsigned size = 0;
 
 #ifdef LIB_VER_W7
     //d_print("Trying to resolve\n");
-    GetFinalPathNameByHandleA(my_trace->last_event.u.LoadDll.hFile, my_trace->libs[my_trace->lib_count].lib_path, MAX_NAME, VOLUME_NAME_NONE);
+    GetFinalPathNameByHandleA(my_trace->last_event.u.LoadDll.hFile, my_trace->libs[my_trace->lib_count].lib_path, MAX_LINE, VOLUME_NAME_NONE);
     //d_print("Resolved 0x%08x to %s\n", my_trace->last_event.u.LoadDll.hFile, my_trace->libs[my_trace->lib_count].lib_path);
     strcpy(my_trace->libs[my_trace->lib_count].lib_name, find_file(my_trace->libs[my_trace->lib_count].lib_path));
 #endif
@@ -2537,7 +2537,7 @@ int write_context(DWORD tid, CONTEXT* ctx)
 
 int list_all_tebs()
 {
-    char buffer2[MAX_NAME];
+    char buffer2[MAX_LINE];
 
     HANDLE hThreadSnap = INVALID_HANDLE_VALUE; 
     THREADENTRY32 te32; 
@@ -2569,7 +2569,7 @@ int release_thread(DWORD tid)
 {
     HANDLE myHandle = (HANDLE)-0x1;
     DWORD tid_id;
-    char buffer2[MAX_NAME];
+    char buffer2[MAX_LINE];
 
     d_print("Trying relese TID: 0x%08x\n", tid);
 
@@ -2595,7 +2595,7 @@ int read_context(DWORD tid, CONTEXT* ctx)
 {
     HANDLE myHandle = (HANDLE)-0x1;
     DWORD tid_id;
-    char buffer2[MAX_NAME];
+    char buffer2[MAX_LINE];
 
     if(tid == 0x0)
     {
@@ -3144,7 +3144,7 @@ int handle_continue(DWORD pid, DWORD tid, unsigned status)
 int get_pending_events()
 {
     int last_report;
-    char buffer2[MAX_NAME];
+    char buffer2[MAX_LINE];
     unsigned status;
 
     d_print("Continuing: PID: 0x%08x, TID: 0x%08x\n", my_trace->last_event.dwProcessId, my_trace->last_event.dwThreadId);
@@ -3536,7 +3536,7 @@ int parse_reaction(char* str)
     char* loc_str;
     char* id;
     char* coupled_id;
-    char coupled_ids[MAX_NAME];
+    char coupled_ids[MAX_LINE];
     unsigned rid;
 
     d_print("Parsing until ;: %s\n", str);
@@ -3568,7 +3568,7 @@ int parse_reaction(char* str)
 int parse_reactions(char* str)
 {
     char* current;
-    char buf[MAX_NAME];
+    char buf[MAX_LINE];
 
     current = str;
     while((current != 0x0) && (strlen(current) > 0x0))
@@ -3586,7 +3586,7 @@ int parse_reactions(char* str)
 int parse_regions(char* str)
 {
     char* current;
-    char buf[MAX_NAME];
+    char buf[MAX_LINE];
 
     current = str;
     while((current != 0x0) && (strlen(current) > 0x0))
@@ -3627,7 +3627,7 @@ int reload_out_file()
 int handle_cmd(char* cmd)
 {
     d_print("%s\n", cmd);
-    char buffer2[MAX_NAME];
+    char buffer2[MAX_LINE];
 
     my_trace->report_code = REPORT_NOTHING;
     memset(my_trace->report_buffer, 0x0, sizeof(my_trace->report_buffer));
@@ -3795,7 +3795,7 @@ int handle_cmd(char* cmd)
     else if(!strncmp(cmd, CMD_DISABLE_REACTION, 2))
     {
         char* mod;
-        char reaction_id[MAX_NAME];
+        char reaction_id[MAX_LINE];
 
         mod = strtok(cmd, " ");
         strcpy(reaction_id, strtok(0x0, " "));
@@ -3819,7 +3819,7 @@ int handle_cmd(char* cmd)
     else if(!strncmp(cmd, CMD_ENABLE_REACTION, 2))
     {
         char* mod;
-        char reaction_id[MAX_NAME];
+        char reaction_id[MAX_LINE];
 
         mod = strtok(cmd, " ");
         strcpy(reaction_id, strtok(0x0, " "));
@@ -4002,7 +4002,7 @@ int handle_cmd(char* cmd)
     {
         char* e_reactions_str;
         DWORD addr;
-        char my_str[MAX_NAME];
+        char my_str[MAX_LINE];
 
         strtok(cmd, " ");
 
@@ -4017,7 +4017,7 @@ int handle_cmd(char* cmd)
     else if(!strncmp(cmd, CMD_AUTO_ST, 2))
     {
         char* e_reactions_str;
-        char my_str[MAX_NAME];
+        char my_str[MAX_LINE];
 
         sprintf(my_str, "0x%08x", (OFFSET)(my_trace->cpdi.lpStartAddress));
 
@@ -4422,8 +4422,8 @@ int main(int argc, char** argv)
 
     d_print("Version 3.0\n");
 
-    if(strlen(argv[1]) > MAX_NAME) return -1;
-    if(strlen(argv[2]) > MAX_NAME) return -1;
+    if(strlen(argv[1]) > MAX_LINE) return -1;
+    if(strlen(argv[2]) > MAX_LINE) return -1;
 
     my_trace = (TRACE_CONFIG*)malloc(sizeof(TRACE_CONFIG));
     if(my_trace == 0x0)

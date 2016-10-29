@@ -17,8 +17,7 @@
 #define CLEAR_SF_FLAGS 0xffffff7f
 #define SET_ZF_FLAGS   0x00000040
 #define MEM_DUMP
-#define MAX_NAME 0x200
-#define MAX_LINE 0x100
+#define MAX_LINE 0x200
 #define MAX_HANDLERS 0x100000
 #define MAX_SYSCALL_OUT_ARGS 0x10
 #define MAX_SYSCALL_ENTRIES  0x10000
