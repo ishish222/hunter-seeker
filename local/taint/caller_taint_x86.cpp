@@ -528,7 +528,7 @@ void taint_x86::print_ret(CONTEXT_INFO* cur_ctx)
     char out_line[MAX_NAME];
     unsigned i;
 
-    d_print(1, "Printing empty call into: %s\n", cur_ctx->graph_filename);
+    d_print(1, "Printing ret into: %s\n", cur_ctx->graph_filename);
 
     strcpy(out_line, "");
 

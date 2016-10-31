@@ -3494,7 +3494,7 @@ int parse_region(char* str)
     off = strtoul(strtok(str, ":"), 0x0, 0x10);
     label_off_location = strtok(0x0, ":");
     size = strtoul(strtok(0x0, ":"), 0x0, 0x10);
-    label_size_location = strtok(0x0, "+");
+    label_size_location = strtok(0x0, ";");
 
     d_print("Calculating off location for data: 0x%08x:%s\n", off, label_off_location);
 
