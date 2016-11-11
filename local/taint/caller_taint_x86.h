@@ -246,6 +246,7 @@ Change of endiannes takes place when reading and writing to memory (to_mem, from
 #define OPTION_UNMATCHED_RET_CREATES_CALL       0x8
 #define OPTION_NOT_EMITTING_BLACKLISTED         0x10
 #define OPTION_VERIFY_ROP_RETS                  0x20
+#define OPTION_VERIFY_SEG_SEC                   0x40
 
 
 /*
@@ -2432,6 +2433,11 @@ class taint_x86
     unsigned new_bpt_count;
     unsigned new_bpt_t_count;
     unsigned new_wpt_count;
+
+    /* some quick analysis improvements */
+    REGION  security_layer[0x10];
+    unsigned security_layer_count;
+    int verify_seg_sec(OFFSET);
  
     int add_breakpoint(BREAKPOINT);
     int add_taint_breakpoint(BREAKPOINT);
@@ -3027,6 +3033,7 @@ class taint_x86
     int apply_lib_layout(LIB_INFO*);
     int apply_lib_exports(LIB_INFO*);
     int apply_memory(DWORD, DWORD);
+    int apply_security(DWORD, DWORD);
     int add_symbols(LIB_INFO*);
     int copy_symbol(SYMBOL**, SYMBOL*);
     int handle_sigsegv();

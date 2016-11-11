@@ -1,3 +1,4 @@
+#include <iostream>
 #include <execinfo.h>
 #include <signal.h>
 #include <stdio.h>
@@ -1135,8 +1136,15 @@ int taint_x86::dive(CONTEXT_INFO* info, OFFSET target, OFFSET next)
     CALL_LEVEL* prev_level;
     CALL_LEVEL* cur_level;
 
-    /* things to do in previous level */
+    /* check if we don't exceed ret table size */
     level = info->call_level;
+    if(level == this->max_call_levels-1) 
+    {
+        d_print(1, "We reached max ret table depth. If you need to register following calls, you need to extend ret table\n");
+        return 0x1; 
+    }
+
+    /* things to do in previous level */
     prev_level = &info->levels[level];
     prev_level->ret = next;
     info->call_level++;
@@ -1277,6 +1285,7 @@ int taint_x86::handle_ret(CONTEXT_INFO* cur_ctx, OFFSET eip)
                 surface(cur_ctx);
             }
             if(cur_ctx->waiting != 0x0) cur_ctx->waiting = 0x0;
+            d_print(1, "[handle ret finishes]\n");
             return 0x0;
         }
     }
@@ -1292,6 +1301,7 @@ int taint_x86::handle_ret(CONTEXT_INFO* cur_ctx, OFFSET eip)
     {
         cur_ctx->before_waiting = 0x0;
         d_print(2, "We just matched waiting\n");
+        d_print(1, "[handle ret finishes]\n");
         return 0x0;
     }
     else
@@ -1354,11 +1364,26 @@ int taint_x86::handle_ret(CONTEXT_INFO* cur_ctx, OFFSET eip)
     return 0x0;
 }
 
+inline int taint_x86::verify_seg_sec(OFFSET off)
+{
+    unsigned i;
+    
+    for(i = 0x0; i< this->security_layer_count; i++)
+    {
+        if((this->security_layer[i].off <= off) && (this->security_layer[i].off + this->security_layer[i].size <= off))
+        {
+            d_print(1, "[IMPREFECTION DETECTED] Attempt of write to secured segment @ instr no: %d, eip: 0x%08x\n", this->current_instr_count, this->reg_restore_32(EIP).get_DWORD());
+            return 0x1;
+        }
+    }
+    return 0x0;
+}
+
 inline int taint_x86::verify_oob_offset(OFFSET off, OFFSET size)
 {
     if(off > size)
     {
-        d_print(3, "Attempt of OOB read/write @ instr no: %d, eip: 0x%08x\n", this->current_instr_count, this->reg_restore_32(EIP).get_DWORD());
+        d_print(3, "[IMPREFECTION DETECTED] Attempt of OOB read/write @ instr no: %d, eip: 0x%08x\n", this->current_instr_count, this->reg_restore_32(EIP).get_DWORD());
 //        exit(1);
         return -1;
     }
@@ -1378,13 +1403,18 @@ void taint_x86::store_32(OFFSET off, DWORD_t v)
     if(this->verify_oob_offset(off, this->mem_length) != 0x0) return;
 #endif
 
+if(this->options & OPTION_VERIFY_SEG_SEC) 
+    if(verify_seg_sec(off))
+        return;
+
 #ifdef REVERSE_ANALYSIS
     DWORD_t lost_val;
     this->restore_32(off, lost_val);
     this->a_push_lost_32(lost_val.get_DWORD());
 #endif
+#if 0
     for(int i = 0x0; i< this->new_bpt_count; i++)
-        if((this->new_bps[i].mem_offset == off) && (this->new_bps[i].mode & BP_MODE_WRITE))
+        if(((off - this->new_bps[i].mem_offset) <= 0x4) && (this->new_bps[i].mode & BP_MODE_WRITE))
         {
             d_err_print("Mem dump in stderr @ 0x%08x\n", off);
             d_print(1, "Breakpoint RW: WRITE to 0x%x @ %lld, 0x%08x\n", off, this->current_instr_count, this->current_eip);
@@ -1393,6 +1423,7 @@ void taint_x86::store_32(OFFSET off, DWORD_t v)
             print_mem(1, off, 0x10);
             return;
         }
+#endif
     v.to_mem(&this->memory[off], 1);
 }
 
@@ -1516,13 +1547,18 @@ void taint_x86::store_16(OFFSET off, WORD_t v)
     if(this->verify_oob_offset(off, this->mem_length) != 0x0) return;
 #endif
 
+if(this->options & OPTION_VERIFY_SEG_SEC) 
+    if(verify_seg_sec(off))
+        return;
+
 #ifdef REVERSE_ANALYSIS
     WORD_t lost_val;
     this->restore_16(off, lost_val);
     this->a_push_lost_16(lost_val.get_WORD());
 #endif
+#if 0
     for(int i = 0x0; i<  this->new_bpt_count; i++)
-        if((this->new_bps[i].mem_offset == off) && (this->new_bps[i].mode & BP_MODE_WRITE))
+        if(((off - this->new_bps[i].mem_offset) <= 0x2) && (this->new_bps[i].mode & BP_MODE_WRITE))
         {
             d_err_print("Mem dump in stderr @ 0x%08x\n", off);
             d_print(1, "Breakpoint RW: WRITE to 0x%x @ %lld, 0x%08x\n", off, this->current_instr_count, this->current_eip);
@@ -1531,6 +1567,7 @@ void taint_x86::store_16(OFFSET off, WORD_t v)
             print_mem(1, off, 0x10);
             return;
         }
+#endif
     v.to_mem(&this->memory[off], 1);
 }
 
@@ -1650,6 +1687,11 @@ void taint_x86::store_8(OFFSET off, BYTE_t v)
     if(this->verify_oob_offset(off, REG_SIZE) != 0x0) return;
 #endif
 
+if(this->options & OPTION_VERIFY_SEG_SEC) 
+    if(verify_seg_sec(off))
+        return;
+
+#if 0
     for(int i = 0x0; i< this->new_bpt_count; i++)
         if((this->new_bps[i].mem_offset == off) && (this->new_bps[i].mode & BP_MODE_WRITE))
         {
@@ -1660,6 +1702,7 @@ void taint_x86::store_8(OFFSET off, BYTE_t v)
             print_mem(1, off, 0x10);
             return;
         }
+#endif
     v.to_mem(&this->memory[off]);
 }
 
@@ -2335,7 +2378,16 @@ int taint_x86::set_lib_dir_path(char* path)
     return 0x0;
 }
 
-#include <iostream>
+
+int taint_x86::apply_security(DWORD offset, DWORD size)
+{
+    d_print(1, "Registering security layer: 0x%08x - 0x%08x\n", offset, size);
+    this->security_layer[this->security_layer_count].off = offset;
+    this->security_layer[this->security_layer_count].size = size;
+    this->security_layer_count++;
+
+    return 0x0;
+}
 
 int taint_x86::apply_memory(DWORD offset, DWORD size)
 {

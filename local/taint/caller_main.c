@@ -234,7 +234,7 @@ int parse_option(char* line, taint_x86* taint_eng)
     
     option[strlen(option)-1] = 0x0;
 
-    printf("Setting analysis option: %s\n", option);
+    printf("Enabling analysis option: %s\n", option);
 
     printf("Before: 0x%08x\n", taint_eng->options);
     if(!strcmp(option, "ANALYZE_JUMPS"))
@@ -260,6 +260,10 @@ int parse_option(char* line, taint_x86* taint_eng)
     else if(!strcmp(option, "VERIFY_ROP_RETS"))
     {
         taint_eng->options |= OPTION_VERIFY_ROP_RETS;
+    }
+    else if(!strcmp(option, "VERIFY_SEG_SEC"))
+    {
+        taint_eng->options |= OPTION_VERIFY_SEG_SEC;
     }
 
     printf("After: 0x%08x\n", taint_eng->options);
@@ -360,6 +364,21 @@ int register_update(char* line, taint_x86* taint_eng)
     size = strtol(strtok(0x0, ","), 0x0, 0x10);
 
     taint_eng->apply_memory(offset, size);
+
+    return 0x0;
+}
+
+
+int register_security(char* line, taint_x86* taint_eng)
+{
+    char* cmd;
+    DWORD offset, size;
+
+    cmd = strtok(line, ",");
+    offset = strtol(strtok(0x0, ","), 0x0, 0x10);
+    size = strtol(strtok(0x0, ","), 0x0, 0x10);
+
+    taint_eng->apply_security(offset, size);
 
     return 0x0;
 }
@@ -819,7 +838,7 @@ int main(int argc, char** argv)
 #ifdef DEBUG
     int bp_idx = 0x0;
 
-//    taint_eng.my_bps[bp_idx].offset = 0x002a01bf; taint_eng.my_bps[bp_idx++].mode = BP_MODE_EXECUTE;
+    taint_eng.my_bps[bp_idx].offset = 0x404832; taint_eng.my_bps[bp_idx++].mode = BP_MODE_WRITE;
 //    taint_eng.my_bps[bp_idx]_offset = 0x0040308c; taint_eng.my_bps[bp_idx++].mode = BP_MODE_READ | BP_MODE_WRITE;
 //    taint_eng.my_bps[bp_idx].offset = 0x0012fda8; taint_eng.my_bps[bp_idx++].mode = BP_MODE_READ | BP_MODE_WRITE;
 //    taint_eng.my_bps[bp_idx].offset = 0x0012f79c; taint_eng.my_bps[bp_idx++].mode = BP_MODE_READ | BP_MODE_WRITE;
@@ -885,6 +904,9 @@ int main(int argc, char** argv)
 
             if(line[0] == 'U' && line[1] == 'P')
                 register_update(line, &taint_eng);
+            
+            if(line[0] == 'S' && line[1] == 'E')
+                register_security(line, &taint_eng);
             
             if(line[0] == 'S' && line[1] == 'Y')
                 register_symbol(line, &taint_eng);
