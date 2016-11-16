@@ -247,6 +247,13 @@ typedef struct LOCATION_
     DWORD size;
 } LOCATION;
 
+typedef struct REGION_
+{
+    LOCATION_DESCRIPTOR_NEW* off;
+    LOCATION_DESCRIPTOR_NEW* size;
+}
+REGION;
+
 typedef struct TRACE_CONFIG_
 {
     /* basic stuff */
@@ -363,6 +370,10 @@ typedef struct TRACE_CONFIG_
     /* regions */
     LOCATION_DESCRIPTOR region_sel[MAX_REGIONS];
     unsigned region_sel_count;
+
+    /* regions new */
+    REGION regions[MAX_REGIONS];
+    unsigned regions_count;
 
     /* syscall data */
     DWORD sysenter_esp;

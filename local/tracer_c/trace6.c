@@ -192,7 +192,7 @@ void react_zero_SF(void* data)
     return;
 }
 
-void update_region(LOCATION* location)
+void update_region_old(LOCATION* location)
 {
     DWORD size_wrote;
     char line[MAX_LINE];
@@ -213,23 +213,45 @@ void update_region(LOCATION* location)
     return;
 }
 
+void update_region(unsigned id)
+{
+    DWORD size_wrote;
+    char line[MAX_LINE];
+
+    REGION* region = &my_trace->regions[id];
+    OFFSET off;
+    OFFSET size;
+
+    off = resolve_loc_desc(region->off);
+    size = resolve_loc_desc(region->size);
+
+    sprintf(line, "# Current mod position: 0x%08x\n", ftell(my_trace->mods));
+    add_to_buffer(line);
+
+    size_wrote = dump_mem(my_trace->mods, (void*)off, size);
+    if(size_wrote == size)
+    {
+        d_print("[Updated location: 0x%08x, size: 0x%08x]\n", off, size);
+        sprintf(line, "UP,0x%08x,0x%08x\n", off, size);
+        add_to_buffer(line);
+        sprintf(line, "# Current mod position: 0x%08x\n", ftell(my_trace->mods));
+        add_to_buffer(line);
+    }
+
+    return;
+}
+
 void react_update_region_1(void* data)
 {
     d_print("Updating region 1\n");
-    LOCATION location;
-    resolve_region(&my_trace->region_sel[0x0], &location);
-
-    update_region(&location);
+    update_region(0x0);
     return;
 }
 
 void react_update_region_2(void* data)
 {
     d_print("Updating region 2\n");
-    LOCATION location;
-    resolve_region(&my_trace->region_sel[0x1], &location);
-
-    update_region(&location);
+    update_region(0x1);
     return;
 }
 
@@ -1163,7 +1185,7 @@ void react_sysret_callback(void* data)
 
         d_print("Resolving location\n");
         resolve_region(&my_trace->syscall_out_args[sysenter_no][i], &location);
-        update_region(&location);
+        update_region_old(&location);
 
     }
 
@@ -3480,6 +3502,7 @@ int add_reaction(char* location_str, char* reaction_id, unsigned rid)
     return 0x0;
 }
 
+/*
 int parse_region(char* str)
 {
     DWORD  off;
@@ -3547,9 +3570,34 @@ int parse_region(char* str)
 
     d_print("Adding region selector: 0x%08x, 0x%08x, 0x%02x, 0x%02x\n", off, size, off_location, size_location);
 
-    /* registering e_reaction */
     add_region_sel(off, size, off_location, size_location);
 
+    return 0x0;
+}
+*/
+
+int parse_region(char* str)
+{
+    d_print("[parse_region]\n");
+
+    char* loc_str;
+    char* size_str;
+
+    loc_str = strtok(str, ":");
+    d_print("loc_str: %s\n", loc_str);
+    size_str = strtok(0x0, ":");
+    d_print("loc_str: %s\n", loc_str);
+
+    REGION* cur_region;
+    
+    cur_region = &my_trace->regions[my_trace->regions_count];
+
+    cur_region->off = parse_location_desc(loc_str);
+    cur_region->size = parse_location_desc(size_str);
+    
+    my_trace->regions_count++;
+
+    d_print("[parse_region finishes]\n");
     return 0x0;
 }
 
