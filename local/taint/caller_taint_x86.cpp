@@ -18,6 +18,7 @@
 #define CODE_BLUE   0x1
 #define CODE_GREEN  0x2
 #define CODE_RED    0x3
+#define CODE_COMMENT 0x4
 
 
 #define GET_MOD(x) (x >> MOD_OFF ) & MOD_MASK
@@ -28,7 +29,7 @@
 
 /* symbols */
 
-char colors[0x10][0x10] = {"#000000", "#0000FF", "#00FF00", "#FF0000"};
+char colors[0x10][0x10] = {"#000000", "#0000FF", "#00FF00", "#FF0000", "#00FFFF"};
 
 int strcmpi(char const *a, char const *b)
 {
@@ -706,6 +707,13 @@ int taint_x86::check_collecting(CONTEXT_INFO* info)
             if(info->levels[i].cur_fence->collecting) return 0x1;
     }
 
+    return 0x0;
+}
+
+int taint_x86::comment_out(char* comment)
+{
+
+    print_empty_call(this->cur_info, comment, colors[CODE_COMMENT]);
     return 0x0;
 }
 

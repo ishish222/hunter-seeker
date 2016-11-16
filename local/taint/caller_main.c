@@ -224,6 +224,20 @@ int load_file(char* line, taint_x86* taint_eng)
     return 0x0;
 }
 
+int comment_out(char* line, taint_x86* taint_eng)
+{
+    char* cmd;
+    char* comment;
+
+    cmd = strtok(line, ",");
+    comment = strtok(0x0, ",");
+    comment(strlen(comment)-1) = 0x0;
+
+    taint_eng->comment_out(comment);
+
+    return 0x0;    
+}
+
 int parse_option(char* line, taint_x86* taint_eng)
 {
     char* cmd;
@@ -947,6 +961,9 @@ int main(int argc, char** argv)
 
             if(line[0] == 'F' && line[1] == 'I')
                 taint_eng.finished = 0x1;
+
+            if(line[0] == 'O' && line[1] == 'U')
+                comment_out(line, &taint_eng);
 
             if(line[0] == 'O' && line[1] == 'P')
                 parse_option(line, &taint_eng);

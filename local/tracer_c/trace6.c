@@ -255,6 +255,26 @@ void react_update_region_2(void* data)
     return;
 }
 
+void react_output_arg_0(void* data)
+{
+    d_print("Outputting arg 0\n");
+    char line[MAX_LINE];
+
+    OFFSET val;
+    OFFSET esp;
+
+    CONTEXT ctx;
+    read_context(0x0, &ctx);
+    esp = ctx.Esp;
+
+    val = read_dword(esp);
+
+    sprintf(line, "OU,Arg0: %08x\n", val);
+    add_to_buffer(line);
+
+    return;
+}
+
 void react_cry_antidebug_1(void* data)
 {
     OFFSET addr = 0x4103e4;
@@ -4521,6 +4541,29 @@ int main(int argc, char** argv)
     my_trace->routines[0x203] = &react_skip_on;
     my_trace->routines[0x204] = &react_skip_off;
     my_trace->routines[0x205] = &react_update_region_2;
+
+    my_trace->routines[0x300] = &react_output_arg_0;
+/*
+    my_trace->routines[0x301] = &react_output_arg_1;
+    my_trace->routines[0x302] = &react_output_arg_2;
+    my_trace->routines[0x303] = &react_output_arg_3;
+    my_trace->routines[0x304] = &react_output_arg_4;
+    my_trace->routines[0x305] = &react_output_arg_5;
+    my_trace->routines[0x306] = &react_output_arg_6;
+    my_trace->routines[0x307] = &react_output_arg_7;
+    my_trace->routines[0x308] = &react_output_arg_8;
+
+    my_trace->routines[0x310] = &react_output_arg_0_str;
+    my_trace->routines[0x311] = &react_output_arg_1_str;
+    my_trace->routines[0x312] = &react_output_arg_2_str;
+    my_trace->routines[0x313] = &react_output_arg_3_str;
+    my_trace->routines[0x314] = &react_output_arg_4_str;
+    my_trace->routines[0x315] = &react_output_arg_5_str;
+    my_trace->routines[0x316] = &react_output_arg_6_str;
+    my_trace->routines[0x317] = &react_output_arg_7_str;
+    my_trace->routines[0x318] = &react_output_arg_8_str;
+    my_trace->routines[0x319] = &react_output_arg_9_str;
+*/
 
     /* Windows sockets */
 
