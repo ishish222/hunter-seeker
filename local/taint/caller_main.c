@@ -231,7 +231,7 @@ int comment_out(char* line, taint_x86* taint_eng)
 
     cmd = strtok(line, ",");
     comment = strtok(0x0, ",");
-    comment(strlen(comment)-1) = 0x0;
+    comment[strlen(comment)-1] = 0x0;
 
     taint_eng->comment_out(comment);
 

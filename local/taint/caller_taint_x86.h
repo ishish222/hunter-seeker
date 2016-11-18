@@ -3133,6 +3133,7 @@ class taint_x86
 
     void print_call(CONTEXT_INFO*, char*, const char*);
     void print_empty_call(CONTEXT_INFO*, char*, const char*);
+    void print_a_ret(CONTEXT_INFO*);
     void print_ret(CONTEXT_INFO*);
     int dive(CONTEXT_INFO*, OFFSET, OFFSET);
     int surface(CONTEXT_INFO*);

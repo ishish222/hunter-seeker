@@ -1010,7 +1010,7 @@ int taint_x86::handle_call(CONTEXT_INFO* info)
                 print_call(info, out_line, colors[CODE_BLACK]);
             }
         }
-        else
+        else /* DECISION_NO_DIVE */
         {
             d_print(2, "Emitting not diving\n");
 
@@ -1019,21 +1019,21 @@ int taint_x86::handle_call(CONTEXT_INFO* info)
                 /* we assume we have symbol */
                 if(this->enumerate) sprintf(out_line, "[x] (%d)0x%08x call %s!%s", this->current_instr_count ,this->current_eip, s->lib_name, s->func_name);
                 else sprintf(out_line, "[x] 0x%08x call %s!%s", this->current_eip, s->lib_name, s->func_name);
-                print_empty_call(info, out_line, colors[CODE_RED]);
+                print_call(info, out_line, colors[CODE_RED]);
             }
             else if(decision_template == DECISION_LAYOUT_SYMBOL)
             {
                 /* we assume we have symbol */
                 if(this->enumerate) sprintf(out_line, "(%d)0x%08x call %s!%s", this->current_instr_count ,this->current_eip, s->lib_name, s->func_name);
                 else sprintf(out_line, "0x%08x call %s!%s", this->current_eip, s->lib_name, s->func_name);
-                print_empty_call(info, out_line, colors[CODE_BLUE]);
+                print_call(info, out_line, colors[CODE_BLUE]);
             }
             else
             {
                 /* regular emission with dive */
                 if(this->enumerate) sprintf(out_line, "(%d)0x%08x call 0x%08x", this->current_instr_count ,this->current_eip, target);
                 else sprintf(out_line, "0x%08x call 0x%08x", this->current_eip, target);
-                print_empty_call(info, out_line, colors[CODE_BLACK]);
+                print_call(info, out_line, colors[CODE_BLACK]);
             }
         
         }
@@ -1843,6 +1843,7 @@ int taint_x86::pre_execute_instruction(DWORD eip)
         d_print(1, "[0x%08x] Waiting: 0x%08x, eip: 0x%08x\n", this->cur_tid, cur_info->waiting, eip);
         cur_info->waiting = 0x0;
         cur_info->before_waiting = 0x1;
+        print_ret(cur_info);
     }
 
     this->current_instr_length = 0x0;
@@ -2167,6 +2168,11 @@ int taint_x86::finish()
     {
         cur_tid = &this->ctx_info[i];
         d_print(1, "Closing 0x%08x\n", cur_tid->tid);
+
+        if(cur_tid->waiting != 0x0)
+        {
+            print_ret(cur_tid);
+        }
 
         open = cur_tid->call_level - cur_tid->call_level_smallest;
         d_print(1, "[0x%08x] Left with %d nodes open\n", cur_tid->tid, open);
