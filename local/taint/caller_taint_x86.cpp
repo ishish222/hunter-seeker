@@ -566,13 +566,10 @@ int taint_x86::handle_jmp(CONTEXT_INFO* info)
         if((s != 0x0) && (s->wanted))
         {
             d_print(1, "Got wanted!\n");
-            sprintf(out_line, "...");
-            print_call(info, out_line, colors[CODE_RED]);
             if(this->enumerate) sprintf(out_line, "[x] (%d)0x%08x jmp %s!%s", this->current_instr_count ,this->current_eip, s->lib_name, s->func_name);
             else sprintf(out_line, "[x] 0x%08x jmp %s!%s", this->current_eip, s->lib_name, s->func_name);
             print_call(info, out_line, colors[CODE_RED]);
             this->print_ret(info);
-            print_ret(info);
         }
         else
         {
@@ -1059,23 +1056,17 @@ int taint_x86::handle_call(CONTEXT_INFO* info)
         if(decision_template == DECISION_LAYOUT_SYMBOL_WANTED)
         {
             /* we assume we have symbol */
-            sprintf(out_line, "...");
-            print_call(info, out_line, colors[CODE_RED]);
             if(this->enumerate) sprintf(out_line, "[x] (%d)0x%08x call %s!%s", this->current_instr_count ,this->current_eip, s->lib_name, s->func_name);
             else sprintf(out_line, "[x] 0x%08x call %s!%s", this->current_eip, s->lib_name, s->func_name);
             print_call(info, out_line, colors[CODE_RED]);
-            print_ret(info);
             print_ret(info);
         }
         else
         {
             /* we assume we have symbol */
-            sprintf(out_line, "...");
-            print_call(info, out_line, colors[CODE_BLACK]);
             if(this->enumerate) sprintf(out_line, "(%d)0x%08x call %s!%s", this->current_instr_count ,this->current_eip, s->lib_name, s->func_name);
             else sprintf(out_line, "0x%08x call %s!%s", this->current_eip, s->lib_name, s->func_name);
             print_call(info, out_line, colors[CODE_BLACK]);
-            print_ret(info);
             print_ret(info);
         
         }
@@ -1895,11 +1886,8 @@ int taint_x86::post_execute_instruction(DWORD eip)
     for(i=0x0; i<this->wanted_count_i; i++)
         if(this->instr_wanted[i] == this->current_instr_count)
         {
-            sprintf(out_line, "...");
-            print_call(cur_ctx, out_line, colors[CODE_RED]);
             sprintf(out_line, "[x] (%d)0x%08x", this->current_instr_count ,this->current_eip);
             print_call(cur_ctx, out_line, colors[CODE_RED]);
-            print_ret(cur_ctx);
             print_ret(cur_ctx);
  
         }
@@ -1907,12 +1895,9 @@ int taint_x86::post_execute_instruction(DWORD eip)
     for(i=0x0; i<this->wanted_count_e; i++)
         if(this->addr_wanted[i] == this->current_eip)
         {
-            sprintf(out_line, "...");
-            print_call(cur_ctx, out_line, colors[CODE_RED]);
             if(this->enumerate) sprintf(out_line, "[x] (%d)0x%08x", this->current_instr_count ,this->current_eip);
             else sprintf(out_line, "[x] 0x%08x", this->current_eip);
             print_call(cur_ctx, out_line, colors[CODE_RED]);
-            print_ret(cur_ctx);
             print_ret(cur_ctx);
         }
 

@@ -17,7 +17,7 @@
 #define CLEAR_SF_FLAGS 0xffffff7f
 #define CLEAR_ZF_FLAGS 0xffffffbf
 #define SET_ZF_FLAGS   0x00000040
-#define MEM_DUMP
+//#define MEM_DUMP
 #define MAX_LINE 0x300
 #define MAX_HANDLERS 0x100000
 #define MAX_SYSCALL_OUT_ARGS 0x10
@@ -83,6 +83,7 @@
 #define LOCATION_END            0x6
 
 #define MAX_NAME 0x200
+#define SNAP_SIZE 0x20
 #define MAX_LIBS 0x200
 
 #define STATUS_EMPTY        0x0

@@ -62,6 +62,7 @@ char* blacklist_lib[] = {"kernel32.dll", "ntdll.dll", "user32.dll"};
 DWORD blacklist_addr[] = {};
 char line2[MAX_LINE];
 
+void read_memory(HANDLE, void*, void*, SIZE_T, SIZE_T*);
 void e_reaction_handler(void* data);
 void i_reaction_handler(void* data);
 void print_context(CONTEXT*);
@@ -255,9 +256,78 @@ void react_update_region_2(void* data)
     return;
 }
 
-void react_output_arg_0(void* data)
+void output_arg_string_x(unsigned x)
 {
-    d_print("Outputting arg 0\n");
+    d_print("Outputting arg %d\n", x);
+    char line[MAX_LINE];
+    char snap[SNAP_SIZE];
+
+    DWORD read;
+    OFFSET esp;
+
+    CONTEXT ctx;
+    read_context(0x0, &ctx);
+    esp = ctx.Esp;
+    esp += (x * 0x4);
+
+    read_memory(my_trace->cpdi.hProcess, (void*)esp, (void*)snap, SNAP_SIZE, &read);
+    if(read == SNAP_SIZE)
+    {
+        sprintf(line, "OU,Arg%d: %s\n", x, snap);
+        add_to_buffer(line);
+    }
+    else
+    {
+        sprintf(line, "Failed to read ANSI string @\n", esp);
+        add_to_buffer(line);
+    }
+
+    return;
+}
+
+void react_output_arg_str_0(void* data)
+{
+    output_arg_string_x(0);
+}
+
+void react_output_arg_str_1(void* data)
+{
+    output_arg_string_x(1);
+}
+
+void react_output_arg_str_2(void* data)
+{
+    output_arg_string_x(2);
+}
+
+void react_output_arg_str_3(void* data)
+{
+    output_arg_string_x(3);
+}
+
+void react_output_arg_str_4(void* data)
+{
+    output_arg_string_x(4);
+}
+
+void react_output_arg_str_5(void* data)
+{
+    output_arg_string_x(5);
+}
+
+void react_output_arg_str_6(void* data)
+{
+    output_arg_string_x(6);
+}
+
+void react_output_arg_str_7(void* data)
+{
+    output_arg_string_x(7);
+}
+
+void output_arg_x(unsigned x)
+{
+    d_print("Outputting arg %d\n", x);
     char line[MAX_LINE];
 
     OFFSET val;
@@ -266,13 +336,54 @@ void react_output_arg_0(void* data)
     CONTEXT ctx;
     read_context(0x0, &ctx);
     esp = ctx.Esp;
+    esp += (x * 0x4);
 
     val = read_dword(esp);
 
-    sprintf(line, "OU,Arg0: %08x\n", val);
+    sprintf(line, "OU,Arg%d: %08x\n", x, val);
     add_to_buffer(line);
 
     return;
+}
+
+void react_output_arg_0(void* data)
+{
+    output_arg_x(0);
+}
+
+void react_output_arg_1(void* data)
+{
+    output_arg_x(1);
+}
+
+void react_output_arg_2(void* data)
+{
+    output_arg_x(2);
+}
+
+void react_output_arg_3(void* data)
+{
+    output_arg_x(3);
+}
+
+void react_output_arg_4(void* data)
+{
+    output_arg_x(4);
+}
+
+void react_output_arg_5(void* data)
+{
+    output_arg_x(5);
+}
+
+void react_output_arg_6(void* data)
+{
+    output_arg_x(6);
+}
+
+void react_output_arg_7(void* data)
+{
+    output_arg_x(7);
 }
 
 void react_cry_antidebug_1(void* data)
@@ -4543,7 +4654,6 @@ int main(int argc, char** argv)
     my_trace->routines[0x205] = &react_update_region_2;
 
     my_trace->routines[0x300] = &react_output_arg_0;
-/*
     my_trace->routines[0x301] = &react_output_arg_1;
     my_trace->routines[0x302] = &react_output_arg_2;
     my_trace->routines[0x303] = &react_output_arg_3;
@@ -4551,19 +4661,15 @@ int main(int argc, char** argv)
     my_trace->routines[0x305] = &react_output_arg_5;
     my_trace->routines[0x306] = &react_output_arg_6;
     my_trace->routines[0x307] = &react_output_arg_7;
-    my_trace->routines[0x308] = &react_output_arg_8;
 
-    my_trace->routines[0x310] = &react_output_arg_0_str;
-    my_trace->routines[0x311] = &react_output_arg_1_str;
-    my_trace->routines[0x312] = &react_output_arg_2_str;
-    my_trace->routines[0x313] = &react_output_arg_3_str;
-    my_trace->routines[0x314] = &react_output_arg_4_str;
-    my_trace->routines[0x315] = &react_output_arg_5_str;
-    my_trace->routines[0x316] = &react_output_arg_6_str;
-    my_trace->routines[0x317] = &react_output_arg_7_str;
-    my_trace->routines[0x318] = &react_output_arg_8_str;
-    my_trace->routines[0x319] = &react_output_arg_9_str;
-*/
+    my_trace->routines[0x310] = &react_output_arg_str_0;
+    my_trace->routines[0x311] = &react_output_arg_str_1;
+    my_trace->routines[0x312] = &react_output_arg_str_2;
+    my_trace->routines[0x313] = &react_output_arg_str_3;
+    my_trace->routines[0x314] = &react_output_arg_str_4;
+    my_trace->routines[0x315] = &react_output_arg_str_5;
+    my_trace->routines[0x316] = &react_output_arg_str_6;
+    my_trace->routines[0x317] = &react_output_arg_str_7;
 
     /* Windows sockets */
 

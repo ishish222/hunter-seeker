@@ -187,8 +187,17 @@ def tracer_add_reaction(args):
     state = globs.state
     status = globs.state.status
     
-    write_socket(options.s, "tracer_register_reactions %s" % args);
-    response, _, _ = read_socket(options.s)
+    parts = args.split(';');
+    cmd = '';
+
+    for part in parts:
+        if(len(cmd) + len(part) < 0x200):
+            cmd += ';'
+            cmd += part
+        else:
+            write_socket(options.s, "tracer_register_reactions %s" % cmd[1:]);
+            response, _, _ = read_socket(options.s)
+            cmd = ''
 
     globs.state.ret = response
 
