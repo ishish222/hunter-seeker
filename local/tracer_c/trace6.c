@@ -256,23 +256,162 @@ void react_update_region_2(void* data)
     return;
 }
 
-void output_arg_string_x(unsigned x)
+void output_register(char* reg)
 {
+    d_print("Outputting register %s\n", reg);
+    char line[MAX_LINE];
+    OFFSET val;
+
+    val = read_register(my_trace->last_tid, reg); 
+
+    sprintf(line, "OU,%s: 0x%08x\n", reg, val);
+    add_to_buffer(line);
+
+    return;
+}
+
+void react_output_eax(void* data)
+{
+    output_register("EAX");
+}
+
+void react_output_ebx(void* data)
+{
+    output_register("EBX");
+}
+
+void react_output_ecx(void* data)
+{
+    output_register("ECX");
+}
+
+void react_output_edx(void* data)
+{
+    output_register("EDX");
+}
+
+void react_output_edi(void* data)
+{
+    output_register("EDI");
+}
+
+void react_output_esi(void* data)
+{
+    output_register("ESI");
+}
+
+void react_output_esp(void* data)
+{
+    output_register("ESP");
+}
+
+void react_output_eip(void* data)
+{
+    output_register("EIP");
+}
+
+void output_arg_unicode_string_x(unsigned x)
+{
+    d_print("Unimplemented\n");
+    return;
     d_print("Outputting arg %d\n", x);
     char line[MAX_LINE];
-    char snap[SNAP_SIZE];
+    char snap[SNAP_SIZE*2];
 
     DWORD read;
     OFFSET esp;
+    OFFSET addr;
 
     CONTEXT ctx;
     read_context(0x0, &ctx);
     esp = ctx.Esp;
     esp += (x * 0x4);
 
-    read_memory(my_trace->cpdi.hProcess, (void*)esp, (void*)snap, SNAP_SIZE, &read);
+    addr = read_dword(esp);
+
+    read_memory(my_trace->cpdi.hProcess, (void*)addr, (void*)snap, SNAP_SIZE*2, &read);
     if(read == SNAP_SIZE)
     {
+        sprintf(line, "OU,Arg%d: %ls\n", x, snap);
+        add_to_buffer(line);
+    }
+    else
+    {
+        sprintf(line, "Failed to read ANSI string @\n", esp);
+        add_to_buffer(line);
+    }
+
+    return;
+}
+
+void react_output_arg_unicode_str_0(void* data)
+{
+    output_arg_unicode_string_x(0);
+}
+
+void react_output_arg_unicode_str_1(void* data)
+{
+    output_arg_unicode_string_x(1);
+}
+
+void react_output_arg_unicode_str_2(void* data)
+{
+    output_arg_unicode_string_x(2);
+}
+
+void react_output_arg_unicode_str_3(void* data)
+{
+    output_arg_unicode_string_x(3);
+}
+
+void react_output_arg_unicode_str_4(void* data)
+{
+    output_arg_unicode_string_x(4);
+}
+
+void react_output_arg_unicode_str_5(void* data)
+{
+    output_arg_unicode_string_x(5);
+}
+
+void react_output_arg_unicode_str_6(void* data)
+{
+    output_arg_unicode_string_x(6);
+}
+
+void react_output_arg_unicode_str_7(void* data)
+{
+    output_arg_unicode_string_x(7);
+}
+
+void output_arg_string_x(unsigned x)
+{
+    d_print("Outputting arg %d as ANSI string\n", x);
+    char line[MAX_LINE];
+    char snap[SNAP_SIZE];
+
+    DWORD read;
+    OFFSET esp;
+    OFFSET addr;
+
+    CONTEXT ctx;
+    read_context(0x0, &ctx);
+    d_print("ESP: 0x%08x\n", esp);
+    esp = ctx.Esp;
+    esp += (x * 0x4);
+    d_print("arg addr: 0x%08x\n", esp);
+
+    addr = read_dword(esp);
+    d_print("str addr: 0x%08x\n", addr);
+
+    read_memory(my_trace->cpdi.hProcess, (void*)addr, (void*)snap, SNAP_SIZE, &read);
+    if(read == SNAP_SIZE)
+    {
+        unsigned i;
+        for(i = 0x0; i< 0x5; i++)
+            d_print("%c ", snap[i]);
+        d_print("\n");
+
         sprintf(line, "OU,Arg%d: %s\n", x, snap);
         add_to_buffer(line);
     }
@@ -4653,6 +4792,7 @@ int main(int argc, char** argv)
     my_trace->routines[0x204] = &react_skip_off;
     my_trace->routines[0x205] = &react_update_region_2;
 
+    /* outputting DWORDs */
     my_trace->routines[0x300] = &react_output_arg_0;
     my_trace->routines[0x301] = &react_output_arg_1;
     my_trace->routines[0x302] = &react_output_arg_2;
@@ -4662,6 +4802,7 @@ int main(int argc, char** argv)
     my_trace->routines[0x306] = &react_output_arg_6;
     my_trace->routines[0x307] = &react_output_arg_7;
 
+    /* outputting ANSI strings */
     my_trace->routines[0x310] = &react_output_arg_str_0;
     my_trace->routines[0x311] = &react_output_arg_str_1;
     my_trace->routines[0x312] = &react_output_arg_str_2;
@@ -4670,6 +4811,27 @@ int main(int argc, char** argv)
     my_trace->routines[0x315] = &react_output_arg_str_5;
     my_trace->routines[0x316] = &react_output_arg_str_6;
     my_trace->routines[0x317] = &react_output_arg_str_7;
+
+    /* outputting UNICODE strings */
+    my_trace->routines[0x320] = &react_output_arg_str_0;
+    my_trace->routines[0x321] = &react_output_arg_str_1;
+    my_trace->routines[0x322] = &react_output_arg_str_2;
+    my_trace->routines[0x323] = &react_output_arg_str_3;
+    my_trace->routines[0x324] = &react_output_arg_str_4;
+    my_trace->routines[0x325] = &react_output_arg_str_5;
+    my_trace->routines[0x326] = &react_output_arg_str_6;
+    my_trace->routines[0x327] = &react_output_arg_str_7;
+
+    /* outputting registers */
+    my_trace->routines[0x330] = &react_output_eax;
+    my_trace->routines[0x331] = &react_output_ebx;
+    my_trace->routines[0x332] = &react_output_ecx;
+    my_trace->routines[0x333] = &react_output_edx;
+    my_trace->routines[0x334] = &react_output_esi;
+    my_trace->routines[0x335] = &react_output_edi;
+    my_trace->routines[0x336] = &react_output_esp;
+    my_trace->routines[0x337] = &react_output_eip;
+
 
     /* Windows sockets */
 
