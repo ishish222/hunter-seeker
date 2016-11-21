@@ -612,12 +612,16 @@ int enable_reaction(char* reaction_id)
     d_print("[enable_reaction]\n");
     unsigned i;
 
+    char another[MAX_LINE]; 
     char* another_r;
 
-    another_r = strtok(reaction_id, ":");
+    strcpy(another, reaction_id);
+    another_r = strtok(another, ":");
     if(another_r)
     {
-        enable_reaction(another_r++);    
+        another_r++;
+        d_print("Found another reaction: %s\n", another_r);
+        enable_reaction(another_r);    
     }
 
     for(i = 0x0; i< my_trace->reaction_count; i++)

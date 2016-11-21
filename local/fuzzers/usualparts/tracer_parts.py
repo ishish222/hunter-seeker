@@ -337,6 +337,18 @@ def tracer_enable_reaction(args):
 
     return
 
+def tracer_enable_anchors():
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+    
+    if(hasattr(options.settings, "builtin_reactions_anchors")):
+        write_socket(options.s, "tracer_enable_reaction %s" % options.settings.builtin_reactions_anchors);
+        response, _, _ = read_socket(options.s)
+        globs.state.ret = response
+
+    return
+
 def tracer_enable_all_reactions():
     options = globs.state.options
     state = globs.state
