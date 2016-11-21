@@ -3132,6 +3132,7 @@ class taint_x86
     /* graph prints */
 
     void print_call(CONTEXT_INFO*, char*, const char*);
+    void print_call_open(CONTEXT_INFO*, char*, const char*);
     void print_empty_call(CONTEXT_INFO*, char*, const char*);
     void print_a_ret(CONTEXT_INFO*);
     void print_ret(CONTEXT_INFO*);

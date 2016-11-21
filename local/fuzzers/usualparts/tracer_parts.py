@@ -198,6 +198,11 @@ def tracer_add_reaction(args):
             write_socket(options.s, "tracer_register_reactions %s" % cmd[1:]);
             response, _, _ = read_socket(options.s)
             cmd = ''
+            cmd += part
+
+    if(len(cmd) > 0x0): 
+        write_socket(options.s, "tracer_register_reactions %s" % cmd[1:]);
+        response, _, _ = read_socket(options.s)
 
     globs.state.ret = response
 
@@ -209,8 +214,33 @@ def tracer_register_reactions():
     status = globs.state.status
     
     if(options.sample_options.reactions == "0"): return
-    write_socket(options.s, "tracer_register_reactions %s" % (options.sample_options.reactions));
-    response, _, _ = read_socket(options.s)
+    args = options.sample_options.reactions
+
+    if(hasattr(options.settings, "builtin_reactions")):
+        args += ';'
+        args += options.settings.builtin_reactions
+
+    print args
+
+    parts = args.split(';');
+    cmd = '';
+
+    for part in parts:
+        if(len(cmd) + len(part) < 0x100):
+            cmd += ';'
+            cmd += part
+            print cmd
+        else:
+            write_socket(options.s, "tracer_register_reactions %s" % cmd[1:]);
+            response, _, _ = read_socket(options.s)
+            cmd = ''
+            cmd += ';'
+            cmd += part
+            print cmd
+
+    if(len(cmd) > 0x0): 
+        write_socket(options.s, "tracer_register_reactions %s" % cmd[1:]);
+        response, _, _ = read_socket(options.s)
 
     globs.state.ret = response
 

@@ -312,8 +312,6 @@ void react_output_eip(void* data)
 
 void output_arg_unicode_string_x(unsigned x)
 {
-    d_print("Unimplemented\n");
-    return;
     d_print("Outputting arg %d\n", x);
     char line[MAX_LINE];
     char snap[SNAP_SIZE*2];
@@ -330,14 +328,14 @@ void output_arg_unicode_string_x(unsigned x)
     addr = read_dword(esp);
 
     read_memory(my_trace->cpdi.hProcess, (void*)addr, (void*)snap, SNAP_SIZE*2, &read);
-    if(read == SNAP_SIZE)
+    if(read == SNAP_SIZE*2)
     {
         sprintf(line, "OU,Arg%d: %ls\n", x, snap);
         add_to_buffer(line);
     }
     else
     {
-        sprintf(line, "Failed to read ANSI string @\n", esp);
+        sprintf(line, "Failed to read UNICODE string @\n", esp);
         add_to_buffer(line);
     }
 
@@ -3719,8 +3717,11 @@ REACTION* find_reaction(char* id)
     {
         if(!strcmp(my_trace->reactions[i].reaction_id, id))
         {
-            d_print("Found reaction dor id: %s - %s\n", my_trace->reactions[i].reaction_id, id);
-            return &my_trace->reactions[i];
+            if(strcmp(my_trace->reactions[i].reaction_id, "xx")) /* exclude xx from searches */
+            {
+                d_print("Found reaction dor id: %s - %s\n", my_trace->reactions[i].reaction_id, id);
+                return &my_trace->reactions[i];
+            }
         }
     }
 
@@ -4813,14 +4814,14 @@ int main(int argc, char** argv)
     my_trace->routines[0x317] = &react_output_arg_str_7;
 
     /* outputting UNICODE strings */
-    my_trace->routines[0x320] = &react_output_arg_str_0;
-    my_trace->routines[0x321] = &react_output_arg_str_1;
-    my_trace->routines[0x322] = &react_output_arg_str_2;
-    my_trace->routines[0x323] = &react_output_arg_str_3;
-    my_trace->routines[0x324] = &react_output_arg_str_4;
-    my_trace->routines[0x325] = &react_output_arg_str_5;
-    my_trace->routines[0x326] = &react_output_arg_str_6;
-    my_trace->routines[0x327] = &react_output_arg_str_7;
+    my_trace->routines[0x320] = &react_output_arg_unicode_str_0;
+    my_trace->routines[0x321] = &react_output_arg_unicode_str_1;
+    my_trace->routines[0x322] = &react_output_arg_unicode_str_2;
+    my_trace->routines[0x323] = &react_output_arg_unicode_str_3;
+    my_trace->routines[0x324] = &react_output_arg_unicode_str_4;
+    my_trace->routines[0x325] = &react_output_arg_unicode_str_5;
+    my_trace->routines[0x326] = &react_output_arg_unicode_str_6;
+    my_trace->routines[0x327] = &react_output_arg_unicode_str_7;
 
     /* outputting registers */
     my_trace->routines[0x330] = &react_output_eax;

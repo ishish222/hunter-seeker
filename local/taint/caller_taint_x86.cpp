@@ -29,7 +29,7 @@
 
 /* symbols */
 
-char colors[0x10][0x10] = {"#000000", "#0000FF", "#00FF00", "#FF0000", "#00FFFF"};
+char colors[0x10][0x10] = {"#000000", "#0000FF", "#00FF00", "#FF0000", "#0055AA"};
 
 int strcmpi(char const *a, char const *b)
 {
@@ -481,6 +481,28 @@ LIB_INFO* taint_x86::get_lib(OFFSET offset)
 
 
 /* graph output routines */
+
+void taint_x86::print_call_open(CONTEXT_INFO* cur_ctx, char* line, const char* color)
+{
+    char out_line[MAX_NAME];
+    char working_line[MAX_NAME];
+    FILE* f = cur_ctx->graph_file;   
+    unsigned i;
+
+//    if(check_collecting(cur_ctx)) return;
+
+    d_print(1, "Printing call into: %s\n", cur_ctx->graph_filename);
+
+    strcpy(out_line, "");
+
+    for(i = this->call_level_start-this->call_level_offset; i< cur_ctx->call_level; i++)
+        strcat(out_line, " ");
+
+    sprintf(working_line, "<node COLOR=\"%s\" CREATED=\"6666666666666\" ID=\"ID_1208439975\" MODIFIED=\"6666666666666\" TEXT=\"%s\">\n", color, line);
+
+    strcat(out_line, working_line);
+    fwrite(out_line, strlen(out_line), 0x1, f);
+}
 
 void taint_x86::print_call(CONTEXT_INFO* cur_ctx, char* line, const char* color)
 {
@@ -1016,21 +1038,21 @@ int taint_x86::handle_call(CONTEXT_INFO* info)
                 /* we assume we have symbol */
                 if(this->enumerate) sprintf(out_line, "[x] (%d)0x%08x call %s!%s", this->current_instr_count ,this->current_eip, s->lib_name, s->func_name);
                 else sprintf(out_line, "[x] 0x%08x call %s!%s", this->current_eip, s->lib_name, s->func_name);
-                print_call(info, out_line, colors[CODE_RED]);
+                print_call_open(info, out_line, colors[CODE_RED]);
             }
             else if(decision_template == DECISION_LAYOUT_SYMBOL)
             {
                 /* we assume we have symbol */
                 if(this->enumerate) sprintf(out_line, "(%d)0x%08x call %s!%s", this->current_instr_count ,this->current_eip, s->lib_name, s->func_name);
                 else sprintf(out_line, "0x%08x call %s!%s", this->current_eip, s->lib_name, s->func_name);
-                print_call(info, out_line, colors[CODE_BLUE]);
+                print_call_open(info, out_line, colors[CODE_BLUE]);
             }
             else
             {
                 /* regular emission with dive */
                 if(this->enumerate) sprintf(out_line, "(%d)0x%08x call 0x%08x", this->current_instr_count ,this->current_eip, target);
                 else sprintf(out_line, "0x%08x call 0x%08x", this->current_eip, target);
-                print_call(info, out_line, colors[CODE_BLACK]);
+                print_call_open(info, out_line, colors[CODE_BLACK]);
             }
         
         }
@@ -1275,6 +1297,14 @@ int taint_x86::handle_ret(CONTEXT_INFO* cur_ctx, OFFSET eip)
         {
             diff = cur_ctx->call_level - i;
             d_print(1, "[0x%08x] (%d) Matched ret 0x%08x on pos: %d, handling diff: %d\n", this->cur_tid, this->current_instr_count, cur_ctx->levels[i].ret, i, diff);
+
+            /* is this correct? */
+            if(cur_ctx->waiting != 0x0)
+            {
+                print_ret(cur_ctx);
+            }
+            if(cur_ctx->waiting != 0x0) cur_ctx->waiting = 0x0;
+
             for(j=0x0; j<diff; j++)
             {
                 if(cur_ctx->levels[cur_ctx->call_level].loop_status != FENCE_NOT_COLLECTING)
@@ -1283,7 +1313,6 @@ int taint_x86::handle_ret(CONTEXT_INFO* cur_ctx, OFFSET eip)
                 }
                 surface(cur_ctx);
             }
-            if(cur_ctx->waiting != 0x0) cur_ctx->waiting = 0x0;
             d_print(1, "[handle ret finishes]\n");
             return 0x0;
         }
