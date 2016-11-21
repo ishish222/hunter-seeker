@@ -612,6 +612,14 @@ int enable_reaction(char* reaction_id)
     d_print("[enable_reaction]\n");
     unsigned i;
 
+    char* another_r;
+
+    another_r = strtok(reaction_id, ":");
+    if(another_r)
+    {
+        enable_reaction(another_r++);    
+    }
+
     for(i = 0x0; i< my_trace->reaction_count; i++)
     {
         /* locate i_reaction */
@@ -2437,6 +2445,13 @@ OFFSET resolve_loc_desc(LOCATION_DESCRIPTOR_NEW* d)
                 read_context(0x0, &ctx);
                 ret = ctx.Ebp;
                 d_print("Reading register EBP: 0x%08x\n", ret);
+            }
+            else if(!strcmp(d->op, "EIP"))
+            {
+                CONTEXT ctx;
+                read_context(0x0, &ctx);
+                ret = ctx.Eip;
+                d_print("Reading register EIP: 0x%08x\n", ret);
             }
             else
             {

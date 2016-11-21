@@ -220,7 +220,11 @@ def tracer_register_reactions():
         args += ';'
         args += options.settings.builtin_reactions
 
+    # remove new lines 
     print args
+    args = args.replace('\n', '')
+    if(args[-1:] == ';'):
+        args = args[:-1]
 
     parts = args.split(';');
     cmd = '';
@@ -238,7 +242,7 @@ def tracer_register_reactions():
             cmd += part
             print cmd
 
-    if(len(cmd) > 0x0): 
+    if(len(cmd) > 0x1): 
         write_socket(options.s, "tracer_register_reactions %s" % cmd[1:]);
         response, _, _ = read_socket(options.s)
 
