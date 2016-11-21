@@ -1,0 +1,10 @@
+GetModuleFileNameW
+GetCommandLineW
+SHGetSpecialFolderPathW
+GetThreadContext
+NtReadVirtualMemory
+VirtualAllocEx
+WriteProcessMemory
+SetThreadContext
+ResumeThread
+

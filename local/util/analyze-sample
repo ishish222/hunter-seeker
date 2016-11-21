@@ -1,0 +1,10 @@
+#!/bin/sh
+
+SAMPLE=$1
+OUT_DIR=$2
+REACTIONS=$3
+REGIONS=$4
+MACHINE=$5
+SCRIPT=$6
+
+./fuzzer-stateful.py -H glob -J "/home/hs1/malware_samples/$SAMPLE" --sample-file "$SAMPLE" --research-dir "e:\\samples\\shared" --out-dir "\\\\10.0.2.4\\qemu\\$OUT_DIR" --out-prefix $OUT_DIR --reactions "$REACTIONS" --regions "$REGIONS" $MACHINE $SCRIPT
