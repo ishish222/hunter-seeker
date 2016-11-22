@@ -34,3 +34,9 @@ success:
 KillExplorer
 ResetTracers
 SpawnTracerController
+SpawnTracerLog
+TracerConfigureSample
+TracerConfigureOutDir
+TracerConfigureOutPrefix
+TracerConfigureInDir
+TracerPrepareTrace

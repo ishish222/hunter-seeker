@@ -50,7 +50,7 @@ def stateful_routine():
 
         if "=" in line:
             instr, ret_tab = line.split("=")
-            ret_tab = ret_tab[:-1]
+            ret_tab = ret_tab[1:-1]
         else:
             instr = line
             ret_tab = None

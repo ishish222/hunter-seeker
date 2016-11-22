@@ -11,26 +11,26 @@ read_socket = common.read_socket
 report = common.report
 
 #def binner_kill_explorer(options, state):
-def binner_kill_host():
+def binner_kill_host(args=None):
     options = globs.state.options
 
     write_socket(options.s, "killHost")
     read_socket(options.s)
 
-def binner_kill_explorer():
+def binner_kill_explorer(args=None):
     options = globs.state.options
 
     write_socket(options.s, "killExplorer")
     read_socket(options.s)
 
 #def binner_spawn_python_server(options, state):
-def binner_spawn_python_server():
+def binner_spawn_python_server(args=None):
     options = globs.state.options
 
     rs("lclick", options.m)
     rs("python_server_spawn_args", options.m)
 
-def binner_spawn():
+def binner_spawn(args=None):
     options = globs.state.options
 
     write_socket(options.s, "startBinner")
@@ -47,7 +47,7 @@ def binner_attach_app(args = None):
     read_socket(options.s)
 '''
 
-def binner_spawn_app():
+def binner_spawn_app(args=None):
     options = globs.state.options
 
     write_socket(options.s, "spawn " + options.settings.app_path)
@@ -58,7 +58,7 @@ def binner_spawn_app():
 #    print "Finished sleeping"
 #    read_socket(options.s)
 
-def binner_configure():
+def binner_configure(args=None):
     options = globs.state.options
 
     write_socket(options.s, "binTest")
@@ -89,18 +89,18 @@ def binner_configure():
 
     time.sleep(1)
 
-def binner_start_logs():
+def binner_start_logs(args=None):
     options = globs.state.options
 
     write_socket(options.s, "logStart e:\\logs\\log-%s-%s.txt" % (options.fuzzbox_name, common.timestamp2()))
     read_socket(options.s)
 
-def binner_start_profiling():
+def binner_start_profiling(args=None):
     options = globs.state.options
 
     write_socket(options.s, "start_profiling")
 
-def binner_check_ready():
+def binner_check_ready(args=None):
     options = globs.state.options
 
     write_socket(options.s, "checkReady")
@@ -108,14 +108,14 @@ def binner_check_ready():
     #TODO: should this be here?
     state.status = ""
 
-def binner_key_wait():
+def binner_key_wait(args=None):
     options = globs.state.options
 
     if(options.wait_key):
         print("Press enter")
         sys.stdin.read(1)
 
-def binner_save():
+def binner_save(args=None):
     options = globs.state.options
 
 #    write_socket(options.s, "getSynopsis")
@@ -131,31 +131,31 @@ def binner_save():
     
     print "Saved automatically"
 
-def binner_close_sample():
+def binner_close_sample(args=None):
     options = globs.state.options
 
     runscriptq(options.settings.closing_plugin_name, options.m)
     write_socket(options.s, "")
 
-def cooldown():
+def cooldown(args=None):
     options = globs.state.options
 
     write_socket(options.s, "cooldown")
     read_socket(options.s)
 
-def cooldown2():
+def cooldown2(args=None):
     options = globs.state.options
 
     write_socket(options.s, "cooldown2 10 30")
     read_socket(options.s)
 
-def cooldown3():
+def cooldown3(args=None):
     options = globs.state.options
 
     write_socket(options.s, "cooldown3 5 10")
     read_socket(options.s)
 
-def cooldown4():
+def cooldown4(args=None):
     options = globs.state.options
 
     write_socket(options.s, "cooldown3 3 101")
