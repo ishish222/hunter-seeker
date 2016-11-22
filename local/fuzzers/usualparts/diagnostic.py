@@ -9,6 +9,6 @@ class statistics(object):
         self.ma_count = 0
         self.last_time_check = time.localtime()
 
-def prepare_stats():
+def prepare_stats(args=None):
     options = globs.state.options
     globs.state.stats = statistics(options.metric_res)

@@ -14,7 +14,7 @@ report = common.report
 read_socket = common.read_socket
 write_socket = common.write_socket
 
-def qemu_prepare_pipes():
+def qemu_prepare_pipes(args=None):
     options = globs.state.options
 
     options.ms = common.prepare_monitor(options.ms_path)
@@ -22,7 +22,7 @@ def qemu_prepare_pipes():
     options.ss_log = common.prepare_serial(options.ss_path + '-log')
 
 
-def qemu_ready():
+def qemu_ready(args=None):
     globs.state.reqScript = ""
     globs.state.status = "RD"
 #    for s in globs.state.samples_list:
@@ -68,7 +68,7 @@ def log_loop(arg1, shutdown):
 
     options.log_file.write('finishing\n')
 
-def qemu_connect_log():
+def qemu_connect_log(args=None):
     from threading import Thread
 
     options = globs.state.options
@@ -78,7 +78,7 @@ def qemu_connect_log():
     options.log_thread.start()
     options.threads.append(options.log_thread)
 
-def qemu_start_full():
+def qemu_start_full(args=None):
     options = globs.state.options
 
     if(hasattr(options, 'tmp_disk_img')):
@@ -103,7 +103,7 @@ def qemu_start_full():
 #    for s in globs.state.samples_list:
 #        print s
 
-def qemu_start_revert():
+def qemu_start_revert(args=None):
     options = globs.state.options
 
     if(hasattr(options, 'tmp_disk_img')):
@@ -132,7 +132,7 @@ def qemu_start_revert():
 
 #was: proceed
 #def qemu_mount_disks(options, state):
-def temu_mount_disks():
+def temu_mount_disks(args=None):
     options = globs.state.options
     #mount_cdrom(options, options.cdrom)
     read_monitor(options.m)
@@ -148,7 +148,7 @@ def temu_mount_disks():
 #    for s in globs.state.samples_list:
 #        print s
 
-def qemu_mount_disks():
+def qemu_mount_disks(args=None):
     options = globs.state.options
     #mount_cdrom(options, options.cdrom)
     read_monitor(options.m)
@@ -175,7 +175,7 @@ def qemu_mount_disks():
 #    if(defined("settings.scripts_1")):
 #        rss(options.settings.scripts_1, options.m, options.slowdown)
 
-def qemu_mount_disks_wo_virtio():
+def qemu_mount_disks_wo_virtio(args=None):
     options = globs.state.options
     read_monitor(options.m)
 
@@ -190,7 +190,7 @@ def qemu_mount_disks_wo_virtio():
 
 # was: init
 #def qemu_connect_dev_socket(options, state):
-def qemu_connect_dev_socket():
+def qemu_connect_dev_socket(args=None):
     options = globs.state.options
     state = globs.state
 
@@ -214,7 +214,7 @@ def qemu_connect_dev_socket():
     #trying infinite
     #s.settimeout(None)
 
-def qemu_connect_dev_socket_infinite():
+def qemu_connect_dev_socket_infinite(args=None):
     options = globs.state.options
     state = globs.state
 
@@ -238,15 +238,15 @@ def qemu_connect_dev_socket_infinite():
     #trying infinite
     s.settimeout(None)
 
-def qemu_umount_disks():
+def qemu_umount_disks(args=None):
     #move from poweroff
     pass
 
-def temu_umount_disks():
+def temu_umount_disks(args=None):
     common.pci_umount('0.1')
 #    common.pci_umount(options.slot_saved)
 
-def temu_poweroff_no_revert():
+def temu_poweroff_no_revert(args=None):
     options = globs.state.options
     
     try:
@@ -265,7 +265,7 @@ def temu_poweroff_no_revert():
     print("Last saved: %s" % options.saved_disk_img)
 
 
-def poweroff_no_revert():
+def poweroff_no_revert(args=None):
     options = globs.state.options
     
     options.shutting_down.set()
@@ -325,7 +325,7 @@ def poweroff_revert(options, state):
     print("Last batch: %s" % options.tmp_disk_img)
     print("Last saved: %s" % options.saved_disk_img)
 
-def offline_revert():
+def offline_revert(args=None):
     options = globs.state.options
     state = globs.state
     print("Reverting to: %s" % options.settings.revert_snapshot)
