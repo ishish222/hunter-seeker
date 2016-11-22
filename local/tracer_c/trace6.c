@@ -80,7 +80,8 @@ int update_breakpoint(BREAKPOINT* bp);
 OFFSET resolve_loc_desc(LOCATION_DESCRIPTOR_NEW* d);
 REACTION* find_reaction(char*);
 int read_dword(DWORD addr);
-int read_register(DWORD tid_id, char* reg);
+int report_register(DWORD tid_id, char* reg);
+DWORD read_register(DWORD tid_id, char* reg);
 
 int d_print(const char* format, ...)
 {
@@ -615,13 +616,19 @@ int enable_reaction(char* reaction_id)
     char another[MAX_LINE]; 
     char* another_r;
 
+    /* take care of chained enabling */
     strcpy(another, reaction_id);
-    another_r = strtok(another, ":");
-    if(another_r)
+    d_print("React string: %s\n", another);
+    if(strstr(another, ":"))
     {
-        another_r++;
-        d_print("Found another reaction: %s\n", another_r);
-        enable_reaction(another_r);    
+        another_r = strtok(another, ":");
+        while(another_r)
+        {
+            d_print("Found another reaction: %s\n", another_r);
+            enable_reaction(another_r);    
+            another_r = strtok(0x0, ":");
+        }
+        return 0x0;
     }
 
     for(i = 0x0; i< my_trace->reaction_count; i++)
@@ -3187,13 +3194,10 @@ int write_register(DWORD tid_id, char* reg, char* data)
     return 0x0;
 }
 
-int read_register(DWORD tid_id, char* reg)
+DWORD read_register(DWORD tid_id, char* reg)
 {
     CONTEXT ctx;
-    char buffer2[MAX_LINE];
 
-    my_trace->report_code = REPORT_INFO;
-    
     if(tid_id == 0x0)
     {
         tid_id = my_trace->last_event.dwThreadId;
@@ -3203,29 +3207,57 @@ int read_register(DWORD tid_id, char* reg)
 
     if(!strcmp(reg, "EAX"))
     {
-        sprintf(buffer2, "%08x", ctx.Eax);
-        strcpy(my_trace->report_buffer, buffer2);
+        return ctx.Eax;
     }
     if(!strcmp(reg, "EBX"))
     {
-        sprintf(buffer2, "%08x", ctx.Ebx);
-        strcpy(my_trace->report_buffer, buffer2);
+        return ctx.Ebx;
     }
     if(!strcmp(reg, "ECX"))
     {
-        sprintf(buffer2, "%08x", ctx.Ecx);
-        strcpy(my_trace->report_buffer, buffer2);
+        return ctx.Ecx;
     }
-    else if(!strcmp(reg, "ESP"))
+    if(!strcmp(reg, "EDX"))
     {
-        sprintf(buffer2, "%08x", ctx.Esp);
-        strcpy(my_trace->report_buffer, buffer2);
+        return ctx.Edx;
     }
-    else if(!strcmp(reg, "EIP"))
+    if(!strcmp(reg, "EDI"))
     {
-        sprintf(buffer2, "%08x", ctx.Eip);
-        strcpy(my_trace->report_buffer, buffer2);
+        return ctx.Edi;
     }
+    if(!strcmp(reg, "EBP"))
+    {
+        return ctx.Ebp;
+    }
+    if(!strcmp(reg, "ESP"))
+    {
+        return ctx.Esp;
+    }
+    if(!strcmp(reg, "Eip"))
+    {
+        return ctx.Eip;
+    }
+    if(!strcmp(reg, "EFLAGS"))
+    {
+        return ctx.EFlags;
+    }
+
+    d_print("Error reading register %s\n", reg);
+    return -1;
+}
+
+int report_register(DWORD tid_id, char* reg)
+{
+    CONTEXT ctx;
+    char buffer2[MAX_LINE];
+    DWORD val;
+
+    my_trace->report_code = REPORT_INFO;
+    
+    val = read_register(tid_id, reg);
+
+    sprintf(buffer2, "%08x", val);
+    strcpy(my_trace->report_buffer, buffer2);
 
     return 0x0;
 }
@@ -3450,6 +3482,10 @@ int create_report(int last_report)
 
         default:
             sprintf(buffer2, "REPORT_OTHER\n");
+            sprintf(buffer3, "at: 0x%08x\n", my_trace->last_eip);
+            strcat(buffer2, buffer3);
+            sprintf(buffer3, "instr: %d\n", my_trace->instr_count);
+            strcat(buffer2, buffer3);
             break;
     }
     strcpy(my_trace->report_buffer, buffer2);
@@ -4300,7 +4336,7 @@ int handle_cmd(char* cmd)
         tid_id = strtoul(strtok(0x0, " "), 0x0, 0x10);
         reg = strtok(0x0, " ");
 
-        read_register(tid_id, reg);
+        report_register(tid_id, reg);
         send_report();   
     
     }
