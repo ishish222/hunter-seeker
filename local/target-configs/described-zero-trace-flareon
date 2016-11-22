@@ -1,4 +1,6 @@
 c:fuzzers/fuzzer-stateful.py
+c:fuzzers/fuzzer.py
+c:fuzzers/codeunit.py
 c:scripters
 c:fuzzers/parts
 c:fuzzers/usualparts

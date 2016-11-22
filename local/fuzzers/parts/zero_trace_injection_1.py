@@ -536,6 +536,11 @@ def decision():
             ### C1 ###
             return CreateSuspended
 
+        if(globs.state.ret[3:5] == "C3"):
+            print "Decision is: Modifying process creation"
+            ### C1 ###
+            return CreateSuspended
+
         if(globs.state.ret[3:5] == "C2"):
             print "Decision is: Reading spawned process information"
             ### C2 ###
@@ -579,14 +584,14 @@ TracerEndTrace.consequence = DefaultShutdown
 ### Decision: RE
 # empty, just continue
 
-### Decision: C1
+### Decision: C1 - CreateProcessA in 1st thread
 CreateSuspended.consequence     = ReadESP1
 ReadESP1.consequence            = Adjust1
 Adjust1.consequence             = WriteCreationFlags
 WriteCreationFlags.consequence  = EnableReactionC2
 EnableReactionC2.consequence    = TracerDebugContinueInf
 
-### Decision: C2
+### Decision: C2 - CreateProcessW in 1st thread
 # We need second pipeline in order to make release, after that we can use it in recurrence
 
 ReadProcessInfo.consequence                 = ReadESP3
