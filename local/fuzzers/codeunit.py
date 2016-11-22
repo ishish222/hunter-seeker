@@ -49,6 +49,10 @@ prototypes['TracerRegisterReactions'] = tracer_parts.tracer_register_reactions
 prototypes['DisableReactions']      = tracer_parts.tracer_disable_all_reactions
 prototypes['TracerDebugSample']     = tracer_parts.tracer_debug_sample
 prototypes['TracerDebugContinueInf'] = tracer_parts.tracer_debug_continue
+prototypes['Decision']              = tracing_parts.decision
+prototypes['EnableReaction']        = tracer_parts.tracer_enable_reaction
+prototypes['DumpMemory']            = tracer_parts.tracer_dump_memory
+prototypes['TracerStartTrace']      = tracer_parts.tracer_start_trace
 #prototypes[''] = 
 
 class CodeUnit:
@@ -62,6 +66,7 @@ class Instruction(CodeUnit):
     def __init__(self, name, args):
         self.name = name
         self.args = args
+        if(self.args == ''): self.args = None
         self.routine = prototypes[name]
 
     def execute(self):

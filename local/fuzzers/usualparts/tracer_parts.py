@@ -409,7 +409,12 @@ def tracer_debug_sample(args=None):
 
     return
 
-def tracer_debug_continue(args = globs.DEBUG_CONTINUE):
+def tracer_debug_continue(args):
+    if(args == None):
+        args = globs.DEBUG_CONTINUE
+    else:
+        args = int(args, 0x10)
+
     options = globs.state.options
     state = globs.state
     status = globs.state.status
@@ -422,6 +427,11 @@ def tracer_debug_continue(args = globs.DEBUG_CONTINUE):
     return
 
 def tracer_debug_continue_1_second(args = globs.DEBUG_CONTINUE):
+    if(args == None):
+        args = globs.DEBUG_CONTINUE
+    else:
+        args = int(args, 0x10)
+
     options = globs.state.options
     state = globs.state
     status = globs.state.status
@@ -434,6 +444,11 @@ def tracer_debug_continue_1_second(args = globs.DEBUG_CONTINUE):
     return
 
 def tracer_debug_continue_10_seconds(args = globs.DEBUG_CONTINUE):
+    if(args == None):
+        args = globs.DEBUG_CONTINUE
+    else:
+        args = int(args, 0x10)
+
     options = globs.state.options
     state = globs.state
     status = globs.state.status
@@ -446,6 +461,8 @@ def tracer_debug_continue_10_seconds(args = globs.DEBUG_CONTINUE):
     return
 
 def tracer_set_limit(args=None):
+    args = int(args, 10)
+
     options = globs.state.options
     state = globs.state
     status = globs.state.status

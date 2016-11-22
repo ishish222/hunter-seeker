@@ -405,3 +405,15 @@ def run_ret(args=None):
     options = globs.state.options
     rss("ret", options.m, options.slowdown)
 
+def decision(args=None):
+    options = globs.state.options
+
+    print "received signal"
+    print globs.state.ret[1:3]
+
+    if(globs.state.ret[1:3] == "RB"):
+        return globs.state.ret[3:5]
+    else:
+        return globs.state.ret[1:3]
+
+
