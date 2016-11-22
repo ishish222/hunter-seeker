@@ -1,0 +1,76 @@
+Start
+PrintLogo
+SpawnTracer
+TracerConfigureOutDir("arg1")
+:Decision A1, A2, A3
+
+:A1
+ReadESP
+ReadPID
+Decision
+
+:A2
+ReadEAX
+ReadESP
+ReadTID
+Decision
+
+:A3
+ReadEBX
+ReadEP
+Decision
+
+#implementation:
+
+read tokens
+for each token:
+if(token == Decision):
+    contructDecision
+if(label):
+else:
+    construct instruction from class
+    assign args
+    assign 
+
+# model:
+
+code_lines have names and tokens 
+token can be: constructed instruction, label, decision node
+    label points to another code line
+    decision needs execution and points to another code line
+    instruction needs execution and points to subsequent token
+
+# two stages
+1st stage: parsing, code_line construction
+2nd stage: executing, as until now
+
+### New parsing stage:
+load instr prototypes
+
+create code array
+while(line):
+    recognize line, construct unit:
+        if instruction, create from construct
+        if decision, create from construct, register decisions
+        if goto, create goto decision
+
+### New executing stage:
+code is an array. 
+each field contains code unit.
+ip is pointer.
+
+Engine executes code unit:
+    if unit is instruction, executes it and IP++
+    if unit is goto, loads IP
+    if unit is decision, executes it and retrieves IP.
+
+
+class code_unit
+    subclass decision
+        routine
+        jmp_table
+    subclass instr
+        routine
+    subclass goto
+        jmp_addr
+
