@@ -205,11 +205,13 @@ def qemu_connect_dev_socket(args=None):
         print("Waiting for connection....")
         read_socket(options.s)
         state.initialized = True
+        print 'Initialized: %s' % state.initialized
     except socket.timeout:
         print("Accpet timed out")
         state.initialized = False
         print "raising machine error"
-        raise MachineError
+        print 'Initialized: %s' % state.initialized
+#        raise MachineError
     s.settimeout(options.settings.fuzzbox_timeout)
     #trying infinite
     #s.settimeout(None)
@@ -229,11 +231,13 @@ def qemu_connect_dev_socket_infinite(args=None):
         print("Waiting for connection...")
         read_socket(options.s)
         state.initialized = True
+        print 'Initialized: %s' % state.initialized
     except socket.timeout:
         print("Accpet timed out")
         state.initialized = False
         print "raising machine error"
-        raise MachineError
+        print 'Initialized: %s' % state.initialized
+#        raise MachineError
     #s.settimeout(options.settings.fuzzbox_timeout)
     #trying infinite
     s.settimeout(None)
@@ -345,4 +349,16 @@ def revert(options):
     print("[Reverting]")
 #    rs("load_ready", options.m)
     rss(options.settings.revert_scripts, options.m, options.slowdown)
+
+def is_socket_connected(args = None):
+    options = globs.state.options
+    state = globs.state
+
+    print 'Initialized: %s' % state.initialized
+
+    if(state.initialized == True):    
+        return "Y"
+    else:
+        return "N"
+
 

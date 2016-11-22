@@ -11,7 +11,7 @@ report = common.report
 write_socket = common.write_socket
 read_socket = common.read_socket
 
-def tracer_prepare_trace():
+def tracer_prepare_trace(args=None):
     options = globs.state.options
     state = globs.state
     status = globs.state.status
@@ -22,7 +22,7 @@ def tracer_prepare_trace():
     globs.state.ret = response
     return
 
-def tracer_dump_memory():
+def tracer_dump_memory(args=None):
     options = globs.state.options
     state = globs.state
     status = globs.state.status
@@ -33,7 +33,7 @@ def tracer_dump_memory():
     globs.state.ret = response
     return
 
-def tracer_start_trace():
+def tracer_start_trace(args=None):
     options = globs.state.options
     state = globs.state
     status = globs.state.status
@@ -44,7 +44,7 @@ def tracer_start_trace():
     globs.state.ret = response
     return
 
-def tracer_start_trace_debug():
+def tracer_start_trace_debug(args=None):
     options = globs.state.options
     state = globs.state
     status = globs.state.status
@@ -55,7 +55,7 @@ def tracer_start_trace_debug():
     globs.state.ret = response
     return
 
-def tracer_stop_trace():
+def tracer_stop_trace(args=None):
     options = globs.state.options
     state = globs.state
     status = globs.state.status
@@ -66,7 +66,7 @@ def tracer_stop_trace():
     globs.state.ret = response
     return
 
-def trace_controller_activate_prev_tracer():
+def trace_controller_activate_prev_tracer(args=None):
     options = globs.state.options
     state = globs.state
     status = globs.state.status
@@ -78,7 +78,7 @@ def trace_controller_activate_prev_tracer():
 
     return
 
-def trace_controller_activate_next_tracer():
+def trace_controller_activate_next_tracer(args=None):
     options = globs.state.options
     state = globs.state
     status = globs.state.status
@@ -90,7 +90,7 @@ def trace_controller_activate_next_tracer():
 
     return
 
-def tracer_configure_in_dir():
+def tracer_configure_in_dir(args=None):
     options = globs.state.options
     state = globs.state
     status = globs.state.status
@@ -105,7 +105,7 @@ def tracer_configure_in_dir():
 
     return
 
-def tracer_configure_out_dir():
+def tracer_configure_out_dir(args=None):
     options = globs.state.options
     state = globs.state
     status = globs.state.status
@@ -120,7 +120,7 @@ def tracer_configure_out_dir():
 
     return
 
-def tracer_configure_out_prefix():
+def tracer_configure_out_prefix(args=None):
     options = globs.state.options
     state = globs.state
     status = globs.state.status
@@ -165,7 +165,7 @@ def tracer_configure_sample_pid(args = None):
 
     return
 
-def tracer_configure_sample():
+def tracer_configure_sample(args=None):
     options = globs.state.options
     state = globs.state
     status = globs.state.status
@@ -208,7 +208,7 @@ def tracer_add_reaction(args):
 
     return
 
-def tracer_register_reactions():
+def tracer_register_reactions(args=None):
     options = globs.state.options
     state = globs.state
     status = globs.state.status
@@ -250,7 +250,7 @@ def tracer_register_reactions():
 
     return
 
-def tracer_register_regions():
+def tracer_register_regions(args=None):
     options = globs.state.options
     state = globs.state
     status = globs.state.status
@@ -263,7 +263,7 @@ def tracer_register_regions():
 
     return
 
-def tracer_configure_markers():
+def tracer_configure_markers(args=None):
     options = globs.state.options
     state = globs.state
     status = globs.state.status
@@ -287,7 +287,7 @@ def tracer_set_st(args):
 
     return
 
-def tracer_auto_st():
+def tracer_auto_st(args=None):
     options = globs.state.options
     state = globs.state
     status = globs.state.status
@@ -299,7 +299,7 @@ def tracer_auto_st():
 
     return
 
-def tracer_activate_markers():
+def tracer_activate_markers(args=None):
     options = globs.state.options
     state = globs.state
     status = globs.state.status
@@ -311,7 +311,7 @@ def tracer_activate_markers():
 
     return
 
-def tracer_configure_marker_st_end():
+def tracer_configure_marker_st_end(args=None):
     options = globs.state.options
     state = globs.state
     status = globs.state.status
@@ -337,7 +337,7 @@ def tracer_enable_reaction(args):
 
     return
 
-def tracer_enable_anchors():
+def tracer_enable_anchors(args=None):
     options = globs.state.options
     state = globs.state
     status = globs.state.status
@@ -349,7 +349,7 @@ def tracer_enable_anchors():
 
     return
 
-def tracer_enable_all_reactions():
+def tracer_enable_all_reactions(args=None):
     options = globs.state.options
     state = globs.state
     status = globs.state.status
@@ -361,7 +361,7 @@ def tracer_enable_all_reactions():
 
     return
 
-def tracer_disable_all_reactions():
+def tracer_disable_all_reactions(args=None):
     options = globs.state.options
     state = globs.state
     status = globs.state.status
@@ -373,7 +373,7 @@ def tracer_disable_all_reactions():
 
     return
 
-def tracer_enable_sysenter():
+def tracer_enable_sysenter(args=None):
     options = globs.state.options
     state = globs.state
     status = globs.state.status
@@ -385,7 +385,7 @@ def tracer_enable_sysenter():
 
     return
 
-def tracer_attach_sample():
+def tracer_attach_sample(args=None):
     options = globs.state.options
     state = globs.state
     status = globs.state.status
@@ -397,7 +397,7 @@ def tracer_attach_sample():
 
     return
 
-def tracer_debug_sample():
+def tracer_debug_sample(args=None):
     options = globs.state.options
     state = globs.state
     status = globs.state.status
@@ -445,7 +445,7 @@ def tracer_debug_continue_10_seconds(args = globs.DEBUG_CONTINUE):
 
     return
 
-def tracer_set_limit():
+def tracer_set_limit(args=None):
     options = globs.state.options
     state = globs.state
     status = globs.state.status
@@ -458,7 +458,7 @@ def tracer_set_limit():
 
     return
 
-def tracer_list_markers():
+def tracer_list_markers(args=None):
     options = globs.state.options
     state = globs.state
     status = globs.state.status
@@ -470,7 +470,7 @@ def tracer_list_markers():
 
     return
 
-def tracer_list_bpts():
+def tracer_list_bpts(args=None):
     options = globs.state.options
     state = globs.state
     status = globs.state.status
@@ -482,7 +482,7 @@ def tracer_list_bpts():
 
     return
 
-def tracer_list_libs():
+def tracer_list_libs(args=None):
     options = globs.state.options
     state = globs.state
     status = globs.state.status
@@ -494,7 +494,7 @@ def tracer_list_libs():
 
     return
 
-def tracer_list_tebs():
+def tracer_list_tebs(args=None):
     options = globs.state.options
     state = globs.state
     status = globs.state.status
@@ -506,7 +506,7 @@ def tracer_list_tebs():
 
     return
 
-def tracer_list_all_tebs():
+def tracer_list_all_tebs(args=None):
     options = globs.state.options
     state = globs.state
     status = globs.state.status

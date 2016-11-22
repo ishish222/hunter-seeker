@@ -11,13 +11,13 @@ globs.init()
 
 import codeunit
 from codeunit import Instruction, Decision, GoTo
-global prototypes 
 
 class MachineError(Exception):
     pass
 
 def stateful_routine():
     script = []
+    labels = {}
     ip = 1
 
     script_path = sys.argv[len(sys.argv) -1]
@@ -42,8 +42,13 @@ def stateful_routine():
             script.append(None)
             continue
 
+        if(line[-1:] == ':'):
+            line = line[:-1]
+            labels[line] = len(script)
+            script.append(None)
+            continue
+
         if "=" in line:
-            print "Found ="
             instr, ret_tab = line.split("=")
             ret_tab = ret_tab[:-1]
         else:
@@ -51,7 +56,6 @@ def stateful_routine():
             ret_tab = None
 
         if "(" in instr:
-            print "Found ("
             name, args = instr.split("(")
             args = args[:-1]
             if "," in args:
@@ -60,9 +64,8 @@ def stateful_routine():
             name = instr
             args = ""
 
-        # lookup name in prototypes
         if(name == "goto"):
-            unit = GoTo(int(args, 10))
+            unit = GoTo(args)
         elif(ret_tab):
             unit = Decision(name, args, ret_tab)
         else:
@@ -75,7 +78,6 @@ def stateful_routine():
         
     # stage 2
     while(1):
-        print ip
         if(ip < 0):
             break
         if(ip >= len(script)):
@@ -87,14 +89,17 @@ def stateful_routine():
             continue
 
         print "[%s] Currently executing: [%d] %s" % (script_path, ip, instruction.name)
-
         ret = instruction.execute()
+
         if(ret == None):
             ip += 1
         else:
-            ip = ret
-
-        print "ip after: %d" % ip
+            try:
+                ip = int(ret, 10)
+            except ValueError:
+                ip = labels[ret]
+    
+        print
 
     print
     print "Finished"

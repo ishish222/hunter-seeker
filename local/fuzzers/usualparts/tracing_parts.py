@@ -11,7 +11,7 @@ report = common.report
 write_socket = common.write_socket
 read_socket = common.read_socket
 
-def get_sample_options():
+def get_sample_options(args=None):
     options = globs.state.options
     parser = options.parser
 
@@ -36,7 +36,7 @@ def get_sample_options():
     (options.sample_options, args) = parser.parse_args()
     options.sample_options.instr_limit = int(options.sample_options.instr_limit)
 
-def get_additional_options():
+def get_additional_options(args=None):
     options = globs.state.options
     parser = options.parser
 
@@ -53,13 +53,13 @@ def get_additional_options():
 
     (options.additional_options, args) = parser.parse_args()
 
-def spawn_internal_controller():
+def spawn_internal_controller(args=None):
     options = globs.state.options
 
     rs("lclick", options.m)
     rs("python_spawn_internal_controller", options.m)
 
-def reset_tracer_controller_status():
+def reset_tracer_controller_status(args=None):
     options = globs.state.options
     state = globs.state
     status = globs.state.status
@@ -68,7 +68,7 @@ def reset_tracer_controller_status():
     state.tracers_count = 0
     return
 
-def start_tracer():
+def start_tracer(args=None):
     options = globs.state.options
     state = globs.state
     status = globs.state.status
@@ -81,7 +81,7 @@ def start_tracer():
     state.tracers.append(response)
     state.tracers_count += 1
 
-def start_tracer_log():
+def start_tracer_log(args=None):
     options = globs.state.options
     state = globs.state
     status = globs.state.status
@@ -94,7 +94,7 @@ def start_tracer_log():
     state.tracers.append(response)
     state.tracers_count += 1
 
-def spawn_tracer_controller():
+def spawn_tracer_controller(args=None):
     options = globs.state.options
     state = globs.state
     status = globs.state.status
@@ -103,7 +103,7 @@ def spawn_tracer_controller():
     response, _, _ = read_socket(options.s)
     return
 
-def stop_tracer_controller():
+def stop_tracer_controller(args=None):
     options = globs.state.options
     state = globs.state
     status = globs.state.status
@@ -112,7 +112,7 @@ def stop_tracer_controller():
     response, _, _ = read_socket(options.s)
     return
 
-def trace_sample2():
+def trace_sample2(args=None):
     # sledzenie wykonania probki w zakresie wybranych adresow
 
     options = globs.state.options
@@ -166,7 +166,7 @@ def trace_sample2():
 #    fout.close()            
 
 
-def trace_sample2_2():
+def trace_sample2_2(args=None):
     # sledzenie wykonania probki ze wskazaniem deskryptora
 
     options = globs.state.options
@@ -202,7 +202,7 @@ def trace_sample2_2():
         pass
 
 
-def configure_port():
+def configure_port(args=None):
     options = globs.state.options
     state = globs.state
     status = globs.state.status
@@ -210,14 +210,14 @@ def configure_port():
     #write_socket(options.s, "trace e:\\samples\\shared\\%s %d f:\\%s.mm" % (test_file, options.walk_level, test_file))
     write_socket(options.s, "openserialport")
 
-def detach_debugger():
+def detach_debugger(args=None):
     options = globs.state.options
     state = globs.state
     status = globs.state.status
 
     write_socket(options.s, "detachdebugger")
 
-def trace_sample():
+def trace_sample(args=None):
     # sledzenie wykonania probki pomiedzy wybranymi markerami
 
     options = globs.state.options
@@ -258,7 +258,7 @@ def trace_sample():
 #    
     print "Waiting for instruction"
 
-def test_sample():
+def test_sample(args=None):
     # test single sample
     
     options = globs.state.options
@@ -285,7 +285,7 @@ def test_sample():
     options.log.write("%s: " % test_file)
     options.log.flush()
 
-def open_sample():
+def open_sample(args=None):
     # test single sample
     
     options = globs.state.options
@@ -312,26 +312,26 @@ def open_sample():
     options.log.write("%s: " % test_file)
     options.log.flush()
 
-def perform_pre_test():
+def perform_pre_test(args=None):
     options = globs.state.options
 
     common.proceed4(options)
 
-def perform_after_test():
+def perform_after_test(args=None):
     options = globs.state.options
 
     # zamknij probke
     common.proceed5(options)
     write_socket(options.s, "")
 
-def log_result():
+def log_result(args=None):
     options = globs.state.options
 
     # wpis w logu
     options.log.write("[%s] \n" % globs.state.status)
     options.log.flush()
 
-def update_stats():
+def update_stats(args=None):
     options = globs.state.options
     status = globs.state.status
     stats = globs.state.stats
@@ -362,7 +362,7 @@ def update_stats():
             write_socket(options.s, "dump_stats")
 
 
-def read_output():
+def read_output(args=None):
     options = globs.state.options
     state = globs.state
 
@@ -379,20 +379,20 @@ def read_output():
         globs.state.timeout = True
         raise MachineError
 
-def read_last_sample():
+def read_last_sample(args=None):
     return read_output()
 
-def execute_script():
+def execute_script(args=None):
     options = globs.state.options
     common.execute_script(options, globs.state.reqScript)
     write_socket(options.s, "")
 
-def handle_crash():
+def handle_crash(args=None):
     #crash is handled internally by binner, maybe we should change it
     print("Got crash, restarting")
     report("Got crash, restarting")
 
-def handle_samples_exhaustion():
+def handle_samples_exhaustion(args=None):
     options = globs.state.options
 
     print("Samples exhaustion")
@@ -401,7 +401,7 @@ def handle_samples_exhaustion():
         os.remove(options.tmp_disk_img)
 
     
-def run_ret():
+def run_ret(args=None):
     options = globs.state.options
     rss("ret", options.m, options.slowdown)
 
