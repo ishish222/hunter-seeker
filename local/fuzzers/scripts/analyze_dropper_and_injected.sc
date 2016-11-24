@@ -47,7 +47,7 @@ TracerDebugSample
 TracerDebugContinueInf
 
 decision:
-Decision=(RR:proc_started,RE:exception,ST:start_trace,C1:created_process,C2:created_process,C3:extract_pid,C4:extract_pid,S1:set_context,EN:tracer_finished)
+Decision=(RR:proc_started,RE:exception,ST:start_trace,C1:created_process,C3:created_process,C2:extract_pid,C4:extract_pid,T1:set_context,EN:tracer_finished)
 
 proc_started:
 EnableReaction(A1)
@@ -59,9 +59,8 @@ TracerDebugContinueInf(0x80010001)
 goto(decision)
 
 start_trace:
-EnableReaction(T1)
 EnableReaction(C1)
-EnableReaction(C1)
+EnableReaction(C3)
 DumpMemory
 TracerStartTrace
 TracerDebugContinueInf
@@ -72,7 +71,7 @@ created_process:
 ReadRegister(ESP)
 Adjust(0x18)
 WriteDword(0x00000004)
-EnableReaction(S1)
+EnableReaction(T1)
 TracerDebugContinueInf
 goto(decision)
 

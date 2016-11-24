@@ -559,6 +559,7 @@ def tracer_read_pid(args = 0x0):
     response, _, _ = read_socket(options.s)
 
     globs.state.pid = int(response[3:11], 0x10)
+    print "Last PID: 0x%08x" % globs.state.pid
     globs.state.ret = response
 
     return
@@ -575,6 +576,7 @@ def tracer_read_ep(args = 0x0):
     response, _, _ = read_socket(options.s)
 
     globs.state.ep = int(response[3:11], 0x10)
+    print "Last EP: 0x%08x" % globs.state.ep
     globs.state.ret = response
 
     return
