@@ -1342,7 +1342,7 @@ def execute(cmds):
         elif(cmd == "spawn_tracer"):
             new_tracer = trace_controller.spawn_tracer()
             writePipe(ext_pipe, "[Trace controller]: OK")
-            writePipe(ext_pipe, "Started: %d" % new_tracer)
+            writePipe(ext_pipe, "%d - %d" % (trace_controller.tracer_active_id, trace_controller.trace_count))
             #writePipe(log_pipe, "Started: %d" % new_tracer)
             writePipe(ext_pipe, "spawn_tracer OK")
             ok(ext_pipe)
@@ -1358,6 +1358,7 @@ def execute(cmds):
         elif(cmd == "close_tracer"):
             writePipe(ext_pipe, "[Trace controller]: OK")
             trace_controller.close_tracer(args)
+            writePipe(ext_pipe, "%d - %d" % (trace_controller.tracer_active_id, trace_controller.trace_count))
             writePipe(ext_pipe, "close_tracer OK")
             ok(ext_pipe)
 

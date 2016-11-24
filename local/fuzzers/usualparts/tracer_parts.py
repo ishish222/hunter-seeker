@@ -547,14 +547,45 @@ def tracer_read_stack(args = 5):
 
     return
 
-def tracer_read_dword(args=0x0):
+def tracer_read_pid(args = 0x0):
     options = globs.state.options
     state = globs.state
     status = globs.state.status
 
     # id source is null, use last ret
-    if(args == None):
-        args = globs.state.stack.pop()
+    args = globs.state.stack.pop()
+
+    write_socket(options.s, "tracer_read_dword 0x%08x" % args);
+    response, _, _ = read_socket(options.s)
+
+    globs.state.pid = int(response[3:11], 0x10)
+    globs.state.ret = response
+
+    return
+
+def tracer_read_ep(args = 0x0):
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+
+    # id source is null, use last ret
+    args = globs.state.stack.pop()
+
+    write_socket(options.s, "tracer_read_dword 0x%08x" % args);
+    response, _, _ = read_socket(options.s)
+
+    globs.state.ep = int(response[3:11], 0x10)
+    globs.state.ret = response
+
+    return
+
+def tracer_read_dword(args = 0x0):
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+
+    # id source is null, use last ret
+    args = globs.state.stack.pop()
 
     write_socket(options.s, "tracer_read_dword 0x%08x" % args);
     response, _, _ = read_socket(options.s)
@@ -564,14 +595,15 @@ def tracer_read_dword(args=0x0):
 
     return
 
-def tracer_write_dword(args):
+def tracer_write_dword(args = 0x0):
     options = globs.state.options
     state = globs.state
     status = globs.state.status
+
+    args = int(args, 0x10)
     
     # id source is null, use last ret
-    if(args[0] == None):
-        args = (globs.state.stack.pop(), args[1])
+    args = (globs.state.stack.pop(), args)
 
     write_socket(options.s, "tracer_write_dword 0x%08x 0x%08x" % args);
     response, _, _ = read_socket(options.s)

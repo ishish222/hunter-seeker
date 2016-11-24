@@ -66,7 +66,8 @@ kernel32.dll+0x6964c,d3:d2,0x100
 
 SetThreadContext:
 kernel32.dll+0x901cb,d4:d5,0x301
-kernel32.dll+0x901ee,d5:d4,0x100
+kernel32.dll+0x901cb,S1,0x0
+kernel32.dll+0x901ee,d5:d4:S1,0x100
 
 OpenThread:
 kernel32.dll+0x50d8f,d6:d7,0x303
@@ -85,6 +86,12 @@ ResumeThread:
 kernel32.dll+0x43f14,e3:e4,0x301
 kernel32.dll+0x43f21,e4:e3,0x100
 
+CreateProcess A i W:
+kernel32.dll+0x2062,C1:C2,0x0
+kernel32.dll+0x208f,C1:C2,0x100
+
+kernel32.dll+0x202d,C3:C4,0x0
+kernel32.dll+0x205a,C3:C4,0x100
 --
 
 GetLastError:
@@ -123,6 +130,8 @@ kernel32.dll+0x4db82,,0x100
 
 kernel32.dll+0x4db75,,0x312
 kernel32.dll+0x4db82,,0x100
+
+
 
 --
 

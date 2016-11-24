@@ -434,7 +434,8 @@ class TraceController(object):
 
     def close_tracer(self, idd):
         print("Closing tracer")
-        self.tracers[idd]
+        self.tracers.remove(self.tracer_active_id)
+        self.trace_count -= 1
 
     def spawn_tracer(self):
         print("Spawning tracer")

@@ -93,6 +93,7 @@ def adjust(args):
     state = globs.state
     status = globs.state.status
     
+    args = int(args, 0x10)
     globs.state.stack.append(globs.state.stack.pop() + args)
 
     return
@@ -253,6 +254,8 @@ def get_options(args=None):
     globs.state.options = options
     globs.state.stack = []
     globs.state.ret = ""
+    globs.state.eip = ""
+    globs.state.ep = ""
     return
 
 

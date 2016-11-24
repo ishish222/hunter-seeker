@@ -40,6 +40,7 @@ prototypes['SpawnTracerLog']        = tracing_parts.start_tracer_log
 prototypes['GetSampleOptions']      = tracing_parts.get_sample_options
 prototypes['RevertClean']           = qemu_parts.offline_revert
 prototypes['TracerConfigureSample'] = tracer_parts.tracer_configure_sample
+prototypes['TracerConfigureSamplePID'] = tracer_parts.tracer_configure_sample_pid
 prototypes['TracerConfigureOutDir'] = tracer_parts.tracer_configure_out_dir
 prototypes['TracerConfigureOutPrefix'] = tracer_parts.tracer_configure_out_prefix
 prototypes['TracerConfigureInDir']  = tracer_parts.tracer_configure_in_dir
@@ -53,7 +54,15 @@ prototypes['Decision']              = tracing_parts.decision
 prototypes['EnableReaction']        = tracer_parts.tracer_enable_reaction
 prototypes['DumpMemory']            = tracer_parts.tracer_dump_memory
 prototypes['TracerStartTrace']      = tracer_parts.tracer_start_trace
-#prototypes[''] = 
+prototypes['ReadRegister']          = tracer_parts.tracer_read_register
+prototypes['Adjust']                = other_parts.adjust
+prototypes['ReadDword']             = tracer_parts.tracer_read_dword
+prototypes['WriteDword']            = tracer_parts.tracer_write_dword
+prototypes['ReadPID']               = tracer_parts.tracer_read_pid
+prototypes['ReadEP']                = tracer_parts.tracer_read_ep
+prototypes['TracerPrev']            = tracer_parts.trace_controller_activate_prev_tracer
+prototypes['TracerNext']            = tracer_parts.trace_controller_activate_next_tracer
+prototypes['CloseTracer']           = tracing_parts.stop_tracer
 
 class CodeUnit:
     def __init__(self, name = "Unknown"):

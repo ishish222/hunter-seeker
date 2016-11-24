@@ -96,14 +96,13 @@ qemu_drive_format = 'mkfs.ntfs'
 host_mount_options="loop,umask=0000"
 saved_dir="/mnt/1/raw/"
 log_dir="/mnt/1/log/"
-#builtin_reactions_anchors="EN:C1:C3:s1:a0:a3:a5:e6:a7:b1:b3:b5:b7:c0:c2:c4:c6:c8:d0:d2:d4:d6:d8:d0:e3"
 builtin_reactions_anchors="EN:s1:a0:a3:a5:e6:a7:b1:b3:b5:b7:c0:c2:c4:c6:c8:d0:d2:d4:d6:d8:d0:e3"
 builtin_reactions="""
 kernel32.dll+0x2acf,EN,0x0;
 kernel32.dll+0x2062,C1:C2,0x0;
-kernel32.dll+0x208f,C2:C1,0x100;
+kernel32.dll+0x208f,C2:C1,0x0;
 kernel32.dll+0x202d,C3:C4,0x0;
-kernel32.dll+0x205a,C4:C3,0x100;
+kernel32.dll+0x205a,C4:C3,0x0;
 ntdll.dll+0x464f0,s1:s2,0x1;
 ntdll.dll+0x464f4,s2:s1,0x2;
 kernel32.dll+0x51837,a0:a2,0x301;
@@ -140,7 +139,8 @@ kernel32.dll+0x519a7,d1:d0,0x100;
 kernel32.dll+0x6962f,d2:d3,0x301;
 kernel32.dll+0x6964c,d3:d2,0x100;
 kernel32.dll+0x901cb,d4:d5,0x301;
-kernel32.dll+0x901ee,d5:d4,0x100;
+kernel32.dll+0x901cb,T1,0x0;
+kernel32.dll+0x901ee,d5:d4:T1,0x100;
 kernel32.dll+0x50d8f,d6:d7,0x303;
 kernel32.dll+0x50d95,d7:d6,0x100;
 kernel32.dll+0x3b42c,d8:d9,0x302;
