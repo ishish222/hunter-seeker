@@ -80,8 +80,9 @@ int update_breakpoint(BREAKPOINT* bp);
 OFFSET resolve_loc_desc(LOCATION_DESCRIPTOR_NEW* d);
 REACTION* find_reaction(char*);
 int read_dword(DWORD addr);
-int report_register(DWORD tid_id, char* reg);
+int report_dword(DWORD addr);
 DWORD read_register(DWORD tid_id, char* reg);
+int report_register(DWORD tid_id, char* reg);
 
 int d_print(const char* format, ...)
 {
@@ -3076,7 +3077,7 @@ int write_word(DWORD addr, char* data)
     return 0x0;
 }
 
-int read_dword_q(DWORD addr)
+int read_dword(DWORD addr)
 {
     DWORD data;
     DWORD read;
@@ -3088,7 +3089,7 @@ int read_dword_q(DWORD addr)
 }
 
 
-int read_dword(DWORD addr)
+int report_dword(DWORD addr)
 {
     DWORD data;
     DWORD read;
@@ -3280,7 +3281,7 @@ int read_stack(DWORD tid_id, DWORD count)
 
     for(pos = 0x0; pos<count; pos++, esp+=0x4)
     {
-        data = read_dword_q(esp);
+        data = read_dword(esp);
         memset(buffer2, 0x0, sizeof(buffer2));
         sprintf(buffer2, "0x%08x:0x%08x", esp, data);
 //        d_print("Adding line: %s\n", buffer2);
@@ -4295,7 +4296,7 @@ int handle_cmd(char* cmd)
 
         d_print("Reading addr: 0x%08x\n", addr);
 
-        read_dword(addr);
+        report_dword(addr);
         send_report();   
     
     }

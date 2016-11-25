@@ -59,10 +59,15 @@ prototypes['Adjust']                = other_parts.adjust
 prototypes['ReadDword']             = tracer_parts.tracer_read_dword
 prototypes['WriteDword']            = tracer_parts.tracer_write_dword
 prototypes['ReadPID']               = tracer_parts.tracer_read_pid
+prototypes['ReadTID']               = tracer_parts.tracer_read_tid
 prototypes['ReadEP']                = tracer_parts.tracer_read_ep
 prototypes['TracerPrev']            = tracer_parts.trace_controller_activate_prev_tracer
 prototypes['TracerNext']            = tracer_parts.trace_controller_activate_next_tracer
 prototypes['CloseTracer']           = tracing_parts.stop_tracer
+prototypes['CheckEqual']            = other_parts.check_equal
+prototypes['AutoST']                = tracer_parts.tracer_auto_st
+#prototypes['ResumeThread']          = tracer_parts.
+
 
 class CodeUnit:
     def __init__(self, name = "Unknown"):

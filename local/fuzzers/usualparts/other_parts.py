@@ -301,4 +301,34 @@ def choosing_saved_disk_procedure(args=None):
     else:
         return "GM"
 
+def check_equal(args=None):
+    options = globs.state.options
+
+    args = int(args, 0x10)
+
+    if(globs.state.ret == args):
+        return "Y"
+    else:
+        return "N"
+
+def check_greater_than(args=None):
+    options = globs.state.options
+
+    args = int(args, 0x10)
+
+    if(globs.state.ret > args):
+        return "Y"
+    else:
+        return "N"
+
+def check_less_than(args=None):
+    options = globs.state.options
+
+    args = int(args, 0x10)
+
+    if(globs.state.ret < args):
+        return "Y"
+    else:
+        return "N"
+
 

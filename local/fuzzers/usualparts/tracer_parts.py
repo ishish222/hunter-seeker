@@ -547,6 +547,23 @@ def tracer_read_stack(args = 5):
 
     return
 
+def tracer_read_tid(args = 0x0):
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+
+    # id source is null, use last ret
+    args = globs.state.stack.pop()
+
+    write_socket(options.s, "tracer_read_dword 0x%08x" % args);
+    response, _, _ = read_socket(options.s)
+
+    globs.state.tid = int(response[3:11], 0x10)
+    print "Last TID: 0x%08x" % globs.state.tid
+    globs.state.ret = response
+
+    return
+
 def tracer_read_pid(args = 0x0):
     options = globs.state.options
     state = globs.state

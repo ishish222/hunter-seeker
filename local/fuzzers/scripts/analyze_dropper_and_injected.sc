@@ -67,22 +67,38 @@ TracerDebugContinueInf
 goto(decision)
 
 created_process:
-# modify to create suspended
+# handle CreateProcessX
+ReadRegister(ESP)
+Adjust(0x18)
+ReadDword
+CheckEqual(0x00000004)=(Y:with_suspension,N:without_suspension)
+
+without_suspension:
 ReadRegister(ESP)
 Adjust(0x18)
 WriteDword(0x00000004)
+# get EP and attach immidiately
+goto(attach_auto_st)
+
+with_suspension:
+# in order to receive EP
+# attach after writing memory and setting EIP
 EnableReaction(T1)
 TracerDebugContinueInf
 goto(decision)
 
 extract_pid:
-# get PROCESS_INFORMATION
+# get PROCESS_INFORMATION and read PID & TID
 ReadRegister(ESP)
-Adjust(0x40)
+Adjust(0x28)
 ReadDword
-# get PID
 Adjust(0x8)
 ReadPID
+ReadRegister(ESP)
+Adjust(0x28)
+ReadDword
+Adjust(0xc)
+ReadTID
 TracerDebugContinueInf
 goto(decision)
 
@@ -92,9 +108,29 @@ ReadRegister(ESP)
 Adjust(0x8)
 ReadDword
 # extract EIP
-Adjust(0xd4)
+#Adjust(0xb0)
+Adjust(0xb8)
 ReadEP
 goto(attach)
+
+attach_auto_st:
+# spawn another tracer
+SpawnTracerLog
+TracerConfigureSamplePID
+TracerConfigureOutDir
+TracerConfigureOutPrefix
+TracerConfigureInDir
+TracerPrepareTrace
+TracerRegisterRegions
+TracerRegisterReactions
+DisableReactions
+TracerDebugSample
+AutoST
+# this should be TracerNext?
+# resume thread
+TracerPrev
+TracerDebugContinueInf
+goto(decision)
 
 attach:
 # spawn another tracer
