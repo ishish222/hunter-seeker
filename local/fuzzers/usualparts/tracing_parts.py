@@ -20,10 +20,7 @@ def get_sample_options(args=None):
     parser.add_option("", "--research-dir",dest="research_dir", help="Starting module for trace", default="None")
     parser.add_option("", "--out-dir",    dest="out_dir", help="Starting module for trace", default="None")
     parser.add_option("", "--out-prefix", dest="out_prefix", help="Starting module for trace", default="None")
-    parser.add_option("", "--smod",       dest="st_mod", help="Starting module for trace", default="0x0")
-    parser.add_option("", "--emod",       dest="end_mod", help="Ending module for trace", default="kernel32.dll")
-    parser.add_option("", "--saddr",      dest="st_addr", help="Starting address for trace", default="0x1b7c")
-    parser.add_option("", "--eaddr",      dest="end_addr", help="Ending address for trace", default="0x52acf")
+    parser.add_option("", "--st",         dest="st_string", help="Starting module for trace", default="0x0")
     parser.add_option("", "--odir",       dest="out_dir", help="Out dir for trace", default="\\\\10.0.2.4\\qemu\\")
     parser.add_option("", "--odir2",      dest="out_dir2", help="Appendix for trace output", default="last")
     parser.add_option("", "--prefix",     dest="prefix", help="Prefix for trace", default="last")
@@ -77,7 +74,6 @@ def start_tracer(args=None):
     response, _, _ = read_socket(options.s)
 
     # register controller on success
-    print('Current tracers: %s, tracer count: %d' % (state.tracers, state.tracers_count))
     state.tracers.append(response)
     state.tracers_count += 1
 
@@ -90,22 +86,46 @@ def start_tracer_log(args=None):
     response, _, _ = read_socket(options.s)
 
     # register controller on success
-    print('Current tracers: %s, tracer count: %d' % (state.tracers, state.tracers_count))
     state.tracers.append(response)
     state.tracers_count += 1
+
+def read_prefix(args=None):
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+    
+    write_socket(options.s, "read_prefix");
+    response, _, _ = read_socket(options.s)
 
 def stop_tracer(args=None):
     options = globs.state.options
     state = globs.state
     status = globs.state.status
     
-    write_socket(options.s, "stop_tracer");
+    write_socket(options.s, "close_tracer");
     response, _, _ = read_socket(options.s)
 
     # register controller on success
-    print('Current tracers: %s, tracer count: %d' % (state.tracers, state.tracers_count))
     state.tracers.append(response)
-    state.tracers_count += 1
+    state.tracers_count -= 1
+
+def more_tracers(args=None):
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+    
+    if(state.tracers_count > 0):
+        return 'Y'
+    else:
+        return 'N'
+
+def which_tracer(args=None):
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+    
+    write_socket(options.s, "which_tracer");
+    response, _, _ = read_socket(options.s)
 
 def spawn_tracer_controller(args=None):
     options = globs.state.options
@@ -417,6 +437,35 @@ def handle_samples_exhaustion(args=None):
 def run_ret(args=None):
     options = globs.state.options
     rss("ret", options.m, options.slowdown)
+
+def load_ep(args = None):
+    globs.state.ret = globs.state.ep
+
+def set_sample_file(args = None):
+    options = globs.state.options
+    options.sample_options.sample_file = args
+
+def set_research_dir(args = None):
+    options = globs.state.options
+    options.sample_options.research_dir = args
+
+def set_out_dir(args = None):
+    options = globs.state.options
+    options.sample_options.out_dir = args
+
+def save_first_ep(args = None):
+    options = globs.state.options
+    globs.state.ep = options.sample_options.st_string
+
+def save_ep(args = None):
+    globs.state.ep = globs.state.ret
+
+def write_last_suspension(args = None):
+    globs.state.last_suspension = globs.state.ret
+
+
+def read_last_suspension(args = None):
+    globs.state.ret = globs.state.last_suspension
 
 def decision(args=None):
     options = globs.state.options

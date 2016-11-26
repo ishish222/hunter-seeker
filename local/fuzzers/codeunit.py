@@ -43,12 +43,14 @@ prototypes['TracerConfigureSample'] = tracer_parts.tracer_configure_sample
 prototypes['TracerConfigureSamplePID'] = tracer_parts.tracer_configure_sample_pid
 prototypes['TracerConfigureOutDir'] = tracer_parts.tracer_configure_out_dir
 prototypes['TracerConfigureOutPrefix'] = tracer_parts.tracer_configure_out_prefix
+prototypes['TracerConfigurePIDPrefix'] = tracer_parts.tracer_configure_pid_prefix
 prototypes['TracerConfigureInDir']  = tracer_parts.tracer_configure_in_dir
 prototypes['TracerPrepareTrace']    = tracer_parts.tracer_prepare_trace
 prototypes['TracerRegisterRegions'] = tracer_parts.tracer_register_regions
 prototypes['TracerRegisterReactions'] = tracer_parts.tracer_register_reactions
 prototypes['DisableReactions']      = tracer_parts.tracer_disable_all_reactions
 prototypes['TracerDebugSample']     = tracer_parts.tracer_debug_sample
+prototypes['TracerAttachSample']    = tracer_parts.tracer_attach_sample
 prototypes['TracerDebugContinueInf'] = tracer_parts.tracer_debug_continue
 prototypes['Decision']              = tracing_parts.decision
 prototypes['EnableReaction']        = tracer_parts.tracer_enable_reaction
@@ -66,7 +68,21 @@ prototypes['TracerNext']            = tracer_parts.trace_controller_activate_nex
 prototypes['CloseTracer']           = tracing_parts.stop_tracer
 prototypes['CheckEqual']            = other_parts.check_equal
 prototypes['AutoST']                = tracer_parts.tracer_auto_st
-#prototypes['ResumeThread']          = tracer_parts.
+prototypes['ResumeThread']          = tracer_parts.tracer_release_thread
+prototypes['WriteLastSuspension']   = tracing_parts.write_last_suspension
+prototypes['ReadLastSuspension']    = tracing_parts.read_last_suspension
+prototypes['WhichTracer']           = tracing_parts.which_tracer
+prototypes['MoreTracers']           = tracing_parts.more_tracers
+prototypes['ReadPrefix']            = tracing_parts.read_prefix
+prototypes['ListTebs']              = tracer_parts.tracer_list_tebs
+prototypes['ListAllTebs']           = tracer_parts.tracer_list_all_tebs
+prototypes['LoadEP']                = tracing_parts.load_ep
+prototypes['SaveFirstEP']           = tracing_parts.save_first_ep
+prototypes['SaveEP']                = tracing_parts.save_ep
+prototypes['ManualST']              = tracer_parts.tracer_manual_st
+prototypes['SetSampleFile']             = tracing_parts.set_sample_file
+prototypes['SetResearchDir']             = tracing_parts.set_research_dir
+prototypes['SetOutDir']             = tracing_parts.set_out_dir
 
 
 class CodeUnit:

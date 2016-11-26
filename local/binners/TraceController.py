@@ -432,10 +432,17 @@ class TraceController(object):
         print("Spawning: %s", path)
         self.proc = Popen(path)
 
-    def close_tracer(self, idd):
+    def close_active_tracer(self):
         print("Closing tracer")
-        self.tracers.remove(self.tracer_active_id)
+        self.tracers.remove(self.tracers[self.tracer_active_id])
         self.trace_count -= 1
+        self.tracer_active_id -= 1
+        self.tracer_active = self.tracers[self.tracer_active_id]
+
+    def read_prefix(self):
+        self.send_command_active("Rp")
+        self.last_report, self.last_answer = self.recv_report_active()
+        return 
 
     def spawn_tracer(self):
         print("Spawning tracer")
@@ -451,7 +458,7 @@ class TraceController(object):
         self.tracer_active.controller = self
         self.trace_count += 1
         print("Tracer synced")
-        return self.trace_count-1
+        return self.trace_count
 
     def spawn_tracer_log(self):
         print("Spawning tracer w log: e:\\server\\log_%x.txt" % self.trace_count)
@@ -468,7 +475,7 @@ class TraceController(object):
         self.tracer_active.controller = self
         self.trace_count += 1
         print("Tracer synced")
-        return self.trace_count-1
+        return self.trace_count
 
     def activate_prev_tid(self):
         self.tracer_active.active_tid_id = self.tracer_active.active_tid_id - 1

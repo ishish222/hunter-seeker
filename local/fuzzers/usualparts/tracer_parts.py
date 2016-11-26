@@ -135,13 +135,25 @@ def tracer_configure_out_prefix(args=None):
 
     return
 
+def tracer_configure_pid_prefix(args=None):
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+    
+    write_socket(options.s, "tracer_configure_out_prefix %s" % globs.state.pid);
+    response, _, _ = read_socket(options.s)
+
+    globs.state.ret = response
+
+    return
+
 def tracer_release_thread(args = None):
     options = globs.state.options
     state = globs.state
     status = globs.state.status
     
     if(args == None):
-        args = globs.state.stack.pop()
+        args = globs.state.tid
 
     write_socket(options.s, "tracer_release_thread 0x%08x" % args);
     response, _, _ = read_socket(options.s)
@@ -156,7 +168,7 @@ def tracer_configure_sample_pid(args = None):
     status = globs.state.status
     
     if(args == None):
-        args = globs.state.stack.pop()
+        args = globs.state.pid
 
     write_socket(options.s, "tracer_configure_sample_pid 0x%08x" % args);
     response, _, _ = read_socket(options.s)
@@ -208,20 +220,25 @@ def tracer_add_reaction(args):
 
     return
 
+def tracer_manual_st(args=None):
+    options = globs.state.options
+    write_socket(options.s, "tracer_register_reactions %s,ST,0x0" % globs.state.ep);
+    response, _, _ = read_socket(options.s)
+
+
 def tracer_register_reactions(args=None):
     options = globs.state.options
     state = globs.state
     status = globs.state.status
     
-    if(options.sample_options.reactions == "0"): return
-    args = options.sample_options.reactions
+#    if(options.sample_options.reactions == "0"): return
+#    args = options.sample_options.reactions
 
     if(hasattr(options.settings, "builtin_reactions")):
         args += ';'
         args += options.settings.builtin_reactions
 
     # remove new lines 
-    print args
     args = args.replace('\n', '')
     if(args[-1:] == ';'):
         args = args[:-1]
@@ -233,14 +250,12 @@ def tracer_register_reactions(args=None):
         if(len(cmd) + len(part) < 0x100):
             cmd += ';'
             cmd += part
-            print cmd
         else:
             write_socket(options.s, "tracer_register_reactions %s" % cmd[1:]);
             response, _, _ = read_socket(options.s)
             cmd = ''
             cmd += ';'
             cmd += part
-            print cmd
 
     if(len(cmd) > 0x1): 
         write_socket(options.s, "tracer_register_reactions %s" % cmd[1:]);
@@ -610,7 +625,7 @@ def tracer_read_dword(args = 0x0):
     response, _, _ = read_socket(options.s)
 
     globs.state.stack.append(int(response[3:11], 0x10))
-    globs.state.ret = response
+    globs.state.ret = int(response[3:11], 0x10)
 
     return
 

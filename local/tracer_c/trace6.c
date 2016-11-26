@@ -4061,6 +4061,12 @@ int handle_cmd(char* cmd)
         d_print("Out prefix set to: %s\n", my_trace->out_prefix);
         send_report();
     }
+    else if(!strncmp(cmd, CMD_READ_PREFIX, 2))
+    {
+        my_trace->report_code = REPORT_INFO;
+        strcpy(my_trace->report_buffer, my_trace->out_prefix);
+        send_report();
+    }
     else if(!strncmp(cmd, CMD_SET_LIMIT, 2))
     {
         my_trace->instr_limit = strtoul(cmd+3, 0x0, 10);

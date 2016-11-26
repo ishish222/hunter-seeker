@@ -17,7 +17,7 @@
 #define CLEAR_SF_FLAGS 0xffffff7f
 #define CLEAR_ZF_FLAGS 0xffffffbf
 #define SET_ZF_FLAGS   0x00000040
-//#define MEM_DUMP
+#define MEM_DUMP
 #define MAX_LINE 0x300
 #define MAX_HANDLERS 0x100000
 #define MAX_SYSCALL_OUT_ARGS 0x10
@@ -113,6 +113,7 @@
 #define CMD_SET_IN_DIRECTORY    "SD"
 #define CMD_SET_OUT_DIRECTORY   "Sd"
 #define CMD_SET_OUT_PREFIX      "Sp"
+#define CMD_READ_PREFIX         "Rp"
 #define CMD_PREPARE_TRACE       "PT"
 #define CMD_SET_E_REACTION_1        "M1"
 #define CMD_SET_E_REACTION_2        "M2"

@@ -6,8 +6,6 @@ c:scripters
 c:fuzzers/parts
 c:fuzzers/usualparts
 c:fuzzers/statemachine.py
-c:fuzzers/StoppableThread.py
-c:settings/default-flareon/arg_reactions.txt
 t:settings/generic-zero-trace/settings.py
 t:settings/default-flareon/default.py
 t:fuzzers/generators

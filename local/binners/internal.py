@@ -1342,24 +1342,34 @@ def execute(cmds):
         elif(cmd == "spawn_tracer"):
             new_tracer = trace_controller.spawn_tracer()
             writePipe(ext_pipe, "[Trace controller]: OK")
-            writePipe(ext_pipe, "%d - %d" % (trace_controller.tracer_active_id, trace_controller.trace_count))
-            #writePipe(log_pipe, "Started: %d" % new_tracer)
+            writePipe(ext_pipe, "Active tracers: %d" % trace_controller.trace_count)
             writePipe(ext_pipe, "spawn_tracer OK")
             ok(ext_pipe)
 
         elif(cmd == "spawn_tracer_log"):
             new_tracer = trace_controller.spawn_tracer_log()
             writePipe(ext_pipe, "[Trace controller]: OK")
-            writePipe(ext_pipe, "Started: %d" % new_tracer)
-            #writePipe(log_pipe, "Started: %d" % new_tracer)
+            writePipe(ext_pipe, "Active tracers: %d" % trace_controller.trace_count)
             writePipe(ext_pipe, "spawn_tracer_log OK")
             ok(ext_pipe)
 
         elif(cmd == "close_tracer"):
+            trace_controller.close_active_tracer()
             writePipe(ext_pipe, "[Trace controller]: OK")
-            trace_controller.close_tracer(args)
-            writePipe(ext_pipe, "%d - %d" % (trace_controller.tracer_active_id, trace_controller.trace_count))
+            writePipe(ext_pipe, "Remaining tracers: %d" % trace_controller.trace_count)
             writePipe(ext_pipe, "close_tracer OK")
+            ok(ext_pipe)
+
+        elif(cmd == "read_prefix"):
+            trace_controller.read_prefix()
+            writePipe(ext_pipe, "%s\n" % trace_controller.last_answer)
+            writePipe(ext_pipe, "read_prefix OK")
+            ok(ext_pipe)
+
+        elif(cmd == "which_tracer"):
+            trace_controller.close_active_tracer()
+            writePipe(ext_pipe, "%d" % trace_controller.tracer_active_id)
+            writePipe(ext_pipe, "which_tracer OK")
             ok(ext_pipe)
 
         elif(cmd == "start_trace_controller"):

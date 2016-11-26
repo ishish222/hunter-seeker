@@ -43,6 +43,7 @@ TracerPrepareTrace
 TracerRegisterRegions
 TracerRegisterReactions
 DisableReactions
+SaveFirstEP
 TracerDebugSample
 TracerDebugContinueInf
 
@@ -50,6 +51,9 @@ decision:
 Decision=(RR:proc_started,RE:exception,ST:start_trace,C1:creating_process,C3:creating_process,C2:created_process,C4:created_process,T1:set_context,EN:tracer_finished,RX:tracer_finished)
 
 proc_started:
+LoadEP
+ManualST
+EnableReaction(ST)
 EnableReaction(A1)
 TracerDebugContinueInf
 goto(decision)
@@ -121,26 +125,9 @@ Adjust(0x28)
 ReadDword
 Adjust(0xc)
 ReadTID
-goto(attach_auto_st)
-
-attach_auto_st:
-# spawn another tracer
-SpawnTracerLog
-TracerConfigureSamplePID
-TracerConfigureOutDir
-TracerConfigurePIDPrefix
-TracerConfigureInDir
-TracerPrepareTrace
-TracerRegisterRegions
-TracerRegisterReactions
-DisableReactions
-TracerDebugSample
-AutoST
-# this should be TracerNext?
-TracerPrev
-ResumeThread
-TracerDebugContinueInf
-goto(decision)
+GetModuleEP
+SaveEP
+goto(attach)
 
 set_context:
 # get CONTEXT
@@ -150,7 +137,7 @@ ReadDword
 # extract EIP
 #Adjust(0xb0)
 Adjust(0xb8)
-ReadEP
+SaveEP
 goto(attach)
 
 attach:
@@ -164,9 +151,7 @@ TracerPrepareTrace
 TracerRegisterRegions
 TracerRegisterReactions
 DisableReactions
-TracerDebugSample
-# this should be TracerNext?
-TracerPrev
+TracerAttachSample
 TracerDebugContinueInf
 goto(decision)
 
