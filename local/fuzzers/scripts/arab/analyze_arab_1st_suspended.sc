@@ -83,8 +83,6 @@ ReadDword
 # extract EIP
 #EAX
 Adjust(0xb0)
-#EIP
-#Adjust(0xb8)
 ReadDword
 SaveEP
 EnableReaction(R1)
@@ -114,7 +112,15 @@ TracerDebugContinueInf
 #ST
 EnableBuiltin
 DumpMemory
-TracerStartTrace
+EnableReaction(C1)
+EnableReaction(C3)
+TracerStartTraceDebug
 TracerDebugContinueInf
+
+# RE
+loop:
+TracerDebugContinueInf(0x80010001)
+Decision=(RE:loop)
+
 
 #RX
