@@ -46,8 +46,10 @@ TracerDebugContinueInf
 
 # ST
 EnableBuiltin
-DumpMemory
-TracerStartTrace
+#DumpMemory
+#TracerStartTrace
+EnableReaction(C1)
+EnableReaction(C3)
 TracerDebugContinueInf
 
 # First CreateProcess
@@ -78,6 +80,7 @@ ReadDword
 # extract EIP
 #Adjust(0xb0)
 Adjust(0xb8)
+ReadDword
 SaveEP
 
 # We have everything we need
@@ -87,8 +90,7 @@ TracerConfigureOutDir
 TracerConfigurePIDPrefix
 TracerConfigureInDir
 TracerPrepareTrace
-TracerRegisterRegions
-TracerRegisterReactions
+TracerRegisterBuiltin
 DisableReactions
 TracerAttachSample
 
@@ -96,5 +98,9 @@ TracerAttachSample
 LoadEP
 ManualST
 TracerDebugContinueInf
+
+#ST
+DumpMemory
+TracerStartTrace
 
 

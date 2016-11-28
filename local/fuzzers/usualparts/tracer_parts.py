@@ -222,7 +222,7 @@ def tracer_add_reaction(args):
 
 def tracer_manual_st(args=None):
     options = globs.state.options
-    write_socket(options.s, "tracer_register_reactions %s,ST,0x0" % globs.state.ep);
+    write_socket(options.s, "tracer_register_reactions 0x%08x,ST,0x0" % globs.state.ep);
     response, _, _ = read_socket(options.s)
 
 
