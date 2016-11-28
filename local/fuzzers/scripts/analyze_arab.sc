@@ -2,8 +2,8 @@ PrintLogo
 GetOptions
 GetSampleOptions
 SetSampleFile(arab.exe)
-SetResearchDir(e:\\samples\\shared)
-SetOutDir(\\\\10.0.2.4\\qemu\\arab_4)
+SetResearchDir(e:\samples\shared)
+SetOutDir(\\10.0.2.4\qemu\arab_4)
 RevertClean
 EnableLogging
 RegisterSignals
@@ -42,11 +42,12 @@ TracerDebugContinueInf
 
 # RR
 EnableReaction(A1)
+TracerDebugContinueInf
 
 # ST
 EnableBuiltin
-#DumpMemory
-#TracerStartTrace
+DumpMemory
+TracerStartTrace
 TracerDebugContinueInf
 
 # First CreateProcess
