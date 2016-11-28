@@ -34,7 +34,8 @@ TracerConfigureOutPrefix
 TracerConfigureInDir
 TracerPrepareTrace
 TracerRegisterRegions(EDI:0x5000)
-TracerRegisterReactions(kernel32.dll+0x2acf,EN,0x0;ntdll.dll+0x464f0,S1:S2,0x1;ntdll.dll+0x464f4,S2:S1,0x2;self+0x1317,A1:A2,0x100;EAX+0x9ab,A2:ST:U1,0x100;EDI,ST,0x0;EDI,U1,0x201)
+TracerRegisterReactions(self+0x1317,A1:A2,0x100;EAX+0x9ab,A2:ST:U1,0x100;EDI,ST,0x0;EDI,U1,0x201)
+TracerRegisterBuiltin
 DisableReactions
 TracerDebugSample
 TracerDebugContinueInf
@@ -43,7 +44,7 @@ TracerDebugContinueInf
 EnableReaction(A1)
 
 # ST
-EnableReaction(S1)
+EnableBuiltin
 #DumpMemory
 #TracerStartTrace
 TracerDebugContinueInf

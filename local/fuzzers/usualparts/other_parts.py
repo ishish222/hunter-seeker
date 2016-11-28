@@ -263,7 +263,10 @@ def sigkill_handler(signum, frame):
     options = globs.state.options
 
     print "Detected sigkill from user"
-    raise statemachine.MachineExit
+#    raise statemachine.MachineExit
+    import qemu_parts
+    qemu_parts.poweroff_no_revert()
+    
     return
 
 def register_signals(args=None):

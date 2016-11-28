@@ -231,12 +231,41 @@ def tracer_register_reactions(args=None):
     state = globs.state
     status = globs.state.status
     
-#    if(options.sample_options.reactions == "0"): return
-#    args = options.sample_options.reactions
+    args = ','.join(args)
 
-    if(hasattr(options.settings, "builtin_reactions")):
-        args += ';'
-        args += options.settings.builtin_reactions
+    # remove new lines 
+    args = args.replace('\n', '')
+    if(args[-1:] == ';'):
+        args = args[:-1]
+
+    parts = args.split(';');
+    cmd = '';
+
+    for part in parts:
+        if(len(cmd) + len(part) < 0x100):
+            cmd += ';'
+            cmd += part
+        else:
+            write_socket(options.s, "tracer_register_reactions %s" % cmd[1:]);
+            response, _, _ = read_socket(options.s)
+            cmd = ''
+            cmd += ';'
+            cmd += part
+
+    if(len(cmd) > 0x1): 
+        write_socket(options.s, "tracer_register_reactions %s" % cmd[1:]);
+        response, _, _ = read_socket(options.s)
+
+    globs.state.ret = response
+
+    return
+
+def tracer_register_builtin(args=None):
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+    
+    args = options.settings.builtin_reactions
 
     # remove new lines 
     args = args.replace('\n', '')
@@ -270,8 +299,9 @@ def tracer_register_regions(args=None):
     state = globs.state
     status = globs.state.status
     
-    if(options.sample_options.regions == "0"): return
-    write_socket(options.s, "tracer_register_regions %s" % (options.sample_options.regions));
+#    args = ','.join(args)
+#    if(options.sample_options.regions == "0"): return
+    write_socket(options.s, "tracer_register_regions %s" % args);
     response, _, _ = read_socket(options.s)
 
     globs.state.ret = response
