@@ -95,12 +95,9 @@ def tracer_configure_in_dir(args=None):
     state = globs.state
     status = globs.state.status
     
-    if(options.sample_options.sample_file != "None"):
-        write_socket(options.s, "tracer_configure_in_dir %s" % options.sample_options.research_dir);
-        response, _, _ = read_socket(options.s)
-    else:
-        print "Error, no research dir"
-        exit(1)
+    write_socket(options.s, "tracer_configure_in_dir %s" % options.sample_options.research_dir);
+    response, _, _ = read_socket(options.s)
+
     globs.state.ret = response
 
     return
@@ -110,12 +107,9 @@ def tracer_configure_out_dir(args=None):
     state = globs.state
     status = globs.state.status
     
-    if(options.sample_options.sample_file != "None"):
-        write_socket(options.s, "tracer_configure_out_dir %s" % options.sample_options.out_dir);
-        response, _, _ = read_socket(options.s)
-    else:
-        print "Error, no research dir"
-        exit(1)
+    write_socket(options.s, "tracer_configure_out_dir %s\\%s" % (options.sample_options.out_dir, options.sample_options.out_prefix));
+    response, _, _ = read_socket(options.s)
+
     globs.state.ret = response
 
     return
@@ -125,12 +119,8 @@ def tracer_configure_out_prefix(args=None):
     state = globs.state
     status = globs.state.status
     
-    if(options.sample_options.sample_file != "None"):
-        write_socket(options.s, "tracer_configure_out_prefix %s" % options.sample_options.out_prefix);
-        response, _, _ = read_socket(options.s)
-    else:
-        print "Error, no research dir"
-        exit(1)
+    write_socket(options.s, "tracer_configure_out_prefix %s" % options.sample_options.out_prefix);
+    response, _, _ = read_socket(options.s)
     globs.state.ret = response
 
     return
@@ -267,8 +257,14 @@ def tracer_register_builtin(args=None):
     
     args = options.settings.builtin_reactions
 
+    # remove comments after ;
+    import re
+    args = re.sub(r';.*\n', ';', args)
+    
     # remove new lines 
     args = args.replace('\n', '')
+
+
     if(args[-1:] == ';'):
         args = args[:-1]
 

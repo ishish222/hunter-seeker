@@ -98,59 +98,55 @@ saved_dir="/mnt/1/raw/"
 log_dir="/mnt/1/log/"
 builtin_reactions_anchors="EN:s1:a0:a3:a5:e6:a7:b1:b3:b5:b7:c0:c2:c4:c6:c8:d0:d2:d4:d6:d8:d0:e3"
 builtin_reactions="""
-kernel32.dll+0x2acf,EN,0x0;
-kernel32.dll+0x2062,C1:C2,0x0;
-kernel32.dll+0x208f,C2:C1,0x0;
-kernel32.dll+0x202d,C3:C4,0x0;
-kernel32.dll+0x205a,C4:C3,0x0;
-ntdll.dll+0x464f0,s1:s2,0x1;
-ntdll.dll+0x464f4,s2:s1,0x2;
-kernel32.dll+0x51837,a0:a2,0x301;
-kernel32.dll+0x51837,a1,0x312;
-kernel32.dll+0x5183c,a2:a0:a1,0x100;
-kernel32.dll+0x528d7,a3:a4,0x311;
-kernel32.dll+0x528dc,a4:a3,0x100;
-kernel32.dll+0x5177e,a5:a6,0x313;
-kernel32.dll+0x51783,a6:a5,0x100;
-kernel32.dll+0x45f40,e6:e7,0x323;
-kernel32.dll+0x45f46,e7:e6,0x100;
-kernel32.dll+0x52864,a7:a8,0x311;
-kernel32.dll+0x5289a,a8:a7,0x100;
-kernel32.dll+0x528b2,b1:b2,0x321;
-kernel32.dll+0x528c4,b2:b1,0x100;
-kernel32.dll+0x528fc,b3:b4,0x311;
-kernel32.dll+0x52941,b4:b3,0x330;
-kernel32.dll+0x50b5d,b5:b6,0x321;
-kernel32.dll+0x50ba8,b6:b5,0x330;
-kernel32.dll+0x511cc,b7:b8,0x301;
-kernel32.dll+0x5121b,b8:b7,0x100;
-kernel32.dll+0x511cc,c0:c1,0x303;
-kernel32.dll+0x5121b,c1:c0,0x100;
-kernel32.dll+0x4daa9,c2:c3,0x301;
-kernel32.dll+0x4db02,c3:c2,0x100;
-kernel32.dll+0x4daa9,c4:c5,0x303;
-kernel32.dll+0x4db02,c5:c4,0x100;
-kernel32.dll+0x51074,c6:c7,0x301;
-kernel32.dll+0x5107a,c7:c6,0x100;
-kernel32.dll+0x529f4,c8:c9,0x301;
-kernel32.dll+0x529fa,c9:c8,0x100;
-kernel32.dll+0x519a1,d0:d1,0x321;
-kernel32.dll+0x519a7,d1:d0,0x100;
-kernel32.dll+0x6962f,d2:d3,0x301;
-kernel32.dll+0x6964c,d3:d2,0x100;
-kernel32.dll+0x901cb,d4:d5,0x301;
-kernel32.dll+0x901cb,T1,0x0;
-kernel32.dll+0x901ee,d5:d4,0x100;
-kernel32.dll+0x50d8f,d6:d7,0x303;
-kernel32.dll+0x50d95,d7:d6,0x100;
-kernel32.dll+0x3b42c,d8:d9,0x302;
-kernel32.dll+0x3b432,d9:d8,0x100;
-kernel32.dll+0x6859f,e0:e2,0x301;
-kernel32.dll+0x6859f,e1,0x302;
-kernel32.dll+0x685a5,e2:e0:e1,0x100;
-kernel32.dll+0x43f14,e3:e4,0x301;
-kernel32.dll+0x43f21,e4:e3,0x100;
-"""
+kernel32.dll+0x2acf,EN,0x0;         # ExitProcess
+kernel32.dll+0x2062,C1:C2,0x0;      # CreateProcessA start
+kernel32.dll+0x208f,C2:C1,0x0;      # CreateProcessA end
+kernel32.dll+0x202d,C3:C4,0x0;      # CreateProcessW start
+kernel32.dll+0x205a,C4:C3,0x0;      # CreateProcessW end
+KERNELBASE.dll+0xc3c9,R1:R2,0x0;    # ResumeThread start
+KERNELBASE.dll+0xc3e7,R2:R1,0x0;    # ResumeThread end
+ntdll.dll+0x464f0,s1:s2,0x1;        # KiFastSystemCall
+ntdll.dll+0x464f4,s2:s1,0x2;        # KiFastSystemRet
+kernel32.dll+0x51837,a0:a2,0x301;   # GetProcAddr start
+kernel32.dll+0x51837,a1,0x312;      # GetProcAddr start
+kernel32.dll+0x5183c,a2:a0:a1,0x100;# GetProcAddr end
+kernel32.dll+0x528d7,a3:a4,0x311;   # GetModuleHandleA start
+kernel32.dll+0x528dc,a4:a3,0x100;   # GetModuleHandleA end
+kernel32.dll+0x5177e,a5:a6,0x313;   # CreateMutexA start
+kernel32.dll+0x51783,a6:a5,0x100;   # CreateMutexA end
+kernel32.dll+0x45f40,e6:e7,0x323;   # CreateMutexW start
+kernel32.dll+0x45f46,e7:e6,0x100;   # CreateMutexW end
+kernel32.dll+0x52864,a7:a8,0x311;   # LoadLibraryA start
+kernel32.dll+0x5289a,a8:a7,0x100;   # LoadLibraryA end
+kernel32.dll+0x528b2,b1:b2,0x321;   # LoadLibraryW start
+kernel32.dll+0x528c4,b2:b1,0x100;   # LoadLibraryW end
+kernel32.dll+0x528fc,b3:b4,0x311;   # CreateFileA start
+kernel32.dll+0x52941,b4:b3,0x330;   # CreateFileA end
+kernel32.dll+0x50b5d,b5:b6,0x321;   # CreateFileW start
+kernel32.dll+0x50ba8,b6:b5,0x330;   # CreateFileW end
+kernel32.dll+0x511cc,b7:b8,0x301;   # WriteFile start
+kernel32.dll+0x5121b,b8:b7,0x100;   # WriteFile end
+kernel32.dll+0x4daa9,c2:c3,0x301;   # ReadFile start
+kernel32.dll+0x4db02,c3:c2,0x100;   # ReadFile end
+kernel32.dll+0x51074,c6:c7,0x301;   # GetModuleFileNameA start
+kernel32.dll+0x5107a,c7:c6,0x100;   # GetModuleFileNameA end
+kernel32.dll+0x529f4,c8:c9,0x301;   # GetModuleFileNameW start
+kernel32.dll+0x529fa,c9:c8,0x100;   # GetModuleFileNameW end
+kernel32.dll+0x519a1,d0:d1,0x321;   # GetModuleHandleW start
+kernel32.dll+0x519a7,d1:d0,0x100;   # GetModuleHandleW end
+kernel32.dll+0x6962f,d2:d3,0x301;   # GetThreadContext start
+kernel32.dll+0x6964c,d3:d2,0x100;   # GetThreadContext end
+kernel32.dll+0x901cb,d4:d5,0x301;   # SetThreadContext start
+kernel32.dll+0x901cb,T1,0x0;        # SetThreadContext start
+kernel32.dll+0x901ee,d5:d4,0x100;   # SetThreadContext end
+kernel32.dll+0x50d8f,d6:d7,0x303;   # OpenThread start
+kernel32.dll+0x50d95,d7:d6,0x100;   # OpenThread end
+kernel32.dll+0x3b42c,d8:d9,0x302;   # VirtualAllocEx start
+kernel32.dll+0x3b432,d9:d8,0x100;   # VirtualAllocEx end
+kernel32.dll+0x6859f,e0:e2,0x301;   # WriteProcessMemory start
+kernel32.dll+0x6859f,e1,0x302;      # WriteProcessMemory start
+kernel32.dll+0x685a5,e2:e0:e1,0x100;# WriteProcessMemory end
+""" 
 
 
 hs_user="hs1"

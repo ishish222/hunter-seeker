@@ -3,7 +3,8 @@ GetOptions
 GetSampleOptions
 SetSampleFile(arab.exe)
 SetResearchDir(e:\samples\shared)
-SetOutDir(\\10.0.2.4\qemu\arab_4)
+SetOutDir(\\10.0.2.4\qemu)
+CheckHostDir
 RevertClean
 EnableLogging
 RegisterSignals
@@ -52,11 +53,13 @@ EnableReaction(C1)
 EnableReaction(C3)
 TracerDebugContinueInf
 
-# First CreateProcess
+### First CreateProcess
+
 TracerDebugContinueInf
 TracerDebugContinueInf
 
-# Second CreateProcess
+### Second CreateProcess
+
 # pass function prologue
 TracerDebugContinueInf
 # get PID and TID
@@ -78,12 +81,16 @@ ReadRegister(ESP)
 Adjust(0x8)
 ReadDword
 # extract EIP
-#Adjust(0xb0)
-Adjust(0xb8)
+#EAX
+Adjust(0xb0)
+#EIP
+#Adjust(0xb8)
 ReadDword
 SaveEP
+EnableReaction(R1)
+TracerDebugContinueInf
 
-# We have everything we need
+# We have everything we need and attempt to resume
 SpawnTracerLog
 TracerConfigureSamplePID
 TracerConfigureOutDir
@@ -96,11 +103,18 @@ TracerAttachSample
 
 # RR
 LoadEP
+#TracerRegisterReactions(0x00401de0,ST,0x0)
 ManualST
+EnableReaction(ST)
+TracerPrev
+TracerDebugContinueInf
+TracerNext
 TracerDebugContinueInf
 
 #ST
+EnableBuiltin
 DumpMemory
 TracerStartTrace
+TracerDebugContinueInf
 
-
+#RX

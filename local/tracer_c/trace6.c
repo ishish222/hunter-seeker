@@ -2671,12 +2671,27 @@ void start_trace_pid()
 
 DWORD find_lib(char* name)
 {
-    unsigned i;
+    unsigned i, j;
     DWORD ret = 0x0;
+
+    char myname[MAX_NAME];
+    char libname[MAX_NAME];
+
+    strcpy(myname, name);
+    for(j = 0; myname[j]; j++)
+    {
+        myname[j] = tolower(myname[j]);
+    }
 
     for(i=0x0; i<my_trace->lib_count; i++)
     {
-        if(strstr(my_trace->libs[i].lib_name, name))
+        strcpy(libname, my_trace->libs[i].lib_name);
+        for(j = 0; libname[j]; j++)
+        {
+            libname[j] = tolower(libname[j]);
+        }
+
+        if(strstr(libname, myname))
         {
             ret = my_trace->libs[i].lib_offset;
             break;

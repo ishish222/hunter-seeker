@@ -442,16 +442,29 @@ def load_ep(args = None):
     globs.state.ret = globs.state.ep
 
 def set_sample_file(args = None):
+    print "Setting sample file to %s" % args
     options = globs.state.options
     options.sample_options.sample_file = args
 
 def set_research_dir(args = None):
+    print "Setting research dir to %s" % args
     options = globs.state.options
     options.sample_options.research_dir = args
 
 def set_out_dir(args = None):
+    print "Setting out dir to %s" % args
     options = globs.state.options
     options.sample_options.out_dir = args
+
+def check_host_dir(args = None):
+    options = globs.state.options
+    
+    my_dir = options.settings.qemu_shared_folder + '/' + options.sample_options.out_prefix
+    import os
+    try:
+        os.mkdir(my_dir)
+    except(OSError):
+        pass
 
 def save_first_ep(args = None):
     options = globs.state.options

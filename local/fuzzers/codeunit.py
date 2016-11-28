@@ -55,9 +55,10 @@ prototypes['TracerAttachSample']    = tracer_parts.tracer_attach_sample
 prototypes['TracerDebugContinueInf'] = tracer_parts.tracer_debug_continue
 prototypes['Decision']              = tracing_parts.decision
 prototypes['EnableReaction']        = tracer_parts.tracer_enable_reaction
-prototypes['EnableBuiltin']        = tracer_parts.tracer_enable_anchors
+prototypes['EnableBuiltin']         = tracer_parts.tracer_enable_anchors
 prototypes['DumpMemory']            = tracer_parts.tracer_dump_memory
 prototypes['TracerStartTrace']      = tracer_parts.tracer_start_trace
+prototypes['TracerStartTraceDebug'] = tracer_parts.tracer_start_trace_debug
 prototypes['ReadRegister']          = tracer_parts.tracer_read_register
 prototypes['Adjust']                = other_parts.adjust
 prototypes['ReadDword']             = tracer_parts.tracer_read_dword
@@ -82,9 +83,10 @@ prototypes['LoadEP']                = tracing_parts.load_ep
 prototypes['SaveFirstEP']           = tracing_parts.save_first_ep
 prototypes['SaveEP']                = tracing_parts.save_ep
 prototypes['ManualST']              = tracer_parts.tracer_manual_st
-prototypes['SetSampleFile']             = tracing_parts.set_sample_file
-prototypes['SetResearchDir']             = tracing_parts.set_research_dir
+prototypes['SetSampleFile']         = tracing_parts.set_sample_file
+prototypes['SetResearchDir']        = tracing_parts.set_research_dir
 prototypes['SetOutDir']             = tracing_parts.set_out_dir
+prototypes['CheckHostDir']          = tracing_parts.check_host_dir
 
 
 class CodeUnit:
