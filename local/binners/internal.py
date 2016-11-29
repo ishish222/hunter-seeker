@@ -1,7 +1,6 @@
 import sys
 
-sys.path.append("e:\\server\\paimei")
-sys.path.append("e:\\common")
+#sys.path.append("e:\\server\\paimei")
 
 import serial
 import win32pipe, win32file, win32gui
@@ -14,7 +13,7 @@ from functions import *
 import socket
 from subprocess import call, Popen
 from glob import glob
-
+import pefile
 
 PIPE_NAME = "\\\\.\\pipe\\control"
 PIPE_BUFF_SIZE = 4096
@@ -1081,6 +1080,10 @@ def execute(cmds):
         elif(cmd == "quit"):
             close_logs()
             #log_pipe.write("quit")
+
+        elif(cmd == "read_ep"):
+            writePipe(ext_pipe, "read_ep OK")
+            ok(ext_pipe)
 
 ### tracer info
         elif(cmd == "tc_activate_prev"):

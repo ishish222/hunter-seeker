@@ -23,3 +23,4 @@ s:binners/internal.py
 s:binners/TraceController.py
 s:binners/Tracer.py
 s:binners/mutex_2.py
+s:binners/pefile.py
