@@ -1086,6 +1086,13 @@ def execute(cmds):
             ok(ext_pipe)
 
 ### tracer info
+        elif(cmd == "extract_ep"):
+            p = pefile.PE(args)
+            writePipe(ext_pipe, "0x%08x" % p.OPTIONAL_HEADER.AddressOfEntryPoint)
+            del p
+            writePipe(ext_pipe, "extract_ep OK")
+            ok(ext_pipe)
+
         elif(cmd == "tc_activate_prev"):
             trace_controller.activate_prev_tracer()
             writePipe(ext_pipe, "[internal]: OK")
@@ -1271,6 +1278,12 @@ def execute(cmds):
             writePipe(ext_pipe, "%s" % trace_controller.last_answer)
             writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
             writePipe(ext_pipe, "tracer_list_markers OK")
+            ok(ext_pipe)
+
+        elif(cmd == "tracer_read_arg_uni"):
+            trace_controller.read_arg_uni(args)
+            writePipe(ext_pipe, "%s" % trace_controller.last_answer)
+            writePipe(ext_pipe, "tracer_read_arg_uni OK")
             ok(ext_pipe)
 
         elif(cmd == "tracer_list_bpts"):

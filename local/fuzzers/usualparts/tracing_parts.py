@@ -136,6 +136,15 @@ def spawn_tracer_controller(args=None):
     response, _, _ = read_socket(options.s)
     return
 
+def extract_ep(args=None):
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+    
+    write_socket(options.s, "extract_ep %s" % args);
+    response, _, _ = read_socket(options.s)
+    return
+
 def stop_tracer_controller(args=None):
     options = globs.state.options
     state = globs.state

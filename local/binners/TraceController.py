@@ -808,6 +808,11 @@ class TraceController(object):
         self.last_report, self.last_answer = self.recv_report_active()
         return 
 
+    def read_arg_uni(self, args):
+        self.send_command_active("ru %s" % args)
+        self.last_report, self.last_answer = self.recv_report_active()
+        return 
+
     def list_bpts(self):
         self.send_command_active("lb")
         self.last_report, self.last_answer = self.recv_report_active()

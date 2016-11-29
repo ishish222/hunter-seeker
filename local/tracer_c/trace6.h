@@ -148,6 +148,9 @@
 #define CMD_AUTO_ST             "AS"
 #define CMD_SET_ST             "SS"
 #define CMD_RELEASE_THREAD      "RE"
+#define CMD_READ_ARG            "ra"
+#define CMD_READ_ARG_ANSI       "rs"
+#define CMD_READ_ARG_UNICODE    "ru"
 
 #define CMD_ROUTINE_1           "R1"
 #define CMD_ROUTINE_2           "R2"

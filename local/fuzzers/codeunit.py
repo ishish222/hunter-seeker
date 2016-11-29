@@ -87,6 +87,9 @@ prototypes['SetSampleFile']         = tracing_parts.set_sample_file
 prototypes['SetResearchDir']        = tracing_parts.set_research_dir
 prototypes['SetOutDir']             = tracing_parts.set_out_dir
 prototypes['CheckHostDir']          = tracing_parts.check_host_dir
+prototypes['ReadArgUni']            = tracer_parts.tracer_read_arg_uni
+prototypes['ReadArgAnsi']           = tracer_parts.tracer_read_arg_ansi
+prototypes['ExtractEP']             = tracing_parts.extract_ep
 
 
 class CodeUnit:

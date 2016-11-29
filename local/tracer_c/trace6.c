@@ -312,6 +312,40 @@ void react_output_eip(void* data)
     output_register("EIP");
 }
 
+void report_arg_unicode_string_x(unsigned x)
+{
+    d_print("Outputting arg %d\n", x);
+    char line[MAX_LINE];
+    char snap[SNAP_SIZE*2];
+
+    DWORD read;
+    OFFSET esp;
+    OFFSET addr;
+
+    CONTEXT ctx;
+    read_context(0x0, &ctx);
+    esp = ctx.Esp;
+    esp += (x * 0x4);
+
+    addr = read_dword(esp);
+
+    read_memory(my_trace->cpdi.hProcess, (void*)addr, (void*)snap, SNAP_SIZE*2, &read);
+    if(read > 0x0)
+    {
+        my_trace->report_code = REPORT_INFO;
+        sprintf(line, "%ls", snap);
+        strcpy(my_trace->report_buffer, line);
+    }
+    else
+    {
+        my_trace->report_code = REPORT_INFO;
+        sprintf(line, "Failed to read UNICODE string @\n", esp);
+        strcpy(my_trace->report_buffer, line);
+    }
+
+    return;
+}
+
 void output_arg_unicode_string_x(unsigned x)
 {
     d_print("Outputting arg %d\n", x);
@@ -330,7 +364,7 @@ void output_arg_unicode_string_x(unsigned x)
     addr = read_dword(esp);
 
     read_memory(my_trace->cpdi.hProcess, (void*)addr, (void*)snap, SNAP_SIZE*2, &read);
-    if(read == SNAP_SIZE*2)
+    if(read > 0x0)
     {
         sprintf(line, "OU,Arg%d: %ls\n", x, snap);
         add_to_buffer(line);
@@ -384,6 +418,42 @@ void react_output_arg_unicode_str_7(void* data)
     output_arg_unicode_string_x(7);
 }
 
+void report_arg_string_x(unsigned x)
+{
+    d_print("Outputting arg %d as ANSI string\n", x);
+    char line[MAX_LINE];
+    char snap[SNAP_SIZE];
+
+    DWORD read;
+    OFFSET esp;
+    OFFSET addr;
+
+    CONTEXT ctx;
+    read_context(0x0, &ctx);
+    d_print("ESP: 0x%08x\n", esp);
+    esp = ctx.Esp;
+    esp += (x * 0x4);
+    d_print("arg addr: 0x%08x\n", esp);
+
+    addr = read_dword(esp);
+    d_print("str addr: 0x%08x\n", addr);
+
+    read_memory(my_trace->cpdi.hProcess, (void*)addr, (void*)snap, SNAP_SIZE, &read);
+    if(read > 0x0)
+    {
+        my_trace->report_code = REPORT_INFO;
+        sprintf(line, "%s", snap);
+        strcpy(my_trace->report_buffer, line);
+    }
+    else
+    {
+        sprintf(line, "Failed to read ANSI string @\n", esp);
+        add_to_buffer(line);
+    }
+
+    return;
+}
+
 void output_arg_string_x(unsigned x)
 {
     d_print("Outputting arg %d as ANSI string\n", x);
@@ -405,13 +475,8 @@ void output_arg_string_x(unsigned x)
     d_print("str addr: 0x%08x\n", addr);
 
     read_memory(my_trace->cpdi.hProcess, (void*)addr, (void*)snap, SNAP_SIZE, &read);
-    if(read == SNAP_SIZE)
+    if(read > 0x0)
     {
-        unsigned i;
-        for(i = 0x0; i< 0x5; i++)
-            d_print("%c ", snap[i]);
-        d_print("\n");
-
         sprintf(line, "OU,Arg%d: %s\n", x, snap);
         add_to_buffer(line);
     }
@@ -462,6 +527,27 @@ void react_output_arg_str_6(void* data)
 void react_output_arg_str_7(void* data)
 {
     output_arg_string_x(7);
+}
+
+void report_arg_x(unsigned x)
+{
+    d_print("Outputting arg %d\n", x);
+    char line[MAX_LINE];
+
+    OFFSET val;
+    OFFSET esp;
+
+    CONTEXT ctx;
+    read_context(0x0, &ctx);
+    esp = ctx.Esp;
+    esp += (x * 0x4);
+
+    val = read_dword(esp);
+
+    my_trace->report_code = REPORT_INFO;
+    sprintf(line, "0x%08x", val);
+
+    return;
 }
 
 void output_arg_x(unsigned x)
@@ -4275,6 +4361,30 @@ int handle_cmd(char* cmd)
         my_trace->status = STATUS_CONFIGURED; /* move to other */
 
         my_trace->report_code = get_pending_events();
+        send_report();   
+    }
+    else if(!strncmp(cmd, CMD_READ_ARG, 2))
+    {
+        unsigned argno;
+        argno = strtoul(cmd+3, 0x0, 10);
+
+        report_arg_x(argno+1);
+        send_report();   
+    }
+    else if(!strncmp(cmd, CMD_READ_ARG_ANSI, 2))
+    {
+        unsigned argno;
+        argno = strtoul(cmd+3, 0x0, 10);
+
+        report_arg_string_x(argno+1);
+        send_report();   
+    }
+    else if(!strncmp(cmd, CMD_READ_ARG_UNICODE, 2))
+    {
+        unsigned argno;
+        argno = strtoul(cmd+3, 0x0, 10);
+
+        report_arg_unicode_string_x(argno+1);
         send_report();   
     }
     else if(!strncmp(cmd, CMD_LIST_TEBS, 2))
