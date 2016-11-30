@@ -339,7 +339,7 @@ void report_arg_unicode_string_x(unsigned x)
     else
     {
         my_trace->report_code = REPORT_INFO;
-        sprintf(line, "Failed to read UNICODE string @\n", esp);
+        sprintf(line, "Failed to read UNICODE string @ 0x%08x\n", esp);
         strcpy(my_trace->report_buffer, line);
     }
 
@@ -371,7 +371,7 @@ void output_arg_unicode_string_x(unsigned x)
     }
     else
     {
-        sprintf(line, "Failed to read UNICODE string @\n", esp);
+        sprintf(line, "Failed to read UNICODE string @ 0x%08x\n", esp);
         add_to_buffer(line);
     }
 
@@ -447,8 +447,9 @@ void report_arg_string_x(unsigned x)
     }
     else
     {
-        sprintf(line, "Failed to read ANSI string @\n", esp);
-        add_to_buffer(line);
+        my_trace->report_code = REPORT_INFO;
+        sprintf(line, "Failed to read ANSI string @ 0x%08x\n", esp);
+        strcpy(my_trace->report_buffer, line);
     }
 
     return;
@@ -482,7 +483,7 @@ void output_arg_string_x(unsigned x)
     }
     else
     {
-        sprintf(line, "Failed to read ANSI string @\n", esp);
+        sprintf(line, "Failed to read ANSI string @ 0x%08x\n", esp);
         add_to_buffer(line);
     }
 

@@ -103,6 +103,14 @@ kernel32.dll+0x2062,C1:C2,0x0;      # CreateProcessA start
 kernel32.dll+0x208f,C2:C1,0x0;      # CreateProcessA end
 kernel32.dll+0x202d,C3:C4,0x0;      # CreateProcessW start
 kernel32.dll+0x205a,C4:C3,0x0;      # CreateProcessW end
+kernel32.dll+0x8f403,C5:C6,0x0;     # CreateRemoteThread start
+kernel32.dll+0x8f425,C6:C5,0x0;     # CreateRemoteThread end
+user32.dll+0x36dfa,C7:C8,0x0;       # SetWindowsHookExA start
+user32.dll+0x36e13,C8:C7,0x0;       # SetWindowsHookExA end
+user32.dll+0x1210a,C9:C0,0x0;       # SetWindowsHookExW start
+user32.dll+0x12123,C0:C9,0x0;       # SetWindowsHookExW end
+KERNELBASE.dll+0x21cc3,D1:D2,0x0;   # QueueUserAPC start
+KERNELBASE.dll+0x21d23,D2:D1,0x0;   # QueueUserAPC end
 KERNELBASE.dll+0xc3c9,R1:R2,0x0;    # ResumeThread start
 KERNELBASE.dll+0xc3e7,R2:R1,0x0;    # ResumeThread end
 ntdll.dll+0x464f0,s1:s2,0x1;        # KiFastSystemCall

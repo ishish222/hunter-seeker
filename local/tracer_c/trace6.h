@@ -83,7 +83,7 @@
 #define LOCATION_END            0x6
 
 #define MAX_NAME 0x200
-#define SNAP_SIZE 0x20
+#define SNAP_SIZE 0x100
 #define MAX_LIBS 0x200
 
 #define STATUS_EMPTY        0x0
