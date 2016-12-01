@@ -90,6 +90,7 @@ prototypes['CheckHostDir']          = tracing_parts.check_host_dir
 prototypes['ReadArgUni']            = tracer_parts.tracer_read_arg_uni
 prototypes['ReadArgAnsi']           = tracer_parts.tracer_read_arg_ansi
 prototypes['ExtractEP']             = tracing_parts.extract_ep
+prototypes['RunRoutine']            = tracer_parts.tracer_run_routine
 
 
 class CodeUnit:
@@ -135,4 +136,6 @@ class Decision(CodeUnit):
         if ret in self.ret_tab.keys():
             print 'Decided on: %s:%s' % (ret, self.ret_tab[ret])
             return self.ret_tab[ret]
-
+        elif 'default' in self.ret_tab.keys():
+            print 'Decided on: default:%s' % (self.ret_tab['default'])
+            return self.ret_tab['default']

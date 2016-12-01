@@ -156,6 +156,7 @@
 #define CMD_ROUTINE_2           "R2"
 #define CMD_ROUTINE_3           "R3"
 #define CMD_ROUTINE_4           "R4"
+#define CMD_ROUTINE_x           "Rx"
 
 /* tracer configuration */
 

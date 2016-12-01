@@ -119,13 +119,20 @@ EnableBuiltin
 DumpMemory
 EnableReaction(C1)
 EnableReaction(C3)
+EnableReaction(W1)
+EnableReaction(W3)
+EnableReaction(W5)
+EnableReaction(W7)
 TracerStartTraceDebug
 TracerDebugContinueInf
 
 # RE
 loop:
 TracerDebugContinueInf(0x80010001)
-Decision=(RE:loop)
+Decision=(W1:unlock,W3:unlock,W5:unlock,W7:unlock,default:loop)
 
+unlock:
+RunRoutine(0x104)
+goto(loop)
 
 #RX

@@ -172,6 +172,29 @@ void react_zero_ZF(void* data)
     return;
 }
 
+void react_zero_EAX(void* data)
+{
+    d_print("Zeroing EAX\n");
+
+    int i;
+    unsigned id, thread_idx;
+
+    id = my_trace->last_event.dwThreadId;
+
+    CONTEXT ctx;
+    read_context(id, &ctx);
+    d_print("before zeroing: 0x%08x\n", ctx.EFlags);
+    /* zeroing */
+    print_context(&ctx);
+    ctx.Eax = 0x0;
+    d_print("after zeroing: 0x%08x\n", ctx.EFlags);
+    print_context(&ctx);
+
+    write_context(id, &ctx);
+
+    return;
+}
+
 void react_zero_SF(void* data)
 {
     d_print("Zeroing SF\n");
@@ -625,6 +648,12 @@ void react_cry_antidebug_1(void* data)
     write_memory(my_trace->procHandle, (void*)addr, (void*)&val2, 0x1, &wrote);
     
     return;
+}
+
+void run_routine(unsigned x)
+{
+    d_print("Executing routine 0x%02x\n", x);
+    my_trace->routines[x](0x0);
 }
 
 void react_skip_on(void* data)
@@ -4322,6 +4351,14 @@ int handle_cmd(char* cmd)
         disable_all_reactions();
         send_report();
     }
+    else if(!strncmp(cmd, CMD_ROUTINE_x, 2))
+    {
+        unsigned argno;
+        argno = strtoul(cmd+3, 0x0, 10);
+
+        run_routine(argno);
+        send_report();
+    }
     else if(!strncmp(cmd, CMD_ENABLE_REACTION, 2))
     {
         char* mod;
@@ -4975,6 +5012,7 @@ int main(int argc, char** argv)
     my_trace->routines[0x101] = &react_zero_SF;
     my_trace->routines[0x102] = &react_set_ZF;
     my_trace->routines[0x103] = &react_zero_ZF;
+    my_trace->routines[0x104] = &react_zero_EAX;
     my_trace->routines[0x201] = &react_update_region_1;
     my_trace->routines[0x202] = &react_cry_antidebug_1;
     my_trace->routines[0x203] = &react_skip_on;

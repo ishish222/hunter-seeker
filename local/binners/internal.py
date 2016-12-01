@@ -1280,6 +1280,12 @@ def execute(cmds):
             writePipe(ext_pipe, "tracer_list_markers OK")
             ok(ext_pipe)
 
+        elif(cmd == "tracer_run_routine"):
+            trace_controller.run_routine(args)
+            writePipe(ext_pipe, "%s" % trace_controller.last_answer)
+            writePipe(ext_pipe, "tracer_run_routine OK")
+            ok(ext_pipe)
+
         elif(cmd == "tracer_read_arg"):
             trace_controller.read_arg(args)
             writePipe(ext_pipe, "%s" % trace_controller.last_answer)

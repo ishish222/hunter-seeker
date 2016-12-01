@@ -210,6 +210,11 @@ def tracer_add_reaction(args):
 
     return
 
+def tracer_run_routine(args=None):
+    options = globs.state.options
+    write_socket(options.s, "tracer_run_routine %s" % args);
+    response, _, _ = read_socket(options.s)
+
 def tracer_read_arg_ansi(args=None):
     options = globs.state.options
     write_socket(options.s, "tracer_read_arg_ansi %s" % args);

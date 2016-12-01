@@ -113,6 +113,14 @@ KERNELBASE.dll+0x21cc3,D1:D2,0x0;   # QueueUserAPC start
 KERNELBASE.dll+0x21d23,D2:D1,0x0;   # QueueUserAPC end
 KERNELBASE.dll+0xc3c9,R1:R2,0x0;    # ResumeThread start
 KERNELBASE.dll+0xc3e7,R2:R1,0x0;    # ResumeThread end
+kernel32.dll+0x4efa0,W1:W2,0x0;     # WaitForSingleObject start
+kernel32.dll+0x4efb3,W2:W1,0x0;     # WaitForSingleObject end
+kernel32.dll+0x4efc0,W3:W4,0x0;     # WaitForSingleObjectEx start
+kernel32.dll+0x4f005,W4:W3,0x0;     # WaitForSingleObjectEx end
+kernel32.dll+0x4f286,W5:W6,0x0;     # WaitForMultipleObjects start
+kernel32.dll+0x4f29f,W6:W5,0x0;     # WaitForMultipleObjects end
+kernel32.dll+0x4f09c,W7:W8,0x0;     # WaitForMultipleObjectsEx start
+kernel32.dll+0x4f13d,W8:W7,0x0;     # WaitForMultipleObjectsEx end
 ntdll.dll+0x464f0,s1:s2,0x1;        # KiFastSystemCall
 ntdll.dll+0x464f4,s2:s1,0x2;        # KiFastSystemRet
 kernel32.dll+0x51837,a0:a2,0x301;   # GetProcAddr start
