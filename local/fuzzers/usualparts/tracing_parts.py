@@ -454,6 +454,11 @@ def run_ret(args=None):
 def load_ep(args = None):
     globs.state.ret = globs.state.ep
 
+def set_glob_pattern(args = None):
+    print "Setting glob pattern to %s" % args
+    options = globs.state.options
+    options.glob_pattern = args
+
 def set_sample_file(args = None):
     print "Setting sample file to %s" % args
     options = globs.state.options
