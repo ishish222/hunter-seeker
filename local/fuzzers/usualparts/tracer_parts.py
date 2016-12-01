@@ -225,8 +225,21 @@ def tracer_read_arg_uni(args=None):
     write_socket(options.s, "tracer_read_arg_uni %s" % args);
     response, _, _ = read_socket(options.s)
 
+def tracer_manual_st_w_self(args=None):
+    options = globs.state.options
+    
+    if(type(globs.state.ep) == str):
+        globs.state.ep = int(globs.state.ep, 0x10)
+
+    write_socket(options.s, "tracer_register_reactions self+0x%08x,ST,0x0" % globs.state.ep);
+    response, _, _ = read_socket(options.s)
+
 def tracer_manual_st(args=None):
     options = globs.state.options
+    
+    if(type(globs.state.ep) == str):
+        globs.state.ep = int(globs.state.ep, 0x10)
+
     write_socket(options.s, "tracer_register_reactions 0x%08x,ST,0x0" % globs.state.ep);
     response, _, _ = read_socket(options.s)
 

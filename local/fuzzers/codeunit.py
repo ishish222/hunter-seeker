@@ -83,6 +83,7 @@ prototypes['LoadEP']                = tracing_parts.load_ep
 prototypes['SaveFirstEP']           = tracing_parts.save_first_ep
 prototypes['SaveEP']                = tracing_parts.save_ep
 prototypes['ManualST']              = tracer_parts.tracer_manual_st
+prototypes['ManualSTwSelf']         = tracer_parts.tracer_manual_st_w_self
 prototypes['SetSampleFile']         = tracing_parts.set_sample_file
 prototypes['SetResearchDir']        = tracing_parts.set_research_dir
 prototypes['SetOutDir']             = tracing_parts.set_out_dir

@@ -143,6 +143,10 @@ def extract_ep(args=None):
     
     write_socket(options.s, "extract_ep %s" % args);
     response, _, _ = read_socket(options.s)
+    response = response.split('\n')
+    response = response[1]
+    globs.state.ret = response
+    print 'r'+response+'r'
     return
 
 def stop_tracer_controller(args=None):
