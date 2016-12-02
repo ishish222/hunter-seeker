@@ -2,6 +2,7 @@ PrintLogo
 GetOptions
 GetSampleOptions
 SetSampleFile(locky.exe)
+GlobPattern(/home/hs1/malware_samples/locky.exe)
 SetResearchDir(e:\samples\shared)
 SetOutDir(\\10.0.2.4\qemu)
 CheckHostDir
@@ -34,14 +35,16 @@ TracerConfigureOutDir
 TracerConfigureOutPrefix
 TracerConfigureInDir
 TracerPrepareTrace
-TracerRegisterReactions(self+0x3a61,A1:A2,0x100;EAX-0xde,A2:ST,0x100;EAX,ST:F1,0x0;self+0x1f280,F1,0x103)
+ExtractEP(e:\samples\shared\locky.exe)
+SaveEP
+ManualSTwSelf
 TracerRegisterBuiltin
 DisableReactions
 TracerDebugSample
 TracerDebugContinueInf
 
 # RR
-EnableReaction(A1)
+EnableReaction(ST)
 TracerDebugContinueInf
 
 # ST
@@ -55,19 +58,33 @@ EnableReaction(C9)
 EnableReaction(D1)
 EnableReaction(T1)
 EnableReaction(R1)
-##DumpMemory
+EnableReaction(W1)
+EnableReaction(W3)
+EnableReaction(W5)
+EnableReaction(W7)
+#DumpMemory
 #TracerStartTraceDebug
+TracerDebugContinueInf
+
+decision:
+Decision=(RE:loop_2,RX:finish,EN:finish,C1:read_name_uni,C3:read_name_ansi,default:loop)
 
 loop:
 TracerDebugContinueInf
-Decision=(RE:loop,RX:finish,EN:finish,C1:read_name_uni,C3:read_name_ansi,default:loop)
+goto(decision)
+
+loop_2:
+TracerDebugContinueInf(0x80010001)
+goto(decision)
 
 read_name_ansi:
 ReadArgAnsi(1)
-goto(loop)
+TracerDebugContinueInf
+goto(decision)
 
 read_name_uni:
 ReadArgUni(1)
-goto(loop)
+TracerDebugContinueInf
+goto(decision)
 
 finish:

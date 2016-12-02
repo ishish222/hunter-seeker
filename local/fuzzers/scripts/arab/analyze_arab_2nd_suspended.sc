@@ -3,6 +3,7 @@ GetOptions
 GetSampleOptions
 SetSampleFile(arab.exe)
 SetResearchDir(e:\samples\shared)
+GlobPattern(/home/hs1/malware_samples/arab.exe)
 SetOutDir(\\10.0.2.4\qemu)
 CheckHostDir
 RevertClean
@@ -47,10 +48,11 @@ TracerDebugContinueInf
 
 # ST
 EnableBuiltin
-#DumpMemory
-#TracerStartTrace
 EnableReaction(C1)
 EnableReaction(C3)
+EnableReaction(C5)
+EnableReaction(C7)
+EnableReaction(C9)
 TracerDebugContinueInf
 
 ### First CreateProcess
@@ -106,7 +108,6 @@ TracerAttachSample
 
 # RR
 LoadEP
-#TracerRegisterReactions(0x00401de0,ST,0x0)
 ManualST
 EnableReaction(ST)
 TracerPrev
@@ -116,23 +117,36 @@ TracerDebugContinueInf
 
 #ST
 EnableBuiltin
-DumpMemory
 EnableReaction(C1)
 EnableReaction(C3)
+EnableReaction(C5)
+EnableReaction(C7)
+EnableReaction(C9)
+EnableReaction(D1)
+EnableReaction(T1)
+EnableReaction(R1)
 EnableReaction(W1)
 EnableReaction(W3)
 EnableReaction(W5)
 EnableReaction(W7)
+DumpMemory
 TracerStartTraceDebug
 TracerDebugContinueInf
 
-# RE
-loop:
+decision:
+Decision=(RE:re,W1:unlock,W3:unlock,W5:unlock,W7:unlock,default:loop)
+
+re:
 TracerDebugContinueInf(0x80010001)
-Decision=(W1:unlock,W3:unlock,W5:unlock,W7:unlock,default:loop)
+goto(decision)
 
 unlock:
 RunRoutine(0x104)
-goto(loop)
+TracerDebugContinueInf
+goto(decision)
+
+loop:
+TracerDebugContinueInf
+goto(decision)
 
 #RX

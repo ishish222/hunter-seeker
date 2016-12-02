@@ -2,6 +2,7 @@ PrintLogo
 GetOptions
 GetSampleOptions
 SetSampleFile(furtim.exe)
+GlobPattern(/home/hs1/malware_samples/furtim.exe)
 SetResearchDir(e:\samples\shared)
 SetOutDir(\\10.0.2.4\qemu)
 CheckHostDir
@@ -63,17 +64,27 @@ EnableReaction(W5)
 EnableReaction(W7)
 DumpMemory
 TracerStartTraceDebug
+TracerDebugContinueInf
+
+decision:
+Decision=(RE:loop_2,RX:finish,EN:finish,C1:read_name_uni,C3:read_name_ansi,default:loop)
 
 loop:
 TracerDebugContinueInf
-Decision=(RE:loop,RX:finish,EN:finish,C1:read_name_uni,C3:read_name_ansi,default:loop)
+goto(decision)
+
+loop_2:
+TracerDebugContinueInf(0x80010001)
+goto(decision)
 
 read_name_ansi:
 ReadArgAnsi(1)
-goto(loop)
+TracerDebugContinueInf
+goto(decision)
 
 read_name_uni:
 ReadArgUni(1)
-goto(loop)
+TracerDebugContinueInf
+goto(decision)
 
 finish:

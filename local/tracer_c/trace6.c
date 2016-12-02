@@ -4354,7 +4354,7 @@ int handle_cmd(char* cmd)
     else if(!strncmp(cmd, CMD_ROUTINE_x, 2))
     {
         unsigned argno;
-        argno = strtoul(cmd+3, 0x0, 10);
+        argno = strtoul(cmd+3, 0x0, 0x10);
 
         run_routine(argno);
         send_report();
