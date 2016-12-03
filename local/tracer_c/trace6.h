@@ -19,17 +19,18 @@
 #define SET_ZF_FLAGS   0x00000040
 #define MEM_DUMP
 #define MAX_LINE 0x300
-#define MAX_HANDLERS 0x100000
 #define MAX_SYSCALL_OUT_ARGS 0x10
 #define MAX_SYSCALL_ENTRIES  0x10000
 #define MAX_HOOKS 0x50
 #define MAX_FUNCTIONS 0x300
-#define MAX_REACTIONS 0x50
 #define MAX_THREADS 0x100
 #define MAX_LIBS 0x50
-#define MAX_BREAKPOINTS 0x50
 #define MAX_REGIONS 0x20
-#define MAX_COUPLES 0x50
+
+#define MAX_REACTIONS   0x200
+#define MAX_BREAKPOINTS 0x200
+#define MAX_COUPLES     0x20
+#define MAX_HANDLERS    0x1000
 
 /* functions offsets in respective libs */
 #define EXIT_PROCESS_OFF 0x52acf

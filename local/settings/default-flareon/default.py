@@ -96,7 +96,8 @@ qemu_drive_format = 'mkfs.ntfs'
 host_mount_options="loop,umask=0000"
 saved_dir="/mnt/1/raw/"
 log_dir="/mnt/1/log/"
-builtin_reactions_anchors="EN:s1:a0:a3:a5:e6:a7:b1:b3:b5:b7:c0:c2:c4:c6:c8:d0:d2:d4:d6:d8:d0:e3"
+#builtin_reactions_anchors="EN:s1:a0:a3:a5:e6:a7:b1:b3:b5:b7:c0:c2:c4:c6:c8:d0:d2:d4:d6:d8:d0:e0:e1"
+builtin_reactions_anchors="EN:s1:a0:a1:a3:a5:e6:a7:b1:b3:b5:b7:c2:c6:c8:d0:d2:d4:d6:d8:e0:e1:e3:e5:e7:e9:f1:f3:f5:f7:f9:g1:g3:g5:g7:g9:h1:h3:h4:h6:h7:h9:h0:i2:i3:i5:i7:i9:j1"
 builtin_reactions="""
 kernel32.dll+0x2acf,EN,0x0;         # ExitProcess
 kernel32.dll+0x2062,C1:C2,0x0;      # CreateProcessA start
@@ -162,6 +163,56 @@ kernel32.dll+0x3b432,d9:d8,0x100;   # VirtualAllocEx end
 kernel32.dll+0x6859f,e0:e2,0x301;   # WriteProcessMemory start
 kernel32.dll+0x6859f,e1,0x302;      # WriteProcessMemory start
 kernel32.dll+0x685a5,e2:e0:e1,0x100;# WriteProcessMemory end
+kernel32.dll+0x53142,e3:e4,0x301;   # SetUnhandledExceptionFilter start
+kernel32.dll+0x531ff,e4:e3,0x100;   # SetUnhandledExceptionFilter end
+SHELL32.dll+0x110654,e5:e6,0x302;   # SHGetFolderPathA start
+SHELL32.dll+0x1106bf,e6:e5,0x100;   # SHGetFolderPathA end
+SHELL32.dll+0x7ca26,e7:e8,0x302;    # SHGetFolderPathW start
+SHELL32.dll+0x7cb29,e8:e7,0x100;    # SHGetFolderPathW end
+SHELL32.dll+0x2526ae,e9:e0,0x303;   # SHGetSpecialFolderPathA start
+SHELL32.dll+0x2526d7,e0:e9,0x100;   # SHGetSpecialFolderPathA end
+SHELL32.dll+0x1fe3d,f1:f2,0x303;    # SHGetSpecialFolderPathW start
+SHELL32.dll+0x1fe66,f2:f1,0x100;    # SHGetSpecialFolderPathW end
+user32.dll+0x6563,f3:f4,0x302;      # LoadStringA start
+user32.dll+0x65ad,f4:f3,0x100;      # LoadStringA end
+user32.dll+0x15533,f5:f6,0x302;     # LoadStringW start
+user32.dll+0x1554d,f6:f5,0x100;     # LoadStringW end
+KERNELBASE.dll+0xfb98,f7:f8,0x311;  # DeleteFileA start
+KERNELBASE.dll+0xfbc8,f8:f7,0x100;  # DeleteFileA end
+KERNELBASE.dll+0xf6fd,f9:f0,0x321;  # DeleteFileW start
+KERNELBASE.dll+0xf811,f0:f9,0x100;  # DeleteFileW end
+ADVAPI32.dll+0xd3c1,g1:g2,0x312;    # RegCreateKeyA start
+ADVAPI32.dll+0xd3fb,g2:g1,0x100;    # RegCreateKeyA end
+ADVAPI32.dll+0x11cc0,g3:g4,0x322;   # RegCreateKeyW start
+ADVAPI32.dll+0x11cfb,g4:g3,0x100;   # RegCreateKeyW end
+ADVAPI32.dll+0x11b71,g5:g6,0x312;   # RegCreateKeyExA start
+ADVAPI32.dll+0x11b77,g6:g5,0x100;   # RegCreateKeyExA end
+ADVAPI32.dll+0x1b946,g7:g8,0x322;   # RegCreateKeyExW start
+ADVAPI32.dll+0x1b94c,g8:g7,0x100;   # RegCreateKeyExW end
+ADVAPI32.dll+0x5df73,g9:g0,0x312;   # RegSetKeyValueA start, lacks printing data, because its type may vary
+ADVAPI32.dll+0x5dfd5,g0:g9,0x100;   # RegSetKeyValueA end
+ADVAPI32.dll+0x2daf2,h1:h2,0x322;   # RegSetKeyValueW start, lacks printing data, because its type may vary
+ADVAPI32.dll+0x2db4d,h2:h1,0x100;   # RegSetKeyValueW end
+ADVAPI32.dll+0x5f529,h3:h5,0x312;   # RegSetValueA start
+ADVAPI32.dll+0x5f529,h4,0x314;      # RegSetValueA start
+ADVAPI32.dll+0x5f5f5,h5:h3:h4,0x100;# RegSetValueA end
+ADVAPI32.dll+0x2fa72,h6:h8,0x322;   # RegSetValueW start
+ADVAPI32.dll+0x2fa72,h7,0x324;      # RegSetValueW start
+ADVAPI32.dll+0x2fb24,h8:h6:h7,0x100;# RegSetValueW end
+ADVAPI32.dll+0x11b96,h9:i1,0x312;   # RegSetValueExA start
+ADVAPI32.dll+0x11b96,h0,0x314;      # RegSetValueExA start
+ADVAPI32.dll+0x11b9c,i1:h9:h0,0x100;# RegSetValueExA end
+ADVAPI32.dll+0x11c82,i2:i4,0x322;   # RegSetValueExW start
+ADVAPI32.dll+0x11c82,i3,0x324;      # RegSetValueExW start
+ADVAPI32.dll+0x11c88,i4:i2:i3,0x100;# RegSetValueExW end
+ADVAPI32.dll+0xd403,i5:i6,0x312;    # RegQueryValueA start
+ADVAPI32.dll+0xd4f8,i6:i5,0x100;    # RegQueryValueA end
+ADVAPI32.dll+0x1b96b,i7:i8,0x322;   # RegQueryValueW start
+ADVAPI32.dll+0x1ba32,i8:i7,0x100;   # RegQueryValueW end
+ADVAPI32.dll+0x1bc25,i9:i0,0x312;   # RegQueryValueA start
+ADVAPI32.dll+0x1bc2b,i0:i9,0x100;   # RegQueryValueA end
+ADVAPI32.dll+0x1bcd5,j1:j2,0x322;   # RegQueryValueW start
+ADVAPI32.dll+0x1bcdb,j2:j1,0x100;   # RegQueryValueW end
 """ 
 
 
