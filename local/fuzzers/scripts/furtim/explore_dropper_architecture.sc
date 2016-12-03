@@ -49,7 +49,6 @@ TracerDebugContinueInf
 
 # ST
 EnableBuiltin
-EnableReaction(F1)
 EnableReaction(C1)
 EnableReaction(C3)
 EnableReaction(C5)

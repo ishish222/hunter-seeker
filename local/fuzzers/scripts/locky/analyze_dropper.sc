@@ -71,23 +71,18 @@ TracerStartTraceDebug
 TracerDebugContinueInf
 
 decision:
-Decision=(RE:loop_2,RX:finish,EN:finish,C1:read_name_uni,C3:read_name_ansi,default:loop)
+Decision=(RE:re,W1:unlock,W3:unlock,W5:unlock,W7:unlock,default:loop)
 
-loop:
-TracerDebugContinueInf
-goto(decision)
-
-loop_2:
+re:
 TracerDebugContinueInf(0x80010001)
 goto(decision)
 
-read_name_ansi:
-ReadArgAnsi(1)
+unlock:
+RunRoutine(0x104)
 TracerDebugContinueInf
 goto(decision)
 
-read_name_uni:
-ReadArgUni(1)
+loop:
 TracerDebugContinueInf
 goto(decision)
 
