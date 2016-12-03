@@ -1,10 +1,10 @@
 PrintLogo
 GetOptions
 GetSampleOptions
-SetSampleFile(locky.exe)
-GlobPattern(/home/hs1/malware_samples/locky.exe)
+SetSampleFile(arab.exe)
 SetResearchDir(e:\samples\shared)
 SetOutDir(\\10.0.2.4\qemu)
+GlobPattern(/home/hs1/malware_samples/arab.exe)
 CheckHostDir
 RevertClean
 EnableLogging
@@ -35,35 +35,30 @@ TracerConfigureOutDir
 TracerConfigureOutPrefix
 TracerConfigureInDir
 TracerPrepareTrace
-ExtractEP(e:\samples\shared\locky.exe)
-SaveEP
-ManualSTwSelf
+TracerRegisterRegions(EDI:0x5000)
+TracerRegisterReactions(self+0x1317,A1:A2,0x100;EAX+0x9ab,A2:ST:U1,0x100;EDI,ST,0x0;EDI,U1,0x201)
 TracerRegisterBuiltin
 DisableReactions
 TracerDebugSample
 TracerDebugContinueInf
 
 # RR
-EnableReaction(ST)
+EnableReaction(A1)
 TracerDebugContinueInf
 
 # ST
 EnableBuiltin
-EnableReaction(F1)
 EnableReaction(C1)
 EnableReaction(C3)
 EnableReaction(C5)
 EnableReaction(C7)
 EnableReaction(C9)
 EnableReaction(D1)
-EnableReaction(T1)
 EnableReaction(R1)
 EnableReaction(W1)
 EnableReaction(W3)
 EnableReaction(W5)
 EnableReaction(W7)
-#DumpMemory
-#TracerStartTraceDebug
 TracerDebugContinueInf
 
 decision:
