@@ -48,11 +48,40 @@ TracerDebugContinueInf
 
 # ST
 EnableBuiltin
-DumpMemory
-TracerStartTraceDebug
+EnableReaction(C1)
+EnableReaction(C3)
+EnableReaction(C5)
+EnableReaction(C7)
+EnableReaction(C9)
+EnableReaction(D1)
+EnableReaction(R1)
+EnableReaction(W1)
+EnableReaction(W3)
+EnableReaction(W5)
+EnableReaction(W7)
+TracerDebugContinueInf
+
+decision:
+Decision=(RE:loop_2,RX:finish,EN:finish,C1:read_name_ansi,C3:read_name_uni,default:loop)
 
 loop:
 TracerDebugContinueInf
-Decision=(RE:loop,RX:finish,EN:finish)
+goto(decision)
+
+loop_2:
+TracerDebugContinueInf(0x80010001)
+goto(decision)
+
+read_name_ansi:
+ReadArg(-1)
+ReadArgAnsi(1)
+TracerDebugContinueInf
+goto(decision)
+
+read_name_uni:
+ReadArg(-1)
+ReadArgUni(1)
+TracerDebugContinueInf
+goto(decision)
 
 finish:

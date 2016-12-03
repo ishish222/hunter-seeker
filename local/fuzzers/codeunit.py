@@ -78,6 +78,7 @@ prototypes['ReadLastSuspension']    = tracing_parts.read_last_suspension
 prototypes['WhichTracer']           = tracing_parts.which_tracer
 prototypes['MoreTracers']           = tracing_parts.more_tracers
 prototypes['ReadPrefix']            = tracing_parts.read_prefix
+prototypes['ListProcesses']         = tracer_parts.tracer_ps
 prototypes['ListTebs']              = tracer_parts.tracer_list_tebs
 prototypes['ListAllTebs']           = tracer_parts.tracer_list_all_tebs
 prototypes['LoadEP']                = tracing_parts.load_ep
@@ -91,8 +92,11 @@ prototypes['SetOutDir']             = tracing_parts.set_out_dir
 prototypes['CheckHostDir']          = tracing_parts.check_host_dir
 prototypes['ReadArgUni']            = tracer_parts.tracer_read_arg_uni
 prototypes['ReadArgAnsi']           = tracer_parts.tracer_read_arg_ansi
+prototypes['ReadArg']               = tracer_parts.tracer_read_arg
 prototypes['ExtractEP']             = tracing_parts.extract_ep
 prototypes['RunRoutine']            = tracer_parts.tracer_run_routine
+prototypes['Spawn']                 = tracer_parts.tracer_spawn
+prototypes['Cooldown']              = tracer_parts.tracer_cooldown
 
 
 class CodeUnit:

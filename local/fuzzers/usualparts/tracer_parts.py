@@ -225,6 +225,11 @@ def tracer_read_arg_uni(args=None):
     write_socket(options.s, "tracer_read_arg_uni %s" % args);
     response, _, _ = read_socket(options.s)
 
+def tracer_read_arg(args=None):
+    options = globs.state.options
+    write_socket(options.s, "tracer_read_arg %s" % args);
+    response, _, _ = read_socket(options.s)
+
 def tracer_manual_st_w_self(args=None):
     options = globs.state.options
     
@@ -580,6 +585,18 @@ def tracer_list_libs(args=None):
 
     return
 
+def tracer_ps(args=None):
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+    
+    write_socket(options.s, "tracer_list_ps");
+    response, _, _ = read_socket(options.s)
+
+    globs.state.ret = response
+
+    return
+
 def tracer_list_tebs(args=None):
     options = globs.state.options
     state = globs.state
@@ -719,6 +736,29 @@ def tracer_write_register(args):
     status = globs.state.status
     
     write_socket(options.s, "tracer_write_register %s 0x%08x" % args);
+    response, _, _ = read_socket(options.s)
+
+    globs.state.ret = response
+
+    return
+
+def tracer_spawn(args=None):
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+    
+    write_socket(options.s, "tracer_spawn %s" % args);
+    response, _, _ = read_socket(options.s)
+
+    globs.state.ret = response
+
+    return
+def tracer_cooldown(args=None):
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+    
+    write_socket(options.s, "tracer_cooldown");
     response, _, _ = read_socket(options.s)
 
     globs.state.ret = response

@@ -570,6 +570,7 @@ void report_arg_x(unsigned x)
 
     my_trace->report_code = REPORT_INFO;
     sprintf(line, "0x%08x", val);
+    strcpy(my_trace->report_buffer, line);
 
     return;
 }

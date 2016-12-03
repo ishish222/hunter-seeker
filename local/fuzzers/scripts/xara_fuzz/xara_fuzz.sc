@@ -4,7 +4,7 @@ GetSampleOptions
 SetSampleFile(arab.exe)
 SetResearchDir(e:\samples\shared)
 SetOutDir(\\10.0.2.4\qemu)
-GlobPattern(/home/hs1/malware_samples/arab.exe)
+#generation configuration
 CheckHostDir
 RevertClean
 EnableLogging
@@ -12,7 +12,6 @@ RegisterSignals
 PrepareStats
 PreparePipes
 GlobMethod
-DiskGlob
 StartQemuFull
 QemuMountDisks
 
@@ -30,6 +29,8 @@ KillExplorer
 ResetTracers
 SpawnTracerController
 SpawnTracerLog
+Spawn(C:\Program Files\Xara\Xara Designer Pro X10\DesignerPro.exe)
+Cooldown
 TracerConfigureSample
 TracerConfigureOutDir
 TracerConfigureOutPrefix

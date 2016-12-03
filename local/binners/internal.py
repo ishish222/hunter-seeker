@@ -949,9 +949,10 @@ def execute(cmds):
             stop_log()
             ok(ext_pipe)
     
-        elif(cmd == "ps"):
+        elif(cmd == "tracer_ps"):
             for (ppid, pid, name) in enumerate_processes_custom():
                 writePipe(ext_pipe, "0x%x 0x%x %s\n" % (ppid, pid, name))
+            writePipe(ext_pipe, "tracer_ps OK")
             ok(ext_pipe)
 
         elif(cmd == "listTebs"):
@@ -1044,10 +1045,10 @@ def execute(cmds):
             writePipe(ext_pipe, "Status: RD")
             ok(ext_pipe)
 
-        elif(cmd == "spawn"):
+        elif(cmd == "tracer_spawn"):
             print("Spawning: %s" % args)
             spawn(args)
-            writePipe(ext_pipe, "OK")
+            writePipe(ext_pipe, "tracer_spawn OK")
             ok(ext_pipe)
 
         elif(cmd == "startBinner"):
@@ -1289,7 +1290,7 @@ def execute(cmds):
         elif(cmd == "tracer_read_arg"):
             trace_controller.read_arg(args)
             writePipe(ext_pipe, "%s" % trace_controller.last_answer)
-            writePipe(ext_pipe, "tracer_read_arg_uni OK")
+            writePipe(ext_pipe, "tracer_read_arg OK")
             ok(ext_pipe)
 
         elif(cmd == "tracer_read_arg_ansi"):

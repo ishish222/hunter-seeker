@@ -43,10 +43,12 @@ def create_saved_disk_glob(args=None):
     options = globs.state.options
     state = globs.state
 
-    state.samples_list = glob(options.glob_pattern)
     disk_size = 0
-    for sample in state.samples_list:
-        disk_size += os.stat(sample).st_size
+
+    if(options.glob_pattern != None):
+        state.samples_list = glob(options.glob_pattern)
+        for sample in state.samples_list:
+            disk_size += os.stat(sample).st_size
 
     size_margin  = disk_size * options.samples_size_margin
     disk_size += size_margin
