@@ -731,10 +731,7 @@ int taint_x86::check_collecting(CONTEXT_INFO* info)
 
 int taint_x86::comment_out(char* comment)
 {
-    if(!this->cur_info->waiting)
-    {
-        print_empty_call(this->cur_info, comment, colors[CODE_COMMENT]);
-    }
+    print_empty_call(this->cur_info, comment, colors[CODE_COMMENT]);
     return 0x0;
 }
 

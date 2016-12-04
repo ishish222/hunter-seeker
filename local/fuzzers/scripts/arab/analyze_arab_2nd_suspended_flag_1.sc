@@ -132,7 +132,7 @@ EnableReaction(W3)
 EnableReaction(W5)
 EnableReaction(W7)
 DumpMemory
-TracerStartTrace
+TracerStartTraceDebug
 TracerDebugContinueInf
 
 decision:
