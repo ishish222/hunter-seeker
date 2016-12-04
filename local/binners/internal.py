@@ -11,7 +11,7 @@ import settings
 from functions import *
 #from socket import socket, AF_INET, SOCK_STREAM
 import socket
-from subprocess import call, Popen
+from subprocess import call, Popen, PIPE
 from glob import glob
 import pefile
 
@@ -212,9 +212,10 @@ def execute(cmds):
             ok(ext_pipe)
 
         if(cmd == "cooldown"):
+            print "here2"
             from functions import getCPU
 
-            writePipe(ext_pipe, "Waiting for cooldown\n")
+            print("Waiting for cooldown")
             cool_count = 5
             cool_level = 10
             cool_wait = 1
@@ -223,7 +224,7 @@ def execute(cmds):
             while(count < cool_count):
                 time.sleep(cool_wait)
                 val = getCPU()
-                writePipe(ext_pipe, "CPU usage: %d\n" % val)
+                print("CPU usage: %d" % val)
                 if val < cool_level:
                     count = count+1
                 else:
@@ -493,7 +494,9 @@ def execute(cmds):
         elif(cmd == "trace3"):
             filee = args
             print("Tracing %s" % (filee))
-            spawn(args)
+            Popen(filee)
+            time.sleep(3)
+
             writePipe(ext_pipe, "OK")
             ok(ext_pipe)
         
@@ -1047,7 +1050,8 @@ def execute(cmds):
 
         elif(cmd == "tracer_spawn"):
             print("Spawning: %s" % args)
-            spawn(args)
+            Popen([args], stdin = PIPE, stdout = PIPE, stderr = PIPE)
+            print "here1"
             writePipe(ext_pipe, "tracer_spawn OK")
             ok(ext_pipe)
 

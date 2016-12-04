@@ -5,6 +5,8 @@ SetSampleFile(arab.exe)
 SetResearchDir(e:\samples\shared)
 SetOutDir(\\10.0.2.4\qemu)
 #generation configuration
+#this is dummy
+GlobPattern(/home/hs1/malware_samples/arab.exe)
 CheckHostDir
 RevertClean
 EnableLogging
@@ -12,6 +14,7 @@ RegisterSignals
 PrepareStats
 PreparePipes
 GlobMethod
+DiskGlob
 StartQemuFull
 QemuMountDisks
 

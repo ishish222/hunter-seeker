@@ -73,13 +73,17 @@ TracerDebugContinueInf(0x80010001)
 goto(decision)
 
 read_name_ansi:
+ReadArg(-2)
 ReadArg(-1)
+ReadArg(0)
 ReadArgAnsi(1)
 TracerDebugContinueInf
 goto(decision)
 
 read_name_uni:
+ReadArg(-2)
 ReadArg(-1)
+ReadArg(0)
 ReadArgUni(1)
 TracerDebugContinueInf
 goto(decision)

@@ -626,7 +626,10 @@ def tracer_read_stack(args = 5):
     state = globs.state
     status = globs.state.status
     
-    write_socket(options.s, "tracer_read_stack %d" % args);
+    if(args == None):
+        args = 5
+    
+    write_socket(options.s, "tracer_read_stack %s" % args);
     response, _, _ = read_socket(options.s)
 
     globs.state.ret = response

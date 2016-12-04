@@ -97,6 +97,7 @@ prototypes['ExtractEP']             = tracing_parts.extract_ep
 prototypes['RunRoutine']            = tracer_parts.tracer_run_routine
 prototypes['Spawn']                 = tracer_parts.tracer_spawn
 prototypes['Cooldown']              = tracer_parts.tracer_cooldown
+prototypes['ReadStack']             = tracer_parts.tracer_read_stack
 
 
 class CodeUnit:
