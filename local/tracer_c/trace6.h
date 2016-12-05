@@ -16,7 +16,9 @@
 #define CLEAR_SS_FLAGS 0xfffffeff
 #define CLEAR_SF_FLAGS 0xffffff7f
 #define CLEAR_ZF_FLAGS 0xffffffbf
+#define CLEAR_CF_FLAGS 0xfffffffe
 #define SET_ZF_FLAGS   0x00000040
+#define SET_CF_FLAGS   0x00000001
 #define MEM_DUMP
 #define MAX_LINE 0x300
 #define MAX_SYSCALL_OUT_ARGS 0x10

@@ -97,7 +97,7 @@ host_mount_options="loop,umask=0000"
 saved_dir="/mnt/1/raw/"
 log_dir="/mnt/1/log/"
 #builtin_reactions_anchors="EN:s1:a0:a3:a5:e6:a7:b1:b3:b5:b7:c0:c2:c4:c6:c8:d0:d2:d4:d6:d8:d0:e0:e1"
-builtin_reactions_anchors="EN:s1:a0:a1:a3:a5:e6:a7:b1:b3:b5:b7:c2:c6:c8:d0:d2:d4:d6:d8:e0:e1:e3:e5:e7:e9:f1:f3:f5:f7:f9:g1:g3:g5:g7:g9:h1:h3:h4:h6:h7:h9:h0:i2:i3:i5:i7:i9:j1"
+builtin_reactions_anchors="EN:s1:a0:a1:a3:a5:e6:a7:b1:b3:b5:b7:c2:c6:c8:d0:d2:d4:d6:d8:e0:e1:e3:e5:e7:e9:f1:f3:f5:f7:f9:g1:g3:g5:g7:g9:h1:h3:h4:h6:h7:h9:h0:i2:i3:i5:i7:i9:j1:j3:j5:j6:j8:j9:k0:k1:k3:k4:k6:k7:k9"
 builtin_reactions="""
 kernel32.dll+0x2acf,EN,0x0;         # ExitProcess
 kernel32.dll+0x2062,C1:C2,0x0;      # CreateProcessA start
@@ -213,6 +213,24 @@ ADVAPI32.dll+0x1bc25,i9:i0,0x312;   # RegQueryValueA start
 ADVAPI32.dll+0x1bc2b,i0:i9,0x100;   # RegQueryValueA end
 ADVAPI32.dll+0x1bcd5,j1:j2,0x322;   # RegQueryValueW start
 ADVAPI32.dll+0x1bcdb,j2:j1,0x100;   # RegQueryValueW end
+ntdll.dll+0x469d0,j3:j4,0x311;      # strstr start
+ntdll.dll+0x469d0,j5,0x312;         # strstr start
+ntdll.dll+0x46a0d,j4:j3:j5,0x100;   # strstr end
+ntdll.dll+0x347f0,j6:j7,0x311;      # strcat start
+ntdll.dll+0x347f0,j8,0x312;         # strcat start
+ntdll.dll+0x348dd,j7:j6:j8,0x100;   # strcat end
+ntdll.dll+0x348e0,j9:j0,0x311;      # strcmp start
+ntdll.dll+0x348e0,k0,0x312;         # strcmp start
+ntdll.dll+0x3492b,j0:j9:k0,0x100;   # strcmp end
+ntdll.dll+0x347e0,k1:k2,0x311;      # strcpy start
+ntdll.dll+0x347e0,k3,0x312;         # strcpy start
+ntdll.dll+0x347e5,k2:k1:k3,0x100;   # strcpy end
+ntdll.dll+0x34a80,k4:k5,0x311;      # strncat start
+ntdll.dll+0x34a80,k6,0x312;         # strncat start
+ntdll.dll+0x34a85,k5:k4:k6,0x100;   # strncat end
+ntdll.dll+0x7191c,k7:k8,0x311;      # strncmp start
+ntdll.dll+0x7191c,k9,0x312;         # strncmp start
+ntdll.dll+0x71983,k8:k7:k9,0x100;   # strncmp end
 """ 
 
 

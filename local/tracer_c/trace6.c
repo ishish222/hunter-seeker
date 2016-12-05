@@ -172,6 +172,29 @@ void react_zero_ZF(void* data)
     return;
 }
 
+void react_zero_CF(void* data)
+{
+    d_print("Zeroing CF\n");
+
+    int i;
+    unsigned id, thread_idx;
+
+    id = my_trace->last_event.dwThreadId;
+
+    CONTEXT ctx;
+    read_context(id, &ctx);
+    d_print("before zeroing: 0x%08x\n", ctx.EFlags);
+    /* zeroing */
+    print_context(&ctx);
+    ctx.EFlags &= CLEAR_CF_FLAGS;
+    d_print("after zeroing: 0x%08x\n", ctx.EFlags);
+    print_context(&ctx);
+
+    write_context(id, &ctx);
+
+    return;
+}
+
 void react_zero_EAX(void* data)
 {
     d_print("Zeroing EAX\n");
@@ -5019,6 +5042,7 @@ int main(int argc, char** argv)
     my_trace->routines[0x203] = &react_skip_on;
     my_trace->routines[0x204] = &react_skip_off;
     my_trace->routines[0x205] = &react_update_region_2;
+    my_trace->routines[0x206] = &react_zero_CF;
 
     /* outputting DWORDs */
     my_trace->routines[0x300] = &react_output_arg_0;
