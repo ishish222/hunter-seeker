@@ -50,7 +50,7 @@ EnableBuiltin
 EnableReaction(C1)
 EnableReaction(C3)
 ##DumpMemory
-#TracerStartTraceDebug
+#TracerStartTrace
 
 loop:
 TracerDebugContinueInf

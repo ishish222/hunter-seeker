@@ -49,7 +49,7 @@ TracerDebugContinueInf
 # ST
 EnableBuiltin
 DumpMemory
-TracerStartTraceLight
+TracerStartTrace
 
 loop:
 TracerDebugContinueInf
