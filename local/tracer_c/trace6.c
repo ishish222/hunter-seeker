@@ -80,6 +80,7 @@ int update_breakpoint(BREAKPOINT* bp);
 OFFSET resolve_loc_desc(LOCATION_DESCRIPTOR_NEW* d);
 REACTION* find_reaction(char*);
 int read_dword(DWORD addr);
+char read_byte(DWORD addr);
 int report_dword(DWORD addr);
 DWORD read_register(DWORD tid_id, char* reg);
 int report_register(DWORD tid_id, char* reg);
@@ -385,7 +386,7 @@ void report_arg_unicode_string_x(unsigned x)
     else
     {
         my_trace->report_code = REPORT_INFO;
-        sprintf(line, "Failed to read UNICODE string @ 0x%08x\n", esp);
+        sprintf(line, "# Failed to read UNICODE string @ 0x%08x\n", esp);
         strcpy(my_trace->report_buffer, line);
     }
 
@@ -417,7 +418,7 @@ void output_arg_unicode_string_x(unsigned x)
     }
     else
     {
-        sprintf(line, "Failed to read UNICODE string @ 0x%08x\n", esp);
+        sprintf(line, "# Failed to read UNICODE string @ 0x%08x\n", esp);
         add_to_buffer(line);
     }
 
@@ -464,6 +465,11 @@ void react_output_arg_unicode_str_7(void* data)
     output_arg_unicode_string_x(7);
 }
 
+void react_output_arg_unicode_str_8(void* data)
+{
+    output_arg_unicode_string_x(8);
+}
+
 void report_arg_string_x(unsigned x)
 {
     d_print("Outputting arg %d as ANSI string\n", x);
@@ -494,7 +500,7 @@ void report_arg_string_x(unsigned x)
     else
     {
         my_trace->report_code = REPORT_INFO;
-        sprintf(line, "Failed to read ANSI string @ 0x%08x\n", esp);
+        sprintf(line, "# Failed to read ANSI string @ 0x%08x\n", esp);
         strcpy(my_trace->report_buffer, line);
     }
 
@@ -529,7 +535,7 @@ void output_arg_string_x(unsigned x)
     }
     else
     {
-        sprintf(line, "Failed to read ANSI string @ 0x%08x\n", esp);
+        sprintf(line, "# Failed to read ANSI string @ 0x%08x\n", esp);
         add_to_buffer(line);
     }
 
@@ -574,6 +580,11 @@ void react_output_arg_str_6(void* data)
 void react_output_arg_str_7(void* data)
 {
     output_arg_string_x(7);
+}
+
+void react_output_arg_str_8(void* data)
+{
+    output_arg_string_x(8);
 }
 
 void report_arg_x(unsigned x)
@@ -657,6 +668,11 @@ void react_output_arg_6(void* data)
 void react_output_arg_7(void* data)
 {
     output_arg_x(7);
+}
+
+void react_output_arg_8(void* data)
+{
+    output_arg_x(8);
 }
 
 void react_cry_antidebug_1(void* data)
@@ -917,7 +933,7 @@ void read_memory(HANDLE handle, void* from, void* to, SIZE_T size, SIZE_T* read)
     DWORD oldProt;
     DWORD ret;
 
-    d_print("read_memory, handle: 0x%08x\n", handle);
+//    d_print("read_memory, handle: 0x%08x\n", handle);
 
     VirtualProtectEx(handle, to, size, PAGE_EXECUTE_READWRITE, &oldProt);
 
@@ -1951,7 +1967,21 @@ void check_debug(DWORD eip, long long unsigned i_count, DWORD id)
     return;
 }
 
+int is_call(OFFSET eip)
+{
+    char val;
+    char line[MAX_LINE];
 
+    val = read_byte(eip);
+    val &= 0xff;
+
+    if((val == 0xe8) || (val == 0xff) || (val == 0xffffffe8) || (val == 0xffffffff))
+    {
+        return 0x1;
+    }
+
+    return 0x0;
+}
 
 void ss_callback(void* data)
 {
@@ -1969,7 +1999,7 @@ void ss_callback(void* data)
 
     eip = (DWORD)(de->u.Exception.ExceptionRecord.ExceptionAddress);
         //d_print("%p\n", eip);
-    if((my_trace->status != STATUS_DBG_STARTED) && (my_trace->status != STATUS_DBG_SCANNED)) 
+    if((my_trace->status != STATUS_DBG_STARTED) && (my_trace->status != STATUS_DBG_SCANNED) && (my_trace->status != STATUS_DBG_LIGHT)) 
     {
         return;
     }
@@ -1985,6 +2015,16 @@ void ss_callback(void* data)
 
     if(my_trace->status == STATUS_DBG_SCANNED)
     {
+        if(register_thread_debug(tid, my_trace->threads[tid_pos].handle) <= 0x0)
+        {
+            d_print("Error writing to file: 0x%x\n", GetLastError());
+            exit(1);
+        }
+    }
+
+    if(my_trace->status == STATUS_DBG_LIGHT)
+    {
+        if(is_call(eip))
         if(register_thread_debug(tid, my_trace->threads[tid_pos].handle) <= 0x0)
         {
             d_print("Error writing to file: 0x%x\n", GetLastError());
@@ -3150,17 +3190,6 @@ char read_byte(DWORD addr)
     char buffer2[MAX_LINE];
 
     read_memory(my_trace->procHandle, (void*)addr, (void*)&data, 0x1, &read);
-    
-    if(read == 0x1)
-    {
-        sprintf(buffer2, "%02x", data);
-        strcpy(my_trace->report_buffer, buffer2);
-    }
-    else {
-        sprintf(buffer2, "Error");
-        strcpy(my_trace->report_buffer, buffer2);
-    }
-
     return data;
 }
 
@@ -4318,6 +4347,21 @@ int handle_cmd(char* cmd)
 
         send_report();
     }
+    else if(!strncmp(cmd, CMD_ENABLE_DBG_LIGHT, 2))
+    {
+        char line2[MAX_LINE];
+
+        my_trace->status = STATUS_DBG_LIGHT;
+        ss_callback((void*)&my_trace->last_event);
+        set_ss(0x0);
+        d_print("Light tracing debugged enabled\n");
+
+        d_print("Starting @ 0x%08x\n", my_trace->last_eip);
+        sprintf(line2, "ST,0x%08x\n", my_trace->last_eip);
+        add_to_buffer(line2);
+
+        send_report();
+    }
     else if(!strncmp(cmd, CMD_ENABLE_DBG_TRACE, 2))
     {
         char line2[MAX_LINE];
@@ -5053,6 +5097,7 @@ int main(int argc, char** argv)
     my_trace->routines[0x305] = &react_output_arg_5;
     my_trace->routines[0x306] = &react_output_arg_6;
     my_trace->routines[0x307] = &react_output_arg_7;
+    my_trace->routines[0x308] = &react_output_arg_8;
 
     /* outputting ANSI strings */
     my_trace->routines[0x310] = &react_output_arg_str_0;
@@ -5063,6 +5108,7 @@ int main(int argc, char** argv)
     my_trace->routines[0x315] = &react_output_arg_str_5;
     my_trace->routines[0x316] = &react_output_arg_str_6;
     my_trace->routines[0x317] = &react_output_arg_str_7;
+    my_trace->routines[0x318] = &react_output_arg_str_8;
 
     /* outputting UNICODE strings */
     my_trace->routines[0x320] = &react_output_arg_unicode_str_0;
@@ -5073,6 +5119,7 @@ int main(int argc, char** argv)
     my_trace->routines[0x325] = &react_output_arg_unicode_str_5;
     my_trace->routines[0x326] = &react_output_arg_unicode_str_6;
     my_trace->routines[0x327] = &react_output_arg_unicode_str_7;
+    my_trace->routines[0x328] = &react_output_arg_unicode_str_8;
 
     /* outputting registers */
     my_trace->routines[0x330] = &react_output_eax;

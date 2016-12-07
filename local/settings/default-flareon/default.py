@@ -97,7 +97,8 @@ host_mount_options="loop,umask=0000"
 saved_dir="/mnt/1/raw/"
 log_dir="/mnt/1/log/"
 #builtin_reactions_anchors="EN:s1:a0:a3:a5:e6:a7:b1:b3:b5:b7:c0:c2:c4:c6:c8:d0:d2:d4:d6:d8:d0:e0:e1"
-builtin_reactions_anchors="EN:s1:a0:a1:a3:a5:e6:a7:b1:b3:b5:b7:c2:c6:c8:d0:d2:d4:d6:d8:e0:e1:e3:e5:e7:e9:f1:f3:f5:f7:f9:g1:g3:g5:g7:g9:h1:h3:h4:h6:h7:h9:h0:i2:i3:i5:i7:i9:j1:j3:j5:j6:j8:j9:k0:k1:k3:k4:k6:k7:k9"
+#builtin_reactions_anchors="EN:s1:a0:a1:a3:a5:e6:a7:b1:b3:b5:b7:c2:c6:c8:d0:d2:d4:d6:d8:e0:e1:e3:e5:e7:e9:f1:f3:f5:f7:f9:g1:g3:g5:g7:g9:h1:h3:h4:h6:h7:h9:h0:i2:i3:i5:i7:i9:j1:j3:j5:j6:j8:j9:k0:k1:k3:k4:k6:k7:k9:k0:l2:l3:l5"
+builtin_reactions_anchors="EN:s1:a0:a1:a3:a5:e6:a7:b1:b3:b5:b7:c2:c6:c8:d0:d2:d4:d6:d8:e0:e1:e3:e5:e7:e9:f1:f3:f5:f7:f9:g1:g3:g5:g7:g9:h1:h3:h4:h6:h7:h9:h0:i2:i3:i5:i7:i9:j1:j3:j5:j6:j8:j9:k0:k1:k3:k4:k6:k7:k9:k0:l2"
 builtin_reactions="""
 kernel32.dll+0x2acf,EN,0x0;         # ExitProcess
 kernel32.dll+0x2062,C1:C2,0x0;      # CreateProcessA start
@@ -231,6 +232,12 @@ ntdll.dll+0x34a85,k5:k4:k6,0x100;   # strncat end
 ntdll.dll+0x7191c,k7:k8,0x311;      # strncmp start
 ntdll.dll+0x7191c,k9,0x312;         # strncmp start
 ntdll.dll+0x71983,k8:k7:k9,0x100;   # strncmp end
+ntdll.dll+0x5ee27,k0:l1,0x301;      # LdrGetProcedureAddress start
+ntdll.dll+0x5ee27,l2,0x318;         # LdrGetProcedureAddress start
+ntdll.dll+0x5ee40,l1:k0:l2,0x100;   # LdrGetProcedureAddress end
+ntdll.dll+0x5eb05,l3:l4,0x301;      # LdrGetProcedureAddressEx start invalid
+ntdll.dll+0x5eb05,l5,0x318;         # LdrGetProcedureAddressEx start invalid
+ntdll.dll+0x5ec50,l4:l3:l5,0x100;   # LdrGetProcedureAddressEx end
 """ 
 
 

@@ -48,7 +48,7 @@ EnableReaction(ST)
 TracerDebugContinueInf
 
 # ST
-TracerRegisterReactions(self+0x766b,Z1:Z2,0x104;self+0xe21f,Z2,0x206)
+TracerRegisterReactions(self+0x766b,Z1:Z2,0x104;self+0xe21f,Z2:Z3,0x206;self+0xe263,Z3:Z4,0x206;self+0xcf39,Z4,0x206)
 EnableBuiltin
 EnableReaction(Z1)
 EnableReaction(C1)

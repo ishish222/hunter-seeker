@@ -94,7 +94,8 @@
 #define STATUS_SPAWNED      0x2
 #define STATUS_DBG_STARTED  0x3
 #define STATUS_DBG_SCANNED  0x4
-#define STATUS_DBG_STOPPED  0x5
+#define STATUS_DBG_LIGHT    0x5
+#define STATUS_DBG_STOPPED  0x6
 
 /* tracer reports */
 
@@ -140,6 +141,7 @@
 #define CMD_INFO_NAME           "SI"
 #define CMD_ENABLE_TRACE        "ET"
 #define CMD_ENABLE_DBG_TRACE    "ED"
+#define CMD_ENABLE_DBG_LIGHT    "EL"
 #define CMD_DISABLE_TRACE       "DT"
 #define CMD_DUMP_MEMORY         "DM"
 #define CMD_CONFIGURE_REGIONS   "cr"

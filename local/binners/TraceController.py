@@ -808,6 +808,11 @@ class TraceController(object):
         self.last_report, self.last_answer = self.recv_report_active()
         return 
 
+    def start_trace_light(self):
+        self.send_command_active("EL")
+        self.last_report, self.last_answer = self.recv_report_active()
+        return 
+
     def stop_trace(self):
         self.send_command_active("DT")
         self.last_report, self.last_answer = self.recv_report_active()

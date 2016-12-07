@@ -44,6 +44,17 @@ def tracer_start_trace(args=None):
     globs.state.ret = response
     return
 
+def tracer_start_trace_light(args=None):
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+    
+    write_socket(options.s, "tracer_start_trace_light");
+    response, _, _ = read_socket(options.s)
+
+    globs.state.ret = response
+    return
+
 def tracer_start_trace_debug(args=None):
     options = globs.state.options
     state = globs.state
