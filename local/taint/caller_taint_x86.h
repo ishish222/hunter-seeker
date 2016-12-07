@@ -2312,10 +2312,12 @@ typedef struct _CONTEXT_INFO
 
     /* call level handling */ 
     unsigned ret_idx;
+    char calling;
     char returning;
+    char before_calling;
     char before_returning;
     char before_waiting;
-    char calling;
+    OFFSET source;
     OFFSET target;
     OFFSET next;
 
