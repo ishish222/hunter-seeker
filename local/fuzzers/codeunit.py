@@ -8,6 +8,7 @@ import usualparts.hs_logging as hs_logging
 import usualparts.diagnostic as diagnostic
 import usualparts.qemu_parts as qemu_parts
 import usualparts.disk_fs_parts as disk_fs_parts
+import usualparts.responder_parts as responder_parts
 
 global prototypes
 prototypes = {}
@@ -99,6 +100,11 @@ prototypes['RunRoutine']            = tracer_parts.tracer_run_routine
 prototypes['Spawn']                 = tracer_parts.tracer_spawn
 prototypes['Cooldown']              = tracer_parts.tracer_cooldown
 prototypes['ReadStack']             = tracer_parts.tracer_read_stack
+prototypes['SpawnResponder80']      = responder_parts.spawn_responder_80
+prototypes['NextResponse']          = responder_parts.next_response
+prototypes['ResolveDNS']            = responder_parts.get_dns
+prototypes['GetHTTP']               = responder_parts.get_http
+prototypes['StartLog']              = responder_parts.start_log
 
 
 class CodeUnit:

@@ -85,7 +85,7 @@ def startLog(name):
     global log_file
     global logf
 
-    log_file = "%s.txt" % name
+    log_file = "%s" % name
     logf = open(log_file, "a", 0)
     logf.write("test\n")
     logStarted = True
@@ -176,6 +176,7 @@ def execute(cmds):
     global ext_pipe
     global status
     global trace_controller
+    global responder
 
     cmd = cmds[0]
     args = " ".join(cmds[1:])
@@ -936,14 +937,8 @@ def execute(cmds):
 
         # TODO: sprawdz ktore logi gdzie maja isc
         elif(cmd == "logStart"):
-            global log_file
-
-#            if(len(cmds) > 1):
-#                startLog(cmds[1])
-#            else:
-#                startLog(log_file)
             startLog(args)
-            start_log("%s" % (args))
+            writePipe(ext_pipe, "logStart OK")
             ok(ext_pipe)
 
         # TODO: sprawdz ktore logi gdzie maja isc
@@ -1379,9 +1374,40 @@ def execute(cmds):
             #writeReport(trace_controller)
             ok(ext_pipe)
 
+        elif(cmd == "get_http"):
+            import urllib2
+            response = urllib2.urlopen(args).read()
+            writePipe(ext_pipe, "%s" % response)
+            writePipe(ext_pipe, "get_http OK")
+            ok(ext_pipe)
+
+        elif(cmd == "get_dns"):
+            import socket
+
+            response = socket.gethostbyname(args)
+            writePipe(ext_pipe, "%s" % response)
+            writePipe(ext_pipe, "get_dns OK")
+            ok(ext_pipe)
+
         elif(cmd == "tracer_print"):
             trace_controller.print_sth(args)
             writePipe(ext_pipe, "tracer_print OK")
+            ok(ext_pipe)
+
+        elif(cmd == "tracer_print"):
+            trace_controller.print_sth(args)
+            writePipe(ext_pipe, "tracer_print OK")
+            ok(ext_pipe)
+
+        elif(cmd == "spawn_responder_80"):
+            from simple import simple_responder
+            responder = simple_responder(80, logf)
+            writePipe(ext_pipe, "spawn_responder_80 OK")
+            ok(ext_pipe)
+
+        elif(cmd == "responder_next_response"):
+            responder.load_next_response(args)
+            writePipe(ext_pipe, "responder_next_response OK")
             ok(ext_pipe)
 
         elif(cmd == "spawn_tracer"):
