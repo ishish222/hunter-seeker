@@ -1292,6 +1292,16 @@ def execute(cmds):
             writePipe(ext_pipe, "tracer_run_routine OK")
             ok(ext_pipe)
 
+        elif(cmd == "tracer_write_string_ansi"):
+            trace_controller.write_string_ansi(args)
+            writePipe(ext_pipe, "tracer_string_ansi OK")
+            ok(ext_pipe)
+
+        elif(cmd == "tracer_write_string_unicode"):
+            trace_controller.write_string_unicode(args)
+            writePipe(ext_pipe, "tracer_string_unicode OK")
+            ok(ext_pipe)
+
         elif(cmd == "tracer_read_arg"):
             trace_controller.read_arg(args)
             writePipe(ext_pipe, "%s" % trace_controller.last_answer)
@@ -1379,6 +1389,14 @@ def execute(cmds):
             response = urllib2.urlopen(args).read()
             writePipe(ext_pipe, "%s" % response)
             writePipe(ext_pipe, "get_http OK")
+            ok(ext_pipe)
+
+        elif(cmd == "run_cmd"):
+            import subprocess
+            logf.write("a")
+            ans = subprocess.call(("%s" % args).split(), stdout=logf.fileno())
+            writePipe(ext_pipe, "run_cmd OK")
+            logf.write("b")
             ok(ext_pipe)
 
         elif(cmd == "get_dns"):

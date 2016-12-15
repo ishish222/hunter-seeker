@@ -105,6 +105,10 @@ prototypes['NextResponse']          = responder_parts.next_response
 prototypes['ResolveDNS']            = responder_parts.get_dns
 prototypes['GetHTTP']               = responder_parts.get_http
 prototypes['StartLog']              = responder_parts.start_log
+prototypes['ChangeIP']              = responder_parts.change_ip
+prototypes['RunCmd']                = responder_parts.run_cmd
+prototypes['WriteAnsi']             = tracer_parts.write_ansi
+prototypes['WriteUnicode']          = tracer_parts.write_unicode
 
 
 class CodeUnit:

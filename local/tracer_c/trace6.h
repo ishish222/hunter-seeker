@@ -132,6 +132,8 @@
 #define CMD_WRITE_MEMORY        "WM"
 #define CMD_READ_REGISTER       "RR"
 #define CMD_WRITE_REGISTER      "WR"
+#define CMD_WRITE_STRING        "WS"
+#define CMD_WRITE_STRING_UNI    "WU"
 #define CMD_READ_STACK          "RS"
 #define CMD_CONTINUE            "cn"
 #define CMD_CONTINUE_TIME       "cN"

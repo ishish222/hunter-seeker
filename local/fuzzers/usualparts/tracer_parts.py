@@ -226,6 +226,21 @@ def tracer_run_routine(args=None):
     write_socket(options.s, "tracer_run_routine %s" % args);
     response, _, _ = read_socket(options.s)
 
+def write_ansi(args=None):
+    options = globs.state.options
+    
+    addr = globs.state.ret
+
+    write_socket(options.s, "tracer_write_string_ansi 0x%08x %s" % (addr, args));
+    response, _, _ = read_socket(options.s)
+
+def write_unicode(args=None):
+    options = globs.state.options
+    addr = globs.state.ret
+
+    write_socket(options.s, "tracer_write_string_unicode 0x%08x %s" % (addr, args));
+    response, _, _ = read_socket(options.s)
+
 def tracer_read_arg_ansi(args=None):
     options = globs.state.options
     write_socket(options.s, "tracer_read_arg_ansi %s" % args);

@@ -696,6 +696,56 @@ void run_routine(unsigned x)
     my_trace->routines[x](0x0);
 }
 
+void write_string_ascii(OFFSET addr, char* str)
+{
+    d_print("Writing ANSI string to 0x%08x\n", addr);
+    char line[MAX_LINE];
+
+    DWORD wrote;
+
+    write_memory(my_trace->cpdi.hProcess, (void*)addr, (void*)str, strlen(str), &wrote);
+    if(wrote > 0x0)
+    {
+        sprintf(line, "# Wrote ANSI string @ 0x%08x\n", addr);
+        add_to_buffer(line);
+    }
+    else
+    {
+        sprintf(line, "# Failed to write ANSI string @ 0x%08x\n", addr);
+        add_to_buffer(line);
+    }
+
+    return;
+}
+
+void write_string_unicode(OFFSET addr, char* str)
+{
+    d_print("Writing UNICODE string to 0x%08x\n", addr);
+    WCHAR* unistring;
+    unsigned unistring_len = (strlen(str)+1)*sizeof(WCHAR);
+    unistring = (WCHAR*)malloc(unistring_len);
+
+    char line[MAX_LINE];
+
+    DWORD wrote;
+    int result = MultiByteToWideChar(CP_OEMCP, 0, str, -1, unistring, strlen(str)+ 1);
+
+    write_memory(my_trace->cpdi.hProcess, (void*)addr, (void*)unistring, unistring_len, &wrote);
+    if(wrote > 0x0)
+    {
+        sprintf(line, "# Wrote UNICODE string @ 0x%08x\n", addr);
+        add_to_buffer(line);
+    }
+    else
+    {
+        sprintf(line, "# Failed to write UNICODE string @ 0x%08x\n", addr);
+        add_to_buffer(line);
+    }
+
+    free(unistring);
+    return;
+}
+
 void react_skip_on(void* data)
 {
     char line[MAX_LINE]; 
@@ -4534,6 +4584,38 @@ int handle_cmd(char* cmd)
         d_print("Reading addr: 0x%08x\n", addr);
 
         report_dword(addr);
+        send_report();   
+    
+    }
+    else if(!strncmp(cmd, CMD_WRITE_STRING, 2))
+    {
+        char* cmd_;
+        DWORD addr;
+        char* str;
+
+        cmd_ = strtok(cmd, " ");
+        addr = strtoul(strtok(0x0, " "), 0x0, 0x10);
+        str = strtok(0x0, ";");
+
+        d_print("Writing str: %s @ 0x%08x\n", str, addr);
+
+        write_string_ascii(addr, str);
+        send_report();   
+    
+    }
+    else if(!strncmp(cmd, CMD_WRITE_STRING_UNI, 2))
+    {
+        char* cmd_;
+        DWORD addr;
+        char* str;
+
+        cmd_ = strtok(cmd, " ");
+        addr = strtoul(strtok(0x0, " "), 0x0, 0x10);
+        str = strtok(0x0, ";");
+
+        d_print("Writing str: %s @ 0x%08x\n", str, addr);
+
+        write_string_unicode(addr, str);
         send_report();   
     
     }

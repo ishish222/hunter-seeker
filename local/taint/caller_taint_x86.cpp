@@ -1155,7 +1155,12 @@ int taint_x86::handle_call(CONTEXT_INFO* info)
     else
     {
         d_print(2, "Not diving!\n");
-        if(info->waiting == 0x0) info->waiting = next;
+        if(info->waiting == 0x0) 
+        {
+            info->waiting = next;
+            info->last_emit_decision = decision_emit;
+        }
+
     }
         
     d_print(1, "[handle call finishes]\n");
@@ -1340,7 +1345,6 @@ int taint_x86::handle_ret(CONTEXT_INFO* cur_ctx, OFFSET eip)
                 print_ret(cur_ctx);
             }
             if(cur_ctx->waiting != 0x0) cur_ctx->waiting = 0x0;
-
             for(j=0x0; j<diff; j++)
             {
                 if(cur_ctx->levels[cur_ctx->call_level].loop_status != FENCE_NOT_COLLECTING)
@@ -1905,7 +1909,11 @@ int taint_x86::pre_execute_instruction(DWORD eip)
         d_print(1, "[0x%08x] Waiting: 0x%08x, eip: 0x%08x\n", this->cur_tid, cur_info->waiting, eip);
         cur_info->waiting = 0x0;
         cur_info->before_waiting = 0x1;
-        print_ret(cur_info);
+        if((cur_info->last_emit_decision == DECISION_EMIT) || (cur_info->last_emit_decision == DECISION_EMIT_NESTED))
+        {
+            print_ret(cur_info);
+            cur_info->last_emit_decision = 0x0; 
+        }
     }
 
     this->current_instr_length = 0x0;
@@ -2229,6 +2237,7 @@ int taint_x86::finish()
 
         if(cur_tid->waiting != 0x0)
         {
+            if(cur_tid->last_emit_decision == DECISION_EMIT)
             print_ret(cur_tid);
         }
 

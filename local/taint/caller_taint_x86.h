@@ -2317,6 +2317,7 @@ typedef struct _CONTEXT_INFO
     char before_calling;
     char before_returning;
     char before_waiting;
+    char last_emit_decision;
     OFFSET source;
     OFFSET target;
     OFFSET next;

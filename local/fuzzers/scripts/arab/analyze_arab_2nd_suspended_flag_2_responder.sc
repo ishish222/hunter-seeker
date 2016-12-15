@@ -50,8 +50,9 @@ TracerDebugContinueInf
 StartLog(e:\samples\internal.log)
 SpawnResponder80
 NextResponse(Test)
-ResolveDNS(google.pl)
-GetHTTP(http://google.pl)
+RunCmd(netsh interface ip add address "Local Area Connection 2" 10.10.10.10 255.255.255.255)
+RunCmd(netsh interface ip show addresses)
+GetHTTP(http://10.10.10.10)
 EnableBuiltin
 EnableReaction(C1)
 EnableReaction(C3)
