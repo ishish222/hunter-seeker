@@ -152,6 +152,17 @@ int register_blacklist(char* line, taint_x86* taint_eng)
     return 0x0;
 }
 
+unsigned get_instr_interval(char* line)
+{
+    char* cmd;
+    unsigned interval;
+
+    cmd = strtok(line, ",");
+    interval = strtol(strtok(0x0, ","), 0x0, 10);
+
+    return interval;
+}
+
 int register_blacklist_addr(char* line, taint_x86* taint_eng)
 {
     char* cmd;
@@ -652,6 +663,7 @@ void _pause()
 int main(int argc, char** argv)
 {
     char structured_buffer[STRUCTURED_BUFFER_LENGTH];
+    unsigned instr_report_interval = INSTR_REPORT_INTERVAL;
 
     // new
     char instr_file_path[MAX_NAME];
@@ -928,6 +940,9 @@ int main(int argc, char** argv)
             if(line[0] == 'B' && line[1] == 'L')
                 register_blacklist(line, &taint_eng);
 
+            if(line[0] == 'I' && line[1] == 'R')
+                instr_report_interval = get_instr_interval(line);
+
             if(line[0] == 'B' && line[1] == 'A')
                 register_blacklist_addr(line, &taint_eng);
 
@@ -1014,7 +1029,7 @@ int main(int argc, char** argv)
             getchar();
         }
 
-        if(!(instr_count % INSTR_REPORT_INTERVAL))
+        if(!(instr_count % instr_report_interval))
         {
             fprintf(stdout, "Processed %lld instructions\n", instr_count);
         }

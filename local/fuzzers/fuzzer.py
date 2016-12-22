@@ -15,12 +15,12 @@ from codeunit import Instruction, Decision, GoTo
 class MachineError(Exception):
     pass
 
-def stateful_routine():
+def stateful_routine(script_path):
     script = []
     labels = {}
     ip = 1
 
-    script_path = sys.argv[len(sys.argv) -1]
+#    script_path = sys.argv[len(sys.argv) -1]
     print
     print "Loading script: [%s]" % script_path
     print
@@ -89,7 +89,11 @@ def stateful_routine():
             continue
 
         print "[%s] Currently executing: [%d] %s" % (script_path, ip, instruction.name)
-        ret = instruction.execute()
+        if(instruction.name == 'Execute'):
+            stateful_routine(instruction.args)
+            ret = None
+        else:
+            ret = instruction.execute()
 
         if(ret == None):
             ip += 1
@@ -106,5 +110,5 @@ def stateful_routine():
     print
 
 if __name__ == '__main__':
-    stateful_routine()
+    stateful_routine(sys.argv[len(sys.argv) -1])
 

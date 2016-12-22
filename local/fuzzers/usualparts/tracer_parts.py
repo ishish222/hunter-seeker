@@ -437,6 +437,18 @@ def tracer_enable_reaction(args):
 
     return
 
+def tracer_disable_reaction(args):
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+    
+    write_socket(options.s, "tracer_disable_reaction %s" % args);
+    response, _, _ = read_socket(options.s)
+
+    globs.state.ret = response
+
+    return
+
 def tracer_enable_anchors(args=None):
     options = globs.state.options
     state = globs.state

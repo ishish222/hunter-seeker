@@ -99,7 +99,7 @@ log_dir="/mnt/1/log/"
 #builtin_reactions_anchors="EN:s1:a0:a3:a5:e6:a7:b1:b3:b5:b7:c0:c2:c4:c6:c8:d0:d2:d4:d6:d8:d0:e0:e1"
 #builtin_reactions_anchors="EN:s1:a0:a1:a3:a5:e6:a7:b1:b3:b5:b7:c2:c6:c8:d0:d2:d4:d6:d8:e0:e1:e3:e5:e7:e9:f1:f3:f5:f7:f9:g1:g3:g5:g7:g9:h1:h3:h4:h6:h7:h9:h0:i2:i3:i5:i7:i9:j1:j3:j5:j6:j8:j9:k0:k1:k3:k4:k6:k7:k9:k0:l2:l3:l5"
 #builtin_reactions_anchors="EN:s1:a0:a1:a3:a5:e6:a7:b1:b3:b5:b7:c2:c6:c8:d0:d2:d4:d6:d8:e0:e1:e3:e5:e7:e9:f1:f3:f5:f7:f9:g1:g3:g5:g7:g9:h1:h3:h4:h6:h7:h9:h0:i2:i3:i5:i7:i9:j1:j3:j5:j6:j8:j9:k0:k1:k3:k4:k6:k7:k9:k0:l2"
-builtin_reactions_anchors="EN:s1:a0:a1:a3:a5:e6:a7:b1:b3:b5:b7:c2:c6:c8:d0:d2:d4:d6:d8:e0:e1:e3:e5:e7:e9:f1:f3:f5:f7:f9:g1:g3:g5:g7:g9:h1:h3:h4:h6:h7:h9:h0:i2:i3:i5:i7:i9:j1:j3:j5:j6:j8:j9:k0:k1:k3:k4:k6:k7:k9:k0:l2:l6:l8:l0:m2:m3:m5:m6:m8" # without LdrGetProcAddressEx, with ShellEx, InternetOpen
+builtin_reactions_anchors="EN:s1:a0:a1:a3:a5:e6:a7:b1:b3:b5:b7:c2:c6:c8:d0:d2:d4:d6:d8:e0:e1:e3:e5:e7:e9:f1:f3:f5:f7:f9:g1:g3:g5:g7:g9:h1:h3:h4:h6:h7:h9:h0:i2:i3:i5:i7:i9:j1:j3:j5:j6:j8:j9:k0:k1:k3:k4:k6:k7:k9:k0:l2:l6:l8:l0:m2:m3:m5:m6:m8:m0:n2" # without LdrGetProcAddressEx, with ShellEx, InternetOpen, other from wininet
 builtin_reactions="""
 kernel32.dll+0x2acf,EN,0x0;         # ExitProcess
 kernel32.dll+0x2062,C1:C2,0x0;      # CreateProcessA start
@@ -250,9 +250,13 @@ SHELL32.dll+0x141f0,m3:m4,0x312;    # ShellExecuteW start
 SHELL32.dll+0x141f0,m5,0x313;       # ShellExecuteW start
 SHELL32.dll+0x14277,m4:m3:m5,0x100; # ShellExecuteW end
 WININET.dll+0x2054f,m6:m7,0x301;    # InternetConnectA start
-WININET.dll+0x2054f,m7:m6,0x100;    # InternetConnectA end 
-WININET.dll+0x20492,m8:m9,0x311;    # InternetConnectW start
-WININET.dll+0x20492,m9:m8,0x100;    # InternetConnectW end 
+WININET.dll+0x205a0,m7:m6,0x100;    # InternetConnectA end 
+WININET.dll+0x20492,m8:m9,0x301;    # InternetConnectW start
+WININET.dll+0x20547,m9:m8,0x100;    # InternetConnectW end 
+WININET.dll+0x900fc,m0:n1,0x301;    # HttpSendRequestA start
+WININET.dll+0x90141,n1:m0,0x100;    # HttpSendRequestA end 
+WININET.dll+0x1eef3,n2:n3,0x301;    # HttpSendRequestW start
+WININET.dll+0x1ef6d,n3:n2,0x100;    # HttpSendRequestW end 
 """ 
 
 

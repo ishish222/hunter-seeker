@@ -37,6 +37,9 @@ def fuzzing_loop(options, state):
     stats = state.stats
     print("Current stats (SA/MA/TO): %d/%d/%d" % (stats.sample_count, stats.ma_count, stats.to_count))
 
+def noop(args):
+    pass
+
 def nop(options, state):
     pass
 

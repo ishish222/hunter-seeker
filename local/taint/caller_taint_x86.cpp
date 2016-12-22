@@ -1203,6 +1203,7 @@ int taint_x86::dive(CONTEXT_INFO* info, OFFSET target, OFFSET next)
     if(level == this->max_call_levels-1) 
     {
         d_print(1, "We reached max ret table depth. If you need to register following calls, you need to extend ret table\n");
+        exit(-1);
         return 0x1; 
     }
 
@@ -2237,8 +2238,11 @@ int taint_x86::finish()
 
         if(cur_tid->waiting != 0x0)
         {
-            if(cur_tid->last_emit_decision == DECISION_EMIT)
-            print_ret(cur_tid);
+            if((cur_tid->last_emit_decision == DECISION_EMIT) || (cur_tid->last_emit_decision == DECISION_EMIT_NESTED))
+            {
+                print_ret(cur_tid);
+                cur_tid->last_emit_decision = 0x0;
+            }
         }
 
         open = cur_tid->call_level - cur_tid->call_level_smallest;

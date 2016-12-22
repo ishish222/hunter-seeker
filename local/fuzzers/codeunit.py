@@ -57,6 +57,7 @@ prototypes['TracerAttachSample']    = tracer_parts.tracer_attach_sample
 prototypes['TracerDebugContinueInf'] = tracer_parts.tracer_debug_continue
 prototypes['Decision']              = tracing_parts.decision
 prototypes['EnableReaction']        = tracer_parts.tracer_enable_reaction
+prototypes['DisableReaction']        = tracer_parts.tracer_disable_reaction
 prototypes['EnableBuiltin']         = tracer_parts.tracer_enable_anchors
 prototypes['DumpMemory']            = tracer_parts.tracer_dump_memory
 prototypes['TracerStartTrace']      = tracer_parts.tracer_start_trace
@@ -109,6 +110,7 @@ prototypes['ChangeIP']              = responder_parts.change_ip
 prototypes['RunCmd']                = responder_parts.run_cmd
 prototypes['WriteAnsi']             = tracer_parts.write_ansi
 prototypes['WriteUnicode']          = tracer_parts.write_unicode
+prototypes['Execute']               = other_parts.noop
 
 
 class CodeUnit:
