@@ -95,7 +95,7 @@ TracerDebugContinueInf
 
 #ST
 TracerRegisterReactions(self+0x35a3,Z1:Z2,0x103;self+0x117e3,Z2,0x104)
-TracerRegisterReactions(wininet.dll+0x20492,Z3:Z4,0x0;wininet.dll+0x20547,Z4:Z3,0x100)
+TracerRegisterReactions(wininet.dll+0x20492,Z3:Z4,0x0;wininet.dll+0x20547,Z4:Z3,0x0)
 TracerRegisterReactions(wininet.dll+0x1eef3,Z5:Z6,0x100;wininet.dll+0x1ef6d,Z6:Z5,0x0)
 EnableBuiltin
 EnableReaction(Z1)
@@ -105,6 +105,7 @@ DisableReaction(m8)
 DisableReaction(m9)
 DisableReaction(n2)
 DisableReaction(n3)
+# Modifying CONTEXTS
 EnableReaction(C1)
 EnableReaction(C3)
 EnableReaction(C5)
@@ -113,18 +114,22 @@ EnableReaction(C9)
 EnableReaction(D1)
 EnableReaction(T1)
 EnableReaction(R1)
+# eliminate waiting & sleeping
 EnableReaction(W1)
 EnableReaction(W3)
 EnableReaction(W5)
 EnableReaction(W7)
-#DumpMemory
-#TracerStartTrace
+EnableReaction(W9)
+EnableReaction(V1)
+DumpMemory
+TracerStartTrace
 TracerDebugContinueInf
 
 decision:
-Decision=(RE:re,W1:unlock,W3:unlock,W5:unlock,W7:unlock,default:loop,Z3:overwrite,Z4:internetopen,Z6:httpsend)
+Decision=(RE:re,W1:zero_to_1,W2:zero_eax,W3:zero_to_1,W4:zero_eax,W5:zero_to_2,W6:zero_eax,W7:zero_to_2,W8:zero_eax,W9:zero_to_3,V1:zero_to_3,default:loop,Z3:overwrite,Z4:internetopen,Z6:httpsend)
 
 overwrite:
+ReadArgUni(1)
 ReadStack
 ReadRegister(ESP)
 Adjust(0x8)
@@ -138,8 +143,35 @@ re:
 TracerDebugContinueInf(0x80010001)
 goto(decision)
 
-unlock:
+zero_to_1:
+# zero out timeout
+ReadStack
+ReadRegister(ESP)
+Adjust(0x8)
+WriteDword(0x0)
+TracerDebugContinueInf
+goto(decision)
+
+zero_to_2:
+# zero out timeout
+ReadStack
+ReadRegister(ESP)
+Adjust(0x10)
+WriteDword(0x0)
+TracerDebugContinueInf
+goto(decision)
+
+zero_eax:
 RunRoutine(0x104)
+TracerDebugContinueInf
+goto(decision)
+
+zero_to_3:
+# zero out timeout
+ReadStack
+ReadRegister(ESP)
+Adjust(0x4)
+WriteDword(0x0)
 TracerDebugContinueInf
 goto(decision)
 
@@ -148,7 +180,7 @@ TracerDebugContinueInf
 goto(decision)
 
 internetopen:
-ReadRegister(EAX)
+#ReadRegister(EAX)
 TracerDebugContinueInf
 goto(decision)
 

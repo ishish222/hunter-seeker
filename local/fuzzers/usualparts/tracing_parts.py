@@ -488,8 +488,33 @@ def save_first_ep(args = None):
     options = globs.state.options
     globs.state.ep = options.sample_options.st_string
 
+def save_offset(args = None):
+    if(args == None):
+        globs.state.offset = globs.state.ret
+    else:
+        globs.state.offset = args
+
+def save_size(args = None):
+    if(args == None):
+        globs.state.size = globs.state.ret
+    else:
+        globs.state.size = args
+
 def save_ep(args = None):
-    globs.state.ep = globs.state.ret
+    if(args == None):
+        globs.state.ep = globs.state.ret
+    else:
+        globs.state.ep = args
+
+def push(args = None):
+    if(args == None):
+        val = globs.state.ret
+    else:
+        val = args
+    globs.state.stack.append(val)
+
+def pop(args = None):
+    globs.state.ret = globs.state.stack.pop()
 
 def write_last_suspension(args = None):
     globs.state.last_suspension = globs.state.ret

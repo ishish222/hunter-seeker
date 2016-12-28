@@ -725,6 +725,34 @@ def tracer_read_ep(args = 0x0):
 
     return
 
+def tracer_out_region(args = 0x0):
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+
+    # id source is null, use last ret
+    size = globs.state.stack.pop()
+    offset = globs.state.stack.pop()
+
+    write_socket(options.s, "tracer_out_region 0x%08x 0x%08x" % (offset, size));
+    response, _, _ = read_socket(options.s)
+
+    return
+
+def tracer_read_region(args = 0x0):
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+
+    # id source is null, use last ret
+    size = globs.state.stack.pop()
+    offset = globs.state.stack.pop()
+
+    write_socket(options.s, "tracer_read_region 0x%08x 0x%08x" % (offset, size));
+    response, _, _ = read_socket(options.s)
+
+    return
+
 def tracer_read_dword(args = 0x0):
     options = globs.state.options
     state = globs.state

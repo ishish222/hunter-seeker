@@ -129,6 +129,8 @@
 #define CMD_LIST_REACTIONS      "lm"
 #define CMD_LIST_BPTS           "lb"
 #define CMD_READ_MEMORY         "RM"
+#define CMD_READ_REGION         "Rr"
+#define CMD_OUT_REGION          "or"
 #define CMD_WRITE_MEMORY        "WM"
 #define CMD_READ_REGISTER       "RR"
 #define CMD_WRITE_REGISTER      "WR"

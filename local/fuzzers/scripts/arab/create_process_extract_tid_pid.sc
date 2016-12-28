@@ -1,0 +1,10 @@
+ReadRegister(ESP)
+Adjust(0x28)
+ReadDword
+Adjust(0x8)
+ReadPID
+ReadRegister(ESP)
+Adjust(0x28)
+ReadDword
+Adjust(0xc)
+ReadTID

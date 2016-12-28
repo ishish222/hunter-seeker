@@ -1177,11 +1177,6 @@ def execute(cmds):
             writePipe(ext_pipe, "tracer_disable_all_reactions OK")
             ok(ext_pipe)
 
-        elif(cmd == "tracer_disable_reaction"):
-            trace_controller.disable_reaction(args)
-            writePipe(ext_pipe, "tracer_disable_reaction OK")
-            ok(ext_pipe)
-
         elif(cmd == "tracer_auto_st"):
             trace_controller.auto_st()
             writePipe(ext_pipe, "tracer_auto_st OK")
@@ -1353,6 +1348,20 @@ def execute(cmds):
             writePipe(ext_pipe, "tracer_list_tebs OK")
             ok(ext_pipe)
 
+        elif(cmd == "tracer_out_region"):
+            trace_controller.out_region(args)
+            writePipe(ext_pipe, "%s\n" % trace_controller.last_answer)
+            writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
+            writePipe(ext_pipe, "tracer_out_region OK");
+            ok(ext_pipe)
+
+        elif(cmd == "tracer_read_region"):
+            trace_controller.read_region(args)
+            writePipe(ext_pipe, "%s\n" % trace_controller.last_answer)
+            writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
+            writePipe(ext_pipe, "tracer_read_region OK");
+            ok(ext_pipe)
+
         elif(cmd == "tracer_read_dword"):
             trace_controller.read_dword(args)
             writePipe(ext_pipe, "%s\n" % trace_controller.last_answer)
@@ -1426,6 +1435,12 @@ def execute(cmds):
             from simple import simple_responder
             responder = simple_responder(80, logf)
             writePipe(ext_pipe, "spawn_responder_80 OK")
+            ok(ext_pipe)
+
+        elif(cmd == "spawn_responder"):
+            from simple import simple_responder
+            responder = simple_responder(int(args,10), logf)
+            writePipe(ext_pipe, "spawn_responder OK")
             ok(ext_pipe)
 
         elif(cmd == "responder_next_response"):

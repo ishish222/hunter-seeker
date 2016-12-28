@@ -731,14 +731,16 @@ void write_string_unicode(OFFSET addr, char* str)
     int result = MultiByteToWideChar(CP_OEMCP, 0, str, -1, unistring, strlen(str)+ 1);
 
     write_memory(my_trace->cpdi.hProcess, (void*)addr, (void*)unistring, unistring_len, &wrote);
-    if(wrote > 0x0)
+    if(wrote == unistring_len)
     {
         sprintf(line, "# Wrote UNICODE string @ 0x%08x\n", addr);
+        d_print("Success\n");
         add_to_buffer(line);
     }
     else
     {
         sprintf(line, "# Failed to write UNICODE string @ 0x%08x\n", addr);
+        d_print("Failed\n");
         add_to_buffer(line);
     }
 
@@ -878,6 +880,7 @@ int disable_reaction(char* reaction_id)
 {
     d_print("[disable_reaction]\n");
     unsigned i;
+    DWORD found = 0x0;
 
     for(i = 0x0; i< my_trace->reaction_count; i++)
     {
@@ -886,8 +889,14 @@ int disable_reaction(char* reaction_id)
         {
             d_print("Disabling reaction %s\n", reaction_id);
             my_trace->reactions[i].enabled = 0x0;
+            found = 1;
             break;            
         }
+    }
+
+    if(!found)
+    {
+        return 0x0;
     }
 
     d_print("Verifying if BP is still enabled\n");
@@ -2800,7 +2809,7 @@ int update_breakpoint(BREAKPOINT* bp)
                 write_breakpoint(bp); /* in order to write breakpoint, it must be enabled and loaded*/
                 bp->written = 0x1;
             }
-            d_print("BP written\n");
+            d_print("BP written @ 0x%08x\n", addr);
             ret = 0x1;
         }
         else
@@ -3322,6 +3331,207 @@ int read_dword(DWORD addr)
     return data;
 }
 
+#define LINE_SIZE 0x20
+int hexify(char* in, char* out, unsigned size)
+{
+    if(in == 0x0)
+        return -1;
+    if(out == 0x0)
+        return -1;
+    d_print("1");
+
+    unsigned i;
+    unsigned j;
+    unsigned size_lines;
+    unsigned size_rest;
+
+    char line[LINE_SIZE];
+    char formatted_line[MAX_LINE];
+    char buffer2[MAX_LINE];
+
+    size_lines = size / LINE_SIZE;
+    size_rest = size % LINE_SIZE;
+
+    d_print("2");
+
+    for(j = 0x0; j< size_lines; j++)
+    {
+        memset(formatted_line, 0x0, MAX_LINE);
+        memset(line, 0x0, LINE_SIZE);
+        memcpy(line, in + (j*LINE_SIZE), LINE_SIZE);
+    
+        strcpy(formatted_line, "");
+
+        for(i = 0x0; i< LINE_SIZE; i++)
+        {
+            if(line[i] == 0x0a) line[i] = 0x32;
+            if(line[i] == 0x0d) line[i] = 0x32;
+            sprintf(buffer2, "%02x ", (unsigned)line[i] & 0xff);
+            strcat(formatted_line, buffer2);
+        }
+    
+        strcat(formatted_line, "  ");
+    
+        for(i = 0x0; i< LINE_SIZE; i++)
+        {
+            if(line[i] == 0x0a) line[i] = 0x32;
+            if(line[i] == 0x0d) line[i] = 0x32;
+            sprintf(buffer2, "%c", (unsigned)line[i]);
+            strcat(formatted_line, buffer2);
+        }
+    
+        strcat(formatted_line, "\n");
+        strcat(out, formatted_line);
+    }
+
+    memset(formatted_line, 0x0, MAX_LINE);
+    memset(line, 0x0, LINE_SIZE);
+    memcpy(line, in + (j*LINE_SIZE), size_rest);
+
+    strcpy(formatted_line, "");
+
+    for(i = 0x0; i< size_rest; i++)
+    {
+        if(line[i] == 0x0a) line[i] = 0x32;
+        if(line[i] == 0x0d) line[i] = 0x32;
+        sprintf(buffer2, "%02x ", (unsigned)line[i] & 0xff);
+        strcat(formatted_line, buffer2);
+    }
+
+    strcat(formatted_line, "  ");
+
+    for(i = 0x0; i< size_rest; i++)
+    {
+        if(line[i] == 0x0a) line[i] = 0x32;
+        if(line[i] == 0x0d) line[i] = 0x32;
+        sprintf(buffer2, "%c", (unsigned)line[i]);
+        strcat(formatted_line, buffer2);
+    }
+
+    strcat(formatted_line, "\n");
+    strcat(out, formatted_line);
+        
+    return 0x0;
+}
+
+int out_region(DWORD addr, DWORD size)
+{
+    char* data;
+    char* data2;
+    DWORD read;
+
+    char buffer2[MAX_LINE];
+    char line[MAX_LINE];
+
+    if(size > 0x20)
+        size = 0x20;
+
+    /*
+    if(size > BUFF_SIZE/5)
+    {
+        size = (BUFF_SIZE/5 - MAX_LINE);
+    }
+    */
+    data = (char*)malloc(size+1);
+    data2 = (char*)malloc(size*0x20);
+
+    if(data == 0x0)
+    {
+        sprintf(buffer2, "Error - not enough memory");
+        strcpy(my_trace->report_buffer, buffer2);
+        return 0x0;
+    }
+
+    if(data2 == 0x0)
+    {
+        sprintf(buffer2, "Error - not enough memory");
+        strcpy(my_trace->report_buffer, buffer2);
+        return 0x0;
+    }
+
+    d_print("Trying to read 0x%08x bytes: @ %p, handle: 0x%08x\n", size, addr, my_trace->cpdi.hProcess);
+    read_memory(my_trace->cpdi.hProcess, (void*)addr, (void*)data, size, &read);
+    
+    if(read == size)
+    {
+        int ret;
+        ret = hexify(data, data2, size);
+        if(ret != 0x0)
+        {
+            sprintf(buffer2, "Error during hexify");
+            strcpy(my_trace->report_buffer, buffer2);
+            return 0x0;
+        }
+        sprintf(line, "OU,%s\n", data2);
+        add_to_buffer(line);
+    }
+    else {
+        sprintf(buffer2, "Error: 0x%08x", GetLastError());
+        strcpy(my_trace->report_buffer, buffer2);
+    }
+
+    free(data);
+    free(data2);
+    return 0x0;
+}
+int report_region(DWORD addr, DWORD size)
+{
+    char* data;
+    char* data2;
+    DWORD read;
+
+    char buffer2[MAX_LINE];
+
+    if(size > 0x100)
+        size = 0x100;
+
+    /*
+    if(size > BUFF_SIZE/5)
+    {
+        size = (BUFF_SIZE/5 - MAX_LINE);
+    }
+    */
+    data = (char*)malloc(size+1);
+    data2 = (char*)malloc(size*0x20);
+
+    if(data == 0x0)
+    {
+        sprintf(buffer2, "Error - not enough memory");
+        strcpy(my_trace->report_buffer, buffer2);
+        return 0x0;
+    }
+
+    if(data2 == 0x0)
+    {
+        sprintf(buffer2, "Error - not enough memory");
+        strcpy(my_trace->report_buffer, buffer2);
+        return 0x0;
+    }
+
+    d_print("Trying to read 0x%08x bytes: @ %p, handle: 0x%08x\n", size, addr, my_trace->cpdi.hProcess);
+    read_memory(my_trace->cpdi.hProcess, (void*)addr, (void*)data, size, &read);
+    
+    if(read == size)
+    {
+        int ret;
+        ret = hexify(data, data2, size);
+        if(ret != 0x0)
+        {
+            sprintf(buffer2, "Error during hexify");
+            strcpy(my_trace->report_buffer, buffer2);
+            return 0x0;
+        }
+        strcpy(my_trace->report_buffer, data2);
+    }
+    else {
+        sprintf(buffer2, "Error: 0x%08x", GetLastError());
+        strcpy(my_trace->report_buffer, buffer2);
+    }
+
+    free(data);
+    free(data2);
+    return 0x0;
+}
 
 int report_dword(DWORD addr)
 {
@@ -4445,6 +4655,18 @@ int handle_cmd(char* cmd)
         dump_memory();
         send_report();
     }
+    else if(!strncmp(cmd, CMD_ENABLE_REACTION, 2))
+    {
+        char* mod;
+        char reaction_id[MAX_LINE];
+
+        mod = strtok(cmd, " ");
+        strcpy(reaction_id, strtok(0x0, " "));
+        
+        d_print("Enabling reaction no %s\n", reaction_id);
+        enable_reaction(reaction_id);
+        send_report();
+    }
     else if(!strncmp(cmd, CMD_DISABLE_REACTION, 2))
     {
         char* mod;
@@ -4453,7 +4675,7 @@ int handle_cmd(char* cmd)
         mod = strtok(cmd, " ");
         strcpy(reaction_id, strtok(0x0, " "));
 
-        d_print("Disabling reaction %s\n", reaction_id);
+        d_print("Disabling single reaction %s\n", reaction_id);
         disable_reaction(reaction_id);
         send_report();
     }
@@ -4475,18 +4697,6 @@ int handle_cmd(char* cmd)
         argno = strtoul(cmd+3, 0x0, 0x10);
 
         run_routine(argno);
-        send_report();
-    }
-    else if(!strncmp(cmd, CMD_ENABLE_REACTION, 2))
-    {
-        char* mod;
-        char reaction_id[MAX_LINE];
-
-        mod = strtok(cmd, " ");
-        strcpy(reaction_id, strtok(0x0, " "));
-        
-        d_print("Enabling reaction no %s\n", reaction_id);
-        enable_reaction(reaction_id);
         send_report();
     }
     else if(!strncmp(cmd, CMD_ATTACH_DEBUG, 2))
@@ -4570,6 +4780,38 @@ int handle_cmd(char* cmd)
     else if(!strncmp(cmd, CMD_LIST_LIBS, 2))
     {
         list_libs();
+        send_report();   
+    
+    }
+    else if(!strncmp(cmd, CMD_OUT_REGION, 2))
+    {
+        DWORD addr;
+        DWORD size;
+        char* cmd_;
+
+        cmd_ = strtok(cmd, " ");
+        addr = strtoul(strtok(0x0, " "), 0x0, 0x10);
+        size  = strtoul(strtok(0x0, " "), 0x0, 0x10);
+
+        d_print("Outing region: 0x%08x, 0x%08x\n", addr, size);
+
+        out_region(addr, size);
+        send_report();   
+    
+    }
+    else if(!strncmp(cmd, CMD_READ_REGION, 2))
+    {
+        DWORD addr;
+        DWORD size;
+        char* cmd_;
+
+        cmd_ = strtok(cmd, " ");
+        addr = strtoul(strtok(0x0, " "), 0x0, 0x10);
+        size  = strtoul(strtok(0x0, " "), 0x0, 0x10);
+
+        d_print("Reading region: 0x%08x, 0x%08x\n", addr, size);
+
+        report_region(addr, size);
         send_report();   
     
     }

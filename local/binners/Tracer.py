@@ -68,6 +68,12 @@ class Tracer(object):
         self.dlog('%s' % args)
         self.send_command('WR %d %s' % (self.active_tid_id, args))
 
+    def read_region(self, args):
+        self.send_command('Rr %s' % (args))
+
+    def out_region(self, args):
+        self.send_command('or %s' % (args))
+
     def read_dword(self, args):
         self.send_command('RM %s' % (args))
 

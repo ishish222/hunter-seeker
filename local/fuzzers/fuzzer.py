@@ -105,9 +105,7 @@ def stateful_routine(script_path):
     
         print
 
-    print
-    print "Finished"
-    print
+    print "Finished: %s" % script_path
 
 if __name__ == '__main__':
     stateful_routine(sys.argv[len(sys.argv) -1])

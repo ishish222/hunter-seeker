@@ -22,6 +22,17 @@ def spawn_responder_80(args=None):
     globs.state.ret = response
     return
 
+def spawn_responder(args=80):
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+    
+    write_socket(options.s, "spawn_responder %s" % args)
+    response, _, _ = read_socket(options.s)
+
+    globs.state.ret = response
+    return
+
 def next_response(args=None):
     options = globs.state.options
     state = globs.state

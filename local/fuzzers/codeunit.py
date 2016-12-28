@@ -87,6 +87,10 @@ prototypes['ListAllTebs']           = tracer_parts.tracer_list_all_tebs
 prototypes['LoadEP']                = tracing_parts.load_ep
 prototypes['SaveFirstEP']           = tracing_parts.save_first_ep
 prototypes['SaveEP']                = tracing_parts.save_ep
+prototypes['SaveOffset']            = tracing_parts.save_offset
+prototypes['SaveSize']              = tracing_parts.save_size
+prototypes['ReadRegion']            = tracer_parts.tracer_read_region
+prototypes['OutRegion']             = tracer_parts.tracer_out_region
 prototypes['ManualST']              = tracer_parts.tracer_manual_st
 prototypes['ManualSTwSelf']         = tracer_parts.tracer_manual_st_w_self
 prototypes['SetSampleFile']         = tracing_parts.set_sample_file
@@ -102,6 +106,7 @@ prototypes['Spawn']                 = tracer_parts.tracer_spawn
 prototypes['Cooldown']              = tracer_parts.tracer_cooldown
 prototypes['ReadStack']             = tracer_parts.tracer_read_stack
 prototypes['SpawnResponder80']      = responder_parts.spawn_responder_80
+prototypes['SpawnResponder']        = responder_parts.spawn_responder
 prototypes['NextResponse']          = responder_parts.next_response
 prototypes['ResolveDNS']            = responder_parts.get_dns
 prototypes['GetHTTP']               = responder_parts.get_http
@@ -111,6 +116,8 @@ prototypes['RunCmd']                = responder_parts.run_cmd
 prototypes['WriteAnsi']             = tracer_parts.write_ansi
 prototypes['WriteUnicode']          = tracer_parts.write_unicode
 prototypes['Execute']               = other_parts.noop
+prototypes['Push']                  = tracing_parts.push
+prototypes['Pop']                   = tracing_parts.pop
 
 
 class CodeUnit:

@@ -885,7 +885,7 @@ class TraceController(object):
         return 
 
     def disable_reaction(self, idd):
-        self.send_command_active("eR %s" % idd)
+        self.send_command_active("dR %s" % idd)
         self.last_report, self.last_answer = self.recv_report_active()
         return 
 
@@ -926,6 +926,16 @@ class TraceController(object):
 
     def tracer_release_thread(self, args):
         self.send_command_active("RE %s" % args)
+        self.last_report, self.last_answer = self.recv_report_active()
+        return 
+
+    def out_region(self, args):
+        self.tracer_active.out_region(args)
+        self.last_report, self.last_answer = self.recv_report_active()
+        return 
+
+    def read_region(self, args):
+        self.tracer_active.read_region(args)
         self.last_report, self.last_answer = self.recv_report_active()
         return 
 
