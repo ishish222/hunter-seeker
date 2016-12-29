@@ -3364,8 +3364,8 @@ int hexify(char* in, char* out, unsigned size)
 
         for(i = 0x0; i< LINE_SIZE; i++)
         {
-            if(line[i] == 0x0a) line[i] = 0x32;
-            if(line[i] == 0x0d) line[i] = 0x32;
+            if(line[i] == 0x0a) line[i] = 0x2e;
+            if(line[i] == 0x0d) line[i] = 0x2e;
             sprintf(buffer2, "%02x ", (unsigned)line[i] & 0xff);
             strcat(formatted_line, buffer2);
         }
@@ -3374,8 +3374,8 @@ int hexify(char* in, char* out, unsigned size)
     
         for(i = 0x0; i< LINE_SIZE; i++)
         {
-            if(line[i] == 0x0a) line[i] = 0x32;
-            if(line[i] == 0x0d) line[i] = 0x32;
+            if(line[i] == 0x0a) line[i] = 0x2e;
+            if(line[i] == 0x0d) line[i] = 0x2e;
             sprintf(buffer2, "%c", (unsigned)line[i]);
             strcat(formatted_line, buffer2);
         }
@@ -3392,8 +3392,8 @@ int hexify(char* in, char* out, unsigned size)
 
     for(i = 0x0; i< size_rest; i++)
     {
-        if(line[i] == 0x0a) line[i] = 0x32;
-        if(line[i] == 0x0d) line[i] = 0x32;
+        if(line[i] == 0x0a) line[i] = 0x2e;
+        if(line[i] == 0x0d) line[i] = 0x2e;
         sprintf(buffer2, "%02x ", (unsigned)line[i] & 0xff);
         strcat(formatted_line, buffer2);
     }
@@ -3402,8 +3402,8 @@ int hexify(char* in, char* out, unsigned size)
 
     for(i = 0x0; i< size_rest; i++)
     {
-        if(line[i] == 0x0a) line[i] = 0x32;
-        if(line[i] == 0x0d) line[i] = 0x32;
+        if(line[i] == 0x0a) line[i] = 0x2e;
+        if(line[i] == 0x0d) line[i] = 0x2e;
         sprintf(buffer2, "%c", (unsigned)line[i]);
         strcat(formatted_line, buffer2);
     }
@@ -3521,7 +3521,8 @@ int report_region(DWORD addr, DWORD size)
             strcpy(my_trace->report_buffer, buffer2);
             return 0x0;
         }
-        strcpy(my_trace->report_buffer, data2);
+        strcpy(my_trace->report_buffer, "\n");
+        strcat(my_trace->report_buffer, data2);
     }
     else {
         sprintf(buffer2, "Error: 0x%08x", GetLastError());
@@ -4793,7 +4794,7 @@ int handle_cmd(char* cmd)
         addr = strtoul(strtok(0x0, " "), 0x0, 0x10);
         size  = strtoul(strtok(0x0, " "), 0x0, 0x10);
 
-        d_print("Outing region: 0x%08x, 0x%08x\n", addr, size);
+        d_print("Ouputting region: 0x%08x, 0x%08x\n", addr, size);
 
         out_region(addr, size);
         send_report();   

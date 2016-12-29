@@ -183,8 +183,8 @@ TracerDebugContinueInf
 goto(decision)
 
 get_info2:
-ReadRegion
-#OutRegion
+#ReadRegion
+OutRegion
 TracerDebugContinueInf
 goto(decision)
 
