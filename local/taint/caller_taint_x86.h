@@ -2309,6 +2309,7 @@ typedef struct _CONTEXT_INFO
     char graph_filename[MAX_NAME];
     FILE* graph_file;
     OFFSET waiting;
+    unsigned lock_level;
 
     /* call level handling */ 
     unsigned ret_idx;

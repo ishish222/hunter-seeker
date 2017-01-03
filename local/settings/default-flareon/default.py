@@ -99,7 +99,7 @@ log_dir="/mnt/1/log/"
 #builtin_reactions_anchors="EN:s1:a0:a3:a5:e6:a7:b1:b3:b5:b7:c0:c2:c4:c6:c8:d0:d2:d4:d6:d8:d0:e0:e1"
 #builtin_reactions_anchors="EN:s1:a0:a1:a3:a5:e6:a7:b1:b3:b5:b7:c2:c6:c8:d0:d2:d4:d6:d8:e0:e1:e3:e5:e7:e9:f1:f3:f5:f7:f9:g1:g3:g5:g7:g9:h1:h3:h4:h6:h7:h9:h0:i2:i3:i5:i7:i9:j1:j3:j5:j6:j8:j9:k0:k1:k3:k4:k6:k7:k9:k0:l2:l3:l5"
 #builtin_reactions_anchors="EN:s1:a0:a1:a3:a5:e6:a7:b1:b3:b5:b7:c2:c6:c8:d0:d2:d4:d6:d8:e0:e1:e3:e5:e7:e9:f1:f3:f5:f7:f9:g1:g3:g5:g7:g9:h1:h3:h4:h6:h7:h9:h0:i2:i3:i5:i7:i9:j1:j3:j5:j6:j8:j9:k0:k1:k3:k4:k6:k7:k9:k0:l2"
-builtin_reactions_anchors="EN:s1:a0:a1:a3:a5:e6:a7:b1:b3:b5:b7:c2:c6:c8:d0:d2:d4:d6:d8:e0:e1:e3:e5:e7:e9:f1:f3:f5:f7:f9:g1:g3:g5:g7:g9:h1:h3:h4:h6:h7:h9:h0:i2:i3:i5:i7:i9:j1:j3:j5:j6:j8:j9:k0:k1:k3:k4:k6:k7:k9:k0:l2:l6:l8:l0:m2:m3:m5:m6:m8:m0:n2:n4:n0" # without LdrGetProcAddressEx, with ShellEx, InternetOpen, other from wininet
+builtin_reactions_anchors="EN:s1:a0:a1:a3:a5:e6:a7:b1:b3:b5:b7:c2:c6:c8:d0:d2:d4:d6:d8:e0:e1:e3:e5:e7:e9:f1:f3:f5:f7:f9:g1:g3:g5:g7:g9:h1:h3:h4:h6:h7:h9:h0:i2:i3:i5:i7:i9:j1:j3:j5:j6:j8:j9:k0:k1:k3:k4:k6:k7:k9:k0:l2:l6:l8:l0:m2:m3:m5:m6:m8:m0:n2:n4:n0:o2" # without LdrGetProcAddressEx, with ShellEx, InternetOpen, other from wininet
 builtin_reactions="""
 kernel32.dll+0x2acf,EN,0x0;         # ExitProcess
 kernel32.dll+0x2062,C1:C2,0x0;      # CreateProcessA start
@@ -267,8 +267,10 @@ WININET.dll+0x14d49,n6:n7,0x100;    # InternetSetOptionA start
 WININET.dll+0x14e49,n7:n6,0x100;    # InternetSetOptionA end
 WININET.dll+0x14ea1,n8:n9,0x100;    # InternetSetOptionW start
 WININET.dll+0x14f6d,n9:n8,0x100;    # InternetSetOptionW end
-WININET.dll+0x50f86,n0:o1:,0x323;   # WideCharToMultiByte start
-WININET.dll+0x51020,o1:n0:,0x100;   # WideCharToMultiByte end
+kernel32.dll+0x50f86,n0:o1,0x323;   # WideCharToMultiByte start
+kernel32.dll+0x50f8c,o1:n0,0x100;   # WideCharToMultiByte end
+WININET.dll+0x1e2a4,o2:o3,0x100;    # InternetReadFile start
+WININET.dll+0x1e2e6,o3:o2,0x100;    # InternetReadFile end
 """
 
 hs_user="hs1"

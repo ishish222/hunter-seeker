@@ -2401,7 +2401,7 @@ int handle_breakpoint(DWORD addr, void* data)
                 }
                 else
                 {
-                    d_print("Executing routine 0x%02x\n", cur_reaction->routine_id);
+                    d_print("Executing routine 0x%02x @ %d\n", cur_reaction->routine_id, my_trace->instr_count);
                     my_trace->routines[cur_reaction->routine_id](data);
                 }
                 /* enable coupled */
@@ -3334,12 +3334,6 @@ int read_dword(DWORD addr)
 #define LINE_SIZE 0x20
 int hexify(char* in, char* out, unsigned size)
 {
-    if(in == 0x0)
-        return -1;
-    if(out == 0x0)
-        return -1;
-    d_print("1");
-
     unsigned i;
     unsigned j;
     unsigned size_lines;
@@ -3352,16 +3346,12 @@ int hexify(char* in, char* out, unsigned size)
     size_lines = size / LINE_SIZE;
     size_rest = size % LINE_SIZE;
 
-    d_print("2");
-
     for(j = 0x0; j< size_lines; j++)
     {
         memset(formatted_line, 0x0, MAX_LINE);
         memset(line, 0x0, LINE_SIZE);
         memcpy(line, in + (j*LINE_SIZE), LINE_SIZE);
     
-        strcpy(formatted_line, "");
-
         for(i = 0x0; i< LINE_SIZE; i++)
         {
             if(line[i] == 0x0a) line[i] = 0x2e;
@@ -3387,8 +3377,6 @@ int hexify(char* in, char* out, unsigned size)
     memset(formatted_line, 0x0, MAX_LINE);
     memset(line, 0x0, LINE_SIZE);
     memcpy(line, in + (j*LINE_SIZE), size_rest);
-
-    strcpy(formatted_line, "");
 
     for(i = 0x0; i< size_rest; i++)
     {

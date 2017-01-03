@@ -731,9 +731,19 @@ int taint_x86::check_collecting(CONTEXT_INFO* info)
 
 int taint_x86::comment_out(char* comment)
 {
-    if(this->started)
+    if(!(this->started))
     {
+        return 0x0;
+    }
+
+    if(this->cur_info->lock_level < 0x1)
+    {
+        d_print(1, "Lock level is 0x%08x, printing out comment\n", this->cur_info->lock_level);
         print_empty_call(this->cur_info, comment, colors[CODE_COMMENT]);
+    }
+    else
+    {
+        d_print(1, "Lock level is 0x%08x, not printing out comment\n", this->cur_info->lock_level);
     }
     return 0x0;
 }
@@ -844,6 +854,7 @@ int taint_x86::check_loop_2(CONTEXT_INFO* info)
 int taint_x86::handle_call(CONTEXT_INFO* info)
 {
     d_print(1, "[handle call]\n");
+    d_print(1, "LL: 0x%08x\n", info->lock_level);
     SYMBOL* s;
     char out_line[MAX_NAME];
     char* func_name;
@@ -880,6 +891,12 @@ int taint_x86::handle_call(CONTEXT_INFO* info)
     {
         d_print(1, "Not yet started\n");
         return 0x0;
+    }
+
+    if(info->waiting != 0x0)
+    {
+        /* increase lock level */
+        info->lock_level++;
     }
 
     d_print(1, "Call\n");
@@ -1295,7 +1312,15 @@ int taint_x86::handle_ret(CONTEXT_INFO* cur_ctx, OFFSET eip)
 
     d_print(1, "[handle ret]\n");
     d_print(1, "Eip: 0x%08x\n", eip);
+    d_print(1, "LL: 0x%08x\n", cur_ctx->lock_level);
     /* verify if ret points to a symbol */
+    
+    if(cur_ctx->waiting != 0x0) 
+    {
+        /* decrease lock_level */
+        cur_ctx->lock_level --;
+    }
+
     if(this->options & OPTION_VERIFY_ROP_RETS)
     {
         d_print(1, "[Checking for ROP ret]\n");
@@ -1376,6 +1401,10 @@ int taint_x86::handle_ret(CONTEXT_INFO* cur_ctx, OFFSET eip)
     else
     {
         d_print(2, "We are not waiting\n");
+        
+        /* reset lock_level */
+        /* [TODO] this should be somewhere else, but it's not consuimng */
+        cur_ctx->lock_level = 0x0;
     }
 
     /* ret unmatched */

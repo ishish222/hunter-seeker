@@ -63,11 +63,12 @@ TracerRegisterReactions(wininet.dll+0x1eef5,Z5:Z6,0x100;wininet.dll+0x1ef6c,Z6:Z
 TracerRegisterReactions(WININET.dll+0x14ea3,Z7:Z8,0x0;WININET.dll+0x14f6c,Z8:Z7,0x100)
 TracerRegisterReactions(WININET.dll+0x20615,Z9:Z0,0x0;WININET.dll+0x20846,Z0:Z9,0x100)
 TracerRegisterReactions(WININET.dll+0x22d7d,Y1:Y2,0x0;WININET.dll+0x22e74,Y2:Y1,0x0)
+TracerRegisterReactions(WININET.dll+0x1e2a4,Y3:Y4,0x0;WININET.dll+0x1e2e6,Y4:Y3,0x0)
 EnableReaction(Z1)
 TracerDebugContinueInf
 
 decision:
-Decision=(ST:started,RE:re,W1:zero_to_1,W2:zero_eax,W3:zero_to_1,W4:zero_eax,W5:zero_to_2,W6:zero_eax,W7:zero_to_2,W8:zero_eax,W9:zero_to_3,V1:zero_to_3,default:loop,Z3:overwrite,Z4:internetopen,Z6:httpsend,Z7:disable_ssl,Z9:disable2,Y1:get_info1,Y2:get_info2,default:loop)
+Decision=(ST:started,RE:re,W1:zero_to_1,W2:zero_eax,W3:zero_to_1,W4:zero_eax,W5:zero_to_2,W6:zero_eax,W7:zero_to_2,W8:zero_eax,W9:zero_to_3,V1:zero_to_3,default:loop,Z3:overwrite,Z4:internetopen,Z6:httpsend,Z7:disable_ssl,Z9:disable2,Y1:get_info1,Y2:get_info2,Y3:get_info3,Y4:get_info4,default:loop)
 
 started:
 EnableBuiltin
@@ -75,10 +76,11 @@ EnableReaction(Z3)
 EnableReaction(Z5)
 EnableReaction(Z7)
 EnableReaction(Y1)
-DisableReaction(m8)
-DisableReaction(m9)
-DisableReaction(n2)
-DisableReaction(n3)
+EnableReaction(Y3)
+#DisableReaction(m8)
+#DisableReaction(m9)
+#DisableReaction(n2)
+#DisableReaction(n3)
 
 # Modifying CONTEXTS
 Execute(scripts/arab/enable_context_mod_detection.sc)
@@ -183,6 +185,26 @@ TracerDebugContinueInf
 goto(decision)
 
 get_info2:
+#ReadRegion
+OutRegion
+TracerDebugContinueInf
+goto(decision)
+
+get_info3:
+ReadStack
+ReadRegister(ESP)
+Adjust(0x8)
+ReadDword
+SaveOffset
+ReadRegister(ESP)
+Adjust(0xc)
+#ReadDword
+ReadDword
+SaveSize
+TracerDebugContinueInf
+goto(decision)
+
+get_info4:
 #ReadRegion
 OutRegion
 TracerDebugContinueInf
