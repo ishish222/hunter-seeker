@@ -2638,7 +2638,7 @@ int taint_x86::add_symbols(LIB_INFO* info)
         if(!strcmpi(info->name, s->lib_name))
         {
             s->addr += info->offset;
-//            d_print(1, "Resolved symbol: %s!%s @ 0x%08x\n", s->lib_name, s->func_name, s->addr);
+            //d_print(1, "Resolved symbol: %s!%s @ 0x%08x\n", s->lib_name, s->func_name, s->addr);
             s->resolved = 0x1;
     
             //move

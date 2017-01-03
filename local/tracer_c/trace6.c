@@ -3727,6 +3727,16 @@ int read_stack(DWORD tid_id, DWORD count)
     return 0x0;
 }
 
+int register_self(OFFSET addr)
+{
+    char line[MAX_LINE];
+
+    d_print("RL,0x%08x,self\n", addr);
+    sprintf(line, "RL,0x%08x,self\n", addr);
+    add_to_buffer(line);
+    return 0x0;
+}
+
 int process_last_event()
 {
     unsigned status;
@@ -3742,6 +3752,9 @@ int process_last_event()
 
                 /* register main thread (does this not belong to other event code? */
                 register_thread(my_trace->last_event.dwThreadId, my_trace->last_event.u.CreateProcessInfo.hThread);
+
+                /* register as self-lib */
+                register_self((OFFSET)my_trace->cpdi.lpBaseOfImage); 
 
                 unsigned i;
 
