@@ -1468,9 +1468,9 @@ inline int taint_x86::verify_seg_sec(OFFSET off)
     
     for(i = 0x0; i< this->security_layer_count; i++)
     {
-        if((this->security_layer[i].off <= off) && (this->security_layer[i].off + this->security_layer[i].size <= off))
+        if((this->security_layer[i].off <= off) && (this->security_layer[i].off + this->security_layer[i].size >= off))
         {
-            d_print(1, "[IMPREFECTION DETECTED] Attempt of write to secured segment @ instr no: %d, eip: 0x%08x\n", this->current_instr_count, this->reg_restore_32(EIP).get_DWORD());
+            d_print(1, "[IMPERFECTION DETECTED] Attempt of write to secured segment @ instr no: %d, eip: 0x%08x\n", this->current_instr_count, this->reg_restore_32(EIP).get_DWORD());
             return 0x1;
         }
     }
@@ -1481,7 +1481,7 @@ inline int taint_x86::verify_oob_offset(OFFSET off, OFFSET size)
 {
     if(off > size)
     {
-        d_print(3, "[IMPREFECTION DETECTED] Attempt of OOB read/write @ instr no: %d, eip: 0x%08x\n", this->current_instr_count, this->reg_restore_32(EIP).get_DWORD());
+        d_print(3, "[IMPERFECTION DETECTED] Attempt of OOB read/write @ instr no: %d, eip: 0x%08x\n", this->current_instr_count, this->reg_restore_32(EIP).get_DWORD());
 //        exit(1);
         return -1;
     }
