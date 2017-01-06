@@ -910,7 +910,7 @@ int disable_reaction(char* reaction_id)
 
     for(i = 0x0; i< bp->reaction_count; i++)
     {
-        d_print("Checking BP reaction %d\n", i);
+//        d_print("Checking BP reaction %d\n", i);
         cur_reaction = bp->reactions[i];
         if(!cur_reaction)
         {
@@ -1547,18 +1547,18 @@ void react_sysret_callback(void* data)
     d_print("[[Syscall: 0x%08x @ 0x%08x]]\n", sysenter_no, ctx.Eip);
     for(i = 0x0; i<MAX_SYSCALL_OUT_ARGS; i++)
     {
-        d_print("Arg no: 0x%02x\n", i);
+//        d_print("Arg no: 0x%02x\n", i);
         if(my_trace->syscall_out_args[sysenter_no][i].off_location == last_arg.off_location) 
         {
-            d_print("Last arg, finishing\n");
+//            d_print("Last arg, finishing\n");
             break;
         }
         if(my_trace->syscall_out_args[sysenter_no][i].eax_val_success != STATUS_ANY)
         {
-            d_print("Arg not any\n");
+//            d_print("Arg not any\n");
             if(my_trace->syscall_out_args[sysenter_no][i].eax_val_success != ctx.Eax) 
             {
-                d_print("Wrong EAX\n");
+//                d_print("Wrong EAX\n");
                 continue;
             }
         }
@@ -1635,38 +1635,38 @@ void react_sysret_callback(void* data)
             switch(my_trace->syscall_out_args[sysenter_no][i].size_location)
             {
                 case LOCATION_CONST:
-                    d_print("LOCATION_CONST\n");
+//                    d_print("LOCATION_CONST\n");
                     my_trace->syscall_out_args_dump_list[i].size = my_trace->syscall_out_args[sysenter_no][i].size;
                     arg_val = my_trace->syscall_out_args_dump_list[i].size;
-                    d_print("Arg size: 0x%08x\n", arg_val);
+//                    d_print("Arg size: 0x%08x\n", arg_val);
                     break;
                 case LOCATION_MEM:
-                    d_print("LOCATION_MEM\n");
+//                    d_print("LOCATION_MEM\n");
                     arg_addr = my_trace->syscall_out_args[sysenter_no][i].size;
                     read_memory(my_trace->cpdi.hProcess, (void*)arg_addr, (void*)&arg_val, 0x4, &read);
-                    d_print("0x%08x: 0x%08x\n", arg_addr, arg_val);
-                    d_print("Arg size: 0x%08x\n", arg_val);
+//                    d_print("0x%08x: 0x%08x\n", arg_addr, arg_val);
+//                    d_print("Arg size: 0x%08x\n", arg_val);
                     my_trace->syscall_out_args_dump_list[i].size = arg_val;
                     break;
                 case LOCATION_STACK:
-                    d_print("LOCATION_STACK\n");
+//                    d_print("LOCATION_STACK\n");
                     arg_addr = sysenter_esp + 0x8;
                     arg_addr += my_trace->syscall_out_args[sysenter_no][i].size * 0x4;
                     read_memory(my_trace->cpdi.hProcess, (void*)arg_addr, (void*)&arg_val, 0x4, &read);
-                    d_print("0x%08x: 0x%08x\n", arg_addr, arg_val);
-                    d_print("Arg size: 0x%08x\n", arg_val);
+//                    d_print("0x%08x: 0x%08x\n", arg_addr, arg_val);
+//                    d_print("Arg size: 0x%08x\n", arg_val);
                     my_trace->syscall_out_args_dump_list[i].size = arg_val;
                     break;
                 case LOCATION_ADDR_STACK:
-                    d_print("LOCATION_ADDR_STACK\n");
+//                    d_print("LOCATION_ADDR_STACK\n");
                     arg_addr = sysenter_esp + 0x8;
                     arg_addr += my_trace->syscall_out_args[sysenter_no][i].size * 0x4;
                     read_memory(my_trace->cpdi.hProcess, (void*)arg_addr, (void*)&arg_val, 0x4, &read);
-                    d_print("0x%08x: 0x%08x\n", arg_addr, arg_val);
+//                    d_print("0x%08x: 0x%08x\n", arg_addr, arg_val);
                     arg_addr = arg_val;
                     read_memory(my_trace->cpdi.hProcess, (void*)arg_addr, (void*)&arg_val, 0x4, &read);
-                    d_print("0x%08x: 0x%08x\n", arg_addr, arg_val);
-                    d_print("Arg size: 0x%08x\n", arg_val);
+//                    d_print("0x%08x: 0x%08x\n", arg_addr, arg_val);
+//                    d_print("Arg size: 0x%08x\n", arg_val);
                     my_trace->syscall_out_args_dump_list[i].size = arg_val;
                     break;
             }
@@ -1686,7 +1686,7 @@ void react_sysret_callback(void* data)
 
         LOCATION location;
 
-        d_print("Resolving location\n");
+//        d_print("Resolving location\n");
         resolve_region(&my_trace->syscall_out_args[sysenter_no][i], &location);
         update_region_old(&location);
 
@@ -1726,7 +1726,7 @@ void react_sysret_callback(void* data)
     
 
     set_ss(tid);
-    d_print("Setting SS for 0x%08x\n", tid);
+//    d_print("Setting SS for 0x%08x\n", tid);
 }
 
 
@@ -2336,7 +2336,7 @@ int del_breakpoint_idx(unsigned my_bpt_idx)
 
 int del_breakpoint(DWORD addr)
 {
-    d_print("Deleting breakpoint at: 0x%08x\n", addr);
+//    d_print("Deleting breakpoint at: 0x%08x\n", addr);
 
     DWORD oldProt;
     char bpt_char = '\xcc';
@@ -2377,7 +2377,7 @@ int handle_breakpoint(DWORD addr, void* data)
 
     for(i = 0x0; i<my_trace->bpt_count; i++)
     {
-        d_print("Checking %d bp: _0x%08x_ & _0x%08x_\n", i, my_trace->breakpoints[i].resolved_location, addr);
+//        d_print("Checking %d bp: _0x%08x_ & _0x%08x_\n", i, my_trace->breakpoints[i].resolved_location, addr);
         if(my_trace->breakpoints[i].resolved_location == addr)
         {
             my_bp = &my_trace->breakpoints[i];
@@ -2410,11 +2410,11 @@ int handle_breakpoint(DWORD addr, void* data)
                 {
                     if(cur_reaction->coupled_id[k][0] != 0x0)
                     {
-                        d_print("Current reaction: %s\n", cur_reaction->reaction_id);
-                        d_print("Enabling coupled reaction: %s\n", cur_reaction->coupled_id[k]);
+//                        d_print("Current reaction: %s\n", cur_reaction->reaction_id);
+//                        d_print("Enabling coupled reaction: %s\n", cur_reaction->coupled_id[k]);
                         REACTION* coupled_reaction;
                         coupled_reaction = find_reaction(cur_reaction->coupled_id[k]);
-                        d_print("Found coupled reaction: %s\n", coupled_reaction->reaction_id);
+//                        d_print("Found coupled reaction: %s\n", coupled_reaction->reaction_id);
                         enable_reaction(coupled_reaction->reaction_id);
                     }
                 }
@@ -2422,7 +2422,7 @@ int handle_breakpoint(DWORD addr, void* data)
         }
     }
 
-    d_print("Deleting breakpoint, decreasing EIP\n");
+//    d_print("Deleting breakpoint, decreasing EIP\n");
     del_breakpoint(addr);
     dec_eip(de->dwThreadId);
 
@@ -2442,13 +2442,13 @@ int write_breakpoint(BREAKPOINT* bp)
 
     addr = resolve_loc_desc(bp->location);
 
-    d_print("Adding breakpoint opcode @ 0x%08x\n", addr);
+//    d_print("Adding breakpoint opcode @ 0x%08x\n", addr);
 
     read_memory(my_trace->procHandle, (void*)addr, (void*)&bp->saved_byte, 0x1, &read);
-    d_print("Before: 0x%02x\n", bp->saved_byte);
+//    d_print("Before: 0x%02x\n", bp->saved_byte);
     write_memory(my_trace->procHandle, (void*)addr, (void*)&bpt_char, 0x1, &read);
     read_memory(my_trace->procHandle, (void*)addr, (void*)&bpt_char, 0x1, &read);
-    d_print("After: 0x%02x\n", bpt_char);
+//    d_print("After: 0x%02x\n", bpt_char);
     bp->written = 0x1;
 
     d_print("[write_breakpoint ends]\n");
@@ -2468,7 +2468,7 @@ int unwrite_breakpoint(BREAKPOINT* bp)
 
     write_memory(my_trace->procHandle, (void*)addr, (void*)&bp->saved_byte, 0x1, &wrote);
     read_memory(my_trace->procHandle, (void*)addr, (void*)&bpt_char, 0x1, &wrote);
-    d_print("After: 0x%02x\n", bpt_char);
+//    d_print("After: 0x%02x\n", bpt_char);
     bp->written = 0x0;
 
     d_print("[unwrite_breakpoint ends]\n");
@@ -2492,7 +2492,7 @@ int print_loc_desc(LOCATION_DESCRIPTOR_NEW* e)
 int print_loc_desc_rev(LOCATION_DESCRIPTOR_NEW* e)
 {
     d_print("[print_loc_desc_rev]\n");
-    d_print("In reccurence\n");
+//    d_print("In reccurence\n");
 
     if(e == 0x0) return 0x0;
 
@@ -2789,10 +2789,10 @@ LOCATION_DESCRIPTOR_NEW* parse_location_desc(char* str)
 
 int update_breakpoint(BREAKPOINT* bp)
 {
-    d_print("[update_breakpoint]\n");
+//    d_print("[update_breakpoint]\n");
     DWORD ret;
     OFFSET addr;
-    d_print("Trying to resolve BP addr\n");
+//    d_print("Trying to resolve BP addr\n");
     bp->resolved_location = addr = resolve_loc_desc(bp->location);
 
     if(addr == -1)
@@ -2809,7 +2809,7 @@ int update_breakpoint(BREAKPOINT* bp)
                 write_breakpoint(bp); /* in order to write breakpoint, it must be enabled and loaded*/
                 bp->written = 0x1;
             }
-            d_print("BP written @ 0x%08x\n", addr);
+//            d_print("BP written @ 0x%08x\n", addr);
             ret = 0x1;
         }
         else
@@ -2819,7 +2819,7 @@ int update_breakpoint(BREAKPOINT* bp)
                 unwrite_breakpoint(bp); /* in order to write breakpoint, it must be enabled and loaded*/
                 bp->written = 0x0;
             }
-            d_print("BP unwritten\n");
+//            d_print("BP unwritten\n");
 
             ret = 0x0;
         }
@@ -2840,7 +2840,7 @@ BREAKPOINT* add_breakpoint(char* location_str, REACTION*  reaction)
     /* do we have this location descriptor? */
     for(i = 0x0; i<my_trace->bpt_count; i++)
     {
-        d_print("BP creation: comparing _%s_ & _%s_\n", my_trace->breakpoints[i].location_str, location_str);
+//        d_print("BP creation: comparing _%s_ & _%s_\n", my_trace->breakpoints[i].location_str, location_str);
         if(!strcmp(my_trace->breakpoints[i].location_str, location_str))
         {
             d_print("Found!\n");
@@ -2852,7 +2852,7 @@ BREAKPOINT* add_breakpoint(char* location_str, REACTION*  reaction)
     /* if not, create */
     if(my_bpt_index == -1) 
     {
-        d_print("Creating new bp\n");
+//        d_print("Creating new bp\n");
         my_bpt_index = my_trace->bpt_count;
         my_trace->breakpoints[my_bpt_index].enabled = 0x1;
         my_trace->breakpoints[my_bpt_index].written = 0x0;
@@ -2860,18 +2860,18 @@ BREAKPOINT* add_breakpoint(char* location_str, REACTION*  reaction)
         /* for identification */
         strcpy(my_trace->breakpoints[my_bpt_index].location_str, location_str);
 
-        d_print("Attempt to parse location string: %s\n", location_str);
+//        d_print("Attempt to parse location string: %s\n", location_str);
         my_trace->breakpoints[my_bpt_index].location = parse_location_desc(location_str);
 
         my_trace->bpt_count ++;
     }
-    d_print("Bp created. Current number of breakpoints: %d\n", my_trace->bpt_count);
+//    d_print("Bp created. Current number of breakpoints: %d\n", my_trace->bpt_count);
 
     /* connect to reaction */
     cur_reaction_id = my_trace->breakpoints[my_bpt_index].reaction_count;
-    d_print("Current reaction count for this BP: %d\n", cur_reaction_id);
+//    d_print("Current reaction count for this BP: %d\n", cur_reaction_id);
     my_trace->breakpoints[my_bpt_index].reactions[cur_reaction_id] = reaction;
-    d_print("Assigned new reaction\n");
+//    d_print("Assigned new reaction\n");
     my_trace->breakpoints[my_bpt_index].enabled = 0x1; /* is this necessary? it is used in update_breakpoint */
     my_trace->breakpoints[my_bpt_index].reaction_count++;
 
@@ -3422,6 +3422,9 @@ int out_region(DWORD addr, DWORD size)
     */
     data = (char*)malloc(size+1);
     data2 = (char*)malloc(size*0x20);
+    memset(data2, 0x0, size*0x20);
+
+    sprintf(line, "# out_arg1 @ %d\n", my_trace->instr_count);
 
     if(data == 0x0)
     {
@@ -3440,7 +3443,10 @@ int out_region(DWORD addr, DWORD size)
     d_print("Trying to read 0x%08x bytes: @ %p, handle: 0x%08x\n", size, addr, my_trace->cpdi.hProcess);
     read_memory(my_trace->cpdi.hProcess, (void*)addr, (void*)data, size, &read);
     
-    if(read == size)
+    sprintf(line, "# out_arg2 @ %d\n", my_trace->instr_count);
+    add_to_buffer(line);
+
+    if(read > 0x0)
     {
         int ret;
         ret = hexify(data, data2, size);
@@ -3456,6 +3462,8 @@ int out_region(DWORD addr, DWORD size)
     else {
         sprintf(buffer2, "Error: 0x%08x", GetLastError());
         strcpy(my_trace->report_buffer, buffer2);
+        sprintf(line, "# OU error\n", data2);
+        add_to_buffer(line);
     }
 
     free(data);
@@ -3803,10 +3811,10 @@ int process_last_event()
 
                         for(i = 0x0; i< my_trace->bpt_count; i++)
                         {
-                            d_print("Comparing 0x%08x and 0x%08x\n", bp_addr, my_trace->breakpoints[i].resolved_location);
+//                            d_print("Comparing 0x%08x and 0x%08x\n", bp_addr, my_trace->breakpoints[i].resolved_location);
                             if(my_trace->breakpoints[i].resolved_location == bp_addr)
                             {
-                                d_print("Handling breakpoint @ 0x%08x\n", bp_addr);
+//                                d_print("Handling breakpoint @ 0x%08x\n", bp_addr);
                                 handle_breakpoint((DWORD)my_trace->last_exception.ExceptionAddress, &my_trace->last_event);
                                 handled = 0x1;
                             }
@@ -4795,7 +4803,7 @@ int handle_cmd(char* cmd)
         addr = strtoul(strtok(0x0, " "), 0x0, 0x10);
         size  = strtoul(strtok(0x0, " "), 0x0, 0x10);
 
-        d_print("Ouputting region: 0x%08x, 0x%08x\n", addr, size);
+        d_print("Ouputting region: 0x%08x, 0x%08x @ %d\n", addr, size, my_trace->instr_count);
 
         out_region(addr, size);
         send_report();   
