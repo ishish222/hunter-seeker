@@ -75,6 +75,7 @@ void write_memory(HANDLE , void* , void* , SIZE_T , SIZE_T* );
 int check_lib_loaded(char*);
 int enable_reaction(char*);
 int disable_reaction(char*);
+int exclusive_reaction(char*);
 int unwrite_breakpoint(BREAKPOINT* bp);
 int update_breakpoint(BREAKPOINT* bp);
 OFFSET resolve_loc_desc(LOCATION_DESCRIPTOR_NEW* d);
@@ -814,6 +815,42 @@ int disable_all_reactions()
     {
         disable_reaction(my_trace->reactions[i].reaction_id);
     }
+    return 0x0;
+}
+
+int exclusive_reaction(char* reaction_id)
+{
+    d_print("[exclusive_reaction]\n");
+    unsigned i;
+
+    char another[MAX_LINE]; 
+    char* another_r;
+
+    /* take care of chained enabling */
+    strcpy(another, reaction_id);
+    d_print("React string: %s\n", another);
+    if(strstr(another, ":"))
+    {
+        another_r = strtok(another, ":");
+        while(another_r)
+        {
+            d_print("Found another reaction: %s\n", another_r);
+            exclusive_reaction(another_r);    
+            another_r = strtok(0x0, ":");
+        }
+        return 0x0;
+    }
+
+    for(i = 0x0; i< my_trace->reaction_count; i++)
+    {
+        /* locate i_reaction */
+        if(!strcmp(reaction_id, my_trace->reactions[i].reaction_id))
+        {
+            d_print("Setting exclusive reaction %s\n", reaction_id);
+            my_trace->reactions[i].exclusive = 0x1;
+        }
+    }
+    d_print("[exclusive_reaction ends]\n");
     return 0x0;
 }
 
@@ -2362,6 +2399,46 @@ int del_breakpoint(DWORD addr)
     return 0x0;
 }
 
+int handle_reaction(REACTION* cur_reaction, void* data)
+{
+    if(cur_reaction->exclusive)
+    {
+        d_print("Locking reaction lock with: %s\n", cur_reaction->reaction_id);
+        my_trace->reaction_lock = cur_reaction;
+    }
+
+    if(cur_reaction->routine_id == 0x0)
+    {
+        /* report rection_id to external controller */
+        d_print("Routine is null, reporting to controller\n");
+        my_trace->last_reaction = cur_reaction;
+        my_trace->report_code = REPORT_BREAKPOINT;
+    }
+    else
+    {
+        /* routine is non-zero, we need to handle */
+        d_print("Executing routine 0x%02x @ %d\n", cur_reaction->routine_id, my_trace->instr_count);
+        my_trace->routines[cur_reaction->routine_id](data);
+    }
+
+    /* enable coupled */
+    unsigned k; 
+    for(k = 0; k< MAX_COUPLES; k++)
+    {
+        if(cur_reaction->coupled_id[k][0] != 0x0)
+        {
+            d_print("Current reaction: %s\n", cur_reaction->reaction_id);
+            d_print("Enabling coupled reaction: %s\n", cur_reaction->coupled_id[k]);
+            REACTION* coupled_reaction;
+            coupled_reaction = find_reaction(cur_reaction->coupled_id[k]);
+            d_print("Found coupled reaction: %s\n", coupled_reaction->reaction_id);
+            enable_reaction(coupled_reaction->reaction_id);
+        }
+    }
+
+    return 0x0;
+}
+
 int handle_breakpoint(DWORD addr, void* data)
 {
     d_print("[handle_breakpoint]\n");
@@ -2392,32 +2469,39 @@ int handle_breakpoint(DWORD addr, void* data)
                     continue;
                 }
 
-                if(cur_reaction->routine_id == 0x0)
+                /* check for reaction lock */
+                if(my_trace->reaction_lock != 0x0)
                 {
-                    /* report rection_id to external controller */
-                    d_print("Routine is null, reporting to controller\n");
-                    my_trace->last_reaction = cur_reaction;
-                    my_trace->report_code = REPORT_BREAKPOINT;
-                }
-                else
-                {
-                    d_print("Executing routine 0x%02x @ %d\n", cur_reaction->routine_id, my_trace->instr_count);
-                    my_trace->routines[cur_reaction->routine_id](data);
-                }
-                /* enable coupled */
-                unsigned k; 
-                for(k = 0; k< MAX_COUPLES; k++)
-                {
-                    if(cur_reaction->coupled_id[k][0] != 0x0)
+                    /* the reaction lock is active */
+
+                    REACTION* lock_reaction;
+                    lock_reaction = my_trace->reaction_lock;
+
+                    unsigned k; 
+                    for(k = 0; k< MAX_COUPLES; k++)
                     {
-//                        d_print("Current reaction: %s\n", cur_reaction->reaction_id);
-//                        d_print("Enabling coupled reaction: %s\n", cur_reaction->coupled_id[k]);
-                        REACTION* coupled_reaction;
-                        coupled_reaction = find_reaction(cur_reaction->coupled_id[k]);
-//                        d_print("Found coupled reaction: %s\n", coupled_reaction->reaction_id);
-                        enable_reaction(coupled_reaction->reaction_id);
+                        if(lock_reaction->coupled_id[k][0] != 0x0)
+                        {
+                            REACTION* coupled_reaction;
+                            coupled_reaction = find_reaction(lock_reaction->coupled_id[k]);
+                            if(coupled_reaction == cur_reaction)
+                            {
+                                /* one of coupled is active, release the lock */
+                                d_print("Unlocking reaction lock with: %s\n", cur_reaction->reaction_id);
+                                my_trace->reaction_lock = 0x0;
+                            }
+                        }
+                    }
+
+                    /* verify if lock is still enabled */
+                    if(my_trace->reaction_lock != 0x0)
+                    {
+                        d_print("Reaction lock is active, continuing, missing reaction %s due to lock by %s\n", cur_reaction->reaction_id, my_trace->reaction_lock->reaction_id);
+                        continue;
                     }
                 }
+
+                handle_reaction(cur_reaction, data);
             }
         }
     }
@@ -4663,6 +4747,30 @@ int handle_cmd(char* cmd)
     else if(!strncmp(cmd, CMD_DUMP_MEMORY, 2))
     {
         dump_memory();
+        send_report();
+    }
+    else if(!strncmp(cmd, CMD_EXCLUSIVE_REACTION, 2))
+    {
+        char* mod;
+        char reaction_id[MAX_LINE];
+
+        mod = strtok(cmd, " ");
+        strcpy(reaction_id, strtok(0x0, " "));
+        
+        d_print("Setting exclusion for reaction no %s\n", reaction_id);
+        exclusive_reaction(reaction_id);
+        send_report();
+    }
+    else if(!strncmp(cmd, CMD_NONEXCLUSIVE_REACTION, 2))
+    {
+        char* mod;
+        char reaction_id[MAX_LINE];
+
+        mod = strtok(cmd, " ");
+        strcpy(reaction_id, strtok(0x0, " "));
+        
+        d_print("Setting exclusion for reaction no %s\n", reaction_id);
+        exclusive_reaction(reaction_id);
         send_report();
     }
     else if(!strncmp(cmd, CMD_ENABLE_REACTION, 2))

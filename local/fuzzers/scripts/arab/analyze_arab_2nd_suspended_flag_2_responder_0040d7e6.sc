@@ -15,12 +15,14 @@ SpawnResponder(11443)
 #GetHTTP(http://127.0.0.1)
 NextResponse(Test3)
 EnableBuiltin
+ExclusiveBuiltin
 Execute(scripts/arab/enable_context_mod_detection.sc)
 
 # we dont need for now, we pass by first creation
 DisableReaction(D1)
 DisableReaction(T1)
 DisableReaction(R1)
+DisableReaction(e9)
 TracerDebugContinueInf
 
 ### First CreateProcess
@@ -72,11 +74,17 @@ Decision=(ST:started,RE:re,W1:zero_to_1,W2:zero_eax,W3:zero_to_1,W4:zero_eax,W5:
 
 started:
 EnableBuiltin
+ExclusiveBuiltin
 EnableReaction(Z3)
 EnableReaction(Z5)
 EnableReaction(Z7)
 EnableReaction(Y1)
 EnableReaction(Y3)
+ExclusiveReaction(Z3)
+ExclusiveReaction(Z5)
+ExclusiveReaction(Z7)
+ExclusiveReaction(Y1)
+ExclusiveReaction(Y3)
 #DisableReaction(m8)
 #DisableReaction(m9)
 #DisableReaction(n2)

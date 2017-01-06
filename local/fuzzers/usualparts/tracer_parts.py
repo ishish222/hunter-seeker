@@ -425,6 +425,18 @@ def tracer_configure_marker_st_end(args=None):
 
     return
 
+def tracer_exclusive_reaction(args):
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+    
+    write_socket(options.s, "tracer_exclusive_reaction %s" % args);
+    response, _, _ = read_socket(options.s)
+
+    globs.state.ret = response
+
+    return
+
 def tracer_enable_reaction(args):
     options = globs.state.options
     state = globs.state
@@ -446,6 +458,18 @@ def tracer_disable_reaction(args):
     response, _, _ = read_socket(options.s)
 
     globs.state.ret = response
+
+    return
+
+def tracer_exclusive_anchors(args=None):
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+    
+    if(hasattr(options.settings, "builtin_reactions_anchors")):
+        write_socket(options.s, "tracer_exclusive_reaction %s" % options.settings.builtin_reactions_anchors);
+        response, _, _ = read_socket(options.s)
+        globs.state.ret = response
 
     return
 

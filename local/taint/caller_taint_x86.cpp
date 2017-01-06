@@ -736,15 +736,7 @@ int taint_x86::comment_out(char* comment)
         return 0x0;
     }
 
-    if(this->cur_info->lock_level < 0x1)
-    {
-        d_print(1, "Lock level is 0x%08x, printing out comment @ %d\n", this->cur_info->lock_level, this->last_instr_count);
         print_empty_call(this->cur_info, comment, colors[CODE_COMMENT]);
-    }
-    else
-    {
-        d_print(1, "Lock level is 0x%08x, not printing out comment @ %d\n", this->cur_info->lock_level, this->last_instr_count);
-    }
     return 0x0;
 }
 

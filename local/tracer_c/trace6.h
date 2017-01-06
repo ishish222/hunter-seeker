@@ -151,6 +151,8 @@
 #define CMD_CONFIGURE_REGIONS   "cr"
 #define CMD_CONFIGURE_REACTIONS "cR"
 #define CMD_ENABLE_REACTION     "eR"
+#define CMD_EXCLUSIVE_REACTION  "ER"
+#define CMD_NONEXCLUSIVE_REACTION  "NR"
 #define CMD_DISABLE_REACTION    "dR"
 #define CMD_ENABLE_ALL_REACTIONS "eA"
 #define CMD_DISABLE_ALL_REACTIONS "dA"
@@ -212,6 +214,7 @@ typedef struct REACTION_
 
     unsigned routine_id;
     char enabled;
+    char exclusive;
     BREAKPOINT* bp;
     unsigned bps_count;
 } REACTION;
@@ -329,6 +332,7 @@ typedef struct TRACE_CONFIG_
     OFFSET last_eip;
     DWORD last_tid;
     REACTION* last_reaction;
+    REACTION* reaction_lock;
 
     char verbose; /*full_log*/
     char buffer[BUFF_SIZE];
