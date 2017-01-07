@@ -894,6 +894,11 @@ class TraceController(object):
         self.last_report, self.last_answer = self.recv_report_active()
         return 
 
+    def raise_reaction(self, idd):
+        self.send_command_active("rR %s" % idd)
+        self.last_report, self.last_answer = self.recv_report_active()
+        return 
+
     def enable_reaction(self, idd):
         self.send_command_active("eR %s" % idd)
         self.last_report, self.last_answer = self.recv_report_active()

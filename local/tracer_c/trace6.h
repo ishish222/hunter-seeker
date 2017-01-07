@@ -152,6 +152,7 @@
 #define CMD_CONFIGURE_REACTIONS "cR"
 #define CMD_ENABLE_REACTION     "eR"
 #define CMD_EXCLUSIVE_REACTION  "ER"
+#define CMD_RAISE_REACTION      "rR"
 #define CMD_NONEXCLUSIVE_REACTION  "NR"
 #define CMD_DISABLE_REACTION    "dR"
 #define CMD_ENABLE_ALL_REACTIONS "eA"
@@ -215,6 +216,7 @@ typedef struct REACTION_
     unsigned routine_id;
     char enabled;
     char exclusive;
+    unsigned level;
     BREAKPOINT* bp;
     unsigned bps_count;
 } REACTION;

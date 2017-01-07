@@ -57,6 +57,7 @@ prototypes['TracerAttachSample']    = tracer_parts.tracer_attach_sample
 prototypes['TracerDebugContinueInf'] = tracer_parts.tracer_debug_continue
 prototypes['Decision']              = tracing_parts.decision
 prototypes['EnableReaction']        = tracer_parts.tracer_enable_reaction
+prototypes['RaiseReaction']         = tracer_parts.tracer_raise_reaction
 prototypes['ExclusiveReaction']     = tracer_parts.tracer_exclusive_reaction
 prototypes['DisableReaction']       = tracer_parts.tracer_disable_reaction
 prototypes['EnableBuiltin']         = tracer_parts.tracer_enable_anchors

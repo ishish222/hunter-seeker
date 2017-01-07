@@ -22,7 +22,6 @@ Execute(scripts/arab/enable_context_mod_detection.sc)
 DisableReaction(D1)
 DisableReaction(T1)
 DisableReaction(R1)
-DisableReaction(e9)
 TracerDebugContinueInf
 
 ### First CreateProcess
