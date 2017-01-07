@@ -77,6 +77,7 @@ int enable_reaction(char*);
 int disable_reaction(char*);
 int exclusive_reaction(char*);
 int raise_reaction(char*);
+int lower_reaction(char*);
 int unwrite_breakpoint(BREAKPOINT* bp);
 int update_breakpoint(BREAKPOINT* bp);
 OFFSET resolve_loc_desc(LOCATION_DESCRIPTOR_NEW* d);
@@ -315,7 +316,7 @@ void output_register(char* reg)
 
     val = read_register(my_trace->last_tid, reg); 
 
-    sprintf(line, "OU,%s: 0x%08x\n", reg, val);
+    sprintf(line, "OU,0x%x,%s: 0x%08x\n", my_trace->last_tid, reg, val);
     add_to_buffer(line);
 
     return;
@@ -415,7 +416,7 @@ void output_arg_unicode_string_x(unsigned x)
     read_memory(my_trace->cpdi.hProcess, (void*)addr, (void*)snap, SNAP_SIZE*2, &read);
     if(read > 0x0)
     {
-        sprintf(line, "OU,Arg%d: %ls\n", x, snap);
+        sprintf(line, "OU,0x%x,Arg%d: %ls\n", my_trace->last_tid, x, snap);
         add_to_buffer(line);
     }
     else
@@ -532,7 +533,7 @@ void output_arg_string_x(unsigned x)
     read_memory(my_trace->cpdi.hProcess, (void*)addr, (void*)snap, SNAP_SIZE, &read);
     if(read > 0x0)
     {
-        sprintf(line, "OU,Arg%d: %s\n", x, snap);
+        sprintf(line, "OU,0x%x,Arg%d: %s\n", my_trace->last_tid, x, snap);
         add_to_buffer(line);
     }
     else
@@ -626,7 +627,7 @@ void output_arg_x(unsigned x)
 
     val = read_dword(esp);
 
-    sprintf(line, "OU,Arg%d: %08x\n", x, val);
+    sprintf(line, "OU,0x%x,Arg%d: %08x\n", my_trace->last_tid,x, val);
     add_to_buffer(line);
 
     return;
@@ -866,6 +867,56 @@ int raise_reaction(char* reaction_id)
         }
     }
     d_print("[raise_reaction ends]\n");
+    return 0x0;
+}
+
+int lower_reaction(char* reaction_id)
+{
+    d_print("[lower_reaction]\n");
+    unsigned i;
+
+    char another[MAX_LINE]; 
+    char* another_r;
+
+    /* take care of chained enabling */
+    strcpy(another, reaction_id);
+    d_print("React string: %s\n", another);
+    if(strstr(another, ":"))
+    {
+        another_r = strtok(another, ":");
+        while(another_r)
+        {
+            d_print("Found another reaction: %s\n", another_r);
+            lower_reaction(another_r);    
+            another_r = strtok(0x0, ":");
+        }
+        return 0x0;
+    }
+
+    for(i = 0x0; i< my_trace->reaction_count; i++)
+    {
+        /* locate i_reaction */
+        if(!strcmp(reaction_id, my_trace->reactions[i].reaction_id))
+        {
+            d_print("Setting exclusive reaction %s\n", reaction_id);
+            my_trace->reactions[i].level --;
+
+            REACTION* cur_reaction = &my_trace->reactions[i];
+
+            /* raise coupled */
+            unsigned k; 
+            for(k = 0; k< MAX_COUPLES; k++)
+            {
+                if(cur_reaction->coupled_id[k][0] != 0x0)
+                {
+                    REACTION* coupled_reaction;
+                    coupled_reaction = find_reaction(cur_reaction->coupled_id[k]);
+                    coupled_reaction->level --;
+                }
+            }
+        }
+    }
+    d_print("[lower_reaction ends]\n");
     return 0x0;
 }
 
@@ -2452,10 +2503,14 @@ int del_breakpoint(DWORD addr)
 
 int handle_reaction(REACTION* cur_reaction, void* data)
 {
+    DWORD tid, thread_no;
+    tid = my_trace->last_tid;
+    thread_no = my_trace->thread_map[tid];
+
     if(cur_reaction->exclusive)
     {
-        d_print("Locking reaction lock with: %s\n", cur_reaction->reaction_id);
-        my_trace->reaction_lock = cur_reaction;
+        d_print("Locking reaction lock with: %s in TID: 0x%08x\n", cur_reaction->reaction_id, tid);
+        my_trace->threads[thread_no].reaction_lock = cur_reaction;
     }
 
     if(cur_reaction->routine_id == 0x0)
@@ -2510,6 +2565,16 @@ int handle_breakpoint(DWORD addr, void* data)
         {
             my_bp = &my_trace->breakpoints[i];
             REACTION* cur_reaction;
+    
+            DWORD tid, thread_no;
+            tid = my_trace->last_tid;
+            thread_no = my_trace->thread_map[tid];
+
+            REACTION* reaction_lock;
+
+            if(thread_no == -1) continue;
+
+            reaction_lock = my_trace->threads[thread_no].reaction_lock;
 
             for(j = 0x0; j < my_bp->reaction_count; j++)
             {
@@ -2521,41 +2586,39 @@ int handle_breakpoint(DWORD addr, void* data)
                 }
 
                 /* check for reaction lock */
-                if(my_trace->reaction_lock != 0x0)
+                if(reaction_lock != 0x0)
                 {
                     /* the reaction lock is active */
-
-                    REACTION* lock_reaction;
-                    lock_reaction = my_trace->reaction_lock;
 
                     unsigned k; 
                     for(k = 0; k< MAX_COUPLES; k++)
                     {
-                        if(lock_reaction->coupled_id[k][0] != 0x0)
+                        if(reaction_lock->coupled_id[k][0] != 0x0)
                         {
                             REACTION* coupled_reaction;
-                            coupled_reaction = find_reaction(lock_reaction->coupled_id[k]);
+                            coupled_reaction = find_reaction(reaction_lock->coupled_id[k]);
                             if(coupled_reaction == cur_reaction)
                             {
                                 /* one of coupled is active, release the lock */
-                                d_print("Unlocking reaction lock with: %s\n", cur_reaction->reaction_id);
-                                my_trace->reaction_lock = 0x0;
+                                d_print("Unlocking reaction lock with: %s in TID: 0x%08x\n", cur_reaction->reaction_id, tid);
+                                my_trace->threads[thread_no].reaction_lock = 0x0;
                             }
                         }
                     }
 
                     /* verify if lock is still enabled */
-                    if(my_trace->reaction_lock != 0x0)
+                    reaction_lock = my_trace->threads[thread_no].reaction_lock;
+                    if(reaction_lock != 0x0)
                     {
                         /* higher reaction level can override */
-                        if(cur_reaction->level <= my_trace->reaction_lock->level)
+                        if(cur_reaction->level <= reaction_lock->level)
                         {
-                            d_print("Reaction lock is active, continuing, missing reaction %s due to lock by %s\n", cur_reaction->reaction_id, my_trace->reaction_lock->reaction_id);
+                            d_print("Reaction lock is active, continuing, missing reaction %s due to lock by %s\n", cur_reaction->reaction_id, reaction_lock->reaction_id);
                             continue;
                         }
                         else
                         {
-                            d_print("Reaction lock %s overriden by %s\n", my_trace->reaction_lock->reaction_id, cur_reaction->reaction_id);
+                            d_print("Reaction lock %s overriden by %s\n", reaction_lock->reaction_id, cur_reaction->reaction_id);
                         }
                     }
                 }
@@ -3599,13 +3662,13 @@ int out_region(DWORD addr, DWORD size)
             strcpy(my_trace->report_buffer, buffer2);
             return 0x0;
         }
-        sprintf(line, "OU,%s\n", data2);
+        sprintf(line, "OU,0x%x,%s\n", my_trace->last_tid, data2);
         add_to_buffer(line);
     }
     else {
         sprintf(buffer2, "Error: 0x%08x", GetLastError());
         strcpy(my_trace->report_buffer, buffer2);
-        sprintf(line, "# OU error\n", data2);
+        sprintf(line, "# OU,0x%x error\n", my_trace->last_tid, data2);
         add_to_buffer(line);
     }
 
@@ -3893,6 +3956,8 @@ int process_last_event()
     unsigned status;
 
         //d_print("process_last_event: 0x%08x\n", my_trace->last_event.dwDebugEventCode);
+        my_trace->last_tid = my_trace->last_event.dwThreadId;
+
         switch(my_trace->last_event.dwDebugEventCode)
         {
             case CREATE_PROCESS_DEBUG_EVENT:
@@ -4878,6 +4943,19 @@ int handle_cmd(char* cmd)
         
         d_print("Raising reaction no %s\n", reaction_id);
         raise_reaction(reaction_id);
+
+        send_report();
+    }
+    else if(!strncmp(cmd, CMD_LOWER_REACTION, 2))
+    {
+        char* mod;
+        char reaction_id[MAX_LINE];
+
+        mod = strtok(cmd, " ");
+        strcpy(reaction_id, strtok(0x0, " "));
+        
+        d_print("Lowering reaction no %s\n", reaction_id);
+        lower_reaction(reaction_id);
 
         send_report();
     }

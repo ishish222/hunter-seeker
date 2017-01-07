@@ -2512,7 +2512,7 @@ class taint_x86
     int check_loop(CONTEXT_INFO*);
     int check_loop_2(CONTEXT_INFO*);
     int check_collecting(CONTEXT_INFO*);
-    int comment_out(char*);
+    int comment_out(char*, DWORD);
 
     /* dumping taint transfer history */
     int write_history(FILE*);

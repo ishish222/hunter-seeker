@@ -16,6 +16,7 @@ SpawnResponder(11443)
 NextResponse(Test3)
 EnableBuiltin
 ExclusiveBuiltin
+LowerBuiltin
 Execute(scripts/arab/enable_context_mod_detection.sc)
 
 # we dont need for now, we pass by first creation
@@ -74,6 +75,7 @@ Decision=(ST:started,RE:re,W1:zero_to_1,W2:zero_eax,W3:zero_to_1,W4:zero_eax,W5:
 started:
 EnableBuiltin
 ExclusiveBuiltin
+LowerBuiltin
 EnableReaction(Z3)
 EnableReaction(Z5)
 EnableReaction(Z7)

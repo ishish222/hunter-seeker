@@ -729,14 +729,22 @@ int taint_x86::check_collecting(CONTEXT_INFO* info)
     return 0x0;
 }
 
-int taint_x86::comment_out(char* comment)
+int taint_x86::comment_out(char* comment, DWORD tid)
 {
     if(!(this->started))
     {
         return 0x0;
     }
 
-        print_empty_call(this->cur_info, comment, colors[CODE_COMMENT]);
+    /* we need to find proper ctx_info */
+    CONTEXT_INFO* info;
+    DWORD tid_no;
+
+    tid_no = this->tids[tid];
+
+    info = &this->ctx_info[tid_no];
+
+    print_empty_call(info, comment, colors[CODE_COMMENT]);
     return 0x0;
 }
 

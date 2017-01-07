@@ -239,12 +239,14 @@ int comment_out(char* line, taint_x86* taint_eng)
 {
     char* cmd;
     char* comment;
+    DWORD tid;
 
     cmd = strtok(line, ",");
+    tid = strtol(strtok(0x0, ","), 0x0, 0x10);
     comment = strtok(0x0, ",");
     comment[strlen(comment)-1] = 0x0;
 
-    taint_eng->comment_out(comment);
+    taint_eng->comment_out(comment, tid);
 
     return 0x0;    
 }

@@ -153,6 +153,7 @@
 #define CMD_ENABLE_REACTION     "eR"
 #define CMD_EXCLUSIVE_REACTION  "ER"
 #define CMD_RAISE_REACTION      "rR"
+#define CMD_LOWER_REACTION      "lR"
 #define CMD_NONEXCLUSIVE_REACTION  "NR"
 #define CMD_DISABLE_REACTION    "dR"
 #define CMD_ENABLE_ALL_REACTIONS "eA"
@@ -216,7 +217,7 @@ typedef struct REACTION_
     unsigned routine_id;
     char enabled;
     char exclusive;
-    unsigned level;
+    int level;
     BREAKPOINT* bp;
     unsigned bps_count;
 } REACTION;
@@ -240,6 +241,7 @@ typedef struct _THREAD_ENTRY
     char created;
     HANDLE handle;
     char skipping;
+    REACTION* reaction_lock;
 } THREAD_ENTRY;
 
 /* tracking libraries */
@@ -334,7 +336,6 @@ typedef struct TRACE_CONFIG_
     OFFSET last_eip;
     DWORD last_tid;
     REACTION* last_reaction;
-    REACTION* reaction_lock;
 
     char verbose; /*full_log*/
     char buffer[BUFF_SIZE];
