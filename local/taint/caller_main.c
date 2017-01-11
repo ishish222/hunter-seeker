@@ -263,7 +263,6 @@ int parse_option(char* line, taint_x86* taint_eng)
 
     printf("Enabling analysis option: %s\n", option);
 
-    printf("Before: 0x%08x\n", taint_eng->options);
     if(!strcmp(option, "ANALYZE_JUMPS"))
     {
         taint_eng->options |= OPTION_ANALYZE_JUMPS;
@@ -293,7 +292,6 @@ int parse_option(char* line, taint_x86* taint_eng)
         taint_eng->options |= OPTION_VERIFY_SEG_SEC;
     }
 
-    printf("After: 0x%08x\n", taint_eng->options);
     return 0x0;
 }
 
@@ -649,6 +647,12 @@ void print_usage()
     return;
 }
 
+void handle_sigint(int signum)
+{
+    taint_eng.handle_sigint();
+    return;
+}
+
 void handle_sigsegv(int signum)
 {
     taint_eng.handle_sigsegv();
@@ -807,6 +811,7 @@ int main(int argc, char** argv)
 
     
     signal(SIGSEGV, handle_sigsegv);
+    signal(SIGINT, handle_sigint);
 
     taint_eng.bp_hit = 0x1;
     taint_eng.enumerate = enumerate;
@@ -1017,18 +1022,6 @@ int main(int argc, char** argv)
                 ;
 #endif
             }
-/*
-            if(instr_limit > 0x0)
-                if(instr_count == instr_limit)
-                    break;
-*/
-        }
-        if(0)
-        if(instr_count == 13700000) 
-        //if(instr_count == 13709825) 
-        {
-            fprintf(stderr, "Problem with instruction after %lld\n", last_instr_count);
-            getchar();
         }
 
         if(!(instr_count % instr_report_interval))

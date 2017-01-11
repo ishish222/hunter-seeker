@@ -52,7 +52,7 @@ TracerDebugContinueInf
 Execute(scripts/arab/attach_sample.sc)
 
 # RR
-SaveEP(0040d7e6)
+#SaveEP(0040d7e6)
 LoadEP
 ManualST
 EnableReaction(ST)
@@ -66,7 +66,9 @@ TracerRegisterReactions(WININET.dll+0x14ea3,Z7:Z8,0x0;WININET.dll+0x14f6c,Z8:Z7,
 TracerRegisterReactions(WININET.dll+0x20615,Z9:Z0,0x0;WININET.dll+0x20846,Z0:Z9,0x100)
 TracerRegisterReactions(WININET.dll+0x22d7d,Y1:Y2,0x0;WININET.dll+0x22e74,Y2:Y1,0x0)
 TracerRegisterReactions(WININET.dll+0x1e2a6,Y3:Y4,0x0;WININET.dll+0x1e2e5,Y4:Y3,0x0)
+TracerRegisterReactions(self+0xd902,A3,0x102)
 EnableReaction(Z1)
+EnableReaction(A3)
 TracerDebugContinueInf
 
 decision:

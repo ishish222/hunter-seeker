@@ -2532,6 +2532,7 @@ class taint_x86
     // instruction routines
     int r_noop(BYTE_t*);
     int r_noop_un(BYTE_t*);
+    int r_jxx(BYTE_t*);
     int r_push_ax_eax(BYTE_t*);
     int r_push_cx_ecx(BYTE_t*);
     int r_push_dx_edx(BYTE_t*);
@@ -3032,6 +3033,7 @@ class taint_x86
     int check_rets(OFFSET);
     LIB_INFO* get_lib(OFFSET);
     int handle_jmp(CONTEXT_INFO*);
+    int handle_jxx(CONTEXT_INFO*);
     int handle_call(CONTEXT_INFO*);
     int handle_ret(CONTEXT_INFO*, OFFSET);
     int handle_exception(EXCEPTION_INFO);
@@ -3042,6 +3044,7 @@ class taint_x86
     int add_symbols(LIB_INFO*);
     int copy_symbol(SYMBOL**, SYMBOL*);
     int handle_sigsegv();
+    int handle_sigint();
 
 /*
     int from_mem(BYTE_t&, OFFSET, int);
@@ -3297,20 +3300,20 @@ class taint_x86
         this->instructions_32[0x6b] = &taint_x86::r_imul_r_rm_16_32_imm_8;      // cf
         this->instructions_32[0x6f] = &taint_x86::r_noop_un;                    // cf
 
-        this->instructions_32[0x72] = &taint_x86::r_noop_un;                    // cf
-        this->instructions_32[0x73] = &taint_x86::r_noop_un;                    // cf
-        this->instructions_32[0x74] = &taint_x86::r_noop_un;                    // cf
-        this->instructions_32[0x75] = &taint_x86::r_noop_un;                    // cf
-        this->instructions_32[0x76] = &taint_x86::r_noop_un;                    // cf
-        this->instructions_32[0x77] = &taint_x86::r_noop_un;                    // cf
-        this->instructions_32[0x78] = &taint_x86::r_noop_un;                    // cf
-        this->instructions_32[0x79] = &taint_x86::r_noop_un;                    // cf
-        this->instructions_32[0x7a] = &taint_x86::r_noop_un;                    // cf
-        this->instructions_32[0x7b] = &taint_x86::r_noop_un;                    // cf
-        this->instructions_32[0x7c] = &taint_x86::r_noop_un;                    // cf
-        this->instructions_32[0x7d] = &taint_x86::r_noop_un;                    // cf
-        this->instructions_32[0x7e] = &taint_x86::r_noop_un;                    // cf
-        this->instructions_32[0x7f] = &taint_x86::r_noop_un;                    // cf
+        this->instructions_32[0x72] = &taint_x86::r_jxx;                        // cf
+        this->instructions_32[0x73] = &taint_x86::r_jxx;                        // cf
+        this->instructions_32[0x74] = &taint_x86::r_jxx;                        // cf
+        this->instructions_32[0x75] = &taint_x86::r_jxx;                        // cf
+        this->instructions_32[0x76] = &taint_x86::r_jxx;                        // cf
+        this->instructions_32[0x77] = &taint_x86::r_jxx;                        // cf
+        this->instructions_32[0x78] = &taint_x86::r_jxx;                        // cf
+        this->instructions_32[0x79] = &taint_x86::r_jxx;                        // cf
+        this->instructions_32[0x7a] = &taint_x86::r_jxx;                        // cf
+        this->instructions_32[0x7b] = &taint_x86::r_jxx;                        // cf
+        this->instructions_32[0x7c] = &taint_x86::r_jxx;                        // cf
+        this->instructions_32[0x7d] = &taint_x86::r_jxx;                        // cf
+        this->instructions_32[0x7e] = &taint_x86::r_jxx;                        // cf
+        this->instructions_32[0x7f] = &taint_x86::r_jxx;                        // cf
         this->instructions_32[0x80] = &taint_x86::r_decode_execute_80;          // cf
         this->instructions_32[0x81] = &taint_x86::r_decode_execute_81;          // cf
         this->instructions_32[0x83] = &taint_x86::r_decode_execute_83;          // cf

@@ -78,6 +78,15 @@ int taint_x86::d_print(int level, const char* format, ...)
     return 0x0;
 }
 
+int taint_x86::handle_sigint()
+{
+    this->finished = 0x1;
+    this->aborted = 0x1;
+    d_print(1, "Eip: 0x%08x, this->end_addr: 0x%08x, limit: %d, count: %d, finishing\n", this->current_eip, this->end_addr, this->instr_limit, this->current_instr_count);
+    
+    return 0x0;
+}
+
 int taint_x86::handle_sigsegv()
 {
     
@@ -563,6 +572,23 @@ void taint_x86::print_ret(CONTEXT_INFO* cur_ctx)
     d_print(1, "Printing ret\n");
     strcat(out_line, "</node>\n");
     fwrite(out_line, strlen(out_line), 0x1, f);
+}
+
+int taint_x86::handle_jxx(CONTEXT_INFO* info)
+{
+    return 0x0; /* output files are too fat :( */
+    if(info->waiting != 0x0)
+    {
+        return 0x0;
+    }
+
+    char out_line[MAX_NAME];
+
+    if(this->enumerate) sprintf(out_line, "(%d)0x%08x jxx", this->current_instr_count ,this->current_eip);
+    else sprintf(out_line, "0x%08x jxx", this->current_eip);
+    print_call(info, out_line, colors[CODE_BLACK]);
+
+    return 0x0;
 }
 
 /* precise jmp analysis */
@@ -4349,6 +4375,12 @@ DWORD taint_x86::a_pop_lost()
 int taint_x86::r_noop(BYTE_t* b)
 {
     d_print(3, "Not implemented: 0x%02x\n", b->get_BYTE());
+    return 0x0;
+}
+
+int taint_x86::r_jxx(BYTE_t* b)
+{
+    handle_jxx(this->cur_info);
     return 0x0;
 }
 
