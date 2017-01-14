@@ -2291,6 +2291,7 @@ typedef struct _CALL_LEVEL
     unsigned loop_struct_count;
     OFFSET   loop_addr[MAX_LOOP_ADDR];
     char     loop_status;
+    unsigned jxx_handling;
 
 } CALL_LEVEL;
 
@@ -2323,7 +2324,6 @@ typedef struct _CONTEXT_INFO
     OFFSET source;
     OFFSET target;
     OFFSET next;
-    unsigned jxx_handling;
     DWORD* list;
     unsigned list_len;
 
@@ -3056,7 +3056,6 @@ class taint_x86
     int handle_jxx(CONTEXT_INFO*, char*);
     int handle_ja(CONTEXT_INFO*);
     int handle_jae(CONTEXT_INFO*);
-    int handle_jxz(CONTEXT_INFO*);
 
 
     int handle_call(CONTEXT_INFO*);

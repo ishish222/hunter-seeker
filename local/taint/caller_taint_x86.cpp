@@ -578,7 +578,7 @@ void taint_x86::print_ret(CONTEXT_INFO* cur_ctx)
 
 int taint_x86::jxx_set(unsigned state)
 {
-    this->cur_info->jxx_handling = state;
+    this->cur_info->levels[this->cur_info->call_level].jxx_handling = state;
     return 0x0;
 }
 
@@ -604,7 +604,7 @@ int add_to_list(CONTEXT_INFO* info, DWORD eip)
 
 int taint_x86::handle_jxx(CONTEXT_INFO* info, char* str)
 {
-    if((info->jxx_handling != 0x1) || (info->waiting != 0x0))
+    if((info->levels[info->call_level].jxx_handling != 0x1) || (info->waiting != 0x0))
     {
         return 0x0;
     }
@@ -615,7 +615,7 @@ int taint_x86::handle_jxx(CONTEXT_INFO* info, char* str)
 
     if(this->enumerate) sprintf(out_line, "(%d)0x%08x %s", this->current_instr_count ,this->current_eip, str);
     else sprintf(out_line, "0x%08x %s", this->current_eip, str);
-    print_empty_call(info, out_line, colors[CODE_BLACK]);
+    print_empty_call(info, out_line, colors[CODE_GREEN]);
 
     add_to_list(info, this->current_eip);
 
@@ -631,24 +631,6 @@ int taint_x86::handle_jae(CONTEXT_INFO* info)
 {
     return handle_jxx(info, "jae");
 }
-
-int taint_x86::handle_jxz(CONTEXT_INFO* info)
-{
-    if((info->jxx_handling != 0x1) || (info->waiting != 0x0))
-    {
-        return 0x0;
-    }
-
-    char out_line[MAX_NAME];
-
-    if(this->enumerate) sprintf(out_line, "(%d)0x%08x jxz", this->current_instr_count ,this->current_eip);
-    else sprintf(out_line, "0x%08x jxz", this->current_eip);
-    print_call(info, out_line, colors[CODE_BLACK]);
-
-    return 0x0;
-}
-
-
 
 /* precise jmp analysis */
 int taint_x86::handle_jmp(CONTEXT_INFO* info)
