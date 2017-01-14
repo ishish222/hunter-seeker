@@ -130,8 +130,8 @@ kernel32.dll+0x45f70,V1:V2,0x0;     # SleepEx start
 kernel32.dll+0x45f76,V2:V1,0x100;   # SleepEx end
 ntdll.dll+0x464f0,s1:s2,0x1;        # KiFastSystemCall
 ntdll.dll+0x464f4,s2:s1,0x2;        # KiFastSystemRet
-kernel32.dll+0x51837,a0:a2,0x301;   # GetProcAddr start
-kernel32.dll+0x5183c,a2:a0,0x100;# GetProcAddr end
+kernel32.dll+0x51837,a0:a2,0x301:0x312;     # GetProcAddr start
+kernel32.dll+0x5183c,a2:a0,0x100;           # GetProcAddr end
 kernel32.dll+0x528d7,a3:a4,0x311;   # GetModuleHandleA start
 kernel32.dll+0x528dc,a4:a3,0x100;   # GetModuleHandleA end
 kernel32.dll+0x5177e,a5:a6,0x313;   # CreateMutexA start
@@ -165,7 +165,7 @@ kernel32.dll+0x50d8f,d6:d7,0x303;   # OpenThread start
 kernel32.dll+0x50d95,d7:d6,0x100;   # OpenThread end
 kernel32.dll+0x3b42c,d8:d9,0x302;   # VirtualAllocEx start
 kernel32.dll+0x3b432,d9:d8,0x100;   # VirtualAllocEx end
-kernel32.dll+0x6859f,e0:e2,0x301;   # WriteProcessMemory start
+kernel32.dll+0x6859f,e0:e2,0x301:0x302;   # WriteProcessMemory start
 kernel32.dll+0x685a5,e2:e0,0x100;# WriteProcessMemory end
 kernel32.dll+0x53142,e3:e4,0x301;   # SetUnhandledExceptionFilter start
 kernel32.dll+0x531ff,e4:e3,0x100;   # SetUnhandledExceptionFilter end
@@ -197,46 +197,46 @@ ADVAPI32.dll+0x5df73,g9:g0,0x312;   # RegSetKeyValueA start, lacks printing data
 ADVAPI32.dll+0x5dfd5,g0:g9,0x100;   # RegSetKeyValueA end
 ADVAPI32.dll+0x2daf2,h1:h2,0x322;   # RegSetKeyValueW start, lacks printing data, because its type may vary
 ADVAPI32.dll+0x2db4d,h2:h1,0x100;   # RegSetKeyValueW end
-ADVAPI32.dll+0x5f529,h3:h5,0x312;   # RegSetValueA start
-ADVAPI32.dll+0x5f5f5,h5:h3,0x100;# RegSetValueA end
-ADVAPI32.dll+0x2fa72,h6:h8,0x322;   # RegSetValueW start
-ADVAPI32.dll+0x2fb24,h8:h6,0x100;# RegSetValueW end
-ADVAPI32.dll+0x11b96,h9:i1,0x312;   # RegSetValueExA start
-ADVAPI32.dll+0x11b9c,i1:h9,0x100;# RegSetValueExA end
-ADVAPI32.dll+0x11c82,i2:i4,0x322;   # RegSetValueExW start
-ADVAPI32.dll+0x11c88,i4:i2,0x100;# RegSetValueExW end
-ADVAPI32.dll+0xd403,i5:i6,0x312;    # RegQueryValueA start
-ADVAPI32.dll+0xd4f8,i6:i5,0x100;    # RegQueryValueA end
-ADVAPI32.dll+0x1b96b,i7:i8,0x322;   # RegQueryValueW start
-ADVAPI32.dll+0x1ba32,i8:i7,0x100;   # RegQueryValueW end
-ADVAPI32.dll+0x1bc25,i9:i0,0x312;   # RegQueryValueA start
-ADVAPI32.dll+0x1bc2b,i0:i9,0x100;   # RegQueryValueA end
-ADVAPI32.dll+0x1bcd5,j1:j2,0x322;   # RegQueryValueW start
-ADVAPI32.dll+0x1bcdb,j2:j1,0x100;   # RegQueryValueW end
-ntdll.dll+0x469d0,j3:j4,0x311;      # strstr start
-ntdll.dll+0x46a0d,j4:j3,0x100;   # strstr end
-ntdll.dll+0x347f0,j6:j7,0x311;      # strcat start
-ntdll.dll+0x348dd,j7:j6,0x100;   # strcat end
-ntdll.dll+0x348e0,j9:j0,0x311;      # strcmp start
-ntdll.dll+0x3492b,j0:j9,0x100;   # strcmp end
-ntdll.dll+0x347e0,k1:k2,0x311;      # strcpy start
-ntdll.dll+0x347e5,k2:k1,0x100;   # strcpy end
-ntdll.dll+0x34a80,k4:k5,0x311;      # strncat start
-ntdll.dll+0x34a85,k5:k4,0x100;   # strncat end
-ntdll.dll+0x7191c,k7:k8,0x311;      # strncmp start
-ntdll.dll+0x71983,k8:k7,0x100;   # strncmp end
-ntdll.dll+0x5ee27,k0:l1,0x301;      # LdrGetProcedureAddress start
-ntdll.dll+0x5ee40,l1:k0,0x100;   # LdrGetProcedureAddress end
-ntdll.dll+0x5eb05,l3:l4,0x301;      # LdrGetProcedureAddressEx start invalid
-ntdll.dll+0x5ec50,l4:l3,0x100;   # LdrGetProcedureAddressEx end
+ADVAPI32.dll+0x5f529,h3:h5,0x312:0x314;     # RegSetValueA start
+ADVAPI32.dll+0x5f5f5,h5:h3,0x100;           # RegSetValueA end
+ADVAPI32.dll+0x2fa72,h6:h8,0x322:0x324;     # RegSetValueW start
+ADVAPI32.dll+0x2fb24,h8:h6,0x100;           # RegSetValueW end
+ADVAPI32.dll+0x11b96,h9:i1,0x312:0x314;     # RegSetValueExA start
+ADVAPI32.dll+0x11b9c,i1:h9,0x100;           # RegSetValueExA end
+ADVAPI32.dll+0x11c82,i2:i4,0x322:0x324;     # RegSetValueExW start
+ADVAPI32.dll+0x11c88,i4:i2,0x100;           # RegSetValueExW end
+ADVAPI32.dll+0xd403,i5:i6,0x312;            # RegQueryValueA start
+ADVAPI32.dll+0xd4f8,i6:i5,0x100;            # RegQueryValueA end
+ADVAPI32.dll+0x1b96b,i7:i8,0x322;           # RegQueryValueW start
+ADVAPI32.dll+0x1ba32,i8:i7,0x100;           # RegQueryValueW end
+ADVAPI32.dll+0x1bc25,i9:i0,0x312;           # RegQueryValueA start
+ADVAPI32.dll+0x1bc2b,i0:i9,0x100;           # RegQueryValueA end
+ADVAPI32.dll+0x1bcd5,j1:j2,0x322;           # RegQueryValueW start
+ADVAPI32.dll+0x1bcdb,j2:j1,0x100;           # RegQueryValueW end
+ntdll.dll+0x469d0,j3:j4,0x311:0x312;        # strstr start
+ntdll.dll+0x46a0d,j4:j3,0x100;              # strstr end
+ntdll.dll+0x347f0,j6:j7,0x311:0x312;        # strcat start
+ntdll.dll+0x348dd,j7:j6,0x100;              # strcat end
+ntdll.dll+0x348e0,j9:j0,0x311:0x312;        # strcmp start
+ntdll.dll+0x3492b,j0:j9,0x100;              # strcmp end
+ntdll.dll+0x347e0,k1:k2,0x311:0x312;        # strcpy start
+ntdll.dll+0x347e5,k2:k1,0x100;              # strcpy end
+ntdll.dll+0x34a80,k4:k5,0x311:0x312;        # strncat start
+ntdll.dll+0x34a85,k5:k4,0x100;              # strncat end
+ntdll.dll+0x7191c,k7:k8,0x311:0x312;        # strncmp start
+ntdll.dll+0x71983,k8:k7,0x100;              # strncmp end
+ntdll.dll+0x5ee27,k0:l1,0x301:0x318;        # LdrGetProcedureAddress start
+ntdll.dll+0x5ee40,l1:k0,0x100;              # LdrGetProcedureAddress end
+ntdll.dll+0x5eb05,l3:l4,0x301:0x318;        # LdrGetProcedureAddressEx start invalid
+ntdll.dll+0x5ec50,l4:l3,0x100;              # LdrGetProcedureAddressEx end
 kernel32.dll+0x2062,l6:l7,0x301;    # CreateProcessA start
 kernel32.dll+0x208f,l7:l6,0x100;    # CreateProcessA end
 kernel32.dll+0x202d,l8:l9,0x311;    # CreateProcessW start
 kernel32.dll+0x205a,l9:l8,0x100;    # CreateProcessW end
-SHELL32.dll+0x249ba5,l0:m1,0x302;   # ShellExecuteA start
-SHELL32.dll+0x249c28,m1:l0,0x100;# ShellExecuteA end
-SHELL32.dll+0x141f0,m3:m4,0x312;    # ShellExecuteW start
-SHELL32.dll+0x14277,m4:m3,0x100; # ShellExecuteW end
+SHELL32.dll+0x249ba5,l0:m1,0x302:0x303;     # ShellExecuteA start
+SHELL32.dll+0x249c28,m1:l0,0x100;           # ShellExecuteA end
+SHELL32.dll+0x141f0,m3:m4,0x312:0x313;      # ShellExecuteW start
+SHELL32.dll+0x14277,m4:m3,0x100;            # ShellExecuteW end
 WININET.dll+0x2054f,m6:m7,0x301;    # InternetConnectA start
 WININET.dll+0x205a0,m7:m6,0x100;    # InternetConnectA end 
 WININET.dll+0x20492,m8:m9,0x301;    # InternetConnectW start

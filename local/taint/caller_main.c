@@ -659,6 +659,18 @@ void handle_sigsegv(int signum)
     return;
 }
 
+void jxx_enable()
+{
+    taint_eng.jxx_set(0x1);
+    return;
+}
+
+void jxx_disable()
+{
+    taint_eng.jxx_set(0x0);
+    return;
+}
+
 void _pause()
 {
     fprintf(stdout, "Press any key\n");
@@ -970,6 +982,12 @@ int main(int argc, char** argv)
 
             if(line[0] == 'F' && line[1] == 'E')
                 register_fence(line, &taint_eng);
+
+            if(line[0] == 'J' && line[1] == 'E')
+                jxx_enable();
+
+            if(line[0] == 'J' && line[1] == 'D')
+                jxx_disable();
 
             if(line[0] == 'P' && line[1] == 'A')
                 _pause();

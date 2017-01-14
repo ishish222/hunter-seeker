@@ -1,5 +1,5 @@
 Execute(scripts/arab/start.sc)
-Execute(scripts/arab/debug_sample.sc)
+Execute(scripts/arab/debug_sample_log.sc)
 
 # RR
 TracerRegisterRegions(EDI:0x5000)

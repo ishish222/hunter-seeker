@@ -574,22 +574,57 @@ void taint_x86::print_ret(CONTEXT_INFO* cur_ctx)
     fwrite(out_line, strlen(out_line), 0x1, f);
 }
 
-int taint_x86::handle_jxx(CONTEXT_INFO* info)
+/* handling conditional jumps  */
+
+int taint_x86::jxx_set(unsigned state)
 {
-    return 0x0; /* output files are too fat :( */
-    if(info->waiting != 0x0)
+    this->cur_info->jxx_handling = state;
+    return 0x0;
+}
+
+int taint_x86::handle_jxx(CONTEXT_INFO* info, char* str)
+{
+    if((info->jxx_handling != 0x1) || (info->waiting != 0x0))
     {
         return 0x0;
     }
 
     char out_line[MAX_NAME];
 
-    if(this->enumerate) sprintf(out_line, "(%d)0x%08x jxx", this->current_instr_count ,this->current_eip);
-    else sprintf(out_line, "0x%08x jxx", this->current_eip);
+    if(this->enumerate) sprintf(out_line, "(%d)0x%08x %s", this->current_instr_count ,this->current_eip, str);
+    else sprintf(out_line, "0x%08x %s", this->current_eip, str);
     print_call(info, out_line, colors[CODE_BLACK]);
 
     return 0x0;
 }
+
+int taint_x86::handle_ja(CONTEXT_INFO* info)
+{
+    return handle_jxx(info, "ja");
+}
+
+int taint_x86::handle_jae(CONTEXT_INFO* info)
+{
+    return handle_jxx(info, "jae");
+}
+
+int taint_x86::handle_jxz(CONTEXT_INFO* info)
+{
+    if((info->jxx_handling != 0x1) || (info->waiting != 0x0))
+    {
+        return 0x0;
+    }
+
+    char out_line[MAX_NAME];
+
+    if(this->enumerate) sprintf(out_line, "(%d)0x%08x jxz", this->current_instr_count ,this->current_eip);
+    else sprintf(out_line, "0x%08x jxz", this->current_eip);
+    print_call(info, out_line, colors[CODE_BLACK]);
+
+    return 0x0;
+}
+
+
 
 /* precise jmp analysis */
 int taint_x86::handle_jmp(CONTEXT_INFO* info)
@@ -4378,9 +4413,93 @@ int taint_x86::r_noop(BYTE_t* b)
     return 0x0;
 }
 
+int taint_x86::r_jb_jc_jnae(BYTE_t* b)
+{
+    handle_jxx(this->cur_info, "r_jb_jc_jnae");
+    return 0x0;
+}
+
+int taint_x86::r_jae_jnb_jnc(BYTE_t* b)
+{
+    handle_jxx(this->cur_info, "r_jae_jnb_jnc");
+    return 0x0;
+}
+
+int taint_x86::r_je_jz(BYTE_t* b)
+{
+    handle_jxx(this->cur_info, "r_je_jz");
+    return 0x0;
+}
+
+int taint_x86::r_jne_jnz(BYTE_t* b)
+{
+    handle_jxx(this->cur_info, "r_jne_jnz");
+    return 0x0;
+}
+
+int taint_x86::r_jbe_jna(BYTE_t* b)
+{
+    handle_jxx(this->cur_info, "r_jbe_jna");
+    return 0x0;
+}
+
+int taint_x86::r_ja_jnbe(BYTE_t* b)
+{
+    handle_jxx(this->cur_info, "r_ja_jnbe");
+    return 0x0;
+}
+
+int taint_x86::r_js(BYTE_t* b)
+{
+    handle_jxx(this->cur_info, "r_js");
+    return 0x0;
+}
+
+int taint_x86::r_jns(BYTE_t* b)
+{
+    handle_jxx(this->cur_info, "r_jns");
+    return 0x0;
+}
+
+int taint_x86::r_jp_jpe(BYTE_t* b)
+{
+    handle_jxx(this->cur_info, "r_jp_jpe");
+    return 0x0;
+}
+
+int taint_x86::r_jnp_jpo(BYTE_t* b)
+{
+    handle_jxx(this->cur_info, "r_jnp_jpo");
+    return 0x0;
+}
+
+int taint_x86::r_jl_jnge(BYTE_t* b)
+{
+    handle_jxx(this->cur_info, "r_jl_jnge");
+    return 0x0;
+}
+
+int taint_x86::r_jge_jnl(BYTE_t* b)
+{
+    handle_jxx(this->cur_info, "r_jge_jnl");
+    return 0x0;
+}
+
+int taint_x86::r_jle_jng(BYTE_t* b)
+{
+    handle_jxx(this->cur_info, "r_jle_jng");
+    return 0x0;
+}
+
+int taint_x86::r_jg_jnle(BYTE_t* b)
+{
+    handle_jxx(this->cur_info, "r_jg_jnle");
+    return 0x0;
+}
+
 int taint_x86::r_jxx(BYTE_t* b)
 {
-    handle_jxx(this->cur_info);
+    handle_jxx(this->cur_info, "jxx");
     return 0x0;
 }
 

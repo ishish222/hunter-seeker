@@ -997,6 +997,7 @@ int enable_reaction(char* reaction_id)
     d_print("[enable_reaction ends]\n");
     return 0x0;
 }
+/*
 int enable_reaction_rid(unsigned routine_id)
 {
     d_print("[enable_reaction_rid]\n");
@@ -1004,7 +1005,6 @@ int enable_reaction_rid(unsigned routine_id)
 
     for(i = 0x0; i< my_trace->reaction_count; i++)
     {
-        /* locate i_reaction */
         if(routine_id == my_trace->reactions[i].routine_id)
         {
             d_print("Enabling reaction by rid 0x%02x\n", routine_id);
@@ -1014,7 +1014,7 @@ int enable_reaction_rid(unsigned routine_id)
     d_print("[enable_reaction_rid ends]\n");
     return 0x0;
 }
-
+*/
 
 int disable_reaction(char* reaction_id)
 {
@@ -1024,7 +1024,6 @@ int disable_reaction(char* reaction_id)
 
     for(i = 0x0; i< my_trace->reaction_count; i++)
     {
-        /* locate i_reaction */
         if((reaction_id[0] == my_trace->reactions[i].reaction_id[0]) && (reaction_id[1] == my_trace->reactions[i].reaction_id[1]))
         {
             d_print("Disabling reaction %s\n", reaction_id);
@@ -1066,14 +1065,14 @@ int disable_reaction(char* reaction_id)
 
     if(!some_enabled)
     {
-        bp->enabled = 0x0; /* If all disabled, bp is disabled */
+        bp->enabled = 0x0; 
     }
     update_breakpoint(bp);
 
     d_print("[disable_reaction ends]\n");
     return 0x0;
 }
-
+/*
 int disable_reaction_rid(unsigned routine_id)
 {
     d_print("[disable_reaction_rid]\n");
@@ -1081,7 +1080,6 @@ int disable_reaction_rid(unsigned routine_id)
 
     for(i = 0x0; i< my_trace->reaction_count; i++)
     {
-        /* locate i_reaction */
         if(routine_id == my_trace->reactions[i].routine_id)
         {
             d_print("Disabling reaction by rid 0x%02x\n", routine_id);
@@ -1091,7 +1089,7 @@ int disable_reaction_rid(unsigned routine_id)
     d_print("[disable_reaction_rid ends]\n");
     return 0x0;
 }
-
+*/
 int add_to_buffer(char* line)
 {
     DWORD written;
@@ -2557,21 +2555,23 @@ int handle_reaction(REACTION* cur_reaction, void* data)
         my_trace->threads[thread_no].locking_reaction = cur_reaction;
     }
 
-    if(cur_reaction->routine_id == 0x0)
+    for(k = 0x0; k< cur_reaction->routines_count; k++)
     {
-        /* report rection_id to external controller */
-        d_print("Routine is null, reporting to controller\n");
-        my_trace->last_reaction = cur_reaction;
-        my_trace->report_code = REPORT_BREAKPOINT;
-    }
-    else
-    {
-        /* routine is non-zero, we need to handle */
-        d_print("ER3 Executing routine 0x%02x @ %d\n", cur_reaction->routine_id, my_trace->instr_count);
-        my_trace->routines[cur_reaction->routine_id](data);
-    }
 
-    /* enable coupled */
+        if(cur_reaction->routine_ids[k] == 0x0)
+        {
+            /* report rection_id to external controller */
+            d_print("Routine is null, reporting to controller\n");
+            my_trace->last_reaction = cur_reaction;
+            my_trace->report_code = REPORT_BREAKPOINT;
+        }
+        else
+        {
+            /* routine is non-zero, we need to handle */
+            d_print("ER3 Executing routine 0x%02x @ %d\n", cur_reaction->routine_ids[k], my_trace->instr_count);
+            my_trace->routines[cur_reaction->routine_ids[k]](data);
+        }
+    }
 
     return 0x0;
 }
@@ -4471,6 +4471,9 @@ REACTION* find_reaction(char* id)
 {
     unsigned i;
 
+    /* cut couples */
+    id[0x2] = 0x0;
+
     for(i= 0x0; i< my_trace->reaction_count; i++)
     {
         if(!strcmp(my_trace->reactions[i].reaction_id, id))
@@ -4506,13 +4509,28 @@ int add_couple(char* id, char* couple_id)
     return 0x0;
 }
 
-int add_reaction(char* location_str, char* reaction_id, unsigned rid)
+int add_rid(char* id, unsigned rid)
+{
+    d_print("[add_rid]\n");
+    REACTION* target;
+
+    target = find_reaction(id);
+    target->routine_ids[target->routines_count] = rid;
+    target->routines_count++;
+    
+    d_print("Added rid: 0x%02x\n", rid);
+    d_print("[add_rid ends]\n");
+ 
+    return 0x0;
+}
+
+int add_reaction(char* location_str, char* reaction_id)
 {
     d_print("[add_reaction]\n");
 
     unsigned cur_reaction_id = my_trace->reaction_count;
 
-    d_print("Trying to add reaction at: %s with id: %s, rid: 0x%02x\n", location_str, reaction_id, rid);
+    d_print("Trying to add reaction at: %s with id: %s\n", location_str, reaction_id);
 
     memset((void*)&my_trace->reactions[cur_reaction_id], 0x0, sizeof(REACTION));
 
@@ -4522,7 +4540,8 @@ int add_reaction(char* location_str, char* reaction_id, unsigned rid)
     my_trace->reactions[cur_reaction_id].bp = add_breakpoint(location_str, &my_trace->reactions[cur_reaction_id]);
     my_trace->reactions[cur_reaction_id].bp->enabled = 0x1; /* deprecated, moved to reaction */
     my_trace->reactions[cur_reaction_id].enabled = 0x1;
-    my_trace->reactions[cur_reaction_id].routine_id = rid;
+
+    //my_trace->reactions[cur_reaction_id].routine_id = rid;
     update_breakpoint(my_trace->reactions[cur_reaction_id].bp);
     d_print("New reaction: %s:%s\n", location_str, my_trace->reactions[cur_reaction_id].reaction_id);
     my_trace->reaction_count ++;
@@ -4633,34 +4652,64 @@ int parse_region(char* str)
 int parse_reaction(char* str)
 {
     d_print("[parse_reaction]\n");
-    char* loc_str;
-    char* id;
+    char* loc_pos;
+    char* id_pos;
+    char* rids_pos;
+
+    char loc_str[MAX_LINE];
+    char id_str[MAX_LINE];
+    char coupled_str[MAX_LINE];
     char* coupled_id;
-    char coupled_ids[MAX_LINE];
-    unsigned rid;
+    char rids_str[MAX_LINE];
+    char* rid;
 
     d_print("Parsing until ;: %s\n", str);
 
-    loc_str = strtok(str, ",");
+    /** acquire **/
+
+    /* acquire loc_pos */
+    loc_pos = strtok(str, ",");
+    strcpy(loc_str, loc_pos);
     d_print("loc_str: %s\n", loc_str);
-    id = strtok(0x0, ",");
-    d_print("id: %s\n", id);
-    rid = strtol(strtok(0x0, ";"), 0x0, 0x10);
-    d_print("rid: 0x%02x\n", rid);
 
-    /* registering e_reaction */
-    add_reaction(loc_str, id, rid);
+    /* acquire id_pos */
+    id_pos = strtok(0x0, ",");
+    strcpy(id_str, id_pos);
+    d_print("id_str: %s\n", id_str);
 
-    coupled_id = strtok(id, ":");
+    /* acquire rids_pos */
+    rids_pos = strtok(0x0, ";");
+    strcpy(rids_str, rids_pos);
+    d_print("rids_str: %s\n", rids_str);
 
-    d_print("coupled_id: %p, from %p\n", coupled_ids, coupled_id);
+    /* acquire coupled_str */
+    strcpy(coupled_str, id_str);
 
+    /** process **/
+
+    /* process loc & id, add reaction */
+    add_reaction(loc_pos, id_str);
+
+    /* process rids_pos, add routines */
+    d_print("Processing rids\n");
+    rid = strtok(rids_str, ":");
+    d_print("id_str: %s, rid: %s\n", id_str, rid);
+    add_rid(id_str, strtol(rid, 0x0, 0x10));
+
+    while((rid = strtok(0x0, ":")) != 0x0)
+    {
+        d_print("id_str: %s, rid: %s\n", id_str, rid);
+        add_rid(id_str, strtol(rid, 0x0, 0x10));
+    }
+
+    /* process coupled_str, add couples */
+    d_print("Processing couples\n");
+    coupled_id = strtok(coupled_str, ":");
+    /* ignore first */
     while((coupled_id = strtok(0x0, ":")) != 0x0)
     {
-//        *coupled_id = 0x0;
-//        coupled_id++;
-        d_print("coupled_id_str: %s\n", coupled_id);
-        add_couple(id, coupled_id);
+        d_print("id_str: %s, coupled_id: %s\n", id_str, coupled_id);
+        add_couple(id_str, coupled_id);
     }
     d_print("[parse_reaction ends]\n");
 }
@@ -5276,7 +5325,8 @@ int handle_cmd(char* cmd)
         addr = strtoul(strtok(0x0, " "), 0x0, 0x10);
         sprintf(my_str, "0x%08x", addr);
 
-        add_reaction(my_str, "ST", 0x0);
+        add_reaction(my_str, "ST");
+        add_rid("ST", 0x0);
         enable_reaction("ST");
         send_report();
         
@@ -5288,7 +5338,9 @@ int handle_cmd(char* cmd)
 
         sprintf(my_str, "0x%08x", (OFFSET)(my_trace->cpdi.lpStartAddress));
 
-        add_reaction(my_str, "ST", 0x0);
+        add_reaction(my_str, "ST");
+        add_rid("ST", 0x0);
+
         enable_reaction("ST");
         send_report();
         

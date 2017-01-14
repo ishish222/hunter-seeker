@@ -2322,6 +2322,7 @@ typedef struct _CONTEXT_INFO
     OFFSET source;
     OFFSET target;
     OFFSET next;
+    unsigned jxx_handling;
 
 } CONTEXT_INFO;
 
@@ -2533,6 +2534,20 @@ class taint_x86
     int r_noop(BYTE_t*);
     int r_noop_un(BYTE_t*);
     int r_jxx(BYTE_t*);
+    int r_jb_jc_jnae(BYTE_t*);
+    int r_jae_jnb_jnc(BYTE_t*);
+    int r_je_jz(BYTE_t*);
+    int r_jne_jnz(BYTE_t*);
+    int r_jbe_jna(BYTE_t*);
+    int r_ja_jnbe(BYTE_t*);
+    int r_js(BYTE_t*);
+    int r_jns(BYTE_t*);
+    int r_jp_jpe(BYTE_t*);
+    int r_jnp_jpo(BYTE_t*);
+    int r_jl_jnge(BYTE_t*);
+    int r_jge_jnl(BYTE_t*);
+    int r_jle_jng(BYTE_t*);
+    int r_jg_jnle(BYTE_t*);
     int r_push_ax_eax(BYTE_t*);
     int r_push_cx_ecx(BYTE_t*);
     int r_push_dx_edx(BYTE_t*);
@@ -3032,8 +3047,15 @@ class taint_x86
     int check_func_included(char*);
     int check_rets(OFFSET);
     LIB_INFO* get_lib(OFFSET);
+
+    /* handling jxx */
     int handle_jmp(CONTEXT_INFO*);
-    int handle_jxx(CONTEXT_INFO*);
+    int handle_jxx(CONTEXT_INFO*, char*);
+    int handle_ja(CONTEXT_INFO*);
+    int handle_jae(CONTEXT_INFO*);
+    int handle_jxz(CONTEXT_INFO*);
+
+
     int handle_call(CONTEXT_INFO*);
     int handle_ret(CONTEXT_INFO*, OFFSET);
     int handle_exception(EXCEPTION_INFO);
@@ -3145,6 +3167,7 @@ class taint_x86
     void print_ret(CONTEXT_INFO*);
     int dive(CONTEXT_INFO*, OFFSET, OFFSET);
     int surface(CONTEXT_INFO*);
+    int jxx_set(unsigned);
 
     int print_err_all_contexts();
     int print_err_all_t_contexts();
@@ -3300,20 +3323,20 @@ class taint_x86
         this->instructions_32[0x6b] = &taint_x86::r_imul_r_rm_16_32_imm_8;      // cf
         this->instructions_32[0x6f] = &taint_x86::r_noop_un;                    // cf
 
-        this->instructions_32[0x72] = &taint_x86::r_jxx;                        // cf
-        this->instructions_32[0x73] = &taint_x86::r_jxx;                        // cf
-        this->instructions_32[0x74] = &taint_x86::r_jxx;                        // cf
-        this->instructions_32[0x75] = &taint_x86::r_jxx;                        // cf
-        this->instructions_32[0x76] = &taint_x86::r_jxx;                        // cf
-        this->instructions_32[0x77] = &taint_x86::r_jxx;                        // cf
-        this->instructions_32[0x78] = &taint_x86::r_jxx;                        // cf
-        this->instructions_32[0x79] = &taint_x86::r_jxx;                        // cf
-        this->instructions_32[0x7a] = &taint_x86::r_jxx;                        // cf
-        this->instructions_32[0x7b] = &taint_x86::r_jxx;                        // cf
-        this->instructions_32[0x7c] = &taint_x86::r_jxx;                        // cf
-        this->instructions_32[0x7d] = &taint_x86::r_jxx;                        // cf
-        this->instructions_32[0x7e] = &taint_x86::r_jxx;                        // cf
-        this->instructions_32[0x7f] = &taint_x86::r_jxx;                        // cf
+        this->instructions_32[0x72] = &taint_x86::r_jb_jc_jnae; 
+        this->instructions_32[0x73] = &taint_x86::r_jae_jnb_jnc;
+        this->instructions_32[0x74] = &taint_x86::r_je_jz;
+        this->instructions_32[0x75] = &taint_x86::r_jne_jnz;
+        this->instructions_32[0x76] = &taint_x86::r_jbe_jna;
+        this->instructions_32[0x77] = &taint_x86::r_ja_jnbe;
+        this->instructions_32[0x78] = &taint_x86::r_js;
+        this->instructions_32[0x79] = &taint_x86::r_jns;
+        this->instructions_32[0x7a] = &taint_x86::r_jp_jpe;
+        this->instructions_32[0x7b] = &taint_x86::r_jnp_jpo;
+        this->instructions_32[0x7c] = &taint_x86::r_jl_jnge;
+        this->instructions_32[0x7d] = &taint_x86::r_jge_jnl;
+        this->instructions_32[0x7e] = &taint_x86::r_jle_jng;
+        this->instructions_32[0x7f] = &taint_x86::r_jg_jnle;
         this->instructions_32[0x80] = &taint_x86::r_decode_execute_80;          // cf
         this->instructions_32[0x81] = &taint_x86::r_decode_execute_81;          // cf
         this->instructions_32[0x83] = &taint_x86::r_decode_execute_83;          // cf

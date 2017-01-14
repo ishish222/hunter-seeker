@@ -33,6 +33,7 @@
 #define MAX_BREAKPOINTS 0x200
 #define MAX_COUPLES     0x20
 #define MAX_HANDLERS    0x1000
+#define MAX_ROUTINES    0x10
 
 /* functions offsets in respective libs */
 #define EXIT_PROCESS_OFF 0x52acf
@@ -215,7 +216,8 @@ typedef struct REACTION_
     char coupled_id[MAX_COUPLES][3];
     unsigned couple_id_count;
 
-    unsigned routine_id;
+    unsigned routine_ids[MAX_ROUTINES];
+    unsigned routines_count;
     char enabled;
     char exclusive;
     int level;
