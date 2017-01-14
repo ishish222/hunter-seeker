@@ -204,7 +204,8 @@ typedef struct BREAKPOINT_
     char written;
     char saved_byte;
 
-    REACTION* reactions[MAX_HANDLERS];
+//    REACTION* reactions[MAX_HANDLERS];
+    REACTION** reactions;
     unsigned reaction_count;
 } BREAKPOINT;
 
@@ -241,7 +242,7 @@ typedef struct _THREAD_ENTRY
     char created;
     HANDLE handle;
     char skipping;
-    REACTION* reaction_lock;
+    REACTION* locking_reaction;
 } THREAD_ENTRY;
 
 /* tracking libraries */
@@ -385,7 +386,8 @@ typedef struct TRACE_CONFIG_
     DWORD sysret_off;
 
     /* reactions */
-    REACTION reactions[MAX_REACTIONS];
+//    REACTION reactions[MAX_REACTIONS];
+    REACTION* reactions;
     unsigned reaction_count;
     reaction_routine routines[MAX_FUNCTIONS];
 

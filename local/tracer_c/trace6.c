@@ -898,12 +898,12 @@ int lower_reaction(char* reaction_id)
         /* locate i_reaction */
         if(!strcmp(reaction_id, my_trace->reactions[i].reaction_id))
         {
-            d_print("Setting exclusive reaction %s\n", reaction_id);
+            d_print("Lowering reaction %s\n", reaction_id);
             my_trace->reactions[i].level --;
 
             REACTION* cur_reaction = &my_trace->reactions[i];
 
-            /* raise coupled */
+            /* lower coupled */
             unsigned k; 
             for(k = 0; k< MAX_COUPLES; k++)
             {
@@ -911,6 +911,7 @@ int lower_reaction(char* reaction_id)
                 {
                     REACTION* coupled_reaction;
                     coupled_reaction = find_reaction(cur_reaction->coupled_id[k]);
+                    d_print("Lowering coupled reaction %s\n", coupled_reaction->reaction_id);
                     coupled_reaction->level --;
                 }
             }
@@ -1328,6 +1329,7 @@ void register_thread(DWORD tid, HANDLE handle)
         my_trace->threads[tid_pos].open = 0x1;
         my_trace->threads[tid_pos].created = 0x1;
         my_trace->threads[tid_pos].tid = tid;
+        my_trace->threads[tid_pos].locking_reaction = 0x0;
     
         //if(my_trace->threads[tid_pos].handle == 0x0) 
         d_print("Registering: TID 0x%08x, handle 0x%08x\n", tid, handle);
@@ -2503,14 +2505,56 @@ int del_breakpoint(DWORD addr)
 
 int handle_reaction(REACTION* cur_reaction, void* data)
 {
-    DWORD tid, thread_no;
-    tid = my_trace->last_tid;
+    DEBUG_EVENT* de;
+    de = (DEBUG_EVENT*)data;
+    DWORD tid;
+    DWORD thread_no;
+
+    tid = de->dwThreadId;
     thread_no = my_trace->thread_map[tid];
 
+    REACTION* locking_reaction;
+
+    /* first enable coupled */
+    unsigned k; 
+    for(k = 0; k< MAX_COUPLES; k++)
+    {
+        REACTION* coupled_reaction;
+
+        if(cur_reaction->coupled_id[k][0] != 0x0)
+        {
+            d_print("Current reaction: %s\n", cur_reaction->reaction_id);
+            d_print("Enabling coupled reaction: %s\n", cur_reaction->coupled_id[k]);
+            coupled_reaction = find_reaction(cur_reaction->coupled_id[k]);
+            d_print("Found coupled reaction: %s\n", coupled_reaction->reaction_id);
+            enable_reaction(coupled_reaction->reaction_id);
+        }
+    }
+
+    /* verify if lock is enabled */
+    locking_reaction = my_trace->threads[thread_no].locking_reaction;
+    if(locking_reaction != 0x0)
+    {
+        /* higher thread is still locked, reaction level can override */
+        if(cur_reaction->level <= locking_reaction->level)
+        {
+//          d_print("ER3 (%d) Reaction lock is active, continuing, missing reaction %s due to lock by %s\n", my_trace->instr_count, cur_reaction->reaction_id, locking_reaction->reaction_id);
+            d_print("ER3 Reaction lock is active, continuing, missing reaction %s due to lock by %s\n", cur_reaction->reaction_id, locking_reaction->reaction_id);
+            return 0x0;
+        }
+        else
+        {
+//          d_print("ER3 (%d) Reaction lock %s overriden by %s\n", my_trace->instr_count, locking_reaction->reaction_id, cur_reaction->reaction_id);
+            d_print("ER3 Reaction lock %s overriden by %s\n", locking_reaction->reaction_id, cur_reaction->reaction_id);
+        }
+    }
+
+    /* We are able to execute routines */
     if(cur_reaction->exclusive)
     {
-        d_print("Locking reaction lock with: %s in TID: 0x%08x\n", cur_reaction->reaction_id, tid);
-        my_trace->threads[thread_no].reaction_lock = cur_reaction;
+        d_print("ER32 in handle_reaction: %p, %s\n", cur_reaction, cur_reaction->reaction_id);
+        d_print("ER3 Locking reaction lock with: %s\n", cur_reaction->reaction_id);
+        my_trace->threads[thread_no].locking_reaction = cur_reaction;
     }
 
     if(cur_reaction->routine_id == 0x0)
@@ -2523,24 +2567,11 @@ int handle_reaction(REACTION* cur_reaction, void* data)
     else
     {
         /* routine is non-zero, we need to handle */
-        d_print("Executing routine 0x%02x @ %d\n", cur_reaction->routine_id, my_trace->instr_count);
+        d_print("ER3 Executing routine 0x%02x @ %d\n", cur_reaction->routine_id, my_trace->instr_count);
         my_trace->routines[cur_reaction->routine_id](data);
     }
 
     /* enable coupled */
-    unsigned k; 
-    for(k = 0; k< MAX_COUPLES; k++)
-    {
-        if(cur_reaction->coupled_id[k][0] != 0x0)
-        {
-            d_print("Current reaction: %s\n", cur_reaction->reaction_id);
-            d_print("Enabling coupled reaction: %s\n", cur_reaction->coupled_id[k]);
-            REACTION* coupled_reaction;
-            coupled_reaction = find_reaction(cur_reaction->coupled_id[k]);
-            d_print("Found coupled reaction: %s\n", coupled_reaction->reaction_id);
-            enable_reaction(coupled_reaction->reaction_id);
-        }
-    }
 
     return 0x0;
 }
@@ -2549,36 +2580,48 @@ int handle_breakpoint(DWORD addr, void* data)
 {
     d_print("[handle_breakpoint]\n");
     DEBUG_EVENT* de;
-
     de = (DEBUG_EVENT*)data;
 
-    int i, j;
+    d_print("ER4 TID: 0x%08x\n", de->dwThreadId);
+
+    int i, j, k;
     int my_bpt_idx = -0x1;
     int handler_count;
     int our_bp = 0x0;
     BREAKPOINT* my_bp;
 
+    /* identify which breakpoint */
     for(i = 0x0; i<my_trace->bpt_count; i++)
     {
-//        d_print("Checking %d bp: _0x%08x_ & _0x%08x_\n", i, my_trace->breakpoints[i].resolved_location, addr);
         if(my_trace->breakpoints[i].resolved_location == addr)
         {
+            /* breakpoint identified, handle it's reactions */
+            
             my_bp = &my_trace->breakpoints[i];
+
             REACTION* cur_reaction;
-    
-            DWORD tid, thread_no;
-            tid = my_trace->last_tid;
+            cur_reaction = 0x0;
+            DWORD tid;
+            DWORD thread_no;
+            tid = de->dwThreadId;
             thread_no = my_trace->thread_map[tid];
-
-            REACTION* reaction_lock;
-
             if(thread_no == -1) continue;
 
-            reaction_lock = my_trace->threads[thread_no].reaction_lock;
+            d_print("ER5 TID1: 0x%08x instr_count: %d\n", de->dwThreadId, my_trace->instr_count);
 
+            /* verify presence of reaction lock */
+            REACTION* locking_reaction;
+            locking_reaction = 0x0;
+            locking_reaction = my_trace->threads[thread_no].locking_reaction;
+
+            d_print("ER3 TID: 0x%08x, thread_no=0x%08x, locking_reaction=%p\n", tid, thread_no, locking_reaction);
+
+            /* handle all reactions for identified breakpoint */
             for(j = 0x0; j < my_bp->reaction_count; j++)
             {
                 cur_reaction = my_bp->reactions[j];
+                d_print("ER3 Reaction no %d: %p, %s\n", j, cur_reaction, cur_reaction->reaction_id);
+                
                 if(!cur_reaction->enabled) 
                 {
                     d_print("Reaction not enabled, continuing\n");
@@ -2586,43 +2629,32 @@ int handle_breakpoint(DWORD addr, void* data)
                 }
 
                 /* check for reaction lock */
-                if(reaction_lock != 0x0)
+                if(locking_reaction != 0x0)
                 {
                     /* the reaction lock is active */
 
-                    unsigned k; 
-                    for(k = 0; k< MAX_COUPLES; k++)
+                    REACTION* coupled_reaction;
+                    coupled_reaction = 0x0;
+
+                    /* check if cur_reaction is coupled with locking_reaction, if so, unlock */
+                    for(k = 0; k < locking_reaction->couple_id_count; k++)
                     {
-                        if(reaction_lock->coupled_id[k][0] != 0x0)
+                        coupled_reaction = find_reaction(locking_reaction->coupled_id[k]);
+                        if(coupled_reaction == cur_reaction)
                         {
-                            REACTION* coupled_reaction;
-                            coupled_reaction = find_reaction(reaction_lock->coupled_id[k]);
-                            if(coupled_reaction == cur_reaction)
-                            {
-                                /* one of coupled is active, release the lock */
-                                d_print("Unlocking reaction lock with: %s in TID: 0x%08x\n", cur_reaction->reaction_id, tid);
-                                my_trace->threads[thread_no].reaction_lock = 0x0;
-                            }
+                            /* current reaction is one of locking reactions couple, unlocking */
+                            d_print("ER3 Unlocking reaction lock with: %s in TID: 0x%08x\n", cur_reaction->reaction_id, tid);
+                            my_trace->threads[thread_no].locking_reaction = 0x0;
                         }
                     }
 
-                    /* verify if lock is still enabled */
-                    reaction_lock = my_trace->threads[thread_no].reaction_lock;
-                    if(reaction_lock != 0x0)
-                    {
-                        /* higher reaction level can override */
-                        if(cur_reaction->level <= reaction_lock->level)
-                        {
-                            d_print("Reaction lock is active, continuing, missing reaction %s due to lock by %s\n", cur_reaction->reaction_id, reaction_lock->reaction_id);
-                            continue;
-                        }
-                        else
-                        {
-                            d_print("Reaction lock %s overriden by %s\n", reaction_lock->reaction_id, cur_reaction->reaction_id);
-                        }
-                    }
+
                 }
 
+                /* unlocked or overriden, handle current reaction */
+                de = (DEBUG_EVENT*)data;
+                d_print("ER6 TID: 0x%08x\n", de->dwThreadId);
+                d_print("ER3 Reaction no %d: %p, %s\n", j, cur_reaction, cur_reaction->reaction_id);
                 handle_reaction(cur_reaction, data);
             }
         }
@@ -2789,14 +2821,14 @@ int unpaint(char* area, unsigned len)
 
 OFFSET resolve_loc_desc(LOCATION_DESCRIPTOR_NEW* d)
 {
-    d_print("[resolve_loc_desc]\n");
+//    d_print("[resolve_loc_desc]\n");
     OFFSET a1_r, a2_r;
     OFFSET ret;
 
     if(d == 0x0)
         return -1;
 
-    d_print("Processing: %s\n", d->op);
+//    d_print("Processing: %s\n", d->op);
 
     if(findany(d->op, "[+-"))
     {
@@ -2913,27 +2945,27 @@ OFFSET resolve_loc_desc(LOCATION_DESCRIPTOR_NEW* d)
             else
             {
                 /* we assume it's library */
-                d_print("Looking for lib: %s\n", d->op);
+//                d_print("Looking for lib: %s\n", d->op);
                 ret = find_lib(d->op);
                 if(ret != 0x0)
                 {
-                    d_print("Found at: 0x%08x\n", ret);
+//                    d_print("Found at: 0x%08x\n", ret);
                 }
                 else if(ret == 0x0) 
                 {
-                    d_print("Not found\n");
+//                    d_print("Not found\n");
                     ret = -1;
                 }
             }
         }
     }
-    d_print("[resolve_loc_desc end]\n");
+//    d_print("[resolve_loc_desc end]\n");
     return ret;
 }
 
 LOCATION_DESCRIPTOR_NEW* parse_location_desc(char* str)
 {
-    d_print("[parse_location_desc]\n");
+//    d_print("[parse_location_desc]\n");
     char* op;
     LOCATION_DESCRIPTOR_NEW* neww;
 
@@ -2989,7 +3021,7 @@ LOCATION_DESCRIPTOR_NEW* parse_location_desc(char* str)
         }
     }
 
-    d_print("[parse_location_desc ends]\n");
+//    d_print("[parse_location_desc ends]\n");
     return neww;
 }
 
@@ -3058,29 +3090,37 @@ BREAKPOINT* add_breakpoint(char* location_str, REACTION*  reaction)
     /* if not, create */
     if(my_bpt_index == -1) 
     {
-//        d_print("Creating new bp\n");
         my_bpt_index = my_trace->bpt_count;
+        d_print("Creating new bp\n");
+        /* moving stuff to heap */
+        my_trace->breakpoints[my_bpt_index].reactions = (REACTION**)malloc(sizeof(REACTION*) * MAX_HANDLERS);
+
+        if(my_trace->breakpoints[my_bpt_index].reactions == 0x0)
+        {
+            d_print("Failed creating new bp- out of memory\n");
+        }
+
         my_trace->breakpoints[my_bpt_index].enabled = 0x1;
         my_trace->breakpoints[my_bpt_index].written = 0x0;
+        d_print("Created new bp\n");
         
         /* for identification */
         strcpy(my_trace->breakpoints[my_bpt_index].location_str, location_str);
 
-//        d_print("Attempt to parse location string: %s\n", location_str);
+        d_print("Attempt to parse location string: %s\n", location_str);
         my_trace->breakpoints[my_bpt_index].location = parse_location_desc(location_str);
 
         my_trace->bpt_count ++;
     }
-//    d_print("Bp created. Current number of breakpoints: %d\n", my_trace->bpt_count);
+    d_print("Bp created. Current number of breakpoints: %d\n", my_trace->bpt_count);
 
     /* connect to reaction */
     cur_reaction_id = my_trace->breakpoints[my_bpt_index].reaction_count;
-//    d_print("Current reaction count for this BP: %d\n", cur_reaction_id);
+    d_print("Current reaction count for this BP: %d\n", cur_reaction_id);
     my_trace->breakpoints[my_bpt_index].reactions[cur_reaction_id] = reaction;
-//    d_print("Assigned new reaction\n");
+    d_print("Assigned new reaction\n");
     my_trace->breakpoints[my_bpt_index].enabled = 0x1; /* is this necessary? it is used in update_breakpoint */
     my_trace->breakpoints[my_bpt_index].reaction_count++;
-
 
     d_print("[add_breakpoint ends]\n");
     return &my_trace->breakpoints[my_bpt_index];
@@ -4011,7 +4051,7 @@ int process_last_event()
                         char handled; 
 
                         bp_addr = (OFFSET)my_trace->last_exception.ExceptionAddress;
-                        d_print("Breakpoint hit! @ 0x%08x\n", bp_addr);
+                        d_print("Breakpoint hit! @ 0x%08x, instr_count: %d\n", bp_addr, my_trace->instr_count);
                         d_print("[BP handling]\n");
 
                         handled = 0x0;
@@ -5302,6 +5342,10 @@ int init_trace(TRACE_CONFIG* trace, char* host, short port)
     my_trace->eventLock = CreateEvent(0x0, 0x0, 0x0, 0x0);
     my_trace->eventUnlock = CreateEvent(0x0, 0x0, 0x0, 0x0);
 
+    my_trace->last_eip = 0x0;
+    my_trace->last_tid = 0x0;
+
+    my_trace->reactions = (REACTION*)malloc(sizeof(REACTION)*MAX_REACTIONS);
 }
 
 /* configure syscalls */
