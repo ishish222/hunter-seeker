@@ -56,6 +56,7 @@ Change of endiannes takes place when reading and writing to memory (to_mem, from
 #define MAX_WANTED              0x100
 #define MAX_LOOP_FENCES         0x10
 #define MAX_LOOP_ADDR           0x50
+#define MAX_LIST_JXX            0x1000
 
 // deprecated
 #define MEM     0xff
@@ -2323,6 +2324,8 @@ typedef struct _CONTEXT_INFO
     OFFSET target;
     OFFSET next;
     unsigned jxx_handling;
+    DWORD* list;
+    unsigned list_len;
 
 } CONTEXT_INFO;
 

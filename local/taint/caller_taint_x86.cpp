@@ -582,6 +582,26 @@ int taint_x86::jxx_set(unsigned state)
     return 0x0;
 }
 
+int is_on_list(CONTEXT_INFO* info, DWORD eip)
+{
+    unsigned i;
+
+    for(i = 0x0; i< info->list_len; i++)
+    {
+        if(eip == info->list[i]) return 0x1;
+    }
+
+    return 0x0;
+}
+
+int add_to_list(CONTEXT_INFO* info, DWORD eip)
+{
+    if(info->list_len == MAX_LIST_JXX-1) return -0x1;
+    info->list[info->list_len] = eip;
+    info->list_len++;
+    return 0x0;
+}
+
 int taint_x86::handle_jxx(CONTEXT_INFO* info, char* str)
 {
     if((info->jxx_handling != 0x1) || (info->waiting != 0x0))
@@ -589,11 +609,15 @@ int taint_x86::handle_jxx(CONTEXT_INFO* info, char* str)
         return 0x0;
     }
 
+    if(is_on_list(info, this->current_eip)) return 0x0;
+
     char out_line[MAX_NAME];
 
     if(this->enumerate) sprintf(out_line, "(%d)0x%08x %s", this->current_instr_count ,this->current_eip, str);
     else sprintf(out_line, "0x%08x %s", this->current_eip, str);
-    print_call(info, out_line, colors[CODE_BLACK]);
+    print_empty_call(info, out_line, colors[CODE_BLACK]);
+
+    add_to_list(info, this->current_eip);
 
     return 0x0;
 }
@@ -2468,6 +2492,8 @@ int taint_x86::add_thread(CONTEXT_info ctx_info)
         }
         memset(this->ctx_info[this->tid_count].levels, 0x0, sizeof(CALL_LEVEL)*this->max_call_levels);
         this->ctx_info[this->tid_count].waiting = 0x0;
+        this->ctx_info[this->tid_count].list = (DWORD*)malloc(sizeof(DWORD) * MAX_LIST_JXX);
+        this->ctx_info[this->tid_count].list_len = 0x0;
 
         /* clear loop structures */
         unsigned call_level;
