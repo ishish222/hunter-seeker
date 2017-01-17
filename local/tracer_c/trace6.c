@@ -678,6 +678,73 @@ void react_output_arg_8(void* data)
     output_arg_x(8);
 }
 
+void output_p_arg_x(unsigned x)
+{
+    d_print("Outputting arg %d\n", x);
+    char line[MAX_LINE];
+
+    OFFSET val;
+    OFFSET esp;
+
+    CONTEXT ctx;
+    read_context(0x0, &ctx);
+    esp = ctx.Esp;
+    esp += (x * 0x4);
+
+    val = read_dword(esp);
+    val = read_dword(val);
+
+    sprintf(line, "OU,0x%x,Arg_p%d: %08x\n", my_trace->last_tid,x, val);
+    add_to_buffer(line);
+
+    return;
+}
+
+void react_output_p_arg_0(void* data)
+{
+    output_p_arg_x(0);
+}
+
+void react_output_p_arg_1(void* data)
+{
+    output_p_arg_x(1);
+}
+
+void react_output_p_arg_2(void* data)
+{
+    output_p_arg_x(2);
+}
+
+void react_output_p_arg_3(void* data)
+{
+    output_p_arg_x(3);
+}
+
+void react_output_p_arg_4(void* data)
+{
+    output_p_arg_x(4);
+}
+
+void react_output_p_arg_5(void* data)
+{
+    output_p_arg_x(5);
+}
+
+void react_output_p_arg_6(void* data)
+{
+    output_p_arg_x(6);
+}
+
+void react_output_p_arg_7(void* data)
+{
+    output_p_arg_x(7);
+}
+
+void react_output_p_arg_8(void* data)
+{
+    output_p_arg_x(8);
+}
+
 void react_cry_antidebug_1(void* data)
 {
     OFFSET addr = 0x4103e4;
@@ -5818,6 +5885,17 @@ int main(int argc, char** argv)
     my_trace->routines[0x335] = &react_output_edi;
     my_trace->routines[0x336] = &react_output_esp;
     my_trace->routines[0x337] = &react_output_eip;
+
+    /* outputting pointed DWORDs */
+    my_trace->routines[0x340] = &react_output_p_arg_0;
+    my_trace->routines[0x341] = &react_output_p_arg_1;
+    my_trace->routines[0x342] = &react_output_p_arg_2;
+    my_trace->routines[0x343] = &react_output_p_arg_3;
+    my_trace->routines[0x344] = &react_output_p_arg_4;
+    my_trace->routines[0x345] = &react_output_p_arg_5;
+    my_trace->routines[0x346] = &react_output_p_arg_6;
+    my_trace->routines[0x347] = &react_output_p_arg_7;
+    my_trace->routines[0x348] = &react_output_p_arg_8;
 
 
     /* Windows sockets */

@@ -38,7 +38,11 @@ def next_response(args=None):
     state = globs.state
     status = globs.state.status
     
-    write_socket(options.s, "responder_next_response %s" % args)
+    if(args == None):
+        write_socket(options.s, "responder_next_response %s" % globs.state.ret)
+    else:
+        write_socket(options.s, "responder_next_response %s" % args)
+
     response, _, _ = read_socket(options.s)
 
     globs.state.ret = response

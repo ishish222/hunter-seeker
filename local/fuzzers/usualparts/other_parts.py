@@ -91,6 +91,15 @@ def testdir(x):
 def testfile(x):
     return os.path.exists(x)
 
+def clear_stack(args):
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+    
+    globs.state.stack = []
+
+    return
+
 def adjust(args):
     options = globs.state.options
     state = globs.state
@@ -109,6 +118,26 @@ def shift(args = 0):
     globs.state.stack.append(globs.state.stack[args])
 
     return
+
+def push(args = None):
+    if(args == None):
+        val = globs.state.ret
+    else:
+        val = args
+    globs.state.stack.append(val)
+
+def push2(args = None):
+    if(args == None):
+        val = globs.state.ret
+    else:
+        val = args
+    globs.state.stack2.append(val)
+
+def pop(args = None):
+    globs.state.ret = globs.state.stack.pop()
+
+def pop2(args = None):
+    globs.state.ret = globs.state.stack2.pop()
 
     
 
@@ -256,6 +285,7 @@ def get_options(args=None):
 
     globs.state.options = options
     globs.state.stack = []
+    globs.state.stack2 = []
     globs.state.ret = ""
     globs.state.eip = ""
     globs.state.ep = ""

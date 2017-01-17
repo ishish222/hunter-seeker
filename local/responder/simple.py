@@ -10,10 +10,11 @@ class simple_responder(object):
         self.next_response = ""        
         self.thread = threading.Thread(target = self.worker)
         self.working = True
-        self.thread.start()
         self.logf = logf
+        self.thread.start()
 
     def load_next_response(self, next_response):
+        self.logf.write("Loading reponse: %s" % next_response)
         self.next_response = next_response
 
     def load_header(self, header):

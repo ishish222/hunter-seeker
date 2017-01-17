@@ -121,8 +121,11 @@ prototypes['RunCmd']                = responder_parts.run_cmd
 prototypes['WriteAnsi']             = tracer_parts.write_ansi
 prototypes['WriteUnicode']          = tracer_parts.write_unicode
 prototypes['Execute']               = other_parts.noop
-prototypes['Push']                  = tracing_parts.push
-prototypes['Pop']                   = tracing_parts.pop
+prototypes['Push']                  = other_parts.push
+prototypes['Pop']                   = other_parts.pop
+prototypes['Push2']                 = other_parts.push2
+prototypes['Pop2']                  = other_parts.pop2
+prototypes['ClearStack']            = other_parts.clear_stack
 
 
 class CodeUnit:

@@ -506,16 +506,6 @@ def save_ep(args = None):
     else:
         globs.state.ep = args
 
-def push(args = None):
-    if(args == None):
-        val = globs.state.ret
-    else:
-        val = args
-    globs.state.stack.append(val)
-
-def pop(args = None):
-    globs.state.ret = globs.state.stack.pop()
-
 def write_last_suspension(args = None):
     globs.state.last_suspension = globs.state.ret
 
