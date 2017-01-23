@@ -275,6 +275,18 @@ def tracer_manual_st(args=None):
     response, _, _ = read_socket(options.s)
 
 
+def tracer_manual_st_from_arg(args=None):
+    options = globs.state.options
+    
+    ep = options.sample_options.st_string
+
+    if(type(ep) == str):
+        ep = int(ep, 0x10)
+
+    write_socket(options.s, "tracer_register_reactions 0x%08x,ST,0x0" % ep);
+    response, _, _ = read_socket(options.s)
+
+
 def tracer_register_reactions(args=None):
     options = globs.state.options
     state = globs.state

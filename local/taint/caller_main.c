@@ -291,6 +291,10 @@ int parse_option(char* line, taint_x86* taint_eng)
     {
         taint_eng->options |= OPTION_VERIFY_SEG_SEC;
     }
+    else if(!strcmp(option, "ANALYZE_WANTED_IN_SYMBOLS"))
+    {
+        taint_eng->options |= OPTION_ANALYZE_WANTED_IN_SYMBOLS;
+    }
 
     return 0x0;
 }

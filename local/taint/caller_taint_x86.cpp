@@ -579,6 +579,13 @@ void taint_x86::print_ret(CONTEXT_INFO* cur_ctx)
 int taint_x86::jxx_set(unsigned state)
 {
     this->cur_info->levels[this->cur_info->call_level].jxx_handling = state;
+
+    if(state == 0x0)
+    {
+        memset(this->cur_info->list, 0x0, MAX_LIST_JXX);
+        this->cur_info->list_len = 0x0;
+    }
+
     return 0x0;
 }
 
@@ -652,7 +659,7 @@ int taint_x86::handle_jmp(CONTEXT_INFO* info)
     if(info->waiting != 0x0)
     {
         /* wanted */
-        if((s != 0x0) && (s->wanted))
+        if((s != 0x0) && (s->wanted) && (this->options & OPTION_ANALYZE_WANTED_IN_SYMBOLS))
         {
             d_print(1, "Got wanted!\n");
             if(this->enumerate) sprintf(out_line, "[x] (%d)0x%08x jmp %s!%s", this->current_instr_count ,this->current_eip, s->lib_name, s->func_name);
@@ -989,7 +996,10 @@ int taint_x86::handle_call(CONTEXT_INFO* info)
             d_print(2, "We are waiting and we do not want\n");
             decision_emit = DECISION_NO_EMIT;
         }
-
+        if(!(this->options & OPTION_ANALYZE_WANTED_IN_SYMBOLS))
+        {
+            decision_emit = DECISION_NO_EMIT;
+        }
     }
     else
     {

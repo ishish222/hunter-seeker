@@ -123,6 +123,48 @@ void react_sample_routine_1(void* data)
     return;
 }
 
+void react_flip_ZF(void* data)
+{
+    d_print("Setting ZF\n");
+    char isset;
+
+    int i;
+    unsigned id, thread_idx;
+    HANDLE myHandle = (HANDLE)-0x1;
+
+    id = my_trace->last_event.dwThreadId;
+    thread_idx = my_trace->thread_map[id];
+    myHandle = my_trace->threads[thread_idx].handle;
+
+    CONTEXT ctx;
+    ctx.ContextFlags = CONTEXT_CONTROL;
+    if(GetThreadContext(myHandle, &ctx) == 0x0)
+    {
+        d_print("Failed to get context, error: 0x%08x\n", GetLastError());
+    }
+    d_print("before flipping: 0x%08x\n", ctx.EFlags);
+
+    /* flipping */
+    print_context(&ctx);
+
+    isset = ctx.EFlags & SET_ZF_FLAGS;
+    if(isset)
+    {
+        ctx.EFlags &= CLEAR_ZF_FLAGS;
+    }
+    else
+    {
+        ctx.EFlags |= SET_ZF_FLAGS;
+    }
+
+    d_print("after flipping: 0x%08x\n", ctx.EFlags);
+    print_context(&ctx);
+
+    SetThreadContext(myHandle, &ctx);
+
+    return;
+}
+
 void react_set_ZF(void* data)
 {
     d_print("Setting ZF\n");
@@ -172,6 +214,48 @@ void react_zero_ZF(void* data)
     print_context(&ctx);
 
     write_context(id, &ctx);
+
+    return;
+}
+
+void react_flip_CF(void* data)
+{
+    d_print("Flipping ZF\n");
+    char isset;
+
+    int i;
+    unsigned id, thread_idx;
+    HANDLE myHandle = (HANDLE)-0x1;
+
+    id = my_trace->last_event.dwThreadId;
+    thread_idx = my_trace->thread_map[id];
+    myHandle = my_trace->threads[thread_idx].handle;
+
+    CONTEXT ctx;
+    ctx.ContextFlags = CONTEXT_CONTROL;
+    if(GetThreadContext(myHandle, &ctx) == 0x0)
+    {
+        d_print("Failed to get context, error: 0x%08x\n", GetLastError());
+    }
+    d_print("before flipping: 0x%08x\n", ctx.EFlags);
+
+    /* flipping */
+    print_context(&ctx);
+
+    isset = ctx.EFlags & SET_CF_FLAGS;
+    if(isset)
+    {
+        ctx.EFlags &= CLEAR_CF_FLAGS;
+    }
+    else
+    {
+        ctx.EFlags |= SET_CF_FLAGS;
+    }
+
+    d_print("after flipping: 0x%08x\n", ctx.EFlags);
+    print_context(&ctx);
+
+    SetThreadContext(myHandle, &ctx);
 
     return;
 }
@@ -2574,6 +2658,7 @@ int handle_reaction(REACTION* cur_reaction, void* data)
     de = (DEBUG_EVENT*)data;
     DWORD tid;
     DWORD thread_no;
+    char line[MAX_LINE];
 
     tid = de->dwThreadId;
     thread_no = my_trace->thread_map[tid];
@@ -2635,7 +2720,13 @@ int handle_reaction(REACTION* cur_reaction, void* data)
         else
         {
             /* routine is non-zero, we need to handle */
-            d_print("ER3 Executing routine 0x%02x @ %d\n", cur_reaction->routine_ids[k], my_trace->instr_count);
+            if(cur_reaction->routine_ids[k] < 0x300)
+            if(cur_reaction->routine_ids[k] > 0x100)
+            {
+                d_print("ER3 Executing routine 0x%08x @ %d\n", cur_reaction->routine_ids[k], my_trace->instr_count);
+                sprintf(line, "OU,0x%x,0x%08x Routine 0x%08x\n", my_trace->last_tid, my_trace->last_eip, cur_reaction->routine_ids[k]);
+                add_to_buffer(line);
+            }
             my_trace->routines[cur_reaction->routine_ids[k]](data);
         }
     }
@@ -4607,6 +4698,8 @@ int add_reaction(char* location_str, char* reaction_id)
     my_trace->reactions[cur_reaction_id].bp = add_breakpoint(location_str, &my_trace->reactions[cur_reaction_id]);
     my_trace->reactions[cur_reaction_id].bp->enabled = 0x1; /* deprecated, moved to reaction */
     my_trace->reactions[cur_reaction_id].enabled = 0x1;
+    my_trace->reactions[cur_reaction_id].exclusive = 0x0;
+//    my_trace->reactions[cur_reaction_id].exclusive = 0x1;
 
     //my_trace->reactions[cur_reaction_id].routine_id = rid;
     update_breakpoint(my_trace->reactions[cur_reaction_id].bp);
@@ -5836,6 +5929,8 @@ int main(int argc, char** argv)
     my_trace->routines[0x102] = &react_set_ZF;
     my_trace->routines[0x103] = &react_zero_ZF;
     my_trace->routines[0x104] = &react_zero_EAX;
+    my_trace->routines[0x105] = &react_flip_ZF;
+
     my_trace->routines[0x201] = &react_update_region_1;
     my_trace->routines[0x202] = &react_cry_antidebug_1;
     my_trace->routines[0x203] = &react_skip_on;

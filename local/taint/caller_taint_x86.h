@@ -248,7 +248,7 @@ Change of endiannes takes place when reading and writing to memory (to_mem, from
 #define OPTION_NOT_EMITTING_BLACKLISTED         0x10
 #define OPTION_VERIFY_ROP_RETS                  0x20
 #define OPTION_VERIFY_SEG_SEC                   0x40
-
+#define OPTION_ANALYZE_WANTED_IN_SYMBOLS        0x80
 
 /*
 

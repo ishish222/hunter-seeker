@@ -97,6 +97,7 @@ prototypes['SaveSize']              = tracing_parts.save_size
 prototypes['ReadRegion']            = tracer_parts.tracer_read_region
 prototypes['OutRegion']             = tracer_parts.tracer_out_region
 prototypes['ManualST']              = tracer_parts.tracer_manual_st
+prototypes['ManualSTArg']           = tracer_parts.tracer_manual_st_from_arg
 prototypes['ManualSTwSelf']         = tracer_parts.tracer_manual_st_w_self
 prototypes['SetSampleFile']         = tracing_parts.set_sample_file
 prototypes['SetResearchDir']        = tracing_parts.set_research_dir
