@@ -2535,6 +2535,10 @@ void dump_memory()
     fclose(my_trace->dump);
 #endif
     d_print("dumping mem end\n");
+
+    char line[MAX_LINE];
+    sprintf(line, "LM,%s.dump\n", my_trace->out_prefix);
+    add_to_buffer(line);
 }
 
 void dump_contexts()
@@ -5048,7 +5052,12 @@ int handle_cmd(char* cmd)
         strcpy(my_trace->out_mods, buffer2);
         my_trace->mods = fopen(my_trace->out_mods, "wb");
         d_print("Mods file: %s\n", my_trace->out_mods);
-        
+
+        /* write informaction on mod file */
+        char line[MAX_LINE];
+        sprintf(line, "OM,%s.mod\n", my_trace->out_prefix);
+        add_to_buffer(line);
+
         /* ini */ 
         strcpy(buffer2, "");
         sprintf(buffer2, "%s\\%s.ini", my_trace->out_dir, my_trace->out_prefix);

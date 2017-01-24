@@ -3170,6 +3170,7 @@ class taint_x86
     int dive(CONTEXT_INFO*, OFFSET, OFFSET);
     int surface(CONTEXT_INFO*);
     int jxx_set(unsigned);
+    int start();
 
     int print_err_all_contexts();
     int print_err_all_t_contexts();

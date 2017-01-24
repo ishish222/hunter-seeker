@@ -1,0 +1,11 @@
+#!/bin/sh
+#
+# usage: $0 FOLDER MAP
+
+LOCAL_ROOT=../
+REMOTE_ROOT="/mnt/1/output"
+FOLDER=$1
+MAP=$2
+
+scp hs1@flareon:$REMOTE_ROOT/$FOLDER/$MAP $MAP".tmp"
+fix-map $MAP".tmp" > $MAP

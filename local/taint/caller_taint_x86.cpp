@@ -87,6 +87,17 @@ int taint_x86::handle_sigint()
     return 0x0;
 }
 
+int taint_x86::start()
+{
+    char out_line[MAX_NAME];
+
+    sprintf(out_line, "[ST]");
+    print_empty_call(&this->ctx_info[this->tids[this->cur_tid]], out_line, colors[CODE_RED]);
+
+    this->started = 0x1;
+    return 0x0;
+}
+
 int taint_x86::handle_sigsegv()
 {
     
@@ -2783,19 +2794,9 @@ int taint_x86::handle_exception(EXCEPTION_INFO info)
 {
     char out_line[MAX_NAME];
 
-    /* exception breaks waiting */
-    /*
-    if(this->cur_info->waiting)
-    {
-    }
-    */
-
-    //surface(this->cur_info);
-
     sprintf(out_line, "[x] Exception %08x in TID %08x, instr. no: %d, eip: 0x%08x", info.er.ExceptionCode, info.tid, this->current_instr_count, info.er.ExceptionAddress);
     print_empty_call(&this->ctx_info[this->tids[this->cur_tid]], out_line, colors[CODE_RED]);
     return 0x0;
-
 }
 
 int taint_x86::add_exception(EXCEPTION_INFO info)

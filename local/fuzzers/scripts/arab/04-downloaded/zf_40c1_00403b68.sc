@@ -76,7 +76,9 @@ Push2(Test4)
 Push2(Test3)
 Push2(Test2)
 Push2(Test1)
-ManualSTArg
+SaveEP(00403b68)
+LoadEP
+ManualST
 EnableReaction(ST)
 TracerPrev
 TracerDebugContinueInf

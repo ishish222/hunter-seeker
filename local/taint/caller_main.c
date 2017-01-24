@@ -218,6 +218,56 @@ int register_fence(char* line, taint_x86* taint_eng)
     return 0x0;
 }
 
+int filter_str(char* str)
+{
+    unsigned i, len;
+
+    len = strlen(str);
+
+    for(i = 0x0; i<len; i++)
+    {
+        if(str[i] == '\r')
+            str[i] = 0x0;
+    }
+    return 0x0;
+}
+
+int load_mod(char* line, taint_x86* taint_eng)
+{
+    char* cmd;
+    char* file_name;
+
+    cmd = strtok(line, ",");
+    file_name = strtok(0x0, ",");
+    file_name[strlen(file_name)-1] = 0x0;
+    
+    printf("Opening mod file: %s\n", file_name);
+
+    filter_str(file_name);
+
+    taint_eng->open_mod_file(file_name);
+
+    return 0x0;
+}
+
+int load_mem(char* line, taint_x86* taint_eng)
+{
+    char* cmd;
+    char* file_name;
+
+    cmd = strtok(line, ",");
+    file_name = strtok(0x0, ",");
+    file_name[strlen(file_name)-1] = 0x0;
+    
+    printf("Loading memory from: %s\n", file_name);
+
+    filter_str(file_name);
+
+    taint_eng->load_mem_from_file(file_name);
+
+    return 0x0;
+}
+
 int load_file(char* line, taint_x86* taint_eng)
 {
     char* cmd;
@@ -797,9 +847,10 @@ int main(int argc, char** argv)
         }
     }
 
-    if((strlen(instr_file_path) == 0x0) 
-        || (strlen(dump1_file_path) == 0x0)
-        || (strlen(loadable_dir_path) == 0x0))
+//    if((strlen(instr_file_path) == 0x0) 
+//        || (strlen(dump1_file_path) == 0x0)
+//        || (strlen(loadable_dir_path) == 0x0))
+    if(strlen(instr_file_path) == 0x0) 
     {
         print_usage();
         return 0x1;
@@ -864,11 +915,10 @@ int main(int argc, char** argv)
     /* load data to engine */
     //taint_eng.print_all_contexts();
 
-    taint_eng.load_mem_from_file(dump1_file_path);
+//    taint_eng.load_mem_from_file(dump1_file_path);
     taint_eng.load_instr_from_file(instr_file_path);
     taint_eng.open_lost_file(lost_file_path);
-//    taint_eng.set_lib_dir_path(loadable_dir_path);
-    taint_eng.open_mod_file(loadable_dir_path);
+//    taint_eng.open_mod_file(loadable_dir_path);
 
     /* pass graph parameters */
     taint_eng.start_addr = start_addr;
@@ -912,6 +962,7 @@ int main(int argc, char** argv)
 
     /* printing values at start */
 
+    /*
     printf("Watched RW locations:\n");
   
  
@@ -922,7 +973,7 @@ int main(int argc, char** argv)
             taint_eng.print_mem(3, taint_eng.my_bps[i].offset, 0x10);
         }
     }
-
+    */
     taint_eng.bp_hit = 0x0;
  
     /* executing instructions */
@@ -996,12 +1047,20 @@ int main(int argc, char** argv)
             if(line[0] == 'P' && line[1] == 'A')
                 _pause();
 
+            if(line[0] == 'O' && line[1] == 'M')
+                load_mod(line, &taint_eng);
+
+            if(line[0] == 'L' && line[1] == 'M')
+                load_mem(line, &taint_eng);
+
             if(line[0] == 'L' && line[1] == 'F')
                 load_file(line, &taint_eng);
 
             if(line[0] == 'S' && line[1] == 'T')
-                if(!(taint_eng.start_addr || taint_eng.start_instr))
-                    taint_eng.started = 0x1;
+//                if(!(taint_eng.start_addr || taint_eng.start_instr))
+                {
+                    taint_eng.start();
+                }
 
             if(line[0] == 'F' && line[1] == 'I')
                 taint_eng.finished = 0x1;

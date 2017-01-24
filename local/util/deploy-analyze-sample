@@ -8,4 +8,6 @@ MACHINE=$2
 SCRIPT=$3
 FOLDER=$4
 
+./deploy-remote $1
+
 ssh -t hs1@flareon "cd hs2-current-deploy/script-zero-trace-flareon/client; screen -S $MACHINE sh -c \"cd .; ./fuzzer.py --out-prefix $FOLDER $MACHINE $SCRIPT; bash\""

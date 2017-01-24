@@ -1,0 +1,5 @@
+deploy-analyze-sample script-zero-trace-flareon hs2-03 scripts/arab/04-downloaded/zf_40c1_00403b68.sc test_folder
+
+analyze-sample script-zero-trace-flareon hs2-03 scripts/arab/04-downloaded/zf_40c1_00403b68.sc test_folder
+
+retrieve-map arab_28_zf_4075 TID_000002A8.mm
