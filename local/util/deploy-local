@@ -18,5 +18,6 @@ mkdir -p $DEPLOY_PATH$TARGET/$DATE
 cp -r $TARGET_DIR/* $DEPLOY_PATH$TARGET/$DATE/
 rm -f /home/ish/hs2-current-deploy/$TARGET
 ln -s $DEPLOY_PATH$TARGET/$DATE /home/ish/hs2-current-deploy/$TARGET
-sudo ln -s $DEPLOY_PATH$TARGET/$DATE /home/hs1/hs2-current-deploy/$TARGET
+#sudo ln -s $DEPLOY_PATH$TARGET/$DATE /home/hs1/hs2-current-deploy/$TARGET
+#ln -s $DEPLOY_PATH$TARGET/$DATE /home/hs1/hs2-current-deploy/$TARGET
 

@@ -5930,6 +5930,7 @@ int main(int argc, char** argv)
     my_trace->routines[0x103] = &react_zero_ZF;
     my_trace->routines[0x104] = &react_zero_EAX;
     my_trace->routines[0x105] = &react_flip_ZF;
+    my_trace->routines[0x106] = &react_flip_CF;
 
     my_trace->routines[0x201] = &react_update_region_1;
     my_trace->routines[0x202] = &react_cry_antidebug_1;

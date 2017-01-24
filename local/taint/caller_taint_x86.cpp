@@ -578,7 +578,12 @@ void taint_x86::print_ret(CONTEXT_INFO* cur_ctx)
 
 int taint_x86::jxx_set(unsigned state)
 {
+    char out_line[MAX_NAME]; 
+
     this->cur_info->levels[this->cur_info->call_level].jxx_handling = state;
+
+    sprintf(out_line, "[x] JXX_STATUS: 0x%02x", state);
+    print_empty_call(&this->ctx_info[this->tids[this->cur_tid]], out_line, colors[CODE_RED]);
 
     if(state == 0x0)
     {
@@ -2785,7 +2790,7 @@ int taint_x86::handle_exception(EXCEPTION_INFO info)
     }
     */
 
-    surface(this->cur_info);
+    //surface(this->cur_info);
 
     sprintf(out_line, "[x] Exception %08x in TID %08x, instr. no: %d, eip: 0x%08x", info.er.ExceptionCode, info.tid, this->current_instr_count, info.er.ExceptionAddress);
     print_empty_call(&this->ctx_info[this->tids[this->cur_tid]], out_line, colors[CODE_RED]);
