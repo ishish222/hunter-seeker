@@ -1,4 +1,4 @@
-#include "trace6.h"
+#include "trace6_64.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include "winsock2.h"
@@ -20,57 +20,57 @@ FILE* log;
 char started = 0x0;
 char instr_count_s[0x20];
 int full_log = 0x0;
-DWORD scan_on;
+DWORD64 scan_on;
 unsigned scan_count;
 READ_RECORD last_read_record;
 WATCHED watched[WATCH_LIMIT];
 HANDLE file_handle;
-DWORD sysenter_esp;
-DWORD sysenter_no;
+DWORD64 sysenter_esp;
+DWORD64 sysenter_no;
 FILE* file;
 char buffer[buf_size];
 int index = 0;
 char instr[0x60];
 const wchar_t* target_lib = L"ntdll.dll";
-DWORD target_lib_off = 0x0;
+DWORD64 target_lib_off = 0x0;
 const char* target_call = "NtCreateFile";
-DWORD target_call_off = 0x44a10;
-DWORD target_off = 0x0;
+DWORD64 target_call_off = 0x44a10;
+DWORD64 target_off = 0x0;
 CREATE_PROCESS_DEBUG_INFO cpdi;
 int myPID = 0x0;
 int myTID = 0x0;
-DWORD img_base;
-DWORD nt1_off;
-DWORD nt2_off;
-DWORD nt3_off;
-DWORD nt4_off;
-DWORD sysenter_off;
-DWORD sysret_off;
+DWORD64 img_base;
+DWORD64 nt1_off;
+DWORD64 nt2_off;
+DWORD64 nt3_off;
+DWORD64 nt4_off;
+DWORD64 sysenter_off;
+DWORD64 sysret_off;
 LOCATION_DESCRIPTOR last_arg = {0x0, 0x0, LOCATION_END, LOCATION_END, 0x0};
 LOCATION last_location = {0x0, 0x0};
 LOCATION_DESCRIPTOR syscall_out_args[MAX_SYSCALL_ENTRIES][MAX_SYSCALL_OUT_ARGS];
 LOCATION syscall_out_args_dump_list[MAX_SYSCALL_OUT_ARGS];
-DWORD buffer_addr;
-DWORD size_addr;
+DWORD64 buffer_addr;
+DWORD64 size_addr;
 CREATE_THREAD_DEBUG_INFO2 threads[0x100000000];
 BREAKPOINT* add_breakpoint(char*, REACTION*);
-DWORD find_lib(char* name);
-BOOL WINAPI HandlerRoutine(_In_ DWORD dwCtrlType);
+DWORD64 find_lib(char* name);
+BOOL WINAPI HandlerRoutine(_In_ DWORD64 dwCtrlType);
 SIZE_T dump_mem(FILE*, void*, SIZE_T);
 
 char* blacklist_lib[] = {"kernel32.dll", "ntdll.dll", "user32.dll"};
-DWORD blacklist_addr[] = {};
+DWORD64 blacklist_addr[] = {};
 char line2[MAX_LINE];
 
 void read_memory(HANDLE, void*, void*, SIZE_T, SIZE_T*);
 void e_reaction_handler(void* data);
 void i_reaction_handler(void* data);
 void print_context(CONTEXT*);
-int del_breakpoint(DWORD);
+int del_breakpoint(DWORD64);
 int resolve_region(LOCATION_DESCRIPTOR*, LOCATION*);
 int add_to_buffer(char*);
-int read_context(DWORD, CONTEXT*);
-int write_context(DWORD, CONTEXT*);
+int read_context(DWORD64, CONTEXT*);
+int write_context(DWORD64, CONTEXT*);
 void write_memory(HANDLE , void* , void* , SIZE_T , SIZE_T* );
 int check_lib_loaded(char*);
 int enable_reaction(char*);
@@ -82,11 +82,11 @@ int unwrite_breakpoint(BREAKPOINT* bp);
 int update_breakpoint(BREAKPOINT* bp);
 OFFSET resolve_loc_desc(LOCATION_DESCRIPTOR_NEW* d);
 REACTION* find_reaction(char*);
-int read_dword(DWORD addr);
-char read_byte(DWORD addr);
-int report_dword(DWORD addr);
-DWORD read_register(DWORD tid_id, char* reg);
-int report_register(DWORD tid_id, char* reg);
+int read_dword(DWORD64 addr);
+char read_byte(DWORD64 addr);
+int report_dword(DWORD64 addr);
+DWORD64 read_register(DWORD64 tid_id, char* reg);
+int report_register(DWORD64 tid_id, char* reg);
 
 int d_print(const char* format, ...)
 {
@@ -369,7 +369,7 @@ void react_zero_EAX(void* data)
     d_print("before zeroing: 0x%08x\n", ctx.EFlags);
     /* zeroing */
     print_context(&ctx);
-    ctx.Eax = 0x0;
+    ctx.Rax = 0x0;
     d_print("after zeroing: 0x%08x\n", ctx.EFlags);
     print_context(&ctx);
 
@@ -403,7 +403,7 @@ void react_zero_SF(void* data)
 
 void update_region_old(LOCATION* location)
 {
-    DWORD size_wrote;
+    DWORD64 size_wrote;
     char line[MAX_LINE];
 
     sprintf(line, "# Current mod position: 0x%08x\n", ftell(my_trace->mods));
@@ -424,7 +424,7 @@ void update_region_old(LOCATION* location)
 
 void update_region(unsigned id)
 {
-    DWORD size_wrote;
+    DWORD64 size_wrote;
     char line[MAX_LINE];
 
     REGION* region = &my_trace->regions[id];
@@ -524,13 +524,13 @@ void report_arg_unicode_string_x(unsigned x)
     char line[MAX_LINE];
     char snap[SNAP_SIZE*2];
 
-    DWORD read;
+    DWORD64 read;
     OFFSET esp;
     OFFSET addr;
 
     CONTEXT ctx;
     read_context(0x0, &ctx);
-    esp = ctx.Esp;
+    esp = ctx.Rsp;
     esp += (x * 0x4);
 
     addr = read_dword(esp);
@@ -558,13 +558,13 @@ void output_arg_unicode_string_x(unsigned x)
     char line[MAX_LINE];
     char snap[SNAP_SIZE*2];
 
-    DWORD read;
+    DWORD64 read;
     OFFSET esp;
     OFFSET addr;
 
     CONTEXT ctx;
     read_context(0x0, &ctx);
-    esp = ctx.Esp;
+    esp = ctx.Rsp;
     esp += (x * 0x4);
 
     addr = read_dword(esp);
@@ -635,14 +635,14 @@ void report_arg_string_x(unsigned x)
     char line[MAX_LINE];
     char snap[SNAP_SIZE];
 
-    DWORD read;
+    DWORD64 read;
     OFFSET esp;
     OFFSET addr;
 
     CONTEXT ctx;
     read_context(0x0, &ctx);
     d_print("ESP: 0x%08x\n", esp);
-    esp = ctx.Esp;
+    esp = ctx.Rsp;
     esp += (x * 0x4);
     d_print("arg addr: 0x%08x\n", esp);
 
@@ -672,14 +672,14 @@ void output_arg_string_x(unsigned x)
     char line[MAX_LINE];
     char snap[SNAP_SIZE];
 
-    DWORD read;
+    DWORD64 read;
     OFFSET esp;
     OFFSET addr;
 
     CONTEXT ctx;
     read_context(0x0, &ctx);
     d_print("ESP: 0x%08x\n", esp);
-    esp = ctx.Esp;
+    esp = ctx.Rsp;
     esp += (x * 0x4);
     d_print("arg addr: 0x%08x\n", esp);
 
@@ -756,7 +756,7 @@ void report_arg_x(unsigned x)
 
     CONTEXT ctx;
     read_context(0x0, &ctx);
-    esp = ctx.Esp;
+    esp = ctx.Rsp;
     esp += (x * 0x4);
 
     val = read_dword(esp);
@@ -778,7 +778,7 @@ void output_arg_x(unsigned x)
 
     CONTEXT ctx;
     read_context(0x0, &ctx);
-    esp = ctx.Esp;
+    esp = ctx.Rsp;
     esp += (x * 0x4);
 
     val = read_dword(esp);
@@ -844,7 +844,7 @@ void output_p_arg_x(unsigned x)
 
     CONTEXT ctx;
     read_context(0x0, &ctx);
-    esp = ctx.Esp;
+    esp = ctx.Rsp;
     esp += (x * 0x4);
 
     val = read_dword(esp);
@@ -904,7 +904,7 @@ void react_output_p_arg_8(void* data)
 void react_cry_antidebug_1(void* data)
 {
     OFFSET addr = 0x4103e4;
-    DWORD wrote;
+    DWORD64 wrote;
     char val1 = 0xf9;
     char val2 = 0x01;
 
@@ -927,7 +927,7 @@ void write_string_ascii(OFFSET addr, char* str)
     d_print("Writing ANSI string to 0x%08x\n", addr);
     char line[MAX_LINE];
 
-    DWORD wrote;
+    DWORD64 wrote;
 
     write_memory(my_trace->cpdi.hProcess, (void*)addr, (void*)str, strlen(str), &wrote);
     if(wrote > 0x0)
@@ -953,7 +953,7 @@ void write_string_unicode(OFFSET addr, char* str)
 
     char line[MAX_LINE];
 
-    DWORD wrote;
+    DWORD64 wrote;
     int result = MultiByteToWideChar(CP_OEMCP, 0, str, -1, unistring, strlen(str)+ 1);
 
     write_memory(my_trace->cpdi.hProcess, (void*)addr, (void*)unistring, unistring_len, &wrote);
@@ -979,11 +979,11 @@ void react_skip_on(void* data)
     char line[MAX_LINE]; 
     DEBUG_EVENT* de;
     de = (DEBUG_EVENT*)data;
-    DWORD tid = de->dwThreadId;
+    DWORD64 tid = de->dwThreadId;
 
     my_trace->threads[my_trace->thread_map[tid]].skipping += 0x1;
 
-    sprintf(line, "# Increasing skipping in TID: 0x%08x @ %p\n", tid, (DWORD)my_trace->last_exception.ExceptionAddress);
+    sprintf(line, "# Increasing skipping in TID: 0x%08x @ %p\n", tid, (DWORD64)my_trace->last_exception.ExceptionAddress);
     add_to_buffer(line);
 
     if(my_trace->threads[my_trace->thread_map[tid]].skipping == 0x1)
@@ -1002,11 +1002,11 @@ void react_skip_off(void* data)
     char line[MAX_LINE]; 
     DEBUG_EVENT* de;
     de = (DEBUG_EVENT*)data;
-    DWORD tid = de->dwThreadId;
+    DWORD64 tid = de->dwThreadId;
 
     my_trace->threads[my_trace->thread_map[tid]].skipping -= 0x1;
 
-    sprintf(line, "# Decreasing skipping in TID: 0x%08x @ %p\n", tid, (DWORD)my_trace->last_exception.ExceptionAddress);
+    sprintf(line, "# Decreasing skipping in TID: 0x%08x @ %p\n", tid, (DWORD64)my_trace->last_exception.ExceptionAddress);
     add_to_buffer(line);
 
     if(my_trace->threads[my_trace->thread_map[tid]].skipping < 0x1)
@@ -1243,7 +1243,7 @@ int disable_reaction(char* reaction_id)
 {
     d_print("[disable_reaction]\n");
     unsigned i;
-    DWORD found = 0x0;
+    DWORD64 found = 0x0;
 
     for(i = 0x0; i< my_trace->reaction_count; i++)
     {
@@ -1315,7 +1315,7 @@ int disable_reaction_rid(unsigned routine_id)
 */
 int add_to_buffer(char* line)
 {
-    DWORD written;
+    DWORD64 written;
     written = 0x0;
 //    sprintf(line2, "%s\n", line);
     //written = fwrite(line2, strlen(line2), 1, file);
@@ -1327,16 +1327,16 @@ int add_to_buffer(char* line)
 void print_context(CONTEXT* ctx)
 {
     d_print("Context:\n");
-    d_print("EAX:\t0x%08x\n", ctx->Eax);
-    d_print("EBX:\t0x%08x\n", ctx->Ebx);
-    d_print("ECX:\t0x%08x\n", ctx->Ecx);
-    d_print("EDX:\t0x%08x\n", ctx->Edx);
-    d_print("ESI:\t0x%08x\n", ctx->Esi);
-    d_print("EDI:\t0x%08x\n", ctx->Edi);
-    d_print("EBP:\t0x%08x\n", ctx->Ebp);
-    d_print("ESP:\t0x%08x\n", ctx->Esp);
+    d_print("EAX:\t0x%08x\n", ctx->Rax);
+    d_print("EBX:\t0x%08x\n", ctx->Rbx);
+    d_print("ECX:\t0x%08x\n", ctx->Rcx);
+    d_print("EDX:\t0x%08x\n", ctx->Rdx);
+    d_print("ESI:\t0x%08x\n", ctx->Rsi);
+    d_print("EDI:\t0x%08x\n", ctx->Rdi);
+    d_print("EBP:\t0x%08x\n", ctx->Rbp);
+    d_print("ESP:\t0x%08x\n", ctx->Rsp);
     d_print("EFLAGS:\t0x%08x\n", ctx->EFlags);
-    d_print("EIP:\t0x%08x\n", ctx->Eip);
+    d_print("EIP:\t0x%08x\n", ctx->Rip);
 }
 
 void react_sysret_refresh(void* data)
@@ -1351,7 +1351,7 @@ void react_sysret_refresh(void* data)
 void read_memory(HANDLE handle, void* from, void* to, SIZE_T size, SIZE_T* read)
 {
     DWORD oldProt;
-    DWORD ret;
+    DWORD64 ret;
 
 //    d_print("read_memory, handle: 0x%08x\n", handle);
 
@@ -1372,7 +1372,7 @@ void read_memory(HANDLE handle, void* from, void* to, SIZE_T size, SIZE_T* read)
 void write_memory(HANDLE handle, void* to, void* from, SIZE_T size, SIZE_T* written)
 {
     DWORD oldProt;
-    DWORD ret;
+    DWORD64 ret;
     
     d_print("write_memory, handle: 0x%08x\n", handle);
     VirtualProtectEx(handle, to, size, PAGE_EXECUTE_READWRITE, &oldProt);
@@ -1387,7 +1387,7 @@ void write_memory(HANDLE handle, void* to, void* from, SIZE_T size, SIZE_T* writ
     VirtualProtectEx(handle, to, size, oldProt, &oldProt);
 }
 
-int dec_eip(DWORD id)
+int dec_eip(DWORD64 id)
 {
     int i;
     unsigned thread_idx;
@@ -1402,9 +1402,9 @@ int dec_eip(DWORD id)
     {
         d_print("Failed to get context, error: 0x%08x\n", GetLastError());
     }
-    d_print("before: 0x%08x\n", ctx.Eip);
-    ctx.Eip -= 0x1;
-    d_print("after: 0x%08x\n", ctx.Eip);
+    d_print("before: 0x%08x\n", ctx.Rip);
+    ctx.Rip -= 0x1;
+    d_print("after: 0x%08x\n", ctx.Rip);
     SetThreadContext(myHandle, &ctx);
 
     return 0x0;
@@ -1446,16 +1446,16 @@ void serialize_lib(LIB_ENTRY* lib, char* buffer)
 void serialize_context(CONTEXT ctx, LDT_ENTRY* ldt, char* buffer)
 {
     sprintf(buffer, "0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x", 
-        ctx.Eax, 
-        ctx.Ecx, 
-        ctx.Edx, 
-        ctx.Ebx, 
-        ctx.Esi, 
-        ctx.Edi, 
-        ctx.Ebp, 
-        ctx.Esp, 
+        ctx.Rax, 
+        ctx.Rcx, 
+        ctx.Rdx, 
+        ctx.Rbx, 
+        ctx.Rsi, 
+        ctx.Rdi, 
+        ctx.Rbp, 
+        ctx.Rsp, 
         ctx.EFlags, 
-        ctx.Eip,
+        ctx.Rip,
         ctx.SegGs,
         ctx.SegFs,
         ctx.SegEs,
@@ -1489,22 +1489,22 @@ void deserialize_context(CONTEXT* ctx, char* buffer)
 {
     sscanf(buffer, 
         "0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x",
-        ctx->Eax, 
-        ctx->Ecx, 
-        ctx->Edx, 
-        ctx->Ebx, 
-        ctx->Esi, 
-        ctx->Edi, 
-        ctx->Ebp, 
-        ctx->Esp, 
+        ctx->Rax, 
+        ctx->Rcx, 
+        ctx->Rdx, 
+        ctx->Rbx, 
+        ctx->Rsi, 
+        ctx->Rdi, 
+        ctx->Rbp, 
+        ctx->Rsp, 
         ctx->EFlags, 
-        ctx->Eip
+        ctx->Rip
         );
 
     return;
 }
 
-void register_exception(DWORD tid, EXCEPTION_RECORD er)
+void register_exception(DWORD64 tid, EXCEPTION_RECORD er)
 {
     char line[MAX_LINE];
     char line2[0x100];
@@ -1529,7 +1529,7 @@ void getSelectorEntries(HANDLE handle, CONTEXT ctx, LDT_ENTRY* ldt)
     return;
 }
 
-void register_thread(DWORD tid, HANDLE handle)
+void register_thread(DWORD64 tid, HANDLE handle)
 {
     char line2[0x200];
     char line[MAX_LINE];
@@ -1539,7 +1539,7 @@ void register_thread(DWORD tid, HANDLE handle)
     if(handle == 0x0) 
         handle = OpenThread(THREAD_GET_CONTEXT |THREAD_SET_CONTEXT | THREAD_ALL_ACCESS, 0x0, tid);
 
-    DWORD tid_pos;
+    DWORD64 tid_pos;
 
     if(my_trace->thread_map[tid] == -1)
     {
@@ -1596,14 +1596,14 @@ void register_thread(DWORD tid, HANDLE handle)
     return;
 }
 
-int register_thread_debug(DWORD tid, HANDLE handle)
+int register_thread_debug(DWORD64 tid, HANDLE handle)
 {
     //d_print("Debug registering: TID 0x%08x, handle 0x%08x\n", tid, handle);
     char line2[0x200];
     char line[MAX_LINE];
     CONTEXT ctx;
     LDT_ENTRY ldt[0x6];
-    DWORD written;
+    DWORD64 written;
 
     written = 0x0;
 
@@ -1614,7 +1614,7 @@ int register_thread_debug(DWORD tid, HANDLE handle)
 
     ctx.ContextFlags = CONTEXT_FULL;
 
-    DWORD tid_pos;
+    DWORD64 tid_pos;
     tid_pos = my_trace->thread_map[tid];
 
     //write info about thread registration
@@ -1629,7 +1629,7 @@ int register_thread_debug(DWORD tid, HANDLE handle)
     return written;
 }
 
-void deregister_thread(DWORD tid, HANDLE handle)
+void deregister_thread(DWORD64 tid, HANDLE handle)
 {
     //d_print("Deregistering: TID 0x%08x, handle 0x%08x\n", tid, handle);
     char line2[0x200];
@@ -1640,7 +1640,7 @@ void deregister_thread(DWORD tid, HANDLE handle)
     if(handle == 0x0) 
         handle = OpenThread(THREAD_GET_CONTEXT |THREAD_SET_CONTEXT | THREAD_ALL_ACCESS, 0x0, tid);
 
-    DWORD tid_pos;
+    DWORD64 tid_pos;
     tid_pos = my_trace->thread_map[tid];
 
     my_trace->threads[tid_pos].alive = 0x0;
@@ -1686,10 +1686,10 @@ void deregister_thread(DWORD tid, HANDLE handle)
     return;
 }
 
-void deregister_thread2(DWORD tid)
+void deregister_thread2(DWORD64 tid)
 {
     char line[MAX_LINE];
-    DWORD tid_pos;
+    DWORD64 tid_pos;
     tid_pos = my_trace->thread_map[tid];
 
 
@@ -1767,7 +1767,7 @@ void register_lib(LOAD_DLL_DEBUG_INFO info)
 #endif
     //d_print("Name pointer: %p, len: 0x%08x\n", libs[my_trace->lib_count].lib_name, strlen(libs[my_trace->lib_count].lib_name));
 
-    my_trace->libs[my_trace->lib_count].lib_offset = (DWORD)info.lpBaseOfDll;
+    my_trace->libs[my_trace->lib_count].lib_offset = (DWORD64)info.lpBaseOfDll;
     d_print("RL,0x%08x,%s\n", my_trace->libs[my_trace->lib_count].lib_offset, my_trace->libs[my_trace->lib_count].lib_name);
     sprintf(line, "RL,0x%08x,%s\n", my_trace->libs[my_trace->lib_count].lib_offset, my_trace->libs[my_trace->lib_count].lib_name);
 
@@ -1781,7 +1781,7 @@ void register_lib(LOAD_DLL_DEBUG_INFO info)
     return;
 }
 
-void deregister_lib(DWORD i)
+void deregister_lib(DWORD64 i)
 {
     char line[MAX_LINE];
     sprintf(line, "DL,0x%08x,%s\n", my_trace->libs[i].lib_offset, my_trace->libs[i].lib_name);
@@ -1797,7 +1797,7 @@ void deregister_lib(UNLOAD_DLL_DEBUG_INFO info)
 
     for (i = 0x0; i< my_trace->lib_count; i++)
     {
-        if(my_trace->libs[i].lib_offset == (DWORD)info.lpBaseOfDll) break;
+        if(my_trace->libs[i].lib_offset == (DWORD64)info.lpBaseOfDll) break;
     }
 
     sprintf(line, "DL,0x%08x,%s\n", my_trace->libs[i].lib_offset, my_trace->libs[i].lib_name);
@@ -1843,10 +1843,10 @@ void react_sysenter_callback(void* data)
 
     DEBUG_EVENT* de;
     de = (DEBUG_EVENT*)data;
-    DWORD tid = de->dwThreadId;
+    DWORD64 tid = de->dwThreadId;
     unsigned i;
 
-    DWORD tid_pos;
+    DWORD64 tid_pos;
     tid_pos = my_trace->thread_map[tid];
 
     CONTEXT ctx;
@@ -1856,9 +1856,9 @@ void react_sysenter_callback(void* data)
         d_print("Failed to get context, error: 0x%08x\n", GetLastError());
         return;
     }
-    d_print("ESP: %p\n", ctx.Esp);
-    sysenter_no = ctx.Eax;
-    sysenter_esp = ctx.Esp;
+    d_print("ESP: %p\n", ctx.Rsp);
+    sysenter_no = ctx.Rax;
+    sysenter_esp = ctx.Rsp;
 
     sprintf(line, "# Syscall in TID: 0x%08x no: 0x%08x, stack@ 0x%08x\n", tid, sysenter_no, sysenter_esp);
     add_to_buffer(line);
@@ -1873,12 +1873,12 @@ void react_sysret_callback(void* data)
 
     DEBUG_EVENT* de;
     de = (DEBUG_EVENT*)data;
-    DWORD tid = de->dwThreadId;
-    DWORD arg_addr, arg_val;
-    DWORD size, read, off, size_wrote;
+    DWORD64 tid = de->dwThreadId;
+    DWORD64 arg_addr, arg_val;
+    DWORD64 size, read, off, size_wrote;
     unsigned i;
     char line[MAX_LINE];
-    DWORD tid_pos;
+    DWORD64 tid_pos;
     tid_pos = my_trace->thread_map[tid];
 
     register_thread(tid, my_trace->threads[tid_pos].handle);
@@ -1899,14 +1899,14 @@ void react_sysret_callback(void* data)
         d_print("Failed to get context, error: 0x%08x\n", GetLastError());
         return;
     }
-    d_print("EAX: 0x%08x\n", ctx.Eax);
+    d_print("EAX: 0x%08x\n", ctx.Rax);
 
     /*
     for(i = 0x0; i<MAX_SYSCALL_OUT_ARGS; i++)
             my_trace->syscall_out_args_dump_list[i].off = last_location.off;
     */
 
-    d_print("[[Syscall: 0x%08x @ 0x%08x]]\n", sysenter_no, ctx.Eip);
+    d_print("[[Syscall: 0x%08x @ 0x%08x]]\n", sysenter_no, ctx.Rip);
     for(i = 0x0; i<MAX_SYSCALL_OUT_ARGS; i++)
     {
 //        d_print("Arg no: 0x%02x\n", i);
@@ -1918,7 +1918,7 @@ void react_sysret_callback(void* data)
         if(my_trace->syscall_out_args[sysenter_no][i].eax_val_success != STATUS_ANY)
         {
 //            d_print("Arg not any\n");
-            if(my_trace->syscall_out_args[sysenter_no][i].eax_val_success != ctx.Eax) 
+            if(my_trace->syscall_out_args[sysenter_no][i].eax_val_success != ctx.Rax) 
             {
 //                d_print("Wrong EAX\n");
                 continue;
@@ -2093,16 +2093,16 @@ void react_sysret_callback(void* data)
 
 
 
-DWORD get_stack(HANDLE tHandle, unsigned index)
+DWORD64 get_stack(HANDLE tHandle, unsigned index)
 {
     CONTEXT ctx;
-    DWORD esp;
-    DWORD val;
-    DWORD read;
+    DWORD64 esp;
+    DWORD64 val;
+    DWORD64 read;
     unsigned i;
 
     GetThreadContext(tHandle, &ctx);
-    esp == ctx.Esp;
+    esp == ctx.Rsp;
     for(i = 0x0; i< index; i++)
     {
         esp += 0x4;
@@ -2115,10 +2115,10 @@ DWORD get_stack(HANDLE tHandle, unsigned index)
 
 void createthread_callback(void* data)
 {
-    DWORD start_addr;
+    DWORD64 start_addr;
     DEBUG_EVENT* de;
     de = (DEBUG_EVENT*)data;
-    DWORD tid = de->dwThreadId;
+    DWORD64 tid = de->dwThreadId;
     unsigned i;
     HANDLE tHandle;
     char line[MAX_LINE];
@@ -2149,7 +2149,7 @@ void isdebuggerpresent_callback_2(void* data)
 {
     DEBUG_EVENT* de;
     de = (DEBUG_EVENT*)data;
-    DWORD tid = de->dwThreadId;
+    DWORD64 tid = de->dwThreadId;
     unsigned i;
     HANDLE tHandle;
     CONTEXT ctx;
@@ -2160,8 +2160,8 @@ void isdebuggerpresent_callback_2(void* data)
     /* zero out eax */
 
     GetThreadContext(tHandle, &ctx);
-    d_print("[antidebug] EAX: 0x%08x\n", ctx.Eax);
-    ctx.Eax = 0x0;
+    d_print("[antidebug] EAX: 0x%08x\n", ctx.Rax);
+    ctx.Rax = 0x0;
     SetThreadContext(tHandle, &ctx);
     CloseHandle(tHandle);
 
@@ -2170,7 +2170,7 @@ void isdebuggerpresent_callback_2(void* data)
     CloseHandle(tHandle);
 
     d_print("[antidebug] IsDebuggerPresent handled\n");
-    d_print("[antidebug] EAX: 0x%08x\n", ctx.Eax);
+    d_print("[antidebug] EAX: 0x%08x\n", ctx.Rax);
 
     d_print("[antidebug] exit\n");
 
@@ -2233,11 +2233,11 @@ int register_all_threads()
     return 0x0;
 }
 
-int verify_ss(DWORD tid)
+int verify_ss(DWORD64 tid)
 {
     CONTEXT ctx;
     int i;
-    DWORD cur_tid;
+    DWORD64 cur_tid;
     char line[MAX_LINE];
 
     if(tid == 0x0)
@@ -2270,11 +2270,11 @@ int verify_ss(DWORD tid)
     return 0x0;
 }
 
-int unset_ss(DWORD tid)
+int unset_ss(DWORD64 tid)
 {
     CONTEXT ctx;
     int i, tid_pos;
-    DWORD cur_tid;
+    DWORD64 cur_tid;
     char line[MAX_LINE];
 
 
@@ -2310,12 +2310,12 @@ int unset_ss(DWORD tid)
     return 0x0;
 }
 
-int set_ss(DWORD tid)
+int set_ss(DWORD64 tid)
 {
     char line[MAX_LINE];
     CONTEXT ctx;
     int i, tid_pos;
-    DWORD cur_tid;
+    DWORD64 cur_tid;
 
     /* avoid turning scanning on while skipping, e.g. during syscalls or i_reactions */
     if(my_trace->threads[my_trace->thread_map[tid]].skipping == 0x1)
@@ -2349,7 +2349,7 @@ int set_ss(DWORD tid)
     return 0x0;
 }
 
-void check_debug(DWORD eip, long long unsigned i_count, DWORD id)
+void check_debug(DWORD64 eip, long long unsigned i_count, DWORD64 id)
 {
     unsigned i;
     HANDLE myHandle = (HANDLE)-0x1;
@@ -2408,17 +2408,17 @@ void ss_callback(void* data)
 {
     DEBUG_EVENT* de;
     de = (DEBUG_EVENT*)data;
-    DWORD eip;
-    DWORD tid;
-    DWORD bytes_written;
+    DWORD64 eip;
+    DWORD64 tid;
+    DWORD64 bytes_written;
     int size = 0x0;
     char* disRet;
     int written;
     char line[MAX_LINE];
     char bytes[0x2];
-    DWORD tid_pos;
+    DWORD64 tid_pos;
 
-    eip = (DWORD)(de->u.Exception.ExceptionRecord.ExceptionAddress);
+    eip = (DWORD64)(de->u.Exception.ExceptionRecord.ExceptionAddress);
         //d_print("%p\n", eip);
     if((my_trace->status != STATUS_DBG_STARTED) && (my_trace->status != STATUS_DBG_SCANNED) && (my_trace->status != STATUS_DBG_LIGHT)) 
     {
@@ -2430,7 +2430,7 @@ void ss_callback(void* data)
 
     WaitForSingleObject(my_trace->mutex, INFINITE);
 
-    eip = (DWORD)(de->u.Exception.ExceptionRecord.ExceptionAddress);
+    eip = (DWORD64)(de->u.Exception.ExceptionRecord.ExceptionAddress);
     my_trace->last_eip = eip;
     my_trace->last_tid = tid;
 
@@ -2493,7 +2493,7 @@ SIZE_T dump_mem(FILE* f, void* from, SIZE_T len)
     
     SIZE_T read, i;
     char mem_buf[buf_size];
-    DWORD oldProt;
+    DWORD64 oldProt;
     SIZE_T wrote_total = 0x0;
 
     SIZE_T whole;
@@ -2549,7 +2549,7 @@ SIZE_T dump_zeros(FILE* f, SIZE_T len)
 {
     SIZE_T read, i;
     char mem_buf[buf_size];
-    DWORD oldProt;
+    DWORD64 oldProt;
     SIZE_T wrote_total = 0x0;
 
     SIZE_T whole;
@@ -2626,8 +2626,8 @@ void end_callback(void* data)
     
     DEBUG_EVENT* de;
     de = (DEBUG_EVENT*)data;
-    DWORD eip;
-    eip = (DWORD)de->u.Exception.ExceptionRecord.ExceptionAddress;
+    DWORD64 eip;
+    eip = (DWORD64)de->u.Exception.ExceptionRecord.ExceptionAddress;
 
     d_print("Finishing @ 0x%08x, detaching\n", eip);
     sprintf(line, "FI,0x%08x\n", eip);
@@ -2637,10 +2637,10 @@ void end_callback(void* data)
 
 }
 
-BOOL WINAPI HandlerRoutine(_In_ DWORD dwCtrlType)
+BOOL WINAPI HandlerRoutine(_In_ DWORD64 dwCtrlType)
 {
     unsigned int i;
-    DWORD tid_pos;
+    DWORD64 tid_pos;
 
     d_print("Detected ctrl-c\n");
     
@@ -2674,7 +2674,7 @@ BOOL WINAPI HandlerRoutine(_In_ DWORD dwCtrlType)
 
 }
 
-DWORD WINAPI writer(LPVOID lpParam)
+DWORD64 WINAPI writer(LPVOID lpParam)
 {
     while(1)
     {
@@ -2700,11 +2700,11 @@ int del_breakpoint_idx(unsigned my_bpt_idx)
     return 0x0;
 }
 
-int del_breakpoint(DWORD addr)
+int del_breakpoint(DWORD64 addr)
 {
 //    d_print("Deleting breakpoint at: 0x%08x\n", addr);
 
-    DWORD oldProt;
+    DWORD64 oldProt;
     char bpt_char = '\xcc';
     int i;
     int my_bpt_idx = -0x1;
@@ -2732,8 +2732,8 @@ int handle_reaction(REACTION* cur_reaction, void* data)
 {
     DEBUG_EVENT* de;
     de = (DEBUG_EVENT*)data;
-    DWORD tid;
-    DWORD thread_no;
+    DWORD64 tid;
+    DWORD64 thread_no;
     char line[MAX_LINE];
 
     tid = de->dwThreadId;
@@ -2810,7 +2810,7 @@ int handle_reaction(REACTION* cur_reaction, void* data)
     return 0x0;
 }
 
-int handle_breakpoint(DWORD addr, void* data)
+int handle_breakpoint(DWORD64 addr, void* data)
 {
     d_print("[handle_breakpoint]\n");
     DEBUG_EVENT* de;
@@ -2835,8 +2835,8 @@ int handle_breakpoint(DWORD addr, void* data)
 
             REACTION* cur_reaction;
             cur_reaction = 0x0;
-            DWORD tid;
-            DWORD thread_no;
+            DWORD64 tid;
+            DWORD64 thread_no;
             tid = de->dwThreadId;
             thread_no = my_trace->thread_map[tid];
             if(thread_no == -1) continue;
@@ -2906,9 +2906,9 @@ int write_breakpoint(BREAKPOINT* bp)
 {
     d_print("[write_breakpoint]\n");
     OFFSET addr;
-    DWORD oldProt;
-    DWORD read;
-    DWORD ret;
+    DWORD64 oldProt;
+    DWORD64 read;
+    DWORD64 ret;
 
     char bpt_char = '\xcc';
 
@@ -2931,10 +2931,10 @@ int unwrite_breakpoint(BREAKPOINT* bp)
 {
     d_print("[unwrite_breakpoint]\n");
     OFFSET addr;
-    DWORD oldProt;
+    DWORD64 oldProt;
     char bpt_char = '\xcc';
-    DWORD wrote;
-    DWORD ret;
+    DWORD64 wrote;
+    DWORD64 ret;
 
     addr = bp->resolved_location;
 
@@ -3070,7 +3070,7 @@ OFFSET resolve_loc_desc(LOCATION_DESCRIPTOR_NEW* d)
 
         if(!strcmp(d->op, "["))
         {
-            DWORD read;
+            DWORD64 read;
             a1_r = resolve_loc_desc(d->a1);
             if(a1_r == -1) return -1;
             /* read_memory and calculate ret */
@@ -3117,63 +3117,63 @@ OFFSET resolve_loc_desc(LOCATION_DESCRIPTOR_NEW* d)
             {
                 CONTEXT ctx;
                 read_context(0x0, &ctx);
-                ret = ctx.Esp;
+                ret = ctx.Rsp;
                 d_print("Reading register ESP: 0x%08x\n", ret);
             }
             else if(!strcmp(d->op, "EAX"))
             {
                 CONTEXT ctx;
                 read_context(0x0, &ctx);
-                ret = ctx.Eax;
+                ret = ctx.Rax;
                 d_print("Reading register EAX: 0x%08x\n", ret);
             }
             else if(!strcmp(d->op, "EBX"))
             {
                 CONTEXT ctx;
                 read_context(0x0, &ctx);
-                ret = ctx.Ebx;
+                ret = ctx.Rbx;
                 d_print("Reading register EBX: 0x%08x\n", ret);
             }
             else if(!strcmp(d->op, "ECX"))
             {
                 CONTEXT ctx;
                 read_context(0x0, &ctx);
-                ret = ctx.Ecx;
+                ret = ctx.Rcx;
                 d_print("Reading register ECX: 0x%08x\n", ret);
             }
             else if(!strcmp(d->op, "EDX"))
             {
                 CONTEXT ctx;
                 read_context(0x0, &ctx);
-                ret = ctx.Edx;
+                ret = ctx.Rdx;
                 d_print("Reading register EDX: 0x%08x\n", ret);
             }
             else if(!strcmp(d->op, "ESI"))
             {
                 CONTEXT ctx;
                 read_context(0x0, &ctx);
-                ret = ctx.Esi;
+                ret = ctx.Rsi;
                 d_print("Reading register ESI: 0x%08x\n", ret);
             }
             else if(!strcmp(d->op, "EDI"))
             {
                 CONTEXT ctx;
                 read_context(0x0, &ctx);
-                ret = ctx.Edi;
+                ret = ctx.Rdi;
                 d_print("Reading register EDI: 0x%08x\n", ret);
             }
             else if(!strcmp(d->op, "EBP"))
             {
                 CONTEXT ctx;
                 read_context(0x0, &ctx);
-                ret = ctx.Ebp;
+                ret = ctx.Rbp;
                 d_print("Reading register EBP: 0x%08x\n", ret);
             }
             else if(!strcmp(d->op, "EIP"))
             {
                 CONTEXT ctx;
                 read_context(0x0, &ctx);
-                ret = ctx.Eip;
+                ret = ctx.Rip;
                 d_print("Reading register EIP: 0x%08x\n", ret);
             }
             else
@@ -3262,7 +3262,7 @@ LOCATION_DESCRIPTOR_NEW* parse_location_desc(char* str)
 int update_breakpoint(BREAKPOINT* bp)
 {
 //    d_print("[update_breakpoint]\n");
-    DWORD ret;
+    DWORD64 ret;
     OFFSET addr;
     d_print("Trying to resolve BP addr\n");
     bp->resolved_location = addr = resolve_loc_desc(bp->location);
@@ -3388,10 +3388,10 @@ void start_trace_pid()
         d_print("Attach failed\n");
 }
 
-DWORD find_lib(char* name)
+DWORD64 find_lib(char* name)
 {
     unsigned i, j;
-    DWORD ret = 0x0;
+    DWORD64 ret = 0x0;
 
     char myname[MAX_NAME];
     char libname[MAX_NAME];
@@ -3592,10 +3592,10 @@ int list_tebs()
     return 0x0;
 }
 
-int write_context(DWORD tid, CONTEXT* ctx)
+int write_context(DWORD64 tid, CONTEXT* ctx)
 {
     HANDLE myHandle;
-    DWORD tid_id;
+    DWORD64 tid_id;
 
     tid_id = my_trace->thread_map[tid];
 
@@ -3639,10 +3639,10 @@ int list_all_tebs()
     return 0x0;
 }
 
-int release_thread(DWORD tid)
+int release_thread(DWORD64 tid)
 {
     HANDLE myHandle = (HANDLE)-0x1;
-    DWORD tid_id;
+    DWORD64 tid_id;
     char buffer2[MAX_LINE];
 
     d_print("Trying relese TID: 0x%08x\n", tid);
@@ -3665,10 +3665,10 @@ int release_thread(DWORD tid)
     return 0x0;
 }
 
-int read_context(DWORD tid, CONTEXT* ctx)
+int read_context(DWORD64 tid, CONTEXT* ctx)
 {
     HANDLE myHandle = (HANDLE)-0x1;
-    DWORD tid_id;
+    DWORD64 tid_id;
     char buffer2[MAX_LINE];
 
     if(tid == 0x0)
@@ -3692,10 +3692,10 @@ int read_context(DWORD tid, CONTEXT* ctx)
     return 0x0;
 }
 
-int write_dword(DWORD addr, DWORD val)
+int write_dword(DWORD64 addr, DWORD64 val)
 {
     CONTEXT ctx;
-    DWORD read;
+    DWORD64 read;
     HANDLE handle;
 
     char buffer2[MAX_LINE];
@@ -3707,7 +3707,7 @@ int write_dword(DWORD addr, DWORD val)
     
     if(read == 0x4)
     {
-        sprintf(buffer2, "DWORD written");
+        sprintf(buffer2, "DWORD64 written");
         strcpy(my_trace->report_buffer, buffer2);
     }
     else 
@@ -3721,10 +3721,10 @@ int write_dword(DWORD addr, DWORD val)
     return 0x0;
 }
 
-char read_byte(DWORD addr)
+char read_byte(DWORD64 addr)
 {
     char data;
-    DWORD read;
+    DWORD64 read;
 
     char buffer2[MAX_LINE];
 
@@ -3732,9 +3732,9 @@ char read_byte(DWORD addr)
     return data;
 }
 
-int write_byte(DWORD addr, char* data)
+int write_byte(DWORD64 addr, char* data)
 {
-    DWORD read;
+    DWORD64 read;
     char data_b;
 
     char buffer2[MAX_LINE];
@@ -3755,10 +3755,10 @@ int write_byte(DWORD addr, char* data)
     return 0x0;
 }
 
-int read_word(DWORD addr)
+int read_word(DWORD64 addr)
 {
     WORD data;
-    DWORD read;
+    DWORD64 read;
 
     char buffer2[MAX_LINE];
 
@@ -3777,9 +3777,9 @@ int read_word(DWORD addr)
     return data;
 }
 
-int write_word(DWORD addr, char* data)
+int write_word(DWORD64 addr, char* data)
 {
-    DWORD read;
+    DWORD64 read;
     WORD  data_w;
 
     char buffer2[MAX_LINE];
@@ -3800,10 +3800,10 @@ int write_word(DWORD addr, char* data)
     return 0x0;
 }
 
-int read_dword(DWORD addr)
+int read_dword(DWORD64 addr)
 {
-    DWORD data;
-    DWORD read;
+    DWORD64 data;
+    DWORD64 read;
 
     char buffer2[MAX_LINE];
 
@@ -3882,11 +3882,11 @@ int hexify(char* in, char* out, unsigned size)
     return 0x0;
 }
 
-int out_region(DWORD addr, DWORD size)
+int out_region(DWORD64 addr, DWORD64 size)
 {
     char* data;
     char* data2;
-    DWORD read;
+    DWORD64 read;
 
     char buffer2[MAX_LINE];
     char line[MAX_LINE];
@@ -3950,11 +3950,11 @@ int out_region(DWORD addr, DWORD size)
     free(data2);
     return 0x0;
 }
-int report_region(DWORD addr, DWORD size)
+int report_region(DWORD64 addr, DWORD64 size)
 {
     char* data;
     char* data2;
-    DWORD read;
+    DWORD64 read;
 
     char buffer2[MAX_LINE];
 
@@ -4010,10 +4010,10 @@ int report_region(DWORD addr, DWORD size)
     return 0x0;
 }
 
-int report_dword(DWORD addr)
+int report_dword(DWORD64 addr)
 {
-    DWORD data;
-    DWORD read;
+    DWORD64 data;
+    DWORD64 read;
 
     char buffer2[MAX_LINE];
 
@@ -4034,11 +4034,11 @@ int report_dword(DWORD addr)
     return data;
 }
 
-int write_register(DWORD tid_id, char* reg, char* data)
+int write_register(DWORD64 tid_id, char* reg, char* data)
 {
     CONTEXT ctx;
     char buffer2[MAX_LINE];
-    DWORD data_d;
+    DWORD64 data_d;
     WORD data_w;
     char data_b;
 
@@ -4048,63 +4048,63 @@ int write_register(DWORD tid_id, char* reg, char* data)
     if(!strcmp(reg, "EAX"))
     {
         data_d = strtoul(data, 0x0, 0x10);
-        ctx.Eax = data_d;
+        ctx.Rax = data_d;
         write_context(tid_id, &ctx);
         strcpy(my_trace->report_buffer, buffer2);
     }
     else if(!strcmp(reg, "EBX"))
     {
         data_d = strtoul(data, 0x0, 0x10);
-        ctx.Ebx = data_d;
+        ctx.Rbx = data_d;
         write_context(tid_id, &ctx);
         strcpy(my_trace->report_buffer, buffer2);
     }
     else if(!strcmp(reg, "ECX"))
     {
         data_d = strtoul(data, 0x0, 0x10);
-        ctx.Ecx = data_d;
+        ctx.Rcx = data_d;
         write_context(tid_id, &ctx);
         strcpy(my_trace->report_buffer, buffer2);
     }
     else if(!strcmp(reg, "EDX"))
     {
         data_d = strtoul(data, 0x0, 0x10);
-        ctx.Edx = data_d;
+        ctx.Rdx = data_d;
         write_context(tid_id, &ctx);
         strcpy(my_trace->report_buffer, buffer2);
     }
     else if(!strcmp(reg, "ESI"))
     {
         data_d = strtoul(data, 0x0, 0x10);
-        ctx.Esi = data_d;
+        ctx.Rsi = data_d;
         write_context(tid_id, &ctx);
         strcpy(my_trace->report_buffer, buffer2);
     }
     else if(!strcmp(reg, "EDI"))
     {
         data_d = strtoul(data, 0x0, 0x10);
-        ctx.Edi = data_d;
+        ctx.Rdi = data_d;
         write_context(tid_id, &ctx);
         strcpy(my_trace->report_buffer, buffer2);
     }
     else if(!strcmp(reg, "EBP"))
     {
         data_d = strtoul(data, 0x0, 0x10);
-        ctx.Ebp = data_d;
+        ctx.Rbp = data_d;
         write_context(tid_id, &ctx);
         strcpy(my_trace->report_buffer, buffer2);
     }
     else if(!strcmp(reg, "ESP"))
     {
         data_d = strtoul(data, 0x0, 0x10);
-        ctx.Esp = data_d;
+        ctx.Rsp = data_d;
         write_context(tid_id, &ctx);
         strcpy(my_trace->report_buffer, buffer2);
     }
     else if(!strcmp(reg, "EIP"))
     {
         data_d = strtoul(data, 0x0, 0x10);
-        ctx.Eip = data_d;
+        ctx.Rip = data_d;
         write_context(tid_id, &ctx);
         strcpy(my_trace->report_buffer, buffer2);
     }
@@ -4116,7 +4116,7 @@ int write_register(DWORD tid_id, char* reg, char* data)
     return 0x0;
 }
 
-DWORD read_register(DWORD tid_id, char* reg)
+DWORD64 read_register(DWORD64 tid_id, char* reg)
 {
     CONTEXT ctx;
 
@@ -4129,35 +4129,35 @@ DWORD read_register(DWORD tid_id, char* reg)
 
     if(!strcmp(reg, "EAX"))
     {
-        return ctx.Eax;
+        return ctx.Rax;
     }
     if(!strcmp(reg, "EBX"))
     {
-        return ctx.Ebx;
+        return ctx.Rbx;
     }
     if(!strcmp(reg, "ECX"))
     {
-        return ctx.Ecx;
+        return ctx.Rcx;
     }
     if(!strcmp(reg, "EDX"))
     {
-        return ctx.Edx;
+        return ctx.Rdx;
     }
     if(!strcmp(reg, "EDI"))
     {
-        return ctx.Edi;
+        return ctx.Rdi;
     }
     if(!strcmp(reg, "EBP"))
     {
-        return ctx.Ebp;
+        return ctx.Rbp;
     }
     if(!strcmp(reg, "ESP"))
     {
-        return ctx.Esp;
+        return ctx.Rsp;
     }
-    if(!strcmp(reg, "Eip"))
+    if(!strcmp(reg, "Rip"))
     {
-        return ctx.Eip;
+        return ctx.Rip;
     }
     if(!strcmp(reg, "EFLAGS"))
     {
@@ -4168,11 +4168,11 @@ DWORD read_register(DWORD tid_id, char* reg)
     return -1;
 }
 
-int report_register(DWORD tid_id, char* reg)
+int report_register(DWORD64 tid_id, char* reg)
 {
     CONTEXT ctx;
     char buffer2[MAX_LINE];
-    DWORD val;
+    DWORD64 val;
 
     my_trace->report_code = REPORT_INFO;
     
@@ -4184,17 +4184,17 @@ int report_register(DWORD tid_id, char* reg)
     return 0x0;
 }
 
-int read_stack(DWORD tid_id, DWORD count)
+int read_stack(DWORD64 tid_id, DWORD64 count)
 {
     CONTEXT ctx;
     char buffer2[MAX_LINE];
-    DWORD esp;
-    DWORD data;
+    DWORD64 esp;
+    DWORD64 data;
 
     my_trace->report_code = REPORT_INFO;
     
     read_context(tid_id, &ctx);
-    esp = ctx.Esp;
+    esp = ctx.Rsp;
 
     unsigned pos;
 
@@ -4297,7 +4297,7 @@ int process_last_event()
                             if(my_trace->breakpoints[i].resolved_location == bp_addr)
                             {
                                 d_print("Handling breakpoint @ 0x%08x\n", bp_addr);
-                                handle_breakpoint((DWORD)my_trace->last_exception.ExceptionAddress, &my_trace->last_event);
+                                handle_breakpoint((DWORD64)my_trace->last_exception.ExceptionAddress, &my_trace->last_event);
                                 handled = 0x1;
                             }
                         }
@@ -4430,7 +4430,7 @@ int create_report(int last_report)
     return 0x0;
 }
 
-int handle_continue(DWORD pid, DWORD tid, unsigned status)
+int handle_continue(DWORD64 pid, DWORD64 tid, unsigned status)
 {
     /* turn on trap again */
     /* TODO: is this necessary? */
@@ -4499,7 +4499,7 @@ int get_pending_events()
 }
 
 /* TODO: continuing for some time */
-int continue_routine(DWORD time, unsigned stat)
+int continue_routine(DWORD64 time, unsigned stat)
 {
     int last_report;
     char buffer2[MAX_LINE];
@@ -4556,12 +4556,12 @@ int resolve_region(LOCATION_DESCRIPTOR* selector, LOCATION* location)
     d_print("Resolving region\n");
     d_print("Locating buffer\n");
 
-    DWORD arg_val, arg_addr, arg_size, off, size, cur_esp;
-    DWORD read;
+    DWORD64 arg_val, arg_addr, arg_size, off, size, cur_esp;
+    DWORD64 read;
     CONTEXT ctx;
 
     read_context(my_trace->last_event.dwThreadId, &ctx);
-    cur_esp = ctx.Esp;
+    cur_esp = ctx.Rsp;
 
     arg_val = 0x0;
     arg_addr = 0x0;
@@ -4682,7 +4682,7 @@ int resolve_region(LOCATION_DESCRIPTOR* selector, LOCATION* location)
     return 0x0;
 }
 
-int add_region_sel(DWORD off, DWORD size, char off_location, char size_location)
+int add_region_sel(DWORD64 off, DWORD64 size, char off_location, char size_location)
 {
     unsigned cur_region;
 
@@ -4789,8 +4789,8 @@ int add_reaction(char* location_str, char* reaction_id)
 /*
 int parse_region(char* str)
 {
-    DWORD  off;
-    DWORD  size;
+    DWORD64  off;
+    DWORD64  size;
     char* label_off_location;
     char* label_size_location;
     char off_location;
@@ -5384,8 +5384,8 @@ int handle_cmd(char* cmd)
     }
     else if(!strncmp(cmd, CMD_OUT_REGION, 2))
     {
-        DWORD addr;
-        DWORD size;
+        DWORD64 addr;
+        DWORD64 size;
         char* cmd_;
 
         cmd_ = strtok(cmd, " ");
@@ -5400,8 +5400,8 @@ int handle_cmd(char* cmd)
     }
     else if(!strncmp(cmd, CMD_READ_REGION, 2))
     {
-        DWORD addr;
-        DWORD size;
+        DWORD64 addr;
+        DWORD64 size;
         char* cmd_;
 
         cmd_ = strtok(cmd, " ");
@@ -5416,7 +5416,7 @@ int handle_cmd(char* cmd)
     }
     else if(!strncmp(cmd, CMD_READ_MEMORY, 2))
     {
-        DWORD addr;
+        DWORD64 addr;
         char* cmd_;
 
         cmd_ = strtok(cmd, " ");
@@ -5431,7 +5431,7 @@ int handle_cmd(char* cmd)
     else if(!strncmp(cmd, CMD_WRITE_STRING, 2))
     {
         char* cmd_;
-        DWORD addr;
+        DWORD64 addr;
         char* str;
 
         cmd_ = strtok(cmd, " ");
@@ -5447,7 +5447,7 @@ int handle_cmd(char* cmd)
     else if(!strncmp(cmd, CMD_WRITE_STRING_UNI, 2))
     {
         char* cmd_;
-        DWORD addr;
+        DWORD64 addr;
         char* str;
 
         cmd_ = strtok(cmd, " ");
@@ -5463,8 +5463,8 @@ int handle_cmd(char* cmd)
     else if(!strncmp(cmd, CMD_WRITE_MEMORY, 2))
     {
         char* cmd_;
-        DWORD addr;
-        DWORD val;
+        DWORD64 addr;
+        DWORD64 val;
 
         cmd_ = strtok(cmd, " ");
         addr = strtoul(strtok(0x0, " "), 0x0, 0x10);
@@ -5520,7 +5520,7 @@ int handle_cmd(char* cmd)
     {
         char* data;
         unsigned tid_id;
-        DWORD count;
+        DWORD64 count;
 
         data = strtok(cmd, " ");
         tid_id = strtoul(strtok(0x0, " "), 0x0, 0x10);
@@ -5546,7 +5546,7 @@ int handle_cmd(char* cmd)
     else if(!strncmp(cmd, CMD_CONTINUE_TIME, 2))
     {
         unsigned report;
-        DWORD time;
+        DWORD64 time;
         unsigned status;
 
         strtok(cmd, " ");
@@ -5559,7 +5559,7 @@ int handle_cmd(char* cmd)
     else if(!strncmp(cmd, CMD_SET_ST, 2))
     {
         char* e_reactions_str;
-        DWORD addr;
+        DWORD64 addr;
         char my_str[MAX_LINE];
 
         strtok(cmd, " ");
@@ -6023,7 +6023,7 @@ int main(int argc, char** argv)
     my_trace->routines[0x204] = &react_skip_off;
     my_trace->routines[0x205] = &react_update_region_2;
 
-    /* outputting DWORDs */
+    /* outputting DWORD64s */
     my_trace->routines[0x300] = &react_output_arg_0;
     my_trace->routines[0x301] = &react_output_arg_1;
     my_trace->routines[0x302] = &react_output_arg_2;
@@ -6066,7 +6066,7 @@ int main(int argc, char** argv)
     my_trace->routines[0x336] = &react_output_esp;
     my_trace->routines[0x337] = &react_output_eip;
 
-    /* outputting pointed DWORDs */
+    /* outputting pointed DWORD64s */
     my_trace->routines[0x340] = &react_output_p_arg_0;
     my_trace->routines[0x341] = &react_output_p_arg_1;
     my_trace->routines[0x342] = &react_output_p_arg_2;
@@ -6136,8 +6136,8 @@ int main(int argc, char** argv)
 
     char recv_buf[MAX_LINE];
 
-    DWORD recv_size;
-    DWORD flags;
+    DWORD64 recv_size;
+    DWORD64 flags;
 
     while(1)
     {
