@@ -165,6 +165,36 @@ void react_flip_ZF(void* data)
     return;
 }
 
+void react_set_CF(void* data)
+{
+    d_print("Setting CF\n");
+
+    int i;
+    unsigned id, thread_idx;
+    HANDLE myHandle = (HANDLE)-0x1;
+
+    id = my_trace->last_event.dwThreadId;
+    thread_idx = my_trace->thread_map[id];
+    myHandle = my_trace->threads[thread_idx].handle;
+
+    CONTEXT ctx;
+    ctx.ContextFlags = CONTEXT_CONTROL;
+    if(GetThreadContext(myHandle, &ctx) == 0x0)
+    {
+        d_print("Failed to get context, error: 0x%08x\n", GetLastError());
+    }
+    d_print("before setting: 0x%08x\n", ctx.EFlags);
+    /* zeroing */
+    print_context(&ctx);
+    ctx.EFlags |= SET_CF_FLAGS;
+    d_print("after setting: 0x%08x\n", ctx.EFlags);
+    print_context(&ctx);
+
+    SetThreadContext(myHandle, &ctx);
+
+    return;
+}
+
 void react_set_ZF(void* data)
 {
     d_print("Setting ZF\n");
@@ -220,7 +250,7 @@ void react_zero_ZF(void* data)
 
 void react_flip_CF(void* data)
 {
-    d_print("Flipping ZF\n");
+    d_print("Flipping CF\n");
     char isset;
 
     int i;
@@ -250,6 +280,48 @@ void react_flip_CF(void* data)
     else
     {
         ctx.EFlags |= SET_CF_FLAGS;
+    }
+
+    d_print("after flipping: 0x%08x\n", ctx.EFlags);
+    print_context(&ctx);
+
+    SetThreadContext(myHandle, &ctx);
+
+    return;
+}
+
+void react_flip_SF(void* data)
+{
+    d_print("Flipping SF\n");
+    char isset;
+
+    int i;
+    unsigned id, thread_idx;
+    HANDLE myHandle = (HANDLE)-0x1;
+
+    id = my_trace->last_event.dwThreadId;
+    thread_idx = my_trace->thread_map[id];
+    myHandle = my_trace->threads[thread_idx].handle;
+
+    CONTEXT ctx;
+    ctx.ContextFlags = CONTEXT_CONTROL;
+    if(GetThreadContext(myHandle, &ctx) == 0x0)
+    {
+        d_print("Failed to get context, error: 0x%08x\n", GetLastError());
+    }
+    d_print("before flipping: 0x%08x\n", ctx.EFlags);
+
+    /* flipping */
+    print_context(&ctx);
+
+    isset = ctx.EFlags & SET_SF_FLAGS;
+    if(isset)
+    {
+        ctx.EFlags &= CLEAR_SF_FLAGS;
+    }
+    else
+    {
+        ctx.EFlags |= SET_SF_FLAGS;
     }
 
     d_print("after flipping: 0x%08x\n", ctx.EFlags);
@@ -3192,7 +3264,7 @@ int update_breakpoint(BREAKPOINT* bp)
 //    d_print("[update_breakpoint]\n");
     DWORD ret;
     OFFSET addr;
-//    d_print("Trying to resolve BP addr\n");
+    d_print("Trying to resolve BP addr\n");
     bp->resolved_location = addr = resolve_loc_desc(bp->location);
 
     if(addr == -1)
@@ -3209,7 +3281,7 @@ int update_breakpoint(BREAKPOINT* bp)
                 write_breakpoint(bp); /* in order to write breakpoint, it must be enabled and loaded*/
                 bp->written = 0x1;
             }
-//            d_print("BP written @ 0x%08x\n", addr);
+            d_print("BP written @ 0x%08x\n", addr);
             ret = 0x1;
         }
         else
@@ -4224,7 +4296,7 @@ int process_last_event()
 //                            d_print("Comparing 0x%08x and 0x%08x\n", bp_addr, my_trace->breakpoints[i].resolved_location);
                             if(my_trace->breakpoints[i].resolved_location == bp_addr)
                             {
-//                                d_print("Handling breakpoint @ 0x%08x\n", bp_addr);
+                                d_print("Handling breakpoint @ 0x%08x\n", bp_addr);
                                 handle_breakpoint((DWORD)my_trace->last_exception.ExceptionAddress, &my_trace->last_event);
                                 handled = 0x1;
                             }
@@ -5930,9 +6002,9 @@ int main(int argc, char** argv)
     configure_syscalls();
 
     /*configure routines */
-    my_trace->routines[0x1] = &react_sysenter_callback;
-    my_trace->routines[0x2] = &react_sysret_callback;
-    my_trace->routines[0x3] = &react_sysret_refresh;
+    my_trace->routines[0x001] = &react_sysenter_callback;
+    my_trace->routines[0x002] = &react_sysret_callback;
+    my_trace->routines[0x003] = &react_sysret_refresh;
     my_trace->routines[0x100] = &react_sample_routine_1;
     my_trace->routines[0x101] = &react_zero_SF;
     my_trace->routines[0x102] = &react_set_ZF;
@@ -5940,13 +6012,15 @@ int main(int argc, char** argv)
     my_trace->routines[0x104] = &react_zero_EAX;
     my_trace->routines[0x105] = &react_flip_ZF;
     my_trace->routines[0x106] = &react_flip_CF;
+    my_trace->routines[0x107] = &react_flip_SF;
+    my_trace->routines[0x108] = &react_zero_CF;
+    my_trace->routines[0x109] = &react_set_CF;
 
     my_trace->routines[0x201] = &react_update_region_1;
     my_trace->routines[0x202] = &react_cry_antidebug_1;
     my_trace->routines[0x203] = &react_skip_on;
     my_trace->routines[0x204] = &react_skip_off;
     my_trace->routines[0x205] = &react_update_region_2;
-    my_trace->routines[0x206] = &react_zero_CF;
 
     /* outputting DWORDs */
     my_trace->routines[0x300] = &react_output_arg_0;

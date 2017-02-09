@@ -639,7 +639,7 @@ def pci_mount(options, filee):
     return slot
 
 def pci_mount_wo_virtio(options, filee):
-    dev_str = write_monitor_2(options.m, "pci_add auto storage file=%s,if=scsi" % filee)
+    dev_str = write_monitor_2(options.m, "pci_add auto storage file=%s,if=none" % filee)
     if(dev_str.find("could not open disk image:") > -1):
         print(dev_str)
         return

@@ -76,7 +76,7 @@ Push2(Test4)
 Push2(Test3)
 Push2(Test2)
 Push2(Test1)
-SaveEP(00403b68)
+SaveEP(4036a0)
 LoadEP
 ManualST
 EnableReaction(ST)
@@ -94,15 +94,13 @@ TracerRegisterReactions(self+0xd902,A3:B3,0x102;self+0xd954,B3:A3,0x100)
 TracerRegisterReactions(self+0xd95c,A4:B4,0x102;self+0xd9a7,B4:A4,0x100)
 TracerRegisterReactions(self+0xd8af,A5:A6,0x0;self+0xd8b8,A6:A5,0x100)
 TracerRegisterReactions(self+0x80d4,A7:A8,0x0;self+0xd86e,A8:A7,0x100)
-TracerRegisterReactions(self+0x4640,B5:B6,0x102;self+0x466d,B6:B5,0x100)
-TracerRegisterReactions(self+0xd863,B7:B8,0x104;self+0xd86e,B8:B7,0x100)
+TracerRegisterReactions(self+0x3c01,B5:B6,0x102;self+0x3c17,B6:B5,0x100)
 EnableReaction(Z1)
 EnableReaction(A3)
 EnableReaction(A4)
 EnableReaction(A5)
 EnableReaction(A7)
 EnableReaction(B5)
-EnableReaction(B7)
 TracerDebugContinueInf
 
 decision:

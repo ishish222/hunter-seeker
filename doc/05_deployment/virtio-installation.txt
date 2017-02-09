@@ -1,0 +1,3 @@
+Boot with regular if and virtio iso mounted as cdrom
+open device manager, install virtio driver
+switch if to virtio

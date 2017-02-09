@@ -29,7 +29,7 @@ turn off fw!
 --
 
 new:
-wylacz autorun
+wylacz autorun: gpedit.msc, Administrative Templates >Windows Components >  Autoplay Policies 
 zainstalouj python, pywin, pyserial
 dodaj cmd.exe do autorun
 optimize for quick removal
