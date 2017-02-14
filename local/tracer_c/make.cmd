@@ -10,3 +10,11 @@ i686-w64-mingw32.static-g++ -w -I /home/ish/projects/2013-09-04-win-headers/msvc
 i686-w64-mingw32.static-g++ -w -I /home/ish/projects/2013-09-04-win-headers/msvcpp/inc/  -I /home/ish/projects/2015-05-25-mxe/mxe2/mxe/usr/i686-w64-mingw32.shared/include/ trace6.c -o b.exe -L /home/ish/projects/2015-05-25-mxe/mxe2/mxe/usr/i686-w64-mingw32.shared/lib/  -lws2_32
 
 x86_64-w64-mingw32.static-g++ -w -I /home/ish/projects/2013-09-04-win-headers/msvcpp/inc/  -I /home/ish/projects/2015-05-25-mxe/mxe2/mxe/usr/i686-w64-mingw32.shared/include/ trace6_64.c -o b.exe -L /home/ish/projects/2015-05-25-mxe/mxe2/mxe/usr/i686-w64-mingw32.shared/lib/  -lws2_32
+
+# fixed
+x86_64-w64-mingw32.static-g++ -w -I /home/ish/projects/2013-09-04-win-headers/msvcpp/inc/  -I /home/ish/projects/2015-05-25-mxe/mxe2/mxe/usr/x86_64-w64-mingw32.static/include/ trace6_64.c -o b.exe -L /home/ish/projects/2015-05-25-mxe/mxe2/mxe/usr/x86_64-w64-mingw32.static/lib/  -lws2_32
+
+# two staged:
+x86_64-w64-mingw32.static-g++ -S -w -I /home/ish/projects/2013-09-04-win-headers/msvcpp/inc/  -I /home/ish/projects/2015-05-25-mxe/mxe2/mxe/usr/x86_64-w64-mingw32.static/include/ trace6_64.c -L /home/ish/projects/2015-05-25-mxe/mxe2/mxe/usr/x86_64-w64-mingw32.static/lib/  -lws2_32
+x86_64-w64-mingw32.static-as trace6_64.s 
+

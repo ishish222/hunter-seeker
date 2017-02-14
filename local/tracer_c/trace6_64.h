@@ -240,7 +240,7 @@ typedef struct _READ_RECORD
 
 typedef struct _THREAD_ENTRY
 {
-    DWORD64 tid;
+    DWORD tid;
     char alive;
     char open;
     char created;
@@ -253,7 +253,7 @@ typedef struct _THREAD_ENTRY
 typedef struct _LIB_ENTRY
 {
     char loaded;
-    DWORD64 lib_offset;
+    OFFSET lib_offset;
     char lib_name[MAX_NAME];
     char lib_path[MAX_NAME];
 } LIB_ENTRY;
@@ -261,17 +261,17 @@ typedef struct _LIB_ENTRY
 /* handling syscalls */
 typedef struct LOCATION_DESCRIPTOR_
 {
-    DWORD64 off;
-    DWORD64 size;
+    OFFSET off;
+    SIZE_T size;
     char off_location;
     char size_location;
-    DWORD64 eax_val_success;
+    DWORD eax_val_success;
 } LOCATION_DESCRIPTOR;
 
 typedef struct LOCATION_
 {
-    DWORD64 off;
-    DWORD64 size;
+    OFFSET off;
+    SIZE_T size;
 } LOCATION;
 
 typedef struct REGION_
@@ -296,7 +296,7 @@ typedef struct TRACE_CONFIG_
 
     /* threads */
 
-    DWORD64 thread_map[0x1000000];
+    DWORD thread_map[0x1000000];
     THREAD_ENTRY threads[MAX_THREADS];
 
     /* libraries */
@@ -313,13 +313,13 @@ typedef struct TRACE_CONFIG_
     unsigned port;
     char host[MAX_NAME];
     HANDLE pipe;
-    DWORD64 report_code;
+    DWORD report_code;
     char report_buffer[BUFF_SIZE];
 
     /* replace this */
     char spawned;
     char started;
-    DWORD64 scan_on;
+    DWORD scan_on;
 
     /* with this */
     char status;
@@ -339,7 +339,7 @@ typedef struct TRACE_CONFIG_
     EXCEPTION_RECORD last_exception;
     int last_win_status;
     OFFSET last_eip;
-    DWORD64 last_tid;
+    DWORD last_tid;
     REACTION* last_reaction;
 
     char verbose; /*full_log*/
@@ -347,7 +347,7 @@ typedef struct TRACE_CONFIG_
 
     /* other options */
 
-    DWORD64 skipping_tid;
+    DWORD skipping_tid;
 
     /* output streams */
     FILE* log;
@@ -381,13 +381,13 @@ typedef struct TRACE_CONFIG_
    
     
     /* offsets */
-    DWORD64 img_base;
-    DWORD64 nt1_off;
-    DWORD64 nt2_off;
-    DWORD64 nt3_off;
-    DWORD64 nt4_off;
-    DWORD64 sysenter_off;
-    DWORD64 sysret_off;
+    OFFSET img_base;
+    OFFSET nt1_off;
+    OFFSET nt2_off;
+    OFFSET nt3_off;
+    OFFSET nt4_off;
+    OFFSET sysenter_off;
+    OFFSET sysret_off;
 
     /* reactions */
 //    REACTION reactions[MAX_REACTIONS];
@@ -419,26 +419,26 @@ typedef struct TRACE_CONFIG_
 typedef struct _CREATE_THREAD_DEBUG_INFO2
 {
     CREATE_THREAD_DEBUG_INFO u;
-    DWORD64 tid;
+    DWORD tid;
 } CREATE_THREAD_DEBUG_INFO2;
 
 typedef void (*handler_routine)(void*);
 //int add_breakpoint(DWORD64 addr, handler_routine handler);
-int add_breakpoint(DWORD64 addr, handler_routine handler);
+int add_breakpoint(OFFSET addr, handler_routine handler);
 DWORD64 find_lib(char* name);
-BOOL WINAPI HandlerRoutine(_In_ DWORD64 dwCtrlType);
+BOOL WINAPI HandlerRoutine(_In_ DWORD dwCtrlType);
 SIZE_T dump_mem(FILE*, void*, SIZE_T);
 
 typedef struct _HOOK
 {
-    DWORD64 offset;
+    OFFSET offset;
     char libname[0x50];
     handler_routine handler;
 } HOOK;
 
 typedef struct _WATCHED
 {
-    DWORD64 off;
+    OFFSET off;
     int hit;
     int scan;
     int count;
@@ -447,8 +447,8 @@ typedef struct _WATCHED
 
 /* tracing functions */
 
-int unset_ss(DWORD64);
-int set_ss(DWORD64);
+int unset_ss(DWORD);
+int set_ss(DWORD);
 int d_print(const char* format, ...);
 FILE* configure_file();
 

@@ -20,7 +20,7 @@ FILE* log;
 char started = 0x0;
 char instr_count_s[0x20];
 int full_log = 0x0;
-DWORD64 scan_on;
+DWORD scan_on;
 unsigned scan_count;
 READ_RECORD last_read_record;
 WATCHED watched[WATCH_LIMIT];
@@ -32,45 +32,45 @@ char buffer[buf_size];
 int index = 0;
 char instr[0x60];
 const wchar_t* target_lib = L"ntdll.dll";
-DWORD64 target_lib_off = 0x0;
+OFFSET target_lib_off = 0x0;
 const char* target_call = "NtCreateFile";
-DWORD64 target_call_off = 0x44a10;
-DWORD64 target_off = 0x0;
+OFFSET  target_call_off = 0x44a10;
+OFFSET target_off = 0x0;
 CREATE_PROCESS_DEBUG_INFO cpdi;
 int myPID = 0x0;
 int myTID = 0x0;
-DWORD64 img_base;
-DWORD64 nt1_off;
-DWORD64 nt2_off;
-DWORD64 nt3_off;
-DWORD64 nt4_off;
-DWORD64 sysenter_off;
-DWORD64 sysret_off;
+OFFSET img_base;
+OFFSET nt1_off;
+OFFSET nt2_off;
+OFFSET nt3_off;
+OFFSET nt4_off;
+OFFSET sysenter_off;
+OFFSET sysret_off;
 LOCATION_DESCRIPTOR last_arg = {0x0, 0x0, LOCATION_END, LOCATION_END, 0x0};
 LOCATION last_location = {0x0, 0x0};
 LOCATION_DESCRIPTOR syscall_out_args[MAX_SYSCALL_ENTRIES][MAX_SYSCALL_OUT_ARGS];
 LOCATION syscall_out_args_dump_list[MAX_SYSCALL_OUT_ARGS];
-DWORD64 buffer_addr;
-DWORD64 size_addr;
+OFFSET buffer_addr;
+DWORD size_addr;
 CREATE_THREAD_DEBUG_INFO2 threads[0x100000000];
 BREAKPOINT* add_breakpoint(char*, REACTION*);
-DWORD64 find_lib(char* name);
-BOOL WINAPI HandlerRoutine(_In_ DWORD64 dwCtrlType);
+OFFSET  find_lib(char* name);
+BOOL WINAPI HandlerRoutine(_In_ DWORD dwCtrlType);
 SIZE_T dump_mem(FILE*, void*, SIZE_T);
 
 char* blacklist_lib[] = {"kernel32.dll", "ntdll.dll", "user32.dll"};
-DWORD64 blacklist_addr[] = {};
+OFFSET blacklist_addr[] = {};
 char line2[MAX_LINE];
 
 void read_memory(HANDLE, void*, void*, SIZE_T, SIZE_T*);
 void e_reaction_handler(void* data);
 void i_reaction_handler(void* data);
 void print_context(CONTEXT*);
-int del_breakpoint(DWORD64);
+int del_breakpoint(OFFSET);
 int resolve_region(LOCATION_DESCRIPTOR*, LOCATION*);
 int add_to_buffer(char*);
-int read_context(DWORD64, CONTEXT*);
-int write_context(DWORD64, CONTEXT*);
+int read_context(DWORD, CONTEXT*);
+int write_context(DWORD, CONTEXT*);
 void write_memory(HANDLE , void* , void* , SIZE_T , SIZE_T* );
 int check_lib_loaded(char*);
 int enable_reaction(char*);
@@ -82,11 +82,11 @@ int unwrite_breakpoint(BREAKPOINT* bp);
 int update_breakpoint(BREAKPOINT* bp);
 OFFSET resolve_loc_desc(LOCATION_DESCRIPTOR_NEW* d);
 REACTION* find_reaction(char*);
-int read_dword(DWORD64 addr);
-char read_byte(DWORD64 addr);
-int report_dword(DWORD64 addr);
-DWORD64 read_register(DWORD64 tid_id, char* reg);
-int report_register(DWORD64 tid_id, char* reg);
+int read_dword(OFFSET addr);
+char read_byte(OFFSET addr);
+int report_dword(OFFSET addr);
+DWORD64 read_register(DWORD tid_id, char* reg);
+int report_register(DWORD tid_id, char* reg);
 
 int d_print(const char* format, ...)
 {
@@ -403,7 +403,7 @@ void react_zero_SF(void* data)
 
 void update_region_old(LOCATION* location)
 {
-    DWORD64 size_wrote;
+    DWORD size_wrote;
     char line[MAX_LINE];
 
     sprintf(line, "# Current mod position: 0x%08x\n", ftell(my_trace->mods));
@@ -424,7 +424,7 @@ void update_region_old(LOCATION* location)
 
 void update_region(unsigned id)
 {
-    DWORD64 size_wrote;
+    DWORD size_wrote;
     char line[MAX_LINE];
 
     REGION* region = &my_trace->regions[id];
@@ -524,7 +524,7 @@ void report_arg_unicode_string_x(unsigned x)
     char line[MAX_LINE];
     char snap[SNAP_SIZE*2];
 
-    DWORD64 read;
+    SIZE_T read;
     OFFSET esp;
     OFFSET addr;
 
@@ -558,7 +558,7 @@ void output_arg_unicode_string_x(unsigned x)
     char line[MAX_LINE];
     char snap[SNAP_SIZE*2];
 
-    DWORD64 read;
+    SIZE_T read;
     OFFSET esp;
     OFFSET addr;
 
@@ -635,7 +635,7 @@ void report_arg_string_x(unsigned x)
     char line[MAX_LINE];
     char snap[SNAP_SIZE];
 
-    DWORD64 read;
+    SIZE_T read;
     OFFSET esp;
     OFFSET addr;
 
@@ -672,7 +672,7 @@ void output_arg_string_x(unsigned x)
     char line[MAX_LINE];
     char snap[SNAP_SIZE];
 
-    DWORD64 read;
+    SIZE_T read;
     OFFSET esp;
     OFFSET addr;
 
@@ -904,7 +904,7 @@ void react_output_p_arg_8(void* data)
 void react_cry_antidebug_1(void* data)
 {
     OFFSET addr = 0x4103e4;
-    DWORD64 wrote;
+    SIZE_T wrote;
     char val1 = 0xf9;
     char val2 = 0x01;
 
@@ -927,7 +927,7 @@ void write_string_ascii(OFFSET addr, char* str)
     d_print("Writing ANSI string to 0x%08x\n", addr);
     char line[MAX_LINE];
 
-    DWORD64 wrote;
+    SIZE_T wrote;
 
     write_memory(my_trace->cpdi.hProcess, (void*)addr, (void*)str, strlen(str), &wrote);
     if(wrote > 0x0)
@@ -953,7 +953,7 @@ void write_string_unicode(OFFSET addr, char* str)
 
     char line[MAX_LINE];
 
-    DWORD64 wrote;
+    SIZE_T wrote;
     int result = MultiByteToWideChar(CP_OEMCP, 0, str, -1, unistring, strlen(str)+ 1);
 
     write_memory(my_trace->cpdi.hProcess, (void*)addr, (void*)unistring, unistring_len, &wrote);
@@ -979,11 +979,11 @@ void react_skip_on(void* data)
     char line[MAX_LINE]; 
     DEBUG_EVENT* de;
     de = (DEBUG_EVENT*)data;
-    DWORD64 tid = de->dwThreadId;
+    DWORD tid = de->dwThreadId;
 
     my_trace->threads[my_trace->thread_map[tid]].skipping += 0x1;
 
-    sprintf(line, "# Increasing skipping in TID: 0x%08x @ %p\n", tid, (DWORD64)my_trace->last_exception.ExceptionAddress);
+    sprintf(line, "# Increasing skipping in TID: 0x%08x @ %p\n", tid, (OFFSET)my_trace->last_exception.ExceptionAddress);
     add_to_buffer(line);
 
     if(my_trace->threads[my_trace->thread_map[tid]].skipping == 0x1)
@@ -1002,11 +1002,11 @@ void react_skip_off(void* data)
     char line[MAX_LINE]; 
     DEBUG_EVENT* de;
     de = (DEBUG_EVENT*)data;
-    DWORD64 tid = de->dwThreadId;
+    DWORD tid = de->dwThreadId;
 
     my_trace->threads[my_trace->thread_map[tid]].skipping -= 0x1;
 
-    sprintf(line, "# Decreasing skipping in TID: 0x%08x @ %p\n", tid, (DWORD64)my_trace->last_exception.ExceptionAddress);
+    sprintf(line, "# Decreasing skipping in TID: 0x%08x @ %p\n", tid, (OFFSET)my_trace->last_exception.ExceptionAddress);
     add_to_buffer(line);
 
     if(my_trace->threads[my_trace->thread_map[tid]].skipping < 0x1)
@@ -1243,7 +1243,7 @@ int disable_reaction(char* reaction_id)
 {
     d_print("[disable_reaction]\n");
     unsigned i;
-    DWORD64 found = 0x0;
+    DWORD found = 0x0;
 
     for(i = 0x0; i< my_trace->reaction_count; i++)
     {
@@ -1315,7 +1315,7 @@ int disable_reaction_rid(unsigned routine_id)
 */
 int add_to_buffer(char* line)
 {
-    DWORD64 written;
+    DWORD written;
     written = 0x0;
 //    sprintf(line2, "%s\n", line);
     //written = fwrite(line2, strlen(line2), 1, file);
@@ -1351,7 +1351,7 @@ void react_sysret_refresh(void* data)
 void read_memory(HANDLE handle, void* from, void* to, SIZE_T size, SIZE_T* read)
 {
     DWORD oldProt;
-    DWORD64 ret;
+    DWORD ret;
 
 //    d_print("read_memory, handle: 0x%08x\n", handle);
 
@@ -1372,7 +1372,7 @@ void read_memory(HANDLE handle, void* from, void* to, SIZE_T size, SIZE_T* read)
 void write_memory(HANDLE handle, void* to, void* from, SIZE_T size, SIZE_T* written)
 {
     DWORD oldProt;
-    DWORD64 ret;
+    DWORD ret;
     
     d_print("write_memory, handle: 0x%08x\n", handle);
     VirtualProtectEx(handle, to, size, PAGE_EXECUTE_READWRITE, &oldProt);
@@ -1387,7 +1387,7 @@ void write_memory(HANDLE handle, void* to, void* from, SIZE_T size, SIZE_T* writ
     VirtualProtectEx(handle, to, size, oldProt, &oldProt);
 }
 
-int dec_eip(DWORD64 id)
+int dec_eip(DWORD id)
 {
     int i;
     unsigned thread_idx;
@@ -1504,7 +1504,7 @@ void deserialize_context(CONTEXT* ctx, char* buffer)
     return;
 }
 
-void register_exception(DWORD64 tid, EXCEPTION_RECORD er)
+void register_exception(DWORD tid, EXCEPTION_RECORD er)
 {
     char line[MAX_LINE];
     char line2[0x100];
@@ -1529,7 +1529,7 @@ void getSelectorEntries(HANDLE handle, CONTEXT ctx, LDT_ENTRY* ldt)
     return;
 }
 
-void register_thread(DWORD64 tid, HANDLE handle)
+void register_thread(DWORD tid, HANDLE handle)
 {
     char line2[0x200];
     char line[MAX_LINE];
@@ -1539,7 +1539,7 @@ void register_thread(DWORD64 tid, HANDLE handle)
     if(handle == 0x0) 
         handle = OpenThread(THREAD_GET_CONTEXT |THREAD_SET_CONTEXT | THREAD_ALL_ACCESS, 0x0, tid);
 
-    DWORD64 tid_pos;
+    DWORD tid_pos;
 
     if(my_trace->thread_map[tid] == -1)
     {
@@ -1596,14 +1596,14 @@ void register_thread(DWORD64 tid, HANDLE handle)
     return;
 }
 
-int register_thread_debug(DWORD64 tid, HANDLE handle)
+int register_thread_debug(DWORD tid, HANDLE handle)
 {
     //d_print("Debug registering: TID 0x%08x, handle 0x%08x\n", tid, handle);
     char line2[0x200];
     char line[MAX_LINE];
     CONTEXT ctx;
     LDT_ENTRY ldt[0x6];
-    DWORD64 written;
+    DWORD written;
 
     written = 0x0;
 
@@ -1614,7 +1614,7 @@ int register_thread_debug(DWORD64 tid, HANDLE handle)
 
     ctx.ContextFlags = CONTEXT_FULL;
 
-    DWORD64 tid_pos;
+    DWORD tid_pos;
     tid_pos = my_trace->thread_map[tid];
 
     //write info about thread registration
@@ -1629,7 +1629,7 @@ int register_thread_debug(DWORD64 tid, HANDLE handle)
     return written;
 }
 
-void deregister_thread(DWORD64 tid, HANDLE handle)
+void deregister_thread(DWORD tid, HANDLE handle)
 {
     //d_print("Deregistering: TID 0x%08x, handle 0x%08x\n", tid, handle);
     char line2[0x200];
@@ -1640,7 +1640,7 @@ void deregister_thread(DWORD64 tid, HANDLE handle)
     if(handle == 0x0) 
         handle = OpenThread(THREAD_GET_CONTEXT |THREAD_SET_CONTEXT | THREAD_ALL_ACCESS, 0x0, tid);
 
-    DWORD64 tid_pos;
+    DWORD tid_pos;
     tid_pos = my_trace->thread_map[tid];
 
     my_trace->threads[tid_pos].alive = 0x0;
@@ -1686,10 +1686,10 @@ void deregister_thread(DWORD64 tid, HANDLE handle)
     return;
 }
 
-void deregister_thread2(DWORD64 tid)
+void deregister_thread2(DWORD tid)
 {
     char line[MAX_LINE];
-    DWORD64 tid_pos;
+    DWORD tid_pos;
     tid_pos = my_trace->thread_map[tid];
 
 
@@ -1767,7 +1767,7 @@ void register_lib(LOAD_DLL_DEBUG_INFO info)
 #endif
     //d_print("Name pointer: %p, len: 0x%08x\n", libs[my_trace->lib_count].lib_name, strlen(libs[my_trace->lib_count].lib_name));
 
-    my_trace->libs[my_trace->lib_count].lib_offset = (DWORD64)info.lpBaseOfDll;
+    my_trace->libs[my_trace->lib_count].lib_offset = (OFFSET)info.lpBaseOfDll;
     d_print("RL,0x%08x,%s\n", my_trace->libs[my_trace->lib_count].lib_offset, my_trace->libs[my_trace->lib_count].lib_name);
     sprintf(line, "RL,0x%08x,%s\n", my_trace->libs[my_trace->lib_count].lib_offset, my_trace->libs[my_trace->lib_count].lib_name);
 
@@ -1781,7 +1781,7 @@ void register_lib(LOAD_DLL_DEBUG_INFO info)
     return;
 }
 
-void deregister_lib(DWORD64 i)
+void deregister_lib(DWORD i)
 {
     char line[MAX_LINE];
     sprintf(line, "DL,0x%08x,%s\n", my_trace->libs[i].lib_offset, my_trace->libs[i].lib_name);
@@ -1797,7 +1797,7 @@ void deregister_lib(UNLOAD_DLL_DEBUG_INFO info)
 
     for (i = 0x0; i< my_trace->lib_count; i++)
     {
-        if(my_trace->libs[i].lib_offset == (DWORD64)info.lpBaseOfDll) break;
+        if(my_trace->libs[i].lib_offset == (OFFSET)info.lpBaseOfDll) break;
     }
 
     sprintf(line, "DL,0x%08x,%s\n", my_trace->libs[i].lib_offset, my_trace->libs[i].lib_name);
@@ -1843,10 +1843,10 @@ void react_sysenter_callback(void* data)
 
     DEBUG_EVENT* de;
     de = (DEBUG_EVENT*)data;
-    DWORD64 tid = de->dwThreadId;
+    DWORD tid = de->dwThreadId;
     unsigned i;
 
-    DWORD64 tid_pos;
+    DWORD tid_pos;
     tid_pos = my_trace->thread_map[tid];
 
     CONTEXT ctx;
@@ -1873,12 +1873,13 @@ void react_sysret_callback(void* data)
 
     DEBUG_EVENT* de;
     de = (DEBUG_EVENT*)data;
-    DWORD64 tid = de->dwThreadId;
-    DWORD64 arg_addr, arg_val;
-    DWORD64 size, read, off, size_wrote;
+    DWORD tid = de->dwThreadId;
+    DWORD arg_addr, arg_val;
+    SIZE_T size, read, size_wrote;
+    OFFSET off;
     unsigned i;
     char line[MAX_LINE];
-    DWORD64 tid_pos;
+    DWORD tid_pos;
     tid_pos = my_trace->thread_map[tid];
 
     register_thread(tid, my_trace->threads[tid_pos].handle);
@@ -2098,7 +2099,7 @@ DWORD64 get_stack(HANDLE tHandle, unsigned index)
     CONTEXT ctx;
     DWORD64 esp;
     DWORD64 val;
-    DWORD64 read;
+    SIZE_T read;
     unsigned i;
 
     GetThreadContext(tHandle, &ctx);
@@ -2115,10 +2116,10 @@ DWORD64 get_stack(HANDLE tHandle, unsigned index)
 
 void createthread_callback(void* data)
 {
-    DWORD64 start_addr;
+    OFFSET start_addr;
     DEBUG_EVENT* de;
     de = (DEBUG_EVENT*)data;
-    DWORD64 tid = de->dwThreadId;
+    DWORD tid = de->dwThreadId;
     unsigned i;
     HANDLE tHandle;
     char line[MAX_LINE];
@@ -2149,7 +2150,7 @@ void isdebuggerpresent_callback_2(void* data)
 {
     DEBUG_EVENT* de;
     de = (DEBUG_EVENT*)data;
-    DWORD64 tid = de->dwThreadId;
+    DWORD tid = de->dwThreadId;
     unsigned i;
     HANDLE tHandle;
     CONTEXT ctx;
@@ -2233,11 +2234,11 @@ int register_all_threads()
     return 0x0;
 }
 
-int verify_ss(DWORD64 tid)
+int verify_ss(DWORD tid)
 {
     CONTEXT ctx;
     int i;
-    DWORD64 cur_tid;
+    DWORD cur_tid;
     char line[MAX_LINE];
 
     if(tid == 0x0)
@@ -2270,11 +2271,11 @@ int verify_ss(DWORD64 tid)
     return 0x0;
 }
 
-int unset_ss(DWORD64 tid)
+int unset_ss(DWORD tid)
 {
     CONTEXT ctx;
     int i, tid_pos;
-    DWORD64 cur_tid;
+    DWORD cur_tid;
     char line[MAX_LINE];
 
 
@@ -2310,12 +2311,12 @@ int unset_ss(DWORD64 tid)
     return 0x0;
 }
 
-int set_ss(DWORD64 tid)
+int set_ss(DWORD tid)
 {
     char line[MAX_LINE];
     CONTEXT ctx;
     int i, tid_pos;
-    DWORD64 cur_tid;
+    DWORD cur_tid;
 
     /* avoid turning scanning on while skipping, e.g. during syscalls or i_reactions */
     if(my_trace->threads[my_trace->thread_map[tid]].skipping == 0x1)
@@ -2349,7 +2350,7 @@ int set_ss(DWORD64 tid)
     return 0x0;
 }
 
-void check_debug(DWORD64 eip, long long unsigned i_count, DWORD64 id)
+void check_debug(OFFSET eip, long long unsigned i_count, DWORD id)
 {
     unsigned i;
     HANDLE myHandle = (HANDLE)-0x1;
@@ -2409,16 +2410,16 @@ void ss_callback(void* data)
     DEBUG_EVENT* de;
     de = (DEBUG_EVENT*)data;
     DWORD64 eip;
-    DWORD64 tid;
-    DWORD64 bytes_written;
+    DWORD tid;
+    DWORD bytes_written;
     int size = 0x0;
     char* disRet;
     int written;
     char line[MAX_LINE];
     char bytes[0x2];
-    DWORD64 tid_pos;
+    DWORD tid_pos;
 
-    eip = (DWORD64)(de->u.Exception.ExceptionRecord.ExceptionAddress);
+    eip = (OFFSET)(de->u.Exception.ExceptionRecord.ExceptionAddress);
         //d_print("%p\n", eip);
     if((my_trace->status != STATUS_DBG_STARTED) && (my_trace->status != STATUS_DBG_SCANNED) && (my_trace->status != STATUS_DBG_LIGHT)) 
     {
@@ -2430,7 +2431,7 @@ void ss_callback(void* data)
 
     WaitForSingleObject(my_trace->mutex, INFINITE);
 
-    eip = (DWORD64)(de->u.Exception.ExceptionRecord.ExceptionAddress);
+    eip = (OFFSET)(de->u.Exception.ExceptionRecord.ExceptionAddress);
     my_trace->last_eip = eip;
     my_trace->last_tid = tid;
 
@@ -2493,7 +2494,7 @@ SIZE_T dump_mem(FILE* f, void* from, SIZE_T len)
     
     SIZE_T read, i;
     char mem_buf[buf_size];
-    DWORD64 oldProt;
+    DWORD oldProt;
     SIZE_T wrote_total = 0x0;
 
     SIZE_T whole;
@@ -2549,7 +2550,7 @@ SIZE_T dump_zeros(FILE* f, SIZE_T len)
 {
     SIZE_T read, i;
     char mem_buf[buf_size];
-    DWORD64 oldProt;
+    DWORD oldProt;
     SIZE_T wrote_total = 0x0;
 
     SIZE_T whole;
@@ -2627,7 +2628,7 @@ void end_callback(void* data)
     DEBUG_EVENT* de;
     de = (DEBUG_EVENT*)data;
     DWORD64 eip;
-    eip = (DWORD64)de->u.Exception.ExceptionRecord.ExceptionAddress;
+    eip = (OFFSET)de->u.Exception.ExceptionRecord.ExceptionAddress;
 
     d_print("Finishing @ 0x%08x, detaching\n", eip);
     sprintf(line, "FI,0x%08x\n", eip);
@@ -2637,10 +2638,10 @@ void end_callback(void* data)
 
 }
 
-BOOL WINAPI HandlerRoutine(_In_ DWORD64 dwCtrlType)
+BOOL WINAPI HandlerRoutine(_In_ DWORD dwCtrlType)
 {
     unsigned int i;
-    DWORD64 tid_pos;
+    DWORD tid_pos;
 
     d_print("Detected ctrl-c\n");
     
@@ -2674,7 +2675,7 @@ BOOL WINAPI HandlerRoutine(_In_ DWORD64 dwCtrlType)
 
 }
 
-DWORD64 WINAPI writer(LPVOID lpParam)
+DWORD WINAPI writer(LPVOID lpParam)
 {
     while(1)
     {
@@ -2700,11 +2701,11 @@ int del_breakpoint_idx(unsigned my_bpt_idx)
     return 0x0;
 }
 
-int del_breakpoint(DWORD64 addr)
+int del_breakpoint(OFFSET addr)
 {
 //    d_print("Deleting breakpoint at: 0x%08x\n", addr);
 
-    DWORD64 oldProt;
+    DWORD oldProt;
     char bpt_char = '\xcc';
     int i;
     int my_bpt_idx = -0x1;
@@ -2732,8 +2733,8 @@ int handle_reaction(REACTION* cur_reaction, void* data)
 {
     DEBUG_EVENT* de;
     de = (DEBUG_EVENT*)data;
-    DWORD64 tid;
-    DWORD64 thread_no;
+    DWORD tid;
+    DWORD thread_no;
     char line[MAX_LINE];
 
     tid = de->dwThreadId;
@@ -2810,7 +2811,7 @@ int handle_reaction(REACTION* cur_reaction, void* data)
     return 0x0;
 }
 
-int handle_breakpoint(DWORD64 addr, void* data)
+int handle_breakpoint(OFFSET addr, void* data)
 {
     d_print("[handle_breakpoint]\n");
     DEBUG_EVENT* de;
@@ -2835,8 +2836,8 @@ int handle_breakpoint(DWORD64 addr, void* data)
 
             REACTION* cur_reaction;
             cur_reaction = 0x0;
-            DWORD64 tid;
-            DWORD64 thread_no;
+            DWORD tid;
+            DWORD thread_no;
             tid = de->dwThreadId;
             thread_no = my_trace->thread_map[tid];
             if(thread_no == -1) continue;
@@ -2906,9 +2907,9 @@ int write_breakpoint(BREAKPOINT* bp)
 {
     d_print("[write_breakpoint]\n");
     OFFSET addr;
-    DWORD64 oldProt;
-    DWORD64 read;
-    DWORD64 ret;
+    DWORD oldProt;
+    SIZE_T read;
+    DWORD ret;
 
     char bpt_char = '\xcc';
 
@@ -2931,10 +2932,10 @@ int unwrite_breakpoint(BREAKPOINT* bp)
 {
     d_print("[unwrite_breakpoint]\n");
     OFFSET addr;
-    DWORD64 oldProt;
+    DWORD oldProt;
     char bpt_char = '\xcc';
-    DWORD64 wrote;
-    DWORD64 ret;
+    SIZE_T wrote;
+    DWORD ret;
 
     addr = bp->resolved_location;
 
@@ -3070,7 +3071,7 @@ OFFSET resolve_loc_desc(LOCATION_DESCRIPTOR_NEW* d)
 
         if(!strcmp(d->op, "["))
         {
-            DWORD64 read;
+            DWORD read;
             a1_r = resolve_loc_desc(d->a1);
             if(a1_r == -1) return -1;
             /* read_memory and calculate ret */
@@ -3262,7 +3263,7 @@ LOCATION_DESCRIPTOR_NEW* parse_location_desc(char* str)
 int update_breakpoint(BREAKPOINT* bp)
 {
 //    d_print("[update_breakpoint]\n");
-    DWORD64 ret;
+    DWORD ret;
     OFFSET addr;
     d_print("Trying to resolve BP addr\n");
     bp->resolved_location = addr = resolve_loc_desc(bp->location);
@@ -3388,10 +3389,10 @@ void start_trace_pid()
         d_print("Attach failed\n");
 }
 
-DWORD64 find_lib(char* name)
+OFFSET find_lib(char* name)
 {
     unsigned i, j;
-    DWORD64 ret = 0x0;
+    DWORD ret = 0x0;
 
     char myname[MAX_NAME];
     char libname[MAX_NAME];
@@ -3430,9 +3431,12 @@ int parse_descriptor(char* path)
 //    while ((read = getline(&desc_line, &len, desc_file)) != -1) 
     while(fgets(desc_line, 80, desc_file) != NULL)
     {
+        /* z jakiegos powodu assembler x86_64 nie ogarnia */
+        /*
         d_print("Line: %s\n", desc_line);
         sprintf(line2, "# desc: %s\n", desc_line);
         add_to_buffer(line2);
+        */
     }
 
     return 0x0;
@@ -3592,10 +3596,10 @@ int list_tebs()
     return 0x0;
 }
 
-int write_context(DWORD64 tid, CONTEXT* ctx)
+int write_context(DWORD tid, CONTEXT* ctx)
 {
     HANDLE myHandle;
-    DWORD64 tid_id;
+    DWORD tid_id;
 
     tid_id = my_trace->thread_map[tid];
 
@@ -3639,10 +3643,10 @@ int list_all_tebs()
     return 0x0;
 }
 
-int release_thread(DWORD64 tid)
+int release_thread(DWORD tid)
 {
     HANDLE myHandle = (HANDLE)-0x1;
-    DWORD64 tid_id;
+    DWORD tid_id;
     char buffer2[MAX_LINE];
 
     d_print("Trying relese TID: 0x%08x\n", tid);
@@ -3665,10 +3669,10 @@ int release_thread(DWORD64 tid)
     return 0x0;
 }
 
-int read_context(DWORD64 tid, CONTEXT* ctx)
+int read_context(DWORD tid, CONTEXT* ctx)
 {
     HANDLE myHandle = (HANDLE)-0x1;
-    DWORD64 tid_id;
+    DWORD tid_id;
     char buffer2[MAX_LINE];
 
     if(tid == 0x0)
@@ -3692,10 +3696,10 @@ int read_context(DWORD64 tid, CONTEXT* ctx)
     return 0x0;
 }
 
-int write_dword(DWORD64 addr, DWORD64 val)
+int write_dword(OFFSET addr, DWORD64 val)
 {
     CONTEXT ctx;
-    DWORD64 read;
+    SIZE_T read;
     HANDLE handle;
 
     char buffer2[MAX_LINE];
@@ -3721,10 +3725,10 @@ int write_dword(DWORD64 addr, DWORD64 val)
     return 0x0;
 }
 
-char read_byte(DWORD64 addr)
+char read_byte(OFFSET addr)
 {
     char data;
-    DWORD64 read;
+    SIZE_T read;
 
     char buffer2[MAX_LINE];
 
@@ -3732,9 +3736,9 @@ char read_byte(DWORD64 addr)
     return data;
 }
 
-int write_byte(DWORD64 addr, char* data)
+int write_byte(OFFSET addr, char* data)
 {
-    DWORD64 read;
+    SIZE_T read;
     char data_b;
 
     char buffer2[MAX_LINE];
@@ -3755,10 +3759,10 @@ int write_byte(DWORD64 addr, char* data)
     return 0x0;
 }
 
-int read_word(DWORD64 addr)
+int read_word(OFFSET addr)
 {
     WORD data;
-    DWORD64 read;
+    SIZE_T read;
 
     char buffer2[MAX_LINE];
 
@@ -3777,9 +3781,9 @@ int read_word(DWORD64 addr)
     return data;
 }
 
-int write_word(DWORD64 addr, char* data)
+int write_word(OFFSET addr, char* data)
 {
-    DWORD64 read;
+    SIZE_T read;
     WORD  data_w;
 
     char buffer2[MAX_LINE];
@@ -3800,10 +3804,10 @@ int write_word(DWORD64 addr, char* data)
     return 0x0;
 }
 
-int read_dword(DWORD64 addr)
+int read_dword(OFFSET addr)
 {
     DWORD64 data;
-    DWORD64 read;
+    SIZE_T read;
 
     char buffer2[MAX_LINE];
 
@@ -3882,11 +3886,11 @@ int hexify(char* in, char* out, unsigned size)
     return 0x0;
 }
 
-int out_region(DWORD64 addr, DWORD64 size)
+int out_region(OFFSET addr, DWORD size)
 {
     char* data;
     char* data2;
-    DWORD64 read;
+    SIZE_T read;
 
     char buffer2[MAX_LINE];
     char line[MAX_LINE];
@@ -3950,11 +3954,11 @@ int out_region(DWORD64 addr, DWORD64 size)
     free(data2);
     return 0x0;
 }
-int report_region(DWORD64 addr, DWORD64 size)
+int report_region(OFFSET addr, DWORD size)
 {
     char* data;
     char* data2;
-    DWORD64 read;
+    SIZE_T read;
 
     char buffer2[MAX_LINE];
 
@@ -4010,10 +4014,10 @@ int report_region(DWORD64 addr, DWORD64 size)
     return 0x0;
 }
 
-int report_dword(DWORD64 addr)
+int report_dword(OFFSET addr)
 {
     DWORD64 data;
-    DWORD64 read;
+    SIZE_T read;
 
     char buffer2[MAX_LINE];
 
@@ -4034,7 +4038,7 @@ int report_dword(DWORD64 addr)
     return data;
 }
 
-int write_register(DWORD64 tid_id, char* reg, char* data)
+int write_register(DWORD tid_id, char* reg, char* data)
 {
     CONTEXT ctx;
     char buffer2[MAX_LINE];
@@ -4116,7 +4120,7 @@ int write_register(DWORD64 tid_id, char* reg, char* data)
     return 0x0;
 }
 
-DWORD64 read_register(DWORD64 tid_id, char* reg)
+DWORD64 read_register(DWORD tid_id, char* reg)
 {
     CONTEXT ctx;
 
@@ -4168,7 +4172,7 @@ DWORD64 read_register(DWORD64 tid_id, char* reg)
     return -1;
 }
 
-int report_register(DWORD64 tid_id, char* reg)
+int report_register(DWORD tid_id, char* reg)
 {
     CONTEXT ctx;
     char buffer2[MAX_LINE];
@@ -4184,7 +4188,7 @@ int report_register(DWORD64 tid_id, char* reg)
     return 0x0;
 }
 
-int read_stack(DWORD64 tid_id, DWORD64 count)
+int read_stack(DWORD tid_id, DWORD count)
 {
     CONTEXT ctx;
     char buffer2[MAX_LINE];
@@ -4297,7 +4301,7 @@ int process_last_event()
                             if(my_trace->breakpoints[i].resolved_location == bp_addr)
                             {
                                 d_print("Handling breakpoint @ 0x%08x\n", bp_addr);
-                                handle_breakpoint((DWORD64)my_trace->last_exception.ExceptionAddress, &my_trace->last_event);
+                                handle_breakpoint((OFFSET)my_trace->last_exception.ExceptionAddress, &my_trace->last_event);
                                 handled = 0x1;
                             }
                         }
@@ -4383,7 +4387,7 @@ int process_last_event()
         }
 }
 
-int create_report(int last_report)
+int create_report(DWORD last_report)
 {
     char buffer2[MAX_LINE];
     char buffer3[MAX_LINE];
@@ -4430,7 +4434,7 @@ int create_report(int last_report)
     return 0x0;
 }
 
-int handle_continue(DWORD64 pid, DWORD64 tid, unsigned status)
+int handle_continue(DWORD pid, DWORD tid, unsigned status)
 {
     /* turn on trap again */
     /* TODO: is this necessary? */
@@ -4499,7 +4503,7 @@ int get_pending_events()
 }
 
 /* TODO: continuing for some time */
-int continue_routine(DWORD64 time, unsigned stat)
+int continue_routine(DWORD time, unsigned stat)
 {
     int last_report;
     char buffer2[MAX_LINE];
@@ -4556,8 +4560,8 @@ int resolve_region(LOCATION_DESCRIPTOR* selector, LOCATION* location)
     d_print("Resolving region\n");
     d_print("Locating buffer\n");
 
-    DWORD64 arg_val, arg_addr, arg_size, off, size, cur_esp;
-    DWORD64 read;
+    DWORD64 arg_val, arg_addr, off, cur_esp;
+    SIZE_T read, arg_size, size;
     CONTEXT ctx;
 
     read_context(my_trace->last_event.dwThreadId, &ctx);
@@ -4682,7 +4686,7 @@ int resolve_region(LOCATION_DESCRIPTOR* selector, LOCATION* location)
     return 0x0;
 }
 
-int add_region_sel(DWORD64 off, DWORD64 size, char off_location, char size_location)
+int add_region_sel(OFFSET off, DWORD size, char off_location, char size_location)
 {
     unsigned cur_region;
 
@@ -5384,8 +5388,8 @@ int handle_cmd(char* cmd)
     }
     else if(!strncmp(cmd, CMD_OUT_REGION, 2))
     {
-        DWORD64 addr;
-        DWORD64 size;
+        OFFSET addr;
+        SIZE_T size;
         char* cmd_;
 
         cmd_ = strtok(cmd, " ");
@@ -5400,8 +5404,8 @@ int handle_cmd(char* cmd)
     }
     else if(!strncmp(cmd, CMD_READ_REGION, 2))
     {
-        DWORD64 addr;
-        DWORD64 size;
+        OFFSET addr;
+        DWORD size;
         char* cmd_;
 
         cmd_ = strtok(cmd, " ");
@@ -5416,7 +5420,7 @@ int handle_cmd(char* cmd)
     }
     else if(!strncmp(cmd, CMD_READ_MEMORY, 2))
     {
-        DWORD64 addr;
+        OFFSET addr;
         char* cmd_;
 
         cmd_ = strtok(cmd, " ");
@@ -5431,7 +5435,7 @@ int handle_cmd(char* cmd)
     else if(!strncmp(cmd, CMD_WRITE_STRING, 2))
     {
         char* cmd_;
-        DWORD64 addr;
+        OFFSET addr;
         char* str;
 
         cmd_ = strtok(cmd, " ");
@@ -5447,7 +5451,7 @@ int handle_cmd(char* cmd)
     else if(!strncmp(cmd, CMD_WRITE_STRING_UNI, 2))
     {
         char* cmd_;
-        DWORD64 addr;
+        OFFSET addr;
         char* str;
 
         cmd_ = strtok(cmd, " ");
@@ -5463,8 +5467,8 @@ int handle_cmd(char* cmd)
     else if(!strncmp(cmd, CMD_WRITE_MEMORY, 2))
     {
         char* cmd_;
-        DWORD64 addr;
-        DWORD64 val;
+        OFFSET addr;
+        DWORD val;
 
         cmd_ = strtok(cmd, " ");
         addr = strtoul(strtok(0x0, " "), 0x0, 0x10);
@@ -5520,7 +5524,7 @@ int handle_cmd(char* cmd)
     {
         char* data;
         unsigned tid_id;
-        DWORD64 count;
+        DWORD count;
 
         data = strtok(cmd, " ");
         tid_id = strtoul(strtok(0x0, " "), 0x0, 0x10);
@@ -5546,7 +5550,7 @@ int handle_cmd(char* cmd)
     else if(!strncmp(cmd, CMD_CONTINUE_TIME, 2))
     {
         unsigned report;
-        DWORD64 time;
+        DWORD time;
         unsigned status;
 
         strtok(cmd, " ");
@@ -5559,7 +5563,7 @@ int handle_cmd(char* cmd)
     else if(!strncmp(cmd, CMD_SET_ST, 2))
     {
         char* e_reactions_str;
-        DWORD64 addr;
+        DWORD addr;
         char my_str[MAX_LINE];
 
         strtok(cmd, " ");
@@ -6136,8 +6140,8 @@ int main(int argc, char** argv)
 
     char recv_buf[MAX_LINE];
 
-    DWORD64 recv_size;
-    DWORD64 flags;
+    DWORD recv_size;
+    DWORD flags;
 
     while(1)
     {
