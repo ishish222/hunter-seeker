@@ -38,8 +38,13 @@ prototypes['Wait10']                = other_parts.wait_10_seconds
 prototypes['KillExplorer']          = binner_parts.binner_kill_explorer
 prototypes['ResetTracers']          = tracing_parts.reset_tracer_controller_status
 prototypes['SpawnTracerController'] = tracing_parts.spawn_tracer_controller
+prototypes['SpawnTracerScrLog']     = tracing_parts.start_tracer
+prototypes['SpawnTracerFileLog']    = tracing_parts.start_tracer_log
+prototypes['SpawnTracerNoLog']      = tracing_parts.start_tracer_no_log
+# for backward compatibility
 prototypes['SpawnTracer']           = tracing_parts.start_tracer
 prototypes['SpawnTracerLog']        = tracing_parts.start_tracer_log
+# ends
 prototypes['GetSampleOptions']      = tracing_parts.get_sample_options
 prototypes['RevertClean']           = qemu_parts.offline_revert
 prototypes['TracerConfigureSample'] = tracer_parts.tracer_configure_sample
@@ -107,6 +112,7 @@ prototypes['CheckHostDir']          = tracing_parts.check_host_dir
 prototypes['ReadArgUni']            = tracer_parts.tracer_read_arg_uni
 prototypes['ReadArgAnsi']           = tracer_parts.tracer_read_arg_ansi
 prototypes['ReadArg']               = tracer_parts.tracer_read_arg
+prototypes['SecureAllSections']     = tracing_parts.secure_all_sections
 prototypes['ExtractEP']             = tracing_parts.extract_ep
 prototypes['RunRoutine']            = tracer_parts.tracer_run_routine
 prototypes['Spawn']                 = tracer_parts.tracer_spawn

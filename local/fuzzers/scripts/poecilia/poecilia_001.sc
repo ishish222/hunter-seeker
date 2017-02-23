@@ -26,7 +26,7 @@ Wait10
 goto(start_controller)
 
 success:
-Execute(scripts/poecilia/debug_sample.sc)
+Execute(scripts/poecilia/debug_sample_no_log.sc)
 
 # RR
 ExtractEP(e:\samples\shared\fdsvc.exe)
@@ -44,7 +44,7 @@ Execute(scripts/arab/enable_context_mod_detection.sc)
 
 # we dont need for now, we pass by first creation
 #DumpMemory
-#TracerStartTrace
+TracerStartTrace
 TracerDebugContinueInf
 
 decision:

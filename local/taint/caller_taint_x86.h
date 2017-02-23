@@ -51,7 +51,7 @@ Change of endiannes takes place when reading and writing to memory (to_mem, from
 #define MAX_TAINTS_OBSERVED     0x400
 #define MAX_EXCEPTIONS_COUNT    0x100
 #define MAX_BREAKPOINTS         0x10
-#define MAX_                    0x10
+#define MAX_SECURITY_LAYERS     0x100
 #define MAX_BLACKLIST           0x50
 #define MAX_WANTED              0x100
 #define MAX_LOOP_FENCES         0x10
@@ -2443,7 +2443,7 @@ class taint_x86
     unsigned new_wpt_count;
 
     /* some quick analysis improvements */
-    REGION  security_layer[0x10];
+    REGION  security_layer[MAX_SECURITY_LAYERS];
     unsigned security_layer_count;
     int verify_seg_sec(OFFSET);
  

@@ -1593,6 +1593,7 @@ void register_thread(DWORD tid, HANDLE handle)
     sprintf(line, "RT,0x%08x,%s\n", tid, line2);
     add_to_buffer(line);
 
+    set_ss(tid);
     return;
 }
 
@@ -1626,6 +1627,7 @@ int register_thread_debug(DWORD tid, HANDLE handle)
     sprintf(line, "CT,0x%08x,%s\n", tid, line2);
     written = add_to_buffer(line);
 
+    set_ss(tid);
     return written;
 }
 
@@ -1753,7 +1755,6 @@ void register_lib(LOAD_DLL_DEBUG_INFO info)
 {
     char path[MAX_LINE];
     char line[MAX_LINE];
-    unsigned size = 0;
 
 #ifdef LIB_VER_W7
     //d_print("Trying to resolve\n");
@@ -1770,6 +1771,21 @@ void register_lib(LOAD_DLL_DEBUG_INFO info)
     my_trace->libs[my_trace->lib_count].lib_offset = (DWORD)info.lpBaseOfDll;
     d_print("RL,0x%08x,%s\n", my_trace->libs[my_trace->lib_count].lib_offset, my_trace->libs[my_trace->lib_count].lib_name);
     sprintf(line, "RL,0x%08x,%s\n", my_trace->libs[my_trace->lib_count].lib_offset, my_trace->libs[my_trace->lib_count].lib_name);
+    add_to_buffer(line);
+
+#ifdef LIB_VER_W70
+    /* try to get size of lib, so we can protect this region */
+
+    FILE* f;
+    SIZE_T size;
+    f = fopen(my_trace->libs[my_trace->lib_count].lib_path, "r");
+    fseek(f, 0L, SEEK_END);
+    size = ftell(f);
+    fclose(f);
+    d_print("SE,0x%08x,0x%08x\n", my_trace->libs[my_trace->lib_count].lib_offset, size);
+    sprintf(line, "SE,0x%08x,0x%08x\n", my_trace->libs[my_trace->lib_count].lib_offset, size);
+    add_to_buffer(line);
+#endif
 
     my_trace->libs[my_trace->lib_count].loaded = 0x1;
     //update_e_reactions(&my_trace->libs[lib_count]);
@@ -1777,7 +1793,6 @@ void register_lib(LOAD_DLL_DEBUG_INFO info)
     my_trace->lib_count++;
 
 
-    add_to_buffer(line);
     return;
 }
 
@@ -2764,23 +2779,30 @@ int handle_reaction(REACTION* cur_reaction, void* data)
         /* higher thread is still locked, reaction level can override */
         if(cur_reaction->level <= locking_reaction->level)
         {
-//          d_print("ER3 (%d) Reaction lock is active, continuing, missing reaction %s due to lock by %s\n", my_trace->instr_count, cur_reaction->reaction_id, locking_reaction->reaction_id);
-            d_print("ER3 Reaction lock is active, continuing, missing reaction %s due to lock by %s\n", cur_reaction->reaction_id, locking_reaction->reaction_id);
+//          d_print("ER_3 (%d) Reaction lock is active, continuing, missing reaction %s due to lock by %s\n", my_trace->instr_count, cur_reaction->reaction_id, locking_reaction->reaction_id);
+            d_print("ER_3 TID: 0x%08x, Reaction lock is active, continuing, missing reaction %s due to lock by %s\n", thread_no, cur_reaction->reaction_id, locking_reaction->reaction_id);
             return 0x0;
         }
         else
         {
-//          d_print("ER3 (%d) Reaction lock %s overriden by %s\n", my_trace->instr_count, locking_reaction->reaction_id, cur_reaction->reaction_id);
-            d_print("ER3 Reaction lock %s overriden by %s\n", locking_reaction->reaction_id, cur_reaction->reaction_id);
+//          d_print("ER_3 (%d) Reaction lock %s overriden by %s\n", my_trace->instr_count, locking_reaction->reaction_id, cur_reaction->reaction_id);
+            d_print("ER_3 TID: 0x%08x, Reaction lock %s overriden by %s\n", thread_no, locking_reaction->reaction_id, cur_reaction->reaction_id);
         }
     }
 
     /* We are able to execute routines */
     if(cur_reaction->exclusive)
     {
-        d_print("ER32 in handle_reaction: %p, %s\n", cur_reaction, cur_reaction->reaction_id);
-        d_print("ER3 Locking reaction lock with: %s\n", cur_reaction->reaction_id);
-        my_trace->threads[thread_no].locking_reaction = cur_reaction;
+        if(my_trace->threads[thread_no].after_unlocking)
+        {
+            my_trace->threads[thread_no].after_unlocking = 0x0;
+        }
+        else
+        {
+            d_print("ER_32 TID: 0x%08x, in handle_reaction: %p, %s\n", thread_no, cur_reaction, cur_reaction->reaction_id);
+            d_print("ER_3 TID: 0x%08x, Locking reaction lock with: %s\n", thread_no, cur_reaction->reaction_id);
+            my_trace->threads[thread_no].locking_reaction = cur_reaction;
+        }
     }
 
     for(k = 0x0; k< cur_reaction->routines_count; k++)
@@ -2799,7 +2821,7 @@ int handle_reaction(REACTION* cur_reaction, void* data)
             if(cur_reaction->routine_ids[k] < 0x300)
             if(cur_reaction->routine_ids[k] > 0x100)
             {
-                d_print("ER3 Executing routine 0x%08x @ %d\n", cur_reaction->routine_ids[k], my_trace->instr_count);
+                d_print("ER_3 TID: 0x%08x, Executing routine 0x%08x @ %d\n", thread_no, cur_reaction->routine_ids[k], my_trace->instr_count);
                 sprintf(line, "OU,0x%x,0x%08x Routine 0x%08x\n", my_trace->last_tid, my_trace->last_eip, cur_reaction->routine_ids[k]);
                 add_to_buffer(line);
             }
@@ -2816,7 +2838,7 @@ int handle_breakpoint(DWORD addr, void* data)
     DEBUG_EVENT* de;
     de = (DEBUG_EVENT*)data;
 
-    d_print("ER4 TID: 0x%08x\n", de->dwThreadId);
+    d_print("ER_4 TID: 0x%08x\n", de->dwThreadId);
 
     int i, j, k;
     int my_bpt_idx = -0x1;
@@ -2841,20 +2863,20 @@ int handle_breakpoint(DWORD addr, void* data)
             thread_no = my_trace->thread_map[tid];
             if(thread_no == -1) continue;
 
-            d_print("ER5 TID1: 0x%08x instr_count: %d\n", de->dwThreadId, my_trace->instr_count);
+            d_print("ER_5 TID1: 0x%08x instr_count: %d\n", de->dwThreadId, my_trace->instr_count);
 
             /* verify presence of reaction lock */
             REACTION* locking_reaction;
             locking_reaction = 0x0;
             locking_reaction = my_trace->threads[thread_no].locking_reaction;
 
-            d_print("ER3 TID: 0x%08x, thread_no=0x%08x, locking_reaction=%p\n", tid, thread_no, locking_reaction);
+            d_print("ER_3 TID: 0x%08x, thread_no=0x%08x, locking_reaction=%p\n", tid, thread_no, locking_reaction);
 
             /* handle all reactions for identified breakpoint */
             for(j = 0x0; j < my_bp->reaction_count; j++)
             {
                 cur_reaction = my_bp->reactions[j];
-                d_print("ER3 Reaction no %d: %p, %s\n", j, cur_reaction, cur_reaction->reaction_id);
+                d_print("ER_3 TID: 0x%08x, Reaction no %d: %p, %s\n", tid, j, cur_reaction, cur_reaction->reaction_id);
                 
                 if(!cur_reaction->enabled) 
                 {
@@ -2877,8 +2899,9 @@ int handle_breakpoint(DWORD addr, void* data)
                         if(coupled_reaction == cur_reaction)
                         {
                             /* current reaction is one of locking reactions couple, unlocking */
-                            d_print("ER3 Unlocking reaction lock with: %s in TID: 0x%08x\n", cur_reaction->reaction_id, tid);
+                            d_print("ER_3 Unlocking reaction lock with: %s in TID: 0x%08x\n", cur_reaction->reaction_id, tid);
                             my_trace->threads[thread_no].locking_reaction = 0x0;
+                            my_trace->threads[thread_no].after_unlocking = 0x1;
                         }
                     }
 
@@ -2887,8 +2910,8 @@ int handle_breakpoint(DWORD addr, void* data)
 
                 /* unlocked or overriden, handle current reaction */
                 de = (DEBUG_EVENT*)data;
-                d_print("ER6 TID: 0x%08x\n", de->dwThreadId);
-                d_print("ER3 Reaction no %d: %p, %s\n", j, cur_reaction, cur_reaction->reaction_id);
+                d_print("ER_6 TID: 0x%08x\n", de->dwThreadId);
+                d_print("ER_3 TID: 0x%08x, Reaction no %d: %p, %s\n", de->dwThreadId, j, cur_reaction, cur_reaction->reaction_id);
                 handle_reaction(cur_reaction, data);
             }
         }
@@ -4215,13 +4238,71 @@ int read_stack(DWORD tid_id, DWORD count)
     return 0x0;
 }
 
+struct ImageSectionInfo
+{
+      char SectionName[IMAGE_SIZEOF_SHORT_NAME];//the macro is defined WinNT.h
+      char *SectionAddress;
+      int SectionSize;
+      ImageSectionInfo(const char* name)
+      {
+            strcpy(SectionName, name); 
+       }
+};
+
+int secure_sections(HANDLE hModule)
+{
+    char line[MAX_NAME];
+    char* dllImageBase;
+    OFFSET addr;
+    OFFSET size;
+
+    dllImageBase = (char*)hModule; //suppose hModule is the handle to the loaded Module (.exe or .dll)
+    d_print("hModule: 0x%08x\n", hModule);
+
+    if(!(hModule)) return 0x0;
+
+    //get the address of NT Header
+    IMAGE_NT_HEADERS *pNtHdr = ImageNtHeader(hModule);
+    d_print("NT header: 0x%08x\n", pNtHdr);
+
+    if(!(pNtHdr)) return 0x0;
+
+    //after Nt headers comes the table of section, so get the addess of section table
+    IMAGE_SECTION_HEADER *pSectionHdr = (IMAGE_SECTION_HEADER *) (pNtHdr + 1);
+    d_print("section header: 0x%08x\n", pSectionHdr);
+
+    if(!(pSectionHdr)) return 0x0;
+
+    ImageSectionInfo *pSectionInfo = NULL;
+
+    //iterate through the list of all sections, and check the section name in the if conditon. etc
+    for ( int i = 0 ; i < pNtHdr->FileHeader.NumberOfSections ; i++ )
+    {
+         char *name = (char*) pSectionHdr->Name;
+        d_print("section name: %s\n", name);
+        addr = (OFFSET)dllImageBase + pSectionHdr->VirtualAddress;
+        size = (OFFSET)pSectionHdr->Misc.VirtualSize;
+    
+        d_print("SE,0x%08x,0x%08x\n", addr, size);
+        sprintf(line, "SE,0x%08x,0x%08x\n", addr, size);
+        add_to_buffer(line);
+         pSectionHdr++;
+        if(!(pSectionHdr)) return 0x0;
+    }
+
+    return 0x0;
+}
+
 int register_self(OFFSET addr)
 {
     char line[MAX_LINE];
+    char path[MAX_LINE];
 
     d_print("RL,0x%08x,self\n", addr);
     sprintf(line, "RL,0x%08x,self\n", addr);
     add_to_buffer(line);
+
+
     return 0x0;
 }
 
@@ -5606,6 +5687,24 @@ int handle_cmd(char* cmd)
         strtok(cmd, " ");
         str = strtok(0x0, " ");
         parse_regions(str);
+        send_report();
+        
+    }
+    else if(!strncmp(cmd, CMD_SECURE_ALL_SECTIONS, 2))
+    {
+        unsigned i;
+
+        d_print("= Securing self\n");
+        secure_sections(my_trace->cpdi.lpBaseOfImage);
+        d_print("\n");
+
+        for(i = 0x0; i< my_trace->lib_count; i++)
+        {
+            d_print("= Securing %s\n", my_trace->libs[i].lib_name);
+            secure_sections((HANDLE)my_trace->libs[i].lib_offset);
+            d_print("\n");
+        }
+        
         send_report();
         
     }

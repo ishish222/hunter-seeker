@@ -77,6 +77,18 @@ def start_tracer(args=None):
     state.tracers.append(response)
     state.tracers_count += 1
 
+def start_tracer_no_log(args=None):
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+    
+    write_socket(options.s, "spawn_tracer_no_log");
+    response, _, _ = read_socket(options.s)
+
+    # register controller on success
+    state.tracers.append(response)
+    state.tracers_count += 1
+
 def start_tracer_log(args=None):
     options = globs.state.options
     state = globs.state
@@ -126,6 +138,15 @@ def which_tracer(args=None):
     
     write_socket(options.s, "which_tracer");
     response, _, _ = read_socket(options.s)
+
+def secure_all_sections(args=None):
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+    
+    write_socket(options.s, "tracer_secure_all_sections");
+    response, _, _ = read_socket(options.s)
+    return
 
 def spawn_tracer_controller(args=None):
     options = globs.state.options
@@ -474,15 +495,22 @@ def set_out_dir(args = None):
     options = globs.state.options
     options.sample_options.out_dir = args
 
-def check_host_dir(args = None):
-    options = globs.state.options
-    
-    my_dir = options.settings.qemu_shared_folder + '/' + options.sample_options.out_prefix
+def check_dir(directory):
     import os
     try:
-        os.mkdir(my_dir)
-    except(OSError):
-        pass
+        os.stat(directory)
+    except:
+        os.mkdir(directory)
+
+def check_host_dir(args = None):
+    options = globs.state.options
+
+    # here check for existence of all necessary dirs. If absent, create them
+    
+    check_dir(options.settings.qemu_shared_folder + '/' + options.sample_options.out_prefix)
+    check_dir(options.settings.log_dir)
+    check_dir(options.settings.saved_dir)
+    check_dir(options.settings.qemu_drives_dir)
 
 def save_first_ep(args = None):
     options = globs.state.options

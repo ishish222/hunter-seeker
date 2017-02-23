@@ -1307,6 +1307,12 @@ def execute(cmds):
             writePipe(ext_pipe, "tracer_run_routine OK")
             ok(ext_pipe)
 
+        elif(cmd == "tracer_secure_all_sections"):
+            trace_controller.secure_all_sections()
+            writePipe(ext_pipe, "%s" % trace_controller.last_answer)
+            writePipe(ext_pipe, "tracer_secure_all_sections OK")
+            ok(ext_pipe)
+
         elif(cmd == "tracer_write_string_ansi"):
             trace_controller.write_string_ansi(args)
             writePipe(ext_pipe, "tracer_string_ansi OK")
@@ -1475,6 +1481,13 @@ def execute(cmds):
             writePipe(ext_pipe, "[Trace controller]: OK")
             writePipe(ext_pipe, "Active tracers: %d" % trace_controller.trace_count)
             writePipe(ext_pipe, "spawn_tracer_log OK")
+            ok(ext_pipe)
+
+        elif(cmd == "spawn_tracer_no_log"):
+            new_tracer = trace_controller.spawn_tracer_no_log()
+            writePipe(ext_pipe, "[Trace controller]: OK")
+            writePipe(ext_pipe, "Active tracers: %d" % trace_controller.trace_count)
+            writePipe(ext_pipe, "spawn_tracer_no_log OK")
             ok(ext_pipe)
 
         elif(cmd == "close_tracer"):

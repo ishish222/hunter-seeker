@@ -412,8 +412,8 @@ void update_region_old(LOCATION* location)
     size_wrote = dump_mem(my_trace->mods, (void*)location->off, location->size);
     if(size_wrote == location->size)
     {
-        d_print("[Updated location: 0x%08x, size: 0x%08x]\n", location->off, location->size);
-        sprintf(line, "UP,0x%08x,0x%08x\n", location->off, location->size);
+        d_print("[Updated location: 0x%016llx, size: 0x%08x]\n", location->off, location->size);
+        sprintf(line, "UP,0x%016llx,0x%08x\n", location->off, location->size);
         add_to_buffer(line);
         sprintf(line, "# Current mod position: 0x%08x\n", ftell(my_trace->mods));
         add_to_buffer(line);
@@ -440,8 +440,8 @@ void update_region(unsigned id)
     size_wrote = dump_mem(my_trace->mods, (void*)off, size);
     if(size_wrote == size)
     {
-        d_print("[Updated location: 0x%08x, size: 0x%08x]\n", off, size);
-        sprintf(line, "UP,0x%08x,0x%08x\n", off, size);
+        d_print("[Updated location: 0x%016llx, size: 0x%08x]\n", off, size);
+        sprintf(line, "UP,0x%016llx,0x%08x\n", off, size);
         add_to_buffer(line);
         sprintf(line, "# Current mod position: 0x%08x\n", ftell(my_trace->mods));
         add_to_buffer(line);
@@ -472,7 +472,7 @@ void output_register(char* reg)
 
     val = read_register(my_trace->last_tid, reg); 
 
-    sprintf(line, "OU,0x%x,%s: 0x%08x\n", my_trace->last_tid, reg, val);
+    sprintf(line, "OU,0x%x,%s: 0x%016llx\n", my_trace->last_tid, reg, val);
     add_to_buffer(line);
 
     return;
@@ -545,7 +545,7 @@ void report_arg_unicode_string_x(unsigned x)
     else
     {
         my_trace->report_code = REPORT_INFO;
-        sprintf(line, "# Failed to read UNICODE string @ 0x%08x\n", esp);
+        sprintf(line, "# Failed to read UNICODE string @ 0x%016llx\n", esp);
         strcpy(my_trace->report_buffer, line);
     }
 
@@ -577,7 +577,7 @@ void output_arg_unicode_string_x(unsigned x)
     }
     else
     {
-        sprintf(line, "# Failed to read UNICODE string @ 0x%08x\n", esp);
+        sprintf(line, "# Failed to read UNICODE string @ 0x%016llx\n", esp);
         add_to_buffer(line);
     }
 
@@ -641,13 +641,13 @@ void report_arg_string_x(unsigned x)
 
     CONTEXT ctx;
     read_context(0x0, &ctx);
-    d_print("ESP: 0x%08x\n", esp);
+    d_print("ESP: 0x%016llx\n", esp);
     esp = ctx.Rsp;
     esp += (x * 0x4);
-    d_print("arg addr: 0x%08x\n", esp);
+    d_print("arg addr: 0x%016llx\n", esp);
 
     addr = read_dword(esp);
-    d_print("str addr: 0x%08x\n", addr);
+    d_print("str addr: 0x%016llx\n", addr);
 
     read_memory(my_trace->cpdi.hProcess, (void*)addr, (void*)snap, SNAP_SIZE, &read);
     if(read > 0x0)
@@ -659,7 +659,7 @@ void report_arg_string_x(unsigned x)
     else
     {
         my_trace->report_code = REPORT_INFO;
-        sprintf(line, "# Failed to read ANSI string @ 0x%08x\n", esp);
+        sprintf(line, "# Failed to read ANSI string @ 0x%016llx\n", esp);
         strcpy(my_trace->report_buffer, line);
     }
 
@@ -678,13 +678,13 @@ void output_arg_string_x(unsigned x)
 
     CONTEXT ctx;
     read_context(0x0, &ctx);
-    d_print("ESP: 0x%08x\n", esp);
+    d_print("ESP: 0x%016llx\n", esp);
     esp = ctx.Rsp;
     esp += (x * 0x4);
-    d_print("arg addr: 0x%08x\n", esp);
+    d_print("arg addr: 0x%016llx\n", esp);
 
     addr = read_dword(esp);
-    d_print("str addr: 0x%08x\n", addr);
+    d_print("str addr: 0x%016llx\n", addr);
 
     read_memory(my_trace->cpdi.hProcess, (void*)addr, (void*)snap, SNAP_SIZE, &read);
     if(read > 0x0)
@@ -694,7 +694,7 @@ void output_arg_string_x(unsigned x)
     }
     else
     {
-        sprintf(line, "# Failed to read ANSI string @ 0x%08x\n", esp);
+        sprintf(line, "# Failed to read ANSI string @ 0x%016llx\n", esp);
         add_to_buffer(line);
     }
 
@@ -908,7 +908,7 @@ void react_cry_antidebug_1(void* data)
     char val1 = 0xf9;
     char val2 = 0x01;
 
-    d_print("Modifying address: 0x%08x\n", addr);
+    d_print("Modifying address: 0x%016llx\n", addr);
     write_memory(my_trace->procHandle, (void*)addr, (void*)&val1, 0x1, &wrote);
     addr++;
     write_memory(my_trace->procHandle, (void*)addr, (void*)&val2, 0x1, &wrote);
@@ -924,7 +924,7 @@ void run_routine(unsigned x)
 
 void write_string_ascii(OFFSET addr, char* str)
 {
-    d_print("Writing ANSI string to 0x%08x\n", addr);
+    d_print("Writing ANSI string to 0x%016llx\n", addr);
     char line[MAX_LINE];
 
     SIZE_T wrote;
@@ -932,12 +932,12 @@ void write_string_ascii(OFFSET addr, char* str)
     write_memory(my_trace->cpdi.hProcess, (void*)addr, (void*)str, strlen(str), &wrote);
     if(wrote > 0x0)
     {
-        sprintf(line, "# Wrote ANSI string @ 0x%08x\n", addr);
+        sprintf(line, "# Wrote ANSI string @ 0x%016llx\n", addr);
         add_to_buffer(line);
     }
     else
     {
-        sprintf(line, "# Failed to write ANSI string @ 0x%08x\n", addr);
+        sprintf(line, "# Failed to write ANSI string @ 0x%016llx\n", addr);
         add_to_buffer(line);
     }
 
@@ -946,7 +946,7 @@ void write_string_ascii(OFFSET addr, char* str)
 
 void write_string_unicode(OFFSET addr, char* str)
 {
-    d_print("Writing UNICODE string to 0x%08x\n", addr);
+    d_print("Writing UNICODE string to 0x%016llx\n", addr);
     WCHAR* unistring;
     unsigned unistring_len = (strlen(str)+1)*sizeof(WCHAR);
     unistring = (WCHAR*)malloc(unistring_len);
@@ -959,13 +959,13 @@ void write_string_unicode(OFFSET addr, char* str)
     write_memory(my_trace->cpdi.hProcess, (void*)addr, (void*)unistring, unistring_len, &wrote);
     if(wrote == unistring_len)
     {
-        sprintf(line, "# Wrote UNICODE string @ 0x%08x\n", addr);
+        sprintf(line, "# Wrote UNICODE string @ 0x%016llx\n", addr);
         d_print("Success\n");
         add_to_buffer(line);
     }
     else
     {
-        sprintf(line, "# Failed to write UNICODE string @ 0x%08x\n", addr);
+        sprintf(line, "# Failed to write UNICODE string @ 0x%016llx\n", addr);
         d_print("Failed\n");
         add_to_buffer(line);
     }
@@ -1327,16 +1327,16 @@ int add_to_buffer(char* line)
 void print_context(CONTEXT* ctx)
 {
     d_print("Context:\n");
-    d_print("EAX:\t0x%08x\n", ctx->Rax);
-    d_print("EBX:\t0x%08x\n", ctx->Rbx);
-    d_print("ECX:\t0x%08x\n", ctx->Rcx);
-    d_print("EDX:\t0x%08x\n", ctx->Rdx);
-    d_print("ESI:\t0x%08x\n", ctx->Rsi);
-    d_print("EDI:\t0x%08x\n", ctx->Rdi);
-    d_print("EBP:\t0x%08x\n", ctx->Rbp);
-    d_print("ESP:\t0x%08x\n", ctx->Rsp);
-    d_print("EFLAGS:\t0x%08x\n", ctx->EFlags);
-    d_print("EIP:\t0x%08x\n", ctx->Rip);
+    d_print("EAX:\t0x%016llx\n", ctx->Rax);
+    d_print("EBX:\t0x%016llx\n", ctx->Rbx);
+    d_print("ECX:\t0x%016llx\n", ctx->Rcx);
+    d_print("EDX:\t0x%016llx\n", ctx->Rdx);
+    d_print("ESI:\t0x%016llx\n", ctx->Rsi);
+    d_print("EDI:\t0x%016llx\n", ctx->Rdi);
+    d_print("EBP:\t0x%016llx\n", ctx->Rbp);
+    d_print("ESP:\t0x%016llx\n", ctx->Rsp);
+    d_print("EFLAGS:\t0x%016llx\n", ctx->EFlags);
+    d_print("EIP:\t0x%016llx\n", ctx->Rip);
 }
 
 void react_sysret_refresh(void* data)
@@ -1402,9 +1402,9 @@ int dec_eip(DWORD id)
     {
         d_print("Failed to get context, error: 0x%08x\n", GetLastError());
     }
-    d_print("before: 0x%08x\n", ctx.Rip);
+    d_print("before: 0x%016llx\n", ctx.Rip);
     ctx.Rip -= 0x1;
-    d_print("after: 0x%08x\n", ctx.Rip);
+    d_print("after: 0x%016llx\n", ctx.Rip);
     SetThreadContext(myHandle, &ctx);
 
     return 0x0;
@@ -1412,7 +1412,7 @@ int dec_eip(DWORD id)
 
 void serialize_exception(EXCEPTION_RECORD er, char* buffer)
 {
-    sprintf(buffer, "0x%08x,0x%08x,0x%08x", 
+    sprintf(buffer, "0x%08x,0x%08x,0x%016llx", 
         er.ExceptionCode,
         er.ExceptionFlags,
         er.ExceptionAddress
@@ -1423,7 +1423,7 @@ void serialize_exception(EXCEPTION_RECORD er, char* buffer)
 
 void deserialize_exception(EXCEPTION_RECORD* er, char* buffer)
 {
-    sscanf(buffer, "0x%08x,0x%08x,0x%08x", 
+    sscanf(buffer, "0x%08x,0x%08x,0x%016llx", 
         er->ExceptionCode,
         er->ExceptionFlags,
         er->ExceptionAddress
@@ -1440,12 +1440,12 @@ void serialize_thread(THREAD_ENTRY* thread, char* buffer)
 
 void serialize_lib(LIB_ENTRY* lib, char* buffer)
 {
-    sprintf(buffer, "0x%08x,%s", lib->lib_offset, lib->lib_name);
+    sprintf(buffer, "0x%016llx,%s", lib->lib_offset, lib->lib_name);
 }
 
 void serialize_context(CONTEXT ctx, LDT_ENTRY* ldt, char* buffer)
 {
-    sprintf(buffer, "0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x", 
+    sprintf(buffer, "0x%016llx,0x%016llx,0x%016llx,0x%016llx,0x%016llx,0x%016llx,0x%016llx,0x%016llx,0x%08x,0x%016llx,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x", 
         ctx.Rax, 
         ctx.Rcx, 
         ctx.Rdx, 
@@ -1488,7 +1488,7 @@ void serialize_context(CONTEXT ctx, LDT_ENTRY* ldt, char* buffer)
 void deserialize_context(CONTEXT* ctx, char* buffer)
 {
     sscanf(buffer, 
-        "0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x,0x%08x",
+        "0x%016llx,0x%016llx,0x%016llx,0x%016llx,0x%016llx,0x%016llx,0x%016llx,0x%016llx,0x%08x,0x%016llx",
         ctx->Rax, 
         ctx->Rcx, 
         ctx->Rdx, 
@@ -1509,7 +1509,7 @@ void register_exception(DWORD tid, EXCEPTION_RECORD er)
     char line[MAX_LINE];
     char line2[0x100];
 
-    d_print("Registering Exception: code 0x%08x at: 0x%08x\n", er.ExceptionCode, er.ExceptionAddress);
+    d_print("Registering Exception: code 0x%08x at: 0x%016llx\n", er.ExceptionCode, er.ExceptionAddress);
 
     serialize_exception(er, line2);
     sprintf(line, "EX,0x%08x,%s\n", tid, line2);
@@ -1768,8 +1768,8 @@ void register_lib(LOAD_DLL_DEBUG_INFO info)
     //d_print("Name pointer: %p, len: 0x%08x\n", libs[my_trace->lib_count].lib_name, strlen(libs[my_trace->lib_count].lib_name));
 
     my_trace->libs[my_trace->lib_count].lib_offset = (OFFSET)info.lpBaseOfDll;
-    d_print("RL,0x%08x,%s\n", my_trace->libs[my_trace->lib_count].lib_offset, my_trace->libs[my_trace->lib_count].lib_name);
-    sprintf(line, "RL,0x%08x,%s\n", my_trace->libs[my_trace->lib_count].lib_offset, my_trace->libs[my_trace->lib_count].lib_name);
+    d_print("RL,0x%016llx,%s\n", my_trace->libs[my_trace->lib_count].lib_offset, my_trace->libs[my_trace->lib_count].lib_name);
+    sprintf(line, "RL,0x%016llx,%s\n", my_trace->libs[my_trace->lib_count].lib_offset, my_trace->libs[my_trace->lib_count].lib_name);
 
     my_trace->libs[my_trace->lib_count].loaded = 0x1;
     //update_e_reactions(&my_trace->libs[lib_count]);
@@ -1784,7 +1784,7 @@ void register_lib(LOAD_DLL_DEBUG_INFO info)
 void deregister_lib(DWORD i)
 {
     char line[MAX_LINE];
-    sprintf(line, "DL,0x%08x,%s\n", my_trace->libs[i].lib_offset, my_trace->libs[i].lib_name);
+    sprintf(line, "DL,0x%016llx,%s\n", my_trace->libs[i].lib_offset, my_trace->libs[i].lib_name);
     my_trace->libs[i].loaded = 0x0;
 
     add_to_buffer(line);
@@ -1800,7 +1800,7 @@ void deregister_lib(UNLOAD_DLL_DEBUG_INFO info)
         if(my_trace->libs[i].lib_offset == (OFFSET)info.lpBaseOfDll) break;
     }
 
-    sprintf(line, "DL,0x%08x,%s\n", my_trace->libs[i].lib_offset, my_trace->libs[i].lib_name);
+    sprintf(line, "DL,0x%016llx,%s\n", my_trace->libs[i].lib_offset, my_trace->libs[i].lib_name);
 
     my_trace->libs[i].loaded  = 0x0;
     //d_print(line);
@@ -1860,7 +1860,7 @@ void react_sysenter_callback(void* data)
     sysenter_no = ctx.Rax;
     sysenter_esp = ctx.Rsp;
 
-    sprintf(line, "# Syscall in TID: 0x%08x no: 0x%08x, stack@ 0x%08x\n", tid, sysenter_no, sysenter_esp);
+    sprintf(line, "# Syscall in TID: 0x%08x no: 0x%08x, stack@ 0x%016llx\n", tid, sysenter_no, sysenter_esp);
     add_to_buffer(line);
 
     deregister_thread(tid, my_trace->threads[tid_pos].handle);
@@ -1900,14 +1900,14 @@ void react_sysret_callback(void* data)
         d_print("Failed to get context, error: 0x%08x\n", GetLastError());
         return;
     }
-    d_print("EAX: 0x%08x\n", ctx.Rax);
+    d_print("EAX: 0x%016llx\n", ctx.Rax);
 
     /*
     for(i = 0x0; i<MAX_SYSCALL_OUT_ARGS; i++)
             my_trace->syscall_out_args_dump_list[i].off = last_location.off;
     */
 
-    d_print("[[Syscall: 0x%08x @ 0x%08x]]\n", sysenter_no, ctx.Rip);
+    d_print("[[Syscall: 0x%08x @ 0x%016llx]]\n", sysenter_no, ctx.Rip);
     for(i = 0x0; i<MAX_SYSCALL_OUT_ARGS; i++)
     {
 //        d_print("Arg no: 0x%02x\n", i);
@@ -2318,8 +2318,11 @@ int set_ss(DWORD tid)
     int i, tid_pos;
     DWORD cur_tid;
 
+
+
     /* avoid turning scanning on while skipping, e.g. during syscalls or i_reactions */
-    if(my_trace->threads[my_trace->thread_map[tid]].skipping == 0x1)
+    tid_pos = my_trace->thread_map[tid];
+    if(my_trace->threads[tid_pos].skipping == 0x1)
         return 0x0;
 
     if(tid == 0x0)
@@ -2409,7 +2412,7 @@ void ss_callback(void* data)
 {
     DEBUG_EVENT* de;
     de = (DEBUG_EVENT*)data;
-    DWORD64 eip;
+    OFFSET eip;
     DWORD tid;
     DWORD bytes_written;
     int size = 0x0;
@@ -2460,7 +2463,7 @@ void ss_callback(void* data)
     }
 
     my_trace->instr_count++;
-    sprintf(line, "0x%x 0x%08x %lld\n", tid, eip, my_trace->instr_count);
+    sprintf(line, "0x%x 0x%016llx %lld\n", tid, eip, my_trace->instr_count);
     add_to_buffer(line);
 
     if(my_trace->instr_limit)

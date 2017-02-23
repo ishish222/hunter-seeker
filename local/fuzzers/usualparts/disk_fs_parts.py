@@ -163,7 +163,12 @@ def create_layout(options):
 def mount_drive_host(options, additional='loop,umask=0000'):
     additional = options.settings.host_mount_options
     print("Mounting %s" % options.tmp_mountpoint)
-    os.spawnv(os.P_WAIT, "/usr/bin/sudo", ["sudo", "mount", "-o", additional, options.tmp_disk_img, options.tmp_mountpoint])
+    if(hasattr(options.settings, 'template_offset')):
+        additional = 'loop,umask=0000'
+        print("Executing: %s" % " ".join(["sudo", "mount", "-o", "%s,offset=%s" % (additional, options.settings.template_offset), options.tmp_disk_img, options.tmp_mountpoint]))
+        os.spawnv(os.P_WAIT, "/usr/bin/sudo", ["sudo", "mount", "-o", "%s,offset=%s" % (additional, options.settings.template_offset), options.tmp_disk_img, options.tmp_mountpoint])
+    else:
+        os.spawnv(os.P_WAIT, "/usr/bin/sudo", ["sudo", "mount", "-o", additional, options.tmp_disk_img, options.tmp_mountpoint])
 
 def umount_drive_host(options):
     print("Umounting %s" % options.tmp_mountpoint)

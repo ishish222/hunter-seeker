@@ -13,7 +13,7 @@ t:fuzzers/correctors
 t:fuzzers/common.py
 c:util/extract-saved
 c:util/analyze-sample
-s:tracer_c/b.exe
+s:tracer_c/32/b.exe
 s:paimei
 s:binners/binner-generic.py
 s:binners/binner.py

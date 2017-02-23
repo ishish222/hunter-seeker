@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <windows.h>
 #include "WinBase.h"
+#include "DbgHelp.h"
 #include <TlHelp32.h>
 #include "winternl.h"
 
@@ -166,6 +167,7 @@
 #define CMD_READ_ARG            "ra"
 #define CMD_READ_ARG_ANSI       "rs"
 #define CMD_READ_ARG_UNICODE    "ru"
+#define CMD_SECURE_ALL_SECTIONS "ss"
 
 #define CMD_ROUTINE_1           "R1"
 #define CMD_ROUTINE_2           "R2"
@@ -246,6 +248,7 @@ typedef struct _THREAD_ENTRY
     HANDLE handle;
     char skipping;
     REACTION* locking_reaction;
+    char after_unlocking;
 } THREAD_ENTRY;
 
 /* tracking libraries */
