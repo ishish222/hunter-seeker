@@ -1060,7 +1060,7 @@ int raise_reaction(char* reaction_id)
         while(another_r)
         {
             d_print("Found another reaction: %s\n", another_r);
-            exclusive_reaction(another_r);    
+            raise_reaction(another_r);    
             another_r = strtok(0x0, ":");
         }
         return 0x0;
@@ -1071,8 +1071,9 @@ int raise_reaction(char* reaction_id)
         /* locate i_reaction */
         if(!strcmp(reaction_id, my_trace->reactions[i].reaction_id))
         {
-            d_print("Setting exclusive reaction %s\n", reaction_id);
+            d_print("Reaction 0x%x and coupled - Before raise: 0x%x\n", my_trace->reactions[i].reaction_id, my_trace->reactions[i].level);
             my_trace->reactions[i].level ++;
+            d_print("Reaction 0x%x and coupled - After raise: 0x%x\n", my_trace->reactions[i].reaction_id, my_trace->reactions[i].level);
 
             REACTION* cur_reaction = &my_trace->reactions[i];
 
@@ -2780,7 +2781,7 @@ int handle_reaction(REACTION* cur_reaction, void* data)
         if(cur_reaction->level <= locking_reaction->level)
         {
 //          d_print("ER_3 (%d) Reaction lock is active, continuing, missing reaction %s due to lock by %s\n", my_trace->instr_count, cur_reaction->reaction_id, locking_reaction->reaction_id);
-            d_print("ER_3 TID: 0x%08x, Reaction lock is active, continuing, missing reaction %s due to lock by %s\n", thread_no, cur_reaction->reaction_id, locking_reaction->reaction_id);
+            d_print("ER_3 TID: 0x%08x, Reaction lock is active, continuing, missing reaction %s (level 0x%x) due to lock by %s (level 0x%x)\n", thread_no, cur_reaction->reaction_id, cur_reaction->level, locking_reaction->reaction_id, locking_reaction->level);
             return 0x0;
         }
         else

@@ -627,7 +627,14 @@ int add_to_list(CONTEXT_INFO* info, DWORD eip)
 
 int taint_x86::handle_jxx(CONTEXT_INFO* info, char* str)
 {
+    /*
     if((info->levels[info->call_level].jxx_handling != 0x1) || (info->waiting != 0x0))
+    {
+        return 0x0;
+    }
+    */
+
+    if(info->waiting != 0x0)
     {
         return 0x0;
     }

@@ -1,0 +1,5 @@
+Dodawanie dyskow w nowym formacie:
+(qemu) drive_add 0 file=/storage/10G.img,format=qcow2,id=drive-virtio-disk1,if=none 
+(qemu) device_add virtio-blk-pci,scsi=on,drive=drive-virtio-disk1
+drive_del drive
+

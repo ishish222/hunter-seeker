@@ -1,0 +1,143 @@
+[x] 001 - rustock analysis, analysis stopps after 2000000 instructions
+
+Instruction @ 0x6de3ab75 in lib: 
+
+W pamieci sa same ff
+Moze kod jakiegos liba zostal zmodyfikowany?
+sprobuje rejestrowac ochrone na wszystkie liby
+Zaimplementowano
+Fixed
+
+--
+
+[x] 002 - obsluga CreateThread
+Fixed
+
+--
+
+[x] 003 - cos do dopasowania watkow
+
+IW nie dziala
+Wystarczy przeszukanie po adresie, jest zarejestrowany call
+
+--
+
+[n] 004 - TID_00000DFC, blad odczytu
+
+--
+
+[x] 005 - czemu wlasciwy kod jest czasami tak globoko zakopany, np. TID_00000738
+
+Pierwszy adres zarejestrowany w watku to: 0x00401c3b
+Wyglada, jakby duza czesc kodu nie zostala nagrana
+
+Pierwszy adres w ogole:
+0x002b2505
+0x004014c0
+
+Podejrzewam, ze cos jest nie tak z wbudowanymi reakcjami
+
+nie no, ale przeciez reakcje nie wylaczaja skanow!
+
+chyba ze to cos z reakcjami sysnter/sysret
+s1/s2 maja za niski priorytet? Proboje podwyzszyc
+
+Cos jest nie tak. nie dzialaja reakcje, ktore powinny dzialac bez problemu.
+Pare poprawek w tracerze.
+
+Zaczynajac watek:
+ntdll.dll+0x1f01c4
+
+Wlaczenie trasowania przy kazdowazowym uruchomieniu watku
+
+Symbptomem rozwiazania problemu bedzie 0x00401b67 w nagraniu
+
+Ok. Powstaje watek. Jest rejestracja watku, w ktorym jest eip. Dlaczego on (ani nastepny) nie jest strasowany? Tylko dopiero po jakims syscallu
+
+RT,0x00000130,0x00401b67,0x00000000,0x00000000,0x0012f450,0x00000000,0x00000000,0x00000000,0x01cefff0,0x00000200,0x77f064d8,0x00000000,0x0000003b,0x00000023,0x00000023,0x0000001b,0x00000023,0x00000000,0x00000000,0x00000000,0x00000fff,0x00003000,0x7f40f3fd,0x0000ffff,0x00000000,0x00cff300,0x0000ffff,0x00000000,0x00cff300,0x0000ffff,0x00000000,0x00cffb00,0x0000ffff,0x00000000,0x00cff300
+RT,0x00000130,0x00000000,0x01cefcb8,0x77f064f4,0x77f9714c,0x7ffdf000,0x7ffd3000,0x01cefd00,0x01cefcb8,0x00000246,0x77f064f5,0x00000000,0x0000003b,0x00000023,0x00000023,0x0000001b,0x00000023,0x00000000,0x00000000,0x00000000,0x00000fff,0x00003000,0x7f40f3fd,0x0000ffff,0x00000000,0x00cff300,0x0000ffff,0x00000000,0x00cff300,0x0000ffff,0x00000000,0x00cffb00,0x0000ffff,0x00000000,0x00cff300
+0x130 0x77f05d3c 96274
+0x130 0x77f1b29d 96275
+
+O chuj tu chodzi?
+
+Ok, 0x00401b67 wystepuje w nagraniach.
+
+Teraz trzeba poprawic wyniki analizy struktury :)
+Trzeba bylo odblokowac BaseThreadInitThunk :)
+
+--
+
+006 - deploy na vulpix
+
+Maszyny
+Procedury
+Narzedzia
+
+mount: /dev/loop1 is write-protected, mounting read-only
+mount: wrong fs type, bad option, bad superblock on /dev/loop1,
+       missing codepage or helper program, or other error
+
+       In some cases useful info is found in syslog - try
+       dmesg | tail or so.
+
+po stworzeniu surowego dysku (dd) mozna go podpiac pod winde, zainicjalizowac i sformatowac.
+offset takiego dysku odczytujemy:
+fdisk -l /home/ish/hs2-data/images/temu-samples-template.bp.2.img * 512
+
+-- 
+
+[x] 007 - conajmniej jeden przyklad niedzialajacej obslugi syscalla:
+
+0x5f4 0x77f064f0 48048
+0x5f4 0x77f064f2 48049
+RT,0x000005f4,0x00000000,0x00000001,0xffffffff,0x00000000,0x00000000,0x00000000,0x0128ff70,0x0128ff28,0x00000306,0x77f064f5,0x00000000,0x0000003b,0x00000023,0x00000023,0x0000001b,0x00000023,0x00000000,0x00000000,0x00000000,0x00000fff,0x0000e000,0x7f40f3fd,0x0000ffff,0x00000000,0x00cff300,0x0000ffff,0x00000000,0x00cff300,0x0000ffff,0x00000000,0x00cffb00,0x0000ffff,0x00000000,0x00cff300
+0x5f4 0x77f0589c 48050
+0x5f4 0x77eed4f1 48051
+
+s2 zostala wywlaszczona przez t7. To oznacza, ze nie zadzialaly poziomy
+
+Poprawiono.
+
+Czy to jest ok?
+
+ER_3 TID: 0x00000001, Reaction lock is active, continuing, missing reaction s1 (level 0x1) due to lock by s1 (level 0x1)
+ER_4 TID: 0x00000600
+ER_5 TID1: 0x00000600 instr_count: 3687623
+
+
+--
+
+[x] 008 - nie zadzialala reakcja CreateFileA
+
+przynajmniej nie ma jej w wynikach
+OU nie zostala umieszczona w nagraniu
+
+--
+
+009 - ogarnac te reakcje. Sa czasem wypisywane pojedynczo, czasem podwojnie, czasem chyba sie nie wykluczaja na tym samym poziomie
+
+Czy reakcje na tym samym poziomie powinny sie wykluczac? Tak.
+
+- Przypadek InternetOpenA
+Nie sa stworzone reakcje, jest tylko symbol. Wiec reakcje wewnatrz nie sa blokowane.
+
+- przypadek InternetSetOptionA
+Sa ustawione reakcje puste (0x100). Nie sa ekskluzywne. Sprawdzic, czy cos sie zmieni po ustawieniu jako ekskluzywne.
+
+- przypadek HttpQueryInfoA
+Nie jest zarejestrowana zadna reakcja
+
+- przypadek InternetReadFile
+Zarejestrowane reakcje puste
+
+- przypadek CreateFileA
+Sa zarejestrowane zwykle reakcje. Wyglada na to, ze kazda z reakcji zostala wykonana 2 razy.
+
+--
+
+[x] 010 - rejestrowanie jmpow
+
+Minimalizowac wypisywanie jmpow w oparciu o tabelki z juz zarejestrowanymi. Ale sa potrzebne do informowania o mozliwych rozgalezieniach.
+
+

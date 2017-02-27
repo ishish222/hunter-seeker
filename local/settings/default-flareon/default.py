@@ -247,7 +247,7 @@ WININET.dll+0x1eef3,n2:n3,0x301;            # HttpSendRequestW start
 WININET.dll+0x1ef6d,n3:n2,0x100;            # HttpSendRequestW end 
 KERNELBASE.dll+0x6811,n4:n5,0x100;          # GetLastError start
 KERNELBASE.dll+0x681a,n5:n4,0x330;          # GetLastError end
-WININET.dll+0x14d49,n6:n7,0x100;            # InternetSetOptionA start
+WININET.dll+0x14d49,n6:n7,0x301:0x302:0x303;            # InternetSetOptionA start
 WININET.dll+0x14e49,n7:n6,0x100;            # InternetSetOptionA end
 WININET.dll+0x14ea1,n8:n9,0x100;            # InternetSetOptionW start
 WININET.dll+0x14f6d,n9:n8,0x100;            # InternetSetOptionW end

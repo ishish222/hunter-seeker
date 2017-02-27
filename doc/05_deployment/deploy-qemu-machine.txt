@@ -1,0 +1,8 @@
+1 - install OS
+2 - install virtio
+3 - admin cmd in autostart (harmonogram), disable ASLR (regedit), disable UAG (Control Panel)
+4 - move to root.qcow2
+5 - create clone disk (qemu-img create -f qcow2 hs2-01.qcow2 -b root.qcow2)
+6 - create snapshot clean 
+7 - define operations in sudo: mount, umount
+8 - create attachable drives
