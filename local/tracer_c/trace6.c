@@ -2751,11 +2751,11 @@ int handle_reaction(REACTION* cur_reaction, void* data)
     DWORD tid;
     DWORD thread_no;
     char line[MAX_LINE];
+    char overriding = 0x0;
+    REACTION* locking_reaction;
 
     tid = de->dwThreadId;
     thread_no = my_trace->thread_map[tid];
-
-    REACTION* locking_reaction;
 
     /* first enable coupled */
     unsigned k; 
@@ -2774,6 +2774,7 @@ int handle_reaction(REACTION* cur_reaction, void* data)
     }
 
     /* verify if lock is enabled */
+
     locking_reaction = my_trace->threads[thread_no].locking_reaction;
     if(locking_reaction != 0x0)
     {
@@ -2781,13 +2782,14 @@ int handle_reaction(REACTION* cur_reaction, void* data)
         if(cur_reaction->level <= locking_reaction->level)
         {
 //          d_print("ER_3 (%d) Reaction lock is active, continuing, missing reaction %s due to lock by %s\n", my_trace->instr_count, cur_reaction->reaction_id, locking_reaction->reaction_id);
-            d_print("ER_3 TID: 0x%08x, Reaction lock is active, continuing, missing reaction %s (level 0x%x) due to lock by %s (level 0x%x)\n", thread_no, cur_reaction->reaction_id, cur_reaction->level, locking_reaction->reaction_id, locking_reaction->level);
+            d_print("ER_3 TID: 0x%08x, Reaction lock is active, continuing, missing reaction %s (level 0x%x) due to lock by %s (level 0x%x)\n", tid, cur_reaction->reaction_id, cur_reaction->level, locking_reaction->reaction_id, locking_reaction->level);
             return 0x0;
         }
         else
         {
 //          d_print("ER_3 (%d) Reaction lock %s overriden by %s\n", my_trace->instr_count, locking_reaction->reaction_id, cur_reaction->reaction_id);
-            d_print("ER_3 TID: 0x%08x, Reaction lock %s overriden by %s\n", thread_no, locking_reaction->reaction_id, cur_reaction->reaction_id);
+            d_print("ER_3 TID: 0x%08x, Reaction lock %s overriden by %s\n", tid, locking_reaction->reaction_id, cur_reaction->reaction_id);
+            overriding = 0x1;
         }
     }
 
@@ -2800,12 +2802,16 @@ int handle_reaction(REACTION* cur_reaction, void* data)
         }
         else
         {
-            d_print("ER_32 TID: 0x%08x, in handle_reaction: %p, %s\n", thread_no, cur_reaction, cur_reaction->reaction_id);
-            d_print("ER_3 TID: 0x%08x, Locking reaction lock with: %s\n", thread_no, cur_reaction->reaction_id);
-            my_trace->threads[thread_no].locking_reaction = cur_reaction;
+            if(!overriding)
+            {
+                d_print("ER_32 TID: 0x%08x, in handle_reaction: %p, %s\n", tid, cur_reaction, cur_reaction->reaction_id);
+                d_print("ER_3 TID: 0x%08x, Locking reaction lock with: %s\n", tid, cur_reaction->reaction_id);
+                my_trace->threads[thread_no].locking_reaction = cur_reaction;
+            }
         }
     }
 
+    /* execute routine handlers */
     for(k = 0x0; k< cur_reaction->routines_count; k++)
     {
 
@@ -2822,7 +2828,7 @@ int handle_reaction(REACTION* cur_reaction, void* data)
             if(cur_reaction->routine_ids[k] < 0x300)
             if(cur_reaction->routine_ids[k] > 0x100)
             {
-                d_print("ER_3 TID: 0x%08x, Executing routine 0x%08x @ %d\n", thread_no, cur_reaction->routine_ids[k], my_trace->instr_count);
+                d_print("ER_3 TID: 0x%08x, Executing routine 0x%08x @ %d\n", tid, cur_reaction->routine_ids[k], my_trace->instr_count);
                 sprintf(line, "OU,0x%x,0x%08x Routine 0x%08x\n", my_trace->last_tid, my_trace->last_eip, cur_reaction->routine_ids[k]);
                 add_to_buffer(line);
             }
@@ -2864,7 +2870,7 @@ int handle_breakpoint(DWORD addr, void* data)
             thread_no = my_trace->thread_map[tid];
             if(thread_no == -1) continue;
 
-            d_print("ER_5 TID1: 0x%08x instr_count: %d\n", de->dwThreadId, my_trace->instr_count);
+            d_print("ER_5 BP hit & identified, TID1: 0x%08x instr_count: %d\n", de->dwThreadId, my_trace->instr_count);
 
             /* verify presence of reaction lock */
             REACTION* locking_reaction;
@@ -2909,7 +2915,7 @@ int handle_breakpoint(DWORD addr, void* data)
 
                 }
 
-                /* unlocked or overriden, handle current reaction */
+                /* lock unlocked or not, handle current reaction */
                 de = (DEBUG_EVENT*)data;
                 d_print("ER_6 TID: 0x%08x\n", de->dwThreadId);
                 d_print("ER_3 TID: 0x%08x, Reaction no %d: %p, %s\n", de->dwThreadId, j, cur_reaction, cur_reaction->reaction_id);

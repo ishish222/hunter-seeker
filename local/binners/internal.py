@@ -1428,10 +1428,11 @@ def execute(cmds):
 
         elif(cmd == "run_cmd"):
             import subprocess
-            logf.write("a")
-            ans = subprocess.call(("%s" % args).split(), stdout=logf.fileno())
+            cmd = "cmd.exe /c %s" % args
+            p = subprocess.Popen(cmd.split(), stdout=subprocess.PIPE)
+            out, err = p.communicate()
+            writePipe(ext_pipe, out)
             writePipe(ext_pipe, "run_cmd OK")
-            logf.write("b")
             ok(ext_pipe)
 
         elif(cmd == "get_dns"):
@@ -1481,6 +1482,13 @@ def execute(cmds):
             writePipe(ext_pipe, "[Trace controller]: OK")
             writePipe(ext_pipe, "Active tracers: %d" % trace_controller.trace_count)
             writePipe(ext_pipe, "spawn_tracer_log OK")
+            ok(ext_pipe)
+
+        elif(cmd == "spawn_tracer_remote_log"):
+            new_tracer = trace_controller.spawn_tracer_remote_log()
+            writePipe(ext_pipe, "[Trace controller]: OK")
+            writePipe(ext_pipe, "Active tracers: %d" % trace_controller.trace_count)
+            writePipe(ext_pipe, "spawn_tracer_remote_log OK")
             ok(ext_pipe)
 
         elif(cmd == "spawn_tracer_no_log"):

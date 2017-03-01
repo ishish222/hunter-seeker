@@ -460,6 +460,23 @@ class TraceController(object):
         print("Tracer synced")
         return self.trace_count
 
+    def spawn_tracer_remote_log(self):
+        print("Spawning tracer w log: e:\\server\\log_%x.txt" % self.trace_count)
+        Popen(["e:\\server\\b.exe", "127.0.0.1", "12341", ">", "\\\\10.0.2.4\\qemu\\log_%d.txt" % self.trace_count], shell=True)
+        #Popen(["e:\\server\\b.exe", "127.0.0.1", "12341", ">", "\\\\10.0.2.4\\qemu\\log.txt"], shell=True)
+        socket, addr = self.main_socket.accept()
+        self.tracers.append(Tracer())
+        self.tracer_active_id = self.trace_count
+        self.tracer_active = self.tracers[self.tracer_active_id]
+        self.tracer_active.socket = socket
+        self.tracer_active.addr = addr
+        self.tracer_active.active_tid_id = 0
+        self.tracer_active.my_id = self.tracer_active_id
+        self.tracer_active.controller = self
+        self.trace_count += 1
+        print("Tracer synced")
+        return self.trace_count
+
     def spawn_tracer_log(self):
         print("Spawning tracer w log: e:\\server\\log_%x.txt" % self.trace_count)
         Popen(["e:\\server\\b.exe", "127.0.0.1", "12341", ">", "e:\\server\\log_%x.txt" % self.trace_count], shell=True)

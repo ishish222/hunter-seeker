@@ -101,6 +101,18 @@ def start_tracer_log(args=None):
     state.tracers.append(response)
     state.tracers_count += 1
 
+def start_tracer_log_remote(args=None):
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+    
+    write_socket(options.s, "spawn_tracer_log_remote");
+    response, _, _ = read_socket(options.s)
+
+    # register controller on success
+    state.tracers.append(response)
+    state.tracers_count += 1
+
 def read_prefix(args=None):
     options = globs.state.options
     state = globs.state

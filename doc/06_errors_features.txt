@@ -119,25 +119,50 @@ OU nie zostala umieszczona w nagraniu
 
 Czy reakcje na tym samym poziomie powinny sie wykluczac? Tak.
 
-- Przypadek InternetOpenA
+- Przypadek InternetOpenA i InternetOpenUrlA
 Nie sa stworzone reakcje, jest tylko symbol. Wiec reakcje wewnatrz nie sa blokowane.
+utworzone reakcje
+
+InternetOpenA nie zostala obsluzona, poniewaz byl lock reakcji s0 z innego watku
+w logach pomylilem thread_no i thread_id. Trzeba jakos ogarnac to nazewnictwo :). Kolejne nagranie i sprawdze
+
+895239 - p4 (51652)
+
+przed odblokowaniem przez p5 jest: 
+
+odblokowanie przez s1 (52001)
+c0 (przy uderzeniu jest, ze locking_reaction = a) (52069)
+
+dopiero p5 (240595)
 
 - przypadek InternetSetOptionA
 Sa ustawione reakcje puste (0x100). Nie sa ekskluzywne. Sprawdzic, czy cos sie zmieni po ustawieniu jako ekskluzywne.
+Nowe nagranie (rustock_004_2) z okreslonyim reakcjami
 
 - przypadek HttpQueryInfoA
 Nie jest zarejestrowana zadna reakcja
+Zarejestrowano reakcje
 
 - przypadek InternetReadFile
 Zarejestrowane reakcje puste
+Zarejestrowano poprawne reakcje
 
 - przypadek CreateFileA
 Sa zarejestrowane zwykle reakcje. Wyglada na to, ze kazda z reakcji zostala wykonana 2 razy.
+OU jest tylko 1 raz, wiec blad znajduje sie w taint
 
 --
 
 [x] 010 - rejestrowanie jmpow
 
 Minimalizowac wypisywanie jmpow w oparciu o tabelki z juz zarejestrowanymi. Ale sa potrzebne do informowania o mozliwych rozgalezieniach.
+
+--
+
+011 - o co chodzi z tym ostatnim zamieszaniem z C3?
+
+--
+
+012 - zaimplementowac kopiowanie plikow (do kopiowania dropow i jebanych logow)
 
 

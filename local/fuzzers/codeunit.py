@@ -40,6 +40,7 @@ prototypes['ResetTracers']          = tracing_parts.reset_tracer_controller_stat
 prototypes['SpawnTracerController'] = tracing_parts.spawn_tracer_controller
 prototypes['SpawnTracerScrLog']     = tracing_parts.start_tracer
 prototypes['SpawnTracerFileLog']    = tracing_parts.start_tracer_log
+prototypes['SpawnTracerRemoteLog']  = tracing_parts.start_tracer_log_remote
 prototypes['SpawnTracerNoLog']      = tracing_parts.start_tracer_no_log
 # for backward compatibility
 prototypes['SpawnTracer']           = tracing_parts.start_tracer

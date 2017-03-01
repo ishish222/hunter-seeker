@@ -26,7 +26,8 @@ Wait10
 goto(start_controller)
 
 success:
-Execute(scripts/common/debug_sample_no_log.sc)
+RunCmd(dir)
+Execute(scripts/common/debug_sample.sc)
 
 # RR
 TracerRegisterRegions(0x400000:0x5000)

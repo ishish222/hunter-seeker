@@ -841,6 +841,7 @@ int taint_x86::comment_out(char* comment, DWORD tid)
 
     info = &this->ctx_info[tid_no];
 
+    d_print(1, "Writing out comment @ %d: %s", this->last_instr_count, comment);
     print_empty_call(info, comment, colors[CODE_COMMENT]);
     return 0x0;
 }
@@ -2573,6 +2574,7 @@ int taint_x86::add_thread(CONTEXT_info ctx_info)
 
     this->cur_tid = 0;
     
+    d_print(1, "ER_9 TID: 0x%08x lock_level: 0x%08x\n", ctx_info.thread_id, this->ctx_info[this->tid_count-1].lock_level);
     return 0x0;
 }
 
