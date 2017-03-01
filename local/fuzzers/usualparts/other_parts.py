@@ -302,13 +302,8 @@ def sigkill_handler(signum, frame):
     
     return
 
-def register_signals(args=None):
-    import signal
-    import common
-    # przeszkadza jednak, nie mozna zakonczyc czasem
-    signal.signal(signal.SIGINT, sigkill_handler)
-    signal.signal(signal.SIGUSR1, sigkill_handler)
-    signal.signal(signal.SIGHUP, sigkill_handler)
+def register_signals(args="exception"):
+    globs.exc_label = args
 
 def wait_1_seconds(args=None):
     import time

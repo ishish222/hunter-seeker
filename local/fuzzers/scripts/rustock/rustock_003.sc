@@ -8,7 +8,7 @@ SetOutDir(\\10.0.2.4\qemu)
 CheckHostDir
 RevertClean
 EnableLogging
-RegisterSignals
+RegisterSignals(exception)
 PrepareStats
 PreparePipes
 GlobMethod
@@ -26,7 +26,6 @@ Wait10
 goto(start_controller)
 
 success:
-RunCmd(dir)
 Execute(scripts/common/debug_sample.sc)
 
 # RR
@@ -76,3 +75,5 @@ re:
 TracerDebugContinueInf(0x80010001)
 goto(decision)
 
+exception:
+RunCmd(dir)

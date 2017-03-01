@@ -12,15 +12,23 @@ globs.init()
 import codeunit
 from codeunit import Instruction, Decision, GoTo
 
+import signal
+
 class MachineError(Exception):
     pass
+
+def sigkill_handler(signum, frame):
+        raise MachineError
 
 def stateful_routine(script_path):
     script = []
     labels = {}
     ip = 1
 
-#    script_path = sys.argv[len(sys.argv) -1]
+    signal.signal(signal.SIGINT, sigkill_handler)
+    signal.signal(signal.SIGUSR1, sigkill_handler)
+    signal.signal(signal.SIGHUP, sigkill_handler)
+
     print
     print "Loading script: [%s]" % script_path
     print
@@ -88,12 +96,26 @@ def stateful_routine(script_path):
             ip += 1
             continue
 
-        print "[%s] Currently executing: [%d] %s" % (script_path, ip, instruction.name)
-        if(instruction.name == 'Execute'):
-            stateful_routine(instruction.args)
-            ret = None
-        else:
-            ret = instruction.execute()
+        try:
+            print "[%s] Currently executing: [%d] %s" % (script_path, ip, instruction.name)
+            if(instruction.name == 'Execute'):
+                stateful_routine(instruction.args)
+                ret = None
+            else:
+                ret = instruction.execute()
+        except Exception:
+            if(hasattr(globs, 'first_chance')):
+                print 'First chance handler finished'
+                print 'Exiting'
+                exit(0)
+            else:
+                globs.first_chance = 1
+
+            print "Caught exception"
+            if(globs.exc_label != None):
+                ret = globs.exc_label
+            else:
+                break
 
         if(ret == None):
             ip += 1
