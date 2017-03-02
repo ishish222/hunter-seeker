@@ -172,8 +172,8 @@ def window_check(hwnd, lParam):
         found = True
 
 ### binner commands
-def execute(cmds):
-    global ext_pipe
+def execute(cmds, ext_pipe):
+#    global ext_pipe
     global status
     global trace_controller
     global responder
@@ -1531,9 +1531,105 @@ def execute(cmds):
 
 ### main loop
 
+class Interrupt(Exception):
+    pass
+
+import threading
+import inspect
+
+def _async_raise(tid, exctype):
+    '''Raises an exception in the threads with id tid'''
+    if not inspect.isclass(exctype):
+        raise TypeError("Only types can be raised (not instances)")
+    res = ctypes.pythonapi.PyThreadState_SetAsyncExc(tid,
+                                                  ctypes.py_object(exctype))
+    if res == 0:
+        raise ValueError("invalid thread id")
+    elif res != 1:
+        # "if it returns a number greater than one, you're in trouble,
+        # and you should call it again with exc=NULL to revert the effect"
+        ctypes.pythonapi.PyThreadState_SetAsyncExc(tid, 0)
+        raise SystemError("PyThreadState_SetAsyncExc failed")
+
+
+class ThreadWithExc(threading.Thread):
+    '''A thread class that supports raising exception in the thread from
+       another thread.
+    '''
+    def _get_my_tid(self):
+        """determines this (self's) thread id
+
+        CAREFUL : this function is executed in the context of the caller
+        thread, to get the identity of the thread represented by this
+        instance.
+        """
+        if not self.isAlive():
+            raise threading.ThreadError("the thread is not active")
+
+        # do we have it cached?
+        if hasattr(self, "_thread_id"):
+            return self._thread_id
+
+        # no, look for it in the _active dict
+        for tid, tobj in threading._active.items():
+            if tobj is self:
+                self._thread_id = tid
+                return tid
+
+        # TODO: in python 2.6, there's a simpler way to do : self.ident
+
+        raise AssertionError("could not determine the thread's id")
+
+    def raiseExc(self, exctype):
+        """Raises the given exception type in the context of this thread.
+
+        If the thread is busy in a system call (time.sleep(),
+        socket.accept(), ...), the exception is simply ignored.
+
+        If you are sure that your exception should terminate the thread,
+        one way to ensure that it works is:
+
+            t = ThreadWithExc( ... )
+            ...
+            t.raiseExc( SomeException )
+            while t.isAlive():
+                time.sleep( 0.1 )
+                t.raiseExc( SomeException )
+
+        If the exception is to be caught by the thread, you need a way to
+        check that your thread has caught it.
+
+        CAREFUL : this function is executed in the context of the
+        caller thread, to raise an excpetion in the context of the
+        thread represented by this instance.
+        """
+        _async_raise( self._get_my_tid(), exctype )
+
+def executing(cmd_q, ext_pipe):
+    while True:
+        cmds = cmd_q.get()
+        execute(cmds, ext_pipe)
+        print 'Executed: %s\n' % cmds
+
+def executing2():
+    import time
+    global cmd_q2
+
+    while True:
+        if(len(cmd_q2) == 0):
+            time.sleep(1)
+            continue
+        cmds = cmd_q2.pop()
+        try:
+            execute(cmds, ext_pipe)
+        except Exception:
+            print 'Interrupted'
+        print 'Executed: %s\n' % cmds
+
 
 def internal_routine():
     global ext_pipe
+    global cmd_q2
     global log_pipe
     global main_binner
     global trace_controller
@@ -1548,40 +1644,38 @@ def internal_routine():
      \/                          \/        
 Hunter-Seeker
 """
+    from multiprocessing import Process, Queue
+
     print(logo)
+
+    cmd_q = Queue()
+    cmd_q2 = []
     ext_pipe = SerialWrap(0)
-#    log_pipe = SerialWrap(1)
-    # signal ext_pipe connection
+
     writePipe(ext_pipe, 'Ext_pipe connected')
     ok(ext_pipe)
-    # signal log_pipe connection
-#    #writePipe(log_pipe, 'Log_pipe connected')
-#    ok(log_pipe)
-    import sys
-#    sys.stdout = log_pipe
-#    sys.stderr = log_pipe
 
+#    p = Process(target=executing, args=(cmd_q, ext_pipe))
+    p = ThreadWithExc(None, executing2)
+    p.start()
+
+    
     while True:
+        print 'Reading...\n'
         cmd = readPipe(ext_pipe)
+        if(cmd == 'interrupt'):
+#            p.terminate()
+            p.raiseExc(Interrupt)
+            p = ThreadWithExc(None, executing2)
+            p.start()
+            print 'Interrupted'
+            ok(ext_pipe)
+            continue
         cmds = cmd.split(" ")
-        execute(cmds)
-        #log_pipe.write("CMD executed")
-        if(cmd == "quit"):
-            break
-
-import cProfile, pstats, StringIO
-pr = cProfile.Profile()
-pr.enable()
-f = open("e:\\logs\\stats-binner", "a", 0)
+#        cmd_q.put(cmds)
+        cmd_q2.insert(0, cmds)
+        print 'Inserted: %s\n' % cmds
 
 if __name__ == '__main__':
     internal_routine()
-#    profile.run("binner_routine()", "e:\\logs\\stats-binner")
-
-pr.disable()
-s = StringIO.StringIO()
-sortby = 'cumulative'
-ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
-f.write("test")
-f.close()
 

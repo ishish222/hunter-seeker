@@ -18,7 +18,8 @@ class MachineError(Exception):
     pass
 
 def sigkill_handler(signum, frame):
-        raise MachineError
+    raise MachineError
+    return True
 
 def stateful_routine(script_path):
     script = []
@@ -104,18 +105,18 @@ def stateful_routine(script_path):
             else:
                 ret = instruction.execute()
         except Exception:
+            print("Exception:", sys.exc_info()[0])
             if(hasattr(globs, 'first_chance')):
                 print 'First chance handler finished'
                 print 'Exiting'
                 exit(0)
             else:
+                print 'First chance handler'
                 globs.first_chance = 1
 
-            print "Caught exception"
             if(globs.exc_label != None):
                 ret = globs.exc_label
-            else:
-                break
+                print 'ret = %s' % ret
 
         if(ret == None):
             ip += 1

@@ -565,3 +565,11 @@ def decision(args=None):
         return globs.state.ret[1:3]
 
 
+def interrupt(args=None):
+    options = globs.state.options
+    
+    write_socket(options.s, "interrupt");
+    response, _, _ = read_socket(options.s)
+
+    return
+

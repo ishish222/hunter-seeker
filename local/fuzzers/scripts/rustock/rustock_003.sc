@@ -26,7 +26,7 @@ Wait10
 goto(start_controller)
 
 success:
-Execute(scripts/common/debug_sample.sc)
+Execute(scripts/common/debug_sample_no_log.sc)
 
 # RR
 TracerRegisterRegions(0x400000:0x5000)
@@ -77,3 +77,4 @@ goto(decision)
 
 exception:
 RunCmd(dir)
+
