@@ -163,11 +163,15 @@ Minimalizowac wypisywanie jmpow w oparciu o tabelki z juz zarejestrowanymi. Ale 
 
 --
 
-012 - zaimplementowac kopiowanie plikow (do kopiowania dropow i jebanych logow)
+[x] 012 - zaimplementowac kopiowanie plikow (do kopiowania dropow i jebanych logow)
 
 --
 
-013 - zaimplementowac obsluge przerwania analizy
+[x] 013 - zaimplementowac obsluge przerwania analizy
 
 Moze zerwac polaczenie z internalem i nawiazac od nowa, a nastepnie przejsc do obslugi przerwania?
+Brzydkie, do uporzadkowania pozniej :)
+
+M.in. kazdy watek powinien miec swoja kolejke
+
 

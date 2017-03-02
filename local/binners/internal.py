@@ -1429,6 +1429,7 @@ def execute(cmds, ext_pipe):
         elif(cmd == "run_cmd"):
             import subprocess
             cmd = "cmd.exe /c %s" % args
+            print 'CMD: %s\n' % cmd
             p = subprocess.Popen(cmd.split(), stdout=subprocess.PIPE)
             out, err = p.communicate()
             writePipe(ext_pipe, out)
