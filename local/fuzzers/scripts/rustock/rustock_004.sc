@@ -78,4 +78,4 @@ goto(decision)
 exception:
 Interrupt
 RunCmd(copy e:\server\log_0.txt \\10.0.2.4\qemu\)
-
+QemuQuit

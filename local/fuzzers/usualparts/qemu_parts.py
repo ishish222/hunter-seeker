@@ -68,6 +68,14 @@ def log_loop(arg1, shutdown):
 
     options.log_file.write('finishing\n')
 
+import signal
+import os
+
+def preexec_function():
+#    signal.signal(signal.SIGINT, signal.SIG_IGN)
+    os.setpgrp()
+
+
 def qemu_connect_log(args=None):
     from threading import Thread
 
@@ -91,7 +99,7 @@ def qemu_start_full(args=None):
 
     myErr = open("./err", "w+")
 
-    m = Popen(options.qemu_args, stdout=PIPE, stdin=PIPE, stderr=myErr.fileno(), env=os.environ)
+    m = Popen(options.qemu_args, stdout=PIPE, stdin=PIPE, stderr=myErr.fileno(), env=os.environ, preexec_fn=preexec_function)
     time.sleep(3)
     options.m, _ = options.ms.accept()
     options.s, _ = options.ss.accept()
@@ -116,7 +124,7 @@ def qemu_start_revert(args=None):
 
     myErr = open("./err", "w+")
 
-    m = Popen(options.qemu_args, stdout=PIPE, stdin=PIPE, stderr=myErr.fileno(), env=os.environ)
+    m = Popen(options.qemu_args, stdout=PIPE, stdin=PIPE, stderr=myErr.fileno(), env=os.environ, preexec_fn=preexec_function)
     time.sleep(3)
     options.m, _ = options.ms.accept()
     options.s, _ = options.ss.accept()
@@ -272,6 +280,21 @@ def temu_poweroff_no_revert(args=None):
     print("Last batch: %s" % options.tmp_disk_img)
     print("Last saved: %s" % options.saved_disk_img)
 
+def quit(args=None):
+    options = globs.state.options
+    
+    options.shutting_down.set()
+
+    write_socket(options.s, "logStop")
+    common.del_mountpoint(options)
+
+    try:
+        common.pci_umount(options.slot_shared)
+        common.pci_umount(options.slot_saved)
+    except Exception:
+        print("Problems unmounting pci")
+
+    rs("quit", options.m)
 
 def poweroff_no_revert(args=None):
     options = globs.state.options

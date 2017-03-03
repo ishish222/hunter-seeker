@@ -172,6 +172,26 @@ Minimalizowac wypisywanie jmpow w oparciu o tabelki z juz zarejestrowanymi. Ale 
 Moze zerwac polaczenie z internalem i nawiazac od nowa, a nastepnie przejsc do obslugi przerwania?
 Brzydkie, do uporzadkowania pozniej :)
 
+
+--
+
+014 - uporzadkowanie przerwan
+
 M.in. kazdy watek powinien miec swoja kolejke
+Powinien tez byc ladnie obsluzone zabijamie qemu
+Powinno dzialac na ctrl-c
 
+Nalezy nie dopuscic do przelania ctrl-c do podprocesu.
 
+Probowalem:
+
+import signal
+
+def preexec_function():
+    signal.signal(signal.SIGINT, signal.SIG_IGN)
+
+w argumencie preexec_fn Popen
+
+a moze raczej isc w strone ignorowania sigint? Tak, to wyglada na sluszna sciezke
+Nie, udalo mi sie ignorowac w podprocesach za pomoca: os.setpgrp()
+Teraz tylko umozliwic wylaczanie przez monitor

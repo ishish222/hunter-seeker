@@ -136,6 +136,7 @@ prototypes['Push2']                 = other_parts.push2
 prototypes['Pop2']                  = other_parts.pop2
 prototypes['ClearStack']            = other_parts.clear_stack
 prototypes['Interrupt']             = tracing_parts.interrupt
+prototypes['QemuQuit']              = qemu_parts.quit
 
 
 class CodeUnit:
