@@ -123,17 +123,17 @@ Czy reakcje na tym samym poziomie powinny sie wykluczac? Tak.
 Nie sa stworzone reakcje, jest tylko symbol. Wiec reakcje wewnatrz nie sa blokowane.
 utworzone reakcje
 
-InternetOpenA nie zostala obsluzona, poniewaz byl lock reakcji s0 z innego watku
-w logach pomylilem thread_no i thread_id. Trzeba jakos ogarnac to nazewnictwo :). Kolejne nagranie i sprawdze
+No wiec:
+jeden watek uderza w p4 i wylacza p5. Drugi watek nie uderza w p4, bo jest wylaczaony :(
+reakcje musza byc po jednej dla kazdego watku
 
-895239 - p4 (51652)
+Moze inaczej:
+Procedura uderzenia w breakpoint:
+wylaczenie breakpointu -> wlaczenie jakiejs flagi -> wykonanie 1 instrukcji -> wlaczenie breakpointu -> wylaczenie flagi
 
-przed odblokowaniem przez p5 jest: 
-
-odblokowanie przez s1 (52001)
-c0 (przy uderzeniu jest, ze locking_reaction = a) (52069)
-
-dopiero p5 (240595)
+To moze rozwiazac kilka problemow:
+ze wykonanie poszlo inna sciezka i wlaczajacy bp nie zostal uderzony
+Nie edzie potrzeba sprzegania breakpointow
 
 - przypadek InternetSetOptionA
 Sa ustawione reakcje puste (0x100). Nie sa ekskluzywne. Sprawdzic, czy cos sie zmieni po ustawieniu jako ekskluzywne.
@@ -175,7 +175,7 @@ Brzydkie, do uporzadkowania pozniej :)
 
 --
 
-014 - uporzadkowanie przerwan
+[x] 014 - uporzadkowanie przerwan
 
 M.in. kazdy watek powinien miec swoja kolejke
 Powinien tez byc ladnie obsluzone zabijamie qemu
@@ -195,3 +195,5 @@ w argumencie preexec_fn Popen
 a moze raczej isc w strone ignorowania sigint? Tak, to wyglada na sluszna sciezke
 Nie, udalo mi sie ignorowac w podprocesach za pomoca: os.setpgrp()
 Teraz tylko umozliwic wylaczanie przez monitor
+Dziala :)
+

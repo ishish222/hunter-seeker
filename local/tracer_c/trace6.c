@@ -2928,6 +2928,8 @@ int handle_breakpoint(DWORD addr, void* data)
     del_breakpoint(addr);
     dec_eip(de->dwThreadId);
 
+    /* schedule breakpoint for this address */
+
     d_print("[handle_breakpoint ends]\n");
     return 0x0;
 }
