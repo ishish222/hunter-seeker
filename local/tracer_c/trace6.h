@@ -26,16 +26,16 @@
 #define MAX_SYSCALL_OUT_ARGS 0x10
 #define MAX_SYSCALL_ENTRIES  0x10000
 #define MAX_HOOKS 0x50
-#define MAX_FUNCTIONS 0x300
+#define MAX_FUNCTIONS 0x500
 #define MAX_THREADS 0x100
 #define MAX_LIBS 0x50
 #define MAX_REGIONS 0x20
 
-#define MAX_REACTIONS   0x200
+#define MAX_REACTIONS   0x500
 #define MAX_BREAKPOINTS 0x200
 #define MAX_COUPLES     0x20
 #define MAX_HANDLERS    0x1000
-#define MAX_ROUTINES    0x10
+#define MAX_ROUTINES    0x100
 
 /* functions offsets in respective libs */
 #define EXIT_PROCESS_OFF 0x52acf
@@ -297,7 +297,6 @@ typedef struct TRACE_CONFIG_
     HANDLE file_handle;
 
     /* threads */
-
     DWORD thread_map[0x1000000];
     THREAD_ENTRY threads[MAX_THREADS];
 
@@ -310,6 +309,7 @@ typedef struct TRACE_CONFIG_
 
     /* breakpoints */
     BREAKPOINT breakpoints[MAX_BREAKPOINTS];
+    BREAKPOINT* delayed_breakpoint;
 
     /* communication */
     unsigned port;

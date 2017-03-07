@@ -115,7 +115,7 @@ OU nie zostala umieszczona w nagraniu
 
 --
 
-009 - ogarnac te reakcje. Sa czasem wypisywane pojedynczo, czasem podwojnie, czasem chyba sie nie wykluczaja na tym samym poziomie
+[x] 009 - ogarnac te reakcje. Sa czasem wypisywane pojedynczo, czasem podwojnie, czasem chyba sie nie wykluczaja na tym samym poziomie
 
 Czy reakcje na tym samym poziomie powinny sie wykluczac? Tak.
 
@@ -159,7 +159,7 @@ Minimalizowac wypisywanie jmpow w oparciu o tabelki z juz zarejestrowanymi. Ale 
 
 --
 
-011 - o co chodzi z tym ostatnim zamieszaniem z C3?
+[x] 011 - o co chodzi z tym ostatnim zamieszaniem z C3?
 
 --
 
@@ -197,3 +197,74 @@ Nie, udalo mi sie ignorowac w podprocesach za pomoca: os.setpgrp()
 Teraz tylko umozliwic wylaczanie przez monitor
 Dziala :)
 
+--
+
+[x] 015 - reenabling breakpointow
+
+[x] Zweryfikowac, czy dziala 
+Jesli dziala, oznacza to, ze koncepcja powiazanych reakcji w przypadku hookow bedzie nieaktualna. Reakcje koncowe hooka beda dzialac bez powiazan. Mozna to sprawdzic likwidujac powiazania i poszerzajac liste root reakcji.
+
+Czy zliczanie reakcji ma w tej sytuacji sens?
+Ma sens, poniewaz sluzy wykluczaniu reakcji pomiedzy nimi.
+
+--
+
+[x] 016 - podwojne komentarze po nagrywaniu
+
+rzeczywiscie, druga z powiazanych reakcji czesto jest obslugiwana, kiedy powinna byc zablokowana. Blad nastepuje w nagrywaniu
+
+Przyklad: 23146862 - HttpQueryInfoA (q2) 
+nie powinno byc zadnej reakcji az do q3 - 23147327
+
+Tymczasem:
+23147327 - m2
+23147327 - m3
+itd.
+
+Przy pierwszej (m2) twierdzi, ze nie ma locking
+
+Do sprawdzenia: 
+czy nie jest za bardzo zwiekszany reaction_count dla bp.
+czy after_unlocking jest dobrze obslugiwane?
+
+Przyklad2:
+
+40100090 - m4
+40101201 - m5
+
+Powodem bylo nieoznaczenie reakcji skojarzonej z ekskluzywna jako ekskluzywna. W wyniku tego nie przeprowadzano zerowania after_unlock. 
+
+Bledow jest mniej, ale nadal wystepuja (watki: 4c8, b8, 5e8, 5f8, 79c)
+
+watek b8:
+
+p4 (1740065) nie wykonano w wyniku blokady przez s0 (1735479)
+W sumie nalezy sobie zadac pytanie dlaczego tak nie ma w innych watkach, poniewaz s0 powinno zablokowac wszystkie reakcje.
+Nalezy wylaczyc ekskluzywnosc s0/s1
+Reakcje s0/s1 powinny miec wyzszy priorytet, zeby zarejestrowac WSZYSTKIE modyfikacje contextow i pamieci. Ale nie powinny byc ekskluzywne, bo to przeszkadza w rejestrowaniu nowych watkow. Poza tym czesto moga byc rekurencyjne, co moze spowodowac problemy z tym sparowaniem.
+
+Rozwiazanie alternatywne: podtrzymac ekskluzywnosc i zasymulowac uderzenie w s1 w kodzie ntdll.dll przed rozpoczeciem watku - np. w 0x77e31172 (ntdll.dll + 0x51172)
+
+Zadzialalo pierwsze :)
+
+--
+
+017 - obsluga regionow wedlug nowego algorytmu
+
+--
+
+018 - bledy w reakcjach po analizie cleopatra_1
+
+--
+
+[x] 019 - zoptymalizowac tracer / zrodlo niewydajnosci przy nagrywaniu cleopatra (okolice 10-15M instrukcji)
+
+Nie za bardzo sie da... ss_callback jest juz niemal optymalne. Jedyne co to brak czekania na mutex albo pisanie do buffera.
+Po usunieciu reakcji z nowymi rutynami wrocilo do normy :/
+
+Odpowiedzialna jest reakcja q6
+Poprawiono rekacje na adresy w kernelbase zamiast kernel i dziala
+
+--
+
+020 - dokladne logowanie z kazdego komponentu

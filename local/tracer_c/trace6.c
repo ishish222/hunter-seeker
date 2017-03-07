@@ -87,6 +87,8 @@ char read_byte(DWORD addr);
 int report_dword(DWORD addr);
 DWORD read_register(DWORD tid_id, char* reg);
 int report_register(DWORD tid_id, char* reg);
+int write_breakpoint(BREAKPOINT*);
+int unwrite_breakpoint(BREAKPOINT*);
 
 int d_print(const char* format, ...)
 {
@@ -516,6 +518,138 @@ void react_output_esp(void* data)
 void react_output_eip(void* data)
 {
     output_register("EIP");
+}
+
+void output_p_register_string(char* reg)
+{
+    char snap[SNAP_SIZE];
+
+    DWORD read;
+    OFFSET esp;
+    OFFSET addr;
+    char line[MAX_LINE];
+
+    d_print("Outputting str pointed by register %s\n", reg);
+
+    addr = read_register(my_trace->last_tid, reg); 
+
+    read_memory(my_trace->cpdi.hProcess, (void*)addr, (void*)snap, SNAP_SIZE, &read);
+    if(read > 0x0)
+    {
+        sprintf(line, "OU,0x%x,Reg %s: %s\n", my_trace->last_tid, reg, snap);
+        add_to_buffer(line);
+    }
+    else
+    {
+        sprintf(line, "# Failed to read ANSI string @ 0x%08x\n", addr);
+        add_to_buffer(line);
+    }
+
+    return;
+}
+void react_output_p_eax_string(void* data)
+{
+    output_p_register_string("EAX");
+}
+
+void react_output_p_ebx_string(void* data)
+{
+    output_p_register_string("EBX");
+}
+
+void react_output_p_ecx_string(void* data)
+{
+    output_p_register_string("ECX");
+}
+
+void react_output_p_edx_string(void* data)
+{
+    output_p_register_string("EDX");
+}
+
+void react_output_p_edi_string(void* data)
+{
+    output_p_register_string("EDI");
+}
+
+void react_output_p_esi_string(void* data)
+{
+    output_p_register_string("ESI");
+}
+
+void react_output_p_esp_string(void* data)
+{
+    output_p_register_string("ESP");
+}
+
+void react_output_p_eip_string(void* data)
+{
+    output_p_register_string("EIP");
+}
+
+void output_p_register_unicode(char* reg)
+{
+    char snap[SNAP_SIZE*2];
+    DWORD read;
+    OFFSET addr;
+    char line[MAX_LINE];
+
+    d_print("Outputting unicode str pointed by register %s\n", reg);
+
+    addr = read_register(my_trace->last_tid, reg); 
+
+    read_memory(my_trace->cpdi.hProcess, (void*)addr, (void*)snap, SNAP_SIZE*2, &read);
+    if(read > 0x0)
+    {
+        sprintf(line, "OU,0x%x,Reg %s: %ls\n", my_trace->last_tid, reg, snap);
+        add_to_buffer(line);
+    }
+    else
+    {
+        sprintf(line, "# Failed to read unicode string @ 0x%08x\n", addr);
+        add_to_buffer(line);
+    }
+
+    return;
+}
+void react_output_p_eax_unicode(void* data)
+{
+    output_p_register_unicode("EAX");
+}
+
+void react_output_p_ebx_unicode(void* data)
+{
+    output_p_register_unicode("EBX");
+}
+
+void react_output_p_ecx_unicode(void* data)
+{
+    output_p_register_unicode("ECX");
+}
+
+void react_output_p_edx_unicode(void* data)
+{
+    output_p_register_unicode("EDX");
+}
+
+void react_output_p_edi_unicode(void* data)
+{
+    output_p_register_unicode("EDI");
+}
+
+void react_output_p_esi_unicode(void* data)
+{
+    output_p_register_unicode("ESI");
+}
+
+void react_output_p_esp_unicode(void* data)
+{
+    output_p_register_unicode("ESP");
+}
+
+void react_output_p_eip_unicode(void* data)
+{
+    output_p_register_unicode("EIP");
 }
 
 void report_arg_unicode_string_x(unsigned x)
@@ -1119,7 +1253,7 @@ int lower_reaction(char* reaction_id)
 
     for(i = 0x0; i< my_trace->reaction_count; i++)
     {
-        /* locate i_reaction */
+        /* locate reaction */
         if(!strcmp(reaction_id, my_trace->reactions[i].reaction_id))
         {
             d_print("Lowering reaction %s\n", reaction_id);
@@ -1175,6 +1309,21 @@ int exclusive_reaction(char* reaction_id)
         {
             d_print("Setting exclusive reaction %s\n", reaction_id);
             my_trace->reactions[i].exclusive = 0x1;
+
+            REACTION* cur_reaction = &my_trace->reactions[i];
+
+            /* lower coupled */
+            unsigned k; 
+            for(k = 0; k< MAX_COUPLES; k++)
+            {
+                if(cur_reaction->coupled_id[k][0] != 0x0)
+                {
+                    REACTION* coupled_reaction;
+                    coupled_reaction = find_reaction(cur_reaction->coupled_id[k]);
+                    d_print("Lowering coupled reaction %s\n", coupled_reaction->reaction_id);
+                    coupled_reaction->exclusive = 0x1;
+                }
+            }
         }
     }
     d_print("[exclusive_reaction ends]\n");
@@ -2434,6 +2583,12 @@ void ss_callback(void* data)
     char bytes[0x2];
     DWORD tid_pos;
 
+    if(my_trace->delayed_breakpoint != 0x0)
+    {
+        write_breakpoint(my_trace->delayed_breakpoint);
+        my_trace->delayed_breakpoint = 0x0;
+    }
+
     eip = (DWORD)(de->u.Exception.ExceptionRecord.ExceptionAddress);
         //d_print("%p\n", eip);
     if((my_trace->status != STATUS_DBG_STARTED) && (my_trace->status != STATUS_DBG_SCANNED) && (my_trace->status != STATUS_DBG_LIGHT)) 
@@ -2444,7 +2599,7 @@ void ss_callback(void* data)
     tid = de->dwThreadId;
     tid_pos = my_trace->thread_map[tid];
 
-    WaitForSingleObject(my_trace->mutex, INFINITE);
+//    WaitForSingleObject(my_trace->mutex, INFINITE);
 
     eip = (DWORD)(de->u.Exception.ExceptionRecord.ExceptionAddress);
     my_trace->last_eip = eip;
@@ -2487,7 +2642,7 @@ void ss_callback(void* data)
         }
     }
 
-    ReleaseMutex(my_trace->mutex);
+//    ReleaseMutex(my_trace->mutex);
 
     return;
 }
@@ -2796,9 +2951,12 @@ int handle_reaction(REACTION* cur_reaction, void* data)
     /* We are able to execute routines */
     if(cur_reaction->exclusive)
     {
+        d_print("ER_x Current reaction is exclusive\n");
         if(my_trace->threads[thread_no].after_unlocking)
         {
+            d_print("ER_x is after_unlocking (0x%08x)\n", my_trace->threads[thread_no].after_unlocking);
             my_trace->threads[thread_no].after_unlocking = 0x0;
+            d_print("ER_x clearing after_unlocking\n");
         }
         else
         {
@@ -2925,10 +3083,12 @@ int handle_breakpoint(DWORD addr, void* data)
     }
 
 //    d_print("Deleting breakpoint, decreasing EIP\n");
-    del_breakpoint(addr);
+//    del_breakpoint(addr);
+    unwrite_breakpoint(my_bp);
     dec_eip(de->dwThreadId);
 
     /* schedule breakpoint for this address */
+    my_trace->delayed_breakpoint = my_bp;
 
     d_print("[handle_breakpoint ends]\n");
     return 0x0;
@@ -6185,6 +6345,25 @@ int main(int argc, char** argv)
     my_trace->routines[0x347] = &react_output_p_arg_7;
     my_trace->routines[0x348] = &react_output_p_arg_8;
 
+    /* outputting strs pointed by regs*/
+    my_trace->routines[0x350] = &react_output_p_eax_string;
+    my_trace->routines[0x351] = &react_output_p_ebx_string;
+    my_trace->routines[0x352] = &react_output_p_ecx_string;
+    my_trace->routines[0x353] = &react_output_p_edx_string;
+    my_trace->routines[0x354] = &react_output_p_esi_string;
+    my_trace->routines[0x355] = &react_output_p_edi_string;
+    my_trace->routines[0x356] = &react_output_p_esp_string;
+    my_trace->routines[0x357] = &react_output_p_eip_string;
+
+    /* outputting unicode strs pointed by regs*/
+    my_trace->routines[0x360] = &react_output_p_eax_unicode;
+    my_trace->routines[0x361] = &react_output_p_ebx_unicode;
+    my_trace->routines[0x362] = &react_output_p_ecx_unicode;
+    my_trace->routines[0x363] = &react_output_p_edx_unicode;
+    my_trace->routines[0x364] = &react_output_p_esi_unicode;
+    my_trace->routines[0x365] = &react_output_p_edi_unicode;
+    my_trace->routines[0x366] = &react_output_p_esp_unicode;
+    my_trace->routines[0x367] = &react_output_p_eip_unicode;
 
     /* Windows sockets */
 
