@@ -3441,20 +3441,20 @@ class taint_x86
 
         this->instructions_32_extended[0x80] = &taint_x86::r_noop_un; 
         this->instructions_32_extended[0x81] = &taint_x86::r_noop_un; 
-        this->instructions_32_extended[0x82] = &taint_x86::r_noop_un; 
-        this->instructions_32_extended[0x83] = &taint_x86::r_noop_un; 
-        this->instructions_32_extended[0x84] = &taint_x86::r_noop_un; 
-        this->instructions_32_extended[0x85] = &taint_x86::r_noop_un; 
-        this->instructions_32_extended[0x86] = &taint_x86::r_noop_un; 
-        this->instructions_32_extended[0x87] = &taint_x86::r_noop_un; 
-        this->instructions_32_extended[0x88] = &taint_x86::r_noop_un; 
-        this->instructions_32_extended[0x89] = &taint_x86::r_noop_un; 
-        this->instructions_32_extended[0x8a] = &taint_x86::r_noop_un; 
-        this->instructions_32_extended[0x8b] = &taint_x86::r_noop_un; 
-        this->instructions_32_extended[0x8c] = &taint_x86::r_noop_un; 
-        this->instructions_32_extended[0x8d] = &taint_x86::r_noop_un; 
-        this->instructions_32_extended[0x8e] = &taint_x86::r_noop_un; 
-        this->instructions_32_extended[0x8f] = &taint_x86::r_noop_un; 
+        this->instructions_32_extended[0x82] = &taint_x86::r_jb_jc_jnae;
+        this->instructions_32_extended[0x83] = &taint_x86::r_jae_jnb_jnc; 
+        this->instructions_32_extended[0x84] = &taint_x86::r_je_jz;
+        this->instructions_32_extended[0x85] = &taint_x86::r_jne_jnz;
+        this->instructions_32_extended[0x86] = &taint_x86::r_jbe_jna;
+        this->instructions_32_extended[0x87] = &taint_x86::r_ja_jnbe;
+        this->instructions_32_extended[0x88] = &taint_x86::r_js;
+        this->instructions_32_extended[0x89] = &taint_x86::r_jns;
+        this->instructions_32_extended[0x8a] = &taint_x86::r_jp_jpe;
+        this->instructions_32_extended[0x8b] = &taint_x86::r_jnp_jpo;
+        this->instructions_32_extended[0x8c] = &taint_x86::r_jl_jnge;
+        this->instructions_32_extended[0x8d] = &taint_x86::r_jge_jnl;
+        this->instructions_32_extended[0x8e] = &taint_x86::r_jle_jng;
+        this->instructions_32_extended[0x8f] = &taint_x86::r_jg_jnle; 
 
         this->instructions_32_extended[0xa4] = &taint_x86::r_shld_r_rm_16_32_imm_8; 
         this->instructions_32_extended[0xa5] = &taint_x86::r_shld_r_rm_16_32_cl; 

@@ -271,3 +271,11 @@ Poprawiono rekacje na adresy w kernelbase zamiast kernel i dziala
 --
 
 020 - dokladne logowanie z kazdego komponentu
+
+--
+
+021 - zaimplementuj skoki w extended
+
+--
+
+
