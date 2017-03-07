@@ -1701,6 +1701,7 @@ void register_thread(DWORD tid, HANDLE handle)
         my_trace->threads[tid_pos].created = 0x1;
         my_trace->threads[tid_pos].tid = tid;
         my_trace->threads[tid_pos].locking_reaction = 0x0;
+        my_trace->threads[tid_pos].lock_level = 0x0;
     
         //if(my_trace->threads[tid_pos].handle == 0x0) 
         d_print("Registering: TID 0x%08x, handle 0x%08x\n", tid, handle);
@@ -2933,6 +2934,11 @@ int handle_reaction(REACTION* cur_reaction, void* data)
     locking_reaction = my_trace->threads[thread_no].locking_reaction;
     if(locking_reaction != 0x0)
     {
+        if(cur_reaction == locking_reaction)
+        {
+            my_trace->threads[thread_no].lock_level++;
+        }
+
         /* higher thread is still locked, reaction level can override */
         if(cur_reaction->level <= locking_reaction->level)
         {
@@ -2965,6 +2971,7 @@ int handle_reaction(REACTION* cur_reaction, void* data)
                 d_print("ER_32 TID: 0x%08x, in handle_reaction: %p, %s\n", tid, cur_reaction, cur_reaction->reaction_id);
                 d_print("ER_3 TID: 0x%08x, Locking reaction lock with: %s\n", tid, cur_reaction->reaction_id);
                 my_trace->threads[thread_no].locking_reaction = cur_reaction;
+                my_trace->threads[thread_no].lock_level = 0x0;
             }
         }
     }
@@ -3063,10 +3070,17 @@ int handle_breakpoint(DWORD addr, void* data)
                         coupled_reaction = find_reaction(locking_reaction->coupled_id[k]);
                         if(coupled_reaction == cur_reaction)
                         {
-                            /* current reaction is one of locking reactions couple, unlocking */
-                            d_print("ER_3 Unlocking reaction lock with: %s in TID: 0x%08x\n", cur_reaction->reaction_id, tid);
-                            my_trace->threads[thread_no].locking_reaction = 0x0;
-                            my_trace->threads[thread_no].after_unlocking = 0x1;
+                            if(my_trace->threads[thread_no].lock_level <= 0x0)
+                            {
+                                /* current reaction is one of locking reactions couple, unlocking */
+                                d_print("ER_3 Unlocking reaction lock with: %s in TID: 0x%08x\n", cur_reaction->reaction_id, tid);
+                                my_trace->threads[thread_no].locking_reaction = 0x0;
+                                my_trace->threads[thread_no].after_unlocking = 0x1;
+                            }
+                            else
+                            {
+                                my_trace->threads[thread_no].lock_level--;
+                            }
                         }
                     }
 

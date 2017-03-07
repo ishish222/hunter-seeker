@@ -826,6 +826,23 @@ int taint_x86::check_collecting(CONTEXT_INFO* info)
     return 0x0;
 }
 
+int detox(char* s)
+{
+    unsigned size;
+    unsigned i;
+
+    size  = strlen(s);
+    for(i = 0; i< size; i++)
+    {
+        if(s[i] == '\"') s[i] = ' ';
+        if(s[i] == '\'') s[i] = ' ';
+        if(s[i] == '<') s[i] = ' ';
+        if(s[i] == '>') s[i] = ' ';
+    }
+
+    return 0x0;
+}
+
 int taint_x86::comment_out(char* comment, DWORD tid)
 {
     if(!(this->started))
@@ -840,6 +857,8 @@ int taint_x86::comment_out(char* comment, DWORD tid)
     tid_no = this->tids[tid];
 
     info = &this->ctx_info[tid_no];
+
+    detox(comment);
 
     d_print(1, "Writing out comment @ %d: %s", this->last_instr_count, comment);
     print_empty_call(info, comment, colors[CODE_COMMENT]);

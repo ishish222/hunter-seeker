@@ -253,7 +253,10 @@ Zadzialalo pierwsze :)
 
 --
 
-018 - bledy w reakcjach po analizie cleopatra_1
+[x] 018 - bledy w reakcjach po analizie cleopatra_1
+
+LoadLibrary - ekskluzywny lock jest wylaczany przez rekurencje
+Rozwiazanie: przy otwieraniu zamiast zwyklej jedynki - dodawanie, przy zamykaniu - -1. Jak semafor
 
 --
 

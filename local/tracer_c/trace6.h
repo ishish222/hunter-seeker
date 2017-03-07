@@ -248,6 +248,7 @@ typedef struct _THREAD_ENTRY
     HANDLE handle;
     char skipping;
     REACTION* locking_reaction;
+    char lock_level;
     char after_unlocking;
 } THREAD_ENTRY;
 

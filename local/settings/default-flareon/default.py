@@ -97,7 +97,7 @@ host_mount_options="loop,umask=0000"
 saved_dir="/mnt/1/raw/"
 log_dir="/mnt/1/log/"
 #builtin_reactions_anchors="EN:s1:a0:a3:a5:e6:a7:b1:b3:b5:b7:c2:c6:c8:d0:d2:d4:d6:d8:e0:e1:e3:e5:e7:e9:f1:f3:f5:f7:f9:g1:g3:g5:g7:g9:h1:h3:h4:h6:h7:h9:i2:i3:i5:i7:i9:j1:j3:j5:j6:j8:j9:k0:k1:k3:k4:k6:k7:k9:k0:l2:l6:l8:l0:m2:m3:m5:m6:m8:m0:n2:n4:n6:n8:n0:o2:o4:o6:o8:o0:p2:p4:p6:p8:r0:r2:r4:r6:r8:t1:t3:t5:t7"
-builtin_reactions_anchors="EN:a0:a2:a4:a6:a8:b0:b2:b4:b6:b8:c0:c2:c4:c6:c8:d0:d2:d4:d6:d8:e0:e2:e4:e6:e8:f0:f2:f4:f6:f8:g0:g2:g4:g6:g8:h0:h2:h6:h8:i0:i2:i4:i6:i8:j0:j2:j4:j6:j8:k0:k2:k4:k6:k8:l0:l2:l4:l6:l8:m0:m2:m4:m6:m8:n0:n2:n4:n6:n8:o0:o2:o4:o6:o8:p0:p2:p4:p6:p8:q0:q2:q4:q6:q8:r0"
+builtin_reactions_anchors="EN:a0:a2:a4:a6:a8:b0:b2:b4:b6:b8:c0:c2:c4:c6:c8:d0:d2:d4:d6:d8:e0:e2:e4:e6:e8:f0:f2:f4:f6:f8:g0:g2:g4:g6:g8:h0:h2:h6:h8:i0:i2:i4:i6:i8:j0:j2:j4:j6:j8:k0:k2:k4:k6:k8:l0:l2:l4:l6:l8:m0:m2:m4:m6:m8:n0:n2:n4:n6:n8:o0:o2:o4:o6:o8:p0:p2:p4:p6:p8:q0:q2:q4:q8:r0"
 builtin_reactions="""
 kernel32.dll+0x2acf,EN,0x0;                 # ExitProcess
 kernel32.dll+0x2062,C1:C2,0x0;              # CreateProcessA start
@@ -287,9 +287,7 @@ WININET.dll+0x1cc02,q2:q3,0x301:0x302:0x303:0x344:0x345; # HttpQueryInfoA start
 WININET.dll+0x1cdb6,q3:q2,0x330;             # HttpQueryInfoA end
 WININET.dll+0x22d7b,q4:q5,0x301:0x302:0x303:0x344:0x345; # HttpQueryInfoA start
 WININET.dll+0x22e75,q5:q4,0x330;             # HttpQueryInfoA end
-KERNELBASE.dll+0x6c5b,q6:q7,0x301,0x312;           # GetProcAddress start
-KERNELBASE.dll+0x6cbb,q7:q6,0x330;           # GetProcAddress end
-KERNELBASE.dll+0xdada,q8:q9,0x100;          # GetCommandLineA start
+KERNELBASE.dll+0xdada,q8:q9,0x100;          # GetCommandLineA start !!!FREE q6 q7
 KERNELBASE.dll+0xdadf,q9:q8,0x350;          # GetCommandLineA end
 KERNELBASE.dll+0x12f2f,r0:r1,0x100;         # GetCommandLineW start
 KERNELBASE.dll+0x12f34,r1:r0,0x360;         # GetCommandLineW end
