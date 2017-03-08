@@ -274,7 +274,7 @@ Poprawiono rekacje na adresy w kernelbase zamiast kernel i dziala
 
 --
 
-021 - zaimplementuj skoki w extended
+[x] 021 - zaimplementuj skoki w extended
 
 --
 
