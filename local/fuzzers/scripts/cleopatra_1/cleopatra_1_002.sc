@@ -1,4 +1,5 @@
 PrintLogo
+RegisterSignals(exception)
 GetOptions
 GetSampleOptions
 SetSampleFile(arab_560000.exe)
@@ -8,7 +9,6 @@ SetOutDir(\\10.0.2.4\qemu)
 CheckHostDir
 RevertClean
 EnableLogging
-RegisterSignals(exception)
 PrepareStats
 PreparePipes
 GlobMethod
@@ -32,6 +32,7 @@ Execute(scripts/common/debug_sample_no_log.sc)
 ExtractEP(e:\samples\shared\arab_560000.exe)
 SaveEP
 ManualSTwSelf
+SetParameters(test1 test2)
 DisableReactions
 EnableReaction(ST)
 TracerDebugContinueInf

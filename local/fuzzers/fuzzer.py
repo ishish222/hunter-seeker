@@ -104,7 +104,7 @@ def stateful_routine(script_path):
                 ret = None
             else:
                 ret = instruction.execute()
-        except Exception:
+        except MachineError:
             print("Exception:", sys.exc_info()[0])
             if(hasattr(globs, 'first_chance')):
                 print 'First chance handler finished'

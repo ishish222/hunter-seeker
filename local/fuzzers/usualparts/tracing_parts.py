@@ -169,6 +169,15 @@ def spawn_tracer_controller(args=None):
     response, _, _ = read_socket(options.s)
     return
 
+def set_parameters(args=None):
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+    
+    write_socket(options.s, "set_parameters %s" % args);
+    response, _, _ = read_socket(options.s)
+    return
+
 def extract_ep(args=None):
     options = globs.state.options
     state = globs.state

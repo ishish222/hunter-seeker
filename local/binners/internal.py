@@ -1197,6 +1197,11 @@ def execute(cmds, ext_pipe):
             writePipe(ext_pipe, "tracer_auto_st OK")
             ok(ext_pipe)
 
+        elif(cmd == "tracer_set_parameters"):
+            trace_controller.set_parameters(args)
+            writePipe(ext_pipe, "tracer_set_parameters OK")
+            ok(ext_pipe)
+
         elif(cmd == "tracer_set_st"):
             trace_controller.set_st(args)
             writePipe(ext_pipe, "tracer_set_st OK")

@@ -1,4 +1,5 @@
 PrintLogo
+RegisterSignals(exception)
 GetOptions
 GetSampleOptions
 SetSampleFile(arab_560000.exe)
@@ -8,7 +9,6 @@ SetOutDir(\\10.0.2.4\qemu)
 CheckHostDir
 RevertClean
 EnableLogging
-RegisterSignals(exception)
 PrepareStats
 PreparePipes
 GlobMethod

@@ -3574,7 +3574,14 @@ void start_trace_fname()
 
     d_print("Creating process: %s\n", my_trace->process_fname);
 
-    res = CreateProcess(my_trace->process_fname, 0x0, 0x0, 0x0, 0x0, DEBUG_ONLY_THIS_PROCESS, 0x0, 0x0, &my_trace->si, &my_trace->pi);
+    if(strlen(my_trace->args) > 0x0)
+    {
+        res = CreateProcess(my_trace->process_fname, my_trace->args, 0x0, 0x0, 0x0, DEBUG_ONLY_THIS_PROCESS, 0x0, 0x0, &my_trace->si, &my_trace->pi);
+    }
+    else
+    {
+        res = CreateProcess(my_trace->process_fname, 0x0, 0x0, 0x0, 0x0, DEBUG_ONLY_THIS_PROCESS, 0x0, 0x0, &my_trace->si, &my_trace->pi);
+    }
 
     if(res == 0x0)
     {
@@ -5310,6 +5317,12 @@ int handle_cmd(char* cmd)
     {
         strcpy(my_trace->out_prefix, cmd+3);
         d_print("Out prefix set to: %s\n", my_trace->out_prefix);
+        send_report();
+    }
+    else if(!strncmp(cmd, CMD_SET_PARAMETERS, 2))
+    {
+        strcpy(my_trace->args, cmd+3);
+        d_print("Args is set to: %s\n", my_trace->args);
         send_report();
     }
     else if(!strncmp(cmd, CMD_READ_PREFIX, 2))

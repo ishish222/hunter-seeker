@@ -120,6 +120,7 @@
 #define CMD_SET_IN_DIRECTORY    "SD"
 #define CMD_SET_OUT_DIRECTORY   "Sd"
 #define CMD_SET_OUT_PREFIX      "Sp"
+#define CMD_SET_PARAMETERS      "SP"
 #define CMD_READ_PREFIX         "Rp"
 #define CMD_PREPARE_TRACE       "PT"
 #define CMD_SET_E_REACTION_1        "M1"
@@ -292,6 +293,7 @@ typedef struct TRACE_CONFIG_
     STARTUPINFO si;
     CREATE_PROCESS_DEBUG_INFO cpdi;
     unsigned PID;
+    char args[MAX_NAME];
     
     /* handles */
     HANDLE procHandle;

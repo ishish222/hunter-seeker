@@ -8,5 +8,5 @@ FOLDER=$1
 MAP=$2
 
 mkdir -p $1
-scp hs1@flareon:$REMOTE_ROOT/$FOLDER/$MAP $MAP".tmp"
-fix-map $MAP".tmp" > $MAP
+scp hs1@flareon:$REMOTE_ROOT/$FOLDER/$MAP $1/$MAP".tmp"
+fix-map $1/$MAP".tmp" > $1/$MAP
