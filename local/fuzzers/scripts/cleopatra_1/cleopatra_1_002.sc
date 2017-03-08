@@ -32,7 +32,7 @@ Execute(scripts/common/debug_sample_no_log.sc)
 ExtractEP(e:\samples\shared\arab_560000.exe)
 SaveEP
 ManualSTwSelf
-SetParameters(test1 test2)
+SetParameters(test1_test2)
 DisableReactions
 EnableReaction(ST)
 TracerDebugContinueInf

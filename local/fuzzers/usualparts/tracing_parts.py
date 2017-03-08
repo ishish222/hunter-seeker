@@ -174,7 +174,7 @@ def set_parameters(args=None):
     state = globs.state
     status = globs.state.status
     
-    write_socket(options.s, "set_parameters %s" % args);
+    write_socket(options.s, "tracer_set_parameters %s" % args);
     response, _, _ = read_socket(options.s)
     return
 
