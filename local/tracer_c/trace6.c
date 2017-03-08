@@ -5321,7 +5321,6 @@ int handle_cmd(char* cmd)
     }
     else if(!strncmp(cmd, CMD_SET_PARAMETERS, 2))
     {
-        d_print("Args is set to: %s\n", cmd+3);
         strcpy(my_trace->args, cmd+3);
         d_print("Args is set to: %s\n", my_trace->args);
         send_report();

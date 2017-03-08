@@ -137,7 +137,7 @@ prototypes['Pop2']                  = other_parts.pop2
 prototypes['ClearStack']            = other_parts.clear_stack
 prototypes['Interrupt']             = tracing_parts.interrupt
 prototypes['QemuQuit']              = qemu_parts.quit
-prototypes['SetParameters']         = tracing_parts.set_parameters
+prototypes['TracerSetParameters']   = tracing_parts.set_parameters
 
 
 class CodeUnit:

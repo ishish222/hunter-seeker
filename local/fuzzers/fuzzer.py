@@ -107,9 +107,10 @@ def stateful_routine(script_path):
         except MachineError:
             print("Exception:", sys.exc_info()[0])
             if(hasattr(globs, 'first_chance')):
-                print 'First chance handler finished'
-                print 'Exiting'
-                exit(0)
+                if(globs.first_chance == 1):
+                    print 'First chance handler finished'
+                    print 'Exiting'
+                    exit(0)
             else:
                 print 'First chance handler'
                 globs.first_chance = 1
@@ -124,7 +125,11 @@ def stateful_routine(script_path):
             try:
                 ip = int(ret, 10)
             except ValueError:
-                ip = labels[ret]
+                try:
+                    ip = labels[ret]
+                except KeyError:
+                    globs.first_chance = 0x0
+                    raise MachineError
     
         print
 

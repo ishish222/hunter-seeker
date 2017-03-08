@@ -37,6 +37,9 @@ EnableReaction(A1)
 TracerDebugContinueInf
 
 # ST
+TracerRegisterReactions(self+0x1c8e,A2,0x108:0x103)
+EnableReaction(A2)
+
 EnableBuiltin
 ExclusiveBuiltin
 LowerBuiltin

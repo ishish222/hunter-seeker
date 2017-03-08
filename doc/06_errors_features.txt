@@ -278,4 +278,10 @@ Poprawiono rekacje na adresy w kernelbase zamiast kernel i dziala
 
 --
 
-022 - zadawanie argumentow do binarki
+[x] 022 - zadawanie argumentow do binarki
+
+--
+
+[x] 023 - obsluz przerwania w ciagu wykonywania podskryptu
+
+

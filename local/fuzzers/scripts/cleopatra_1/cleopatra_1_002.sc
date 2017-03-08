@@ -32,16 +32,7 @@ Execute(scripts/common/debug_sample_no_log.sc)
 ExtractEP(e:\samples\shared\arab_560000.exe)
 SaveEP
 ManualSTwSelf
-SetParameters(test1_test2)
-DisableReactions
-EnableReaction(ST)
-TracerDebugContinueInf
-
-# ST
-
-ExtractEP(e:\samples\shared\arab_560000.exe)
-SaveEP
-ManualSTwSelf
+TracerSetParameters(test1 test2)
 DisableReactions
 EnableReaction(ST)
 TracerDebugContinueInf
@@ -55,8 +46,8 @@ RaiseReaction(s0)
 RaiseReaction(s1)
 
 # modifications
-TracerRegisterReactions(self+0x1e86,A1,0x105)
-EnableReaction(A1)
+#TracerRegisterReactions(self+0x1e86,A1,0x105)
+#EnableReaction(A1)
 
 Execute(scripts/arab/enable_context_mod_detection.sc)
 
