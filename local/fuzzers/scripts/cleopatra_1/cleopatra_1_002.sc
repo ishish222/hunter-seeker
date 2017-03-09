@@ -19,6 +19,7 @@ QemuMountDisks
 start_controller:
 SpawnInternalController
 QemuConnectDevSocket
+#TracerSetParameters(test1 test2)
 IsSocketConnected=(Y:success,N:fail)
 
 fail:
@@ -33,7 +34,6 @@ Execute(scripts/common/debug_sample_no_log.sc)
 # SaveEP
 # ManualSTwSelf
 TracerRegisterReactions(self+0x1e47,ST,0x0)
-TracerSetParameters(test1 test2)
 DisableReactions
 EnableReaction(ST)
 TracerDebugContinueInf

@@ -11777,6 +11777,8 @@ int taint_x86::r_jmp_rm_16_32(BYTE_t* instr_ptr)
         this->handle_jmp(cur_ctx);
     }
 
+    handle_jxx(this->cur_info, "r_jmp_rm (switch/case)");
+
     return 0x0;
 }
 

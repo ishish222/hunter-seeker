@@ -297,4 +297,16 @@ No niby sa inne watki od poczatku, ale w 0x778 konczy sie nagranie na CreateFile
 
 To dlatego, ze analize zaczales w trakcie nagrywania, helou! :) Wszystko dziala
 
+--
 
+027 - zaimplementowac podgrywanie wybranego pliku w momencie CreateFileA
+
+--
+
+028 - zaimplementowac podgrywanie wybranego pliku w momencie InternetReadFile 
+
+przez wskazanie pliku responderowi
+
+--
+
+[x] 029 - zaimplementowac wykrywanie switch-case (jmp do tablicy)
