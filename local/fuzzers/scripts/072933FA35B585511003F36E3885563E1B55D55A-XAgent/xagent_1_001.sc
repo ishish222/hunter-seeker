@@ -2,9 +2,9 @@ PrintLogo
 RegisterSignals(exception)
 GetOptions
 GetSampleOptions
-SetSampleFile(arab_560000.exe)
+SetSampleFile(072933FA35B585511003F36E3885563E1B55D55A.exe)
 SetResearchDir(e:\samples\shared)
-GlobPattern(/home/hs1/malware_samples/arab_560000.exe)
+GlobPattern(/home/hs1/malware_samples/XAgent-WIN/072933FA35B585511003F36E3885563E1B55D55A.exe)
 SetOutDir(\\10.0.2.4\qemu)
 CheckHostDir
 RevertClean
@@ -29,11 +29,10 @@ success:
 Execute(scripts/common/debug_sample_no_log.sc)
 
 # RR
-# ExtractEP(e:\samples\shared\arab_560000.exe)
-# SaveEP
-# ManualSTwSelf
-TracerRegisterReactions(self+0x1e47,ST,0x0)
-TracerSetParameters(test1 test2)
+ExtractEP(e:\samples\shared\072933FA35B585511003F36E3885563E1B55D55A.exe)
+SaveEP
+ManualSTwSelf
+#TracerSetParameters(test1 test2)
 DisableReactions
 EnableReaction(ST)
 TracerDebugContinueInf

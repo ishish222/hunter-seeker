@@ -1744,7 +1744,10 @@ void register_thread(DWORD tid, HANDLE handle)
     sprintf(line, "RT,0x%08x,%s\n", tid, line2);
     add_to_buffer(line);
 
-    set_ss(tid);
+    if((my_trace->status == STATUS_DBG_STARTED) || (my_trace->status == STATUS_DBG_SCANNED) || (my_trace->status == STATUS_DBG_LIGHT)) 
+    {
+        set_ss(tid);
+    }
     return;
 }
 
@@ -3577,6 +3580,7 @@ void start_trace_fname()
     if(strlen(my_trace->args) > 0x0)
     {
         res = CreateProcess(my_trace->process_fname, my_trace->args, 0x0, 0x0, 0x0, DEBUG_ONLY_THIS_PROCESS, 0x0, 0x0, &my_trace->si, &my_trace->pi);
+        d_print("Args: %s\n", my_trace->args);
     }
     else
     {
@@ -5321,7 +5325,8 @@ int handle_cmd(char* cmd)
     }
     else if(!strncmp(cmd, CMD_SET_PARAMETERS, 2))
     {
-        strcpy(my_trace->args, cmd+3);
+        strcpy(my_trace->args, my_trace->process_fname);
+        strcat(my_trace->args, cmd+3);
         d_print("Args is set to: %s\n", my_trace->args);
         send_report();
     }

@@ -284,4 +284,17 @@ Poprawiono rekacje na adresy w kernelbase zamiast kernel i dziala
 
 [x] 023 - obsluz przerwania w ciagu wykonywania podskryptu
 
+--
+
+[x] 024 - ss_callback tylko po ST
+
+Bo analiza dlugo trwa
+Ale mozliwe, ze beda zaklocenia w nagrywaniu watkow. Trzeba przeprowadzic testy regresyjne z rustockiem.
+
+Dodalem warunek, jest duzo szybciej.
+
+No niby sa inne watki od poczatku, ale w 0x778 konczy sie nagranie na CreateFileA
+
+To dlatego, ze analize zaczales w trakcie nagrywania, helou! :) Wszystko dziala
+
 

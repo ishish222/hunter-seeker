@@ -2,9 +2,9 @@ PrintLogo
 RegisterSignals(exception)
 GetOptions
 GetSampleOptions
-SetSampleFile(arab_560000.exe)
+SetSampleFile(04301B59C6EB71DB2F701086B617A98C6E026872.exe)
 SetResearchDir(e:\samples\shared)
-GlobPattern(/home/hs1/malware_samples/arab_560000.exe)
+GlobPattern(/home/hs1/malware_samples/Sedreco_payload/04301B59C6EB71DB2F701086B617A98C6E026872.exe)
 SetOutDir(\\10.0.2.4\qemu)
 CheckHostDir
 RevertClean
@@ -29,11 +29,10 @@ success:
 Execute(scripts/common/debug_sample_no_log.sc)
 
 # RR
-# ExtractEP(e:\samples\shared\arab_560000.exe)
-# SaveEP
-# ManualSTwSelf
-TracerRegisterReactions(self+0x1e47,ST,0x0)
-TracerSetParameters(test1 test2)
+ExtractEP(e:\samples\shared\04301B59C6EB71DB2F701086B617A98C6E026872.exe)
+SaveEP
+ManualSTwSelf
+#TracerSetParameters(test1 test2)
 DisableReactions
 EnableReaction(ST)
 TracerDebugContinueInf
