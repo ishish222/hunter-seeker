@@ -11,8 +11,8 @@ TracerDebugContinueInf
 # A1 -> A2 -> ST
 StartLog(e:\samples\internal.log)
 SpawnResponder(11443)
-Push2(Test)
-Pop2
+Enqueue(Test)
+Dequeue
 NextResponse
 EnableBuiltin
 ExclusiveBuiltin
@@ -52,30 +52,30 @@ TracerDebugContinueInf
 Execute(scripts/arab/attach_sample.sc)
 
 # RR
-Push2(Test4)
-Push2(Test3)
-Push2(Test2)
-Push2(Test1)
-Push2(Test0)
-Push2(Test9)
-Push2(Test8)
-Push2(Test7)
-Push2(Test6)
-Push2(Test5)
-Push2(Test4)
-Push2(Test3)
-Push2(Test2)
-Push2(Test1)
-Push2(Test0)
-Push2(Test9)
-Push2(Test8)
-Push2(Test7)
-Push2(Test6)
-Push2(Test5)
-Push2(Test4)
-Push2(Test3)
-Push2(Test2)
-Push2(Test1)
+Enqueue(Test4)
+Enqueue(Test3)
+Enqueue(Test2)
+Enqueue(Test1)
+Enqueue(Test0)
+Enqueue(Test9)
+Enqueue(Test8)
+Enqueue(Test7)
+Enqueue(Test6)
+Enqueue(Test5)
+Enqueue(Test4)
+Enqueue(Test3)
+Enqueue(Test2)
+Enqueue(Test1)
+Enqueue(Test0)
+Enqueue(Test9)
+Enqueue(Test8)
+Enqueue(Test7)
+Enqueue(Test6)
+Enqueue(Test5)
+Enqueue(Test4)
+Enqueue(Test3)
+Enqueue(Test2)
+Enqueue(Test1)
 SaveEP(40d7e2)
 LoadEP
 ManualST
@@ -254,7 +254,7 @@ TracerDebugContinueInf(0x80010001)
 goto(decision)
 
 load_and_continue:
-Pop2
+Dequeue
 NextResponse
 TracerDebugContinueInf
 goto(decision)

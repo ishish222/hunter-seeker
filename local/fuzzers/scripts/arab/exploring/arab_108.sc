@@ -13,8 +13,8 @@ TracerDebugContinueInf
 # A1 -> A2 -> ST
 StartLog(e:\samples\internal.log)
 SpawnResponder(11443)
-Push2(Test)
-Pop2
+Enqueue(Test)
+Dequeue
 NextResponse
 EnableBuiltin
 ExclusiveBuiltin

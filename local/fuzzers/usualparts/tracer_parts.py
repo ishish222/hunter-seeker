@@ -876,7 +876,9 @@ def tracer_write_register(args):
     state = globs.state
     status = globs.state.status
     
-    write_socket(options.s, "tracer_write_register %s 0x%08x" % args);
+    val = int(globs.state.stack.pop(), 0x10)
+
+    write_socket(options.s, "tracer_write_register %s 0x%08x" % (args, val));
     response, _, _ = read_socket(options.s)
 
     globs.state.ret = response

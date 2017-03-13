@@ -3817,7 +3817,16 @@ int write_context(DWORD tid, CONTEXT* ctx)
     tid_id = my_trace->thread_map[tid];
 
     myHandle = my_trace->threads[tid_id].handle;
+
+    if(myHandle == 0x0)
+    {
+        myHandle = OpenThread(THREAD_GET_CONTEXT |THREAD_SET_CONTEXT | THREAD_ALL_ACCESS, 0x0, tid);
+        my_trace->threads[tid_id].handle = myHandle;
+    }
+
+    d_print("TID: 0x%08x, TID_pos: 0x%08x, handle: 0x%08x\n", tid, tid_id, myHandle);
     ctx->ContextFlags = CONTEXT_FULL;
+
     if(SetThreadContext(myHandle, ctx) == 0x0)
     {
         d_print("Failed to set context, error: 0x%08x\n", GetLastError());
@@ -4259,6 +4268,16 @@ int write_register(DWORD tid_id, char* reg, char* data)
     WORD data_w;
     char data_b;
 
+    DWORD tid;
+
+    if(tid_id == -1)
+    {
+        tid = my_trace->last_tid;
+    }
+    else
+    {
+        tid = my_trace->threads[tid_id].tid;
+    }
     
     read_context(tid_id, &ctx);
 

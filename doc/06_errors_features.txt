@@ -310,3 +310,17 @@ przez wskazanie pliku responderowi
 --
 
 [x] 029 - zaimplementowac wykrywanie switch-case (jmp do tablicy)
+
+--
+
+[x] 030 - zaimplementowac pisanie do rejestrow
+
+Jest blad przy zapisywaniu contextu, 0x6 - bad handle
+Wybiera 0x0 jago TID.
+Zaimplementowano ze domyslnie jest id = -1, co oznacza, ze brany pod uwage jest aktualny watek. Ewentualnie mozliwe, ze potrzebne bedzie wskazanie innego watku w oddzielnych rutynach klasy Tracer.
+
+--
+
+031 - zeby komunikaty sie nie przeslanialy (np. o jmpie i reakcji)
+
+

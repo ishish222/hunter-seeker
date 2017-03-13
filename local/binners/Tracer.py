@@ -62,11 +62,13 @@ class Tracer(object):
         return (self.last_report, self.last_answer)
 
     def read_register(self, reg):
-        self.send_command('RR %d %s' % (self.active_tid_id, reg))
+#        self.send_command('RR -1 %s' % (self.active_tid_id, reg))
+        self.send_command('RR -1 %s' % (reg))
 
     def write_register(self, args):
         self.dlog('%s' % args)
-        self.send_command('WR %d %s' % (self.active_tid_id, args))
+#        self.send_command('WR -1 %s' % (self.active_tid_id, args))
+        self.send_command('WR -1 %s' % (args))
 
     def read_region(self, args):
         self.send_command('Rr %s' % (args))
