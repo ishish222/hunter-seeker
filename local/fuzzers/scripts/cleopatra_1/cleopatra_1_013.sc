@@ -17,13 +17,13 @@ StartQemuFull
 QemuMountDisks
 
 start_controller:
-SpawnInternalController
-QemuConnectDevSocket
-IsSocketConnected=(Y:success,N:fail)
+    SpawnInternalController
+    QemuConnectDevSocket
+    IsSocketConnected=(Y:success,N:fail)
 
 fail:
-Wait10
-goto(start_controller)
+    Wait10
+    goto(start_controller)
 
 success:
 KillExplorer
@@ -75,32 +75,34 @@ TracerRegisterReactions(self+0x1f05,SELECTCASE:START,0x0)
 TracerRegisterReactions(self+0x1f07,REPORTSELECTED,0x330)
 
 TracerRegisterReactions(
-    WININET.dll+0x20494,
-    INTERNETCONNECTW+1:INTERNETCONNECTW-1,
-    0x0;
-
-    WININET.dll+0x20546,
-    INTERNETCONNECTW-1:INTERNETCONNECTW+1,
-    0x0
+    WININET.dll+0x20494,INTERNETCONNECTW+1:INTERNETCONNECTW-1,0x0;
+    WININET.dll+0x20546,INTERNETCONNECTW-1:INTERNETCONNECTW+1,0x0
 )
 
 TracerRegisterReactions(
-    WININET.dll+0x1eef5,
-    HTTPREQUESTW+1:HTTPREQUESTW-1,
-    0x100;
-
-    WININET.dll+0x1ef6c,
-    HTTPREQUESTW-1:HTTPREQUESTW+1,
-    0x0
+    WININET.dll+0x1eef5,HTTPREQUESTW+1:HTTPREQUESTW-1,0x100;
+    WININET.dll+0x1ef6c,HTTPREQUESTW-1:HTTPREQUESTW+1,0x0
 )
 
-TracerRegisterReactions(WININET.dll+0x14ea3,INTERNETSETOPTION+1:INTERNETSETOPTION-1,0x0;WININET.dll+0x14f6c,INTERNETSETOPTION-1:INTERNETSETOPTION+1,0x100)
+TracerRegisterReactions(
+    WININET.dll+0x14ea3,INTERNETSETOPTION+1:INTERNETSETOPTION-1,0x0;
+    WININET.dll+0x14f6c,INTERNETSETOPTION-1:INTERNETSETOPTION+1,0x100
+)
 
-TracerRegisterReactions(WININET.dll+0x20615,HTTPOPENREQUESTW-1:HTTPOPENREQUESTW+1,0x0;WININET.dll+0x20846,HTTPOPENREQUESTW+1:HTTPOPENREQUESTW-1,0x100)
+TracerRegisterReactions(
+    WININET.dll+0x20615,HTTPOPENREQUESTW-1:HTTPOPENREQUESTW+1,0x0;
+    WININET.dll+0x20846,HTTPOPENREQUESTW+1:HTTPOPENREQUESTW-1,0x100
+)
 
-TracerRegisterReactions(WININET.dll+0x22d7d,HTTPQUERYINFOW+1:HTTPQUERYINFOW-1,0x0;WININET.dll+0x22e74,HTTPQUERYINFOW-1:HTTPQUERYINFOW+1,0x0)
+TracerRegisterReactions(
+    WININET.dll+0x22d7d,HTTPQUERYINFOW+1:HTTPQUERYINFOW-1,0x0;
+    WININET.dll+0x22e74,HTTPQUERYINFOW-1:HTTPQUERYINFOW+1,0x0
+)
 
-TracerRegisterReactions(WININET.dll+0x1e2a6,INTERNETREADFILE+1:INTERNETREADFILE-1,0x0;WININET.dll+0x1e2e5,INTERNETREADFILE-1:INTERNETREADFILE+1,0x0)
+TracerRegisterReactions(
+    WININET.dll+0x1e2a6,INTERNETREADFILE+1:INTERNETREADFILE-1,0x0;
+    WININET.dll+0x1e2e5,INTERNETREADFILE-1:INTERNETREADFILE+1,0x0
+)
 
 EnableReaction(INTERNETCONNECTW-1)
 EnableReaction(HTTPREQUESTW+1)
@@ -115,165 +117,182 @@ EnableReaction(REPORTSELECTED)
 TracerDebugContinueInf
 
 decision:
-Decision=(START:Start,RE:re,SELECTCASE:SelectCase,INTERNETCONNECTW-1:overwrite,Z4:internetopen,HTTPREQUESTW-1:httpsend,INTERNETSETOPTION+1:disable_ssl,HTTPOPENREQUESTW-1:disable2,HTTPQUERYINFOW+1:get_info1,HTTPQUERYINFOW-1:get_info2,INTERNETREADFILE+1:get_info3,INTERNETREADFILE-1:get_info4,A5:load_and_continue,A6:zero_eax,default:loop)
+Decision=(
+    START:Start,
+    RE:re,
+    SELECTCASE:SelectCase,
+    INTERNETCONNECTW-1:overwrite,
+    Z4:internetopen,
+    HTTPREQUESTW-1:httpsend,
+    INTERNETSETOPTION+1:disable_ssl,
+    HTTPOPENREQUESTW-1:disable2,
+    HTTPQUERYINFOW+1:get_info1,
+    HTTPQUERYINFOW-1:get_info2,
+    INTERNETREADFILE+1:get_info3,
+    INTERNETREADFILE-1:get_info4,
+    A5:load_and_continue,
+    A6:zero_eax,
+    default:loop
+)
 
 Start:
-EnableBuiltin
-ExclusiveBuiltin
-LowerBuiltin
-EnableReaction(s0)
-RaiseReaction(s0)
-RaiseReaction(s1)
-# modifications
+    EnableBuiltin
+    ExclusiveBuiltin
+    LowerBuiltin
+    EnableReaction(s0)
+    RaiseReaction(s0)
+    RaiseReaction(s1)
+    # modifications
 
-Execute(scripts/arab/enable_context_mod_detection.sc)
+    Execute(scripts/arab/enable_context_mod_detection.sc)
 
-# we dont need for now, we pass by first creation
-DumpMemory
-TracerStartTrace
-TracerDebugContinueInf
-goto(decision)
+    # we dont need for now, we pass by first creation
+    DumpMemory
+    TracerStartTrace
+    TracerDebugContinueInf
+    goto(decision)
 
 overwrite:
-ReadArgUni(1)
-ReadStack
-ReadRegister(ESP)
-Adjust(0x8)
-ReadDword
-WriteUnicode(127.0.0.1)
-ReadArgUni(1)
-TracerDebugContinueInf
-goto(decision)
+    ReadArgUni(1)
+    ReadStack
+    ReadRegister(ESP)
+    Adjust(0x8)
+    ReadDword
+    WriteUnicode(127.0.0.1)
+    ReadArgUni(1)
+    TracerDebugContinueInf
+    goto(decision)
 
 internetopen:
-ReadRegister(EAX)
-TracerDebugContinueInf
-goto(decision)
+    ReadRegister(EAX)
+    TracerDebugContinueInf
+    goto(decision)
 
 zero_to_1:
-# zero out timeout
-ReadStack
-ReadRegister(ESP)
-Adjust(0x8)
-WriteDword(0x0)
-TracerDebugContinueInf
-goto(decision)
+    # zero out timeout
+    ReadStack
+    ReadRegister(ESP)
+    Adjust(0x8)
+    WriteDword(0x0)
+    TracerDebugContinueInf
+    goto(decision)
 
 zero_to_2:
-# zero out timeout
-ReadStack
-ReadRegister(ESP)
-Adjust(0x10)
-WriteDword(0x0)
-TracerDebugContinueInf
-goto(decision)
+    # zero out timeout
+    ReadStack
+    ReadRegister(ESP)
+    Adjust(0x10)
+    WriteDword(0x0)
+    TracerDebugContinueInf
+    goto(decision)
 
 zero_eax:
-RunRoutine(0x104)
-TracerDebugContinueInf
-goto(decision)
+    RunRoutine(0x104)
+    TracerDebugContinueInf
+    goto(decision)
 
 zero_to_3:
-# zero out timeout
-ReadStack
-ReadRegister(ESP)
-Adjust(0x4)
-WriteDword(0x0)
-TracerDebugContinueInf
-goto(decision)
+    # zero out timeout
+    ReadStack
+    ReadRegister(ESP)
+    Adjust(0x4)
+    WriteDword(0x0)
+    TracerDebugContinueInf
+    goto(decision)
 
 httpsend:
-ReadRegister(EAX)
-TracerDebugContinueInf
-goto(decision)
+    ReadRegister(EAX)
+    TracerDebugContinueInf
+    goto(decision)
 
 disable_ssl:
-ReadRegister(ESP)
-Adjust(0x8)
-ReadDword
-CheckEqual(0x1f)=(Y:disable,N:ignore)
+    ReadRegister(ESP)
+    Adjust(0x8)
+    ReadDword
+    CheckEqual(0x1f)=(Y:disable,N:ignore)
 
 disable:
-ReadRegister(ESP)
-Adjust(0xc)
-ReadDword
-WriteDword(0x0)
+    ReadRegister(ESP)
+    Adjust(0xc)
+    ReadDword
+    WriteDword(0x0)
 
 ignore:
-TracerDebugContinueInf
-goto(decision)
+    TracerDebugContinueInf
+    goto(decision)
 
 disable2:
-ReadRegister(ESP)
-Adjust(0x1c)
-WriteDword(0x0)
-TracerDebugContinueInf
-goto(decision)
+    ReadRegister(ESP)
+    Adjust(0x1c)
+    WriteDword(0x0)
+    TracerDebugContinueInf
+    goto(decision)
 
 get_info1:
-ReadStack
-ReadRegister(ESP)
-Adjust(0xc)
-ReadDword
-SaveOffset
-ReadRegister(ESP)
-Adjust(0x10)
-ReadDword
-ReadDword
-SaveSize
-TracerDebugContinueInf
-goto(decision)
+    ReadStack
+    ReadRegister(ESP)
+    Adjust(0xc)
+    ReadDword
+    SaveOffset
+    ReadRegister(ESP)
+    Adjust(0x10)
+    ReadDword
+    ReadDword
+    SaveSize
+    TracerDebugContinueInf
+    goto(decision)
 
 get_info2:
-OutRegion
-TracerDebugContinueInf
-goto(decision)
+    OutRegion
+    TracerDebugContinueInf
+    goto(decision)
 
 get_info3:
-ReadStack
-ReadRegister(ESP)
-Adjust(0x8)
-ReadDword
-SaveOffset
-ReadRegister(ESP)
-Adjust(0xc)
-ReadDword
-SaveSize
-TracerDebugContinueInf
-goto(decision)
+    ReadStack
+    ReadRegister(ESP)
+    Adjust(0x8)
+    ReadDword
+    SaveOffset
+    ReadRegister(ESP)
+    Adjust(0xc)
+    ReadDword
+    SaveSize
+    TracerDebugContinueInf
+    goto(decision)
 
 get_info4:
-OutRegion
-TracerDebugContinueInf
-goto(decision)
+    OutRegion
+    TracerDebugContinueInf
+    goto(decision)
 
 SelectCase:
-Push(0x0)
-WriteRegister(EAX)
-TracerDebugContinueInf
-goto(decision)
+    Push(0x0)
+    WriteRegister(EAX)
+    TracerDebugContinueInf
+    goto(decision)
 
 overwrite:
-ReadRegister(ESP)
-Adjust(0x4)
-WriteDword(0x1)
-TracerDebugContinueInf
-goto(decision)
+    ReadRegister(ESP)
+    Adjust(0x4)
+    WriteDword(0x1)
+    TracerDebugContinueInf
+    goto(decision)
 
 overwrite2:
-ReadRegister(ESP)
-Adjust(0x0)
-WriteDword(0xa)
-TracerDebugContinueInf
-goto(decision)
+    ReadRegister(ESP)
+    Adjust(0x0)
+    WriteDword(0xa)
+    TracerDebugContinueInf
+    goto(decision)
 
 loop:
-TracerDebugContinueInf
-goto(decision)
+    TracerDebugContinueInf
+    goto(decision)
 
 re:
-TracerDebugContinueInf(0x80010001)
-goto(decision)
+    TracerDebugContinueInf(0x80010001)
+    goto(decision)
 
 exception:
-Execute(scripts/common/interrupt.sc)
+    Execute(scripts/common/interrupt.sc)
+

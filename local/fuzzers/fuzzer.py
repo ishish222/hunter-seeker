@@ -46,6 +46,8 @@ def stateful_routine(script_path):
 
     for line in script_file:
         line = line[:-1]
+        line = line.replace('\t', '')
+        line = line.replace(' ', '')
 
         if(line == ''):
             script.append(None)
