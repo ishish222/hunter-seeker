@@ -329,4 +329,10 @@ Zaimplementowano ze domyslnie jest id = -1, co oznacza, ze brany pod uwage jest 
 
 Implementacja zmian w tracer + testy z nowymi skryptami
 
+--
+
+[x] 033 - bledy zwiazane z poszerzeniem nazw reakcji
+
+- nie dzialaja Decision
+zmiany w tracing_parts.decision
 

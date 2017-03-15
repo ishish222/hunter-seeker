@@ -69,11 +69,11 @@ TracerDebugContinueInf
 # ExtractEP(e:\samples\shared\arab_560000_mod.exe)
 # SaveEP
 # ManualSTwSelf
-TracerRegisterReactions(self+0xf422,Start,0x0)
-TracerRegisterReactions(self+0x1f05,Aaa1:Start,0x0)
-TracerRegisterReactions(self+0x1f07,A2,0x330)
+TracerRegisterReactions(self+0xf422,START,0x0)
+TracerRegisterReactions(self+0x1f05,SELECTCASE:START,0x0)
+TracerRegisterReactions(self+0x1f07,REPORTSELECTED,0x330)
 
-TracerRegisterReactions(WININET.dll+0x20494,InternetConnectWNext:Z4,0x000;WININET.dll+0x20546,Z4:Z3,0x000)
+TracerRegisterReactions(WININET.dll+0x20494,INTERNETCONNECTW+1:Z4,0x000;WININET.dll+0x20546,Z4:Z3,0x000)
 TracerRegisterReactions(WININET.dll+0x1eef5,Z5:Z6,0x100;WININET.dll+0x1ef6c,Z6:Z5,0x000)
 TracerRegisterReactions(WININET.dll+0x14ea3,Z7:Z8,0x000;WININET.dll+0x14f6c,Z8:Z7,0x100)
 TracerRegisterReactions(WININET.dll+0x20615,Z9:Z0,0x000;WININET.dll+0x20846,Z0:Z9,0x100)
@@ -86,10 +86,15 @@ EnableReaction(Y1)
 EnableReaction(Y3)
 
 DisableReactions
-EnableReaction(Aaa1)
-EnableReaction(A2)
+EnableReaction(SELECTCASE)
+EnableReaction(REPORTSELECTED)
 
 TracerDebugContinueInf
+
+decision:
+Decision=(START:Start,RE:re,SELECTCASE:SelectCase,Z3:overwrite,Z4:internetopen,Z6:httpsend,Z7:disable_ssl,Z9:disable2,Y1:get_info1,Y2:get_info2,Y3:get_info3,Y4:get_info4,A5:load_and_continue,A6:zero_eax,default:loop)
+
+Start:
 EnableBuiltin
 ExclusiveBuiltin
 LowerBuiltin
@@ -104,9 +109,7 @@ Execute(scripts/arab/enable_context_mod_detection.sc)
 DumpMemory
 TracerStartTrace
 TracerDebugContinueInf
-
-decision:
-Decision=(RE:re,Aaa1:a1,Z3:overwrite,Z4:internetopen,Z6:httpsend,Z7:disable_ssl,Z9:disable2,Y1:get_info1,Y2:get_info2,Y3:get_info3,Y4:get_info4,A5:load_and_continue,A6:zero_eax,default:loop)
+goto(decision)
 
 overwrite:
 ReadArgUni(1)
@@ -221,7 +224,7 @@ OutRegion
 TracerDebugContinueInf
 goto(decision)
 
-a1:
+SelectCase:
 Push(0x0)
 WriteRegister(EAX)
 TracerDebugContinueInf

@@ -565,11 +565,11 @@ def read_last_suspension(args = None):
 def decision(args=None):
     options = globs.state.options
 
-    print "received signal"
     print globs.state.ret[1:3]
 
     if(globs.state.ret[1:3] == "RB"):
-        return globs.state.ret[3:5]
+        bp = globs.state.ret[3:].split('\n')[0]
+        return bp
     else:
         return globs.state.ret[1:3]
 
