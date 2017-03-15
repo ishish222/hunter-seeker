@@ -38,6 +38,10 @@ def stateful_routine(script_path):
 
     # stage 1
     # import prorotypes, make a list
+
+    gathering = 0
+    longline = ''
+
     script.append(None) # to fill line 0
 
     for line in script_file:
@@ -50,6 +54,21 @@ def stateful_routine(script_path):
         if(line[0] == '#'):
             script.append(None)
             continue
+
+        if(gathering):
+            longline += line
+            if(')' in line):
+                line = longline.replace('\n', '')
+                gathering = 0
+            else:
+                continue
+
+        # read until parantheses closure
+        if('(' in line):
+            if(')' not in line):
+                gathering = 1
+                longline += line
+                continue            
 
         if(line[-1:] == ':'):
             line = line[:-1]
@@ -84,6 +103,14 @@ def stateful_routine(script_path):
         script.append(unit)
 
     print "Script length: %d" % len(script)
+    print "Script:"
+    for line in script:
+        if line is None:
+            continue
+        if(hasattr(line, 'args')):
+            print '%s - %s' % (line.name, line.args)
+        else:
+            print '%s' % (line.name)
         
     # stage 2
     while(1):

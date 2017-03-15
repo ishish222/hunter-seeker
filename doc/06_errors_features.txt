@@ -336,3 +336,9 @@ Implementacja zmian w tracer + testy z nowymi skryptami
 - nie dzialaja Decision
 zmiany w tracing_parts.decision
 
+--
+
+[x] 034 - zczytywanie argumentow z kilku linii
+
+Zaimplementowano w fuzzer.py
+

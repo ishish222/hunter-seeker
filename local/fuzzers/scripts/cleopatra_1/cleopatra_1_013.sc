@@ -73,17 +73,27 @@ TracerRegisterReactions(self+0xf422,START,0x0)
 TracerRegisterReactions(self+0x1f05,SELECTCASE:START,0x0)
 TracerRegisterReactions(self+0x1f07,REPORTSELECTED,0x330)
 
-TracerRegisterReactions(WININET.dll+0x20494,INTERNETCONNECTW+1:Z4,0x000;WININET.dll+0x20546,Z4:Z3,0x000)
-TracerRegisterReactions(WININET.dll+0x1eef5,Z5:Z6,0x100;WININET.dll+0x1ef6c,Z6:Z5,0x000)
-TracerRegisterReactions(WININET.dll+0x14ea3,Z7:Z8,0x000;WININET.dll+0x14f6c,Z8:Z7,0x100)
-TracerRegisterReactions(WININET.dll+0x20615,Z9:Z0,0x000;WININET.dll+0x20846,Z0:Z9,0x100)
-TracerRegisterReactions(WININET.dll+0x22d7d,Y1:Y2,0x000;WININET.dll+0x22e74,Y2:Y1,0x000)
-TracerRegisterReactions(WININET.dll+0x1e2a6,Y3:Y4,0x000;WININET.dll+0x1e2e5,Y4:Y3,0x000)
-EnableReaction(Z3)
-EnableReaction(Z5)
-EnableReaction(Z7)
-EnableReaction(Y1)
-EnableReaction(Y3)
+TracerRegisterReactions(
+WININET.dll+0x20494,
+INTERNETCONNECTW+1:INTERNETCONNECTW-1,
+0x0;
+
+WININET.dll+0x20546,
+INTERNETCONNECTW-1:INTERNETCONNECTW+1,
+0x0
+)
+
+TracerRegisterReactions(WININET.dll+0x1eef5,HTTPREQUESTW+1:HTTPREQUESTW-1,0x100;WININET.dll+0x1ef6c,HTTPREQUESTW-1:HTTPREQUESTW+1,0x0)
+TracerRegisterReactions(WININET.dll+0x14ea3,INTERNETSETOPTION+1:INTERNETSETOPTION-1,0x0;WININET.dll+0x14f6c,INTERNETSETOPTION-1:INTERNETSETOPTION+1,0x100)
+TracerRegisterReactions(WININET.dll+0x20615,HTTPOPENREQUESTW-1:HTTPOPENREQUESTW+1,0x0;WININET.dll+0x20846,HTTPOPENREQUESTW+1:HTTPOPENREQUESTW-1,0x100)
+TracerRegisterReactions(WININET.dll+0x22d7d,HTTPQUERYINFOW+1:HTTPQUERYINFOW-1,0x0;WININET.dll+0x22e74,HTTPQUERYINFOW-1:HTTPQUERYINFOW+1,0x0)
+TracerRegisterReactions(WININET.dll+0x1e2a6,INTERNETREADFILE+1:INTERNETREADFILE-1,0x0;WININET.dll+0x1e2e5,INTERNETREADFILE-1:INTERNETREADFILE+1,0x0)
+
+EnableReaction(INTERNETCONNECTW-1)
+EnableReaction(HTTPREQUESTW+1)
+EnableReaction(INTERNETSETOPTION+1)
+EnableReaction(HTTPQUERYINFOW+1)
+EnableReaction(INTERNETREADFILE+1)
 
 DisableReactions
 EnableReaction(SELECTCASE)
@@ -92,7 +102,7 @@ EnableReaction(REPORTSELECTED)
 TracerDebugContinueInf
 
 decision:
-Decision=(START:Start,RE:re,SELECTCASE:SelectCase,Z3:overwrite,Z4:internetopen,Z6:httpsend,Z7:disable_ssl,Z9:disable2,Y1:get_info1,Y2:get_info2,Y3:get_info3,Y4:get_info4,A5:load_and_continue,A6:zero_eax,default:loop)
+Decision=(START:Start,RE:re,SELECTCASE:SelectCase,INTERNETCONNECTW-1:overwrite,Z4:internetopen,HTTPREQUESTW-1:httpsend,INTERNETSETOPTION+1:disable_ssl,HTTPOPENREQUESTW-1:disable2,HTTPQUERYINFOW+1:get_info1,HTTPQUERYINFOW-1:get_info2,INTERNETREADFILE+1:get_info3,INTERNETREADFILE-1:get_info4,A5:load_and_continue,A6:zero_eax,default:loop)
 
 Start:
 EnableBuiltin
