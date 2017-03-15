@@ -55,20 +55,23 @@ def stateful_routine(script_path):
             script.append(None)
             continue
 
-        if(gathering):
-            longline += line
-            if(')' in line):
-                line = longline.replace('\n', '')
-                gathering = 0
-            else:
-                continue
-
         # read until parantheses closure
         if('(' in line):
             if(')' not in line):
                 gathering = 1
                 longline += line
                 continue            
+
+        if(gathering):
+            longline += line
+            if(')' in line):
+                line = longline.replace('\n', '')
+                line = longline.replace('\t', '')
+                line = longline.replace(' ', '')
+                gathering = 0
+                longline = ''
+            else:
+                continue
 
         if(line[-1:] == ':'):
             line = line[:-1]
@@ -82,6 +85,8 @@ def stateful_routine(script_path):
         else:
             instr = line
             ret_tab = None
+
+#        print instr
 
         if "(" in instr:
             name, args = instr.split("(")
@@ -102,15 +107,15 @@ def stateful_routine(script_path):
         # create object from class
         script.append(unit)
 
-    print "Script length: %d" % len(script)
-    print "Script:"
-    for line in script:
-        if line is None:
-            continue
-        if(hasattr(line, 'args')):
-            print '%s - %s' % (line.name, line.args)
-        else:
-            print '%s' % (line.name)
+#    print "Script length: %d" % len(script)
+#    print "Script:"
+#    for line in script:
+#        if line is None:
+#            continue
+#        if(hasattr(line, 'args')):
+#            print '%s - %s' % (line.name, line.args)
+#        else:
+#            print '%s' % (line.name)
         
     # stage 2
     while(1):
