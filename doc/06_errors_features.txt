@@ -323,4 +323,10 @@ Zaimplementowano ze domyslnie jest id = -1, co oznacza, ze brany pod uwage jest 
 
 031 - zeby komunikaty sie nie przeslanialy (np. o jmpie i reakcji)
 
+--
+
+[x] 032 - nazwy reakcji dluzsze niz 2 znaki
+
+Implementacja zmian w tracer + testy z nowymi skryptami
+
 

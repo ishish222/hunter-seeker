@@ -2,9 +2,9 @@ PrintLogo
 RegisterSignals(exception)
 GetOptions
 GetSampleOptions
-SetSampleFile(072933FA35B585511003F36E3885563E1B55D55A.exe)
+SetSampleFile(arab_560000.exe)
 SetResearchDir(e:\samples\shared)
-GlobPattern(/home/hs1/malware_samples/XAgent-WIN/072933FA35B585511003F36E3885563E1B55D55A.exe)
+GlobPattern(/home/hs1/malware_samples/arab_560000.exe)
 SetOutDir(\\10.0.2.4\qemu)
 CheckHostDir
 RevertClean
@@ -26,13 +26,26 @@ Wait10
 goto(start_controller)
 
 success:
-Execute(scripts/common/debug_sample_no_log.sc)
+KillExplorer
+ResetTracers
+SpawnTracerController
+SpawnTracerFileLog
+TracerConfigureSample
+TracerConfigureOutDir
+TracerConfigureOutPrefix
+TracerConfigureInDir
+TracerPrepareTrace
+TracerRegisterBuiltin
+DisableReactions
+TracerSetParameters(test1 test2 test3)
+TracerDebugSample
+TracerDebugContinueInf
 
 # RR
-ExtractEP(e:\samples\shared\072933FA35B585511003F36E3885563E1B55D55A.exe)
-SaveEP
-ManualSTwSelf
-#TracerSetParameters(test1 test2)
+# ExtractEP(e:\samples\shared\arab_560000.exe)
+# SaveEP
+# ManualSTwSelf
+TracerRegisterReactions(self+0x1e47,ST,0x0)
 DisableReactions
 EnableReaction(ST)
 TracerDebugContinueInf
@@ -46,8 +59,10 @@ RaiseReaction(s0)
 RaiseReaction(s1)
 
 # modifications
-#TracerRegisterReactions(self+0x1e86,A1,0x105)
-#EnableReaction(A1)
+TracerRegisterReactions(self+0x1f05,A1,0x0)
+TracerRegisterReactions(self+0x1f07,A2,0x330)
+EnableReaction(A1)
+EnableReaction(A2)
 
 Execute(scripts/arab/enable_context_mod_detection.sc)
 
@@ -57,7 +72,13 @@ TracerStartTrace
 TracerDebugContinueInf
 
 decision:
-Decision=(RE:re,default:loop)
+Decision=(RE:re,A1:a1,default:loop)
+
+a1:
+Push(0x2)
+WriteRegister(EAX)
+TracerDebugContinueInf
+goto(decision)
 
 overwrite:
 ReadRegister(ESP)

@@ -1467,7 +1467,8 @@ def execute(cmds, ext_pipe):
 
         elif(cmd == "spawn_responder"):
             from simple import simple_responder
-            responder = simple_responder(int(args,10), logf)
+            #responder = simple_responder(int(args,10), logf)
+            responder = simple_responder(int(args,10))
             writePipe(ext_pipe, "spawn_responder OK")
             ok(ext_pipe)
 

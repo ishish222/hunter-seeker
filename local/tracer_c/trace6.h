@@ -216,8 +216,8 @@ typedef struct BREAKPOINT_
 
 typedef struct REACTION_
 {
-    char reaction_id[3];
-    char coupled_id[MAX_COUPLES][3];
+    char reaction_id[MAX_NAME];
+    char coupled_id[MAX_COUPLES][MAX_NAME];
     unsigned couple_id_count;
 
     unsigned routine_ids[MAX_ROUTINES];

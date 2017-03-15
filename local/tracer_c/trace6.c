@@ -5000,10 +5000,11 @@ REACTION* find_reaction(char* id)
     unsigned i;
 
     /* cut couples */
-    id[0x2] = 0x0;
+    //id[0x2] = 0x0;
 
     for(i= 0x0; i< my_trace->reaction_count; i++)
     {
+        d_print("Comparing: %s - %s\n", my_trace->reactions[i].reaction_id, id);
         if(!strcmp(my_trace->reactions[i].reaction_id, id))
         {
             if(strcmp(my_trace->reactions[i].reaction_id, "xx")) /* exclude xx from searches */
@@ -5057,6 +5058,9 @@ int add_reaction(char* location_str, char* reaction_id)
     d_print("[add_reaction]\n");
 
     unsigned cur_reaction_id = my_trace->reaction_count;
+    char* reaction_id_clean;
+
+    reaction_id_clean = strtok(reaction_id, ":");
 
     d_print("Trying to add reaction at: %s with id: %s\n", location_str, reaction_id);
 
@@ -5064,7 +5068,7 @@ int add_reaction(char* location_str, char* reaction_id)
 
     strcpy(my_trace->reactions[my_trace->reaction_count].reaction_id, reaction_id);
 
-    my_trace->reactions[cur_reaction_id].reaction_id[0x2] = 0x0;
+//    my_trace->reactions[cur_reaction_id].reaction_id[0x2] = 0x0;
     my_trace->reactions[cur_reaction_id].bp = add_breakpoint(location_str, &my_trace->reactions[cur_reaction_id]);
     my_trace->reactions[cur_reaction_id].bp->enabled = 0x1; /* deprecated, moved to reaction */
     my_trace->reactions[cur_reaction_id].enabled = 0x1;
