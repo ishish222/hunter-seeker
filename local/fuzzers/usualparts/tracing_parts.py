@@ -566,6 +566,7 @@ def decision(args=None):
     options = globs.state.options
 
     print globs.state.ret[1:3]
+    print globs.state.ret
 
     if(globs.state.ret[1:3] == "RB"):
         bp = globs.state.ret[3:].split('\n')[0]

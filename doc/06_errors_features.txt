@@ -342,3 +342,14 @@ zmiany w tracing_parts.decision
 
 Zaimplementowano w fuzzer.py
 
+--
+
+[x] 035 - zapetla sie BP START
+
+zastapilem wycinanie spacji strip()
+uderza caly czas w ST :/
+usunieto ss_callback przy ET. Ale czy to rozwiaze problem?
+Czemu ten problem nie wystepowal wczesniej?
+
+Do przeprowadzenia testy z innym bptem.
+Testy zakonczone powodzeniem.

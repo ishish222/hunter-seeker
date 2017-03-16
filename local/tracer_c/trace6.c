@@ -1397,7 +1397,8 @@ int disable_reaction(char* reaction_id)
 
     for(i = 0x0; i< my_trace->reaction_count; i++)
     {
-        if((reaction_id[0] == my_trace->reactions[i].reaction_id[0]) && (reaction_id[1] == my_trace->reactions[i].reaction_id[1]))
+        //if((reaction_id[0] == my_trace->reactions[i].reaction_id[0]) && (reaction_id[1] == my_trace->reactions[i].reaction_id[1]))
+        if(!strcmp(reaction_id, my_trace->reactions[i].reaction_id))
         {
             d_print("Disabling reaction %s\n", reaction_id);
             my_trace->reactions[i].enabled = 0x0;
@@ -2589,6 +2590,7 @@ void ss_callback(void* data)
 
     if(my_trace->delayed_breakpoint != 0x0)
     {
+        d_print("Writing delayed breakpoint!\n");
         write_breakpoint(my_trace->delayed_breakpoint);
         my_trace->delayed_breakpoint = 0x0;
     }
@@ -2752,6 +2754,7 @@ SIZE_T dump_zeros(FILE* f, SIZE_T len)
 
 void dump_memory()
 {
+    fflush(my_trace->trace);
     SIZE_T addr;
     SIZE_T read;
 
@@ -3147,9 +3150,10 @@ int unwrite_breakpoint(BREAKPOINT* bp)
 
     addr = bp->resolved_location;
 
+    d_print("Unwriting @: 0x%08x\n", addr);
     write_memory(my_trace->procHandle, (void*)addr, (void*)&bp->saved_byte, 0x1, &wrote);
     read_memory(my_trace->procHandle, (void*)addr, (void*)&bpt_char, 0x1, &wrote);
-//    d_print("After: 0x%02x\n", bpt_char);
+    d_print("After: 0x%02x\n", bpt_char);
     bp->written = 0x0;
 
     d_print("[unwrite_breakpoint ends]\n");
@@ -5023,11 +5027,12 @@ int add_couple(char* id, char* couple_id)
     d_print("[add_couple]\n");
     REACTION* target;
 
-    char my_couple[0x3];
+    char my_couple[MAX_NAME];
 
-    my_couple[0] = couple_id[0];
-    my_couple[1] = couple_id[1];
-    my_couple[2] = 0;
+    strcpy(my_couple, couple_id);
+//    my_couple[0] = couple_id[0];
+  //  my_couple[1] = couple_id[1];
+    //my_couple[2] = 0;
 
     target = find_reaction(id);
     strcpy(target->coupled_id[target->couple_id_count], couple_id);
@@ -5451,7 +5456,7 @@ int handle_cmd(char* cmd)
         char line2[MAX_LINE];
 
         my_trace->status = STATUS_DBG_STARTED;
-        ss_callback((void*)&my_trace->last_event);
+//        ss_callback((void*)&my_trace->last_event);
         set_ss(0x0);
         d_print("Tracing enabled\n");
 

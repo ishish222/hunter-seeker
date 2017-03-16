@@ -66,12 +66,14 @@ TracerDebugSample
 TracerDebugContinueInf
 
 # RR
-# ExtractEP(e:\samples\shared\arab_560000_mod.exe)
-# SaveEP
-# ManualSTwSelf
+ExtractEP(e:\samples\shared\arab_560000_mod.exe)
+SaveEP
+ManualSTwSelf
 
-TracerRegisterReactions(self+0xf422,START,0x0)
-TracerRegisterReactions(self+0x1f05,SELECTCASE:START,0x0)
+#TracerRegisterReactions(self+0xf422,ST,0x0)
+TracerRegisterReactions(self+0x1de1,TEST,0x0)
+#TracerRegisterReactions(self+0x1f05,SELECTCASE:ST,0x0)
+TracerRegisterReactions(self+0x1f05,SELECTCASE,0x0)
 TracerRegisterReactions(self+0x1f07,REPORTSELECTED,0x330)
 
 TracerRegisterReactions(
@@ -90,8 +92,8 @@ TracerRegisterReactions(
 )
 
 TracerRegisterReactions(
-    WININET.dll+0x20615,HTTPOPENREQUESTW-1:HTTPOPENREQUESTW+1,0x0;
-    WININET.dll+0x20846,HTTPOPENREQUESTW+1:HTTPOPENREQUESTW-1,0x100
+    WININET.dll+0x20615,HTTPOPENREQUESTW+1:HTTPOPENREQUESTW-1,0x0;
+    WININET.dll+0x20846,HTTPOPENREQUESTW-1:HTTPOPENREQUESTW+1,0x100
 )
 
 TracerRegisterReactions(
@@ -104,34 +106,25 @@ TracerRegisterReactions(
     WININET.dll+0x1e2e5,INTERNETREADFILE-1:INTERNETREADFILE+1,0x0
 )
 
-EnableReaction(INTERNETCONNECTW-1)
-EnableReaction(HTTPREQUESTW+1)
-EnableReaction(INTERNETSETOPTION+1)
-EnableReaction(HTTPQUERYINFOW+1)
-EnableReaction(INTERNETREADFILE+1)
-
 DisableReactions
-EnableReaction(SELECTCASE)
-EnableReaction(REPORTSELECTED)
+EnableReaction(ST)
 
 TracerDebugContinueInf
 
 decision:
 Decision=(
-    START:Start,
+    ST:Start,
     RE:re,
     SELECTCASE:SelectCase,
-    INTERNETCONNECTW-1:overwrite,
-    Z4:internetopen,
+    INTERNETCONNECTW+1:overwrite,
+    INTERNETCONNECTW-1:internetopen,
     HTTPREQUESTW-1:httpsend,
     INTERNETSETOPTION+1:disable_ssl,
-    HTTPOPENREQUESTW-1:disable2,
+    HTTPOPENREQUESTW+1:disable2,
     HTTPQUERYINFOW+1:get_info1,
     HTTPQUERYINFOW-1:get_info2,
     INTERNETREADFILE+1:get_info3,
     INTERNETREADFILE-1:get_info4,
-    A5:load_and_continue,
-    A6:zero_eax,
     default:loop
 )
 
@@ -142,12 +135,18 @@ Start:
     EnableReaction(s0)
     RaiseReaction(s0)
     RaiseReaction(s1)
-    # modifications
+    EnableReaction(SELECTCASE)
+    EnableReaction(TEST)
+    EnableReaction(REPORTSELECTED)
+    EnableReaction(INTERNETCONNECTW+1)
+    EnableReaction(HTTPREQUESTW+1)
+    EnableReaction(INTERNETSETOPTION+1)
+    EnableReaction(HTTPQUERYINFOW+1)
+    EnableReaction(INTERNETREADFILE+1)
 
     Execute(scripts/arab/enable_context_mod_detection.sc)
 
-    # we dont need for now, we pass by first creation
-    DumpMemory
+    #DumpMemory
     TracerStartTrace
     TracerDebugContinueInf
     goto(decision)
