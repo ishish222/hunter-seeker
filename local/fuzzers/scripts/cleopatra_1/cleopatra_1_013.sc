@@ -129,25 +129,22 @@ Decision=(
 )
 
 Start:
+    DumpMemory
+    TracerStartTrace
     EnableBuiltin
     ExclusiveBuiltin
     LowerBuiltin
     EnableReaction(s0)
     RaiseReaction(s0)
-    RaiseReaction(s1)
     EnableReaction(SELECTCASE)
-    EnableReaction(TEST)
     EnableReaction(REPORTSELECTED)
     EnableReaction(INTERNETCONNECTW+1)
     EnableReaction(HTTPREQUESTW+1)
     EnableReaction(INTERNETSETOPTION+1)
     EnableReaction(HTTPQUERYINFOW+1)
     EnableReaction(INTERNETREADFILE+1)
-
     Execute(scripts/arab/enable_context_mod_detection.sc)
 
-    #DumpMemory
-    TracerStartTrace
     TracerDebugContinueInf
     goto(decision)
 

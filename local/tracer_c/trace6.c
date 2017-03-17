@@ -2590,9 +2590,16 @@ void ss_callback(void* data)
 
     if(my_trace->delayed_breakpoint != 0x0)
     {
-        d_print("Writing delayed breakpoint!\n");
-        write_breakpoint(my_trace->delayed_breakpoint);
-        my_trace->delayed_breakpoint = 0x0;
+        if(my_trace->block_delayed_breakpoint != 0x0)
+        {
+            my_trace->block_delayed_breakpoint = 0x0;
+        }
+        else
+        {
+            d_print("Writing delayed breakpoint!\n");
+            write_breakpoint(my_trace->delayed_breakpoint);
+            my_trace->delayed_breakpoint = 0x0;
+        }
     }
 
     eip = (DWORD)(de->u.Exception.ExceptionRecord.ExceptionAddress);
@@ -3023,6 +3030,7 @@ int handle_breakpoint(DWORD addr, void* data)
     int handler_count;
     int our_bp = 0x0;
     BREAKPOINT* my_bp;
+
 
     /* identify which breakpoint */
     for(i = 0x0; i<my_trace->bpt_count; i++)
@@ -4600,6 +4608,7 @@ int process_last_event()
                             }
                         }
 
+                        ss_callback((void*)&my_trace->last_event);
                         if(!handled)                        
                         {
                             d_print("This BP is not our, we pass it to the debugee\n");
@@ -5456,7 +5465,8 @@ int handle_cmd(char* cmd)
         char line2[MAX_LINE];
 
         my_trace->status = STATUS_DBG_STARTED;
-//        ss_callback((void*)&my_trace->last_event);
+        my_trace->block_delayed_breakpoint = 1;
+        ss_callback((void*)&my_trace->last_event);
         set_ss(0x0);
         d_print("Tracing enabled\n");
 

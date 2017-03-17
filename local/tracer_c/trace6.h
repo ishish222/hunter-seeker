@@ -313,6 +313,7 @@ typedef struct TRACE_CONFIG_
     /* breakpoints */
     BREAKPOINT breakpoints[MAX_BREAKPOINTS];
     BREAKPOINT* delayed_breakpoint;
+    char block_delayed_breakpoint;
 
     /* communication */
     unsigned port;

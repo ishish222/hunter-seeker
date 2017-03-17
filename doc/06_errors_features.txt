@@ -353,3 +353,19 @@ Czemu ten problem nie wystepowal wczesniej?
 
 Do przeprowadzenia testy z innym bptem.
 Testy zakonczone powodzeniem.
+
+--
+
+037 - zaimplementowac samowstawiajacy breakpoint jako opcja xx:xx
+
+--
+
+[x] 038 - brak switch/case w wyniku analizy
+
+odczytuje jako 0xcc :/
+problem z tracerem, ktory wynotowuje bajt zanim nastapi usuniecie bp.
+
+Nie! Problem z postawieniem bp PRZED MemoryDump!!!
+
+
+
