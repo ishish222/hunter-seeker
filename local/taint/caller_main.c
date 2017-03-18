@@ -272,6 +272,7 @@ int load_file(char* line, taint_x86* taint_eng)
 {
     char* cmd;
     char* file_name;
+    int ret;
 
     cmd = strtok(line, ",");
     file_name = strtok(0x0, ",");
@@ -280,9 +281,7 @@ int load_file(char* line, taint_x86* taint_eng)
     printf("Switching instr file to %s\n", file_name);
 
     fclose(taint_eng->instr_file);
-    taint_eng->load_instr_from_file(file_name);
-
-    return 0x0;
+    return taint_eng->load_instr_from_file(file_name);
 }
 
 int comment_out(char* line, taint_x86* taint_eng)
@@ -979,6 +978,11 @@ int main(int argc, char** argv)
     /* executing instructions */
     while ((read = getline(&line, &len, taint_eng.instr_file)) != -1) 
     {
+        if(taint_eng.aborted) 
+        {
+            printf("\nABORTED!!!\n\n");
+            break;
+        }
         if(line[0] != '0')
         {
             //printf("%s\n", line);
@@ -1054,7 +1058,8 @@ int main(int argc, char** argv)
                 load_mem(line, &taint_eng);
 
             if(line[0] == 'L' && line[1] == 'F')
-                load_file(line, &taint_eng);
+                if(load_file(line, &taint_eng) != 0x0)
+                    taint_eng.aborted = 1;
 
             if(line[0] == 'S' && line[1] == 'T')
 //                if(!(taint_eng.start_addr || taint_eng.start_instr))
@@ -1079,11 +1084,6 @@ int main(int argc, char** argv)
         {
             last_instr_count = instr_count;
             decode_instruction(&tid, &eip, &instr_count, line);
-            if(taint_eng.aborted) 
-            {
-                printf("\nABORTED!!!\n\n");
-                break;
-            }
             //fprintf(stderr, "instruction %lld in TID: 0x%08x, offset: 0x%08x\n", instr_count, tid, eip);
             taint_eng.current_instr_count = instr_count;
             taint_eng.execute_instruction_at_eip(eip, tid);

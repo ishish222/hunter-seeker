@@ -78,12 +78,12 @@ TracerRegisterReactions(self+0x1f07,REPORTSELECTED,0x330)
 
 TracerRegisterReactions(
     WININET.dll+0x20494,INTERNETCONNECTW+1:INTERNETCONNECTW-1,0x0;
-    WININET.dll+0x20546,INTERNETCONNECTW-1:INTERNETCONNECTW+1,0x0
+    WININET.dll+0x20546,INTERNETCONNECTW-1:INTERNETCONNECTW+1,0x330
 )
 
 TracerRegisterReactions(
     WININET.dll+0x1eef5,HTTPREQUESTW+1:HTTPREQUESTW-1,0x100;
-    WININET.dll+0x1ef6c,HTTPREQUESTW-1:HTTPREQUESTW+1,0x0
+    WININET.dll+0x1ef6c,HTTPREQUESTW-1:HTTPREQUESTW+1,0x330
 )
 
 TracerRegisterReactions(
@@ -116,7 +116,7 @@ Decision=(
     ST:Start,
     RE:re,
     SELECTCASE:SelectCase,
-    INTERNETCONNECTW+1:overwrite,
+    INTERNETCONNECTW+1:overwrite_address,
     INTERNETCONNECTW-1:internetopen,
     HTTPREQUESTW-1:httpsend,
     INTERNETSETOPTION+1:disable_ssl,
@@ -148,7 +148,7 @@ Start:
     TracerDebugContinueInf
     goto(decision)
 
-overwrite:
+overwrite_address:
     ReadArgUni(1)
     ReadStack
     ReadRegister(ESP)

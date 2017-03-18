@@ -1,0 +1,14 @@
+#!/bin/bash
+
+ls *$1.out 2> /dev/null
+
+while [ $? -ne 0 ];
+do
+    sleep 5
+    ls *$1.out 2> /dev/null
+done
+
+if [ $? -eq 0 ];
+then
+    beeep
+fi

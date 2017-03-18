@@ -1,0 +1,4 @@
+#!/bin/bash
+
+echo "aa" | nc -q 0 korrino.com 44844
+

@@ -367,5 +367,9 @@ problem z tracerem, ktory wynotowuje bajt zanim nastapi usuniecie bp.
 
 Nie! Problem z postawieniem bp PRZED MemoryDump!!!
 
+--
 
+039 - analiza wysypuje sie w przypadku usuniecia pliku w LF
+
+dodano obsluge
 
