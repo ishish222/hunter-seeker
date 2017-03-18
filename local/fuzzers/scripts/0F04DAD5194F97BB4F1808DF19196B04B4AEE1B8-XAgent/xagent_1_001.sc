@@ -38,6 +38,7 @@ EnableReaction(ST)
 TracerDebugContinueInf
 
 # A1 -> A2 -> ST
+DumpMemory
 EnableBuiltin
 ExclusiveBuiltin
 LowerBuiltin
@@ -47,17 +48,26 @@ RaiseReaction(s1)
 
 # modifications
 #TracerRegisterReactions(self+0x1e86,A1,0x105)
-#EnableReaction(A1)
+TracerRegisterReactions(
+    SHELL32.dll+0x0141f2,SHELLEXEC+2:SHELLEXEC-1,0x0;
+    SHELL32.dll+0x014276,SHELLEXEC-1:SHELLEXEC+2,0x100;
+    )
+EnableReaction(SHELLEXEC+2)
 
 Execute(scripts/arab/enable_context_mod_detection.sc)
 
 # we dont need for now, we pass by first creation
-DumpMemory
 TracerStartTrace
 TracerDebugContinueInf
 
 decision:
-Decision=(RE:re,default:loop)
+Decision=(RE:re,SHELLEXEC+2:inspect_shellexecute,default:loop)
+
+inspect_shellexecute:
+ReadArgUni(2)
+ReadArgUni(3)
+TracerDebugContinueInf
+goto(decision)
 
 overwrite:
 ReadRegister(ESP)

@@ -5,6 +5,10 @@ import Queue
 
 options = globs.state.options
 
+def beep(args = None):
+    from subprocess import Popen
+    Popen('beeep')
+
 def defined(name):
     if(name in globals()):
         return True

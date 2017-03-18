@@ -369,7 +369,16 @@ Nie! Problem z postawieniem bp PRZED MemoryDump!!!
 
 --
 
-039 - analiza wysypuje sie w przypadku usuniecia pliku w LF
+[x] 039 - analiza wysypuje sie w przypadku usuniecia pliku w LF
 
 dodano obsluge
+
+--
+
+040 - dodac beeep jako mozliwe polecenie
+
+--
+
+041 - dodac wypisanie do komentarzy jako polecenie
+
 

@@ -3,14 +3,14 @@ import threading
 import sys
 
 class simple_responder(object):
-    def __init__(self, port, logf=sys.stdout):
+    def __init__(self, port=80, log_fname="e:\\logs\\responder_log.txt"):
         self.port = port
         self.socket = socket(AF_INET, SOCK_STREAM)
         self.socket.bind(('127.0.0.1', port))
         self.next_response = ""        
         self.thread = threading.Thread(target = self.worker)
         self.working = True
-        self.logf = logf
+        self.logf = open(log_fname, 'w', 1)
         self.thread.start()
 
     def load_next_response(self, next_response):
@@ -25,7 +25,6 @@ class simple_responder(object):
 
     def worker(self):
         self.socket.listen(5)
-        
 
         while(self.working):
             self.logf.write("In loop\n")
