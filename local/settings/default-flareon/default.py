@@ -231,9 +231,9 @@ kernel32.dll+0x02062,k6:k7,0x301;              # CreateProcessA start
 kernel32.dll+0x0208f,k7:k6,0x100;              # CreateProcessA end
 kernel32.dll+0x0202d,k8:k9,0x311;              # CreateProcessW start
 kernel32.dll+0x0205a,k9:k8,0x100;              # CreateProcessW end
-SHELL32.dll+0x249ba5,l0:l1,0x302:0x303;        # ShellExecuteA start
+SHELL32.dll+0x249ba5,l0:l1,0x312:0x313:0x314;  # ShellExecuteA start
 SHELL32.dll+0x249c28,l1:l0,0x100;              # ShellExecuteA end
-SHELL32.dll+0x0141f0,l2:l3,0x312:0x313;        # ShellExecuteW start
+SHELL32.dll+0x0141f0,l2:l3,0x322:0x323:0x324;  # ShellExecuteW start
 SHELL32.dll+0x014277,l3:l2,0x100;              # ShellExecuteW end
 WININET.dll+0x02054f,l4:l5,0x301;              # InternetConnectA start
 WININET.dll+0x0205a0,l5:l4,0x100;              # InternetConnectA end 

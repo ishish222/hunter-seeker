@@ -119,6 +119,22 @@ int d_print(const char* format, ...)
     return 0x0;
 }
 
+int filter_str(char* str, char unwanted)
+{
+    unsigned i, len;
+
+    len = strlen(str);
+
+    for(i = 0x0; i<len; i++)
+    {
+        if(str[i] == unwanted)
+            str[i] = '_';
+    }
+    return 0x0;
+}
+
+
+
 void react_sample_routine_1(void* data)
 {
     d_print("Sample routine 1\n");
@@ -536,6 +552,7 @@ void output_p_register_string(char* reg)
     read_memory(my_trace->cpdi.hProcess, (void*)addr, (void*)snap, SNAP_SIZE, &read);
     if(read > 0x0)
     {
+        filter_str(snap, ',');
         sprintf(line, "OU,0x%x,Reg %s: %s\n", my_trace->last_tid, reg, snap);
         add_to_buffer(line);
     }
@@ -590,6 +607,7 @@ void react_output_p_eip_string(void* data)
 void output_p_register_unicode(char* reg)
 {
     char snap[SNAP_SIZE*2];
+    char snap_ascii[SNAP_SIZE];
     DWORD read;
     OFFSET addr;
     char line[MAX_LINE];
@@ -601,7 +619,9 @@ void output_p_register_unicode(char* reg)
     read_memory(my_trace->cpdi.hProcess, (void*)addr, (void*)snap, SNAP_SIZE*2, &read);
     if(read > 0x0)
     {
-        sprintf(line, "OU,0x%x,Reg %s: %ls\n", my_trace->last_tid, reg, snap);
+        sprintf(snap_ascii, "%ls", snap);
+        filter_str(snap_ascii, ',');
+        sprintf(line, "OU,0x%x,Reg %s: %ls\n", my_trace->last_tid, reg, snap_ascii);
         add_to_buffer(line);
     }
     else
