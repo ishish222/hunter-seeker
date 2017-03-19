@@ -246,15 +246,21 @@ def tracer_read_arg_ansi(args=None):
     write_socket(options.s, "tracer_read_arg_ansi %s" % args);
     response, _, _ = read_socket(options.s)
 
+    globs.state.ret = response[3:]
+
 def tracer_read_arg_uni(args=None):
     options = globs.state.options
     write_socket(options.s, "tracer_read_arg_uni %s" % args);
     response, _, _ = read_socket(options.s)
 
+    globs.state.ret = response[3:]
+
 def tracer_read_arg(args=None):
     options = globs.state.options
     write_socket(options.s, "tracer_read_arg %s" % args);
     response, _, _ = read_socket(options.s)
+
+    globs.state.ret = response[3:]
 
 def tracer_manual_st_w_self(args=None):
     options = globs.state.options

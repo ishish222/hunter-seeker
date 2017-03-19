@@ -375,11 +375,11 @@ dodano obsluge
 
 --
 
-040 - dodac beeep jako mozliwe polecenie
+[x] 040 - dodac beeep jako mozliwe polecenie
 
 --
 
-041 - dodac wypisanie do komentarzy jako polecenie
+[x] 041 - dodac wypisanie do komentarzy jako polecenie
 
 --
 
