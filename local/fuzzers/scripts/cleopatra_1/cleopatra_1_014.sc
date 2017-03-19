@@ -198,6 +198,7 @@ zero_to_3:
 
 httpsend:
     ReadRegister(EAX)
+    Print
     TracerDebugContinueInf
     goto(decision)
 

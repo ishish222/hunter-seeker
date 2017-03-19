@@ -1454,11 +1454,6 @@ def execute(cmds, ext_pipe):
             writePipe(ext_pipe, "tracer_print OK")
             ok(ext_pipe)
 
-        elif(cmd == "tracer_print"):
-            trace_controller.print_sth(args)
-            writePipe(ext_pipe, "tracer_print OK")
-            ok(ext_pipe)
-
         elif(cmd == "spawn_responder_80"):
             from simple import simple_responder
             responder = simple_responder(80)
@@ -1467,7 +1462,6 @@ def execute(cmds, ext_pipe):
 
         elif(cmd == "spawn_responder"):
             from simple import simple_responder
-            #responder = simple_responder(int(args,10), logf)
             responder = simple_responder(int(args,10))
             writePipe(ext_pipe, "spawn_responder OK")
             ok(ext_pipe)

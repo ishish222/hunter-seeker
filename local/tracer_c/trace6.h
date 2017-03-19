@@ -169,6 +169,7 @@
 #define CMD_READ_ARG_ANSI       "rs"
 #define CMD_READ_ARG_UNICODE    "ru"
 #define CMD_SECURE_ALL_SECTIONS "ss"
+#define CMD_PRINT               "PR"
 
 #define CMD_ROUTINE_1           "R1"
 #define CMD_ROUTINE_2           "R2"

@@ -140,7 +140,7 @@ prototypes['Interrupt']             = tracing_parts.interrupt
 prototypes['QemuQuit']              = qemu_parts.quit
 prototypes['TracerSetParameters']   = tracing_parts.set_parameters
 prototypes['Beep']                  = other_parts.beep
-prototypes['CommentOut']            = tracer_parts.tracer_comment_out
+prototypes['Print']                 = tracer_parts.tracer_print
 
 
 class CodeUnit:

@@ -4608,7 +4608,7 @@ int process_last_event()
                             }
                         }
 
-                        ss_callback((void*)&my_trace->last_event);
+//                        ss_callback((void*)&my_trace->last_event); /*skad to sie tutaj wzielo? */
                         if(!handled)                        
                         {
                             d_print("This BP is not our, we pass it to the debugee\n");
@@ -5926,6 +5926,18 @@ int handle_cmd(char* cmd)
         strtok(cmd, " ");
         str = strtok(0x0, " ");
         parse_regions(str);
+        send_report();
+        
+    }
+    else if(!strncmp(cmd, CMD_PRINT, 2))
+    {
+        char* str;
+        char line2[MAX_NAME];
+
+        strtok(cmd, " ");
+        str = strtok(0x0, " ");
+        sprintf(line2, "OU,0x%x,%s\n", my_trace->last_tid, str);
+        add_to_buffer(line2);
         send_report();
         
     }

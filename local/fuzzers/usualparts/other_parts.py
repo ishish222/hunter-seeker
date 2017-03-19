@@ -8,6 +8,7 @@ options = globs.state.options
 def beep(args = None):
     from subprocess import Popen
     Popen('beeep')
+    return
 
 def defined(name):
     if(name in globals()):

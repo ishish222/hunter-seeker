@@ -987,6 +987,11 @@ class TraceController(object):
         self.last_report, self.last_answer = self.recv_report_active()
         return 
 
+    def print_sth(self, args):
+        self.send_command_active("PR %s" % args)
+        self.last_report, self.last_answer = self.recv_report_active()
+        return 
+
     def out_region(self, args):
         self.tracer_active.out_region(args)
         self.last_report, self.last_answer = self.recv_report_active()
@@ -1022,9 +1027,4 @@ class TraceController(object):
         self.last_report, self.last_answer = self.recv_report_active()
         return 
 
-
-
-    def print_sth(self, data):
-        self.last_report, self.last_answer = self.recv_report_active()
-        return 
 

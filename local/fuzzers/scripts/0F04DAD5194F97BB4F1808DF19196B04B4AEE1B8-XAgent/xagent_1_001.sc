@@ -38,7 +38,7 @@ EnableReaction(ST)
 TracerDebugContinueInf
 
 # A1 -> A2 -> ST
-DumpMemory
+#DumpMemory
 EnableBuiltin
 ExclusiveBuiltin
 LowerBuiltin
@@ -64,10 +64,15 @@ decision:
 Decision=(RE:re,SHELLEXEC+2:inspect_shellexecute,default:loop)
 
 inspect_shellexecute:
-ReadArgUni(2)
-ReadArgUni(3)
-TracerDebugContinueInf
-goto(decision)
+    ReadArgUni(2)
+    Print
+    ReadArgUni(3)
+    Print
+    ReadArgUni(4)
+    Print
+    Beep
+    TracerDebugContinueInf
+    goto(decision)
 
 overwrite:
 ReadRegister(ESP)

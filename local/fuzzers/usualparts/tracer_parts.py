@@ -797,12 +797,15 @@ def tracer_read_ep(args = 0x0):
 
     return
 
-def tracer_comment_out(args = 0x0):
+def tracer_print(args = None):
     options = globs.state.options
     state = globs.state
     status = globs.state.status
 
-    write_socket(options.s, "tracer_comment_out 0x%08x 0x%s" % args);
+    if(args == None):
+        args = globs.state.ret
+
+    write_socket(options.s, "tracer_print %s" % args);
     response, _, _ = read_socket(options.s)
 
     return
