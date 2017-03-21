@@ -96,7 +96,6 @@ TracerDebugContinueInf
 
 ### Third CreateProcess
 
-goto(loop)
 # pass function prologue
 TracerDebugContinueInf
 # get PID and TID
@@ -110,7 +109,7 @@ Adjust(0x28)
 ReadDword
 Adjust(0xc)
 ReadTID
-EnableReaction(T1)
+EnableReaction(SETTHREADCONTEXT+)
 TracerDebugContinueInf
 
 # waiting for setthread
@@ -122,7 +121,7 @@ ReadDword
 Adjust(0xb0)
 ReadDword
 SaveEP
-EnableReaction(R1)
+EnableReaction(RESUMETHREAD+)
 TracerDebugContinueInf
 
 # We have everything we need and attempt to resume
@@ -145,7 +144,7 @@ TracerDebugContinueInf
 TracerNext
 TracerDebugContinueInf
 
-Pause
+goto(loop)
 
 #TracerRegisterReactions(self+0xd89d,ST,0x0)
 TracerRegisterReactions(self+0x1de1,TEST,0x0)

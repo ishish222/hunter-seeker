@@ -114,8 +114,8 @@ kernel32.dll+0x901cd,SETTHREADCONTEXT+,0x0;                # SetThreadContext st
 kernel32.dll+0x901ed,SETTHREADCONTEXT-,0x0;                # SetThreadContext start
 KERNELBASE.dll+0x21cc3,D1:D2,0x0;           # QueueUserAPC start
 KERNELBASE.dll+0x21d23,D2:D1,0x0;           # QueueUserAPC end
-KERNELBASE.dll+0xc3c9,R1:R2,0x0;            # ResumeThread start
-KERNELBASE.dll+0xc3e7,R2:R1,0x0;            # ResumeThread end
+KERNELBASE.dll+0xc3cb,RESUMETHREAD+:RESUMETHREAD-,0x0;            # ResumeThread start
+KERNELBASE.dll+0xc3e6,RESUMETHREAD-:RESUMETHREAD+,0x0;            # ResumeThread end
 kernel32.dll+0x4ef66,W9:W0,0x0;             # Sleep start
 kernel32.dll+0x4ef6c,W0:W9,0x100;           # Sleep end
 kernel32.dll+0x45f70,V1:V2,0x0;             # SleepEx start
