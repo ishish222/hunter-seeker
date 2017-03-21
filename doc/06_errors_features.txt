@@ -306,6 +306,8 @@ To dlatego, ze analize zaczales w trakcie nagrywania, helou! :) Wszystko dziala
 028 - zaimplementowac podgrywanie wybranego pliku w momencie InternetReadFile 
 
 przez wskazanie pliku responderowi
+Nie chce sie skopiowac :/
+Moze nie da sie skopiowac z cmd ukrytego lub  zukrytego folderu? <sighs>
 
 --
 
@@ -382,5 +384,26 @@ dodano obsluge
 [x] 041 - dodac wypisanie do komentarzy jako polecenie
 
 --
+
+[x] 042 - ogarnij ustawianie parametrow binarki
+
+--
+
+[x] 043 - blad w cleopatra_1_014:91020080
+
+w nagraniu jest numer, pod ktorym jest call.
+
+W analizie zrodlem calla jest inny adres :/
+pod 0x4083d0 jest 0xff :/
+czyzby ten obszar nie byl chroniony??
+Zabraklo SecureAllSections :(
+
+--
+
+044 - moze system ostrzezen o braku pewnych instrukcji w skrypcie
+
+--
+
+045 - kopiowanie logow do indywidualnych katalogow
 
 

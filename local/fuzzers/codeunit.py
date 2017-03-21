@@ -32,6 +32,7 @@ prototypes['StartQemuLoad']         = qemu_parts.qemu_start_revert
 prototypes['QemuMountDisks']        = qemu_parts.qemu_mount_disks
 prototypes['QemuMountDisksNoVirtio'] = qemu_parts.qemu_mount_disks_wo_virtio
 prototypes['SpawnInternalController'] = tracing_parts.spawn_internal_controller
+prototypes['SpawnInternalController2'] = tracing_parts.spawn_internal_controller_no_thread
 prototypes['QemuConnectDevSocket']  = qemu_parts.qemu_connect_dev_socket_infinite
 prototypes['IsSocketConnected']     = qemu_parts.is_socket_connected
 prototypes['Wait10']                = other_parts.wait_10_seconds
@@ -128,6 +129,7 @@ prototypes['GetHTTP']               = responder_parts.get_http
 prototypes['StartLog']              = responder_parts.start_log
 prototypes['ChangeIP']              = responder_parts.change_ip
 prototypes['RunCmd']                = responder_parts.run_cmd
+prototypes['RunCmdHost']            = other_parts.run_cmd_host
 prototypes['WriteAnsi']             = tracer_parts.write_ansi
 prototypes['WriteUnicode']          = tracer_parts.write_unicode
 prototypes['Execute']               = other_parts.noop
@@ -141,6 +143,7 @@ prototypes['QemuQuit']              = qemu_parts.quit
 prototypes['TracerSetParameters']   = tracing_parts.set_parameters
 prototypes['Beep']                  = other_parts.beep
 prototypes['Print']                 = tracer_parts.tracer_print
+prototypes['DumpFile']              = tracing_parts.dump_file
 
 
 class CodeUnit:

@@ -65,12 +65,7 @@ decision:
 Decision=(RE:re,SHELLEXEC+2:inspect_shellexecute,default:loop)
 
 inspect_shellexecute:
-    ReadArgUni(1)
-    Print
-    ReadArgUni(2)
-    Print
-    ReadArgUni(3)
-    Print
+    DumpFile(C:\ProgramData\netapi64.dll)
     Beep
     TracerDebugContinueInf
     goto(decision)

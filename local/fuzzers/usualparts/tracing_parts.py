@@ -56,6 +56,12 @@ def spawn_internal_controller(args=None):
     rs("lclick", options.m)
     rs("python_spawn_internal_controller", options.m)
 
+def spawn_internal_controller_no_thread(args=None):
+    options = globs.state.options
+
+    rs("lclick", options.m)
+    rs("python_spawn_internal_controller_no_thread", options.m)
+
 def reset_tracer_controller_status(args=None):
     options = globs.state.options
     state = globs.state
@@ -174,6 +180,9 @@ def set_parameters(args=None):
     state = globs.state
     status = globs.state.status
     
+    if(type(args) == list):
+        args = ",".join(args)
+
     write_socket(options.s, "tracer_set_parameters %s" % args);
     response, _, _ = read_socket(options.s)
     return
@@ -583,3 +592,16 @@ def interrupt(args=None):
 
     return
 
+def dump_file(args=None):
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+
+    if(args == None):
+        args = globs.state.ret
+    
+    write_socket(options.s, "run_cmd copy %s \\\\10.0.2.4\\qemu\\dump" % args)
+    response, _, _ = read_socket(options.s)
+
+    globs.state.ret = response
+    return

@@ -368,3 +368,14 @@ def check_less_than(args=None):
         return "N"
 
 
+def run_cmd_host(args=None):
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+    
+    from subprocess import call
+    call(args.split())
+
+    globs.state.ret = response
+    return
+

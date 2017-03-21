@@ -130,6 +130,7 @@ Decision=(
 
 Start:
     DumpMemory
+    SecureAllSections
     TracerStartTrace
     EnableBuiltin
     ExclusiveBuiltin

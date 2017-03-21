@@ -254,6 +254,7 @@ def tracer_read_arg_uni(args=None):
     response, _, _ = read_socket(options.s)
 
     globs.state.ret = response[3:]
+    print 'ret is: %s ' % globs.state.ret
 
 def tracer_read_arg(args=None):
     options = globs.state.options

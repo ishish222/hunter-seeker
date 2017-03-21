@@ -1,5 +1,6 @@
 #include <iostream>
 #include <execinfo.h>
+#include <stdarg.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -25,42 +26,7 @@
 #define GET_RM(x)  (x >> RM_OFF )  & RM_MASK
 #define GET_REG(x) (x >> REG_OFF ) & REG_MASK;
 
-/* instruction implementation */
-
-/* symbols */
-
 char colors[0x10][0x10] = {"#000000", "#0000FF", "#00FF00", "#FF0000", "#0055AA"};
-
-int strcmpi(char const *a, char const *b)
-{
-    for (;; a++, b++) {
-        int d = tolower(*a) - tolower(*b);
-        if (d != 0 || !*a)
-            return d;
-    }
-}
-
-int taint_x86::copy_symbol(SYMBOL** dst, SYMBOL* src)
-{
-    SYMBOL* sp;
-    SYMBOL* old;
-
-    old = *dst;
-
-    sp = (SYMBOL*)malloc(sizeof(SYMBOL));
-    sp->addr = src->addr;
-    sp->lib_name = (char*)malloc(strlen(src->lib_name)+1);
-    sp->func_name = (char*)malloc(strlen(src->func_name)+1);
-    strcat(sp->lib_name, src->lib_name);
-    strcat(sp->func_name, src->func_name);
-    sp->next = old;
-
-    *dst = sp;
-
-    return 0x0;
-}
-
-#include <stdarg.h>
 
 int taint_x86::d_print(int level, const char* format, ...)
 {
@@ -75,26 +41,6 @@ int taint_x86::d_print(int level, const char* format, ...)
         va_end(argptr);
     }
 
-    return 0x0;
-}
-
-int taint_x86::handle_sigint()
-{
-    this->finished = 0x1;
-    this->aborted = 0x1;
-    d_print(1, "Eip: 0x%08x, this->end_addr: 0x%08x, limit: %d, count: %d, finishing\n", this->current_eip, this->end_addr, this->instr_limit, this->current_instr_count);
-    
-    return 0x0;
-}
-
-int taint_x86::start()
-{
-    char out_line[MAX_NAME];
-
-    sprintf(out_line, "[ST]");
-    print_empty_call(&this->ctx_info[this->tids[this->cur_tid]], out_line, colors[CODE_RED]);
-
-    this->started = 0x1;
     return 0x0;
 }
 
@@ -127,6 +73,183 @@ int taint_x86::handle_sigsegv()
     return 0x0;
 }
 
+int taint_x86::handle_sigint()
+{
+    this->finished = 0x1;
+    this->aborted = 0x1;
+    d_print(1, "Eip: 0x%08x, this->end_addr: 0x%08x, limit: %d, count: %d, finishing\n", this->current_eip, this->end_addr, this->instr_limit, this->current_instr_count);
+    
+    return 0x0;
+}
+
+int strcmpi(char const *a, char const *b)
+{
+    for (;; a++, b++) {
+        int d = tolower(*a) - tolower(*b);
+        if (d != 0 || !*a)
+            return d;
+    }
+}
+
+/*
+*  symbols 
+*/
+
+int taint_x86::copy_symbol(SYMBOL** dst, SYMBOL* src)
+{
+    SYMBOL* sp;
+    SYMBOL* old;
+
+    old = *dst;
+
+    sp = (SYMBOL*)malloc(sizeof(SYMBOL));
+    sp->addr = src->addr;
+    sp->lib_name = (char*)malloc(strlen(src->lib_name)+1);
+    sp->func_name = (char*)malloc(strlen(src->func_name)+1);
+    strcat(sp->lib_name, src->lib_name);
+    strcat(sp->func_name, src->func_name);
+    sp->next = old;
+
+    *dst = sp;
+
+    return 0x0;
+}
+
+int taint_x86::add_symbol(SYMBOL** s, OFFSET addr, char* lib_name, char* func_name)
+{
+    SYMBOL* sp;
+    SYMBOL* old;
+
+    old = *s;
+
+    if(this->symbols_count >= MAX_SYMBOL_COUNT)
+    {
+        d_print(1, "Error, maximum of symbols reached\n");
+        exit(-1);
+    }
+
+    sp = (SYMBOL*)malloc(sizeof(SYMBOL));
+    sp->addr = addr;
+    sp->lib_name = (char*)malloc(strlen(lib_name)+1);
+    sp->func_name = (char*)malloc(strlen(func_name)+1);
+    sp->resolved = 0x0;
+    sp->wanted = this->check_func_wanted(func_name);
+    sp->included = this->check_func_included(func_name);
+    strcat(sp->lib_name, lib_name);
+    strcat(sp->func_name, func_name);
+    sp->next = old;
+    this->symbols_count++;
+
+    *s = sp;
+
+    return 0x0;
+}
+
+int taint_x86::remove_symbol(SYMBOL* sp)
+{
+    if(sp->lib_name) free(sp->lib_name);
+    if(sp->func_name) free(sp->func_name);
+    free(sp);
+    return 0x0;
+}
+
+/* [TODO] need to optimize. Somehow. */
+SYMBOL* taint_x86::get_symbol(OFFSET addr)
+{
+    SYMBOL* s;
+    LIB_INFO* lib;
+
+    lib = this->get_lib(addr);
+    if(lib == 0x0) return 0x0;
+
+    s = lib->symbols;
+
+    if(s == 0x0) return 0x0;
+    do
+    {
+        if((s->addr == addr) && (s->resolved)) 
+        {
+            return s; 
+        }
+        else s = s->next;
+    } while(s);
+
+    return 0x0;
+}
+
+/*
+* adding to lists
+*/
+
+int taint_x86::add_blacklist(char* str)
+{
+    if(this->blacklist_count >= MAX_BLACKLIST)
+    {
+        d_print(1, "Error, maximum of blacklisted functions reached\n");
+        exit(-1);
+    }
+
+    strcpy(this->lib_blacklist[this->blacklist_count], str);
+    this->blacklist_count++;
+    return 0x0;
+}
+
+int taint_x86::add_blacklist_addr(DWORD addr)
+{
+    if(this->addr_blacklist_count >= MAX_BLACKLIST)
+    {
+        d_print(1, "Error, maximum of blacklisted functions reached\n");
+        exit(-1);
+    }
+
+    this->addr_blacklist[this->addr_blacklist_count] = addr;
+    this->addr_blacklist_count++;
+    return 0x0;
+}
+
+int taint_x86::add_wanted_i(unsigned instr)
+{
+    if(this->wanted_count_i >= MAX_WANTED)
+    {
+        d_print(1, "Error, maximum of wanted functions reached\n");
+        exit(-1);
+    }
+    this->instr_wanted[this->wanted_count_i] = instr;
+    this->wanted_count_i++;
+    return 0x0;
+}
+
+int taint_x86::add_wanted_e(DWORD addr)
+{
+    if(this->wanted_count_e >= MAX_WANTED)
+    {
+        d_print(1, "Error, maximum of wanted functions reached\n");
+        exit(-1);
+    }
+    this->addr_wanted[this->wanted_count_e] = addr;
+    this->wanted_count_e++;
+    return 0x0;
+}
+
+int taint_x86::add_wanted(char* str)
+{
+    if(this->wanted_count >= MAX_WANTED)
+    {
+        d_print(1, "Error, maximum of wanted functions reached\n");
+        exit(-1);
+    }
+    strcpy(this->func_wanted[this->wanted_count], str);
+    this->func_wanted[this->wanted_count][strlen(this->func_wanted[this->wanted_count])] = 0x0;
+    this->func_wanted[this->wanted_count][strlen(this->func_wanted[this->wanted_count])-1] = 0x0;
+    d_print(1, "%s\n", this->func_wanted[this->wanted_count]);
+    this->wanted_count++;
+    return 0x0;
+}
+
+/*
+* looking up lists
+*/
+
 int taint_x86::check_func_wanted(char* name)
 {
     unsigned i = 0x0;
@@ -134,12 +257,11 @@ int taint_x86::check_func_wanted(char* name)
     //replace MAX_WANTED with wanted_count
     for(i = 0x0; i < MAX_WANTED; i++)
     {
-        if(strlen(this->func_wanted[i]) == 0x0) continue;
-//        if(strstr(name, this->func_wanted[i]) != 0x0)
-//        d_print(1, "Comparing: %sXXX and %sXXX\n", name, this->func_wanted[i]);
+        if(strlen(this->func_wanted[i]) == 0x0) 
+            continue;
+
         if(strcmp(name, this->func_wanted[i]) == 0x0)
         {
-//            d_print(1, "Marked wanted: %s\n", name);
             return 0x1;
         }
     }
@@ -154,13 +276,26 @@ int taint_x86::check_func_included(char* name)
     //replace MAX_WANTED with included_count
     for(i = 0x0; i < MAX_WANTED; i++)
     {
-        if(strlen(this->func_included[i]) == 0x0) continue;
+        if(strlen(this->func_included[i]) == 0x0) 
+            continue;
+
         if(strcmp(name, this->func_included[i]) == 0x0)
         {
             return 0x1;
         }
     }
 
+    return 0x0;
+}
+
+int taint_x86::start()
+{
+    char out_line[MAX_NAME];
+
+    sprintf(out_line, "[ST]");
+    print_empty_call(&this->ctx_info[this->tids[this->cur_tid]], out_line, colors[CODE_RED]);
+
+    this->started = 0x1;
     return 0x0;
 }
 
@@ -258,134 +393,7 @@ int taint_x86::add_trace_watchpoint(TRACE_WATCHPOINT wp)
     return 0x0;
 }
 
-int taint_x86::add_symbol(SYMBOL** s, OFFSET addr, char* lib_name, char* func_name)
-{
-    SYMBOL* sp;
-    SYMBOL* old;
-
-    old = *s;
-
-    if(this->symbols_count >= MAX_SYMBOL_COUNT)
-    {
-        d_print(1, "Error, maximum of symbols reached\n");
-        exit(-1);
-    }
-
-    sp = (SYMBOL*)malloc(sizeof(SYMBOL));
-    sp->addr = addr;
-    sp->lib_name = (char*)malloc(strlen(lib_name)+1);
-    sp->func_name = (char*)malloc(strlen(func_name)+1);
-    sp->resolved = 0x0;
-    sp->wanted = this->check_func_wanted(func_name);
-    sp->included = this->check_func_included(func_name);
-    strcat(sp->lib_name, lib_name);
-    strcat(sp->func_name, func_name);
-    sp->next = old;
-    this->symbols_count++;
-
-    *s = sp;
-
-    return 0x0;
-}
-
-int taint_x86::remove_symbol(SYMBOL* sp)
-{
-    if(sp->lib_name) free(sp->lib_name);
-    if(sp->func_name) free(sp->func_name);
-    free(sp);
-    return 0x0;
-}
-
-/* [TODO] need to optimize. Somehow. */
-SYMBOL* taint_x86::get_symbol(OFFSET addr)
-{
-    SYMBOL* s;
-    LIB_INFO* lib;
-
-    lib = this->get_lib(addr);
-    if(lib == 0x0) return 0x0;
-
-    s = lib->symbols;
-
-    if(s == 0x0) return 0x0;
-    do
-    {
-        if((s->addr == addr) && (s->resolved)) 
-        {
-            return s; 
-        }
-        else s = s->next;
-    } while(s);
-
-    return 0x0;
-}
-
 /* blacklist routines */
-
-int taint_x86::add_blacklist(char* str)
-{
-    if(this->blacklist_count >= MAX_BLACKLIST)
-    {
-        d_print(1, "Error, maximum of blacklisted functions reached\n");
-        exit(-1);
-    }
-
-    strcpy(this->lib_blacklist[this->blacklist_count], str);
-    this->blacklist_count++;
-    return 0x0;
-}
-
-int taint_x86::add_blacklist_addr(DWORD addr)
-{
-    if(this->addr_blacklist_count >= MAX_BLACKLIST)
-    {
-        d_print(1, "Error, maximum of blacklisted functions reached\n");
-        exit(-1);
-    }
-
-    this->addr_blacklist[this->addr_blacklist_count] = addr;
-    this->addr_blacklist_count++;
-    return 0x0;
-}
-
-int taint_x86::add_wanted_i(unsigned instr)
-{
-    if(this->wanted_count_i >= MAX_WANTED)
-    {
-        d_print(1, "Error, maximum of wanted functions reached\n");
-        exit(-1);
-    }
-    this->instr_wanted[this->wanted_count_i] = instr;
-    this->wanted_count_i++;
-    return 0x0;
-}
-
-int taint_x86::add_wanted_e(DWORD addr)
-{
-    if(this->wanted_count_e >= MAX_WANTED)
-    {
-        d_print(1, "Error, maximum of wanted functions reached\n");
-        exit(-1);
-    }
-    this->addr_wanted[this->wanted_count_e] = addr;
-    this->wanted_count_e++;
-    return 0x0;
-}
-
-int taint_x86::add_wanted(char* str)
-{
-    if(this->wanted_count >= MAX_WANTED)
-    {
-        d_print(1, "Error, maximum of wanted functions reached\n");
-        exit(-1);
-    }
-    strcpy(this->func_wanted[this->wanted_count], str);
-    this->func_wanted[this->wanted_count][strlen(this->func_wanted[this->wanted_count])] = 0x0;
-    this->func_wanted[this->wanted_count][strlen(this->func_wanted[this->wanted_count])-1] = 0x0;
-    d_print(1, "%s\n", this->func_wanted[this->wanted_count]);
-    this->wanted_count++;
-    return 0x0;
-}
 
 int taint_x86::add_fence(OFFSET entry, OFFSET start, OFFSET struct_size, OFFSET struct_count)
 {

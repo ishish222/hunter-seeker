@@ -2,9 +2,9 @@ PrintLogo
 RegisterSignals(exception)
 GetOptions
 GetSampleOptions
-SetSampleFile(0F04DAD5194F97BB4F1808DF19196B04B4AEE1B8.exe)
+SetSampleFile(netapi64.dll)
 SetResearchDir(e:\samples\shared)
-GlobPattern(/home/hs1/malware_samples/XAgent-WIN/0F04DAD5194F97BB4F1808DF19196B04B4AEE1B8.exe)
+GlobPattern(/home/hs1/malware_samples/netapi64.dll)
 SetOutDir(\\10.0.2.4\qemu)
 CheckHostDir
 RevertClean
@@ -17,7 +17,7 @@ StartQemuFull
 QemuMountDisks
 
 start_controller:
-SpawnInternalController
+SpawnInternalController2
 QemuConnectDevSocket
 IsSocketConnected=(Y:success,N:fail)
 
@@ -26,13 +26,24 @@ Wait10
 goto(start_controller)
 
 success:
-Execute(scripts/common/debug_sample_no_log.sc)
+SetSampleFile(rundll32.exe)
+SetResearchDir(c:\windows\system32)
+KillExplorer
+ResetTracers
+SpawnTracerController
+SpawnTracerFileLog
+TracerConfigureSample
+TracerConfigureOutDir
+TracerConfigureOutPrefix
+TracerConfigureInDir
+TracerPrepareTrace
+TracerRegisterBuiltin
+DisableReactions
+TracerDebugSample
+TracerSetParameters(e:\samples\shared\netapi64.dll,init)
 
 # RR
-ExtractEP(e:\samples\shared\0F04DAD5194F97BB4F1808DF19196B04B4AEE1B8.exe)
-SaveEP
-ManualSTwSelf
-#TracerSetParameters(test1 test2)
+TracerRegisterReactions(self+0x137a,ST,0x0)
 DisableReactions
 EnableReaction(ST)
 TracerDebugContinueInf
@@ -65,12 +76,7 @@ decision:
 Decision=(RE:re,SHELLEXEC+2:inspect_shellexecute,default:loop)
 
 inspect_shellexecute:
-    ReadArgUni(1)
-    Print
-    ReadArgUni(2)
-    Print
-    ReadArgUni(3)
-    Print
+    DumpFile(C:\ProgramData\netapi64.dll)
     Beep
     TracerDebugContinueInf
     goto(decision)
@@ -98,4 +104,7 @@ TracerDebugContinueInf(0x80010001)
 goto(decision)
 
 exception:
-Execute(scripts/common/interrupt.sc)
+RunCmdHost(mkdir /mnt/1/output/logs/xagent_1_003)
+RunCmd(copy e:\server\log_0.txt \\10.0.2.4\qemu\logs\xagent_1_003)
+RunCmd(copy e:\logs\init_log.txt \\10.0.2.4\qemu\logs\xagent_1_003)
+QemuQuit
