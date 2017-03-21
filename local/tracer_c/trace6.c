@@ -3182,10 +3182,10 @@ int write_breakpoint(BREAKPOINT* bp)
 //    d_print("Adding breakpoint opcode @ 0x%08x\n", addr);
 
     read_memory(my_trace->procHandle, (void*)addr, (void*)&bp->saved_byte, 0x1, &read);
-//    d_print("Before: 0x%02x\n", bp->saved_byte);
+    d_print("Before: 0x%02x\n", bp->saved_byte);
     write_memory(my_trace->procHandle, (void*)addr, (void*)&bpt_char, 0x1, &read);
     read_memory(my_trace->procHandle, (void*)addr, (void*)&bpt_char, 0x1, &read);
-//    d_print("After: 0x%02x\n", bpt_char);
+    d_print("After: 0x%02x\n", bpt_char);
     bp->written = 0x1;
 
     d_print("[write_breakpoint ends]\n");
@@ -3203,7 +3203,7 @@ int unwrite_breakpoint(BREAKPOINT* bp)
 
     addr = bp->resolved_location;
 
-    d_print("Unwriting @: 0x%08x\n", addr);
+    d_print("Unwriting @: 0x%08x (saved_byte is: 0x%02x)\n", addr, bp->saved_byte);
     write_memory(my_trace->procHandle, (void*)addr, (void*)&bp->saved_byte, 0x1, &wrote);
     read_memory(my_trace->procHandle, (void*)addr, (void*)&bpt_char, 0x1, &wrote);
     d_print("After: 0x%02x\n", bpt_char);

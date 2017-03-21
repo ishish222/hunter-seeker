@@ -76,20 +76,27 @@ TracerDebugContinueInf
 
 #sledzimy wstrzykiwanie
 
-EnableBuiltin
-EnableReaction(C1)
-EnableReaction(C3)
-EnableReaction(C5)
-EnableReaction(C7)
-EnableReaction(C9)
+EnableReaction(CREATEPROCESSA+)
+EnableReaction(CREATEPROCESSW+)
+EnableReaction(CREATEREMOTETHREAD+)
 
 #DumpMemory
-TracerStartTrace
+#TracerStartTrace
 TracerDebugContinueInf
 
+### First CreateProcess
+
+TracerDebugContinueInf
+TracerDebugContinueInf
+
+### Second CreateProcess
+
+TracerDebugContinueInf
+TracerDebugContinueInf
 
 ### Third CreateProcess
 
+goto(loop)
 # pass function prologue
 TracerDebugContinueInf
 # get PID and TID
@@ -106,8 +113,39 @@ ReadTID
 EnableReaction(T1)
 TracerDebugContinueInf
 
-Pause
+# waiting for setthread
+ReadRegister(ESP)
+Adjust(0x8)
+ReadDword
+# extract EIP
+#EAX
+Adjust(0xb0)
+ReadDword
+SaveEP
+EnableReaction(R1)
+TracerDebugContinueInf
 
+# We have everything we need and attempt to resume
+SpawnTracerLog
+TracerConfigureSamplePID
+TracerConfigureOutDir
+TracerConfigurePIDPrefix
+TracerConfigureInDir
+TracerPrepareTrace
+TracerRegisterBuiltin
+DisableReactions
+TracerAttachSample
+
+# RR
+LoadEP
+ManualST
+EnableReaction(ST)
+TracerPrev
+TracerDebugContinueInf
+TracerNext
+TracerDebugContinueInf
+
+Pause
 
 #TracerRegisterReactions(self+0xd89d,ST,0x0)
 TracerRegisterReactions(self+0x1de1,TEST,0x0)
