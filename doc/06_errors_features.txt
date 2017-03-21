@@ -406,4 +406,12 @@ Zabraklo SecureAllSections :(
 
 [x] 045 - kopiowanie logow do indywidualnych katalogow
 
+--
+
+[x] 046 - powazny problem z breakpointami. Z jakiegos powodu stare skrypty nie dzialaja dobrze. Nie dzialaja ciagi reakcji do obslugi dekrypterow
+
+Trzeba gruntownie przeanalizowac sposob dodawania i obslugi reakcji i breakpointow.
+Problem: co jesli update_breakpoint wykonamy na EAX+0x200, podczas gdy EAX=0x2?
+
+To moze miec zwiazek z autorepeatem dla breakpointow. Nalezy chyba wprowadzic konwencje xx:xx do autorepeatu.
 

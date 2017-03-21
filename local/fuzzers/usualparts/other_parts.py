@@ -378,3 +378,8 @@ def run_cmd_host(args=None):
 
     return
 
+def pause(aegs = None):
+    import sys
+    print "PAUSED"
+    sys.stdin.read(1)
+    return

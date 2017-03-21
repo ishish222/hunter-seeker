@@ -1309,6 +1309,56 @@ int lower_reaction(char* reaction_id)
     return 0x0;
 }
 
+int autorepeat_reaction(char* reaction_id)
+{
+    d_print("[autorepeat_reaction]\n");
+    unsigned i;
+
+    char another[MAX_LINE]; 
+    char* another_r;
+
+    /* take care of chained enabling */
+    strcpy(another, reaction_id);
+    d_print("React string: %s\n", another);
+    if(strstr(another, ":"))
+    {
+        another_r = strtok(another, ":");
+        while(another_r)
+        {
+            d_print("Found another reaction: %s\n", another_r);
+            autorepeat_reaction(another_r);    
+            another_r = strtok(0x0, ":");
+        }
+        return 0x0;
+    }
+
+    REACTION* cur_reaction;
+    cur_reaction = 0x0;
+    for(i = 0x0; i< my_trace->reaction_count; i++)
+    {
+        /* locate i_reaction */
+        if(!strcmp(reaction_id, my_trace->reactions[i].reaction_id))
+        {
+            cur_reaction = &my_trace->reactions[i];
+        }
+    }
+
+    if(!cur_reaction)
+        return 0x1;
+        
+    BREAKPOINT* cur_bp;
+
+    for(i = 0x0; i< cur_reaction->bps_count; i++)
+    {
+
+        cur_bp = &cur_reaction->bp[i];
+        cur_bp->autorepeat = 1;
+    }
+
+    d_print("[autorepeat_reaction ends]\n");
+    return 0x0;
+}
+
 int exclusive_reaction(char* reaction_id)
 {
     d_print("[exclusive_reaction]\n");
@@ -3110,7 +3160,8 @@ int handle_breakpoint(DWORD addr, void* data)
     dec_eip(de->dwThreadId);
 
     /* schedule breakpoint for this address */
-    my_trace->delayed_breakpoint = my_bp;
+    if(my_bp->autorepeat)
+        my_trace->delayed_breakpoint = my_bp;
 
     d_print("[handle_breakpoint ends]\n");
     return 0x0;
@@ -5080,6 +5131,7 @@ int add_reaction(char* location_str, char* reaction_id)
 //    my_trace->reactions[cur_reaction_id].reaction_id[0x2] = 0x0;
     my_trace->reactions[cur_reaction_id].bp = add_breakpoint(location_str, &my_trace->reactions[cur_reaction_id]);
     my_trace->reactions[cur_reaction_id].bp->enabled = 0x1; /* deprecated, moved to reaction */
+    my_trace->reactions[cur_reaction_id].bp->autorepeat = 0x0; /* needs to be set manually */
     my_trace->reactions[cur_reaction_id].enabled = 0x1;
     my_trace->reactions[cur_reaction_id].exclusive = 0x0;
 //    my_trace->reactions[cur_reaction_id].exclusive = 0x1;
@@ -5517,6 +5569,18 @@ int handle_cmd(char* cmd)
     else if(!strncmp(cmd, CMD_DUMP_MEMORY, 2))
     {
         dump_memory();
+        send_report();
+    }
+    else if(!strncmp(cmd, CMD_AUTOREPEAT_REACTION, 2))
+    {
+        char* mod;
+        char reaction_id[MAX_LINE];
+
+        mod = strtok(cmd, " ");
+        strcpy(reaction_id, strtok(0x0, " "));
+        
+        d_print("Setting autorepeat for reaction %s\n", reaction_id);
+        autorepeat_reaction(reaction_id);
         send_report();
     }
     else if(!strncmp(cmd, CMD_EXCLUSIVE_REACTION, 2))
