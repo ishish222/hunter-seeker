@@ -376,6 +376,5 @@ def run_cmd_host(args=None):
     from subprocess import call
     call(args.split())
 
-    globs.state.ret = response
     return
 

@@ -17,7 +17,7 @@ StartQemuFull
 QemuMountDisks
 
 start_controller:
-SpawnInternalController2
+SpawnInternalController
 QemuConnectDevSocket
 IsSocketConnected=(Y:success,N:fail)
 
@@ -39,8 +39,8 @@ TracerConfigureInDir
 TracerPrepareTrace
 TracerRegisterBuiltin
 DisableReactions
-TracerDebugSample
 TracerSetParameters(e:\samples\shared\netapi64.dll,init)
+TracerDebugSample
 
 # RR
 TracerRegisterReactions(self+0x137a,ST,0x0)
@@ -48,8 +48,8 @@ DisableReactions
 EnableReaction(ST)
 TracerDebugContinueInf
 
-# A1 -> A2 -> ST
-DumpMemory
+# ST
+#DumpMemory
 SecureAllSections
 EnableBuiltin
 ExclusiveBuiltin
@@ -59,7 +59,6 @@ RaiseReaction(s0)
 RaiseReaction(s1)
 
 # modifications
-#TracerRegisterReactions(self+0x1e86,A1,0x105)
 TracerRegisterReactions(
     SHELL32.dll+0x0141f2,SHELLEXEC+2:SHELLEXEC-1,0x0;
     SHELL32.dll+0x014276,SHELLEXEC-1:SHELLEXEC+2,0x100;
@@ -104,7 +103,8 @@ TracerDebugContinueInf(0x80010001)
 goto(decision)
 
 exception:
-RunCmdHost(mkdir /mnt/1/output/logs/xagent_1_003)
+Interrupt
+RunCmdHost(mkdir -p /mnt/1/output/logs/xagent_1_003)
 RunCmd(copy e:\server\log_0.txt \\10.0.2.4\qemu\logs\xagent_1_003)
 RunCmd(copy e:\logs\init_log.txt \\10.0.2.4\qemu\logs\xagent_1_003)
 QemuQuit

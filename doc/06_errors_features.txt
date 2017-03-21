@@ -404,6 +404,6 @@ Zabraklo SecureAllSections :(
 
 --
 
-045 - kopiowanie logow do indywidualnych katalogow
+[x] 045 - kopiowanie logow do indywidualnych katalogow
 
 

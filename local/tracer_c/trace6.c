@@ -90,6 +90,10 @@ int report_register(DWORD tid_id, char* reg);
 int write_breakpoint(BREAKPOINT*);
 int unwrite_breakpoint(BREAKPOINT*);
 
+/*
+* various
+*/
+
 int d_print(const char* format, ...)
 {
     va_list argptr;
@@ -133,7 +137,9 @@ int filter_str(char* str, char unwanted)
     return 0x0;
 }
 
-
+/*
+* reactions
+*/
 
 void react_sample_routine_1(void* data)
 {
@@ -1175,6 +1181,10 @@ void react_skip_off(void* data)
     return;
 }
 
+/*
+* commands implementation
+*/
+
 int enable_all_reactions()
 {
     unsigned i;
@@ -1390,24 +1400,6 @@ int enable_reaction(char* reaction_id)
     d_print("[enable_reaction ends]\n");
     return 0x0;
 }
-/*
-int enable_reaction_rid(unsigned routine_id)
-{
-    d_print("[enable_reaction_rid]\n");
-    unsigned i;
-
-    for(i = 0x0; i< my_trace->reaction_count; i++)
-    {
-        if(routine_id == my_trace->reactions[i].routine_id)
-        {
-            d_print("Enabling reaction by rid 0x%02x\n", routine_id);
-            enable_reaction(my_trace->reactions[i].reaction_id);
-        }
-    }
-    d_print("[enable_reaction_rid ends]\n");
-    return 0x0;
-}
-*/
 
 int disable_reaction(char* reaction_id)
 {
@@ -1417,7 +1409,6 @@ int disable_reaction(char* reaction_id)
 
     for(i = 0x0; i< my_trace->reaction_count; i++)
     {
-        //if((reaction_id[0] == my_trace->reactions[i].reaction_id[0]) && (reaction_id[1] == my_trace->reactions[i].reaction_id[1]))
         if(!strcmp(reaction_id, my_trace->reactions[i].reaction_id))
         {
             d_print("Disabling reaction %s\n", reaction_id);
@@ -1466,24 +1457,7 @@ int disable_reaction(char* reaction_id)
     d_print("[disable_reaction ends]\n");
     return 0x0;
 }
-/*
-int disable_reaction_rid(unsigned routine_id)
-{
-    d_print("[disable_reaction_rid]\n");
-    unsigned i;
 
-    for(i = 0x0; i< my_trace->reaction_count; i++)
-    {
-        if(routine_id == my_trace->reactions[i].routine_id)
-        {
-            d_print("Disabling reaction by rid 0x%02x\n", routine_id);
-            my_trace->reactions[i].enabled = 0x0;
-        }
-    }
-    d_print("[disable_reaction_rid ends]\n");
-    return 0x0;
-}
-*/
 int add_to_buffer(char* line)
 {
     DWORD written;
