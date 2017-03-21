@@ -41,16 +41,24 @@ TracerRegisterBuiltin
 DisableReactions
 TracerSetParameters(e:\samples\shared\netapi64.dll,init)
 TracerDebugSample
+TracerDebugContinueInf
 
 # RR
-TracerRegisterReactions(self+0x137a,ST,0x0)
+#TracerRegisterReactions(self+0x137a,ST,0x0)
+TracerRegisterReactions(self+0x1877,flip1,0x105)
+TracerRegisterReactions(self+0x18d8,flip2,0x105)
+ExtractEP(c:\windows\system32\rundll32.exe)
+SaveEP
+ManualSTwSelf
 DisableReactions
 EnableReaction(ST)
 TracerDebugContinueInf
 
 # ST
-#DumpMemory
+DumpMemory
 SecureAllSections
+EnableReaction(flip1)
+EnableReaction(flip2)
 EnableBuiltin
 ExclusiveBuiltin
 LowerBuiltin

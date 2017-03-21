@@ -3228,9 +3228,9 @@ int paint(char* area, unsigned len)
             if(active)      area[i]+=3;
         }
 
-        printf("%c", area[i]);
+//        printf("%c", area[i]);
     }
-    printf("\n");
+//    printf("\n");
 
     return 0x0;
 }
@@ -3263,8 +3263,9 @@ int unpaint(char* area, unsigned len)
         }
 
         printf("%c", area[i]);
+//
     }
-    printf("\n");
+//    printf("\n");
     return 0x0;
 }
 
@@ -3333,63 +3334,63 @@ OFFSET resolve_loc_desc(LOCATION_DESCRIPTOR_NEW* d)
                 CONTEXT ctx;
                 read_context(0x0, &ctx);
                 ret = ctx.Esp;
-                d_print("Reading register ESP: 0x%08x\n", ret);
+//                d_print("Reading register ESP: 0x%08x\n", ret);
             }
             else if(!strcmp(d->op, "EAX"))
             {
                 CONTEXT ctx;
                 read_context(0x0, &ctx);
                 ret = ctx.Eax;
-                d_print("Reading register EAX: 0x%08x\n", ret);
+//                d_print("Reading register EAX: 0x%08x\n", ret);
             }
             else if(!strcmp(d->op, "EBX"))
             {
                 CONTEXT ctx;
                 read_context(0x0, &ctx);
                 ret = ctx.Ebx;
-                d_print("Reading register EBX: 0x%08x\n", ret);
+//                d_print("Reading register EBX: 0x%08x\n", ret);
             }
             else if(!strcmp(d->op, "ECX"))
             {
                 CONTEXT ctx;
                 read_context(0x0, &ctx);
                 ret = ctx.Ecx;
-                d_print("Reading register ECX: 0x%08x\n", ret);
+//                d_print("Reading register ECX: 0x%08x\n", ret);
             }
             else if(!strcmp(d->op, "EDX"))
             {
                 CONTEXT ctx;
                 read_context(0x0, &ctx);
                 ret = ctx.Edx;
-                d_print("Reading register EDX: 0x%08x\n", ret);
+//                d_print("Reading register EDX: 0x%08x\n", ret);
             }
             else if(!strcmp(d->op, "ESI"))
             {
                 CONTEXT ctx;
                 read_context(0x0, &ctx);
                 ret = ctx.Esi;
-                d_print("Reading register ESI: 0x%08x\n", ret);
+//                d_print("Reading register ESI: 0x%08x\n", ret);
             }
             else if(!strcmp(d->op, "EDI"))
             {
                 CONTEXT ctx;
                 read_context(0x0, &ctx);
                 ret = ctx.Edi;
-                d_print("Reading register EDI: 0x%08x\n", ret);
+//                d_print("Reading register EDI: 0x%08x\n", ret);
             }
             else if(!strcmp(d->op, "EBP"))
             {
                 CONTEXT ctx;
                 read_context(0x0, &ctx);
                 ret = ctx.Ebp;
-                d_print("Reading register EBP: 0x%08x\n", ret);
+//                d_print("Reading register EBP: 0x%08x\n", ret);
             }
             else if(!strcmp(d->op, "EIP"))
             {
                 CONTEXT ctx;
                 read_context(0x0, &ctx);
                 ret = ctx.Eip;
-                d_print("Reading register EIP: 0x%08x\n", ret);
+//                d_print("Reading register EIP: 0x%08x\n", ret);
             }
             else
             {
@@ -3428,7 +3429,7 @@ LOCATION_DESCRIPTOR_NEW* parse_location_desc(char* str)
         d_print("Out of memory\n");
     }
 
-    d_print("Creating new descriptor node\n");
+//    d_print("Creating new descriptor node\n");
 
     paint(str, strlen(str));
     op = findany(str, "+-");
@@ -3445,14 +3446,14 @@ LOCATION_DESCRIPTOR_NEW* parse_location_desc(char* str)
         }
         else
         {
-            d_print("No operators found, assuming leaf: %s\n", str);
+//            d_print("No operators found, assuming leaf: %s\n", str);
             strcpy(neww->op, str);
         }
     }
     else
     {
         unpaint(str, strlen(str));
-        d_print("Found operator: %s\n", op);
+//        d_print("Found operator: %s\n", op);
         
         if(op[0] == '+')
         {
@@ -3479,12 +3480,12 @@ int update_breakpoint(BREAKPOINT* bp)
 //    d_print("[update_breakpoint]\n");
     DWORD ret;
     OFFSET addr;
-    d_print("Trying to resolve BP addr\n");
+//    d_print("Trying to resolve BP addr\n");
     bp->resolved_location = addr = resolve_loc_desc(bp->location);
 
     if(addr == -1)
     {
-        d_print("Unable to resolve BP address, will not be updated at this time\n");
+//        d_print("Unable to resolve BP address, will not be updated at this time\n");
         return 0x0;
     }
     else
@@ -3511,7 +3512,7 @@ int update_breakpoint(BREAKPOINT* bp)
             ret = 0x0;
         }
     }
-    d_print("[update_breakpoint ends]\n");
+//    d_print("[update_breakpoint ends]\n");
     return ret;
 }
 
@@ -3556,7 +3557,7 @@ BREAKPOINT* add_breakpoint(char* location_str, REACTION*  reaction)
         /* for identification */
         strcpy(my_trace->breakpoints[my_bpt_index].location_str, location_str);
 
-        d_print("Attempt to parse location string: %s\n", location_str);
+//        d_print("Attempt to parse location string: %s\n", location_str);
         my_trace->breakpoints[my_bpt_index].location = parse_location_desc(location_str);
 
         my_trace->bpt_count ++;
@@ -4553,7 +4554,7 @@ int process_last_event()
 
                 for(i = 0x0; i<my_trace->bpt_count; i++)
                 {
-                    d_print("bp: %s, resolved_location: 0x%08x\n", my_trace->breakpoints[i].location_str, my_trace->breakpoints[i].resolved_location);
+//                    d_print("bp: %s, resolved_location: 0x%08x\n", my_trace->breakpoints[i].location_str, my_trace->breakpoints[i].resolved_location);
                     if(my_trace->breakpoints[i].resolved_location == -1)
                     {
                         update_breakpoint(&my_trace->breakpoints[i]);
@@ -5011,7 +5012,7 @@ REACTION* find_reaction(char* id)
 
     for(i= 0x0; i< my_trace->reaction_count; i++)
     {
-        d_print("Comparing: %s - %s\n", my_trace->reactions[i].reaction_id, id);
+//        d_print("Comparing: %s - %s\n", my_trace->reactions[i].reaction_id, id);
         if(!strcmp(my_trace->reactions[i].reaction_id, id))
         {
             if(strcmp(my_trace->reactions[i].reaction_id, "xx")) /* exclude xx from searches */
@@ -5027,7 +5028,7 @@ REACTION* find_reaction(char* id)
 
 int add_couple(char* id, char* couple_id)
 {
-    d_print("[add_couple]\n");
+//    d_print("[add_couple]\n");
     REACTION* target;
 
     char my_couple[MAX_NAME];
@@ -5041,22 +5042,22 @@ int add_couple(char* id, char* couple_id)
     strcpy(target->coupled_id[target->couple_id_count], couple_id);
     target->couple_id_count++;
     
-    d_print("Added couple: %s\n", my_couple);
-    d_print("[add_couple ends]\n");
+//    d_print("Added couple: %s\n", my_couple);
+//    d_print("[add_couple ends]\n");
     return 0x0;
 }
 
 int add_rid(char* id, unsigned rid)
 {
-    d_print("[add_rid]\n");
+//    d_print("[add_rid]\n");
     REACTION* target;
 
     target = find_reaction(id);
     target->routine_ids[target->routines_count] = rid;
     target->routines_count++;
     
-    d_print("Added rid: 0x%02x\n", rid);
-    d_print("[add_rid ends]\n");
+//    d_print("Added rid: 0x%02x\n", rid);
+//    d_print("[add_rid ends]\n");
  
     return 0x0;
 }
@@ -5193,7 +5194,7 @@ int parse_region(char* str)
 
 int parse_reaction(char* str)
 {
-    d_print("[parse_reaction]\n");
+//    d_print("[parse_reaction]\n");
     char* loc_pos;
     char* id_pos;
     char* rids_pos;
@@ -5205,24 +5206,24 @@ int parse_reaction(char* str)
     char rids_str[MAX_LINE];
     char* rid;
 
-    d_print("Parsing until ;: %s\n", str);
+//    d_print("Parsing until ;: %s\n", str);
 
     /** acquire **/
 
     /* acquire loc_pos */
     loc_pos = strtok(str, ",");
     strcpy(loc_str, loc_pos);
-    d_print("loc_str: %s\n", loc_str);
+//    d_print("loc_str: %s\n", loc_str);
 
     /* acquire id_pos */
     id_pos = strtok(0x0, ",");
     strcpy(id_str, id_pos);
-    d_print("id_str: %s\n", id_str);
+//    d_print("id_str: %s\n", id_str);
 
     /* acquire rids_pos */
     rids_pos = strtok(0x0, ";");
     strcpy(rids_str, rids_pos);
-    d_print("rids_str: %s\n", rids_str);
+//    d_print("rids_str: %s\n", rids_str);
 
     /* acquire coupled_str */
     strcpy(coupled_str, id_str);
@@ -5233,27 +5234,27 @@ int parse_reaction(char* str)
     add_reaction(loc_pos, id_str);
 
     /* process rids_pos, add routines */
-    d_print("Processing rids\n");
+//    d_print("Processing rids\n");
     rid = strtok(rids_str, ":");
-    d_print("id_str: %s, rid: %s\n", id_str, rid);
+//    d_print("id_str: %s, rid: %s\n", id_str, rid);
     add_rid(id_str, strtol(rid, 0x0, 0x10));
 
     while((rid = strtok(0x0, ":")) != 0x0)
     {
-        d_print("id_str: %s, rid: %s\n", id_str, rid);
+//        d_print("id_str: %s, rid: %s\n", id_str, rid);
         add_rid(id_str, strtol(rid, 0x0, 0x10));
     }
 
     /* process coupled_str, add couples */
-    d_print("Processing couples\n");
+//    d_print("Processing couples\n");
     coupled_id = strtok(coupled_str, ":");
     /* ignore first */
     while((coupled_id = strtok(0x0, ":")) != 0x0)
     {
-        d_print("id_str: %s, coupled_id: %s\n", id_str, coupled_id);
+//        d_print("id_str: %s, coupled_id: %s\n", id_str, coupled_id);
         add_couple(id_str, coupled_id);
     }
-    d_print("[parse_reaction ends]\n");
+//    d_print("[parse_reaction ends]\n");
 }
 
 int parse_reactions(char* str)

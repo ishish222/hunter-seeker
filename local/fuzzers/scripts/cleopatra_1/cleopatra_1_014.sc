@@ -294,9 +294,10 @@ re:
 
 exception:
     Interrupt
-    RunCmd(copy e:\logs\responder_log.txt \\10.0.2.4\qemu\logs)
-    RunCmd(copy e:\server\log_0.txt \\10.0.2.4\qemu\logs)
-    RunCmd(copy e:\logs\init_log.txt \\10.0.2.4\qemu\logs)
-    RunCmd(copy e:\logs\last_log.txt \\10.0.2.4\qemu\logs)
+    RunCmdHost(mkdir -p /mnt/1/output/logs/cleopatra_1_014)
+    RunCmd(copy e:\logs\responder_log.txt \\10.0.2.4\qemu\logs\cleopatra_1_014)
+    RunCmd(copy e:\server\log_0.txt \\10.0.2.4\qemu\logs\cleopatra_1_014)
+    RunCmd(copy e:\logs\init_log.txt \\10.0.2.4\qemu\logs\cleopatra_1_014)
+    RunCmd(copy e:\logs\last_log.txt \\10.0.2.4\qemu\logs\cleopatra_1_014)
     QemuQuit
 
