@@ -98,14 +98,15 @@ TracerDebugContinueInf
 
 # pass function prologue
 TracerDebugContinueInf
+
 # get PID and TID
 ReadRegister(ESP)
-Adjust(0x28)
+Adjust(0x2c)
 ReadDword
 Adjust(0x8)
 ReadPID
 ReadRegister(ESP)
-Adjust(0x28)
+Adjust(0x2c)
 ReadDword
 Adjust(0xc)
 ReadTID
