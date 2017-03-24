@@ -1,3 +1,5 @@
+# added flip
+
 PrintLogo
 RegisterSignals(exception)
 GetOptions
@@ -91,11 +93,6 @@ TracerDebugContinueInf
 
 ### Second CreateProcess
 
-TracerDebugContinueInf
-TracerDebugContinueInf
-
-### Third CreateProcess
-
 # pass function prologue
 TracerDebugContinueInf
 
@@ -163,7 +160,7 @@ Decision=(
 )
 
 Start:
-    TracerRegisterReactions(self+0x35a3,flip1:flip2,0x103;self+0x117e3,flip2,0x104)
+    TracerRegisterReactions(self+0xd8ff,flip1,0x105)
     EnableBuiltin
     EnableReaction(filp1)
 
@@ -366,10 +363,10 @@ re:
 
 exception:
     Interrupt
-    RunCmdHost(mkdir -p /mnt/1/output/logs/cleopatra_1_016)
-    RunCmd(copy e:\logs\responder_log.txt \\10.0.2.4\qemu\logs\cleopatra_1_016)
-    RunCmd(copy e:\server\log_0.txt \\10.0.2.4\qemu\logs\cleopatra_1_016)
-    RunCmd(copy e:\logs\init_log.txt \\10.0.2.4\qemu\logs\cleopatra_1_016)
-    RunCmd(copy e:\logs\last_log.txt \\10.0.2.4\qemu\logs\cleopatra_1_016)
+    RunCmdHost(mkdir -p /mnt/1/output/logs/cleopatra_2_002)
+    RunCmd(copy e:\logs\responder_log.txt \\10.0.2.4\qemu\logs\cleopatra_2_002)
+    RunCmd(copy e:\server\log_0.txt \\10.0.2.4\qemu\logs\cleopatra_2_002)
+    RunCmd(copy e:\logs\init_log.txt \\10.0.2.4\qemu\logs\cleopatra_2_002)
+    RunCmd(copy e:\logs\last_log.txt \\10.0.2.4\qemu\logs\cleopatra_2_002)
     QemuQuit
 

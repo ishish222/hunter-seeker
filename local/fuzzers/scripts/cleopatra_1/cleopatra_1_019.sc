@@ -1,3 +1,5 @@
+# proba podstawienia calla
+
 PrintLogo
 RegisterSignals(exception)
 GetOptions
@@ -159,6 +161,7 @@ Decision=(
     HTTPQUERYINFOW-1:get_info2,
     INTERNETREADFILE+1:get_info3,
     INTERNETREADFILE-1:get_info4,
+    LOAD_EAX:load_eax,
     default:loop
 )
 
@@ -167,9 +170,10 @@ Start:
     EnableBuiltin
     EnableReaction(filp1)
 
-    TracerRegisterReactions(self+0x1de1,TEST,0x0)
     TracerRegisterReactions(self+0x1f05,SELECTCASE,0x0)
-    TracerRegisterReactions(self+0x1f07,REPORTSELECTED,0x330)
+    TracerRegisterReactions(self+0x1f07,REPORTSELECTED:flip3,0x330)
+    TracerRegisterReactions(self+0xa387,flip3:load_eax,0x105)
+    TracerRegisterReactions(self+0xa390,LOAD_EAX,0x0)
 
     TracerRegisterReactions(
         WININET.dll+0x20494,INTERNETCONNECTW+1:INTERNETCONNECTW-1,0x0;
@@ -218,6 +222,12 @@ Start:
     EnableReaction(INTERNETREADFILE+1)
     Execute(scripts/arab/enable_context_mod_detection.sc)
 
+    TracerDebugContinueInf
+    goto(decision)
+
+load_eax:
+    Push(0x77c6d2ba)
+    WriteRegister(EAX)
     TracerDebugContinueInf
     goto(decision)
 
@@ -366,10 +376,10 @@ re:
 
 exception:
     Interrupt
-    RunCmdHost(mkdir -p /mnt/1/output/logs/cleopatra_1_016)
-    RunCmd(copy e:\logs\responder_log.txt \\10.0.2.4\qemu\logs\cleopatra_1_016)
-    RunCmd(copy e:\server\log_0.txt \\10.0.2.4\qemu\logs\cleopatra_1_016)
-    RunCmd(copy e:\logs\init_log.txt \\10.0.2.4\qemu\logs\cleopatra_1_016)
-    RunCmd(copy e:\logs\last_log.txt \\10.0.2.4\qemu\logs\cleopatra_1_016)
+    RunCmdHost(mkdir -p /mnt/1/output/logs/cleopatra_1_019)
+    RunCmd(copy e:\logs\responder_log.txt \\10.0.2.4\qemu\logs\cleopatra_1_019)
+    RunCmd(copy e:\server\log_0.txt \\10.0.2.4\qemu\logs\cleopatra_1_019)
+    RunCmd(copy e:\logs\init_log.txt \\10.0.2.4\qemu\logs\cleopatra_1_019)
+    RunCmd(copy e:\logs\last_log.txt \\10.0.2.4\qemu\logs\cleopatra_1_019)
     QemuQuit
 

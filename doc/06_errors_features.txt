@@ -415,3 +415,31 @@ Problem: co jesli update_breakpoint wykonamy na EAX+0x200, podczas gdy EAX=0x2?
 
 To moze miec zwiazek z autorepeatem dla breakpointow. Nalezy chyba wprowadzic konwencje xx:xx do autorepeatu.
 
+--
+
+047 - jakis blad przy cleopatra_1_19
+
+--
+
+048 - chwilowe wylaczenie bp przy dumpie pamieci?
+
+--
+
+[x] 049 - nie zadzialal autorepeat w cleopatra_1_021
+
+Do testowania zmien reakcje na 0x0
+
+--
+
+[x] 050 - wyzerowany bajt w pamieci
+
+Adres zerowania: 0x4116d3
+SE nie objelo tego bajtu
+Modyfikacja SE - zadzialalo!!!
+Porownaj SE z przed wstrzyknieciem
+
+--
+
+[x] 051 - bledy w outputowaniu UNICODE stringow
+
+zly modyfikator w format stringu

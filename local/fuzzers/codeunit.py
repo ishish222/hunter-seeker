@@ -68,6 +68,7 @@ prototypes['EnableReaction']        = tracer_parts.tracer_enable_reaction
 prototypes['RaiseReaction']         = tracer_parts.tracer_raise_reaction
 prototypes['LowerReaction']         = tracer_parts.tracer_lower_reaction
 prototypes['ExclusiveReaction']     = tracer_parts.tracer_exclusive_reaction
+prototypes['AutorepeatReaction']    = tracer_parts.tracer_autorepeat_reaction
 prototypes['DisableReaction']       = tracer_parts.tracer_disable_reaction
 prototypes['EnableBuiltin']         = tracer_parts.tracer_enable_anchors
 prototypes['ExclusiveBuiltin']      = tracer_parts.tracer_exclusive_anchors

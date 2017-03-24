@@ -44,7 +44,7 @@ TracerDebugSample
 TracerDebugContinueInf
 
 # RR
-#TracerRegisterReactions(self+0x137a,ST,0x0)
+TracerRegisterReactions(self+0x1867,print1,0x360)
 TracerRegisterReactions(self+0x1877,flip1,0x105)
 TracerRegisterReactions(self+0x18d8,flip2,0x105)
 ExtractEP(c:\windows\system32\rundll32.exe)
@@ -57,8 +57,9 @@ TracerDebugContinueInf
 # ST
 DumpMemory
 SecureAllSections
-EnableReaction(flip1)
-EnableReaction(flip2)
+#EnableReaction(flip1)
+#EnableReaction(flip2)
+EnableReaction(print1)
 EnableBuiltin
 ExclusiveBuiltin
 LowerBuiltin

@@ -625,9 +625,10 @@ void output_p_register_unicode(char* reg)
     read_memory(my_trace->cpdi.hProcess, (void*)addr, (void*)snap, SNAP_SIZE*2, &read);
     if(read > 0x0)
     {
-        sprintf(snap_ascii, "%ls", snap);
+        d_print("Read from memory: %ls\n", snap);
+        wcstombs(snap_ascii, (wchar_t*)snap, SNAP_SIZE);
         filter_str(snap_ascii, ',');
-        sprintf(line, "OU,0x%x,Reg %s: %ls\n", my_trace->last_tid, reg, snap_ascii);
+        sprintf(line, "OU,0x%x,Reg %s: %s\n", my_trace->last_tid, reg, snap_ascii);
         add_to_buffer(line);
     }
     else
@@ -1336,24 +1337,22 @@ int autorepeat_reaction(char* reaction_id)
     cur_reaction = 0x0;
     for(i = 0x0; i< my_trace->reaction_count; i++)
     {
-        /* locate i_reaction */
         if(!strcmp(reaction_id, my_trace->reactions[i].reaction_id))
         {
             cur_reaction = &my_trace->reactions[i];
+            d_print("Reaction found\n");
+            cur_reaction->bp->autorepeat = 1;
+            break;
         }
     }
 
     if(!cur_reaction)
+    {
+        d_print("Reaction not found\n");
         return 0x1;
+    }
         
     BREAKPOINT* cur_bp;
-
-    for(i = 0x0; i< cur_reaction->bps_count; i++)
-    {
-
-        cur_bp = &cur_reaction->bp[i];
-        cur_bp->autorepeat = 1;
-    }
 
     d_print("[autorepeat_reaction ends]\n");
     return 0x0;
@@ -3633,11 +3632,17 @@ void start_trace_fname()
 {
     BOOL res;
 
+    char final_args[MAX_NAME]; 
+
     d_print("Creating process: %s\n", my_trace->process_fname);
 
     if(strlen(my_trace->args) > 0x0)
     {
-        res = CreateProcess(my_trace->process_fname, my_trace->args, 0x0, 0x0, 0x0, DEBUG_ONLY_THIS_PROCESS, 0x0, 0x0, &my_trace->si, &my_trace->pi);
+        strcpy(final_args, my_trace->process_fname);
+        strcat(final_args, " ");
+        strcat(final_args, my_trace->args);
+        //res = CreateProcess(my_trace->process_fname, my_trace->args, 0x0, 0x0, 0x0, DEBUG_ONLY_THIS_PROCESS, 0x0, 0x0, &my_trace->si, &my_trace->pi);
+        res = CreateProcess(my_trace->process_fname, final_args, 0x0, 0x0, 0x0, DEBUG_ONLY_THIS_PROCESS, 0x0, 0x0, &my_trace->si, &my_trace->pi);
         d_print("Args: %s\n", my_trace->args);
     }
     else

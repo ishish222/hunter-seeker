@@ -1162,6 +1162,11 @@ def execute(cmds, ext_pipe):
             writePipe(ext_pipe, "tracer_disable_reaction OK")
             ok(ext_pipe)
 
+        elif(cmd == "tracer_autorepeat_reaction"):
+            trace_controller.autorepeat_reaction(args)
+            writePipe(ext_pipe, "tracer_autorepeat_reaction OK")
+            ok(ext_pipe)
+
         elif(cmd == "tracer_exclusive_reaction"):
             trace_controller.exclusive_reaction(args)
             writePipe(ext_pipe, "tracer_exclusive_reaction OK")

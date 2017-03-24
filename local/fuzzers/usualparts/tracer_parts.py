@@ -456,6 +456,18 @@ def tracer_exclusive_reaction(args):
 
     return
 
+def tracer_autorepeat_reaction(args):
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+    
+    write_socket(options.s, "tracer_autorepeat_reaction %s" % args);
+    response, _, _ = read_socket(options.s)
+
+    globs.state.ret = response
+
+    return
+
 def tracer_raise_reaction(args):
     options = globs.state.options
     state = globs.state
