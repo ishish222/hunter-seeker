@@ -143,7 +143,7 @@ TracerAttachSample
 TracerRegisterReactions(self+0x3657,ST,0x0)
 #TracerRegisterReactions(self+0x3b5c,ST,0x0)
 TracerRegisterReactions(self+0x35a3,flip1:flip2,0x103;self+0x117e3,flip2,0x104)
-TracerRegisterReactions(self+0xd95c,flip3,0x105)
+TracerRegisterReactions(self+0xd95c,flip3,0x102)
 #TracerRegisterReactions(self+0x1f05,SELECTCASE,0x0)
 TracerRegisterReactions(self+0x1f07,REPORTSELECTED,0x330)
 
@@ -371,10 +371,10 @@ re:
 
 exception:
     Interrupt
-    RunCmdHost(mkdir -p /mnt/1/output/logs/cleopatra_1_021)
-    RunCmd(copy e:\logs\responder_log.txt \\10.0.2.4\qemu\logs\cleopatra_1_021)
-    RunCmd(copy e:\server\log_*.txt \\10.0.2.4\qemu\logs\cleopatra_1_021)
-    RunCmd(copy e:\logs\init_log.txt \\10.0.2.4\qemu\logs\cleopatra_1_021)
-    RunCmd(copy e:\logs\last_log.txt \\10.0.2.4\qemu\logs\cleopatra_1_021)
+    RunCmdHost(mkdir -p /mnt/1/output/logs/cleopatra_1_022)
+    RunCmd(copy e:\logs\responder_log.txt \\10.0.2.4\qemu\logs\cleopatra_1_022)
+    RunCmd(copy e:\server\log_*.txt \\10.0.2.4\qemu\logs\cleopatra_1_022)
+    RunCmd(copy e:\logs\init_log.txt \\10.0.2.4\qemu\logs\cleopatra_1_022)
+    RunCmd(copy e:\logs\last_log.txt \\10.0.2.4\qemu\logs\cleopatra_1_022)
     QemuQuit
 

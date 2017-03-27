@@ -443,3 +443,18 @@ Porownaj SE z przed wstrzyknieciem
 [x] 051 - bledy w outputowaniu UNICODE stringow
 
 zly modyfikator w format stringu
+
+--
+
+052 - jakies bzdury w bibliotece w przypadku xagent_1_003
+
+5114394 - po tym wywolaniu nie ma kadu z tamtad
+w nagraniu jest
+wszedzie sa zera :/
+czyzby sie nie zdumpowala pamiec??
+
+Teraz zmienie breakpoint, ale to jest niedopuszczalne. Musi byc jakis UP po RL!
+
+--
+
+053 - rejestrowanie danych o jmpach na poziomie calla (CALL_LEVEL)
