@@ -604,12 +604,21 @@ int taint_x86::jxx_set(unsigned state)
     sprintf(out_line, "[x] JXX_STATUS: 0x%02x", state);
     print_empty_call(&this->ctx_info[this->tids[this->cur_tid]], out_line, colors[CODE_RED]);
 
-    if(state == 0x0)
-    {
-        memset(this->cur_info->list, 0x0, MAX_LIST_JXX);
-        this->cur_info->list_len = 0x0;
-    }
+    return 0x0;
+}
 
+int taint_x86::jxx_clear()
+{
+    unsigned level = this->cur_info->call_level;
+
+    jxx_clear_level(level);
+    return 0x0;
+}
+
+int taint_x86::jxx_clear_level(unsigned level)
+{
+    this->cur_info->list_len[level] = 0x0;
+    d_print(1, "Clearing JXX on level: %d\n", level);
     return 0x0;
 }
 
@@ -617,9 +626,15 @@ int is_on_list(CONTEXT_INFO* info, DWORD eip)
 {
     unsigned i;
 
-    for(i = 0x0; i< info->list_len; i++)
+    unsigned level = info->call_level;
+
+    for(i = 0x0; i< info->list_len[level]; i++)
     {
-        if(eip == info->list[i]) return 0x1;
+        if(eip == info->list[level][i])
+        {
+            info->jxx_total[level]++;
+            return 0x1;
+        }
     }
 
     return 0x0;
@@ -627,9 +642,13 @@ int is_on_list(CONTEXT_INFO* info, DWORD eip)
 
 int add_to_list(CONTEXT_INFO* info, DWORD eip)
 {
-    if(info->list_len == MAX_LIST_JXX-1) return -0x1;
-    info->list[info->list_len] = eip;
-    info->list_len++;
+    unsigned level = info->call_level;
+
+    if(info->list_len[level] == MAX_LIST_JXX-1) return -0x1;
+    d_print(1, "Adding to list at level %d: 0x%08x\n", level, eip);
+    info->list[level][info->list_len[level]] = eip;
+    info->list_len[level]++;
+    d_print(1, "List len: %d\n", info->list_len[level]);
     return 0x0;
 }
 
@@ -647,7 +666,11 @@ int taint_x86::handle_jxx(CONTEXT_INFO* info, char* str)
         return 0x0;
     }
 
-    if(is_on_list(info, this->current_eip)) return 0x0;
+    if(is_on_list(info, this->current_eip)) 
+    {
+        d_print(1, "JXX Is on list, ignoring\n");
+        return 0x0;
+    }
 
     char out_line[MAX_NAME];
 
@@ -1359,8 +1382,12 @@ int taint_x86::dive(CONTEXT_INFO* info, OFFSET target, OFFSET next)
 
     /* OK, new level */
     level = info->call_level;
+    d_print(1, "Entering level %d\n", level);
     cur_level = &info->levels[level];
     memset(cur_level, 0x0, sizeof(CALL_LEVEL));
+
+    /* clear jumps for jxx */
+    jxx_clear_level(level);
 
 //    cur_level->loop_addr = (OFFSET*)malloc(sizeof(OFFSET) * MAX_LOOP_ADDR);
     cur_level->entry = target;
@@ -2447,6 +2474,14 @@ int taint_x86::finish()
             print_call(cur_tid, "unknown", colors[CODE_BLACK]);
         //print_call(cur_tid->graph_file, "unknown", colors[CODE_BLACK]);
         }
+
+        unsigned k;
+        d_print(1, "JXX stats:\n");
+        for(k = cur_tid->call_level_smallest; k< cur_tid->call_level_largest; k++)
+        {
+            d_print(1, "Level %d: %d\n", cur_tid->jxx_total[k]);
+        }
+
     }
     return 0x0;    
 }
@@ -2535,8 +2570,8 @@ int taint_x86::add_thread(CONTEXT_info ctx_info)
         }
         memset(this->ctx_info[this->tid_count].levels, 0x0, sizeof(CALL_LEVEL)*this->max_call_levels);
         this->ctx_info[this->tid_count].waiting = 0x0;
-        this->ctx_info[this->tid_count].list = (DWORD*)malloc(sizeof(DWORD) * MAX_LIST_JXX);
-        this->ctx_info[this->tid_count].list_len = 0x0;
+//        this->ctx_info[this->tid_count].list = (DWORD*)malloc(sizeof(DWORD) * MAX_LIST_JXX);
+//        this->ctx_info[this->tid_count].list_len = 0x0;
 
         /* clear loop structures */
         unsigned call_level;

@@ -724,6 +724,12 @@ void jxx_disable()
     return;
 }
 
+void jxx_clear()
+{
+    taint_eng.jxx_clear();
+    return;
+}
+
 void _pause()
 {
     fprintf(stdout, "Press any key\n");
@@ -1047,6 +1053,9 @@ int main(int argc, char** argv)
 
             if(line[0] == 'J' && line[1] == 'D')
                 jxx_disable();
+
+            if(line[0] == 'J' && line[1] == 'C')
+                jxx_clear();
 
             if(line[0] == 'P' && line[1] == 'A')
                 _pause();

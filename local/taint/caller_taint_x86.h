@@ -2324,8 +2324,9 @@ typedef struct _CONTEXT_INFO
     OFFSET source;
     OFFSET target;
     OFFSET next;
-    DWORD* list;
-    unsigned list_len;
+    DWORD list[MAX_CALL_LEVELS][MAX_LIST_JXX];
+    unsigned list_len[MAX_CALL_LEVELS];
+    unsigned jxx_total[MAX_CALL_LEVELS];
 
 } CONTEXT_INFO;
 
@@ -3170,6 +3171,8 @@ class taint_x86
     int dive(CONTEXT_INFO*, OFFSET, OFFSET);
     int surface(CONTEXT_INFO*);
     int jxx_set(unsigned);
+    int jxx_clear_level(unsigned);
+    int jxx_clear();
     int start();
 
     int print_err_all_contexts();

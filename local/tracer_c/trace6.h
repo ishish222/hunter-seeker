@@ -303,7 +303,7 @@ typedef struct TRACE_CONFIG_
     HANDLE file_handle;
 
     /* threads */
-    DWORD thread_map[0x1000000];
+    DWORD tid2index[0x1000000];
     THREAD_ENTRY threads[MAX_THREADS];
 
     /* libraries */

@@ -157,7 +157,7 @@ void react_flip_ZF(void* data)
     HANDLE myHandle = (HANDLE)-0x1;
 
     id = my_trace->last_event.dwThreadId;
-    thread_idx = my_trace->thread_map[id];
+    thread_idx = my_trace->tid2index[id];
     myHandle = my_trace->threads[thread_idx].handle;
 
     CONTEXT ctx;
@@ -198,7 +198,7 @@ void react_set_CF(void* data)
     HANDLE myHandle = (HANDLE)-0x1;
 
     id = my_trace->last_event.dwThreadId;
-    thread_idx = my_trace->thread_map[id];
+    thread_idx = my_trace->tid2index[id];
     myHandle = my_trace->threads[thread_idx].handle;
 
     CONTEXT ctx;
@@ -228,7 +228,7 @@ void react_set_ZF(void* data)
     HANDLE myHandle = (HANDLE)-0x1;
 
     id = my_trace->last_event.dwThreadId;
-    thread_idx = my_trace->thread_map[id];
+    thread_idx = my_trace->tid2index[id];
     myHandle = my_trace->threads[thread_idx].handle;
 
     CONTEXT ctx;
@@ -282,7 +282,7 @@ void react_flip_CF(void* data)
     HANDLE myHandle = (HANDLE)-0x1;
 
     id = my_trace->last_event.dwThreadId;
-    thread_idx = my_trace->thread_map[id];
+    thread_idx = my_trace->tid2index[id];
     myHandle = my_trace->threads[thread_idx].handle;
 
     CONTEXT ctx;
@@ -324,7 +324,7 @@ void react_flip_SF(void* data)
     HANDLE myHandle = (HANDLE)-0x1;
 
     id = my_trace->last_event.dwThreadId;
-    thread_idx = my_trace->thread_map[id];
+    thread_idx = my_trace->tid2index[id];
     myHandle = my_trace->threads[thread_idx].handle;
 
     CONTEXT ctx;
@@ -1142,12 +1142,12 @@ void react_skip_on(void* data)
     de = (DEBUG_EVENT*)data;
     DWORD tid = de->dwThreadId;
 
-    my_trace->threads[my_trace->thread_map[tid]].skipping += 0x1;
+    my_trace->threads[my_trace->tid2index[tid]].skipping += 0x1;
 
     sprintf(line, "# Increasing skipping in TID: 0x%08x @ %p\n", tid, (DWORD)my_trace->last_exception.ExceptionAddress);
     add_to_buffer(line);
 
-    if(my_trace->threads[my_trace->thread_map[tid]].skipping == 0x1)
+    if(my_trace->threads[my_trace->tid2index[tid]].skipping == 0x1)
     {
         unset_ss(tid);
         d_print("Skipping in TID: 0x%08x...\n", tid);
@@ -1165,15 +1165,15 @@ void react_skip_off(void* data)
     de = (DEBUG_EVENT*)data;
     DWORD tid = de->dwThreadId;
 
-    my_trace->threads[my_trace->thread_map[tid]].skipping -= 0x1;
+    my_trace->threads[my_trace->tid2index[tid]].skipping -= 0x1;
 
     sprintf(line, "# Decreasing skipping in TID: 0x%08x @ %p\n", tid, (DWORD)my_trace->last_exception.ExceptionAddress);
     add_to_buffer(line);
 
-    if(my_trace->threads[my_trace->thread_map[tid]].skipping < 0x1)
+    if(my_trace->threads[my_trace->tid2index[tid]].skipping < 0x1)
     {
         d_print("Finished skippingin TID: 0x%08x\n", tid);
-        my_trace->threads[my_trace->thread_map[tid]].skipping = 0x0;
+        my_trace->threads[my_trace->tid2index[tid]].skipping = 0x0;
         set_ss(tid);
         sprintf(line, "# Stopped skipping in TID: 0x%08x\n", tid);
         add_to_buffer(line);
@@ -1587,7 +1587,7 @@ int dec_eip(DWORD id)
     unsigned thread_idx;
     HANDLE myHandle = (HANDLE)-0x1;
 
-    thread_idx = my_trace->thread_map[id];
+    thread_idx = my_trace->tid2index[id];
 
     myHandle = my_trace->threads[thread_idx].handle;
     CONTEXT ctx;
@@ -1735,7 +1735,7 @@ void register_thread(DWORD tid, HANDLE handle)
 
     DWORD tid_pos;
 
-    if(my_trace->thread_map[tid] == -1)
+    if(my_trace->tid2index[tid] == -1)
     {
         tid_pos = my_trace->thread_count;
         
@@ -1750,7 +1750,7 @@ void register_thread(DWORD tid, HANDLE handle)
         //if(my_trace->threads[tid_pos].handle == 0x0) 
         d_print("Registering: TID 0x%08x, handle 0x%08x\n", tid, handle);
 
-        my_trace->thread_map[tid] = tid_pos;
+        my_trace->tid2index[tid] = tid_pos;
         my_trace->thread_count ++;
 
         sprintf(line, "# Thread count: 0x%08x\n", my_trace->thread_count);
@@ -1758,7 +1758,7 @@ void register_thread(DWORD tid, HANDLE handle)
     }
     else
     {
-        tid_pos = my_trace->thread_map[tid];
+        tid_pos = my_trace->tid2index[tid];
 
         // do not create new, update this one
         d_print("Updating: TID 0x%08x, handle 0x%08x\n", tid, handle);
@@ -1814,7 +1814,7 @@ int register_thread_debug(DWORD tid, HANDLE handle)
     ctx.ContextFlags = CONTEXT_FULL;
 
     DWORD tid_pos;
-    tid_pos = my_trace->thread_map[tid];
+    tid_pos = my_trace->tid2index[tid];
 
     //write info about thread registration
     GetThreadContext(my_trace->threads[tid_pos].handle, &ctx);
@@ -1841,7 +1841,7 @@ void deregister_thread(DWORD tid, HANDLE handle)
         handle = OpenThread(THREAD_GET_CONTEXT |THREAD_SET_CONTEXT | THREAD_ALL_ACCESS, 0x0, tid);
 
     DWORD tid_pos;
-    tid_pos = my_trace->thread_map[tid];
+    tid_pos = my_trace->tid2index[tid];
 
     my_trace->threads[tid_pos].alive = 0x0;
     my_trace->threads[tid_pos].handle = handle;
@@ -1890,7 +1890,7 @@ void deregister_thread2(DWORD tid)
 {
     char line[MAX_LINE];
     DWORD tid_pos;
-    tid_pos = my_trace->thread_map[tid];
+    tid_pos = my_trace->tid2index[tid];
 
 
     if(my_trace->threads[tid_pos].handle != 0x0) 
@@ -2060,7 +2060,7 @@ void react_sysenter_callback(void* data)
     unsigned i;
 
     DWORD tid_pos;
-    tid_pos = my_trace->thread_map[tid];
+    tid_pos = my_trace->tid2index[tid];
 
     CONTEXT ctx;
     ctx.ContextFlags = CONTEXT_FULL;
@@ -2092,7 +2092,7 @@ void react_sysret_callback(void* data)
     unsigned i;
     char line[MAX_LINE];
     DWORD tid_pos;
-    tid_pos = my_trace->thread_map[tid];
+    tid_pos = my_trace->tid2index[tid];
 
     register_thread(tid, my_trace->threads[tid_pos].handle);
 
@@ -2431,7 +2431,7 @@ int register_all_threads()
                     my_trace->threads[te32.th32ThreadID].handle = OpenThread(THREAD_GET_CONTEXT |THREAD_SET_CONTEXT | THREAD_ALL_ACCESS, 0x0, te32.th32ThreadID);
                     my_trace->threads[te32.th32ThreadID].open = 0x1;
 
-                    my_trace->thread_map[my_trace->thread_count] = te32.th32ThreadID;
+                    my_trace->tid2index[my_trace->thread_count] = te32.th32ThreadID;
                     my_trace->thread_count ++;
                     //d_print("Registering TID: 0x%08x with handle: 0x%08x, new thread count: 0x%x\n", te32.th32ThreadID, my_trace->threads[my_trace->thread_count].handle, my_trace->thread_count);
  
@@ -2457,7 +2457,7 @@ int verify_ss(DWORD tid)
     {
         for(i = 0x0; i< my_trace->thread_count; i++)
         {
-            cur_tid = my_trace->thread_map[i];
+            cur_tid = my_trace->tid2index[i];
             verify_ss(cur_tid);
         }
     }
@@ -2496,7 +2496,7 @@ int unset_ss(DWORD tid)
         for(i = 0x0; i< my_trace->thread_count; i++)
         {
             /* unset for all */
-            cur_tid = my_trace->thread_map[i];
+            cur_tid = my_trace->tid2index[i];
             unset_ss(cur_tid);
         }
     }
@@ -2530,8 +2530,12 @@ int set_ss(DWORD tid)
     int i, tid_pos;
     DWORD cur_tid;
 
+    /* attempt to handle autorepeat before ST (#060) */
+    if((my_trace->status != STATUS_DBG_STARTED) && (my_trace->status != STATUS_DBG_SCANNED) && (my_trace->status != STATUS_DBG_LIGHT)) 
+        return 0x0;
+
     /* avoid turning scanning on while skipping, e.g. during syscalls or i_reactions */
-    if(my_trace->threads[my_trace->thread_map[tid]].skipping == 0x1)
+    if(my_trace->threads[my_trace->tid2index[tid]].skipping == 0x1)
         return 0x0;
 
     if(tid == 0x0)
@@ -2653,7 +2657,7 @@ void ss_callback(void* data)
     }
 
     tid = de->dwThreadId;
-    tid_pos = my_trace->thread_map[tid];
+    tid_pos = my_trace->tid2index[tid];
 
 //    WaitForSingleObject(my_trace->mutex, INFINITE);
 
@@ -2967,7 +2971,7 @@ int handle_reaction(REACTION* cur_reaction, void* data)
     REACTION* locking_reaction;
 
     tid = de->dwThreadId;
-    thread_no = my_trace->thread_map[tid];
+    thread_no = my_trace->tid2index[tid];
 
     /* first enable coupled */
     unsigned k; 
@@ -3089,7 +3093,7 @@ int handle_breakpoint(DWORD addr, void* data)
             DWORD tid;
             DWORD thread_no;
             tid = de->dwThreadId;
-            thread_no = my_trace->thread_map[tid];
+            thread_no = my_trace->tid2index[tid];
             if(thread_no == -1) continue;
 
             d_print("ER_5 BP hit & identified, TID1: 0x%08x instr_count: %d\n", de->dwThreadId, my_trace->instr_count);
@@ -3160,7 +3164,11 @@ int handle_breakpoint(DWORD addr, void* data)
 
     /* schedule breakpoint for this address */
     if(my_bp->autorepeat)
+    {
         my_trace->delayed_breakpoint = my_bp;
+        /* enable SS for just one breakpoint */
+        set_ss(de->dwThreadId);
+    }
 
     d_print("[handle_breakpoint ends]\n");
     return 0x0;
@@ -3875,19 +3883,23 @@ int list_tebs()
 int write_context(DWORD tid, CONTEXT* ctx)
 {
     HANDLE myHandle;
-    DWORD tid_id;
+    DWORD map_id;
 
-    tid_id = my_trace->thread_map[tid];
+    if(tid == 0x0)
+    {
+        tid = my_trace->last_event.dwThreadId;
+    }
 
-    myHandle = my_trace->threads[tid_id].handle;
+    map_id = my_trace->tid2index[tid];
+    myHandle = my_trace->threads[map_id].handle;
 
     if(myHandle == 0x0)
     {
         myHandle = OpenThread(THREAD_GET_CONTEXT |THREAD_SET_CONTEXT | THREAD_ALL_ACCESS, 0x0, tid);
-        my_trace->threads[tid_id].handle = myHandle;
+        my_trace->threads[map_id].handle = myHandle;
     }
 
-    d_print("TID: 0x%08x, TID_pos: 0x%08x, handle: 0x%08x\n", tid, tid_id, myHandle);
+    d_print("TID: 0x%08x, TID_pos: 0x%08x, handle: 0x%08x\n", tid, map_id, myHandle);
     ctx->ContextFlags = CONTEXT_FULL;
 
     if(SetThreadContext(myHandle, ctx) == 0x0)
@@ -3965,7 +3977,7 @@ int read_context(DWORD tid, CONTEXT* ctx)
         tid = my_trace->last_event.dwThreadId;
     }
 
-    tid_id = my_trace->thread_map[tid];
+    tid_id = my_trace->tid2index[tid];
     myHandle = my_trace->threads[tid_id].handle;
 
     d_print("Trying to get context of TID: 0x%08x, index: 0x%08x, handle: 0x%08x\n", tid, tid_id, myHandle);
@@ -4323,7 +4335,7 @@ int report_dword(DWORD addr)
     return data;
 }
 
-int write_register(DWORD tid_id, char* reg, char* data)
+int write_register(DWORD map_id, char* reg, char* data)
 {
     CONTEXT ctx;
     char buffer2[MAX_LINE];
@@ -4333,78 +4345,78 @@ int write_register(DWORD tid_id, char* reg, char* data)
 
     DWORD tid;
 
-    if(tid_id == -1)
+    if(map_id == -1)
     {
         tid = my_trace->last_tid;
     }
     else
     {
-        tid = my_trace->threads[tid_id].tid;
+        tid = my_trace->threads[map_id].tid;
     }
     
-    read_context(tid_id, &ctx);
+    read_context(tid, &ctx);
 
     if(!strcmp(reg, "EAX"))
     {
         data_d = strtoul(data, 0x0, 0x10);
         ctx.Eax = data_d;
-        write_context(tid_id, &ctx);
+        write_context(tid, &ctx);
         strcpy(my_trace->report_buffer, buffer2);
     }
     else if(!strcmp(reg, "EBX"))
     {
         data_d = strtoul(data, 0x0, 0x10);
         ctx.Ebx = data_d;
-        write_context(tid_id, &ctx);
+        write_context(tid, &ctx);
         strcpy(my_trace->report_buffer, buffer2);
     }
     else if(!strcmp(reg, "ECX"))
     {
         data_d = strtoul(data, 0x0, 0x10);
         ctx.Ecx = data_d;
-        write_context(tid_id, &ctx);
+        write_context(tid, &ctx);
         strcpy(my_trace->report_buffer, buffer2);
     }
     else if(!strcmp(reg, "EDX"))
     {
         data_d = strtoul(data, 0x0, 0x10);
         ctx.Edx = data_d;
-        write_context(tid_id, &ctx);
+        write_context(tid, &ctx);
         strcpy(my_trace->report_buffer, buffer2);
     }
     else if(!strcmp(reg, "ESI"))
     {
         data_d = strtoul(data, 0x0, 0x10);
         ctx.Esi = data_d;
-        write_context(tid_id, &ctx);
+        write_context(tid, &ctx);
         strcpy(my_trace->report_buffer, buffer2);
     }
     else if(!strcmp(reg, "EDI"))
     {
         data_d = strtoul(data, 0x0, 0x10);
         ctx.Edi = data_d;
-        write_context(tid_id, &ctx);
+        write_context(tid, &ctx);
         strcpy(my_trace->report_buffer, buffer2);
     }
     else if(!strcmp(reg, "EBP"))
     {
         data_d = strtoul(data, 0x0, 0x10);
         ctx.Ebp = data_d;
-        write_context(tid_id, &ctx);
+        write_context(tid, &ctx);
         strcpy(my_trace->report_buffer, buffer2);
     }
     else if(!strcmp(reg, "ESP"))
     {
         data_d = strtoul(data, 0x0, 0x10);
         ctx.Esp = data_d;
-        write_context(tid_id, &ctx);
+        write_context(tid, &ctx);
         strcpy(my_trace->report_buffer, buffer2);
     }
     else if(!strcmp(reg, "EIP"))
     {
         data_d = strtoul(data, 0x0, 0x10);
         ctx.Eip = data_d;
-        write_context(tid_id, &ctx);
+        write_context(tid, &ctx);
         strcpy(my_trace->report_buffer, buffer2);
     }
 
@@ -4418,13 +4430,18 @@ int write_register(DWORD tid_id, char* reg, char* data)
 DWORD read_register(DWORD tid_id, char* reg)
 {
     CONTEXT ctx;
+    DWORD tid;
 
-    if(tid_id == 0x0)
+    if(tid_id == -1)
     {
-        tid_id = my_trace->last_event.dwThreadId;
+        tid = my_trace->last_tid;
+    }
+    else
+    {
+        tid = my_trace->threads[tid_id].tid;
     }
 
-    read_context(tid_id, &ctx);
+    read_context(tid, &ctx);
 
     if(!strcmp(reg, "EAX"))
     {
@@ -6044,7 +6061,7 @@ int init_trace(TRACE_CONFIG* trace, char* host, short port)
     strcpy(my_trace->host, host);
     my_trace->port = port;
 
-    memset(my_trace->thread_map, -1, sizeof(my_trace->thread_map));
+    memset(my_trace->tid2index, -1, sizeof(my_trace->tid2index));
 
     my_trace->mutex = CreateMutex(0x0, 0x0, 0x0);
     my_trace->eventLock = CreateEvent(0x0, 0x0, 0x0, 0x0);

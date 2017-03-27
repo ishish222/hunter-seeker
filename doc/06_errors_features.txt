@@ -457,4 +457,62 @@ Teraz zmienie breakpoint, ale to jest niedopuszczalne. Musi byc jakis UP po RL!
 
 --
 
-053 - rejestrowanie danych o jmpach na poziomie calla (CALL_LEVEL)
+[x] 053 - rejestrowanie danych o jmpach na poziomie calla (CALL_LEVEL)
+
+--
+
+054 - moze wprowadzic czyszczenie listy calli (jako rozkaz), zeby moc zarejestrowac wszystkie PO pewnym momencie
+
+--
+
+055 - w przyszlosci, wyodrebnienie CALL_LEVEL jako odrebnej struktury
+
+do rozwazenia i ew. implementacji
+
+--
+
+056 - mozliwe, ze konieczne bedzie ograniczenie rejestrowania JXX do okreslonych leveli.
+
+Wyprowadzenie statystyk JXX (JXX_LEVEL_TOTAL)
+Cos nie dziala w wypisywaniu
+Wprowadzenie JXX_DEPTH w rozkazach
+
+--
+
+[x] 057 - cos jest nie tak z powrotem z 0x004116d0 (nie wraca level wyzej)
+
+Pewnie jak zwykle zapomnialem SE :)
+Jesli tak, to to jest ostatni ticket tego typu!!!1
+Lol, oczywiscie ze tak xD
+
+--
+
+058 - strojenie analizy opcjami
+
+wlaczanie i wylaczenie sledzenia JXX, zbierania statystyk, etc. Wszystko w celu mozliwego przyspieszenie vs. zaawansowanej diagnostyki
+
+--
+
+059 - przemyslec wprowadzenie w przyszlosci mozliwosci zachowania i odtwarzania stanu maszyny
+
+--
+
+060 - nie dzialaja kolejne breakpointy
+
+autorepeat nie dziala przed ST
+rozwazyc wprowadzenie jednorazowego SS bez obslugi
+
+--
+
+[x] 061 - nie dziala zapisywanie do domyslnego watku, bo zamiast 0 jest wysylane przez Trace -1
+
+poprawione, wykonuje testy regresywne
+powinno byc wysylane -1, poniewaz to jest index w tablicy. Jesli bedzie 0x0, odczyta z pierwszego watku.
+Proba ujednolicenia zapisu i odczytu z rejestrow
+Byly mylace komentarze, tak naprawde dzialalo z -1
+Nie, nie bylo chyba dobrze. Kurwa, ale ta konstrukcja jest mylaca.
+
+062 - refaktoryzacja i testy regresyjne
+Nalezy zrefaktoryzowac kod uzywajac dwoch wskaznikow:
+tid i tindex
+
