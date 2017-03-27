@@ -497,10 +497,12 @@ wlaczanie i wylaczenie sledzenia JXX, zbierania statystyk, etc. Wszystko w celu 
 
 --
 
-060 - nie dzialaja kolejne breakpointy
+[x] 060 - nie dzialaja kolejne breakpointy
 
 autorepeat nie dziala przed ST
 rozwazyc wprowadzenie jednorazowego SS bez obslugi
+przerzucilem autorepeat na reakcje
+poprawiony ss_callback, trzeba sprawdzic, czy poprawki nie zjadaja instrukcji w innych watkach!
 
 --
 
@@ -511,6 +513,8 @@ powinno byc wysylane -1, poniewaz to jest index w tablicy. Jesli bedzie 0x0, odc
 Proba ujednolicenia zapisu i odczytu z rejestrow
 Byly mylace komentarze, tak naprawde dzialalo z -1
 Nie, nie bylo chyba dobrze. Kurwa, ale ta konstrukcja jest mylaca.
+
+-- 
 
 062 - refaktoryzacja i testy regresyjne
 Nalezy zrefaktoryzowac kod uzywajac dwoch wskaznikow:

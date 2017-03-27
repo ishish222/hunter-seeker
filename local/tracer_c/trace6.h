@@ -210,7 +210,6 @@ typedef struct BREAKPOINT_
     char enabled;
     char written;
     char saved_byte;
-    char autorepeat;
 
 //    REACTION* reactions[MAX_HANDLERS];
     REACTION** reactions;
@@ -229,6 +228,7 @@ typedef struct REACTION_
     char exclusive;
     int level;
     BREAKPOINT* bp;
+    char autorepeat;
     unsigned bps_count;
 } REACTION;
 
@@ -315,8 +315,8 @@ typedef struct TRACE_CONFIG_
 
     /* breakpoints */
     BREAKPOINT breakpoints[MAX_BREAKPOINTS];
-    BREAKPOINT* delayed_breakpoint;
-    char block_delayed_breakpoint;
+    REACTION* delayed_reaction;
+    char block_delayed_reaction;
 
     /* communication */
     unsigned port;

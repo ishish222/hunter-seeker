@@ -494,7 +494,7 @@ void output_register(char* reg)
     char line[MAX_LINE];
     OFFSET val;
 
-    val = read_register(my_trace->last_tid, reg); 
+    val = read_register(-1, reg); 
 
     sprintf(line, "OU,0x%x,%s: 0x%08x\n", my_trace->last_tid, reg, val);
     add_to_buffer(line);
@@ -553,7 +553,7 @@ void output_p_register_string(char* reg)
 
     d_print("Outputting str pointed by register %s\n", reg);
 
-    addr = read_register(my_trace->last_tid, reg); 
+    addr = read_register(-1, reg); 
 
     read_memory(my_trace->cpdi.hProcess, (void*)addr, (void*)snap, SNAP_SIZE, &read);
     if(read > 0x0)
@@ -620,7 +620,7 @@ void output_p_register_unicode(char* reg)
 
     d_print("Outputting unicode str pointed by register %s\n", reg);
 
-    addr = read_register(my_trace->last_tid, reg); 
+    addr = read_register(-1, reg); 
 
     read_memory(my_trace->cpdi.hProcess, (void*)addr, (void*)snap, SNAP_SIZE*2, &read);
     if(read > 0x0)
@@ -1341,7 +1341,7 @@ int autorepeat_reaction(char* reaction_id)
         {
             cur_reaction = &my_trace->reactions[i];
             d_print("Reaction found\n");
-            cur_reaction->bp->autorepeat = 1;
+            cur_reaction->autorepeat = 1;
             break;
         }
     }
@@ -1352,8 +1352,6 @@ int autorepeat_reaction(char* reaction_id)
         return 0x1;
     }
         
-    BREAKPOINT* cur_bp;
-
     d_print("[autorepeat_reaction ends]\n");
     return 0x0;
 }
@@ -2530,10 +2528,6 @@ int set_ss(DWORD tid)
     int i, tid_pos;
     DWORD cur_tid;
 
-    /* attempt to handle autorepeat before ST (#060) */
-    if((my_trace->status != STATUS_DBG_STARTED) && (my_trace->status != STATUS_DBG_SCANNED) && (my_trace->status != STATUS_DBG_LIGHT)) 
-        return 0x0;
-
     /* avoid turning scanning on while skipping, e.g. during syscalls or i_reactions */
     if(my_trace->threads[my_trace->tid2index[tid]].skipping == 0x1)
         return 0x0;
@@ -2635,17 +2629,17 @@ void ss_callback(void* data)
     char bytes[0x2];
     DWORD tid_pos;
 
-    if(my_trace->delayed_breakpoint != 0x0)
+    if(my_trace->delayed_reaction!= 0x0)
     {
-        if(my_trace->block_delayed_breakpoint != 0x0)
+        if(my_trace->block_delayed_reaction != 0x0)
         {
-            my_trace->block_delayed_breakpoint = 0x0;
+            my_trace->block_delayed_reaction = 0x0;
         }
         else
         {
-            d_print("Writing delayed breakpoint!\n");
-            write_breakpoint(my_trace->delayed_breakpoint);
-            my_trace->delayed_breakpoint = 0x0;
+            d_print("Enabling delaued reaction!\n");
+            enable_reaction(my_trace->delayed_reaction->reaction_id);
+            my_trace->delayed_reaction = 0x0;
         }
     }
 
@@ -2653,6 +2647,8 @@ void ss_callback(void* data)
         //d_print("%p\n", eip);
     if((my_trace->status != STATUS_DBG_STARTED) && (my_trace->status != STATUS_DBG_SCANNED) && (my_trace->status != STATUS_DBG_LIGHT)) 
     {
+        d_print("quick ss_callback\n");
+        unset_ss(0x0);
         return;
     }
 
@@ -2703,6 +2699,7 @@ void ss_callback(void* data)
     }
 
 //    ReleaseMutex(my_trace->mutex);
+    set_ss(0x0);
 
     return;
 }
@@ -3061,6 +3058,15 @@ int handle_reaction(REACTION* cur_reaction, void* data)
         }
     }
 
+    /* handle autorepeat */
+    /* schedule breakpoint for this address */
+    if(cur_reaction->autorepeat)
+    {
+        my_trace->delayed_reaction = cur_reaction;
+        /* enable SS for just one breakpoint */
+        set_ss(tid);
+    }
+
     return 0x0;
 }
 
@@ -3153,6 +3159,7 @@ int handle_breakpoint(DWORD addr, void* data)
                 d_print("ER_6 TID: 0x%08x\n", de->dwThreadId);
                 d_print("ER_3 TID: 0x%08x, Reaction no %d: %p, %s\n", de->dwThreadId, j, cur_reaction, cur_reaction->reaction_id);
                 handle_reaction(cur_reaction, data);
+            
             }
         }
     }
@@ -3162,13 +3169,6 @@ int handle_breakpoint(DWORD addr, void* data)
     unwrite_breakpoint(my_bp);
     dec_eip(de->dwThreadId);
 
-    /* schedule breakpoint for this address */
-    if(my_bp->autorepeat)
-    {
-        my_trace->delayed_breakpoint = my_bp;
-        /* enable SS for just one breakpoint */
-        set_ss(de->dwThreadId);
-    }
 
     d_print("[handle_breakpoint ends]\n");
     return 0x0;
@@ -4646,7 +4646,7 @@ int process_last_event()
                     case EXCEPTION_SINGLE_STEP:
                         /* we are authorized to handle this */
                         ss_callback((void*)&my_trace->last_event);
-                        set_ss(my_trace->last_event.dwThreadId);
+                        //set_ss(my_trace->last_event.dwThreadId);
                         my_trace->last_win_status = DBG_CONTINUE;
                         return REPORT_CONTINUE;
                         break;
@@ -5153,7 +5153,7 @@ int add_reaction(char* location_str, char* reaction_id)
 //    my_trace->reactions[cur_reaction_id].reaction_id[0x2] = 0x0;
     my_trace->reactions[cur_reaction_id].bp = add_breakpoint(location_str, &my_trace->reactions[cur_reaction_id]);
     my_trace->reactions[cur_reaction_id].bp->enabled = 0x1; /* deprecated, moved to reaction */
-    my_trace->reactions[cur_reaction_id].bp->autorepeat = 0x0; /* needs to be set manually */
+    my_trace->reactions[cur_reaction_id].autorepeat = 0x0; /* needs to be set manually */
     my_trace->reactions[cur_reaction_id].enabled = 0x1;
     my_trace->reactions[cur_reaction_id].exclusive = 0x0;
 //    my_trace->reactions[cur_reaction_id].exclusive = 0x1;
@@ -5534,7 +5534,7 @@ int handle_cmd(char* cmd)
         char line2[MAX_LINE];
 
         my_trace->status = STATUS_DBG_STARTED;
-        my_trace->block_delayed_breakpoint = 1;
+        my_trace->block_delayed_reaction = 1;
         ss_callback((void*)&my_trace->last_event);
         set_ss(0x0);
         d_print("Tracing enabled\n");
