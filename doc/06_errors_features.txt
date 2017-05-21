@@ -520,3 +520,95 @@ Nie, nie bylo chyba dobrze. Kurwa, ale ta konstrukcja jest mylaca.
 Nalezy zrefaktoryzowac kod uzywajac dwoch wskaznikow:
 tid i tindex
 
+--
+
+[x] 063 - rejestrowanie regionu ze zlozona lokalizacja
+
+O kurwa xD Dziala xD
+
+--
+
+[x] 064 - prefix w nazwach map
+
+Zaimplementowano w taint
+
+--
+
+[x] 065 - nie dziala poprawnie out region
+
+Poprawiono zapisywanie size i offset. Na stosie nie za bardzo, bo moze sie pomylic
+
+--
+
+066 - zle wypisuje ostatnie adresy w przypadku, gdy jest wyscig
+
+Chyba naprawiono, ale okaze sie przy analizie xagent
+
+--
+
+[x] 067 - problemy przy wstrzykiwaniu :/
+
+Nie zaczyna wykonywac watku, jakby nie mozna bylo go odblokowac.
+watek ma count, trzeba kilka razy
+
+--
+
+068 - enable reakcji przy rejestrowaniu.
+
+Czystszy kod
+Przeprowadzic testy regresji
+!trzeba bedzie robic disable dla wtornych
+
+--
+
+069 - komendy do zachowania stanu maszyny i odzyskania stanu maszyny
+
+Trzeba bedzie zaimplementowac jakies rozlaczanie agenta i ponowne czekanie na polaczenie po zaladowaniu
+
+--
+
+070 - implementacja uruchomienia i zapiecia serwera IDA
+
+--
+
+[x] 071 - zbieranie i zachowanie logow fuzzera
+
+W ograniczonym zakresie - screenlog.0
+
+--
+
+072 - czasami nastepny jmp wyprzedza poprzedni (74211120, xagent_1_007, 190)
+
+--
+
+073 - dodac jakas warstwe abstrakcji pamieci, zeby nie trzeba bylo sie jebac z tymi wszystkimi zerami
+
+--
+
+[x] 074 - jesli biblioteka jest ladowana kilka razy (np. netapi64.dll), breakpointy przestaja dzialac
+
+--
+
+075 - znow nie dzialaja symbole
+
+Workaround.
+Jesli biblioteka jest przeladowywana, usun niepotrzebne przeladowania
+Docelowo - popraw mechanizm przenoszenia symboli
+
+--
+
+076 - exception w innym watku niz w grafie (xagent_1_017__TID_000006B4)
+
+--
+
+077 - wprowadzic narzedzia analizy pokrycia
+
+Na podstawie snalizy skazen - oznaczyc wykonane, i odczytane bajty.
+Na koniec dla kazdej biblioteki stworzyc: dane o %, bitmape skazenia
+
+--
+
+[x] 078 - zapobieganie podwojnemu dumpowaniu pamieci
+
+Np. jesli ST jest w petli, pierwszy dump nie powinien zostac nadpisany
+

@@ -23,8 +23,8 @@ cat $TARGET_CONFIGS_DIR$TARGET | grep s: | cut -d":" -f2 |
 while read line;
 do
     target_line=$(basename $line)
-    echo "cp -rH $LOCAL_ROOT$line $TARGET_DIR/server/$target_line"
-    cp -rH $LOCAL_ROOT$line $TARGET_DIR/server/$target_line
+    echo "cp -r $LOCAL_ROOT$line $TARGET_DIR/server/$target_line"
+    cp -Lr $LOCAL_ROOT$line $TARGET_DIR/server/$target_line
 done
     
 echo "client"
@@ -32,8 +32,8 @@ cat $TARGET_CONFIGS_DIR$TARGET | grep c: | cut -d":" -f2 |
 while read line;
 do
     target_line=$(basename $line)
-    echo "cp -rH $LOCAL_ROOT$line $TARGET_DIR/client/$target_line"
-    cp -rH $LOCAL_ROOT$line $TARGET_DIR/client/$target_line
+    echo "cp -r $LOCAL_ROOT$line $TARGET_DIR/client/$target_line"
+    cp -Lr $LOCAL_ROOT$line $TARGET_DIR/client/$target_line
 done
 
 echo "settings"
@@ -41,8 +41,8 @@ cat $TARGET_CONFIGS_DIR$TARGET | grep t: | cut -d":" -f2 |
 while read line;
 do
     target_line=$(basename $line)
-    echo "cp -rH $LOCAL_ROOT$line $TARGET_DIR/settings/$target_line"
-    cp -rH $LOCAL_ROOT$line $TARGET_DIR/common/$target_line
+    echo "cp -r $LOCAL_ROOT$line $TARGET_DIR/settings/$target_line"
+    cp -Lr $LOCAL_ROOT$line $TARGET_DIR/common/$target_line
 done
 
 echo "original samples"
@@ -50,8 +50,8 @@ cat $TARGET_CONFIGS_DIR$TARGET | grep o: | cut -d":" -f2 |
 while read line;
 do
     target_line=$(basename $line)
-    echo "cp -rH $LOCAL_ROOT$line $TARGET_DIR/samples/original/$target_line"
-    cp -rH $LOCAL_ROOT$line $TARGET_DIR/samples/original/$target_line
+    echo "cp -r $LOCAL_ROOT$line $TARGET_DIR/samples/original/$target_line"
+    cp -Lr $LOCAL_ROOT$line $TARGET_DIR/samples/original/$target_line
 done
 
 echo "Finished deploying"

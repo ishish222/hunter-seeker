@@ -33,6 +33,21 @@ def spawn_responder(args=80):
     globs.state.ret = response
     return
 
+def next_response_from_file(args=None):
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+    
+    if(args == None):
+        write_socket(options.s, "responder_next_response_from_file %s" % globs.state.ret)
+    else:
+        write_socket(options.s, "responder_next_response_from_file %s" % args)
+
+    response, _, _ = read_socket(options.s)
+
+    globs.state.ret = response
+    return
+
 def next_response(args=None):
     options = globs.state.options
     state = globs.state

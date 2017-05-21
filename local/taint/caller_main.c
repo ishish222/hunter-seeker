@@ -446,6 +446,34 @@ int register_update(char* line, taint_x86* taint_eng)
     return 0x0;
 }
 
+int filter_str(char* str, char unwanted)
+{
+    unsigned i, len;
+
+    len = strlen(str);
+
+    for(i = 0x0; i<len; i++)
+    {
+        if(str[i] == unwanted)
+            str[i] = '_';
+    }
+    return 0x0;
+}
+
+int set_prefix(char* line, taint_x86* taint_eng)
+{
+    char* cmd;
+    char* prefix;
+
+    cmd = strtok(line, ",");
+    prefix = strtok(0x0, "\n");
+
+    printf("Setting prefix to: %s\n", prefix);
+    filter_str(prefix, '\x0d');
+    taint_eng->set_prefix(prefix);
+
+    return 0x0;
+}
 
 int register_security(char* line, taint_x86* taint_eng)
 {
@@ -815,8 +843,12 @@ int main(int argc, char** argv)
                 end_addr = -1;
                 if(optarg[0] == '0' && optarg[1] == 'x')
                     end_addr = strtol(optarg, 0x0, 0x10);
-                else 
+                else
+                { 
                     instr_limit = strtol(optarg, 0x0, 10);
+                    instr_limit *= 1000000;
+                }
+                    
                 break;
             case 'T': 
                 strcpy(dump2_taint_file_path, optarg); 
@@ -1018,6 +1050,9 @@ int main(int argc, char** argv)
             if(line[0] == 'S' && line[1] == 'E')
                 register_security(line, &taint_eng);
             
+            if(line[0] == 'S' && line[1] == 'P')
+                set_prefix(line, &taint_eng);
+
             if(line[0] == 'S' && line[1] == 'Y')
                 register_symbol(line, &taint_eng);
 

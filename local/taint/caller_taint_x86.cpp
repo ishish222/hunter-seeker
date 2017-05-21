@@ -28,6 +28,12 @@
 
 char colors[0x10][0x10] = {"#000000", "#0000FF", "#00FF00", "#FF0000", "#0055AA"};
 
+int taint_x86::set_prefix(char* prefix)
+{
+    strcpy(this->prefix, prefix);
+    return 0x0;
+}
+
 int taint_x86::d_print(int level, const char* format, ...)
 {
     va_list argptr;
@@ -2557,7 +2563,14 @@ int taint_x86::add_thread(CONTEXT_info ctx_info)
 
     if(!this->already_added(ctx_info.thread_id))
     {
-        sprintf(this->ctx_info[this->tid_count].graph_filename, "TID_%08X.mm", ctx_info.thread_id);
+        if(strlen(this->prefix) > 0x1)
+        {
+            sprintf(this->ctx_info[this->tid_count].graph_filename, "%s_TID_%08X.mm", this->prefix, ctx_info.thread_id);
+        }
+        else
+        {
+            sprintf(this->ctx_info[this->tid_count].graph_filename, "TID_%08X.mm", ctx_info.thread_id);
+        }
         d_print(1, "Creating graph file: %s\n", this->ctx_info[this->tid_count].graph_filename);
         this->ctx_info[this->tid_count].graph_file = fopen(this->ctx_info[this->tid_count].graph_filename, "w");
         this->ctx_info[this->tid_count].call_level = (this->max_call_levels/3); // starting at level 1/3 of max_call_levels

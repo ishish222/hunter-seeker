@@ -786,6 +786,11 @@ class TraceController(object):
         self.last_report, self.last_answer = self.recv_report_active()
         return 
 
+    def append_out_prefix(self, filee):
+        self.send_command_active("Ap %s" % filee)
+        self.last_report, self.last_answer = self.recv_report_active()
+        return 
+
     def run_routine(self, number):
         self.send_command_active("Rx %s" % number)
         self.last_report, self.last_answer = self.recv_report_active()
@@ -861,6 +866,16 @@ class TraceController(object):
         self.last_report, self.last_answer = self.recv_report_active()
         return 
 
+    def update_memory_w_zero(self, args):
+        self.send_command_active("UZ %s" % args)
+        self.last_report, self.last_answer = self.recv_report_active()
+        return 
+
+    def update_memory(self, args):
+        self.send_command_active("UM %s" % args)
+        self.last_report, self.last_answer = self.recv_report_active()
+        return 
+
     def write_string_ansi(self, args):
         self.send_command_active("WS %s" % args)
         self.last_report, self.last_answer = self.recv_report_active()
@@ -868,6 +883,11 @@ class TraceController(object):
 
     def write_string_unicode(self, args):
         self.send_command_active("WU %s" % args)
+        self.last_report, self.last_answer = self.recv_report_active()
+        return 
+
+    def read_string_unicode(self, args):
+        self.send_command_active("RU %s" % args)
         self.last_report, self.last_answer = self.recv_report_active()
         return 
 
@@ -893,6 +913,11 @@ class TraceController(object):
 
     def list_tebs(self):
         self.send_command_active("lt")
+        self.last_report, self.last_answer = self.recv_report_active()
+        return 
+
+    def list_ps(self):
+        self.send_command_active("lp")
         self.last_report, self.last_answer = self.recv_report_active()
         return 
 
@@ -929,6 +954,11 @@ class TraceController(object):
 
     def autorepeat_reaction(self, idd):
         self.send_command_active("AR %s" % idd)
+        self.last_report, self.last_answer = self.recv_report_active()
+        return 
+
+    def reaction_counter(self, idd):
+        self.send_command_active("rc %s" % idd)
         self.last_report, self.last_answer = self.recv_report_active()
         return 
 
@@ -989,6 +1019,11 @@ class TraceController(object):
 
     def tracer_release_thread(self, args):
         self.send_command_active("RE %s" % args)
+        self.last_report, self.last_answer = self.recv_report_active()
+        return 
+
+    def tracer_suspend_all_except(self, args):
+        self.send_command_active("sa %s" % args)
         self.last_report, self.last_answer = self.recv_report_active()
         return 
 

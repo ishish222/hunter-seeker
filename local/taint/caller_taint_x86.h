@@ -2477,6 +2477,7 @@ class taint_x86
     LIB_INFO* libs;
     unsigned libs_count;
     char lib_dir_path[MAX_NAME];
+    char prefix[MAX_NAME];
 //    char lib_blacklist[MAX_NAME][MAX_BLACKLIST];
     char* lib_blacklist[MAX_NAME];
     unsigned blacklist_count;
@@ -3034,6 +3035,7 @@ class taint_x86
     int load_mem_from_file(char*);
     int load_instr_from_file(char*);
     int open_lost_file(char*);
+    int set_prefix(char*);
     int open_mod_file(char*);
     int close_files();
     int set_lib_dir_path(char*);

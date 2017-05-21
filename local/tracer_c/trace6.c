@@ -219,6 +219,36 @@ void react_set_CF(void* data)
     return;
 }
 
+void react_set_SF(void* data)
+{
+    d_print("Setting SF\n");
+
+    int i;
+    unsigned id, thread_idx;
+    HANDLE myHandle = (HANDLE)-0x1;
+
+    id = my_trace->last_event.dwThreadId;
+    thread_idx = my_trace->tid2index[id];
+    myHandle = my_trace->threads[thread_idx].handle;
+
+    CONTEXT ctx;
+    ctx.ContextFlags = CONTEXT_CONTROL;
+    if(GetThreadContext(myHandle, &ctx) == 0x0)
+    {
+        d_print("Failed to get context, error: 0x%08x\n", GetLastError());
+    }
+    d_print("before setting: 0x%08x\n", ctx.EFlags);
+    /* zeroing */
+    print_context(&ctx);
+    ctx.EFlags |= SET_SF_FLAGS;
+    d_print("after setting: 0x%08x\n", ctx.EFlags);
+    print_context(&ctx);
+
+    SetThreadContext(myHandle, &ctx);
+
+    return;
+}
+
 void react_set_ZF(void* data)
 {
     d_print("Setting ZF\n");
@@ -457,6 +487,8 @@ void update_region(unsigned id)
 
     off = resolve_loc_desc(region->off);
     size = resolve_loc_desc(region->size);
+
+    d_print("Updating region: 0x%08x:0x%08x\n", off, size);
 
     sprintf(line, "# Current mod position: 0x%08x\n", ftell(my_trace->mods));
     add_to_buffer(line);
@@ -1083,6 +1115,137 @@ void run_routine(unsigned x)
     my_trace->routines[x](0x0);
 }
 
+void update_memory_w_zero(OFFSET addr, char* fname)
+{
+    d_print("Writing memory @ 0x%08x\n", addr);
+    char line[MAX_LINE];
+    char target_fname[MAX_LINE];
+    char* buffer;
+    DWORD read;
+
+    FILE* f;
+    SIZE_T size;
+
+    strcpy(target_fname, my_trace->in_research_dir);
+    strcat(target_fname, "\\");
+    strcat(target_fname, fname);
+
+    d_print("Attempt to open: %s\n", target_fname);
+    f = fopen(target_fname, "rb");
+
+    if(f == 0x0)
+    {
+        d_print("Error opening file %s\n", target_fname);
+    }
+    else
+    {
+        d_print("Successfully opened file %s\n", target_fname);
+    }
+
+    fseek(f, 0L, SEEK_END);
+    size = ftell(f);
+    rewind(f);
+
+    buffer = (char*)malloc(size+1);
+    if(buffer == 0x0)
+    {
+        d_print("Error allocating %08x bytes\n", size);
+    }        
+    
+    d_print("Allocated %08x bytes\n", size);
+    read = fread(buffer, 1, size, f);
+    buffer[size] = 0x0;
+    d_print("Read %08x bytes from file\n", read);
+    
+    fclose(f);
+
+    DWORD wrote;
+
+    d_print("Writing %08x bytes @ 0x%08x\n", size, addr);
+    write_memory(my_trace->cpdi.hProcess, (void*)addr, (void*)buffer, size+1, &wrote);
+    if(wrote == size+1)
+    {
+        d_print("Wrote memory @ 0x%08x\n", addr);
+        sprintf(line, "# Wrote memory @ 0x%08x\n", addr);
+        add_to_buffer(line);
+    }
+    else
+    {
+        d_print("Failed to write memory @ 0x%08x\n", addr);
+        sprintf(line, "# Failed to write memory @ 0x%08x\n", addr);
+        add_to_buffer(line);
+    }
+
+    free(buffer);
+
+    return;
+}
+
+void update_memory(OFFSET addr, char* fname)
+{
+    d_print("Writing memory @ 0x%08x\n", addr);
+    char line[MAX_LINE];
+    char target_fname[MAX_LINE];
+    char* buffer;
+    DWORD read;
+
+    FILE* f;
+    SIZE_T size;
+
+    strcpy(target_fname, my_trace->in_research_dir);
+    strcat(target_fname, "\\");
+    strcat(target_fname, fname);
+
+    d_print("Attempt to open: %s\n", target_fname);
+    f = fopen(target_fname, "rb");
+
+    if(f == 0x0)
+    {
+        d_print("Error opening file %s\n", target_fname);
+    }
+    else
+    {
+        d_print("Successfully opened file %s\n", target_fname);
+    }
+
+    fseek(f, 0L, SEEK_END);
+    size = ftell(f);
+    rewind(f);
+
+    buffer = (char*)malloc(size);
+    if(buffer == 0x0)
+    {
+        d_print("Error allocating %08x bytes\n", size);
+    }        
+    
+    d_print("Allocated %08x bytes\n", size);
+    read = fread(buffer, 1, size, f);
+    d_print("Read %08x bytes from file\n", read);
+    
+    fclose(f);
+
+    DWORD wrote;
+
+    d_print("Writing %08x bytes @ 0x%08x\n", size, addr);
+    write_memory(my_trace->cpdi.hProcess, (void*)addr, (void*)buffer, size, &wrote);
+    if(wrote == size)
+    {
+        d_print("Wrote memory @ 0x%08x\n", addr);
+        sprintf(line, "# Wrote memory @ 0x%08x\n", addr);
+        add_to_buffer(line);
+    }
+    else
+    {
+        d_print("Failed to write memory @ 0x%08x\n", addr);
+        sprintf(line, "# Failed to write memory @ 0x%08x\n", addr);
+        add_to_buffer(line);
+    }
+
+    free(buffer);
+
+    return;
+}
+
 void write_string_ascii(OFFSET addr, char* str)
 {
     d_print("Writing ANSI string to 0x%08x\n", addr);
@@ -1099,6 +1262,29 @@ void write_string_ascii(OFFSET addr, char* str)
     else
     {
         sprintf(line, "# Failed to write ANSI string @ 0x%08x\n", addr);
+        add_to_buffer(line);
+    }
+
+    return;
+}
+
+void read_string_unicode(DWORD addr)
+{
+    char snap[SNAP_SIZE*2];
+    char snap_ascii[SNAP_SIZE];
+    DWORD read;
+    char line[MAX_LINE];
+
+    read_memory(my_trace->cpdi.hProcess, (void*)addr, (void*)snap, SNAP_SIZE*2, &read);
+    if(read > 0x0)
+    {
+        d_print("Read from memory: %ls\n", snap);
+        wcstombs(snap_ascii, (wchar_t*)snap, SNAP_SIZE);
+        strcat(my_trace->report_buffer, snap_ascii);
+    }
+    else
+    {
+        sprintf(line, "# Failed to read unicode string @ 0x%08x\n", addr);
         add_to_buffer(line);
     }
 
@@ -1356,6 +1542,17 @@ int autorepeat_reaction(char* reaction_id)
     return 0x0;
 }
 
+int set_reaction_counter(char* reaction_id, unsigned counter)
+{
+    REACTION* cur_reaction;
+
+    cur_reaction = find_reaction(reaction_id);
+    if(cur_reaction)
+        cur_reaction->counter = counter;
+
+    return 0x0;
+}
+
 int exclusive_reaction(char* reaction_id)
 {
     d_print("[exclusive_reaction]\n");
@@ -1577,6 +1774,11 @@ void write_memory(HANDLE handle, void* to, void* from, SIZE_T size, SIZE_T* writ
     }
 
     VirtualProtectEx(handle, to, size, oldProt, &oldProt);
+}
+
+void apply_memory_file(DWORD addr, char* file)
+{
+    d_print("Writing\n");
 }
 
 int dec_eip(DWORD id)
@@ -1983,6 +2185,7 @@ void register_lib(LOAD_DLL_DEBUG_INFO info)
     add_to_buffer(line);
 #endif
 
+    d_print("[x] Loading lib: %s\n", my_trace->libs[my_trace->lib_count].lib_name);
     my_trace->libs[my_trace->lib_count].loaded = 0x1;
     //update_e_reactions(&my_trace->libs[lib_count]);
 
@@ -2008,7 +2211,9 @@ void deregister_lib(UNLOAD_DLL_DEBUG_INFO info)
 
     for (i = 0x0; i< my_trace->lib_count; i++)
     {
-        if(my_trace->libs[i].lib_offset == (DWORD)info.lpBaseOfDll) break;
+        if(my_trace->libs[i].lib_offset == (DWORD)info.lpBaseOfDll) 
+            if(my_trace->libs[i].loaded)
+                break;
     }
 
     sprintf(line, "DL,0x%08x,%s\n", my_trace->libs[i].lib_offset, my_trace->libs[i].lib_name);
@@ -2017,6 +2222,11 @@ void deregister_lib(UNLOAD_DLL_DEBUG_INFO info)
     //d_print(line);
     //d_print("\n");
     add_to_buffer(line);
+    d_print("[x] Unloading lib: %s\n", my_trace->libs[i].lib_name);
+    for(i = 0x0; i<my_trace->bpt_count; i++)
+    {
+        update_breakpoint(&my_trace->breakpoints[i]);
+    }
 
     return;
 }
@@ -2809,6 +3019,12 @@ void dump_memory()
     SIZE_T addr;
     SIZE_T read;
 
+    if(my_trace->mem_dumped)
+    {
+        d_print("Memory dump already made, ignoring\n");
+        return; 
+    }
+
     d_print("Dumping mem start\n");
 #ifdef MEM_DUMP
     my_trace->dump = fopen(my_trace->out_dump, "wb");
@@ -2840,6 +3056,7 @@ void dump_memory()
     char line[MAX_LINE];
     sprintf(line, "LM,%s.dump\n", my_trace->out_prefix);
     add_to_buffer(line);
+    my_trace->mem_dumped = 1;
 }
 
 void dump_contexts()
@@ -3046,15 +3263,24 @@ int handle_reaction(REACTION* cur_reaction, void* data)
         }
         else
         {
-            /* routine is non-zero, we need to handle */
-            if(cur_reaction->routine_ids[k] < 0x300)
-            if(cur_reaction->routine_ids[k] > 0x100)
+            /* check counters */
+            if(cur_reaction->counter == 0x0)
             {
-                d_print("ER_3 TID: 0x%08x, Executing routine 0x%08x @ %d\n", tid, cur_reaction->routine_ids[k], my_trace->instr_count);
-                sprintf(line, "OU,0x%x,0x%08x Routine 0x%08x\n", my_trace->last_tid, my_trace->last_eip, cur_reaction->routine_ids[k]);
-                add_to_buffer(line);
+                /* routine is non-zero, we need to handle */
+                if(cur_reaction->routine_ids[k] < 0x300)
+                if(cur_reaction->routine_ids[k] > 0x100)
+                {
+                    d_print("ER_3 TID: 0x%08x, Executing routine 0x%08x @ %d\n", tid, cur_reaction->routine_ids[k], my_trace->instr_count);
+                    sprintf(line, "OU,0x%x,0x%08x Routine 0x%08x\n", my_trace->last_tid, my_trace->last_eip, cur_reaction->routine_ids[k]);
+                    add_to_buffer(line);
+                }
+                my_trace->routines[cur_reaction->routine_ids[k]](data);
             }
-            my_trace->routines[cur_reaction->routine_ids[k]](data);
+            else
+            {
+                d_print("ER_8: counter: 0x%02x, decreasing\n", cur_reaction->counter);
+                cur_reaction->counter--;
+            }
         }
     }
 
@@ -3320,7 +3546,7 @@ int unpaint(char* area, unsigned len)
             if(active)      area[i]-=3;
         }
 
-        printf("%c", area[i]);
+//        printf("%c", area[i]);
 //
     }
 //    printf("\n");
@@ -3539,15 +3765,21 @@ int update_breakpoint(BREAKPOINT* bp)
     DWORD ret;
     OFFSET addr;
 //    d_print("Trying to resolve BP addr\n");
-    bp->resolved_location = addr = resolve_loc_desc(bp->location);
+    addr = resolve_loc_desc(bp->location);
+
 
     if(addr == -1)
     {
 //        d_print("Unable to resolve BP address, will not be updated at this time\n");
+        if(bp->written)
+            unwrite_breakpoint(bp);
+        bp->resolved_location = -1;
         return 0x0;
     }
     else
     {
+        bp->resolved_location = addr;
+
         if(bp->enabled)
         {
             if(!bp->written)
@@ -3671,9 +3903,11 @@ void start_trace_pid()
     d_print("Attaching debugger\n");
 
     if(DebugActiveProcess(my_trace->in_sample_pid) != 0x0)
-        d_print("Successfully attached to PID: 0x%x, handle: 0x%x\n", my_trace->in_sample_pid);
+        d_print("Successfully attached to PID: 0x%x\n", my_trace->in_sample_pid);
     else 
-        d_print("Attach failed\n");
+        d_print("Attach failed. Last error: 0x%08x\n", GetLastError());
+
+    my_trace->PID = my_trace->in_sample_pid;
 }
 
 DWORD find_lib(char* name)
@@ -3698,10 +3932,16 @@ DWORD find_lib(char* name)
             libname[j] = tolower(libname[j]);
         }
 
-        if(strstr(libname, myname))
+        /*if(strstr(libname, myname))*/
+        if((strstr(libname, myname)))
         {
-            ret = my_trace->libs[i].lib_offset;
-            break;
+            d_print("%s found\n", libname);
+            if(my_trace->libs[i].loaded == 1)
+            {
+                d_print("Is loaded, returning\n");
+                ret = my_trace->libs[i].lib_offset;
+                break;
+            }
         }
     }
     return ret;
@@ -3859,6 +4099,40 @@ int list_libs()
 
 int list_tebs()
 {
+    char buffer2[MAX_LINE];
+
+    HANDLE hThreadSnap = INVALID_HANDLE_VALUE; 
+    THREADENTRY32 te32; 
+ 
+    hThreadSnap = CreateToolhelp32Snapshot( TH32CS_SNAPTHREAD, 0 ); 
+    if( hThreadSnap == INVALID_HANDLE_VALUE ) 
+        return( FALSE ); 
+ 
+    te32.dwSize = sizeof(THREADENTRY32 ); 
+ 
+    if( !Thread32First( hThreadSnap, &te32 ) ) 
+    {
+        d_print("Thread32First");
+        CloseHandle( hThreadSnap );
+        return( FALSE );
+    }
+
+    sprintf(buffer2, "TID \t\tBasePri \tFlags\n");
+    strcat(my_trace->report_buffer, buffer2);
+    do 
+    { 
+        if(te32.th32OwnerProcessID != my_trace->PID)
+            continue;
+        sprintf(buffer2, "0x%08x \t0x%08x \t0x%08x\n", te32.th32ThreadID, te32.tpBasePri, te32.dwFlags);
+        strcat(my_trace->report_buffer, buffer2);
+    } while( Thread32Next(hThreadSnap, &te32 ) );
+
+    CloseHandle( hThreadSnap );
+    return 0x0;
+}
+
+int list_registered_tebs()
+{
     d_print("Listings TEBs\n");
     unsigned i;
     char buffer2[MAX_LINE];
@@ -3910,6 +4184,38 @@ int write_context(DWORD tid, CONTEXT* ctx)
     return 0x0;
 }
 
+int list_ps()
+{
+    char buffer2[MAX_LINE];
+
+    HANDLE hProcessSnap;
+    HANDLE hProcess;
+    PROCESSENTRY32 pe32;
+
+    hProcessSnap = CreateToolhelp32Snapshot( TH32CS_SNAPPROCESS, 0 ); 
+    if( hProcessSnap == INVALID_HANDLE_VALUE ) 
+        return( FALSE ); 
+ 
+    pe32.dwSize = sizeof( PROCESSENTRY32 );
+ 
+    if( !Process32First( hProcessSnap, &pe32 ) )
+    {
+        d_print("Process32First");
+        CloseHandle( hProcessSnap );          // clean the snapshot object
+        return( FALSE );
+    }
+
+    do 
+    { 
+        sprintf(buffer2, "0x%08x - %s\n", pe32.th32ProcessID, pe32.szExeFile);
+        d_print("0x%08x\n", pe32.th32ProcessID);
+        strcat(my_trace->report_buffer, buffer2);
+    } while( Process32Next(hProcessSnap, &pe32 ) );
+
+    CloseHandle( hProcessSnap );
+    return 0x0;
+}
+
 int list_all_tebs()
 {
     char buffer2[MAX_LINE];
@@ -3937,6 +4243,71 @@ int list_all_tebs()
     } while( Thread32Next(hThreadSnap, &te32 ) );
 
     CloseHandle( hThreadSnap );
+    return 0x0;
+}
+
+int suspend_thread(DWORD tid);
+
+int suspend_all_except(DWORD tid)
+{
+    char buffer2[MAX_LINE];
+
+    HANDLE hThreadSnap = INVALID_HANDLE_VALUE; 
+    THREADENTRY32 te32; 
+ 
+    hThreadSnap = CreateToolhelp32Snapshot( TH32CS_SNAPTHREAD, 0 ); 
+    if( hThreadSnap == INVALID_HANDLE_VALUE ) 
+        return( FALSE ); 
+ 
+    te32.dwSize = sizeof(THREADENTRY32 ); 
+ 
+    if( !Thread32First( hThreadSnap, &te32 ) ) 
+    {
+        d_print("Thread32First");
+        CloseHandle( hThreadSnap );
+        return( FALSE );
+    }
+
+    do 
+    { 
+        if(te32.th32OwnerProcessID != my_trace->PID)
+            continue;
+        if(te32.th32ThreadID == tid)
+            continue;
+
+        sprintf(buffer2, "Suspending: 0x%08x\n", te32.th32ThreadID);
+        strcat(my_trace->report_buffer, buffer2);
+        suspend_thread(te32.th32ThreadID);
+    } while( Thread32Next(hThreadSnap, &te32 ) );
+
+    CloseHandle( hThreadSnap );
+
+    return 0x0;
+}
+
+int suspend_thread(DWORD tid)
+{
+    HANDLE myHandle = (HANDLE)-0x1;
+    DWORD tid_id;
+    char buffer2[MAX_LINE];
+
+    d_print("Trying relese TID: 0x%08x\n", tid);
+
+    if((myHandle = OpenThread(THREAD_SUSPEND_RESUME, 0x0, tid)) == 0x0)
+    {
+        d_print("Failed to open thread, error: 0x%08x\n", GetLastError());
+        sprintf(buffer2, "Error: 0x%08x\n", GetLastError());
+        strcpy(my_trace->report_buffer, buffer2);
+    }
+
+
+    if(SuspendThread(myHandle) == -1)
+    {
+        d_print("Failed to suspend thread, error: 0x%08x\n", GetLastError());
+        sprintf(buffer2, "Error: 0x%08x\n", GetLastError());
+        strcpy(my_trace->report_buffer, buffer2);
+    }
+
     return 0x0;
 }
 
@@ -4471,7 +4842,7 @@ DWORD read_register(DWORD tid_id, char* reg)
     {
         return ctx.Esp;
     }
-    if(!strcmp(reg, "Eip"))
+    if(!strcmp(reg, "EIP"))
     {
         return ctx.Eip;
     }
@@ -4640,6 +5011,7 @@ int process_last_event()
             case EXCEPTION_DEBUG_EVENT:
                 status = DBG_EXCEPTION_NOT_HANDLED;
                 my_trace->last_exception = my_trace->last_event.u.Exception.ExceptionRecord;
+                my_trace->last_eip = (DWORD)my_trace->last_exception.ExceptionAddress;
 
                 switch(my_trace->last_exception.ExceptionCode)
                 {
@@ -4716,7 +5088,8 @@ int process_last_event()
                 for(i = 0x0; i<my_trace->bpt_count; i++)
                 {
                     d_print("bp: %s, resolved_location: 0x%08x\n", my_trace->breakpoints[i].location_str, my_trace->breakpoints[i].resolved_location);
-                    if(my_trace->breakpoints[i].resolved_location == -1)
+                    /*if(my_trace->breakpoints[i].resolved_location == -1)*/
+                    if(1)
                     {
                         update_breakpoint(&my_trace->breakpoints[i]);
                     }
@@ -5156,6 +5529,7 @@ int add_reaction(char* location_str, char* reaction_id)
     my_trace->reactions[cur_reaction_id].autorepeat = 0x0; /* needs to be set manually */
     my_trace->reactions[cur_reaction_id].enabled = 0x1;
     my_trace->reactions[cur_reaction_id].exclusive = 0x0;
+    my_trace->reactions[cur_reaction_id].counter = 0x0;
 //    my_trace->reactions[cur_reaction_id].exclusive = 0x1;
 
     //my_trace->reactions[cur_reaction_id].routine_id = rid;
@@ -5163,6 +5537,7 @@ int add_reaction(char* location_str, char* reaction_id)
     d_print("New reaction: %s:%s\n", location_str, my_trace->reactions[cur_reaction_id].reaction_id);
     my_trace->reaction_count ++;
 
+    //enable_reaction(reaction_id);
     d_print("[add_reaction ends]\n");
     return 0x0;
 }
@@ -5423,10 +5798,21 @@ int handle_cmd(char* cmd)
         d_print("Out dir set to: %s\n", my_trace->out_dir);
         send_report();
     }
+    else if(!strncmp(cmd, CMD_APP_OUT_PREFIX, 2))
+    {
+        char line[MAX_NAME];
+        strcat(my_trace->out_prefix, "_");
+        strcat(my_trace->out_prefix, cmd+3);
+        d_print("Out prefix set to: %s\n", my_trace->out_prefix);
+        /* information on prefix */
+        send_report();
+    }
     else if(!strncmp(cmd, CMD_SET_OUT_PREFIX, 2))
     {
+        char line[MAX_NAME];
         strcpy(my_trace->out_prefix, cmd+3);
         d_print("Out prefix set to: %s\n", my_trace->out_prefix);
+        /* information on prefix */
         send_report();
     }
     else if(!strncmp(cmd, CMD_SET_PARAMETERS, 2))
@@ -5483,10 +5869,12 @@ int handle_cmd(char* cmd)
         }
 
         /* TODO: make it nicer */
+        /*
         if(my_trace->in_sample_pid != 0x0)
         {
             sprintf(my_trace->out_prefix, "%08x", my_trace->in_sample_pid);
         }
+        */
 
         /* configure out paths */
         /* trace */ 
@@ -5517,6 +5905,10 @@ int handle_cmd(char* cmd)
         /* write informaction on mod file */
         char line[MAX_LINE];
         sprintf(line, "OM,%s.mod\n", my_trace->out_prefix);
+        add_to_buffer(line);
+
+        /* information on prefix */
+        sprintf(line, "SP,%s\n", my_trace->out_prefix);
         add_to_buffer(line);
 
         /* ini */ 
@@ -5691,6 +6083,21 @@ int handle_cmd(char* cmd)
 
         send_report();
     }
+    else if(!strncmp(cmd, CMD_REACTION_COUNTER, 2))
+    {
+        char* mod;
+        char reaction_id[MAX_LINE];
+        unsigned counter;
+
+        mod = strtok(cmd, " ");
+        strcpy(reaction_id, strtok(0x0, " "));
+        counter = strtoul(strtok(0x0, " "), 0x0, 0x10);
+        
+        d_print("Setting reaction %s counter to %d\n", reaction_id, counter);
+        set_reaction_counter(reaction_id, counter);
+
+        send_report();
+    }
     else if(!strncmp(cmd, CMD_ROUTINE_x, 2))
     {
         unsigned argno;
@@ -5752,6 +6159,12 @@ int handle_cmd(char* cmd)
 
         report_arg_unicode_string_x(argno+1);
         send_report();   
+    }
+    else if(!strncmp(cmd, CMD_LIST_PS, 2))
+    {
+        list_ps();
+        send_report();   
+    
     }
     else if(!strncmp(cmd, CMD_LIST_TEBS, 2))
     {
@@ -5829,6 +6242,38 @@ int handle_cmd(char* cmd)
         send_report();   
     
     }
+    else if(!strncmp(cmd, CMD_UPDATE_MEMORY_W_ZERO, 2))
+    {
+        char* cmd_;
+        DWORD addr;
+        char* fname;
+
+        cmd_ = strtok(cmd, " ");
+        addr = strtoul(strtok(0x0, " "), 0x0, 0x10);
+        fname = strtok(0x0, ";");
+
+        d_print("Updating memory from file: %s @ 0x%08x\n", fname, addr);
+
+        update_memory_w_zero(addr, fname);
+        send_report();   
+    
+    }
+    else if(!strncmp(cmd, CMD_UPDATE_MEMORY, 2))
+    {
+        char* cmd_;
+        DWORD addr;
+        char* fname;
+
+        cmd_ = strtok(cmd, " ");
+        addr = strtoul(strtok(0x0, " "), 0x0, 0x10);
+        fname = strtok(0x0, ";");
+
+        d_print("Updating memory from file: %s @ 0x%08x\n", fname, addr);
+
+        update_memory(addr, fname);
+        send_report();   
+    
+    }
     else if(!strncmp(cmd, CMD_WRITE_STRING, 2))
     {
         char* cmd_;
@@ -5845,6 +6290,20 @@ int handle_cmd(char* cmd)
         send_report();   
     
     }
+    else if(!strncmp(cmd, CMD_READ_STRING_UNI, 2))
+    {
+        char* cmd_;
+        DWORD addr;
+        char* str;
+
+        cmd_ = strtok(cmd, " ");
+        addr = strtoul(strtok(0x0, " "), 0x0, 0x10);
+
+        d_print("Reading str: @ 0x%08x\n", addr);
+
+        read_string_unicode(addr);
+        send_report();   
+    }
     else if(!strncmp(cmd, CMD_WRITE_STRING_UNI, 2))
     {
         char* cmd_;
@@ -5858,6 +6317,22 @@ int handle_cmd(char* cmd)
         d_print("Writing str: %s @ 0x%08x\n", str, addr);
 
         write_string_unicode(addr, str);
+        send_report();   
+    
+    }
+    else if(!strncmp(cmd, CMD_APPLY_MEMORY_FILE, 2))
+    {
+        char* cmd_;
+        DWORD addr;
+        char* fname;
+
+        cmd_ = strtok(cmd, " ");
+        addr = strtoul(strtok(0x0, " "), 0x0, 0x10);
+        fname = strtok(0x0, " ");
+
+        d_print("Applying memory file %s at addr: 0x%08x\n", fname, addr);
+
+        apply_memory_file(addr, fname);
         send_report();   
     
     }
@@ -5886,6 +6361,18 @@ int handle_cmd(char* cmd)
         tid_id = strtoul(strtok(0x0, " "), 0x0, 0x10);
 
         release_thread(tid_id);
+        send_report();   
+    
+    }
+    else if(!strncmp(cmd, CMD_SUSPEND_ALL_EXCEPT, 2))
+    {
+        unsigned tid_id;
+        char* reg;
+
+        reg = strtok(cmd, " ");
+        tid_id = strtoul(strtok(0x0, " "), 0x0, 0x10);
+
+        suspend_all_except(tid_id);
         send_report();   
     
     }
@@ -6447,6 +6934,7 @@ int main(int argc, char** argv)
     my_trace->routines[0x107] = &react_flip_SF;
     my_trace->routines[0x108] = &react_zero_CF;
     my_trace->routines[0x109] = &react_set_CF;
+    my_trace->routines[0x10a] = &react_set_SF;
 
     my_trace->routines[0x201] = &react_update_region_1;
     my_trace->routines[0x202] = &react_cry_antidebug_1;

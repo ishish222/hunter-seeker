@@ -120,6 +120,7 @@
 #define CMD_SET_IN_DIRECTORY    "SD"
 #define CMD_SET_OUT_DIRECTORY   "Sd"
 #define CMD_SET_OUT_PREFIX      "Sp"
+#define CMD_APP_OUT_PREFIX      "Ap"
 #define CMD_SET_PARAMETERS      "SP"
 #define CMD_READ_PREFIX         "Rp"
 #define CMD_PREPARE_TRACE       "PT"
@@ -127,6 +128,7 @@
 #define CMD_SET_E_REACTION_2        "M2"
 #define CMD_START_DEBUG         "sd"
 #define CMD_ATTACH_DEBUG        "ad"
+#define CMD_LIST_PS             "lp"
 #define CMD_LIST_TEBS           "lt"
 #define CMD_LIST_ALL_TEBS       "la"
 #define CMD_LIST_LIBS           "ll"
@@ -140,6 +142,7 @@
 #define CMD_WRITE_REGISTER      "WR"
 #define CMD_WRITE_STRING        "WS"
 #define CMD_WRITE_STRING_UNI    "WU"
+#define CMD_READ_STRING_UNI     "RU"
 #define CMD_READ_STACK          "RS"
 #define CMD_CONTINUE            "cn"
 #define CMD_CONTINUE_TIME       "cN"
@@ -152,12 +155,15 @@
 #define CMD_ENABLE_DBG_LIGHT    "EL"
 #define CMD_DISABLE_TRACE       "DT"
 #define CMD_DUMP_MEMORY         "DM"
+#define CMD_UPDATE_MEMORY       "UM"
+#define CMD_UPDATE_MEMORY_W_ZERO       "UZ"
 #define CMD_CONFIGURE_REGIONS   "cr"
 #define CMD_CONFIGURE_REACTIONS "cR"
 #define CMD_ENABLE_REACTION     "eR"
 #define CMD_EXCLUSIVE_REACTION  "ER"
 #define CMD_RAISE_REACTION      "rR"
 #define CMD_LOWER_REACTION      "lR"
+#define CMD_REACTION_COUNTER    "rc"
 #define CMD_NONEXCLUSIVE_REACTION  "NR"
 #define CMD_DISABLE_REACTION    "dR"
 #define CMD_ENABLE_ALL_REACTIONS "eA"
@@ -165,12 +171,14 @@
 #define CMD_AUTO_ST             "AS"
 #define CMD_SET_ST             "SS"
 #define CMD_RELEASE_THREAD      "RE"
+#define CMD_SUSPEND_ALL_EXCEPT  "sa"
 #define CMD_READ_ARG            "ra"
 #define CMD_READ_ARG_ANSI       "rs"
 #define CMD_READ_ARG_UNICODE    "ru"
 #define CMD_SECURE_ALL_SECTIONS "ss"
 #define CMD_PRINT               "PR"
 #define CMD_AUTOREPEAT_REACTION "AR"
+#define CMD_APPLY_MEMORY_FILE   "AF"
 
 #define CMD_ROUTINE_1           "R1"
 #define CMD_ROUTINE_2           "R2"
@@ -230,6 +238,8 @@ typedef struct REACTION_
     BREAKPOINT* bp;
     char autorepeat;
     unsigned bps_count;
+    unsigned counter;
+
 } REACTION;
 
 
@@ -332,6 +342,7 @@ typedef struct TRACE_CONFIG_
 
     /* with this */
     char status;
+    char mem_dumped;
 
     /* counters */
     unsigned long long instr_count;

@@ -550,19 +550,19 @@ def save_offset(args = None):
     if(args == None):
         globs.state.offset = globs.state.ret
     else:
-        globs.state.offset = args
+        globs.state.size = int(args, 0x10)
 
 def save_size(args = None):
     if(args == None):
         globs.state.size = globs.state.ret
     else:
-        globs.state.size = args
+        globs.state.size = int(args, 0x10)
 
 def save_ep(args = None):
     if(args == None):
         globs.state.ep = globs.state.ret
     else:
-        globs.state.ep = args
+        globs.state.ep = int(args, 0x10)
 
 def write_last_suspension(args = None):
     globs.state.last_suspension = globs.state.ret
