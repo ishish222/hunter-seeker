@@ -1726,7 +1726,7 @@ def executing_thread():
         cmds = cmd_q2.pop()
         try:
             execute(cmds, ext_pipe)
-        except Exception:
+        except Interrupt:
             print 'Interrupted'
         print 'Executed: %s\n' % cmds
 
@@ -1740,7 +1740,7 @@ def executing_no_thread():
     cmds = cmd_q2.pop()
     try:
         execute(cmds, ext_pipe)
-    except Exception:
+    except Interrupt:
         print 'Interrupted'
     print 'Executed: %s\n' % cmds
 
