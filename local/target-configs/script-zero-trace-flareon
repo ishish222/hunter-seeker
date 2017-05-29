@@ -26,3 +26,4 @@ s:binners/Tracer.py
 s:binners/mutex_2.py
 s:binners/pefile.py
 s:responder/simple.py
+s:responder/mailslot_client.py

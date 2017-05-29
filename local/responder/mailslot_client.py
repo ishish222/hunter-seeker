@@ -34,7 +34,7 @@ class mailslot_client(object):
         self.handle = ret
 
     def send_mail(self):
-        ret = WriteFile(hSlot, self.next_response, strlen(self.next_response)+1, 0x0, 0x0); 
+        ret = win32file.WriteFile(self.handle, self.next_response); 
         if(ret == 0x0):
             print "Mailslot client failed to send\n" 
             self.logf.write("Mailslot client failed to send\n")
