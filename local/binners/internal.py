@@ -107,7 +107,7 @@ def dlog(data, level=0):
         return
 
     if(logStarted == False):
-        return
+        print("[internal]: %s" % data)
     logf.write("[internal]: %s" % data)
 
 def verify():
@@ -1715,7 +1715,7 @@ def executing(cmd_q, ext_pipe):
         execute(cmds, ext_pipe)
         print 'Executed: %s\n' % cmds
 
-def executing2():
+def executing_thread():
     import time
     global cmd_q2
 
@@ -1730,6 +1730,22 @@ def executing2():
             print 'Interrupted'
         print 'Executed: %s\n' % cmds
 
+def executing_no_thread():
+    import time
+    global cmd_q2
+
+    if(len(cmd_q2) == 0):
+        time.sleep(1)
+        return
+    cmds = cmd_q2.pop()
+    try:
+        execute(cmds, ext_pipe)
+    except Exception:
+        print 'Interrupted'
+    print 'Executed: %s\n' % cmds
+
+
+threading_enabled = True
 
 def internal_routine():
     global ext_pipe
@@ -1759,26 +1775,34 @@ Hunter-Seeker
     writePipe(ext_pipe, 'Ext_pipe connected')
     ok(ext_pipe)
 
-#    p = Process(target=executing, args=(cmd_q, ext_pipe))
-    p = ThreadWithExc(None, executing2)
-    p.start()
+    if(threading_enabled):
+        p = ThreadWithExc(None, executing_thread)
+        p.start()
 
-    
-    while True:
-        print 'Reading...\n'
-        cmd = readPipe(ext_pipe)
-        if(cmd == 'interrupt'):
-#            p.terminate()
-            p.raiseExc(Interrupt)
-            p = ThreadWithExc(None, executing2)
-            p.start()
-            print 'Interrupted'
-            ok(ext_pipe)
-            continue
-        cmds = cmd.split(" ")
-#        cmd_q.put(cmds)
-        cmd_q2.insert(0, cmds)
-        print 'Inserted: %s\n' % cmds
+        while True:
+            print 'Reading...\n'
+            cmd = readPipe(ext_pipe)
+            if(cmd == 'interrupt'):
+    #            p.terminate()
+                p.raiseExc(Interrupt)
+                p = ThreadWithExc(None, executing_thread)
+                p.start()
+                print 'Interrupted'
+                ok(ext_pipe)
+                continue
+            cmds = cmd.split(" ")
+    #        cmd_q.put(cmds)
+            cmd_q2.insert(0, cmds)
+            print 'Inserted: %s\n' % cmds
+    else:
+        while True:
+            print 'Reading...\n'
+            cmd = readPipe(ext_pipe)
+            cmds = cmd.split(" ")
+            cmd_q2.insert(0, cmds)
+            print 'Inserted: %s\n' % cmds
+            executing_no_thread()
+
 
 if __name__ == '__main__':
     internal_routine()

@@ -629,3 +629,12 @@ Kiedy oparte na ret, kiedy oparte na stosie
 --
 
 081 - ogarnac odczytywanie lancuchow
+
+--
+
+[x] 082 - wylaczanie watkowania komend za pomoca jednej zmiennej
+
+Tak, by zmian w kodzie nie trzeba bylo replikowac w innym pliku
+Zalatwione, ale to rzczej nie stanowi problemu
+Wypisywanie na ekran dziala rowniez z watkowaniem, trzeba tylko zmienic ustawienie w skrypcie
+
