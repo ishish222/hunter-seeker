@@ -819,7 +819,7 @@ int main(int argc, char** argv)
 
     /* started parsing args and preparing params */
 
-    while ((opt = getopt(argc, argv, "M:i:d:s:e:T:l:m:b:t:w:h:D:I")) != -1) 
+    while ((opt = getopt(argc, argv, "M:i:d:s:E:e:T:l:m:b:t:w:h:D:I")) != -1) 
     {
         switch (opt) 
         {
@@ -839,7 +839,7 @@ int main(int argc, char** argv)
                     start_instr = strtol(optarg, 0x0, 10);
                 printf("start_addr: 0x%08x, start_instr: %d\n", start_addr, start_instr);
                 break;
-            case 'e': 
+            case 'E': 
                 end_addr = -1;
                 if(optarg[0] == '0' && optarg[1] == 'x')
                     end_addr = strtol(optarg, 0x0, 0x10);
@@ -847,6 +847,16 @@ int main(int argc, char** argv)
                 { 
                     instr_limit = strtol(optarg, 0x0, 10);
                     instr_limit *= 1000000;
+                }
+                    
+                break;
+            case 'e': 
+                end_addr = -1;
+                if(optarg[0] == '0' && optarg[1] == 'x')
+                    end_addr = strtol(optarg, 0x0, 0x10);
+                else
+                { 
+                    instr_limit = strtol(optarg, 0x0, 10);
                 }
                     
                 break;
