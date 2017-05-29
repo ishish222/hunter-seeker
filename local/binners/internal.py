@@ -177,6 +177,7 @@ def execute(cmds, ext_pipe):
     global status
     global trace_controller
     global responder
+    global mailslot_client
 
     cmd = cmds[0]
     args = " ".join(cmds[1:])
@@ -1378,6 +1379,13 @@ def execute(cmds, ext_pipe):
             writePipe(ext_pipe, "tracer_string_ansi OK")
             ok(ext_pipe)
 
+        elif(cmd == "tracer_read_string_ansi"):
+            trace_controller.read_string_ansi(args)
+            writePipe(ext_pipe, "%s" % trace_controller.last_answer)
+            writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
+            writePipe(ext_pipe, "tracer_read_string_ansi OK")
+            ok(ext_pipe)
+
         elif(cmd == "tracer_write_string_ansi"):
             trace_controller.write_string_ansi(args)
             writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
@@ -1553,6 +1561,17 @@ def execute(cmds, ext_pipe):
         elif(cmd == "responder_next_response"):
             responder.load_next_response(args)
             writePipe(ext_pipe, "responder_next_response OK")
+            ok(ext_pipe)
+
+        elif(cmd == "spawn_mailslot_client"):
+            from mailslot_client import mailslot_client
+            mailslot_client = mailslot_client(args)
+            writePipe(ext_pipe, "spawn_mailslot_client OK")
+            ok(ext_pipe)
+
+        elif(cmd == "mailslot_next_response"):
+            mailslot_client.load_next_response(args)
+            writePipe(ext_pipe, "mailslot_next_response OK")
             ok(ext_pipe)
 
         elif(cmd == "spawn_tracer"):

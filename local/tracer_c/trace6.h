@@ -142,6 +142,7 @@
 #define CMD_WRITE_REGISTER      "WR"
 #define CMD_WRITE_STRING        "WS"
 #define CMD_WRITE_STRING_UNI    "WU"
+#define CMD_READ_STRING_ASCII   "RA"
 #define CMD_READ_STRING_UNI     "RU"
 #define CMD_READ_STACK          "RS"
 #define CMD_CONTINUE            "cn"

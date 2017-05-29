@@ -886,6 +886,11 @@ class TraceController(object):
         self.last_report, self.last_answer = self.recv_report_active()
         return 
 
+    def read_string_ansi(self, args):
+        self.send_command_active("RA %s" % args)
+        self.last_report, self.last_answer = self.recv_report_active()
+        return 
+
     def read_string_unicode(self, args):
         self.send_command_active("RU %s" % args)
         self.last_report, self.last_answer = self.recv_report_active()

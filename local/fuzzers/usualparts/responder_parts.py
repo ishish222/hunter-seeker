@@ -11,6 +11,35 @@ report = common.report
 write_socket = common.write_socket
 read_socket = common.read_socket
 
+def spawn_mailslot_client(args=None):
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+
+    if(args == None):
+        args = globs.state.ret
+    
+    write_socket(options.s, "spawn_mailslot_client %s" % args)
+    response, _, _ = read_socket(options.s)
+
+    globs.state.ret = response
+    return
+
+def mailslot_next_response(args=None):
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+    
+    if(args == None):
+        write_socket(options.s, "mailslot_next_response %s" % globs.state.ret)
+    else:
+        write_socket(options.s, "mailslot_next_response %s" % args)
+
+    response, _, _ = read_socket(options.s)
+
+    globs.state.ret = response
+    return
+
 def spawn_responder_80(args=None):
     options = globs.state.options
     state = globs.state

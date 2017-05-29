@@ -226,6 +226,30 @@ def tracer_run_routine(args=None):
     write_socket(options.s, "tracer_run_routine %s" % args);
     response, _, _ = read_socket(options.s)
 
+def read_ansi(args=None):
+    options = globs.state.options
+    
+    if(args == None):
+        addr = globs.state.ret
+    else:
+        addr = args
+
+    write_socket(options.s, "tracer_read_string_ansi 0x%08x" % addr)
+    response, _, _ = read_socket(options.s)
+    globs.state.ret = response[3:]
+
+def read_unicode(args=None):
+    options = globs.state.options
+    
+    if(args == None):
+        addr = globs.state.ret
+    else:
+        addr = args
+
+    write_socket(options.s, "tracer_read_string_unicode 0x%08x" % addr)
+    response, _, _ = read_socket(options.s)
+    globs.state.ret = response[3:]
+
 def write_ansi(args=None):
     options = globs.state.options
     
@@ -899,7 +923,7 @@ def tracer_read_register(args="EIP"):
     response, _, _ = read_socket(options.s)
 
     globs.state.stack.append(int(response[3:11], 0x10))
-    globs.state.ret = response
+    globs.state.ret = int(response[3:11], 0x10)
 
     return
 

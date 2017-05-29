@@ -1268,6 +1268,30 @@ void write_string_ascii(OFFSET addr, char* str)
     return;
 }
 
+void read_string_ascii(DWORD addr)
+{
+    char snap[SNAP_SIZE];
+    DWORD read;
+    char line[MAX_LINE];
+
+    sprintf(line, "Attempt to read: handle: 0x%08x, addr: 0x%08x, snap: 0x%08x, size: 0x%08x, read: 0x%08x\n", my_trace->cpdi.hProcess, addr, snap, SNAP_SIZE, read);
+    read_memory(my_trace->cpdi.hProcess, (void*)addr, (void*)snap, SNAP_SIZE, &read);
+    if(read > 0x0)
+    {
+        d_print("Read from memory: %s\n", snap);
+        strcat(my_trace->report_buffer, snap);
+    }
+    else
+    {
+        strcat(my_trace->report_buffer, line);
+        sprintf(line, "# Failed to read ascii string @ 0x%08x\n", addr);
+        strcat(my_trace->report_buffer, line);
+        add_to_buffer(line);
+    }
+
+    return;
+}
+
 void read_string_unicode(DWORD addr)
 {
     char snap[SNAP_SIZE*2];
@@ -4351,6 +4375,7 @@ int read_context(DWORD tid, CONTEXT* ctx)
     tid_id = my_trace->tid2index[tid];
     myHandle = my_trace->threads[tid_id].handle;
 
+    //myHandle = OpenThread(THREAD_GET_CONTEXT |THREAD_SET_CONTEXT | THREAD_ALL_ACCESS, 0x0, tid);
     d_print("Trying to get context of TID: 0x%08x, index: 0x%08x, handle: 0x%08x\n", tid, tid_id, myHandle);
 
     ctx->ContextFlags = CONTEXT_FULL;
@@ -4360,6 +4385,7 @@ int read_context(DWORD tid, CONTEXT* ctx)
         sprintf(buffer2, "Error: 0x%08x\n", GetLastError());
         strcpy(my_trace->report_buffer, buffer2);
     }
+    //CloseHandle(myHandle);
 
     return 0x0;
 }
@@ -6289,6 +6315,20 @@ int handle_cmd(char* cmd)
         write_string_ascii(addr, str);
         send_report();   
     
+    }
+    else if(!strncmp(cmd, CMD_READ_STRING_ASCII, 2))
+    {
+        char* cmd_;
+        DWORD addr;
+        char* str;
+
+        cmd_ = strtok(cmd, " ");
+        addr = strtoul(strtok(0x0, " "), 0x0, 0x10);
+
+        d_print("Reading str: @ 0x%08x\n", addr);
+
+        read_string_ascii(addr);
+        send_report();   
     }
     else if(!strncmp(cmd, CMD_READ_STRING_UNI, 2))
     {

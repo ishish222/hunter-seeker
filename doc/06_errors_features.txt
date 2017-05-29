@@ -612,3 +612,20 @@ Na koniec dla kazdej biblioteki stworzyc: dane o %, bitmape skazenia
 
 Np. jesli ST jest w petli, pierwszy dump nie powinien zostac nadpisany
 
+--
+
+079 - ujednolicic nazewnictwo 
+
+report_ - funkcje czytajace i raportujace do controllera
+read_ - funkcje czytajace i zwracajace
+output_ - funkcje wypisujace do nagrania
+
+--
+
+080 - ujednolicic konwencje wywolan
+
+Kiedy oparte na ret, kiedy oparte na stosie
+
+--
+
+081 - ogarnac odczytywanie lancuchow
