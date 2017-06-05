@@ -3436,7 +3436,7 @@ int write_breakpoint(BREAKPOINT* bp)
 
     addr = resolve_loc_desc(bp->location);
 
-//    d_print("Adding breakpoint opcode @ 0x%08x\n", addr);
+    d_print("Adding breakpoint opcode @ 0x%08x\n", addr);
 
     read_memory(my_trace->procHandle, (void*)addr, (void*)&bp->saved_byte, 0x1, &read);
     d_print("Before: 0x%02x\n", bp->saved_byte);
@@ -3579,14 +3579,14 @@ int unpaint(char* area, unsigned len)
 
 OFFSET resolve_loc_desc(LOCATION_DESCRIPTOR_NEW* d)
 {
-//    d_print("[resolve_loc_desc]\n");
+    d_print("[resolve_loc_desc]\n");
     OFFSET a1_r, a2_r;
     OFFSET ret;
 
     if(d == 0x0)
         return -1;
 
-//    d_print("Processing: %s\n", d->op);
+    d_print("Processing: %s\n", d->op);
 
     if(findany(d->op, "[+-"))
     {
@@ -3637,87 +3637,87 @@ OFFSET resolve_loc_desc(LOCATION_DESCRIPTOR_NEW* d)
         else
         {
             /* registers */
-            if(!strcmp(d->op, "ESP"))
+            if(!strcmpi(d->op, "ESP"))
             {
                 CONTEXT ctx;
                 read_context(0x0, &ctx);
                 ret = ctx.Esp;
-//                d_print("Reading register ESP: 0x%08x\n", ret);
+                d_print("Reading register ESP: 0x%08x\n", ret);
             }
-            else if(!strcmp(d->op, "EAX"))
+            else if(!strcmpi(d->op, "EAX"))
             {
                 CONTEXT ctx;
                 read_context(0x0, &ctx);
                 ret = ctx.Eax;
-//                d_print("Reading register EAX: 0x%08x\n", ret);
+                d_print("Reading register EAX: 0x%08x\n", ret);
             }
-            else if(!strcmp(d->op, "EBX"))
+            else if(!strcmpi(d->op, "EBX"))
             {
                 CONTEXT ctx;
                 read_context(0x0, &ctx);
                 ret = ctx.Ebx;
-//                d_print("Reading register EBX: 0x%08x\n", ret);
+                d_print("Reading register EBX: 0x%08x\n", ret);
             }
-            else if(!strcmp(d->op, "ECX"))
+            else if(!strcmpi(d->op, "ECX"))
             {
                 CONTEXT ctx;
                 read_context(0x0, &ctx);
                 ret = ctx.Ecx;
-//                d_print("Reading register ECX: 0x%08x\n", ret);
+                d_print("Reading register ECX: 0x%08x\n", ret);
             }
-            else if(!strcmp(d->op, "EDX"))
+            else if(!strcmpi(d->op, "EDX"))
             {
                 CONTEXT ctx;
                 read_context(0x0, &ctx);
                 ret = ctx.Edx;
-//                d_print("Reading register EDX: 0x%08x\n", ret);
+                d_print("Reading register EDX: 0x%08x\n", ret);
             }
-            else if(!strcmp(d->op, "ESI"))
+            else if(!strcmpi(d->op, "ESI"))
             {
                 CONTEXT ctx;
                 read_context(0x0, &ctx);
                 ret = ctx.Esi;
-//                d_print("Reading register ESI: 0x%08x\n", ret);
+                d_print("Reading register ESI: 0x%08x\n", ret);
             }
-            else if(!strcmp(d->op, "EDI"))
+            else if(!strcmpi(d->op, "EDI"))
             {
                 CONTEXT ctx;
                 read_context(0x0, &ctx);
                 ret = ctx.Edi;
-//                d_print("Reading register EDI: 0x%08x\n", ret);
+                d_print("Reading register EDI: 0x%08x\n", ret);
             }
-            else if(!strcmp(d->op, "EBP"))
+            else if(!strcmpi(d->op, "EBP"))
             {
                 CONTEXT ctx;
                 read_context(0x0, &ctx);
                 ret = ctx.Ebp;
-//                d_print("Reading register EBP: 0x%08x\n", ret);
+                d_print("Reading register EBP: 0x%08x\n", ret);
             }
-            else if(!strcmp(d->op, "EIP"))
+            else if(!strcmpi(d->op, "EIP"))
             {
                 CONTEXT ctx;
                 read_context(0x0, &ctx);
                 ret = ctx.Eip;
-//                d_print("Reading register EIP: 0x%08x\n", ret);
+                d_print("Reading register EIP: 0x%08x\n", ret);
             }
             else
             {
                 /* we assume it's library */
-//                d_print("Looking for lib: %s\n", d->op);
+                d_print("Looking for lib: %s\n", d->op);
                 ret = find_lib(d->op);
                 if(ret != 0x0)
                 {
-//                    d_print("Found at: 0x%08x\n", ret);
+                    d_print("Found at: 0x%08x\n", ret);
                 }
                 else if(ret == 0x0) 
                 {
-//                    d_print("Not found\n");
+                    d_print("Not found\n");
                     ret = -1;
                 }
             }
         }
     }
-//    d_print("[resolve_loc_desc end]\n");
+    d_print("[resolve_loc_desc end]\n");
     return ret;
 }
 
@@ -3785,16 +3785,16 @@ LOCATION_DESCRIPTOR_NEW* parse_location_desc(char* str)
 
 int update_breakpoint(BREAKPOINT* bp)
 {
-//    d_print("[update_breakpoint]\n");
+    d_print("[update_breakpoint]\n");
     DWORD ret;
     OFFSET addr;
-//    d_print("Trying to resolve BP addr\n");
+    d_print("Trying to resolve BP addr\n");
     addr = resolve_loc_desc(bp->location);
 
 
     if(addr == -1)
     {
-//        d_print("Unable to resolve BP address, will not be updated at this time\n");
+        d_print("Unable to resolve BP address, will not be updated at this time\n");
         if(bp->written)
             unwrite_breakpoint(bp);
         bp->resolved_location = -1;
@@ -3821,12 +3821,12 @@ int update_breakpoint(BREAKPOINT* bp)
                 unwrite_breakpoint(bp); /* in order to write breakpoint, it must be enabled and loaded*/
                 bp->written = 0x0;
             }
-//            d_print("BP unwritten\n");
+            d_print("BP unwritten\n");
 
             ret = 0x0;
         }
     }
-//    d_print("[update_breakpoint ends]\n");
+    d_print("[update_breakpoint ends]\n");
     return ret;
 }
 
@@ -3873,6 +3873,22 @@ BREAKPOINT* add_breakpoint(char* location_str, REACTION*  reaction)
 
 //        d_print("Attempt to parse location string: %s\n", location_str);
         my_trace->breakpoints[my_bpt_index].location = parse_location_desc(location_str);
+        if(strstr(location_str, "EAX")) my_trace->breakpoints[my_bpt_index].reg_based = 0x1;
+        if(strstr(location_str, "EBX")) my_trace->breakpoints[my_bpt_index].reg_based = 0x1;
+        if(strstr(location_str, "ECX")) my_trace->breakpoints[my_bpt_index].reg_based = 0x1;
+        if(strstr(location_str, "EDX")) my_trace->breakpoints[my_bpt_index].reg_based = 0x1;
+        if(strstr(location_str, "ESI")) my_trace->breakpoints[my_bpt_index].reg_based = 0x1;
+        if(strstr(location_str, "EDI")) my_trace->breakpoints[my_bpt_index].reg_based = 0x1;
+        if(strstr(location_str, "EBP")) my_trace->breakpoints[my_bpt_index].reg_based = 0x1;
+        if(strstr(location_str, "ESP")) my_trace->breakpoints[my_bpt_index].reg_based = 0x1;
+        if(strstr(location_str, "eax")) my_trace->breakpoints[my_bpt_index].reg_based = 0x1;
+        if(strstr(location_str, "ebx")) my_trace->breakpoints[my_bpt_index].reg_based = 0x1;
+        if(strstr(location_str, "ecx")) my_trace->breakpoints[my_bpt_index].reg_based = 0x1;
+        if(strstr(location_str, "edx")) my_trace->breakpoints[my_bpt_index].reg_based = 0x1;
+        if(strstr(location_str, "esi")) my_trace->breakpoints[my_bpt_index].reg_based = 0x1;
+        if(strstr(location_str, "edi")) my_trace->breakpoints[my_bpt_index].reg_based = 0x1;
+        if(strstr(location_str, "ebp")) my_trace->breakpoints[my_bpt_index].reg_based = 0x1;
+        if(strstr(location_str, "esp")) my_trace->breakpoints[my_bpt_index].reg_based = 0x1;
 
         my_trace->bpt_count ++;
     }
@@ -5113,11 +5129,13 @@ int process_last_event()
 
                 for(i = 0x0; i<my_trace->bpt_count; i++)
                 {
-                    d_print("bp: %s, resolved_location: 0x%08x\n", my_trace->breakpoints[i].location_str, my_trace->breakpoints[i].resolved_location);
-                    /*if(my_trace->breakpoints[i].resolved_location == -1)*/
-                    if(1)
+                    if(!my_trace->breakpoints[i].reg_based)
                     {
                         update_breakpoint(&my_trace->breakpoints[i]);
+                    }
+                    else
+                    {
+                        d_print("WARNING!!! Not updating %s as register-based\n", my_trace->breakpoints[i].location_str);
                     }
                 }
 

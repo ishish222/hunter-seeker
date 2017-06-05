@@ -638,3 +638,15 @@ Tak, by zmian w kodzie nie trzeba bylo replikowac w innym pliku
 Zalatwione, ale to rzczej nie stanowi problemu
 Wypisywanie na ekran dziala rowniez z watkowaniem, trzeba tylko zmienic ustawienie w skrypcie
 
+--
+
+083 - dlaczego sie wypierdala w GdiPlus?
+
+Workaround - zaslepic biblioteki z wyspecjalizowanymi instrukcjami symbolami
+
+--
+
+[x] 084 - w june_002 nie dziala kaskadowe wlaczeanie reakcji mod2.
+
+Reakcje sa automatycznie enablowane podczas ich dodawania. Trzeba je zdisablowac po rejestracji.
+Tez przeladowanie zabroniono jesli lokacja oparta na rejestrze (chociaz to niezbyt spojne).

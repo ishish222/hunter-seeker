@@ -219,6 +219,7 @@ typedef struct BREAKPOINT_
     char enabled;
     char written;
     char saved_byte;
+    char reg_based;
 
 //    REACTION* reactions[MAX_HANDLERS];
     REACTION** reactions;
