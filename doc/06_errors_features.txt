@@ -650,3 +650,13 @@ Workaround - zaslepic biblioteki z wyspecjalizowanymi instrukcjami symbolami
 
 Reakcje sa automatycznie enablowane podczas ich dodawania. Trzeba je zdisablowac po rejestracji.
 Tez przeladowanie zabroniono jesli lokacja oparta na rejestrze (chociaz to niezbyt spojne).
+
+
+-- 
+
+[u] 085 - w june_012 jest nagranie, na ktorym wciaz jest ta sama instrukcja. Czemu?
+
+Instrukcje sa zwielokratniane. 
+Przy olejnym nagraniu juz dziala :/
+
+
