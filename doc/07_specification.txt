@@ -1,0 +1,170 @@
+caller_taint:
+
+OP - set option
+    syntax: OP,<options_name>
+
+    current options names:
+    ANALYZE_JUMPS
+    ANALYZE_LOOPS
+    UNMATCHED_RET_INVALIDATES_STACK
+    UNMATCHED_RET_CREATES_CALL
+    NOT_EMITTING_BLACKLISTED
+    VERIFY_ROP_RETS
+    VERIFY_SEG_SEC
+    ANALYZE_WANTED_IN_SYMBOLS
+    
+BA - blacklist address
+    syntax: BA,<address>
+
+    if address is without symbol and is blacklisted, caller will not dive
+    
+BL - blacklist library
+    syntax: BL,<lib_name>
+
+    All addresses in blacklisted library will be blacklisted
+    
+IN - include symbol in call analysis
+    syntax: IN,<func_name>
+    
+    Symbol with func_name will be dived into
+
+FW - wanted function
+    syntax: FW,<func_name>
+
+    Symbol with func_name will be marked [x]
+
+SY - register symbol
+    syntax: SY,<lib_name>,<func_name><CRLF>
+
+    Define symbol. Symbols are not dived into
+
+LF - load next file
+    syntax: LF,<file_name> 
+
+    Load next file for anaysis
+
+OM - load modifications file
+    syntax: OM,<mod_file>
+
+    Load the modifications file for servicing UP requests. 
+    CONFIGURED AUTOMATICALLY, DO NOT CHANGE
+
+SP - set prefix
+    syntax: SP,<prefix>
+
+    Sets prefix for output files
+
+RT - register thread
+    syntax: RT,<TID>,<formatted_context>
+
+    Registering thread
+    CONFIGURED AUTOMATICALLY, DO NOT CHANGE
+
+DT - deregister thread
+    syntax: DT,<TID>,<formatted_context>
+
+    Deregistering thread
+    CONFIGURED AUTOMATICALLY, DO NOT CHANGE
+
+RL - register library
+    syntax: RL,<lib_addr>,<lib_name>
+
+    Register library
+    CONFIGURED AUTOMATICALLY, DO NOT CHANGE
+
+
+DL - deregister library
+    syntax: DL,<lib_name>
+
+    Deregister library
+    CONFIGURED AUTOMATICALLY, DO NOT CHANGE
+
+LM - load memory file
+    syntax: LM,<memory_file>
+
+    Register memory file
+    CONFIGURED AUTOMATICALLY, DO NOT CHANGE
+
+SE - secure area
+    syntax: SE,<addr>,<size>
+
+    Secure memory area. No modifications to this area will be made during analysis
+
+PA - pause analysis 
+    syntax: PA
+
+    Analysis will pause and wait for keypress
+
+EX - register exception
+    syntax: EX,<TID>,<exc_code>,<exc_flags>,<exc_address>
+
+    Register exception in a thread
+
+IR - get instruction interval
+    syntax: IR,<count>
+
+    Will report after elapsed interval
+
+IW - register wanted instruction number
+    syntax: IW,<instr_num>
+
+    Instruction number <instr_num> will be [x] marked
+    
+EW - register wanted address
+    syntax: EW,<address>
+
+    Instruction with address <address> will be [x] marked
+
+CT - check consistency (for debugging)
+    syntax: CT,<TID>,<formatted_context>
+
+    Verify consistency of thread's context
+    CONFIGURED AUTOMATICALLY, DO NOT CHANGE
+
+FE - register fence
+    syntax: FE,<entry_addr>,<start_addr>,<loop_size>,<loop_count>
+
+    Create a fence for loops. 
+    entry_addr - this is caller of a loop addr
+    start_addr - first call addr in a loop
+    loop_size - how many calls in loop
+    loop_count - how many loop iterations
+
+    
+JE - jxx_enable
+    syntax: JE
+
+    Enables JXX inclusion in analysis. Only one jxx address will be wirtten out in particular callee. jxx addresses list will be reset upon return or JC command.
+
+JD - jxx_disable
+    syntax: JD
+
+    Disable JXX analysis
+
+JC - jxx_clear
+    syntax: JC
+
+    Clears jxx addresses list
+
+ST - start analysis
+    syntax: ST
+
+    Analysis start. [TODO: what are the consequences?]
+
+FI - finish analysis
+    syntax: FI 
+
+    Analysis finish. [TODO: what are the consequences?]
+
+OU - comment out
+    syntax: OU,<TID>,<comment>
+
+    Include comment in TID output file.
+
+# - comment (ignored)
+    syntax: #
+
+    Ignore rest of the line
+
+
+

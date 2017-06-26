@@ -659,4 +659,9 @@ Tez przeladowanie zabroniono jesli lokacja oparta na rejestrze (chociaz to niezb
 Instrukcje sa zwielokratniane. 
 Przy olejnym nagraniu juz dziala :/
 
+--
+
+086 - zaimplementowac jakies latwe pomijanie nagrywania syscalli w stylu generowania kluczy (dlugich i nieprzydatnych)
+
+Propozycja - reakcje skip i unskip + consistency check na koniec unskip.
 
