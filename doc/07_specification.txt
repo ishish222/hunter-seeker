@@ -1,5 +1,53 @@
 caller_taint:
 
+commandline options:
+
+-M
+    define max_levels. This defines, how many call level stack will handle. Increase it if you receive error saying that you should do so.
+
+-i
+    instr_file. This defines the first file in sequence that will be parsed.
+
+-d
+    dump file path. Passed via script.
+
+-s
+    start addr (if starts with '0x') or start instruction number.
+
+-E
+    end addr (if starts with '0x') or end instruction number, multiplied by 1000000
+
+-e
+    end addr (if starts with '0x') or end instruction number, multiplied by 1000000
+
+-T
+    dump taint file path [TODO - what is it]
+
+-l
+    depth [TODO - what is it]
+
+-m
+    loadable dir path [TODO - what is it]
+
+-b
+    breakpoint_optarg [TODO - remind how it works]
+
+-t
+    breakpoint_t_optarg [TODO - remind how it works]
+
+-w
+    watchpoint_optarg [TODO - remind how it works]
+
+-h
+    history_path
+
+-D
+    depth  [TODO - what is it]
+-I
+    include instruction numbers
+
+Configuration in script:
+
 OP - set option
     syntax: OP,<options_name>
 
@@ -125,11 +173,10 @@ FE - register fence
     syntax: FE,<entry_addr>,<start_addr>,<loop_size>,<loop_count>
 
     Create a fence for loops. 
-    entry_addr - this is caller of a loop addr
+    entry_addr - this is target of call of a loop addr
     start_addr - first call addr in a loop
     loop_size - how many calls in loop
     loop_count - how many loop iterations
-
     
 JE - jxx_enable
     syntax: JE

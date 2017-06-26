@@ -1,7 +1,7 @@
 /*
 *   Tomasz Salacinski
-*   CERT Orange Polska
-*   tomasz.salacinski@orange.com
+*   Korrino
+*   info@korrino.com
 */
 
 
@@ -249,6 +249,26 @@ Change of endiannes takes place when reading and writing to memory (to_mem, from
 #define OPTION_VERIFY_ROP_RETS                  0x20
 #define OPTION_VERIFY_SEG_SEC                   0x40
 #define OPTION_ANALYZE_WANTED_IN_SYMBOLS        0x80
+
+/* jumping codes */
+
+#define JMP_CODE_JB_JC_JNAE     0x0
+#define JMP_CODE_JAE_JNB_JNC    0x1
+#define JMP_CODE_JE_JZ          0x2
+#define JMP_CODE_JNE_JNZ        0x3
+#define JMP_CODE_JBE_JNA        0x4
+#define JMP_CODE_JA_JNBE        0x5
+#define JMP_CODE_JS             0x6
+#define JMP_CODE_JNS            0x7
+#define JMP_CODE_JP_JPE         0x8
+#define JMP_CODE_JNP_JPO        0x9
+#define JMP_CODE_JL_JNGE        0xa
+#define JMP_CODE_JGE_JNL        0xb
+#define JMP_CODE_JLE_JNG        0xc
+#define JMP_CODE_JG_JNLE        0xd
+#define JMP_CODE_RM             0xe
+#define JMP_CODE_JXX            0xf
+
 
 /*
 
@@ -2321,9 +2341,17 @@ typedef struct _CONTEXT_INFO
     char before_returning;
     char before_waiting;
     char last_emit_decision;
+
+    /* jmp analysis processing */
+    char jumping;
+    char before_jumping;
+    char jmp_code;
+    char before_jmp_code;
+
     OFFSET source;
     OFFSET target;
     OFFSET next;
+    OFFSET last_eip;
     DWORD list[MAX_CALL_LEVELS][MAX_LIST_JXX];
     unsigned list_len[MAX_CALL_LEVELS];
     unsigned jxx_total[MAX_CALL_LEVELS];
@@ -3056,9 +3084,8 @@ class taint_x86
 
     /* handling jxx */
     int handle_jmp(CONTEXT_INFO*);
-    int handle_jxx(CONTEXT_INFO*, char*);
-    int handle_ja(CONTEXT_INFO*);
-    int handle_jae(CONTEXT_INFO*);
+    int handle_jxx(CONTEXT_INFO*);
+    int handle_this_jxx(CONTEXT_INFO*, char*);
 
 
     int handle_call(CONTEXT_INFO*);
