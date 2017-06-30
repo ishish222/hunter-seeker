@@ -200,6 +200,19 @@ int taint_x86::add_blacklist(char* str)
     return 0x0;
 }
 
+int taint_x86::add_silenced_addr(DWORD addr)
+{
+    if(this->addr_silenced_count >= MAX_BLACKLIST)
+    {
+        d_print(1, "Error, maximum of silenced functions reached\n");
+        exit(-1);
+    }
+
+    this->addr_silenced[this->addr_silenced_count] = addr;
+    this->addr_silenced_count++;
+    return 0x0;
+}
+
 int taint_x86::add_blacklist_addr(DWORD addr)
 {
     if(this->addr_blacklist_count >= MAX_BLACKLIST)
@@ -457,6 +470,20 @@ int taint_x86::check_lib_blacklist(LIB_INFO* lib)
     return 0x0;
 }
 
+int taint_x86::check_addr_silenced(OFFSET offset)
+{
+    LIB_INFO* lib;
+
+    unsigned i;
+
+    for(i = 0x0; i< this->addr_silenced_count; i++)
+    {
+        if(this->addr_silenced[i] == offset)
+            return 0x1;
+    }
+
+    return 0x0;
+}
 int taint_x86::check_addr_blacklist(OFFSET offset)
 {
     LIB_INFO* lib;
@@ -1124,7 +1151,11 @@ int taint_x86::handle_call(CONTEXT_INFO* info)
     /* decision about emission */
 
     d_print(2, "Decision about emission\n");
-    if(info->waiting != 0x0)
+    if(this->check_addr_silenced(source))
+    {
+        decision_emit = DECISION_NO_EMIT;
+    }
+    else if(info->waiting != 0x0)
     {
         /* we are waiting for return */ 
         d_print(2, "We are waiting for return \n");
@@ -2354,6 +2385,7 @@ int taint_x86::execute_instruction(DWORD eip, DWORD tid)
     this->cur_tid = tid;
 
     /* debug */
+    /*
     for(int i = 0x0; i< 0x10; i++)
         if((this->my_bps[i].offset == eip) & (this->my_bps[i].mode == BP_MODE_EXECUTE))
         {
@@ -2361,14 +2393,18 @@ int taint_x86::execute_instruction(DWORD eip, DWORD tid)
             this->bp_hit = 0x1;
             //getchar();
         }
-            
+      */      
 
     this->current_instr_byte = &this->memory[eip];
 /*
     if((this->started) && (this->counter <0x10))
         d_print(1, "[0x%08x] 0x%08x: 0x%02x, count: %d\n", this->cur_tid, eip, *(this->current_instr_byte), this->current_instr_count);
 */
-    //this->current_instr_byte->set_BYTE_t(0xff); // taint executed?
+    if(this->options & OPTION_COUNT_INSTRUCTIONS)
+    {
+        this->current_instr_byte->set_BYTE_t(0xff); // taint executed?
+    }
+
     //this->current_propagation->instruction = eip;
     this->current_instr_length += 1;
 

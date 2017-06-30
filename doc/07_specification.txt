@@ -66,6 +66,11 @@ BA - blacklist address
 
     if address is without symbol and is blacklisted, caller will not dive
     
+SA - silence address
+    syntax: SA,<address>
+
+    if SOURCE address is silenced, caller will not emit
+    
 BL - blacklist library
     syntax: BL,<lib_name>
 

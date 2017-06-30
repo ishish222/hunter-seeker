@@ -174,6 +174,17 @@ int register_blacklist_addr(char* line, taint_x86* taint_eng)
 
     return 0x0;
 }
+int register_silenced_addr(char* line, taint_x86* taint_eng)
+{
+    char* cmd;
+    DWORD addr;
+
+    cmd = strtok(line, ",");
+    addr = strtol(strtok(0x0, ","), 0x0, 0x10);
+    taint_eng->add_silenced_addr(addr);
+
+    return 0x0;
+}
 
 
 int register_wanted_i(char* line, taint_x86* taint_eng)
@@ -343,6 +354,11 @@ int parse_option(char* line, taint_x86* taint_eng)
     else if(!strcmp(option, "ANALYZE_WANTED_IN_SYMBOLS"))
     {
         taint_eng->options |= OPTION_ANALYZE_WANTED_IN_SYMBOLS;
+    }
+
+    else if(!strcmp(option, "COUNT_INSTRUCTIONS"))
+    {
+        taint_eng->options |= OPTION_COUNT_INSTRUCTIONS;
     }
 
     return 0x0;
@@ -1075,6 +1091,9 @@ int main(int argc, char** argv)
             if(line[0] == 'B' && line[1] == 'A')
                 register_blacklist_addr(line, &taint_eng);
 
+            if(line[0] == 'S' && line[1] == 'A')
+                register_silenced_addr(line, &taint_eng);
+
             if(line[0] == 'I' && line[1] == 'N')
                 register_included(line, &taint_eng);
 
@@ -1240,6 +1259,21 @@ int main(int argc, char** argv)
     write_region(out, taint_eng.memory, taint_eng.mem_length);
     fclose(out);
 */    
+
+    if(taint_eng.options & OPTION_COUNT_INSTRUCTIONS)
+    {
+        printf("Calculating executed unique instructions\n");
+        unsigned i;
+        unsigned executed = 0x0;
+        for(i=0x0; i< taint_eng.mem_length; i++)
+        {
+            if(taint_eng.memory[i].get_BYTE_t())
+            {
+                executed++;
+            }
+        }
+        printf("Executed 0x%08x (%d) unique instructions\n", executed, executed);
+    }
 
     // dumping memory taint
     printf("Dumping taint region: 0x0 - 0x%08x to %s\n", taint_eng.mem_length, dump2_taint_file_path);

@@ -249,6 +249,7 @@ Change of endiannes takes place when reading and writing to memory (to_mem, from
 #define OPTION_VERIFY_ROP_RETS                  0x20
 #define OPTION_VERIFY_SEG_SEC                   0x40
 #define OPTION_ANALYZE_WANTED_IN_SYMBOLS        0x80
+#define OPTION_COUNT_INSTRUCTIONS               0x100
 
 /* jumping codes */
 
@@ -2509,6 +2510,8 @@ class taint_x86
 //    char lib_blacklist[MAX_NAME][MAX_BLACKLIST];
     char* lib_blacklist[MAX_NAME];
     unsigned blacklist_count;
+    DWORD addr_silenced[MAX_BLACKLIST];
+    unsigned addr_silenced_count;
     DWORD addr_blacklist[MAX_BLACKLIST];
     unsigned addr_blacklist_count;
 //    char func_wanted[MAX_NAME][MAX_WANTED];
@@ -3069,6 +3072,7 @@ class taint_x86
     int set_lib_dir_path(char*);
     int add_blacklist(char*);
     int add_blacklist_addr(DWORD);
+    int add_silenced_addr(DWORD);
     int add_included(char*);
     int add_wanted(char*);
     int add_wanted_e(DWORD);
@@ -3077,6 +3081,7 @@ class taint_x86
     int check_fence(CALL_LEVEL*);
     int check_lib_blacklist(LIB_INFO*);
     int check_addr_blacklist(OFFSET);
+    int check_addr_silenced(OFFSET);
     int check_func_wanted(char*);
     int check_func_included(char*);
     int check_rets(OFFSET);
