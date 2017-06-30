@@ -8,8 +8,8 @@ c:fuzzers/usualparts
 c:fuzzers/statemachine.py
 t:settings/generic-zero-trace/settings.py
 t:settings/default-flareon/default.py
-t:fuzzers/generators
-t:fuzzers/correctors
+t:generators
+t:correctors
 t:fuzzers/common.py
 c:util/extract-saved
 c:util/analyze-sample

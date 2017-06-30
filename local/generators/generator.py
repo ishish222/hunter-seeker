@@ -7,6 +7,7 @@ import struct
 import tempfile
 import glob
 import random
+import changer
 
 #log_info = log.log_info
 #log_debug = log.log_debug
@@ -56,7 +57,7 @@ class DirGenerator(object):
         self.generate(1) # lol?
 
 class Generator(object):
-    def __init__(self, origin_path_ = "", dest_path_ = "", dest_suffix_ = None, mutator_ = None, mutations_ = 3):
+    def __init__(self, origin_path_ = "", dest_path_ = "", dest_suffix_ = None, mutator_ = changer.Changer, mutations_ = 3):
         self.origin_path = origin_path_
         self.dest_path = dest_path_
         if(dest_suffix_ != None):

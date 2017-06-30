@@ -1,3 +1,4 @@
-Boot with regular if and virtio iso mounted as cdrom
+Link: https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/archive-virtio/virtio-win-0.1.126-2/virtio-win-0.1.126.iso
+Boot with regular if and virtio iso mounted as cdrom and secondary drive with virtio if, nic with model virtio
 open device manager, install virtio driver
 switch if to virtio
