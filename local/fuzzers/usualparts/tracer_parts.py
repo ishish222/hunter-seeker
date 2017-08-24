@@ -964,3 +964,14 @@ def tracer_cooldown(args=None):
 
     return
 
+def tracer_resolve_location(args=None):
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+    
+    write_socket(options.s, "tracer_resolve_location %s" % args);
+    response, _, _ = read_socket(options.s)
+
+    globs.state.stack.append(int(response[3:13], 0x10))
+    return
+

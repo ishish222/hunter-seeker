@@ -682,3 +682,15 @@ Na poziomie b.exe to chyba bedzie
 089 - czemu sa druty na koncu plikow czasem?
 
 Czy nie dzialaja locki pry zapisywaniu?
+
+--
+
+090 - skrypt do wypisywania IoC
+
+Wlaczenie zamiast trasowania trybu wypisywania reakcji z API
+
+--
+
+[x] 091 - potrzebna operacja resolve zwracajaca adres
+
+

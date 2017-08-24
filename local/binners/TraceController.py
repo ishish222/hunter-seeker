@@ -906,6 +906,11 @@ class TraceController(object):
         self.last_report, self.last_answer = self.recv_report_active()
         return 
 
+    def resolve_location(self, args):
+        self.send_command_active("RL %s" % args)
+        self.last_report, self.last_answer = self.recv_report_active()
+        return 
+
     def list_bpts(self):
         self.send_command_active("lb")
         self.last_report, self.last_answer = self.recv_report_active()

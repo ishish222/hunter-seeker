@@ -150,6 +150,7 @@ prototypes['Beep']                  = other_parts.beep
 prototypes['Print']                 = tracer_parts.tracer_print
 prototypes['DumpFile']              = tracing_parts.dump_file
 prototypes['Pause']                 = other_parts.pause
+prototypes['ResolveLocation']       = tracer_parts.tracer_resolve_location
 
 
 class CodeUnit:

@@ -180,6 +180,7 @@
 #define CMD_PRINT               "PR"
 #define CMD_AUTOREPEAT_REACTION "AR"
 #define CMD_APPLY_MEMORY_FILE   "AF"
+#define CMD_RESOLVE_LOCATION    "RL"
 
 #define CMD_ROUTINE_1           "R1"
 #define CMD_ROUTINE_2           "R2"

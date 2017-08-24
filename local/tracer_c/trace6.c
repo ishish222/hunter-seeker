@@ -5759,6 +5759,22 @@ int parse_reaction(char* str)
 //    d_print("[parse_reaction ends]\n");
 }
 
+int resolve_location(char* location)
+{
+    OFFSET addr;
+    char line[MAX_LINE];
+    LOCATION_DESCRIPTOR_NEW desc;
+    LOCATION_DESCRIPTOR_NEW* desc_;
+
+    desc_ = parse_location_desc(location);
+    addr = resolve_loc_desc(desc_);
+
+    my_trace->report_code = REPORT_INFO;
+    sprintf(line, "0x%08x", addr);
+    strcpy(my_trace->report_buffer, line);
+    return 0x0;
+}
+
 int parse_reactions(char* str)
 {
     char* current;
@@ -6551,6 +6567,16 @@ int handle_cmd(char* cmd)
 
         d_print("Configuring reactions\n");
         parse_reactions(reactions_str);
+        send_report();
+        
+    }
+    else if(!strncmp(cmd, CMD_RESOLVE_LOCATION, 2))
+    {
+        char* str;
+
+        strtok(cmd, " ");
+        str = strtok(0x0, " ");
+        resolve_location(str);
         send_report();
         
     }
