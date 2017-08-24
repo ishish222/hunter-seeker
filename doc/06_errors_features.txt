@@ -665,3 +665,20 @@ Przy olejnym nagraniu juz dziala :/
 
 Propozycja - reakcje skip i unskip + consistency check na koniec unskip.
 
+--
+
+[x] 087 - segfault przy analizie june_015
+
+taint probowal zrobic update pamieci przed dumpem. 
+
+--
+
+088 - zaimplementowac obsluge i raportowanie bledow
+
+Na poziomie b.exe to chyba bedzie
+
+--
+
+089 - czemu sa druty na koncu plikow czasem?
+
+Czy nie dzialaja locki pry zapisywaniu?

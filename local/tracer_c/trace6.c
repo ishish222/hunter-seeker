@@ -94,6 +94,15 @@ int unwrite_breakpoint(BREAKPOINT*);
 * various
 */
 
+int check_started()
+{
+    if((my_trace->status != STATUS_DBG_STARTED) && (my_trace->status != STATUS_DBG_SCANNED) && (my_trace->status != STATUS_DBG_LIGHT)) 
+    {
+        return 0x0;
+    }
+    return 1;
+}
+
 int d_print(const char* format, ...)
 {
     va_list argptr;

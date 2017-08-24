@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/python2.7
 
 import sys
 
@@ -7,21 +7,27 @@ if(len(sys.argv) < 2):
 
 map_path = sys.argv[1]
 
+sys.stderr.write('Opening file: %s\n' % map_path)
 my_map = open(map_path, "r")
+
+sys.stderr.write('Parsing...\n')
 
 for line in my_map:
     if(line.find('/map') != -1):
         break
 
+sys.stderr.write('Moving structures...\n')
+
 for line in my_map:
-    print line[:-1]
+    sys.stdout.write( line[:-1])
 
 my_map.seek(0, 0)
 
 for line in my_map:
     if(line.find('/map') != -1):
-        print line[:-1]
+        sys.stdout.write(line[:-1])
         break
-    print line[:-1]
+    sys.stdout.write(line[:-1])
 
 my_map.close()
+sys.stderr.write('Done\n')

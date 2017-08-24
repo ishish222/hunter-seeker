@@ -8,5 +8,7 @@ FOLDER=$1
 MAP=$2
 
 mkdir -p $1
+echo "Retrieving remote render..."
 scp hs1@flareon:$REMOTE_ROOT/$FOLDER/$MAP $1/$MAP".tmp"
-fix-map $1/$MAP".tmp" > $1/$MAP
+echo "Restructurizing..."
+fix-map $1/$MAP".tmp" 1> $1/$MAP

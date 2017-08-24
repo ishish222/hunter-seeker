@@ -2800,6 +2800,11 @@ int taint_x86::apply_security(DWORD offset, DWORD size)
 
 int taint_x86::apply_memory(DWORD offset, DWORD size)
 {
+    if(!this->started)
+    {
+        return 0x0;
+    }
+
     char* buffer;
     int i;
     size_t read;
@@ -2992,6 +2997,11 @@ int taint_x86::add_lib(OFFSET off, char* name)
 
 int taint_x86::handle_exception(EXCEPTION_INFO info)
 {
+    if(!(this->started))
+    {
+        return 0x0;
+    }
+
     char out_line[MAX_NAME];
 
     sprintf(out_line, "[x] Exception %08x in TID %08x, instr. no: %d, eip: 0x%08x", info.er.ExceptionCode, info.tid, this->current_instr_count, info.er.ExceptionAddress);
