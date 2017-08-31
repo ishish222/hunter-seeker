@@ -42,7 +42,7 @@ def fuzzing_loop(options, state):
     stats = state.stats
     print("Current stats (SA/MA/TO): %d/%d/%d" % (stats.sample_count, stats.ma_count, stats.to_count))
 
-def noop(args):
+def noop(args = None):
     pass
 
 def nop(options, state):
@@ -96,7 +96,7 @@ def testdir(x):
 def testfile(x):
     return os.path.exists(x)
 
-def clear_stack(args):
+def clear_stack(args = None):
     options = globs.state.options
     state = globs.state
     status = globs.state.status
@@ -111,7 +111,7 @@ def adjust(args):
     status = globs.state.status
     
     args = int(args, 0x10)
-    globs.state.stack.append(globs.state.stack.pop() + args)
+    globs.state.ret = globs.state.ret + args
 
     return
 
@@ -138,13 +138,65 @@ def push2(args = None):
         val = args
     globs.state.stack2.append(val)
 
+def enqueue(args = None):
+    if(args == None):
+        val = globs.state.ret
+    else:
+        val = args
+    globs.state.queue2.insert(0, val)
+
+def enqueue2(args = None):
+    if(args == None):
+        val = globs.state.ret
+    else:
+        val = args
+    globs.state.queue2.insert(0, val)
+
 def pop(args = None):
     globs.state.ret = globs.state.stack.pop()
+    print "Popped: %s" % globs.state.ret
 
 def pop2(args = None):
     globs.state.ret = globs.state.stack2.pop()
+    print "Popped: %s" % globs.state.ret
 
-    
+def dequeue(args = None):
+    globs.state.ret = globs.state.queue2.pop()
+    print "Dequeued: %s" % globs.state.ret
+
+def dequeue2(args = None):
+    globs.state.ret = globs.state.queue2.pop()
+    print "Dequeued: %s" % globs.state.ret
+
+def int10(args = None):
+    if(args == None):
+        globs.state.ret = int(globs.state.ret, 10)
+    else:
+        globs.state.ret = int(args, 10)
+
+def int16(args = None):
+    if(args == None):
+        globs.state.ret = int(globs.state.ret, 0x10)
+    else:
+        globs.state.ret = int(args, 0x10)
+
+def set_counter(args):
+    globs.state.counter = int(args, 0x10)
+    print "0x%08x" % globs.state.counter
+
+def get_counter(args = None):
+    print "0x%08x" % globs.state.counter
+    globs.state.ret = globs.state.counter
+    globs.state.counter = globs.state.counter-1
+
+def check_counter(args = None):
+    print "0x%08x" % globs.state.counter
+    if(globs.state.counter == 0x0):
+        globs.state.counter = globs.state.counter-1
+        return "Y"
+    else:
+        globs.state.counter = globs.state.counter-1
+        return "N"
 
 def get_options(args=None):
     from optparse import OptionParser
@@ -291,6 +343,8 @@ def get_options(args=None):
     globs.state.options = options
     globs.state.stack = []
     globs.state.stack2 = []
+    globs.state.queue = []
+    globs.state.queue2 = []
     globs.state.ret = ""
     globs.state.eip = ""
     globs.state.ep = ""

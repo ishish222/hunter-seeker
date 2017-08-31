@@ -148,6 +148,29 @@ def tracer_configure_pid_prefix(args=None):
 
     return
 
+def tracer_append_out_prefix(args=None):
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+    
+    write_socket(options.s, "tracer_append_out_prefix %s" % options.sample_options.out_prefix);
+    response, _, _ = read_socket(options.s)
+    globs.state.ret = response
+
+    return
+
+def tracer_append_pid_prefix(args=None):
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+    
+    write_socket(options.s, "tracer_append_out_prefix %s" % globs.state.pid);
+    response, _, _ = read_socket(options.s)
+
+    globs.state.ret = response
+
+    return
+
 def tracer_release_thread(args = None):
     options = globs.state.options
     state = globs.state
@@ -922,7 +945,8 @@ def tracer_read_register(args="EIP"):
     write_socket(options.s, "tracer_read_register %s" % args);
     response, _, _ = read_socket(options.s)
 
-    globs.state.stack.append(int(response[3:11], 0x10))
+#   according to specification stack is intact
+#    globs.state.stack.append(int(response[3:11], 0x10))
     globs.state.ret = int(response[3:11], 0x10)
 
     return
@@ -972,6 +996,7 @@ def tracer_resolve_location(args=None):
     write_socket(options.s, "tracer_resolve_location %s" % args);
     response, _, _ = read_socket(options.s)
 
-    globs.state.stack.append(int(response[3:13], 0x10))
+#    globs.state.stack.append(int(response[3:13], 0x10))
+    globs.state.ret = int(response[3:13], 0x10)
     return
 
