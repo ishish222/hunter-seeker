@@ -14,6 +14,16 @@ from codeunit import Instruction, Decision, GoTo
 
 import signal
 
+class bcolors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+
 class MachineError(Exception):
     pass
 
@@ -31,7 +41,7 @@ def stateful_routine(script_path):
     signal.signal(signal.SIGHUP, sigkill_handler)
 
     print
-    print "Loading script: [%s]" % script_path
+    print bcolors.OKGREEN + "Loading script: [%s]" % script_path + bcolors.ENDC
     print
 
     script_file = open(script_path)
@@ -133,7 +143,7 @@ def stateful_routine(script_path):
 
         try:
             #print "[%s] (%s)" % (instruction.name, script_path)
-            print "===[%s]" % (instruction.name)
+            print bcolors.OKBLUE + "===[%s]" % (instruction.name) + bcolors.ENDC
             if(instruction.name == 'Execute'):
                 stateful_routine(instruction.args)
                 ret = None

@@ -11,6 +11,16 @@ report = common.report
 write_socket = common.write_socket
 read_socket = common.read_socket
 
+class bcolors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+
 def get_sample_options(args=None):
     options = globs.state.options
     parser = options.parser
@@ -574,11 +584,9 @@ def read_last_suspension(args = None):
 def decision(args=None):
     options = globs.state.options
 
-    print globs.state.ret[1:3]
-    print globs.state.ret
-
     if(globs.state.ret[1:3] == "RB"):
         bp = globs.state.ret[3:].split('\n')[0]
+        print bcolors.WARNING + bcolors.BOLD + bp + bcolors.ENDC
         return bp
     else:
         return globs.state.ret[1:3]
