@@ -132,7 +132,8 @@ def stateful_routine(script_path):
             continue
 
         try:
-            print "[%s] Currently executing: [%d] %s" % (script_path, ip, instruction.name)
+            #print "[%s] (%s)" % (instruction.name, script_path)
+            print "===[%s]" % (instruction.name)
             if(instruction.name == 'Execute'):
                 stateful_routine(instruction.args)
                 ret = None

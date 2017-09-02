@@ -205,7 +205,8 @@ def read_socket(s):
             lineEnd = data[scOff+8:].find("\n")
             reqScript = data[scOff+8:scOff+8+lineEnd]
 
-    print("%s %s" % (timestamp(), lastResponse))
+#    print("%s %s" % (timestamp(), lastResponse))
+    print("%s" % (lastResponse))
     return (lastResponse, status, reqScript)
 
 def read_socket_q(s):
@@ -264,7 +265,8 @@ def read_socket_q_deprecated(s):
 def write_socket(s, data):
     options = globs.state.options
 
-    print(timestamp() + "> " + str(data))
+#    print(timestamp() + "> " + str(data))
+    print("> " + str(data))
     s.send(data + "-=OK=-")
 
 def powerofff(options):
