@@ -18,6 +18,18 @@ import pefile
 PIPE_NAME = "\\\\.\\pipe\\control"
 PIPE_BUFF_SIZE = 4096
 
+class bcolors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+    OK_STR = BOLD+OKGREEN+"OK"+ENDC
+    ERR_STR = BOLD+FAIL+"ERROR"+ENDC
+
 class SerialWrap(serial.Serial):
     def write(self, data):
         super(SerialWrap, self).write(data+'\n')
@@ -1048,7 +1060,7 @@ def execute(cmds, ext_pipe):
             print("Spawning: %s" % args)
             Popen([args], stdin = PIPE, stdout = PIPE, stderr = PIPE)
             print "here1"
-            writePipe(ext_pipe, "tracer_spawn OK")
+            writePipe(ext_pipe, "tracer_spawn "+bcolors.OKGREEN+"OK"+bcolors.ENDC)
             ok(ext_pipe)
 
         elif(cmd == "startBinner"):
@@ -1058,13 +1070,13 @@ def execute(cmds, ext_pipe):
         elif(cmd == "kill"):
             print("Killing %s" % args)
             call("taskkill /F /IM %s" % args)
-            writePipe(ext_pipe, "kill OK")
+            writePipe(ext_pipe, "kill "+bcolors.OK_STR)
             ok(ext_pipe)
 
         elif(cmd == "killExplorer"):
             call("taskkill /F /IM explorer.exe")
             #writePipe(log_pipe, "Killed explorer")
-            writePipe(ext_pipe, "killExplorer OK")
+            writePipe(ext_pipe, "killExplorer "+bcolors.OK_STR)
             ok(ext_pipe)
 
         elif(cmd == "release"):
@@ -1083,7 +1095,7 @@ def execute(cmds, ext_pipe):
             #log_pipe.write("quit")
 
         elif(cmd == "read_ep"):
-            writePipe(ext_pipe, "read_ep OK")
+            writePipe(ext_pipe, "read_ep "+bcolors.OK_STR)
             ok(ext_pipe)
 
 ### tracer info
@@ -1092,233 +1104,233 @@ def execute(cmds, ext_pipe):
             writePipe(ext_pipe, "0x%08x" % p.OPTIONAL_HEADER.AddressOfEntryPoint)
             writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
             del p
-            writePipe(ext_pipe, "extract_ep OK")
+            writePipe(ext_pipe, "extract_ep "+bcolors.OK_STR)
             ok(ext_pipe)
 
         elif(cmd == "tc_activate_prev"):
             trace_controller.activate_prev_tracer()
             writePipe(ext_pipe, "[internal] Active tracer: 0x%02x" % trace_controller.tracer_active_id)
-            writePipe(ext_pipe, "[internal]: OK")
-            writePipe(ext_pipe, "tc_avtivate_prev OK")
+            writePipe(ext_pipe, "[internal]: "+bcolors.OK_STR)
+            writePipe(ext_pipe, "tc_avtivate_prev "+bcolors.OK_STR)
             ok(ext_pipe)
 
         elif(cmd == "tc_activate_next"):
             trace_controller.activate_next_tracer()
             writePipe(ext_pipe, "[internal] Active tracer: 0x%02x" % trace_controller.tracer_active_id)
-            writePipe(ext_pipe, "[internal]: OK")
-            writePipe(ext_pipe, "tc_avtivate_next OK")
+            writePipe(ext_pipe, "[internal]: "+bcolors.OK_STR)
+            writePipe(ext_pipe, "tc_avtivate_next "+bcolors.OK_STR)
             ok(ext_pipe)
 
         elif(cmd == "tracer_suspend_all_except"):
             trace_controller.tracer_suspend_all_except(args)
             writePipe(ext_pipe, "%s" % trace_controller.last_answer)
             writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
-            writePipe(ext_pipe, "tracer_suspend_all_except OK")
+            writePipe(ext_pipe, "tracer_suspend_all_except "+bcolors.OK_STR)
             ok(ext_pipe)
 
         elif(cmd == "tracer_release_thread"):
             trace_controller.tracer_release_thread(args)
             writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
-            writePipe(ext_pipe, "tracer_release_thread OK")
+            writePipe(ext_pipe, "tracer_release_thread "+bcolors.OK_STR)
             ok(ext_pipe)
 
         elif(cmd == "tracer_configure_sample_pid"):
             trace_controller.set_sample_pid(args)
             writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
-            writePipe(ext_pipe, "tracer_configure_sample_pid OK")
+            writePipe(ext_pipe, "tracer_configure_sample_pid "+bcolors.OK_STR)
             ok(ext_pipe)
 
         elif(cmd == "tracer_configure_sample_file"):
             trace_controller.set_sample_file(args)
             writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
-            writePipe(ext_pipe, "tracer_configure_sample_file OK")
+            writePipe(ext_pipe, "tracer_configure_sample_file "+bcolors.OK_STR)
             ok(ext_pipe)
 
         elif(cmd == "tracer_configure_in_dir"):
             trace_controller.configure_in_dir(args)
             trace_controller.in_dir = args
             writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
-            writePipe(ext_pipe, "tracer_configure_in_dir OK")
+            writePipe(ext_pipe, "tracer_configure_in_dir "+bcolors.OK_STR)
             ok(ext_pipe)
 
         elif(cmd == "tracer_configure_out_dir"):
             trace_controller.configure_out_dir(args)
             writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
-            writePipe(ext_pipe, "tracer_configure_out_dir OK")
+            writePipe(ext_pipe, "tracer_configure_out_dir "+bcolors.OK_STR)
             ok(ext_pipe)
 
         elif(cmd == "tracer_append_out_prefix"):
             trace_controller.append_out_prefix(args)
             writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
-            writePipe(ext_pipe, "tracer_append_out_prefix OK")
+            writePipe(ext_pipe, "tracer_append_out_prefix "+bcolors.OK_STR)
             ok(ext_pipe)
 
         elif(cmd == "tracer_configure_out_prefix"):
             trace_controller.configure_out_prefix(args)
             writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
-            writePipe(ext_pipe, "tracer_configure_out_prefix OK")
+            writePipe(ext_pipe, "tracer_configure_out_prefix "+bcolors.OK_STR)
             ok(ext_pipe)
 
         elif(cmd == "tracer_configure_markers"):
             trace_controller.configure_markers(args)
             writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
-            writePipe(ext_pipe, "tracer_configure_markers OK")
+            writePipe(ext_pipe, "tracer_configure_markers "+bcolors.OK_STR)
             ok(ext_pipe)
 
         elif(cmd == "tracer_register_regions"):
             trace_controller.register_regions(args)
             writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
-            writePipe(ext_pipe, "tracer_register_regions OK")
+            writePipe(ext_pipe, "tracer_register_regions "+bcolors.OK_STR)
             ok(ext_pipe)
 
         elif(cmd == "tracer_register_reactions"):
             trace_controller.register_reactions(args)
             writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
-            writePipe(ext_pipe, "tracer_register_reactions OK")
+            writePipe(ext_pipe, "tracer_register_reactions "+bcolors.OK_STR)
             ok(ext_pipe)
 
         elif(cmd == "tracer_disable_reaction"):
             trace_controller.disable_reaction(args)
             writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
-            writePipe(ext_pipe, "tracer_disable_reaction OK")
+            writePipe(ext_pipe, "tracer_disable_reaction "+bcolors.OK_STR)
             ok(ext_pipe)
 
         elif(cmd == "tracer_autorepeat_reaction"):
             trace_controller.autorepeat_reaction(args)
             writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
-            writePipe(ext_pipe, "tracer_autorepeat_reaction OK")
+            writePipe(ext_pipe, "tracer_autorepeat_reaction "+bcolors.OK_STR)
             ok(ext_pipe)
 
         elif(cmd == "tracer_exclusive_reaction"):
             trace_controller.exclusive_reaction(args)
             writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
-            writePipe(ext_pipe, "tracer_exclusive_reaction OK")
+            writePipe(ext_pipe, "tracer_exclusive_reaction "+bcolors.OK_STR)
             ok(ext_pipe)
 
         elif(cmd == "tracer_reaction_counter"):
             trace_controller.reaction_counter(args)
             writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
-            writePipe(ext_pipe, "tracer_reaction_counter OK")
+            writePipe(ext_pipe, "tracer_reaction_counter "+bcolors.OK_STR)
             ok(ext_pipe)
 
         elif(cmd == "tracer_raise_reaction"):
             trace_controller.raise_reaction(args)
             writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
-            writePipe(ext_pipe, "tracer_raise_reaction OK")
+            writePipe(ext_pipe, "tracer_raise_reaction "+bcolors.OK_STR)
             ok(ext_pipe)
 
         elif(cmd == "tracer_lower_reaction"):
             trace_controller.lower_reaction(args)
             writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
-            writePipe(ext_pipe, "tracer_lower_reaction OK")
+            writePipe(ext_pipe, "tracer_lower_reaction "+bcolors.OK_STR)
             ok(ext_pipe)
 
         elif(cmd == "tracer_enable_reaction"):
             trace_controller.enable_reaction(args)
             writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
-            writePipe(ext_pipe, "tracer_enable_reaction OK")
+            writePipe(ext_pipe, "tracer_enable_reaction "+bcolors.OK_STR)
             ok(ext_pipe)
 
         elif(cmd == "tracer_enable_all_reactions"):
             trace_controller.enable_all_reactions()
             writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
-            writePipe(ext_pipe, "tracer_enable_all_reactions OK")
+            writePipe(ext_pipe, "tracer_enable_all_reactions "+bcolors.OK_STR)
             ok(ext_pipe)
 
         elif(cmd == "tracer_disable_all_reactions"):
             trace_controller.disable_all_reactions()
             writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
-            writePipe(ext_pipe, "tracer_disable_all_reactions OK")
+            writePipe(ext_pipe, "tracer_disable_all_reactions "+bcolors.OK_STR)
             ok(ext_pipe)
 
         elif(cmd == "tracer_resolve_location"):
             trace_controller.resolve_location(args)
             writePipe(ext_pipe, "%s" % trace_controller.last_answer)
             writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
-            writePipe(ext_pipe, "tracer_resolve_location OK")
+            writePipe(ext_pipe, "tracer_resolve_location "+bcolors.OK_STR)
             ok(ext_pipe)
 
         elif(cmd == "tracer_auto_st"):
             trace_controller.auto_st()
             writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
-            writePipe(ext_pipe, "tracer_auto_st OK")
+            writePipe(ext_pipe, "tracer_auto_st "+bcolors.OK_STR)
             ok(ext_pipe)
 
         elif(cmd == "tracer_set_parameters"):
             trace_controller.set_parameters(args)
             writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
-            writePipe(ext_pipe, "tracer_set_parameters OK")
+            writePipe(ext_pipe, "tracer_set_parameters "+bcolors.OK_STR)
             ok(ext_pipe)
 
         elif(cmd == "tracer_set_st"):
             trace_controller.set_st(args)
             writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
-            writePipe(ext_pipe, "tracer_set_st OK")
+            writePipe(ext_pipe, "tracer_set_st "+bcolors.OK_STR)
             ok(ext_pipe)
 
         elif(cmd == "tracer_activate_markers"):
             trace_controller.activate_markers()
             writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
-            writePipe(ext_pipe, "tracer_activate_markers OK")
+            writePipe(ext_pipe, "tracer_activate_markers "+bcolors.OK_STR)
             ok(ext_pipe)
 
         elif(cmd == "tracer_configure_sample_pname"):
             trace_controller.set_sample_pname(args)
             writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
-            writePipe(ext_pipe, "tracer_configure_sample_pname OK")
+            writePipe(ext_pipe, "tracer_configure_sample_pname "+bcolors.OK_STR)
             ok(ext_pipe)
 
         elif(cmd == "tracer_configure_marker_st"):
             mod, addr = args.split(" ")
             trace_controller.configure_marker_st(mod, addr)
             writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
-            writePipe(ext_pipe, "tracer_configure_marker_st OK")
+            writePipe(ext_pipe, "tracer_configure_marker_st "+bcolors.OK_STR)
             ok(ext_pipe)
 
         elif(cmd == "tracer_configure_marker_end"):
             mod, addr = args.split(" ")
             trace_controller.configure_marker_end(mod, addr)
             writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
-            writePipe(ext_pipe, "tracer_configure_marker_end OK")
+            writePipe(ext_pipe, "tracer_configure_marker_end "+bcolors.OK_STR)
             ok(ext_pipe)
 
         elif(cmd == "tracer_attach_sample"):
             trace_controller.attach_sample()
             writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
-            writePipe(ext_pipe, "tracer_attach_sample OK")
+            writePipe(ext_pipe, "tracer_attach_sample "+bcolors.OK_STR)
             ok(ext_pipe)
 
         elif(cmd == "tracer_debug_sample"):
             trace_controller.debug_sample()
             writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
-            writePipe(ext_pipe, "tracer_debug_sample OK")
+            writePipe(ext_pipe, "tracer_debug_sample "+bcolors.OK_STR)
             ok(ext_pipe)
 
         elif(cmd == "tracer_debug_continue"):
             trace_controller.debug_continue(args)
             writePipe(ext_pipe, "%s" % trace_controller.last_answer)
             writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
-            writePipe(ext_pipe, "tracer_debug_continue OK")
+            writePipe(ext_pipe, "tracer_debug_continue "+bcolors.OK_STR)
             ok(ext_pipe)
 
         elif(cmd == "tracer_debug_continue_time"):
             trace_controller.debug_continue_time(args)
             writePipe(ext_pipe, "%s" % trace_controller.last_answer)
             writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
-            writePipe(ext_pipe, "tracer_debug_continue_time OK")
+            writePipe(ext_pipe, "tracer_debug_continue_time "+bcolors.OK_STR)
             ok(ext_pipe)
 
         elif(cmd == "tracer_prepare_trace"):
             trace_controller.prepare_trace()
             writePipe(ext_pipe, "%s" % trace_controller.last_answer)
             writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
-            writePipe(ext_pipe, "tracer_start_trace OK")
+            writePipe(ext_pipe, "tracer_start_trace "+bcolors.OK_STR)
             ok(ext_pipe)
 
         elif(cmd == "tracer_set_limit"):
             trace_controller.set_limit(args)
             writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
-            writePipe(ext_pipe, "tracer_set_limit OK")
+            writePipe(ext_pipe, "tracer_set_limit "+bcolors.OK_STR)
             ok(ext_pipe)
 
         elif(cmd == "tracer_dump_memory"):
@@ -1326,195 +1338,202 @@ def execute(cmds, ext_pipe):
             writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
             ok(ext_pipe)
 
+        elif(cmd == "tracer_start_strace"):
+            trace_controller.start_strace()
+            writePipe(ext_pipe, "%s" % trace_controller.last_answer)
+            writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
+            writePipe(ext_pipe, "tracer_start_strace "+bcolors.OK_STR)
+            ok(ext_pipe)
+
         elif(cmd == "tracer_start_trace"):
             trace_controller.start_trace()
             writePipe(ext_pipe, "%s" % trace_controller.last_answer)
             writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
-            writePipe(ext_pipe, "tracer_start_trace OK")
+            writePipe(ext_pipe, "tracer_start_trace "+bcolors.OK_STR)
             ok(ext_pipe)
 
         elif(cmd == "tracer_start_trace_light"):
             trace_controller.start_trace_light()
             writePipe(ext_pipe, "%s" % trace_controller.last_answer)
             writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
-            writePipe(ext_pipe, "tracer_start_trace_light OK")
+            writePipe(ext_pipe, "tracer_start_trace_light "+bcolors.OK_STR)
             ok(ext_pipe)
 
         elif(cmd == "tracer_start_trace_debug"):
             trace_controller.start_trace_debug()
             writePipe(ext_pipe, "%s" % trace_controller.last_answer)
             writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
-            writePipe(ext_pipe, "tracer_start_trace_debug OK")
+            writePipe(ext_pipe, "tracer_start_trace_debug "+bcolors.OK_STR)
             ok(ext_pipe)
 
         elif(cmd == "tracer_stop_trace"):
             trace_controller.stop_trace()
             writePipe(ext_pipe, "%s" % trace_controller.last_answer)
             writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
-            writePipe(ext_pipe, "tracer_stop_trace OK")
+            writePipe(ext_pipe, "tracer_stop_trace "+bcolors.OK_STR)
             ok(ext_pipe)
 
         elif(cmd == "tracer_list_markers"):
             trace_controller.list_markers()
             writePipe(ext_pipe, "%s" % trace_controller.last_answer)
             writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
-            writePipe(ext_pipe, "tracer_list_markers OK")
+            writePipe(ext_pipe, "tracer_list_markers "+bcolors.OK_STR)
             ok(ext_pipe)
 
         elif(cmd == "tracer_run_routine"):
             trace_controller.run_routine(args)
             writePipe(ext_pipe, "%s" % trace_controller.last_answer)
-            writePipe(ext_pipe, "tracer_run_routine OK")
+            writePipe(ext_pipe, "tracer_run_routine "+bcolors.OK_STR)
             ok(ext_pipe)
 
         elif(cmd == "tracer_secure_all_sections"):
             trace_controller.secure_all_sections()
             writePipe(ext_pipe, "%s" % trace_controller.last_answer)
             writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
-            writePipe(ext_pipe, "tracer_secure_all_sections OK")
+            writePipe(ext_pipe, "tracer_secure_all_sections "+bcolors.OK_STR)
             ok(ext_pipe)
 
         elif(cmd == "tracer_update_memory_w_zero"):
             trace_controller.update_memory_w_zero(args)
             writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
-            writePipe(ext_pipe, "tracer_string_ansi OK")
+            writePipe(ext_pipe, "tracer_string_ansi "+bcolors.OK_STR)
             ok(ext_pipe)
 
         elif(cmd == "tracer_update_memory"):
             trace_controller.update_memory(args)
             writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
-            writePipe(ext_pipe, "tracer_string_ansi OK")
+            writePipe(ext_pipe, "tracer_string_ansi "+bcolors.OK_STR)
             ok(ext_pipe)
 
         elif(cmd == "tracer_read_string_ansi"):
             trace_controller.read_string_ansi(args)
             writePipe(ext_pipe, "%s" % trace_controller.last_answer)
             writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
-            writePipe(ext_pipe, "tracer_read_string_ansi OK")
+            writePipe(ext_pipe, "tracer_read_string_ansi "+bcolors.OK_STR)
             ok(ext_pipe)
 
         elif(cmd == "tracer_write_string_ansi"):
             trace_controller.write_string_ansi(args)
             writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
-            writePipe(ext_pipe, "tracer_string_ansi OK")
+            writePipe(ext_pipe, "tracer_string_ansi "+bcolors.OK_STR)
             ok(ext_pipe)
 
         elif(cmd == "tracer_read_string_unicode"):
             trace_controller.read_string_unicode(args)
             writePipe(ext_pipe, "%s" % trace_controller.last_answer)
             writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
-            writePipe(ext_pipe, "tracer_read_string_unicode OK")
+            writePipe(ext_pipe, "tracer_read_string_unicode "+bcolors.OK_STR)
             ok(ext_pipe)
 
         elif(cmd == "tracer_write_string_unicode"):
             trace_controller.write_string_unicode(args)
             writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
-            writePipe(ext_pipe, "tracer_write_string_unicode OK")
+            writePipe(ext_pipe, "tracer_write_string_unicode "+bcolors.OK_STR)
             ok(ext_pipe)
 
         elif(cmd == "tracer_read_arg"):
             trace_controller.read_arg(args)
             writePipe(ext_pipe, "%s" % trace_controller.last_answer)
             writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
-            writePipe(ext_pipe, "tracer_read_arg OK")
+            writePipe(ext_pipe, "tracer_read_arg "+bcolors.OK_STR)
             ok(ext_pipe)
 
         elif(cmd == "tracer_read_arg_ansi"):
             trace_controller.read_arg_ansi(args)
             writePipe(ext_pipe, "%s" % trace_controller.last_answer)
             writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
-            writePipe(ext_pipe, "tracer_read_arg_uni OK")
+            writePipe(ext_pipe, "tracer_read_arg_uni "+bcolors.OK_STR)
             ok(ext_pipe)
 
         elif(cmd == "tracer_read_arg_uni"):
             trace_controller.read_arg_uni(args)
             writePipe(ext_pipe, "%s" % trace_controller.last_answer)
             writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
-            writePipe(ext_pipe, "tracer_read_arg_uni OK")
+            writePipe(ext_pipe, "tracer_read_arg_uni "+bcolors.OK_STR)
             ok(ext_pipe)
 
         elif(cmd == "tracer_list_bpts"):
             trace_controller.list_bpts()
             writePipe(ext_pipe, "%s" % trace_controller.last_answer)
             writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
-            writePipe(ext_pipe, "tracer_list_bpts OK")
+            writePipe(ext_pipe, "tracer_list_bpts "+bcolors.OK_STR)
             ok(ext_pipe)
 
         elif(cmd == "tracer_list_libs"):
             trace_controller.list_libs()
             writePipe(ext_pipe, "%s" % trace_controller.last_answer)
             writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
-            writePipe(ext_pipe, "tracer_list_libs OK")
+            writePipe(ext_pipe, "tracer_list_libs "+bcolors.OK_STR)
             ok(ext_pipe)
 
         elif(cmd == "tracer_list_all_tebs"):
             trace_controller.list_all_tebs()
             writePipe(ext_pipe, "%s" % trace_controller.last_answer)
             writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
-            writePipe(ext_pipe, "tracer_list_all_tebs OK")
+            writePipe(ext_pipe, "tracer_list_all_tebs "+bcolors.OK_STR)
             ok(ext_pipe)
 
         elif(cmd == "tracer_list_tebs"):
             trace_controller.list_tebs()
             writePipe(ext_pipe, "%s" % trace_controller.last_answer)
             writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
-            writePipe(ext_pipe, "tracer_list_tebs OK")
+            writePipe(ext_pipe, "tracer_list_tebs "+bcolors.OK_STR)
             ok(ext_pipe)
 
         elif(cmd == "tracer_list_ps"):
             trace_controller.list_ps()
             writePipe(ext_pipe, "%s" % trace_controller.last_answer)
             writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
-            writePipe(ext_pipe, "tracer_list_ps OK")
+            writePipe(ext_pipe, "tracer_list_ps "+bcolors.OK_STR)
             ok(ext_pipe)
 
         elif(cmd == "tracer_out_region"):
             trace_controller.out_region(args)
             writePipe(ext_pipe, "%s\n" % trace_controller.last_answer)
             writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
-            writePipe(ext_pipe, "tracer_out_region OK");
+            writePipe(ext_pipe, "tracer_out_region "+bcolors.OK_STR);
             ok(ext_pipe)
 
         elif(cmd == "tracer_read_region"):
             trace_controller.read_region(args)
             writePipe(ext_pipe, "%s\n" % trace_controller.last_answer)
             writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
-            writePipe(ext_pipe, "tracer_read_region OK");
+            writePipe(ext_pipe, "tracer_read_region "+bcolors.OK_STR);
             ok(ext_pipe)
 
         elif(cmd == "tracer_read_dword"):
             trace_controller.read_dword(args)
             writePipe(ext_pipe, "%s\n" % trace_controller.last_answer)
             writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
-            writePipe(ext_pipe, "tracer_read_dword OK");
+            writePipe(ext_pipe, "tracer_read_dword "+bcolors.OK_STR);
             ok(ext_pipe)
 
         elif(cmd == "tracer_write_dword"):
             trace_controller.write_dword(args)
             writePipe(ext_pipe, "%s\n" % trace_controller.last_answer)
             writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
-            writePipe(ext_pipe, "tracer_write_dword OK");
+            writePipe(ext_pipe, "tracer_write_dword "+bcolors.OK_STR);
             ok(ext_pipe)
 
         elif(cmd == "tracer_read_register"):
             trace_controller.read_register(args)
             writePipe(ext_pipe, "%s\n" % trace_controller.last_answer)
             writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
-            writePipe(ext_pipe, "tracer_read_register OK");
+            writePipe(ext_pipe, "tracer_read_register "+bcolors.OK_STR);
             ok(ext_pipe)
 
         elif(cmd == "tracer_write_register"):
             trace_controller.write_register(args)
             writePipe(ext_pipe, "%s\n" % trace_controller.last_answer)
             writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
-            writePipe(ext_pipe, "tracer_write_register OK");
+            writePipe(ext_pipe, "tracer_write_register "+bcolors.OK_STR);
             ok(ext_pipe)
 
         elif(cmd == "tracer_read_stack"):
             trace_controller.read_stack(args)
             writePipe(ext_pipe, "%s\n" % trace_controller.last_answer)
             writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
-            writePipe(ext_pipe, "tracer_read_stack OK")
+            writePipe(ext_pipe, "tracer_read_stack "+bcolors.OK_STR)
             #writeReport(trace_controller)
             ok(ext_pipe)
 
@@ -1522,7 +1541,7 @@ def execute(cmds, ext_pipe):
             import urllib2
             response = urllib2.urlopen(args).read()
             writePipe(ext_pipe, "%s" % response)
-            writePipe(ext_pipe, "get_http OK")
+            writePipe(ext_pipe, "get_http "+bcolors.OK_STR)
             ok(ext_pipe)
 
         elif(cmd == "run_cmd"):
@@ -1532,7 +1551,7 @@ def execute(cmds, ext_pipe):
             p = subprocess.Popen(cmd.split(), stdout=subprocess.PIPE)
             out, err = p.communicate()
             writePipe(ext_pipe, out)
-            writePipe(ext_pipe, "run_cmd OK")
+            writePipe(ext_pipe, "run_cmd "+bcolors.OK_STR)
             ok(ext_pipe)
 
         elif(cmd == "get_dns"):
@@ -1540,98 +1559,101 @@ def execute(cmds, ext_pipe):
 
             response = socket.gethostbyname(args)
             writePipe(ext_pipe, "%s" % response)
-            writePipe(ext_pipe, "get_dns OK")
+            writePipe(ext_pipe, "get_dns "+bcolors.OK_STR)
             ok(ext_pipe)
 
         elif(cmd == "tracer_print"):
             trace_controller.print_sth(args)
-            writePipe(ext_pipe, "tracer_print OK")
+            writePipe(ext_pipe, "tracer_print "+bcolors.OK_STR)
             ok(ext_pipe)
 
         elif(cmd == "spawn_responder_80"):
             from simple import simple_responder
             responder = simple_responder(80)
-            writePipe(ext_pipe, "spawn_responder_80 OK")
+            writePipe(ext_pipe, "spawn_responder_80 "+bcolors.OK_STR)
             ok(ext_pipe)
 
         elif(cmd == "spawn_responder"):
             from simple import simple_responder
-            responder = simple_responder(int(args,10))
-            writePipe(ext_pipe, "spawn_responder OK")
+            try:
+                responder = simple_responder(int(args,10))
+                writePipe(ext_pipe, "spawn_responder "+bcolors.OK_STR)
+            except Exception:
+                writePipe(ext_pipe, "ERROR")
             ok(ext_pipe)
 
         elif(cmd == "responder_next_response_from_file"):
             responder.load_next_response_from_file("%s\\%s" % (trace_controller.in_dir, args))
-            writePipe(ext_pipe, "responder_next_response OK")
+            writePipe(ext_pipe, "responder_next_response "+bcolors.OK_STR)
             ok(ext_pipe)
 
         elif(cmd == "responder_next_response"):
             responder.load_next_response(args)
-            writePipe(ext_pipe, "responder_next_response OK")
+            writePipe(ext_pipe, "responder_next_response "+bcolors.OK_STR)
             ok(ext_pipe)
 
         elif(cmd == "spawn_mailslot_client"):
             from mailslot_client import mailslot_client
             mailslot_client = mailslot_client(args)
-            writePipe(ext_pipe, "spawn_mailslot_client OK")
+            writePipe(ext_pipe, "spawn_mailslot_client "+bcolors.OK_STR)
             ok(ext_pipe)
 
         elif(cmd == "mailslot_next_response"):
             mailslot_client.load_next_response(args)
-            writePipe(ext_pipe, "mailslot_next_response OK")
+            writePipe(ext_pipe, "mailslot_next_response "+bcolors.OK_STR)
             ok(ext_pipe)
 
         elif(cmd == "spawn_tracer"):
             new_tracer = trace_controller.spawn_tracer()
-            writePipe(ext_pipe, "[Trace controller]: OK")
+            writePipe(ext_pipe, "[Trace controller]: "+bcolors.OK_STR)
             writePipe(ext_pipe, "Active tracers: %d" % trace_controller.trace_count)
-            writePipe(ext_pipe, "spawn_tracer OK")
+            writePipe(ext_pipe, "spawn_tracer "+bcolors.OK_STR)
             ok(ext_pipe)
 
         elif(cmd == "spawn_tracer_log"):
             new_tracer = trace_controller.spawn_tracer_log()
-            writePipe(ext_pipe, "[Trace controller]: OK")
+            writePipe(ext_pipe, "[Trace controller]: "+bcolors.OK_STR)
             writePipe(ext_pipe, "Active tracers: %d" % trace_controller.trace_count)
-            writePipe(ext_pipe, "spawn_tracer_log OK")
+            writePipe(ext_pipe, "spawn_tracer_log "+bcolors.OK_STR)
             ok(ext_pipe)
 
         elif(cmd == "spawn_tracer_remote_log"):
             new_tracer = trace_controller.spawn_tracer_remote_log()
-            writePipe(ext_pipe, "[Trace controller]: OK")
+            writePipe(ext_pipe, "[Trace controller]: "+bcolors.OK_STR)
             writePipe(ext_pipe, "Active tracers: %d" % trace_controller.trace_count)
-            writePipe(ext_pipe, "spawn_tracer_remote_log OK")
+            writePipe(ext_pipe, "spawn_tracer_remote_log "+bcolors.OK_STR)
             ok(ext_pipe)
 
         elif(cmd == "spawn_tracer_no_log"):
             new_tracer = trace_controller.spawn_tracer_no_log()
-            writePipe(ext_pipe, "[Trace controller]: OK")
+            writePipe(ext_pipe, "[Trace controller]: "+bcolors.OK_STR)
             writePipe(ext_pipe, "Active tracers: %d" % trace_controller.trace_count)
-            writePipe(ext_pipe, "spawn_tracer_no_log OK")
+            writePipe(ext_pipe, "spawn_tracer_no_log "+bcolors.OK_STR)
             ok(ext_pipe)
 
         elif(cmd == "close_tracer"):
             trace_controller.close_active_tracer()
-            writePipe(ext_pipe, "[Trace controller]: OK")
+            writePipe(ext_pipe, "[Trace controller]: "+bcolors.OK_STR)
             writePipe(ext_pipe, "Remaining tracers: %d" % trace_controller.trace_count)
-            writePipe(ext_pipe, "close_tracer OK")
+            writePipe(ext_pipe, "close_tracer "+bcolors.OK_STR)
             ok(ext_pipe)
 
         elif(cmd == "read_prefix"):
             trace_controller.read_prefix()
             writePipe(ext_pipe, "%s\n" % trace_controller.last_answer)
-            writePipe(ext_pipe, "read_prefix OK")
+            writePipe(ext_pipe, "read_prefix "+bcolors.OK_STR)
             ok(ext_pipe)
 
         elif(cmd == "which_tracer"):
             trace_controller.close_active_tracer()
             writePipe(ext_pipe, "%d" % trace_controller.tracer_active_id)
-            writePipe(ext_pipe, "which_tracer OK")
+            writePipe(ext_pipe, "which_tracer "+bcolors.OK_STR)
             ok(ext_pipe)
 
         elif(cmd == "start_trace_controller"):
-            writePipe(ext_pipe, "[internal]: OK")
+            writePipe(ext_pipe, "[internal]: "+bcolors.OK_STR)
             trace_controller = TraceController.TraceController(ext_pipe)
-            writePipe(ext_pipe, "start_trace_controller OK")
+            writePipe(ext_pipe, "start_trace_controller "+bcolors.OK_STR)
             ok(ext_pipe)
 
 #    except Exception, e:

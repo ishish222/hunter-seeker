@@ -316,6 +316,7 @@ Perform offline qemu image revert to state from settings
 - LowerBuiltin
 - DumpMemory
 - TracerStartTrace
+- TracerStartStrace
 - TracerStartTraceDebug
 - TracerStartTraceLight
 - ReadRegister

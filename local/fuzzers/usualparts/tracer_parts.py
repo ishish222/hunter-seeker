@@ -33,6 +33,17 @@ def tracer_dump_memory(args=None):
     globs.state.ret = response
     return
 
+def tracer_start_strace(args=None):
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+    
+    write_socket(options.s, "tracer_start_strace");
+    response, _, _ = read_socket(options.s)
+
+    globs.state.ret = response
+    return
+
 def tracer_start_trace(args=None):
     options = globs.state.options
     state = globs.state
@@ -277,6 +288,8 @@ def write_ansi(args=None):
     options = globs.state.options
     
     addr = globs.state.ret
+    if(args == None):
+        args = globs.state.stack.pop()
 
     write_socket(options.s, "tracer_write_string_ansi 0x%08x %s" % (addr, args));
     response, _, _ = read_socket(options.s)

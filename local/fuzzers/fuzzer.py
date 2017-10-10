@@ -17,6 +17,7 @@ import signal
 class bcolors:
     HEADER = '\033[95m'
     OKBLUE = '\033[94m'
+    LIGHTBLUE = '\033[42m'
     OKGREEN = '\033[92m'
     WARNING = '\033[93m'
     FAIL = '\033[91m'
@@ -41,7 +42,7 @@ def stateful_routine(script_path):
     signal.signal(signal.SIGHUP, sigkill_handler)
 
     print
-    print bcolors.OKGREEN + "Loading script: [%s]" % script_path + bcolors.ENDC
+    print bcolors.OKBLUE + "Loading script: [%s]" % script_path + bcolors.ENDC
     print
 
     script_file = open(script_path)
@@ -143,7 +144,7 @@ def stateful_routine(script_path):
 
         try:
             #print "[%s] (%s)" % (instruction.name, script_path)
-            print bcolors.OKBLUE + "===[%s]" % (instruction.name) + bcolors.ENDC
+            print bcolors.LIGHTBLUE + "===[%s]" % (instruction.name) + bcolors.ENDC
             if(instruction.name == 'Execute'):
                 stateful_routine(instruction.args)
                 ret = None

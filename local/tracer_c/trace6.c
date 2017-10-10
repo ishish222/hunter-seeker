@@ -5,6 +5,9 @@
 
 #define TRACE_CONTROLLER_IP "127.0.0.1"
 #define TRACE_CONTROLLER_PORT 12341
+
+
+#define VERSION_STR "# tracer version 2.0\n"
 //#include <winsock.h>
 
 //#pragma comment(lib,"ws2_32.lib") //Winsock Library
@@ -89,18 +92,20 @@ DWORD read_register(DWORD tid_id, char* reg);
 int report_register(DWORD tid_id, char* reg);
 int write_breakpoint(BREAKPOINT*);
 int unwrite_breakpoint(BREAKPOINT*);
+int read_word(DWORD addr);
+int read_dword(DWORD addr);
 
 /*
 * various
 */
 
-int check_started()
+int check_status_for_ss(int status)
 {
-    if((my_trace->status != STATUS_DBG_STARTED) && (my_trace->status != STATUS_DBG_SCANNED) && (my_trace->status != STATUS_DBG_LIGHT)) 
-    {
-        return 0x0;
-    }
-    return 1;
+    if(status == STATUS_DBG_STARTED) return 0x1;
+    if(status == STATUS_DBG_SCANNED) return 0x1;
+    if(status == STATUS_DBG_LIGHT) return 0x1;
+    if(status == STATUS_DBG_SYSCALL) return 0x1;
+    return 0x0;
 }
 
 int d_print(const char* format, ...)
@@ -2021,12 +2026,14 @@ void register_thread(DWORD tid, HANDLE handle)
     sprintf(line, "RT,0x%08x,%s\n", tid, line2);
     add_to_buffer(line);
 
-    if((my_trace->status == STATUS_DBG_STARTED) || (my_trace->status == STATUS_DBG_SCANNED) || (my_trace->status == STATUS_DBG_LIGHT)) 
+    //if((my_trace->status == STATUS_DBG_STARTED) || (my_trace->status == STATUS_DBG_SCANNED) || (my_trace->status == STATUS_DBG_LIGHT)) 
+    if(check_status_for_ss(my_trace->status))
     {
         set_ss(tid);
     }
     return;
 }
+
 
 int register_thread_debug(DWORD tid, HANDLE handle)
 {
@@ -2265,6 +2272,8 @@ void deregister_lib(UNLOAD_DLL_DEBUG_INFO info)
 }
 
 void ss_callback(void* data);
+void syscall_callback(void* data);
+void noop_callback(void* data);
 void end_callback(void* data);
 void ntmap_1_callback(void* data);
 void ntmap_2_callback(void* data);
@@ -2858,6 +2867,73 @@ int is_call(OFFSET eip)
     return 0x0;
 }
 
+void noop_callback(void* data)
+{
+    return;
+}
+
+int is_syscall(DWORD eip)
+{
+    DWORD dword;
+
+    /* read WORD */ 
+    dword = read_word(eip);    
+    
+    /* compare to 0x0f 0x34 (sysenter) */
+    if(dword == 0x0000340f)
+    {
+        return 0x1;
+    }
+
+    return 0x0;
+}
+
+void syscall_callback(void* data)
+{
+    DEBUG_EVENT* de;
+    de = (DEBUG_EVENT*)data;
+    DWORD eip;
+    DWORD tid;
+    DWORD bytes_written;
+    int size = 0x0;
+    char* disRet;
+    int written;
+    char line[MAX_LINE];
+    char bytes[0x2];
+    DWORD tid_pos;
+
+    eip = (DWORD)(de->u.Exception.ExceptionRecord.ExceptionAddress);
+    tid = de->dwThreadId;
+    tid_pos = my_trace->tid2index[tid];
+
+    my_trace->last_eip = eip;
+    my_trace->last_tid = tid;
+    my_trace->instr_count++;
+
+    if(is_syscall(eip))
+    {
+        DWORD syscall_no;
+
+        /* check syscall number */
+        syscall_no = read_register(-1, "EAX");
+
+        /* if syscall observed  */
+
+        /* print out syscall args */
+        sprintf(line, "SC,0x%08x,0x%08x,0x%08x\n", syscall_no, tid, eip);
+        add_to_buffer(line);
+    }
+    //else
+    //{
+    //sprintf(line, "0x%08x,0x%08x\n", tid, eip);
+    //add_to_buffer(line);
+    //}
+
+    set_ss(0x0);
+
+    return;
+}
+
 void ss_callback(void* data)
 {
     DEBUG_EVENT* de;
@@ -2888,7 +2964,8 @@ void ss_callback(void* data)
 
     eip = (DWORD)(de->u.Exception.ExceptionRecord.ExceptionAddress);
         //d_print("%p\n", eip);
-    if((my_trace->status != STATUS_DBG_STARTED) && (my_trace->status != STATUS_DBG_SCANNED) && (my_trace->status != STATUS_DBG_LIGHT)) 
+//    if((my_trace->status != STATUS_DBG_STARTED) && (my_trace->status != STATUS_DBG_SCANNED) && (my_trace->status != STATUS_DBG_LIGHT)) 
+    if(!check_status_for_ss(my_trace->status))
     {
         d_print("quick ss_callback\n");
         unset_ss(0x0);
@@ -3101,7 +3178,8 @@ void dump_contexts()
 void end_callback(void* data)
 {
     char line[MAX_LINE];
-    ss_callback(data);
+    //ss_callback(data);
+    my_trace->callback_routine(data);
     
     DEBUG_EVENT* de;
     de = (DEBUG_EVENT*)data;
@@ -5068,7 +5146,8 @@ int process_last_event()
                 {
                     case EXCEPTION_SINGLE_STEP:
                         /* we are authorized to handle this */
-                        ss_callback((void*)&my_trace->last_event);
+                        //ss_callback((void*)&my_trace->last_event);
+                        my_trace->callback_routine((void*)&my_trace->last_event);
                         //set_ss(my_trace->last_event.dwThreadId);
                         my_trace->last_win_status = DBG_CONTINUE;
                         return REPORT_CONTINUE;
@@ -5099,7 +5178,9 @@ int process_last_event()
                             }
                         }
 
-//                        ss_callback((void*)&my_trace->last_event); /*skad to sie tutaj wzielo? */
+//                        //ss_callback((void*)&my_trace->last_event); /*skad to sie tutaj wzielo? */
+                        my_trace->callback_routine((void*)&my_trace->last_event);
+
                         if(!handled)                        
                         {
                             d_print("This BP is not our, we pass it to the debugee\n");
@@ -5114,7 +5195,9 @@ int process_last_event()
                         d_print("other\n");
                         /* this is not our responsibility, inform TracerController and wait for orders */
                         register_exception(my_trace->last_event.dwThreadId, my_trace->last_exception);
-                        ss_callback((void*)&my_trace->last_event);
+//                        ss_callback((void*)&my_trace->last_event);
+                        my_trace->callback_routine((void*)&my_trace->last_event);
+ 
                         return REPORT_EXCEPTION;
                         break;
                 }
@@ -5996,11 +6079,34 @@ int handle_cmd(char* cmd)
 
         my_trace->status = STATUS_DBG_STARTED;
         my_trace->block_delayed_reaction = 1;
-        ss_callback((void*)&my_trace->last_event);
-        set_ss(0x0);
+ //       ss_callback((void*)&my_trace->last_event);
+        my_trace->callback_routine = &ss_callback;
+        my_trace->callback_routine((void*)&my_trace->last_event);
+         set_ss(0x0);
         d_print("Tracing enabled\n");
 
         d_print("Starting @ 0x%08x\n", my_trace->last_eip);
+        sprintf(line2, VERSION_STR);
+        add_to_buffer(line2);
+        sprintf(line2, "ST,0x%08x\n", my_trace->last_eip);
+        add_to_buffer(line2);
+
+        send_report();
+    }
+    else if(!strncmp(cmd, CMD_ENABLE_TRACE_SYSCALL, 2))
+    {
+        char line2[MAX_LINE];
+
+        my_trace->status = STATUS_DBG_SYSCALL;
+//        ss_callback((void*)&my_trace->last_event);
+        my_trace->callback_routine = &syscall_callback;
+        my_trace->callback_routine((void*)&my_trace->last_event);
+        set_ss(0x0);
+        d_print("Syscall tracing debugged enabled\n");
+
+        d_print("Starting @ 0x%08x\n", my_trace->last_eip);
+        sprintf(line2, VERSION_STR);
+        add_to_buffer(line2);
         sprintf(line2, "ST,0x%08x\n", my_trace->last_eip);
         add_to_buffer(line2);
 
@@ -6011,10 +6117,15 @@ int handle_cmd(char* cmd)
         char line2[MAX_LINE];
 
         my_trace->status = STATUS_DBG_LIGHT;
-        ss_callback((void*)&my_trace->last_event);
+//        ss_callback((void*)&my_trace->last_event);
+        my_trace->callback_routine = &ss_callback;
+        my_trace->callback_routine((void*)&my_trace->last_event);
+
         set_ss(0x0);
         d_print("Light tracing debugged enabled\n");
 
+        sprintf(line2, VERSION_STR);
+        add_to_buffer(line2);
         d_print("Starting @ 0x%08x\n", my_trace->last_eip);
         sprintf(line2, "ST,0x%08x\n", my_trace->last_eip);
         add_to_buffer(line2);
@@ -6026,10 +6137,15 @@ int handle_cmd(char* cmd)
         char line2[MAX_LINE];
 
         my_trace->status = STATUS_DBG_SCANNED;
-        ss_callback((void*)&my_trace->last_event);
+        my_trace->callback_routine = &ss_callback;
+        my_trace->callback_routine((void*)&my_trace->last_event);
+
+//        ss_callback((void*)&my_trace->last_event);
         set_ss(0x0);
         d_print("Tracing debugged enabled\n");
 
+        sprintf(line2, VERSION_STR);
+        add_to_buffer(line2);
         d_print("Starting @ 0x%08x\n", my_trace->last_eip);
         sprintf(line2, "ST,0x%08x\n", my_trace->last_eip);
         add_to_buffer(line2);
@@ -7012,6 +7128,8 @@ int main(int argc, char** argv)
 
     /*configure syscalls */
     configure_syscalls();
+
+    my_trace->callback_routine = &noop_callback;
 
     /*configure routines */
     my_trace->routines[0x001] = &react_sysenter_callback;

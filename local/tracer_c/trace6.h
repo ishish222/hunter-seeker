@@ -99,6 +99,7 @@
 #define STATUS_DBG_SCANNED  0x4
 #define STATUS_DBG_LIGHT    0x5
 #define STATUS_DBG_STOPPED  0x6
+#define STATUS_DBG_SYSCALL  0x7
 
 /* tracer reports */
 
@@ -154,6 +155,7 @@
 #define CMD_ENABLE_TRACE        "ET"
 #define CMD_ENABLE_DBG_TRACE    "ED"
 #define CMD_ENABLE_DBG_LIGHT    "EL"
+#define CMD_ENABLE_TRACE_SYSCALL "Et"
 #define CMD_DISABLE_TRACE       "DT"
 #define CMD_DUMP_MEMORY         "DM"
 #define CMD_UPDATE_MEMORY       "UM"
@@ -435,6 +437,8 @@ typedef struct TRACE_CONFIG_
     LOCATION last_location = {0x0, 0x0};
     LOCATION_DESCRIPTOR syscall_out_args[MAX_SYSCALL_ENTRIES][MAX_SYSCALL_OUT_ARGS];
     LOCATION syscall_out_args_dump_list[MAX_SYSCALL_OUT_ARGS];
+
+    void (*callback_routine)(void*);
 
 } TRACE_CONFIG;
 

@@ -676,6 +676,9 @@ taint probowal zrobic update pamieci przed dumpem.
 088 - zaimplementowac obsluge i raportowanie bledow
 
 Na poziomie b.exe to chyba bedzie
+Wprowadzono kolorowanie informacji
+Mozliwe, ze najlepiej bedzie to zaczac od poziomu internal z lapaniem wyjatkow
+Pozniej poimplementowac raportowanie bledow w b.exe
 
 --
 
@@ -688,9 +691,18 @@ Czy nie dzialaja locki pry zapisywaniu?
 090 - skrypt do wypisywania IoC
 
 Wlaczenie zamiast trasowania trybu wypisywania reakcji z API
+Pouzupelniac opisy API
 
 --
 
 [x] 091 - potrzebna operacja resolve zwracajaca adres
 
+--
 
+092 - czy w decyzjach moze byc automatyczne przekierowanie breakpointu do podprocedury?
+
+--
+
+093 - skanowanie strace
+
+rlated to #90

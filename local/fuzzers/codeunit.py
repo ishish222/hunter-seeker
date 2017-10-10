@@ -77,6 +77,7 @@ prototypes['ExclusiveBuiltin']      = tracer_parts.tracer_exclusive_anchors
 prototypes['LowerBuiltin']          = tracer_parts.tracer_lower_anchors
 prototypes['DumpMemory']            = tracer_parts.tracer_dump_memory
 prototypes['TracerStartTrace']      = tracer_parts.tracer_start_trace
+prototypes['TracerStartStrace']     = tracer_parts.tracer_start_strace
 prototypes['TracerStartTraceDebug'] = tracer_parts.tracer_start_trace_debug
 prototypes['TracerStartTraceLight'] = tracer_parts.tracer_start_trace_light
 prototypes['ReadRegister']          = tracer_parts.tracer_read_register

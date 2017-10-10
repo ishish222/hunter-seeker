@@ -197,6 +197,8 @@ def read_socket(s):
             break
 
     # find status
+
+
     off = data.find("Status: ")
     if(off != -1):
         status = data[off+8:off+10]
