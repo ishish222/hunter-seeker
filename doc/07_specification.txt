@@ -185,6 +185,11 @@ OU - comment out
 
     Include comment in TID output file.
 
+SC - syscall
+    syntax: SC,<TID>,<syscall_no>
+
+    Syscall has been made. This information is consumed in IoC research.
+
 # - comment (ignored)
     syntax: #
 

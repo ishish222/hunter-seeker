@@ -16,16 +16,9 @@
 
 /* add_readsign */
 
-int reload_out_file();
 TRACE_CONFIG* my_trace;
-char spawned = 0x0;
-FILE* log;
-char started = 0x0;
 char instr_count_s[0x20];
-int full_log = 0x0;
 DWORD scan_on;
-unsigned scan_count;
-READ_RECORD last_read_record;
 WATCHED watched[WATCH_LIMIT];
 HANDLE file_handle;
 DWORD sysenter_esp;
@@ -33,38 +26,19 @@ DWORD sysenter_no;
 FILE* file;
 char buffer[buf_size];
 int index = 0;
-char instr[0x60];
-const wchar_t* target_lib = L"ntdll.dll";
-DWORD target_lib_off = 0x0;
-const char* target_call = "NtCreateFile";
-DWORD target_call_off = 0x44a10;
-DWORD target_off = 0x0;
-CREATE_PROCESS_DEBUG_INFO cpdi;
 int myPID = 0x0;
-int myTID = 0x0;
-DWORD img_base;
-DWORD nt1_off;
-DWORD nt2_off;
-DWORD nt3_off;
-DWORD nt4_off;
-DWORD sysenter_off;
-DWORD sysret_off;
 LOCATION_DESCRIPTOR last_arg = {0x0, 0x0, LOCATION_END, LOCATION_END, 0x0};
 LOCATION last_location = {0x0, 0x0};
 LOCATION_DESCRIPTOR syscall_out_args[MAX_SYSCALL_ENTRIES][MAX_SYSCALL_OUT_ARGS];
 LOCATION syscall_out_args_dump_list[MAX_SYSCALL_OUT_ARGS];
-DWORD buffer_addr;
-DWORD size_addr;
-CREATE_THREAD_DEBUG_INFO2 threads[0x100000000];
-BREAKPOINT* add_breakpoint(char*, REACTION*);
+
+char line2[MAX_LINE];
+
 DWORD find_lib(char* name);
 BOOL WINAPI HandlerRoutine(_In_ DWORD dwCtrlType);
 SIZE_T dump_mem(FILE*, void*, SIZE_T);
-
-char* blacklist_lib[] = {"kernel32.dll", "ntdll.dll", "user32.dll"};
-DWORD blacklist_addr[] = {};
-char line2[MAX_LINE];
-
+BREAKPOINT* add_breakpoint(char*, REACTION*);
+int reload_out_file();
 void read_memory(HANDLE, void*, void*, SIZE_T, SIZE_T*);
 void e_reaction_handler(void* data);
 void i_reaction_handler(void* data);
@@ -2323,10 +2297,39 @@ void react_sysenter_callback(void* data)
     sysenter_no = ctx.Eax;
     sysenter_esp = ctx.Esp;
 
-    sprintf(line, "# Syscall in TID: 0x%08x no: 0x%08x, stack@ 0x%08x\n", tid, sysenter_no, sysenter_esp);
+    sprintf(line, "SC,0x%08x,0x%08x\n", tid, sysenter_no);
     add_to_buffer(line);
 
     deregister_thread(tid, my_trace->threads[tid_pos].handle);
+    set_ss(0x0);
+}
+
+void react_sysenter_callback_wo_reregister(void* data)
+{
+    char line[MAX_LINE];
+
+    DEBUG_EVENT* de;
+    de = (DEBUG_EVENT*)data;
+    DWORD tid = de->dwThreadId;
+    unsigned i;
+
+    DWORD tid_pos;
+    tid_pos = my_trace->tid2index[tid];
+
+    CONTEXT ctx;
+    ctx.ContextFlags = CONTEXT_FULL;
+    if(GetThreadContext(my_trace->threads[tid_pos].handle, &ctx) == 0x0) 
+    {
+        d_print("Failed to get context, error: 0x%08x\n", GetLastError());
+        return;
+    }
+    d_print("ESP: %p\n", ctx.Esp);
+    sysenter_no = ctx.Eax;
+    sysenter_esp = ctx.Esp;
+
+    sprintf(line, "SC,0x%08x,0x%08x\n", tid, sysenter_no);
+    add_to_buffer(line);
+
     set_ss(0x0);
 }
 
@@ -2353,6 +2356,219 @@ void react_sysret_callback(void* data)
     sprintf(line, "UP,0x%08x,0x%08x", sysenter_esp, 0x50);
     add_to_buffer(line);
 */
+
+    // prepare dump list
+    CONTEXT ctx;
+    ctx.ContextFlags = CONTEXT_FULL;
+    if(GetThreadContext(my_trace->threads[tid_pos].handle, &ctx) == 0x0) 
+    {
+        d_print("Failed to get context, error: 0x%08x\n", GetLastError());
+        return;
+    }
+    d_print("EAX: 0x%08x\n", ctx.Eax);
+
+    /*
+    for(i = 0x0; i<MAX_SYSCALL_OUT_ARGS; i++)
+            my_trace->syscall_out_args_dump_list[i].off = last_location.off;
+    */
+
+    d_print("[[Syscall: 0x%08x @ 0x%08x]]\n", sysenter_no, ctx.Eip);
+    for(i = 0x0; i<MAX_SYSCALL_OUT_ARGS; i++)
+    {
+//        d_print("Arg no: 0x%02x\n", i);
+        if(my_trace->syscall_out_args[sysenter_no][i].off_location == last_arg.off_location) 
+        {
+//            d_print("Last arg, finishing\n");
+            break;
+        }
+        if(my_trace->syscall_out_args[sysenter_no][i].eax_val_success != STATUS_ANY)
+        {
+//            d_print("Arg not any\n");
+            if(my_trace->syscall_out_args[sysenter_no][i].eax_val_success != ctx.Eax) 
+            {
+//                d_print("Wrong EAX\n");
+                continue;
+            }
+        }
+        if(0)
+        {
+            d_print("Locating buffer\n");
+            arg_val = 0x0;
+            arg_addr = 0x0;
+            off = 0x0;
+            size = 0x0;
+
+            d_print("ESP: 0x%08x\n", sysenter_esp);
+
+            // decide offset
+            switch(my_trace->syscall_out_args[sysenter_no][i].off_location)
+            {
+                case LOCATION_CONST:
+                    d_print("LOCATION_CONST\n");
+                    my_trace->syscall_out_args_dump_list[i].off = my_trace->syscall_out_args[sysenter_no][i].off;
+                    arg_val = my_trace->syscall_out_args_dump_list[i].off;
+                    d_print("Arg off: 0x%08x\n", arg_val);
+                    break;
+                case LOCATION_MEM:
+                    d_print("LOCATION_MEM\n");
+                    arg_addr = my_trace->syscall_out_args[sysenter_no][i].off;
+                    read_memory(my_trace->cpdi.hProcess, (void*)arg_addr, (void*)&arg_val, 0x4, &read);
+                    d_print("0x%08x: 0x%08x\n", arg_addr, arg_val);
+                    if(arg_val == 0x0) break;
+                    d_print("Arg off: 0x%08x\n", arg_val);
+                    my_trace->syscall_out_args_dump_list[i].off = arg_val;
+                    break;
+                case LOCATION_STACK:
+                    d_print("LOCATION_STACK\n");
+                    arg_addr = sysenter_esp + 0x8;
+                    arg_addr += my_trace->syscall_out_args[sysenter_no][i].off * 0x4;
+                    arg_val = arg_addr;
+                    d_print("0x%08x: 0x%08x\n", arg_addr, arg_val);
+                    d_print("Arg off: 0x%08x\n", arg_val);
+                    if(arg_val == 0x0) break;
+                    my_trace->syscall_out_args_dump_list[i].off = arg_val;
+                    break;
+                case LOCATION_ADDR_STACK:
+                    d_print("LOCATION_ADDR_STACK\n");
+                    arg_addr = sysenter_esp + 0x8;
+                    arg_addr += my_trace->syscall_out_args[sysenter_no][i].off * 0x4;
+                    read_memory(my_trace->cpdi.hProcess, (void*)arg_addr, (void*)&arg_val, 0x4, &read);
+                    d_print("0x%08x: 0x%08x\n", arg_addr, arg_val);
+                    if(arg_val == 0x0) break;
+                    d_print("Arg off: 0x%08x\n", arg_val);
+                    my_trace->syscall_out_args_dump_list[i].off = arg_val;
+                    break;
+                case LOCATION_ADDR_ADDR_STACK:
+                    d_print("LOCATION_ADDR_ADDR_STACK\n");
+                    arg_addr = sysenter_esp + 0x8;
+                    arg_addr += my_trace->syscall_out_args[sysenter_no][i].off * 0x4;
+                    read_memory(my_trace->cpdi.hProcess, (void*)arg_addr, (void*)&arg_val, 0x4, &read);
+                    d_print("0x%08x: 0x%08x\n", arg_addr, arg_val);
+                    arg_addr = arg_val;
+                    read_memory(my_trace->cpdi.hProcess, (void*)arg_addr, (void*)&arg_val, 0x4, &read);
+                    d_print("0x%08x: 0x%08x\n", arg_addr, arg_val);
+                    if(arg_val == 0x0) break;
+                    d_print("Arg off: 0x%08x\n", arg_val);
+                    my_trace->syscall_out_args_dump_list[i].off = arg_val;
+                    break;
+            }
+
+            if(arg_val == 0x0) break;
+            off = arg_val;
+            arg_val = 0x0;
+            arg_addr = 0x0;
+            d_print("Locating size\n");
+
+            // decide size
+            switch(my_trace->syscall_out_args[sysenter_no][i].size_location)
+            {
+                case LOCATION_CONST:
+//                    d_print("LOCATION_CONST\n");
+                    my_trace->syscall_out_args_dump_list[i].size = my_trace->syscall_out_args[sysenter_no][i].size;
+                    arg_val = my_trace->syscall_out_args_dump_list[i].size;
+//                    d_print("Arg size: 0x%08x\n", arg_val);
+                    break;
+                case LOCATION_MEM:
+//                    d_print("LOCATION_MEM\n");
+                    arg_addr = my_trace->syscall_out_args[sysenter_no][i].size;
+                    read_memory(my_trace->cpdi.hProcess, (void*)arg_addr, (void*)&arg_val, 0x4, &read);
+//                    d_print("0x%08x: 0x%08x\n", arg_addr, arg_val);
+//                    d_print("Arg size: 0x%08x\n", arg_val);
+                    my_trace->syscall_out_args_dump_list[i].size = arg_val;
+                    break;
+                case LOCATION_STACK:
+//                    d_print("LOCATION_STACK\n");
+                    arg_addr = sysenter_esp + 0x8;
+                    arg_addr += my_trace->syscall_out_args[sysenter_no][i].size * 0x4;
+                    read_memory(my_trace->cpdi.hProcess, (void*)arg_addr, (void*)&arg_val, 0x4, &read);
+//                    d_print("0x%08x: 0x%08x\n", arg_addr, arg_val);
+//                    d_print("Arg size: 0x%08x\n", arg_val);
+                    my_trace->syscall_out_args_dump_list[i].size = arg_val;
+                    break;
+                case LOCATION_ADDR_STACK:
+//                    d_print("LOCATION_ADDR_STACK\n");
+                    arg_addr = sysenter_esp + 0x8;
+                    arg_addr += my_trace->syscall_out_args[sysenter_no][i].size * 0x4;
+                    read_memory(my_trace->cpdi.hProcess, (void*)arg_addr, (void*)&arg_val, 0x4, &read);
+//                    d_print("0x%08x: 0x%08x\n", arg_addr, arg_val);
+                    arg_addr = arg_val;
+                    read_memory(my_trace->cpdi.hProcess, (void*)arg_addr, (void*)&arg_val, 0x4, &read);
+//                    d_print("0x%08x: 0x%08x\n", arg_addr, arg_val);
+//                    d_print("Arg size: 0x%08x\n", arg_val);
+                    my_trace->syscall_out_args_dump_list[i].size = arg_val;
+                    break;
+            }
+
+            size = arg_val;
+
+            size_wrote = dump_mem(my_trace->mods, (void*)off, size);
+            if(size_wrote == size)
+            {
+                d_print("[Out argument: 0x%08x, size: 0x%08x]\n", off, size);
+                sprintf(line, "UP,0x%08x,0x%08x\n", off, size);
+                add_to_buffer(line);
+            }
+        }
+
+        /* new update */
+
+        LOCATION location;
+
+//        d_print("Resolving location\n");
+        resolve_region(&my_trace->syscall_out_args[sysenter_no][i], &location);
+        update_region_old(&location);
+
+    }
+
+
+    // special cases
+
+    if(sysenter_no == 0x42) // CreateFile
+    {
+        // first one
+        if(file_handle == 0x0) 
+        {
+            arg_addr = sysenter_esp + 0x8;
+            arg_addr += my_trace->syscall_out_args[sysenter_no][i].size * 0x4;
+            read_memory(my_trace->cpdi.hProcess, (void*)arg_addr, (void*)&arg_val, 0x4, &read);
+            arg_addr = arg_val;
+            read_memory(my_trace->cpdi.hProcess, (void*)arg_addr, (void*)&file_handle, 0x4, &read);
+
+            d_print("Hunting for reads from: 0x%08x\n", file_handle);
+        }
+    }
+
+    if(sysenter_no == 0x111) // ReadFile
+    {
+        if(file_handle == (HANDLE)my_trace->syscall_out_args_dump_list[0].off)
+        {
+            // our file, enter taint
+            sprintf(line, "RN,0x%08x,0x%08x\n", my_trace->syscall_out_args_dump_list[3].off, my_trace->syscall_out_args_dump_list[3].size);
+            add_to_buffer(line);
+            d_print("Marked taint: 0x%08x,0x%08x\n", off, size);
+        }
+    }
+
+    //sprintf(line, "# ret1");
+    //add_to_buffer(line);
+    
+
+    set_ss(tid);
+//    d_print("Setting SS for 0x%08x\n", tid);
+}
+
+
+void react_sysret_callback_wo_reregister(void* data)
+{
+    DEBUG_EVENT* de;
+    de = (DEBUG_EVENT*)data;
+    DWORD tid = de->dwThreadId;
+    DWORD arg_addr, arg_val;
+    DWORD size, read, off, size_wrote;
+    unsigned i;
+    char line[MAX_LINE];
+    DWORD tid_pos;
+    tid_pos = my_trace->tid2index[tid];
 
     // prepare dump list
     CONTEXT ctx;
@@ -5919,7 +6135,6 @@ int reload_out_file()
 
 int handle_cmd(char* cmd)
 {
-    d_print("%s\n", cmd);
     char buffer2[MAX_LINE];
 
     my_trace->report_code = REPORT_NOTHING;
@@ -7097,44 +7312,19 @@ int configure_syscalls()
     return 0x0;    
 }
 
-/* new main routine */
-
-int main(int argc, char** argv)
+int configure_reaction_routines()
 {
+    /*configure reaction routines */
 
-    int i = 0;
-    for(i=0;i<argc;i++)
-        d_print("%d - %s\n", i, argv[i]);
-
-    if(argc < 3)
-    {
-        d_print("You need do provide host and port\n");
-        return -1;
-    }
-
-    d_print("Version 3.0\n");
-
-    if(strlen(argv[1]) > MAX_LINE) return -1;
-    if(strlen(argv[2]) > MAX_LINE) return -1;
-
-    my_trace = (TRACE_CONFIG*)malloc(sizeof(TRACE_CONFIG));
-    if(my_trace == 0x0)
-    {
-        d_print("Unable to allocate trace config\n");
-        return -1;
-    }
-
-    init_trace(my_trace, argv[1], atoi(argv[2]));
-
-    /*configure syscalls */
-    configure_syscalls();
-
-    my_trace->callback_routine = &noop_callback;
-
-    /*configure routines */
+    /* handling syscalls in regular tracing */
     my_trace->routines[0x001] = &react_sysenter_callback;
     my_trace->routines[0x002] = &react_sysret_callback;
     my_trace->routines[0x003] = &react_sysret_refresh;
+
+    /* handling syscalls in IoC research */
+    my_trace->routines[0x011] = &react_sysenter_callback_wo_reregister;
+    my_trace->routines[0x012] = &react_sysret_callback_wo_reregister;
+
     my_trace->routines[0x100] = &react_sample_routine_1;
     my_trace->routines[0x101] = &react_zero_SF;
     my_trace->routines[0x102] = &react_set_ZF;
@@ -7227,6 +7417,46 @@ int main(int argc, char** argv)
     my_trace->routines[0x366] = &react_output_p_esp_unicode;
     my_trace->routines[0x367] = &react_output_p_eip_unicode;
 
+    return 0x0;
+}
+
+/* new main routine */
+
+int main(int argc, char** argv)
+{
+
+    int i = 0;
+    for(i=0;i<argc;i++)
+        d_print("%d - %s\n", i, argv[i]);
+
+    if(argc < 3)
+    {
+        d_print("You need do provide host and port\n");
+        return -1;
+    }
+
+    d_print("Version 3.0\n");
+
+    if(strlen(argv[1]) > MAX_LINE) return -1;
+    if(strlen(argv[2]) > MAX_LINE) return -1;
+
+    my_trace = (TRACE_CONFIG*)malloc(sizeof(TRACE_CONFIG));
+    if(my_trace == 0x0)
+    {
+        d_print("Unable to allocate trace config\n");
+        return -1;
+    }
+
+    init_trace(my_trace, argv[1], atoi(argv[2]));
+
+    /*configure syscalls */
+    configure_syscalls();
+
+    /* set empty callback routine */
+    my_trace->callback_routine = &noop_callback;
+
+    configure_reaction_routines();
+
     /* Windows sockets */
 
     WSADATA wsa;
@@ -7315,7 +7545,6 @@ int main(int argc, char** argv)
         //d_print("Handled\n");
 
     }
-
     return 0x0;
 }
 

@@ -4,14 +4,17 @@
 *   tomasz.salacinski@orange.com
 */
 
-#include <strace_taint_x86.h>
+#include <caller_taint_x86.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
+#include <signal.h>
 
 #define STRUCTURED_BUFFER_LENGTH 0x10000
 #define MAX_LINE 0x1000
 #define INSTR_REPORT_INTERVAL 1000000
+
+taint_x86 taint_eng;
 
 int write_region(FILE* f, BYTE_t* src, unsigned int len)
 {
@@ -149,6 +152,17 @@ int register_blacklist(char* line, taint_x86* taint_eng)
     return 0x0;
 }
 
+unsigned get_instr_interval(char* line)
+{
+    char* cmd;
+    unsigned interval;
+
+    cmd = strtok(line, ",");
+    interval = strtol(strtok(0x0, ","), 0x0, 10);
+
+    return interval;
+}
+
 int register_blacklist_addr(char* line, taint_x86* taint_eng)
 {
     char* cmd;
@@ -157,6 +171,17 @@ int register_blacklist_addr(char* line, taint_x86* taint_eng)
     cmd = strtok(line, ",");
     addr = strtol(strtok(0x0, ","), 0x0, 0x10);
     taint_eng->add_blacklist_addr(addr);
+
+    return 0x0;
+}
+int register_silenced_addr(char* line, taint_x86* taint_eng)
+{
+    char* cmd;
+    DWORD addr;
+
+    cmd = strtok(line, ",");
+    addr = strtol(strtok(0x0, ","), 0x0, 0x10);
+    taint_eng->add_silenced_addr(addr);
 
     return 0x0;
 }
@@ -182,6 +207,188 @@ int register_wanted_e(char* line, taint_x86* taint_eng)
     cmd = strtok(line, ",");
     addr = strtol(strtok(0x0, ","), 0x0, 0x10);
     taint_eng->add_wanted_e(addr);
+
+    return 0x0;
+}
+
+int register_fence(char* line, taint_x86* taint_eng)
+{
+    char* cmd;
+    OFFSET entry;
+    OFFSET start;
+    OFFSET size;
+    OFFSET count;
+
+    cmd = strtok(line, ",");
+    entry = strtol(strtok(0x0, ","), 0x0, 0x10);
+    start = strtol(strtok(0x0, ","), 0x0, 0x10);
+    size = strtol(strtok(0x0, ","), 0x0, 0x10);
+    count  = strtol(strtok(0x0, ","), 0x0, 0x10);
+    taint_eng->add_fence(entry, start, size, count);
+
+    return 0x0;
+}
+
+int filter_str(char* str)
+{
+    unsigned i, len;
+
+    len = strlen(str);
+
+    for(i = 0x0; i<len; i++)
+    {
+        if(str[i] == '\r')
+            str[i] = 0x0;
+    }
+    return 0x0;
+}
+
+int load_mod(char* line, taint_x86* taint_eng)
+{
+    char* cmd;
+    char* file_name;
+
+    cmd = strtok(line, ",");
+    file_name = strtok(0x0, ",");
+    file_name[strlen(file_name)-1] = 0x0;
+    
+    printf("Opening mod file: %s\n", file_name);
+
+    filter_str(file_name);
+
+    taint_eng->open_mod_file(file_name);
+
+    return 0x0;
+}
+
+int load_mem(char* line, taint_x86* taint_eng)
+{
+    char* cmd;
+    char* file_name;
+
+    cmd = strtok(line, ",");
+    file_name = strtok(0x0, ",");
+    file_name[strlen(file_name)-1] = 0x0;
+    
+    printf("Loading memory from: %s\n", file_name);
+
+    filter_str(file_name);
+
+    taint_eng->load_mem_from_file(file_name);
+
+    return 0x0;
+}
+
+int load_file(char* line, taint_x86* taint_eng)
+{
+    char* cmd;
+    char* file_name;
+    int ret;
+
+    cmd = strtok(line, ",");
+    file_name = strtok(0x0, ",");
+    file_name[strlen(file_name)-1] = 0x0;
+    
+    printf("Switching instr file to %s\n", file_name);
+
+    fclose(taint_eng->instr_file);
+    return taint_eng->load_instr_from_file(file_name);
+}
+
+int comment_out(char* line, taint_x86* taint_eng)
+{
+    char* cmd;
+    char* comment;
+    DWORD tid;
+
+    cmd = strtok(line, ",");
+    tid = strtol(strtok(0x0, ","), 0x0, 0x10);
+    comment = strtok(0x0, ",");
+    comment[strlen(comment)-1] = 0x0;
+
+    taint_eng->comment_out(comment, tid);
+
+    return 0x0;    
+}
+
+int parse_option(char* line, taint_x86* taint_eng)
+{
+    char* cmd;
+    char* option;
+
+    cmd = strtok(line, ",");
+    option = strtok(0x0, ",");
+    
+    option[strlen(option)-1] = 0x0;
+
+    printf("Enabling analysis option: %s\n", option);
+
+    if(!strcmp(option, "ANALYZE_JUMPS"))
+    {
+        taint_eng->options |= OPTION_ANALYZE_JUMPS;
+    }
+    else if(!strcmp(option, "ANALYZE_LOOPS"))
+    {
+        taint_eng->options |= OPTION_ANALYZE_LOOPS;
+    }
+    else if(!strcmp(option, "UNMATCHED_RET_INVALIDATES_STACK"))
+    {
+        taint_eng->options |= OPTION_UNMATCHED_RET_INVALIDATES_STACK;
+    }
+    else if(!strcmp(option, "UNMATCHED_RET_CREATES_CALL"))
+    {
+        taint_eng->options |= OPTION_UNMATCHED_RET_CREATES_CALL;
+    }
+    else if(!strcmp(option, "NOT_EMITTING_BLACKLISTED"))
+    {
+        taint_eng->options |= OPTION_NOT_EMITTING_BLACKLISTED;
+    }
+    else if(!strcmp(option, "VERIFY_ROP_RETS"))
+    {
+        taint_eng->options |= OPTION_VERIFY_ROP_RETS;
+    }
+    else if(!strcmp(option, "VERIFY_SEG_SEC"))
+    {
+        taint_eng->options |= OPTION_VERIFY_SEG_SEC;
+    }
+    else if(!strcmp(option, "ANALYZE_WANTED_IN_SYMBOLS"))
+    {
+        taint_eng->options |= OPTION_ANALYZE_WANTED_IN_SYMBOLS;
+    }
+
+    else if(!strcmp(option, "COUNT_INSTRUCTIONS"))
+    {
+        taint_eng->options |= OPTION_COUNT_INSTRUCTIONS;
+    }
+
+    return 0x0;
+}
+
+
+int register_syscall(char* line, taint_x86* taint_eng)
+{
+    char* cmd;
+    DWORD TID;
+    DWORD syscall_no;
+
+    printf("%s", line);
+    cmd = strtok(line, ",");
+    TID = strtol(strtok(0x0, ","), 0x0, 0x10);
+    syscall_no = strtol(strtok(0x0, ","), 0x0, 0x10);
+
+    taint_eng->register_syscall(TID, syscall_no);
+
+    return 0x0;
+}
+
+int register_included(char* line, taint_x86* taint_eng)
+{
+    char* cmd;
+    char* func_name;
+
+    cmd = strtok(line, ",");
+    func_name = strtok(0x0, ",");
+    taint_eng->add_included(func_name);
 
     return 0x0;
 }
@@ -267,6 +474,49 @@ int register_update(char* line, taint_x86* taint_eng)
     size = strtol(strtok(0x0, ","), 0x0, 0x10);
 
     taint_eng->apply_memory(offset, size);
+
+    return 0x0;
+}
+
+int filter_str(char* str, char unwanted)
+{
+    unsigned i, len;
+
+    len = strlen(str);
+
+    for(i = 0x0; i<len; i++)
+    {
+        if(str[i] == unwanted)
+            str[i] = '_';
+    }
+    return 0x0;
+}
+
+int set_prefix(char* line, taint_x86* taint_eng)
+{
+    char* cmd;
+    char* prefix;
+
+    cmd = strtok(line, ",");
+    prefix = strtok(0x0, "\n");
+
+    printf("Setting prefix to: %s\n", prefix);
+    filter_str(prefix, '\x0d');
+    taint_eng->set_prefix(prefix);
+
+    return 0x0;
+}
+
+int register_security(char* line, taint_x86* taint_eng)
+{
+    char* cmd;
+    DWORD offset, size;
+
+    cmd = strtok(line, ",");
+    offset = strtol(strtok(0x0, ","), 0x0, 0x10);
+    size = strtol(strtok(0x0, ","), 0x0, 0x10);
+
+    taint_eng->apply_security(offset, size);
 
     return 0x0;
 }
@@ -510,9 +760,47 @@ void print_usage()
     return;
 }
 
+void handle_sigint(int signum)
+{
+    taint_eng.handle_sigint();
+    return;
+}
+
+void handle_sigsegv(int signum)
+{
+    taint_eng.handle_sigsegv();
+    return;
+}
+
+void jxx_enable()
+{
+    taint_eng.jxx_set(0x1);
+    return;
+}
+
+void jxx_disable()
+{
+    taint_eng.jxx_set(0x0);
+    return;
+}
+
+void jxx_clear()
+{
+    taint_eng.jxx_clear();
+    return;
+}
+
+void _pause()
+{
+    fprintf(stdout, "Press any key\n");
+    getchar();
+    return;
+}
+
 int main(int argc, char** argv)
 {
     char structured_buffer[STRUCTURED_BUFFER_LENGTH];
+    unsigned instr_report_interval = INSTR_REPORT_INTERVAL;
 
     // new
     char instr_file_path[MAX_NAME];
@@ -550,6 +838,7 @@ int main(int argc, char** argv)
     instr_limit = 0x0;
     last_instr_count = 0x0;
     instr_count = 0x0;
+    unsigned max_levels = 0x0;
 
     char* line;
     size_t len = 0;
@@ -562,10 +851,13 @@ int main(int argc, char** argv)
 
     /* started parsing args and preparing params */
 
-    while ((opt = getopt(argc, argv, "i:d:s:e:T:l:m:b:t:w:h:D:I")) != -1) 
+    while ((opt = getopt(argc, argv, "M:i:d:s:E:e:T:l:m:b:t:w:h:D:I")) != -1) 
     {
         switch (opt) 
         {
+            case 'M': 
+                max_levels = strtol(optarg, 0x0, 0x10);
+                break;
             case 'i': 
                 strcpy(instr_file_path, optarg); 
                 break;
@@ -577,12 +869,28 @@ int main(int argc, char** argv)
                     start_addr = strtol(optarg, 0x0, 0x10);
                 else 
                     start_instr = strtol(optarg, 0x0, 10);
+                printf("start_addr: 0x%08x, start_instr: %d\n", start_addr, start_instr);
                 break;
-            case 'e': 
+            case 'E': 
+                end_addr = -1;
                 if(optarg[0] == '0' && optarg[1] == 'x')
                     end_addr = strtol(optarg, 0x0, 0x10);
-                else 
+                else
+                { 
                     instr_limit = strtol(optarg, 0x0, 10);
+                    instr_limit *= 1000000;
+                }
+                    
+                break;
+            case 'e': 
+                end_addr = -1;
+                if(optarg[0] == '0' && optarg[1] == 'x')
+                    end_addr = strtol(optarg, 0x0, 0x10);
+                else
+                { 
+                    instr_limit = strtol(optarg, 0x0, 10);
+                }
+                    
                 break;
             case 'T': 
                 strcpy(dump2_taint_file_path, optarg); 
@@ -618,9 +926,10 @@ int main(int argc, char** argv)
         }
     }
 
-    if((strlen(instr_file_path) == 0x0) 
-        || (strlen(dump1_file_path) == 0x0)
-        || (strlen(loadable_dir_path) == 0x0))
+//    if((strlen(instr_file_path) == 0x0) 
+//        || (strlen(dump1_file_path) == 0x0)
+//        || (strlen(loadable_dir_path) == 0x0))
+    if(strlen(instr_file_path) == 0x0) 
     {
         print_usage();
         return 0x1;
@@ -639,13 +948,25 @@ int main(int argc, char** argv)
 
     /* finished parsing args and preparing params */
 
-    printf("Here we go\n");
+    printf("Here we go - 2.0\n");
 
     printf("BYTE_t size: 0x%08x\n", sizeof(BYTE_t));
-    taint_x86 taint_eng;
+
+    /* handle SIGSEGV */
+   // struct sigaction sa;
+
+    
+    signal(SIGSEGV, handle_sigsegv);
+    signal(SIGINT, handle_sigint);
 
     taint_eng.bp_hit = 0x1;
     taint_eng.enumerate = enumerate;
+    if(max_levels == 0x0) max_levels = MAX_CALL_LEVELS;
+
+    taint_eng.max_call_levels = max_levels;
+    taint_eng.call_level_start = max_levels/3;
+    taint_eng.call_level_offset = max_levels/30;
+    printf("Setting max levels to: 0x%08x, start: 0x%08x, offset: 0x%08x\n", max_levels, taint_eng.call_level_start, taint_eng.call_level_offset);
  
     parse_mem_breakpoints(breakpoint_optarg, &taint_eng);
     parse_taint_breakpoints(breakpoint_t_optarg, &taint_eng);
@@ -673,11 +994,10 @@ int main(int argc, char** argv)
     /* load data to engine */
     //taint_eng.print_all_contexts();
 
-    taint_eng.load_mem_from_file(dump1_file_path);
+//    taint_eng.load_mem_from_file(dump1_file_path);
     taint_eng.load_instr_from_file(instr_file_path);
     taint_eng.open_lost_file(lost_file_path);
-//    taint_eng.set_lib_dir_path(loadable_dir_path);
-    taint_eng.open_mod_file(loadable_dir_path);
+//    taint_eng.open_mod_file(loadable_dir_path);
 
     /* pass graph parameters */
     taint_eng.start_addr = start_addr;
@@ -696,7 +1016,7 @@ int main(int argc, char** argv)
 #ifdef DEBUG
     int bp_idx = 0x0;
 
-//    taint_eng.my_bps[bp_idx].offset = 0x002a01bf; taint_eng.my_bps[bp_idx++].mode = BP_MODE_EXECUTE;
+    taint_eng.my_bps[bp_idx].offset = 0x404832; taint_eng.my_bps[bp_idx++].mode = BP_MODE_WRITE;
 //    taint_eng.my_bps[bp_idx]_offset = 0x0040308c; taint_eng.my_bps[bp_idx++].mode = BP_MODE_READ | BP_MODE_WRITE;
 //    taint_eng.my_bps[bp_idx].offset = 0x0012fda8; taint_eng.my_bps[bp_idx++].mode = BP_MODE_READ | BP_MODE_WRITE;
 //    taint_eng.my_bps[bp_idx].offset = 0x0012f79c; taint_eng.my_bps[bp_idx++].mode = BP_MODE_READ | BP_MODE_WRITE;
@@ -714,7 +1034,6 @@ int main(int argc, char** argv)
     taint_eng.t8[bp_idx].count = 992877; taint_eng.t8[bp_idx++].watched = &taint_eng.ctx_info[0].registers[EDI];
     taint_eng.t8[bp_idx].count = 942799; taint_eng.t8[bp_idx++].watched = &taint_eng.ctx_info[0].registers[EAX];
 */
-    taint_eng.t8[bp_idx].count = 98336; taint_eng.t8[bp_idx++].watched = &taint_eng.ctx_info[0].registers[EDX];
 
     bp_idx = 0x0;
     
@@ -722,6 +1041,7 @@ int main(int argc, char** argv)
 
     /* printing values at start */
 
+    /*
     printf("Watched RW locations:\n");
   
  
@@ -732,65 +1052,46 @@ int main(int argc, char** argv)
             taint_eng.print_mem(3, taint_eng.my_bps[i].offset, 0x10);
         }
     }
-
+    */
     taint_eng.bp_hit = 0x0;
  
     /* executing instructions */
     while ((read = getline(&line, &len, taint_eng.instr_file)) != -1) 
-
     {
+        if(taint_eng.aborted) 
+        {
+            printf("\nABORTED!!!\n\n");
+            break;
+        }
         if(line[0] != '0')
         {
+            //printf("%s\n", line);
             //strcat(structured_buffer, line);
             // other operations
-            if(line[0] == 'R' && line[1] == 'T')
-                register_thread(line, &taint_eng);
     
-            if(line[0] == 'D' && line[1] == 'T')
-                deregister_thread(line, &taint_eng);
-            
-            if(line[0] == 'R' && line[1] == 'L')
-                register_lib(line, &taint_eng);
-            
-            if(line[0] == 'D' && line[1] == 'L')
-                deregister_lib(line, &taint_eng);
-            
-            if(line[0] == 'E' && line[1] == 'X')
-                register_exception(line, &taint_eng);
-            
-            if(line[0] == 'R' && line[1] == 'N')
-                register_taint(line, &taint_eng);
-
             if(line[0] == 'U' && line[1] == 'P')
                 register_update(line, &taint_eng);
             
-            if(line[0] == 'S' && line[1] == 'Y')
-                register_symbol(line, &taint_eng);
+            if(line[0] == 'S' && line[1] == 'C')
+                register_syscall(line, &taint_eng);
 
-            if(line[0] == 'B' && line[1] == 'L')
-                register_blacklist(line, &taint_eng);
+            if(line[0] == 'P' && line[1] == 'A')
+                _pause();
 
-            if(line[0] == 'B' && line[1] == 'A')
-                register_blacklist_addr(line, &taint_eng);
-
-            if(line[0] == 'F' && line[1] == 'W')
-                register_wanted(line, &taint_eng);
-
-            if(line[0] == 'I' && line[1] == 'W')
-                register_wanted_i(line, &taint_eng);
-
-            if(line[0] == 'E' && line[1] == 'W')
-                register_wanted_e(line, &taint_eng);
-
-            if(line[0] == 'C' && line[1] == 'T')
-                check_consistency(line, &taint_eng);
+            if(line[0] == 'L' && line[1] == 'F')
+                if(load_file(line, &taint_eng) != 0x0)
+                    taint_eng.aborted = 1;
 
             if(line[0] == 'S' && line[1] == 'T')
-                if(!(taint_eng.start_addr || taint_eng.start_instr))
-                    taint_eng.started = 0x1;
+                {
+                    taint_eng.start();
+                }
 
             if(line[0] == 'F' && line[1] == 'I')
                 taint_eng.finished = 0x1;
+
+            if(line[0] == 'O' && line[1] == 'P')
+                parse_option(line, &taint_eng);
 
             if(line[0] == '#'); //comment
             
@@ -800,11 +1101,6 @@ int main(int argc, char** argv)
         {
             last_instr_count = instr_count;
             decode_instruction(&tid, &eip, &instr_count, line);
-            if(taint_eng.aborted) 
-            {
-                printf("\nABORTED!!!\n\n");
-                break;
-            }
             //fprintf(stderr, "instruction %lld in TID: 0x%08x, offset: 0x%08x\n", instr_count, tid, eip);
             taint_eng.current_instr_count = instr_count;
             taint_eng.execute_instruction_at_eip(eip, tid);
@@ -824,28 +1120,11 @@ int main(int argc, char** argv)
                 ;
 #endif
             }
-/*
-            if(instr_limit > 0x0)
-                if(instr_count == instr_limit)
-                    break;
-*/
-        }
-        if(instr_count == 0)
-        {
-//            fprintf(stderr, "Waiting...\n");
-            fprintf(stderr, "Problem with instruction after %lld\n", last_instr_count);
-            getchar();
-        }
-        //if(instr_count == 342118) 
-        if(0) 
-        {
-            fprintf(stderr, "Problem...\n");
-            getchar();
         }
 
-        if(!(instr_count % INSTR_REPORT_INTERVAL))
+        if(!(instr_count % instr_report_interval))
         {
-            fprintf(stdout, "Processed %lld instructions, propagation count: %d\n", instr_count, taint_eng.current_propagation_count);
+            fprintf(stdout, "Processed %lld instructions\n", instr_count);
         }
 
     }
@@ -924,6 +1203,21 @@ int main(int argc, char** argv)
     write_region(out, taint_eng.memory, taint_eng.mem_length);
     fclose(out);
 */    
+
+    if(taint_eng.options & OPTION_COUNT_INSTRUCTIONS)
+    {
+        printf("Calculating executed unique instructions\n");
+        unsigned i;
+        unsigned executed = 0x0;
+        for(i=0x0; i< taint_eng.mem_length; i++)
+        {
+            if(taint_eng.memory[i].get_BYTE_t())
+            {
+                executed++;
+            }
+        }
+        printf("Executed 0x%08x (%d) unique instructions\n", executed, executed);
+    }
 
     // dumping memory taint
     printf("Dumping taint region: 0x0 - 0x%08x to %s\n", taint_eng.mem_length, dump2_taint_file_path);

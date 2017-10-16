@@ -2798,6 +2798,12 @@ int taint_x86::apply_security(DWORD offset, DWORD size)
     return 0x0;
 }
 
+int taint_x86::register_syscall(DWORD TID, DWORD syscall_no)
+{
+    d_print(1, "Syscall: 0x%08x\n", syscall_no);
+    return 0x0;
+}
+
 int taint_x86::apply_memory(DWORD offset, DWORD size)
 {
     if(!this->started)

@@ -3102,6 +3102,7 @@ class taint_x86
     int apply_security(DWORD, DWORD);
     int add_symbols(LIB_INFO*);
     int copy_symbol(SYMBOL**, SYMBOL*);
+    int register_syscall(DWORD, DWORD);
     int handle_sigsegv();
     int handle_sigint();
 

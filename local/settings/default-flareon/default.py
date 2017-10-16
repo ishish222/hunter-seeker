@@ -147,6 +147,8 @@ kernel32.dll+0x45f70,V1:V2,0x0;             # SleepEx start
 kernel32.dll+0x45f76,V2:V1,0x100;           # SleepEx end
 ntdll.dll+0x464f0,s0:s1,0x1;                # KiFastSystemCall
 ntdll.dll+0x464f4,s1:s0,0x2;                # KiFastSystemRet
+ntdll.dll+0x464f0,s11:s12,0x11;             # KiFastSystemCall wo reregister
+ntdll.dll+0x464f4,s12:s11,0x12;             # KiFastSystemRet wo reregister
 kernel32.dll+0x51837,a0:a1,0x301:0x312;     # GetProcAddr start
 kernel32.dll+0x5183c,a1:a0,0x100;           # GetProcAddr end
 kernel32.dll+0x528d7,a2:a3,0x311;           # GetModuleHandleA start
