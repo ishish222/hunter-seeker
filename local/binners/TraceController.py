@@ -1037,6 +1037,11 @@ class TraceController(object):
         self.last_report, self.last_answer = self.recv_report_active()
         return 
 
+    def tracer_release_all(self, args):
+        self.send_command_active("Ra")
+        self.last_report, self.last_answer = self.recv_report_active()
+        return 
+
     def tracer_suspend_all_except(self, args):
         self.send_command_active("sa %s" % args)
         self.last_report, self.last_answer = self.recv_report_active()

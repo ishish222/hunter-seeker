@@ -706,3 +706,11 @@ Pouzupelniac opisy API
 093 - skanowanie strace
 
 rlated to #90
+
+-- 
+
+094 - zaimplementowac RequireOnce
+
+Lub wymyslic inny sposob skracania tworzenia nowych skryptow na podstawie wyjsciowych dla malware
+
+

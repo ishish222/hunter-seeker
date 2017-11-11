@@ -112,6 +112,18 @@ def trace_controller_activate_next_tracer(args=None):
 
     return
 
+def trace_controller_current_tracer(args=None):
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+    
+    write_socket(options.s, "tc_current");
+    response, _, _ = read_socket(options.s)
+
+    globs.state.ret = response
+
+    return
+
 def tracer_configure_in_dir(args=None):
     options = globs.state.options
     state = globs.state
@@ -191,6 +203,21 @@ def tracer_release_thread(args = None):
         args = globs.state.tid
 
     write_socket(options.s, "tracer_release_thread 0x%08x" % args);
+    response, _, _ = read_socket(options.s)
+
+    globs.state.ret = response
+
+    return
+
+def tracer_release_all(args = None):
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+    
+    if(args == None):
+        args = globs.state.tid
+
+    write_socket(options.s, "tracer_release_all");
     response, _, _ = read_socket(options.s)
 
     globs.state.ret = response

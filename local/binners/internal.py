@@ -1121,6 +1121,12 @@ def execute(cmds, ext_pipe):
             writePipe(ext_pipe, "tc_avtivate_next "+bcolors.OK_STR)
             ok(ext_pipe)
 
+        elif(cmd == "tc_current"):
+            writePipe(ext_pipe, "[internal] Active tracer: 0x%02x" % trace_controller.tracer_active_id)
+            writePipe(ext_pipe, "[internal]: "+bcolors.OK_STR)
+            writePipe(ext_pipe, "tc_avtivate_next "+bcolors.OK_STR)
+            ok(ext_pipe)
+
         elif(cmd == "tracer_suspend_all_except"):
             trace_controller.tracer_suspend_all_except(args)
             writePipe(ext_pipe, "%s" % trace_controller.last_answer)
@@ -1132,6 +1138,12 @@ def execute(cmds, ext_pipe):
             trace_controller.tracer_release_thread(args)
             writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
             writePipe(ext_pipe, "tracer_release_thread "+bcolors.OK_STR)
+            ok(ext_pipe)
+
+        elif(cmd == "tracer_release_all"):
+            trace_controller.tracer_release_all(args)
+            writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
+            writePipe(ext_pipe, "tracer_release_all "+bcolors.OK_STR)
             ok(ext_pipe)
 
         elif(cmd == "tracer_configure_sample_pid"):

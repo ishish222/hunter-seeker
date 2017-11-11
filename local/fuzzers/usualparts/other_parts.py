@@ -5,6 +5,18 @@ import Queue
 
 options = globs.state.options
 
+def print_result(args=None):
+    options = globs.state.options
+
+    if(args is None):
+        args = globs.state.stack.pop()
+
+    if(hasattr(options, 'host_result_file') == False):
+        options.host_result_file = open("results.txt", "w", 0)
+    options.host_result_file.write(args)
+
+    return
+
 def beep(args = None):
     from subprocess import Popen
     Popen('beeep')

@@ -4680,6 +4680,23 @@ int release_thread(DWORD tid)
     return 0x0;
 }
 
+int release_all()
+{
+    HANDLE myHandle = (HANDLE)-0x1;
+    DWORD tid;
+    char buffer2[MAX_LINE];
+
+    unsigned i;
+
+    for(i=0x0; i<my_trace->thread_count; i++)
+    {
+        tid = my_trace->threads[i].tid;        
+        release_thread(tid);
+    }
+
+    return 0x0;
+}
+
 int read_context(DWORD tid, CONTEXT* ctx)
 {
     HANDLE myHandle = (HANDLE)-0x1;
@@ -6775,6 +6792,12 @@ int handle_cmd(char* cmd)
         tid_id = strtoul(strtok(0x0, " "), 0x0, 0x10);
 
         release_thread(tid_id);
+        send_report();   
+    
+    }
+    else if(!strncmp(cmd, CMD_RELEASE_ALL, 2))
+    {
+        release_all();
         send_report();   
     
     }
