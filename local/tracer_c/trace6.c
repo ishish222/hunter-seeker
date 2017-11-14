@@ -4589,7 +4589,130 @@ int list_all_tebs()
     return 0x0;
 }
 
-int suspend_thread(DWORD tid);
+int suspend_thread(DWORD tid)
+{
+    HANDLE myHandle = (HANDLE)-0x1;
+    DWORD tid_id;
+    char buffer2[MAX_LINE];
+
+    d_print("Trying to suspend TID: 0x%08x\n", tid);
+
+    if((myHandle = OpenThread(THREAD_SUSPEND_RESUME, 0x0, tid)) == 0x0)
+    {
+        d_print("Failed to open thread, error: 0x%08x\n", GetLastError());
+        sprintf(buffer2, "Error: 0x%08x\n", GetLastError());
+        strcpy(my_trace->report_buffer, buffer2);
+    }
+
+
+    if(SuspendThread(myHandle) == -1)
+    {
+        d_print("Failed to suspend thread, error: 0x%08x\n", GetLastError());
+        sprintf(buffer2, "Error: 0x%08x\n", GetLastError());
+        strcpy(my_trace->report_buffer, buffer2);
+    }
+
+    return 0x0;
+}
+
+
+int suspend_all()
+{
+    char buffer2[MAX_LINE];
+
+    HANDLE hThreadSnap = INVALID_HANDLE_VALUE; 
+    THREADENTRY32 te32; 
+ 
+    hThreadSnap = CreateToolhelp32Snapshot( TH32CS_SNAPTHREAD, 0 ); 
+    if( hThreadSnap == INVALID_HANDLE_VALUE ) 
+        return( FALSE ); 
+ 
+    te32.dwSize = sizeof(THREADENTRY32 ); 
+ 
+    if( !Thread32First( hThreadSnap, &te32 ) ) 
+    {
+        d_print("Thread32First");
+        CloseHandle( hThreadSnap );
+        return( FALSE );
+    }
+
+    do 
+    { 
+        if(te32.th32OwnerProcessID != my_trace->PID)
+            continue;
+
+        sprintf(buffer2, "Suspending: 0x%08x\n", te32.th32ThreadID);
+        strcat(my_trace->report_buffer, buffer2);
+        suspend_thread(te32.th32ThreadID);
+    } while( Thread32Next(hThreadSnap, &te32 ) );
+
+    CloseHandle( hThreadSnap );
+
+    return 0x0;
+}
+
+int release_thread(DWORD tid)
+{
+    HANDLE myHandle = (HANDLE)-0x1;
+    DWORD tid_id;
+    char buffer2[MAX_LINE];
+
+    d_print("Trying relese TID: 0x%08x\n", tid);
+
+    if((myHandle = OpenThread(THREAD_SUSPEND_RESUME, 0x0, tid)) == 0x0)
+    {
+        d_print("Failed to open thread, error: 0x%08x\n", GetLastError());
+        sprintf(buffer2, "Error: 0x%08x\n", GetLastError());
+        strcpy(my_trace->report_buffer, buffer2);
+    }
+
+
+    if(ResumeThread(myHandle) == -1)
+    {
+        d_print("Failed to resume thread, error: 0x%08x\n", GetLastError());
+        sprintf(buffer2, "Error: 0x%08x\n", GetLastError());
+        strcpy(my_trace->report_buffer, buffer2);
+    }
+
+    return 0x0;
+}
+
+int release_all_except(DWORD tid)
+{
+    char buffer2[MAX_LINE];
+
+    HANDLE hThreadSnap = INVALID_HANDLE_VALUE; 
+    THREADENTRY32 te32; 
+ 
+    hThreadSnap = CreateToolhelp32Snapshot( TH32CS_SNAPTHREAD, 0 ); 
+    if( hThreadSnap == INVALID_HANDLE_VALUE ) 
+        return( FALSE ); 
+ 
+    te32.dwSize = sizeof(THREADENTRY32 ); 
+ 
+    if( !Thread32First( hThreadSnap, &te32 ) ) 
+    {
+        d_print("Thread32First");
+        CloseHandle( hThreadSnap );
+        return( FALSE );
+    }
+
+    do 
+    { 
+        if(te32.th32OwnerProcessID != my_trace->PID)
+            continue;
+        if(te32.th32ThreadID == tid)
+            continue;
+
+        sprintf(buffer2, "Suspending: 0x%08x\n", te32.th32ThreadID);
+        strcat(my_trace->report_buffer, buffer2);
+        release_thread(te32.th32ThreadID);
+    } while( Thread32Next(hThreadSnap, &te32 ) );
+
+    CloseHandle( hThreadSnap );
+
+    return 0x0;
+}
 
 int suspend_all_except(DWORD tid)
 {
@@ -4627,7 +4750,7 @@ int suspend_all_except(DWORD tid)
 
     return 0x0;
 }
-
+/*
 int suspend_thread(DWORD tid)
 {
     HANDLE myHandle = (HANDLE)-0x1;
@@ -4653,33 +4776,7 @@ int suspend_thread(DWORD tid)
 
     return 0x0;
 }
-
-int release_thread(DWORD tid)
-{
-    HANDLE myHandle = (HANDLE)-0x1;
-    DWORD tid_id;
-    char buffer2[MAX_LINE];
-
-    d_print("Trying relese TID: 0x%08x\n", tid);
-
-    if((myHandle = OpenThread(THREAD_SUSPEND_RESUME, 0x0, tid)) == 0x0)
-    {
-        d_print("Failed to open thread, error: 0x%08x\n", GetLastError());
-        sprintf(buffer2, "Error: 0x%08x\n", GetLastError());
-        strcpy(my_trace->report_buffer, buffer2);
-    }
-
-
-    if(ResumeThread(myHandle) == -1)
-    {
-        d_print("Failed to resume thread, error: 0x%08x\n", GetLastError());
-        sprintf(buffer2, "Error: 0x%08x\n", GetLastError());
-        strcpy(my_trace->report_buffer, buffer2);
-    }
-
-    return 0x0;
-}
-
+*/
 int release_all()
 {
     HANDLE myHandle = (HANDLE)-0x1;
@@ -6783,6 +6880,18 @@ int handle_cmd(char* cmd)
         send_report();   
     
     }
+    else if(!strncmp(cmd, CMD_SUSPEND_THREAD, 2))
+    {
+        unsigned tid_id;
+        char* reg;
+
+        reg = strtok(cmd, " ");
+        tid_id = strtoul(strtok(0x0, " "), 0x0, 0x10);
+
+        suspend_thread(tid_id);
+        send_report();   
+    
+    }
     else if(!strncmp(cmd, CMD_RELEASE_THREAD, 2))
     {
         unsigned tid_id;
@@ -6792,6 +6901,12 @@ int handle_cmd(char* cmd)
         tid_id = strtoul(strtok(0x0, " "), 0x0, 0x10);
 
         release_thread(tid_id);
+        send_report();   
+    
+    }
+    else if(!strncmp(cmd, CMD_SUSPEND_ALL, 2))
+    {
+        suspend_all();
         send_report();   
     
     }
@@ -6810,6 +6925,18 @@ int handle_cmd(char* cmd)
         tid_id = strtoul(strtok(0x0, " "), 0x0, 0x10);
 
         suspend_all_except(tid_id);
+        send_report();   
+    
+    }
+    else if(!strncmp(cmd, CMD_RELEASE_ALL_EXCEPT, 2))
+    {
+        unsigned tid_id;
+        char* reg;
+
+        reg = strtok(cmd, " ");
+        tid_id = strtoul(strtok(0x0, " "), 0x0, 0x10);
+
+        release_all_except(tid_id);
         send_report();   
     
     }

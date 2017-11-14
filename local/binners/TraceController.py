@@ -1032,18 +1032,33 @@ class TraceController(object):
         self.last_report, self.last_answer = self.recv_report_active()
         return 
 
+    def tracer_suspend_thread(self, args):
+        self.send_command_active("sT %s" % args)
+        self.last_report, self.last_answer = self.recv_report_active()
+        return 
+
     def tracer_release_thread(self, args):
         self.send_command_active("RE %s" % args)
         self.last_report, self.last_answer = self.recv_report_active()
         return 
 
-    def tracer_release_all(self, args):
+    def tracer_suspend_all(self):
+        self.send_command_active("SA")
+        self.last_report, self.last_answer = self.recv_report_active()
+        return 
+
+    def tracer_release_all(self):
         self.send_command_active("Ra")
         self.last_report, self.last_answer = self.recv_report_active()
         return 
 
     def tracer_suspend_all_except(self, args):
         self.send_command_active("sa %s" % args)
+        self.last_report, self.last_answer = self.recv_report_active()
+        return 
+
+    def tracer_release_all_except(self, args):
+        self.send_command_active("rA %s" % args)
         self.last_report, self.last_answer = self.recv_report_active()
         return 
 

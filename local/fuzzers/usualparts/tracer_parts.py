@@ -196,6 +196,21 @@ def tracer_append_pid_prefix(args=None):
 
     return
 
+def tracer_suspend_thread(args = None):
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+    
+    if(args == None):
+        args = globs.state.tid
+
+    write_socket(options.s, "tracer_suspend_thread 0x%08x" % args);
+    response, _, _ = read_socket(options.s)
+
+    globs.state.ret = response
+
+    return
+
 def tracer_release_thread(args = None):
     options = globs.state.options
     state = globs.state
@@ -211,7 +226,19 @@ def tracer_release_thread(args = None):
 
     return
 
-def tracer_release_all(args = None):
+def tracer_suspend_all(args = None):
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+    
+    write_socket(options.s, "tracer_suspend_all");
+    response, _, _ = read_socket(options.s)
+
+    globs.state.ret = response
+
+    return
+
+def tracer_suspend_all_except(args = None):
     options = globs.state.options
     state = globs.state
     status = globs.state.status
@@ -219,7 +246,34 @@ def tracer_release_all(args = None):
     if(args == None):
         args = globs.state.tid
 
+    write_socket(options.s, "tracer_suspend_all_except 0x%08x" % args);
+    response, _, _ = read_socket(options.s)
+
+    globs.state.ret = response
+
+    return
+
+def tracer_release_all(args = None):
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+    
     write_socket(options.s, "tracer_release_all");
+    response, _, _ = read_socket(options.s)
+
+    globs.state.ret = response
+
+    return
+
+def tracer_release_all_except(args = None):
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+    
+    if(args == None):
+        args = globs.state.tid
+
+    write_socket(options.s, "tracer_release_all_except 0x%08x" % args);
     response, _, _ = read_socket(options.s)
 
     globs.state.ret = response
