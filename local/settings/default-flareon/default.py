@@ -107,6 +107,8 @@ kernel32.dll+0x202f,CREATEPROCESSW+:CREATEPROCESSW-,0x0;              # CreatePr
 kernel32.dll+0x2059,CREATEPROCESSW-:CREATEPROCESSW+,0x0;              # CreateProcessW end
 kernel32.dll+0x8f405,CREATEREMOTETHREAD+:CREATEREMOTETHREAD-,0x0;             # CreateRemoteThread start
 kernel32.dll+0x8f424,CREATEREMOTETHREAD-:CREATEREMOTETHREAD+,0x0;             # CreateRemoteThread end
+kernel32.dll+0x0527ff,CREATETHREAD+:CREATETHREAD-,0x0;     # CreateThread start
+kernel32.dll+0x05281d,CREATETHREAD-:CREATETHREAD+,0x0;           # CreateThread end
 KERNELBASE.dll+0x916f,OPENPROCESS+:OPENPROCESS-,0x0;            # OpenProcess start
 KERNELBASE.dll+0x91c2,OPENPROCESS-:OPENPROCESS+,0x0;            # OpenProcess end
 WININET.dll+0x20494,INTERNETCONNECTW+1:INTERNETCONNECTW-1,0x0;
@@ -131,6 +133,16 @@ WININET.dll+0x1e2a6,INTERNETREADFILE+1:INTERNETREADFILE-1,0x0;
 WININET.dll+0x1e2e5,INTERNETREADFILE-1:INTERNETREADFILE+1,0x0;
 KERNELBASE.dll+0x6811,GETLASTERROR+1:GETLASTERROR-1,0x0;
 KERNELBASE.dll+0x681a,GETLASTERROR-1:GETLASTERROR+1,0x0;
+kernel32.dll+0x52866,LOADLIBRARYA+:LOADLIBRARYA-,0x0;           # LoadLibraryA start
+kernel32.dll+0x52899,LOADLIBRARYA-:LOADLIBRARYA+,0x0;           # LoadLibraryA end
+kernel32.dll+0x4efa2,WAITFORSINGLEOBJECT+:WAITFORSINGLEOBJECT-,0x0;           # WaitForSingleObject start
+kernel32.dll+0x4efb2,WAITFORSINGLEOBJECT-:WAITFORSINGLEOBJECT+,0x0;           # WaitForSingleObject end
+kernel32.dll+0x4efc2,WAITFORSINGLEOBJECTEX+:WAITFORSINGLEOBJECTEX-,0x0;           # WaitForSingleObjectEx start
+kernel32.dll+0x4f004,WAITFORSINGLEOBJECTEX-:WAITFORSINGLEOBJECTEX+,0x0;           # WaitForSingleObjectEx end
+kernel32.dll+0x4f288,WAITFORMULTIPLEOBJECTS+:WAITFORMULTIPLEOBJECTS-,0x0;           # WaitForMultipleObjects start
+kernel32.dll+0x4f29e,WAITFORMULTIPLEOBJECTS-:WAITFORMULTIPLEOBJECTS+,0x0;           # WaitForMultipleObjects end
+kernel32.dll+0x4f09e,WAITFORMULTIPLEOBJECTSEX+:WAITFORMULTIPLEOBJECTSEX-,0x0;           # WaitForMultipleObjectsEx start
+kernel32.dll+0x4f13c,WAITFORMULTIPLEOBJECTSEX-:WAITFORMULTIPLEOBJECTSEX+,0x0;           # WaitForMultipleObjectsEx end
 user32.dll+0x36dfa,C7:C8,0x0;               # SetWindowsHookExA start
 user32.dll+0x36e13,C8:C7,0x0;               # SetWindowsHookExA end
 user32.dll+0x1210a,C9:C0,0x0;               # SetWindowsHookExW start

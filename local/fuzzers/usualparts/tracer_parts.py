@@ -120,6 +120,8 @@ def trace_controller_current_tracer(args=None):
     write_socket(options.s, "tc_current");
     response, _, _ = read_socket(options.s)
 
+    response = response[12:31]
+
     globs.state.ret = response
 
     return
@@ -380,6 +382,44 @@ def tracer_manual_st_from_arg(args=None):
     write_socket(options.s, "tracer_register_reactions 0x%08x,ST,0x0" % ep);
     response, _, _ = read_socket(options.s)
 
+
+def tracer_register_reactions_at(args=None):
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+    
+    args = ','.join(args)
+    loc = globs.state.stack.pop()
+    if(type(loc) == int):
+        loc = '0x%08x' % loc
+    args = loc+','+args
+
+    # remove new lines 
+    args = args.replace('\n', '')
+    if(args[-1:] == ';'):
+        args = args[:-1]
+
+    parts = args.split(';');
+    cmd = '';
+
+    for part in parts:
+        if(len(cmd) + len(part) < 0x100):
+            cmd += ';'
+            cmd += part
+        else:
+            write_socket(options.s, "tracer_register_reactions %s" % cmd[1:]);
+            response, _, _ = read_socket(options.s)
+            cmd = ''
+            cmd += ';'
+            cmd += part
+
+    if(len(cmd) > 0x1): 
+        write_socket(options.s, "tracer_register_reactions %s" % cmd[1:]);
+        response, _, _ = read_socket(options.s)
+
+    globs.state.ret = response
+
+    return
 
 def tracer_register_reactions(args=None):
     options = globs.state.options
@@ -879,8 +919,9 @@ def tracer_read_pid(args = 0x0):
 
     write_socket(options.s, "tracer_read_dword 0x%08x" % args);
     response, _, _ = read_socket(options.s)
+    response = response[3:11]
 
-    globs.state.pid = int(response[3:11], 0x10)
+    globs.state.pid = int(response, 0x10)
     print "Last PID: 0x%08x" % globs.state.pid
     globs.state.ret = response
 
@@ -896,8 +937,9 @@ def tracer_read_ep(args = 0x0):
 
     write_socket(options.s, "tracer_read_dword 0x%08x" % args);
     response, _, _ = read_socket(options.s)
+    response = response[3:11]
 
-    globs.state.ep = int(response[3:11], 0x10)
+    globs.state.ep = int(response, 0x10)
     print "Last EP: 0x%08x" % globs.state.ep
     globs.state.ret = response
 

@@ -3003,6 +3003,8 @@ int taint_x86::add_lib(OFFSET off, char* name)
 
 int taint_x86::handle_exception(EXCEPTION_INFO info)
 {
+    //[TODO: WARNING, REMOVE!!!]
+    return 0x0;
     if(!(this->started))
     {
         return 0x0;

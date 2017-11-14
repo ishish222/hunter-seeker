@@ -11,9 +11,13 @@ def print_result(args=None):
     if(args is None):
         args = globs.state.stack.pop()
 
+    if(type(args) == int):
+        args = '0x%08x' % args
+
     if(hasattr(options, 'host_result_file') == False):
         options.host_result_file = open("results.txt", "w", 0)
     options.host_result_file.write(args)
+    options.host_result_file.write('\n')
 
     return
 

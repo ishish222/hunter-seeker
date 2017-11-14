@@ -12,3 +12,5 @@ echo "Retrieving remote render..."
 scp hs1@flareon:$REMOTE_ROOT/$FOLDER/$MAP $1/$MAP".tmp"
 echo "Restructurizing..."
 fix-map $1/$MAP".tmp" 1> $1/$MAP
+echo "Removing temp file..."
+rm $1/$MAP".tmp"

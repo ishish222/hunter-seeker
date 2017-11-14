@@ -60,6 +60,7 @@ prototypes['TracerConfigureInDir']  = tracer_parts.tracer_configure_in_dir
 prototypes['TracerPrepareTrace']    = tracer_parts.tracer_prepare_trace
 prototypes['TracerRegisterRegions'] = tracer_parts.tracer_register_regions
 prototypes['TracerRegisterReactions'] = tracer_parts.tracer_register_reactions
+prototypes['TracerRegisterReactionsAt'] = tracer_parts.tracer_register_reactions_at
 prototypes['TracerRegisterBuiltin'] = tracer_parts.tracer_register_builtin
 prototypes['DisableReactions']      = tracer_parts.tracer_disable_all_reactions
 prototypes['TracerDebugSample']     = tracer_parts.tracer_debug_sample
