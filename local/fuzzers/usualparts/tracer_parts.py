@@ -196,6 +196,17 @@ def tracer_append_pid_prefix(args=None):
 
     return
 
+def tracer_current_tid(args = None):
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+    
+    write_socket(options.s, "tracer_current_tid");
+    response, _, _ = read_socket(options.s)
+
+    globs.state.ret = int(response[8:18], 0x10)
+    return
+
 def tracer_suspend_thread(args = None):
     options = globs.state.options
     state = globs.state
@@ -366,6 +377,13 @@ def read_unicode(args=None):
     write_socket(options.s, "tracer_read_string_unicode 0x%08x" % addr)
     response, _, _ = read_socket(options.s)
     globs.state.ret = response[3:]
+
+def set_base(args=None):
+    options = globs.state.options
+    addr = globs.state.stack.pop()
+
+    write_socket(options.s, "tracer_set_base %s 0x%08x" % (args, addr));
+    response, _, _ = read_socket(options.s)
 
 def write_ansi(args=None):
     options = globs.state.options

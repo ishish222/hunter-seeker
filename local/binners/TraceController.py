@@ -1027,8 +1027,18 @@ class TraceController(object):
         self.last_report, self.last_answer = self.recv_report_active()
         return 
 
+    def set_base(self, args):
+        self.send_command_active("SB %s" % args)
+        self.last_report, self.last_answer = self.recv_report_active()
+        return 
+
     def set_parameters(self, args):
         self.send_command_active("SP %s" % args)
+        self.last_report, self.last_answer = self.recv_report_active()
+        return 
+
+    def tracer_current_tid(self):
+        self.send_command_active("CT")
         self.last_report, self.last_answer = self.recv_report_active()
         return 
 

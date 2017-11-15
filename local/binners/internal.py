@@ -1127,6 +1127,13 @@ def execute(cmds, ext_pipe):
             writePipe(ext_pipe, "tc_avtivate_next "+bcolors.OK_STR)
             ok(ext_pipe)
 
+        elif(cmd == "tracer_current_tid"):
+            trace_controller.tracer_current_tid()
+            writePipe(ext_pipe, "%s" % trace_controller.last_answer)
+            writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
+            writePipe(ext_pipe, "tracer_current_tid "+bcolors.OK_STR)
+            ok(ext_pipe)
+
         elif(cmd == "tracer_suspend_thread"):
             trace_controller.tracer_suspend_thread(args)
             writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
@@ -1163,6 +1170,12 @@ def execute(cmds, ext_pipe):
             trace_controller.tracer_release_all_except(args)
             writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
             writePipe(ext_pipe, "tracer_release_all_except "+bcolors.OK_STR)
+            ok(ext_pipe)
+
+        elif(cmd == "tracer_set_base"):
+            trace_controller.set_base(args)
+            writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
+            writePipe(ext_pipe, "tracer_set_base"+bcolors.OK_STR)
             ok(ext_pipe)
 
         elif(cmd == "tracer_configure_sample_pid"):

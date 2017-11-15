@@ -173,6 +173,7 @@
 #define CMD_DISABLE_ALL_REACTIONS "dA"
 #define CMD_AUTO_ST             "AS"
 #define CMD_SET_ST              "SS"
+#define CMD_CURRENT_TID         "CT"
 #define CMD_RELEASE_THREAD      "RE"
 #define CMD_RELEASE_ALL         "Ra"
 #define CMD_RELEASE_ALL_EXCEPT  "rA"
@@ -187,6 +188,7 @@
 #define CMD_AUTOREPEAT_REACTION "AR"
 #define CMD_APPLY_MEMORY_FILE   "AF"
 #define CMD_RESOLVE_LOCATION    "RL"
+#define CMD_SET_BASE            "SB"
 
 #define CMD_ROUTINE_1           "R1"
 #define CMD_ROUTINE_2           "R2"

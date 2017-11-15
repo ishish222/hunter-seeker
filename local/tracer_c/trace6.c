@@ -2175,8 +2175,8 @@ void register_lib(LOAD_DLL_DEBUG_INFO info)
     strcpy(my_trace->libs[my_trace->lib_count].lib_name, find_file(my_trace->libs[my_trace->lib_count].lib_path));
 #endif
 #ifdef LIB_VER_WXP
-    strcpy(my_trace->libs[mt_trace->lib_count].lib_name, "UNKNOWN");
-    strcpy(my_trace->libs[mt_trace->lib_count].lib_path, "UNKNOWN");
+    strcpy(my_trace->libs[my_trace->lib_count].lib_name, "UNKNOWN");
+    strcpy(my_trace->libs[my_trace->lib_count].lib_path, "UNKNOWN");
 #endif
     //d_print("Name pointer: %p, len: 0x%08x\n", libs[my_trace->lib_count].lib_name, strlen(libs[my_trace->lib_count].lib_name));
 
@@ -2216,6 +2216,23 @@ void deregister_lib(DWORD i)
     my_trace->libs[i].loaded = 0x0;
 
     add_to_buffer(line);
+}
+
+int set_base(char* lib_name, DWORD addr)
+{
+    char line[MAX_LINE];
+
+    strcpy(my_trace->libs[my_trace->lib_count].lib_name, lib_name);
+    strcpy(my_trace->libs[my_trace->lib_count].lib_path, "NONE");
+
+    my_trace->libs[my_trace->lib_count].lib_offset = addr;
+    sprintf(line, "RL,0x%08x,%s\n", addr, lib_name);
+    add_to_buffer(line);
+
+    my_trace->libs[my_trace->lib_count].loaded = 0x1;
+
+    my_trace->lib_count++;
+    return 0x0;
 }
 
 void deregister_lib(UNLOAD_DLL_DEBUG_INFO info)
@@ -4651,6 +4668,16 @@ int suspend_all()
     return 0x0;
 }
 
+int current_thread()
+{
+    char buffer2[MAX_LINE];
+
+    sprintf(buffer2, "TID: 0x%08x\n", my_trace->last_tid);
+    strcat(my_trace->report_buffer, buffer2);
+
+    return 0x0;
+}
+
 int release_thread(DWORD tid)
 {
     HANDLE myHandle = (HANDLE)-0x1;
@@ -6261,6 +6288,19 @@ int handle_cmd(char* cmd)
         d_print("Sample path set to: %s\n", my_trace->in_sample_path);    
         send_report();
     }
+    else if(!strncmp(cmd, CMD_SET_BASE, 2))
+    {
+        DWORD offset;
+        char lib_name[MAX_LINE];
+        char* cmd_;
+
+        cmd_ = strtok(cmd, " ");
+        strcpy(lib_name, strtok(0x0, " "));
+        offset  = strtoul(strtok(0x0, " "), 0x0, 0x10);
+
+        set_base(lib_name, offset);
+        send_report();
+    }
     else if(!strncmp(cmd, CMD_SET_PID, 2))
     {
         my_trace->in_sample_pid = strtol(cmd+3, 0x0, 0x10);
@@ -6879,6 +6919,11 @@ int handle_cmd(char* cmd)
         write_dword(addr, val);
         send_report();   
     
+    }
+    else if(!strncmp(cmd, CMD_CURRENT_TID, 2))
+    {
+        current_thread();
+        send_report();   
     }
     else if(!strncmp(cmd, CMD_SUSPEND_THREAD, 2))
     {
