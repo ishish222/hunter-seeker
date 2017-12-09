@@ -713,4 +713,21 @@ rlated to #90
 
 Lub wymyslic inny sposob skracania tworzenia nowych skryptow na podstawie wyjsciowych dla malware
 
+--
+
+095 - settings per badanie jest nieaktualny
+
+Wiekszosc tych ustawien zostalo przeniesionych do skryptow. Mozna sie pozbywac powili
+
+--
+
+096 - trzeba sportowac do nowszych qemu
+
+--
+
+[x] 097 - deploy kluczy rejestru i plikow
+
+Przeprowadzane za pomoca cmd.exe i ew. zaladowanych wartosci do kolejki lub ladowany dysk.
+Potrzebne skrypty do reuzycia
+
 

@@ -144,6 +144,9 @@ def run_cmd(args=None):
     state = globs.state
     status = globs.state.status
     
+    if(args == None):
+        args = globs.state.ret
+
     write_socket(options.s, "run_cmd %s" % args)
     response, _, _ = read_socket(options.s)
 

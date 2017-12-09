@@ -2218,6 +2218,32 @@ void deregister_lib(DWORD i)
     add_to_buffer(line);
 }
 
+int set_priority_high(DWORD tid)
+{
+    HANDLE myHandle = (HANDLE)-0x1;
+    DWORD tid_id;
+    char buffer2[MAX_LINE];
+
+    d_print("Setting high priority for TID: 0x%08x\n", tid);
+
+    if((myHandle = OpenThread(THREAD_SET_INFORMATION | THREAD_SET_LIMITED_INFORMATION, 0x0, tid)) == 0x0)
+    {
+        d_print("Failed to open thread, error: 0x%08x\n", GetLastError());
+        sprintf(buffer2, "Error: 0x%08x\n", GetLastError());
+        strcpy(my_trace->report_buffer, buffer2);
+    }
+
+
+    if(SetThreadPriority(myHandle, THREAD_PRIORITY_TIME_CRITICAL) == -1)
+    {
+        d_print("Failed to suspend thread, error: 0x%08x\n", GetLastError());
+        sprintf(buffer2, "Error: 0x%08x\n", GetLastError());
+        strcpy(my_trace->report_buffer, buffer2);
+    }
+
+    return 0x0;
+}
+
 int set_base(char* lib_name, DWORD addr)
 {
     char line[MAX_LINE];
@@ -7103,6 +7129,18 @@ int handle_cmd(char* cmd)
         strtok(cmd, " ");
         str = strtok(0x0, " ");
         resolve_location(str);
+        send_report();
+        
+    }
+    else if(!strncmp(cmd, CMD_SET_PRIORITY_HIGH, 2))
+    {
+        char* str;
+        DWORD tid_id;
+
+        strtok(cmd, " ");
+        str = strtok(0x0, " ");
+        tid_id = strtoul(strtok(0x0, " "), 0x0, 0x10);
+        set_priority_high(tid_id);
         send_report();
         
     }

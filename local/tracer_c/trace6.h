@@ -189,6 +189,7 @@
 #define CMD_APPLY_MEMORY_FILE   "AF"
 #define CMD_RESOLVE_LOCATION    "RL"
 #define CMD_SET_BASE            "SB"
+#define CMD_SET_PRIORITY_HIGH   "sp"
 
 #define CMD_ROUTINE_1           "R1"
 #define CMD_ROUTINE_2           "R2"

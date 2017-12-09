@@ -1,6 +1,6 @@
 1 - install OS
 2 - install virtio
-3 - install python, python-win32, fix python-win32 (move dlls like Lib\site-packages\pywin32_system32\pywintypes.dll to Lib\site-packages\win32)
+3 - install python, python-win32, pyserial, fix python-*(move dlls like Lib\site-packages\pywin32_system32\pywintypes.dll to Lib\site-packages\win32)
 4 - admin cmd in autostart (harmonogram), disable ASLR (regedit), disable UAC (Control Panel)
 5 - move to root.qcow2
 6 - create clone disk (qemu-img create -f qcow2 hs2-01.qcow2 -b root.qcow2)

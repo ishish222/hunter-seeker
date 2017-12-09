@@ -35,7 +35,8 @@ machines = {
     'hs2-11': {'disk' : 'hs2-11-win7.qcow2', 'vnc' : ':11', 'taskset' : '7,8,9',    'monitor' : '/tmp/monitor-hs11', 'serial' : '/tmp/serial-hs11'},
     'hs2-12': {'disk' : 'hs2-12-win7.qcow2', 'vnc' : ':12', 'taskset' : '10,11,12', 'monitor' : '/tmp/monitor-hs12', 'serial' : '/tmp/serial-hs12'},
     'hs3-01': {'disk' : 'hs3-01.qcow2', 'vnc' : ':1', 'taskset' : '1,2,3',     'monitor' : '/tmp/monitor-hs31', 'serial' : '/tmp/serial-hs31'},
-    'hs3-01': {'disk' : 'hs3-02.qcow2', 'vnc' : ':2', 'taskset' : '4,5,6',     'monitor' : '/tmp/monitor-hs32', 'serial' : '/tmp/serial-hs32'}
+    'hs3-01': {'disk' : 'hs3-02.qcow2', 'vnc' : ':2', 'taskset' : '4,5,6',     'monitor' : '/tmp/monitor-hs32', 'serial' : '/tmp/serial-hs32'},
+    'rzut_1-01': {'disk' : 'rzut_1-01.qcow2', 'vnc' : ':1', 'taskset' : '1,2,3',     'monitor' : '/tmp/rzut-1_01-monitor', 'serial' : '/tmp/rzut-1_01-serial'}
 }
 
 script_codes = {}

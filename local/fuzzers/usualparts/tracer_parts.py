@@ -207,6 +207,21 @@ def tracer_current_tid(args = None):
     globs.state.ret = int(response[8:18], 0x10)
     return
 
+def tracer_set_priority_high(args = None):
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+    
+    if(args == None):
+        args = globs.state.stack.pop()
+
+    write_socket(options.s, "tracer_set_priority_high 0x%08x" % args);
+    response, _, _ = read_socket(options.s)
+
+    globs.state.ret = response
+
+    return
+
 def tracer_suspend_thread(args = None):
     options = globs.state.options
     state = globs.state
@@ -408,6 +423,8 @@ def tracer_read_arg_ansi(args=None):
     response, _, _ = read_socket(options.s)
 
     globs.state.ret = response[3:]
+    globs.state.ret = globs.state.ret.split()[0]
+    print 'ret is: %s ' % globs.state.ret
 
 def tracer_read_arg_uni(args=None):
     options = globs.state.options
@@ -415,6 +432,7 @@ def tracer_read_arg_uni(args=None):
     response, _, _ = read_socket(options.s)
 
     globs.state.ret = response[3:]
+    globs.state.ret = globs.state.ret.split()[0]
     print 'ret is: %s ' % globs.state.ret
 
 def tracer_read_arg(args=None):
@@ -423,6 +441,7 @@ def tracer_read_arg(args=None):
     response, _, _ = read_socket(options.s)
 
     globs.state.ret = response[3:]
+    globs.state.ret = globs.state.ret.split()[0]
 
 def tracer_manual_st_w_self(args=None):
     options = globs.state.options

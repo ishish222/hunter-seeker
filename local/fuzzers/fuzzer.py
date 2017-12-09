@@ -175,6 +175,7 @@ def stateful_routine(script_path):
                     ip = labels[ret]
                 except KeyError:
                     globs.first_chance = 0x0
+                    print 'Key error: %s' % ip
                     raise MachineError
     
         print

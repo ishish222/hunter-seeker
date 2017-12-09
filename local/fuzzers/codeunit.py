@@ -49,6 +49,7 @@ prototypes['SpawnTracerLog']        = tracing_parts.start_tracer_log
 # ends
 prototypes['GetSampleOptions']      = tracing_parts.get_sample_options
 prototypes['RevertClean']           = qemu_parts.offline_revert
+prototypes['RevertReady']           = qemu_parts.revert_ready
 prototypes['TracerConfigureSample'] = tracer_parts.tracer_configure_sample
 prototypes['TracerConfigureSamplePID'] = tracer_parts.tracer_configure_sample_pid
 prototypes['TracerConfigureOutDir'] = tracer_parts.tracer_configure_out_dir
@@ -144,7 +145,9 @@ prototypes['GetHTTP']               = responder_parts.get_http
 prototypes['StartLog']              = responder_parts.start_log
 prototypes['ChangeIP']              = responder_parts.change_ip
 prototypes['RunCmd']                = responder_parts.run_cmd
+prototypes['RunCommand']                = responder_parts.run_cmd
 prototypes['RunCmdHost']            = other_parts.run_cmd_host
+prototypes['RunCommandHost']            = other_parts.run_cmd_host
 prototypes['ReadAscii']             = tracer_parts.read_ansi
 prototypes['WriteAscii']             = tracer_parts.write_ansi
 prototypes['ReadAnsi']             = tracer_parts.read_ansi
@@ -156,10 +159,14 @@ prototypes['Push']                  = other_parts.push
 prototypes['Pop']                   = other_parts.pop
 prototypes['Push2']                 = other_parts.push2
 prototypes['Pop2']                  = other_parts.pop2
+prototypes['AuxPush']               = other_parts.push2
+prototypes['AuxPop']                = other_parts.pop2
 prototypes['Enqueue']               = other_parts.enqueue
 prototypes['Dequeue']               = other_parts.dequeue
 prototypes['Enqueue2']               = other_parts.enqueue2
 prototypes['Dequeue2']               = other_parts.dequeue2
+prototypes['AuxEnqueue']               = other_parts.enqueue2
+prototypes['AuxDequeue']               = other_parts.dequeue2
 prototypes['ClearStack']            = other_parts.clear_stack
 prototypes['Interrupt']             = tracing_parts.interrupt
 prototypes['QemuQuit']              = qemu_parts.quit
@@ -173,9 +180,13 @@ prototypes['ResolveLocation']       = tracer_parts.tracer_resolve_location
 prototypes['SetBase']       = tracer_parts.set_base
 prototypes['Int10']                 = other_parts.int10
 prototypes['Int16']                 = other_parts.int16
+prototypes['StrCat']                = other_parts.str_cat
+prototypes['StrCatQueue']           = other_parts.str_cat_queue
+prototypes['Str']                   = other_parts.strr
 prototypes['SetCounter']            = other_parts.set_counter
 prototypes['GetCounter']            = other_parts.get_counter
 prototypes['CheckCounter']          = other_parts.check_counter
+prototypes['SetPriorityHigh']          = tracer_parts.tracer_set_priority_high
 
 
 class CodeUnit:

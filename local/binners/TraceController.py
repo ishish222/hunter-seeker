@@ -1042,6 +1042,11 @@ class TraceController(object):
         self.last_report, self.last_answer = self.recv_report_active()
         return 
 
+    def tracer_set_priority_high(self, args):
+        self.send_command_active("sp %s" % args)
+        self.last_report, self.last_answer = self.recv_report_active()
+        return 
+
     def tracer_suspend_thread(self, args):
         self.send_command_active("sT %s" % args)
         self.last_report, self.last_answer = self.recv_report_active()

@@ -184,6 +184,21 @@ def dequeue2(args = None):
     globs.state.ret = globs.state.queue2.pop()
     print "Dequeued: %s" % globs.state.ret
 
+def str_cat(args = None):
+    if(args == None):
+        globs.state.ret = '%s%s' % (globs.state.ret, globs.state.stack.pop())
+    else:
+        globs.state.ret = '%s%s' % (globs.state.ret, args)
+    print 'Result string: %s' % globs.state.ret
+
+def str_cat_queue(args = None):
+    globs.state.ret = '%s%s' % (globs.state.ret, globs.state.queue2.pop())
+    print 'Result string: %s' % globs.state.ret
+
+def strr(args):
+    globs.state.ret = '%s' % (args)
+    print 'Result string: %s' % globs.state.ret
+
 def int10(args = None):
     if(args == None):
         globs.state.ret = int(globs.state.ret, 10)
