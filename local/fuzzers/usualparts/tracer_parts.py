@@ -270,7 +270,7 @@ def tracer_suspend_all_except(args = None):
     status = globs.state.status
     
     if(args == None):
-        args = globs.state.tid
+        args = globs.state.stack.pop()
 
     write_socket(options.s, "tracer_suspend_all_except 0x%08x" % args);
     response, _, _ = read_socket(options.s)
@@ -380,6 +380,7 @@ def read_ansi(args=None):
     write_socket(options.s, "tracer_read_string_ansi 0x%08x" % addr)
     response, _, _ = read_socket(options.s)
     globs.state.ret = response[3:]
+    globs.state.ret = globs.state.ret.split()[0]
 
 def read_unicode(args=None):
     options = globs.state.options
@@ -392,6 +393,7 @@ def read_unicode(args=None):
     write_socket(options.s, "tracer_read_string_unicode 0x%08x" % addr)
     response, _, _ = read_socket(options.s)
     globs.state.ret = response[3:]
+    globs.state.ret = globs.state.ret.split()[0]
 
 def set_base(args=None):
     options = globs.state.options

@@ -191,6 +191,10 @@ def str_cat(args = None):
         globs.state.ret = '%s%s' % (globs.state.ret, args)
     print 'Result string: %s' % globs.state.ret
 
+def str_extract_extension(args = None):
+    globs.state.ret = '%s' % (globs.state.ret.split(".")[-1:][0])
+    print 'Result string: %s' % globs.state.ret
+
 def str_cat_queue(args = None):
     globs.state.ret = '%s%s' % (globs.state.ret, globs.state.queue2.pop())
     print 'Result string: %s' % globs.state.ret
@@ -394,6 +398,13 @@ def sigkill_handler(signum, frame):
 
 def register_signals(args="exception"):
     globs.exc_label = args
+
+def wait(args=None):
+    import time
+    if(args == None):
+        args = globs.state.stack.pop()
+
+    time.sleep(float(args))
 
 def wait_1_seconds(args=None):
     import time

@@ -3321,10 +3321,37 @@ SIZE_T dump_mem(FILE* f, void* from, SIZE_T len)
             d_print("Failed to read from %p to %p\nError: 0x%08x\n", from,(from+part), GetLastError());
             break;
         }
+        else
+        {
 
-        fwrite(mem_buf, read, 0x1, f);
-        wrote_total += read;
+            /* for each breakpoint */
+            unsigned k;
+            OFFSET cur_bp_addr;    
+    
+            for(k=0x0; k<my_trace->bpt_count; k++)
+            {
+                cur_bp_addr = my_trace->breakpoints[k].resolved_location;
+                if(cur_bp_addr == -0x1)
+                {
+                    continue;
+                }
+                d_print("Checking bp no: 0x%02x resolved to: 0x%08x\n", k, cur_bp_addr);
+                /* check if breakpoint in dumped region */
+                d_print("Checking 0x%08x <= 0x%08x < 0x%08x\n", (OFFSET)from+i, cur_bp_addr, (OFFSET)from+i+buf_size);
+                if(((OFFSET)from+i <= cur_bp_addr) && (cur_bp_addr < (OFFSET)from+i+buf_size))
+                {
+                    /* restore old byte */
+                    OFFSET part_off = cur_bp_addr-(OFFSET)from-i;
+                    d_print("Restoring before: 0x%02x after: 0x%02x\n", mem_buf[part_off], my_trace->breakpoints[k].saved_byte);
+                    mem_buf[part_off] = my_trace->breakpoints[k].saved_byte;
+                }
+            }
+
+            fwrite(mem_buf, read, 0x1, f);
+            wrote_total += read;
+        }
     }
+
 
     for(j=0x0; j<0x5; j++)
         d_print("0x%02x ", mem_buf[j]);
@@ -3338,9 +3365,35 @@ SIZE_T dump_mem(FILE* f, void* from, SIZE_T len)
         {
             d_print("Failed to read from %p to %p\nError: 0x%08x\n", from,(from+part), GetLastError());
         }
+        else
+        {
 
-        fwrite(mem_buf, read, 0x1, f);
-        wrote_total += read;
+            /* for each breakpoint */
+            unsigned k;
+            OFFSET cur_bp_addr;    
+    
+            for(k=0x0; k<my_trace->bpt_count; k++)
+            {
+                cur_bp_addr = my_trace->breakpoints[k].resolved_location;
+                if(cur_bp_addr == -0x1)
+                {
+                    continue;
+                }
+                d_print("Checking bp no: 0x%02x resolved to: 0x%08x\n", k, cur_bp_addr);
+                /* check if breakpoint in dumped region */
+                d_print("Checking 0x%08x <= 0x%08x < 0x%08x\n", (OFFSET)from+i, cur_bp_addr, (OFFSET)from+i+part);
+                if(((OFFSET)from+i <= cur_bp_addr) && (cur_bp_addr < (OFFSET)from+i+buf_size))
+                {
+                    /* restore old byte */
+                    OFFSET part_off = cur_bp_addr-(OFFSET)from-i;
+                    d_print("Restoring before: 0x%02x after: 0x%02x\n", mem_buf[part_off], my_trace->breakpoints[k].saved_byte);
+                    mem_buf[part_off] = my_trace->breakpoints[k].saved_byte;
+                }
+            }
+
+            fwrite(mem_buf, read, 0x1, f);
+            wrote_total += read;
+        }
     }
 
     for(j=0x0; j<0x5; j++)
@@ -5562,7 +5615,7 @@ int process_last_event()
                         }
 
 //                        //ss_callback((void*)&my_trace->last_event); /*skad to sie tutaj wzielo? */
-                        my_trace->callback_routine((void*)&my_trace->last_event);
+                        //my_trace->callback_routine((void*)&my_trace->last_event);
 
                         if(!handled)                        
                         {
