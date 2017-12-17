@@ -86,6 +86,36 @@ def qemu_connect_log(args=None):
     options.log_thread.start()
     options.threads.append(options.log_thread)
 
+def qemu_args_kvm(args=None):
+    options = globs.state.options
+
+    options.qemu_args += ['--enable-kvm']
+
+def qemu_args_research_dir(args=None):
+    options = globs.state.options
+
+    options.qemu_args += ['-net', 'nic,model=rtl8139', '-net', 'user,smb=%s' % globs.state.research_dir]
+
+def qemu_start(args=None):
+    options = globs.state.options
+
+    print("[%s] Starting" % common.timestamp())
+    print " ".join(options.qemu_args)
+
+    myErr = open("./err", "w+")
+
+    m = Popen(options.qemu_args, stdout=PIPE, stdin=PIPE, stderr=myErr.fileno(), env=os.environ, preexec_fn=preexec_function)
+    time.sleep(3)
+    options.m, _ = options.ms.accept()
+    options.s, _ = options.ss.accept()
+
+#    time.sleep(options.boot_wait)
+    #TODO!!! wee nedd to perform test, not wait!
+
+    print("[%s] Qemu full boot finished" % common.timestamp())
+#    for s in globs.state.samples_list:
+#        print s
+
 def qemu_start_full(args=None):
     options = globs.state.options
 
@@ -286,7 +316,8 @@ def quit(args=None):
     options.shutting_down.set()
 
     write_socket(options.s, "logStop")
-    common.del_mountpoint(options)
+    if(hasattr(options, 'tmp_mountpoint')):
+        common.del_mountpoint(options)
 
     try:
         common.pci_umount(options.slot_shared)

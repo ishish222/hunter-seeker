@@ -1,17 +1,8 @@
 import sys
-
-sys.path.append("e:\\server\\paimei")
-sys.path.append("e:\\common")
-
 from Queue import PriorityQueue
-import settings
 from threading import Event
 from multiprocessing import Lock, Process, Pipe
 from subprocess import Popen, PIPE
-from pydbg import *
-from pydbg.defines import *
-from functions import *
-import utils
 import win32pipe, win32file
 import time
 from select import select
@@ -19,7 +10,6 @@ import socket
 import os
 from shutil import copyfile, copytree
 import os
-from mutex_2 import NamedMutex
 from Tracer import Tracer
 
 statusPri = {'SR' : 1, 'SL' : 1, 'CR' : 0, 'TO' : 2, 'MA' : 2, 'RD' : 2, 'ST' : 2, 'WS' : 2, 'WE' : 2, 'EX' : 1}
@@ -49,8 +39,6 @@ def defined(name):
 
 class TraceController(object):
     def __init__(self, ext_pipe):
-        self.start_mutex = NamedMutex("StartMutex", True)
-        self.stop_mutex = NamedMutex("StopMutex", True)
         #self.ext_pipe = ext_pipe
         self.test_lock = Lock()
         self.loop_lock = Lock()
@@ -62,14 +50,13 @@ class TraceController(object):
         self.tracers = []
         self.trace_count = 0
         self.trace_sockets = []
+        self.log_level = 1 #TODO: fix this
 
         # active stuff
         self.tracer_active_id = 0
         self.tracer_active = None
 
         self.sockets = {}
-        self.init_dbg = pydbg()
-        self.crash_bin = utils.crash_binning.crash_binning()
         self.active = False
         self.sockets_crashed = []
         self.race_lock = Lock()
@@ -94,15 +81,10 @@ class TraceController(object):
         self.prev_status = ""
         self.last_file = ""
 
-        if(defined("settings.log_level") == True):
-            self.log_level = settings.log_level
-        else:
-            self.log_level = 0
-
-        if(defined("settings.debug") == True):
-            if(settings.debug == True):
+        if(True):
+            if(True):
                 self.debug = True
-                self.last_log_file = open("e:\\logs\\init_log.txt", "a", 0)
+                self.last_log_file = open("\\\\10.0.2.4\\qemu\\logs\\init_log.txt", "a", 0)
         else:
             self.debug = False
             self.last_log_file = None
@@ -256,7 +238,6 @@ class TraceController(object):
             if(data == "SR"):
                 script_code = dbg_socket.recv(2)
                 self.last_answer += script_code
-                self.reqScript = settings.script_codes[script_code]
                 status = "SR"
                 self.status.put((statusPri[status], status, self.reqScript))
             if(data == "EX"):
@@ -269,7 +250,6 @@ class TraceController(object):
                 long_data = ""
                 script_code = dbg_socket.recv(2)
                 self.last_answer += script_code
-                self.reqScript = settings.script_codes[script_code]
                 status = "SL"
                 while True:
                     long_data += dbg_socket.recv(1)
@@ -329,7 +309,6 @@ class TraceController(object):
             self.start_debuggers("Loop interation")
             if(invocation_args != None):
                 self.dlog("Invoking: %s" % invocation_args)
-                settings.runner(invocation_args)
             self.poll_debuggers()
             self.stop_debuggers("Detected readiness")
         else:
@@ -339,7 +318,6 @@ class TraceController(object):
             self.start_debuggers("Loop interation")
             if(invocation_args != None):
                 self.dlog("Invoking: %s" % invocation_args)
-                settings.runner(invocation_args)
             # Create race
             T1 = Thread(target=self.race1, args=(event,))
             T2 = Thread(target=self.race2, args=(to,event))
@@ -368,9 +346,7 @@ class TraceController(object):
 
     def start_debuggers(self, reason="unknown", to=None):
 #        print("Releasing mutex")
-        self.start_mutex.release()
 #        print("Acquiring mutex")
-        self.start_mutex.acquire()
         self.loop_lock.release()
         self.dlog("[UNLOCK] Debug section", 2)
         self.dlog("Waiting for debug event")
@@ -446,7 +422,7 @@ class TraceController(object):
 
     def spawn_tracer(self):
         print("Spawning tracer")
-        Popen(["e:\\server\\b.exe", "127.0.0.1", "12341"], shell=True)
+        Popen(["\\\\10.0.2.4\\qemu\\server\\b.exe", "127.0.0.1", "12341"], shell=True)
         socket, addr = self.main_socket.accept()
         self.tracers.append(Tracer())
         self.tracer_active_id = self.trace_count
@@ -461,9 +437,7 @@ class TraceController(object):
         return self.trace_count
 
     def spawn_tracer_remote_log(self):
-        print("Spawning tracer w log: e:\\server\\log_%x.txt" % self.trace_count)
-        Popen(["e:\\server\\b.exe", "127.0.0.1", "12341", ">", "\\\\10.0.2.4\\qemu\\log_%d.txt" % self.trace_count], shell=True)
-        #Popen(["e:\\server\\b.exe", "127.0.0.1", "12341", ">", "\\\\10.0.2.4\\qemu\\log.txt"], shell=True)
+        Popen(["\\\\10.0.2.4\\qemu\\server\\b.exe", "127.0.0.1", "12341", ">", "\\\\10.0.2.4\\qemu\\logs\\log_%d.log" % self.trace_count], shell=True)
         socket, addr = self.main_socket.accept()
         self.tracers.append(Tracer())
         self.tracer_active_id = self.trace_count
@@ -478,9 +452,7 @@ class TraceController(object):
         return self.trace_count
 
     def spawn_tracer_log(self):
-        print("Spawning tracer w log: e:\\server\\log_%x.txt" % self.trace_count)
-        Popen(["e:\\server\\b.exe", "127.0.0.1", "12341", ">", "e:\\server\\log_%x.txt" % self.trace_count], shell=True)
-        #Popen(["e:\\server\\b.exe", "127.0.0.1", "12341", ">", "\\\\10.0.2.4\\qemu\\log.txt"], shell=True)
+        Popen(["\\\\10.0.2.4\\qemu\\server\\b.exe", "127.0.0.1", "12341", ">", "\\\\10.0.2.4\\qemu\\logs\\log_%x.log" % self.trace_count], shell=True)
         socket, addr = self.main_socket.accept()
         self.tracers.append(Tracer())
         self.tracer_active_id = self.trace_count
@@ -495,8 +467,8 @@ class TraceController(object):
         return self.trace_count
 
     def spawn_tracer_no_log(self):
-        print("Spawning tracer w log: e:\\server\\log_%x.txt" % self.trace_count)
-        Popen(["e:\\server\\b.exe", "127.0.0.1", "12341", ">", "NUL"], shell=True)
+        print("Spawning tracer w log: \\\\10.0.2.4\\qemu\\server\\log_%x.txt" % self.trace_count)
+        Popen(["\\\\10.0.2.4\\qemu\\server\\b.exe", "127.0.0.1", "12341", ">", "NUL"], shell=True)
         socket, addr = self.main_socket.accept()
         self.tracers.append(Tracer())
         self.tracer_active_id = self.trace_count
@@ -538,7 +510,7 @@ class TraceController(object):
         else:
             print("Spawning dbg")
             pid = str(pid)
-            self.debuggers[pid] = Popen([sys.executable, "-u", "e:\\server\\debugger.py"], shell=True)
+            self.debuggers[pid] = Popen([sys.executable, "-u", "\\\\10.0.2.4\\qemu\\server\\debugger.py"], shell=True)
             self.sockets[pid], addr = self.main_socket.accept()
             self.dlog("Got connection")
             my_dbg = (pid, self.debuggers[pid])
@@ -703,7 +675,6 @@ class TraceController(object):
         self.ea = self.last_data
 
     def test_bin_dir(self):
-        bin_dir = "%s\\%s" % (settings.samples_binned, self.ea)
         testdir(bin_dir)
 
     def take_a_trace(self, args):
@@ -717,8 +688,8 @@ class TraceController(object):
         st_addr = 0x4e30ac
         end_addr = 0x7e427f87
    
-        self.dlog("e:\\server\\trace.exe %s 0x%x 0x%x" % (pid, st_addr, end_addr))
-        Popen("e:\\server\\trace.exe %s 0x%x 0x%x" % (pid, st_addr, end_addr), stdout=PIPE, stderr=PIPE)
+        self.dlog("\\\\10.0.2.4\\qemu\\server\\trace.exe %s 0x%x 0x%x" % (pid, st_addr, end_addr))
+        Popen("\\\\10.0.2.4\\qemu\\server\\trace.exe %s 0x%x 0x%x" % (pid, st_addr, end_addr), stdout=PIPE, stderr=PIPE)
 
     def take_a_walk(self, args):
         self.send_command("WK%s%s" % (args, end))
@@ -728,12 +699,10 @@ class TraceController(object):
 
     def save_synopsis(self, filee):
         fname = filee.split("\\")[-1]
-        self.send_command("SS%s%s\\%s%s" % (settings.samples_binned, self.ea, fname, end))
 #        self.ok()
 
     def save_sample(self, filee):
 #        fname = filee.split("\\")[-1]
-        fname = filee.replace(settings.samples_shared_path, "")
 #        if(os.path.isfile(filee)):
 #            copyfile(filee, "%s%s\\%s" % (settings.samples_binned, self.ea, fname))
 #        else:
@@ -741,7 +710,6 @@ class TraceController(object):
         #copyfile(filee, "%s%s\\%s" % (settings.samples_binned, self.ea, fname))
         #copy(filee, "%s%s\\%s" % (settings.samples_binned, self.ea, fname))
         dir1 = filee
-        dir2 = "%s%s\\%s" % (settings.samples_binned, self.ea, fname)
         if(dir1[-1:] == "\\"): dir1 = dir1[:-1]
         if(dir2[-1:] == "\\"): dir2 = dir2[:-1]
         #cmd = "xcopy /R /Y /I /E %s %s" % (dir1, dir2)

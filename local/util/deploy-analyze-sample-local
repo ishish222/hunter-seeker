@@ -1,0 +1,13 @@
+#!/bin/sh
+#
+# usage: $0 TARGET MACHINE SCRIPT
+
+LOCAL_ROOT=../
+TARGET=$1
+MACHINE=$2
+SCRIPT=$3
+FOLDER=$4
+
+./deploy-local $1
+screen -L -S $MACHINE sh -c "cd /home/ish/hs2-current-deploy/$TARGET/client; ./fuzzer.py --out-prefix $FOLDER $MACHINE $SCRIPT; bash"
+

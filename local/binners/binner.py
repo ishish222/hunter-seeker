@@ -1,7 +1,7 @@
 import sys
 
-sys.path.append("e:\\server\\paimei")
-sys.path.append("e:\\common")
+sys.path.append("\\\\10.0.2.4\\qemu\\server\\paimei")
+sys.path.append("\\\\10.0.2.4\\common")
 
 from Queue import PriorityQueue
 import settings

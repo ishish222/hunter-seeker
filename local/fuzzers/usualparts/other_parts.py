@@ -304,6 +304,9 @@ def get_options(args=None):
     #qemu settings
     options.qemu_command = settings.qemu_command
     options.qemu_drive_options = settings.qemu_drive_options
+
+    options.use_taskset = False
+
     if(options.use_taskset is True):
         qemu_args =  ['taskset', '-c', settings.machines[options.fuzzbox_name]['taskset'], options.qemu_command]
     else:
@@ -328,13 +331,13 @@ def get_options(args=None):
 
     if(options.visible == False and options.vnc == True):
         qemu_args += ['-vnc', settings.machines[options.fuzzbox_name]['vnc']]
-    qemu_args += settings.qemu_additional
+    #qemu_args += settings.qemu_additional
 
     qemu_args += ['-monitor', "unix:%s" % settings.machines[options.fuzzbox_name]['monitor']]
     qemu_args += ['-serial', "unix:%s" % settings.machines[options.fuzzbox_name]['serial']]
     qemu_args += ['-serial', "unix:%s" % settings.machines[options.fuzzbox_name]['serial']+'-log']
     qemu_args += ['-serial', "file:%s" % settings.machines[options.fuzzbox_name]['serial']+'3']
-    qemu_args += ['-smp', str(options.smp)]
+#    qemu_args += ['-smp', str(options.smp)]
     
     if(settings.qemu_env != None):
         for exp in settings.qemu_env:

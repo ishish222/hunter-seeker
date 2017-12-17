@@ -66,6 +66,12 @@ def spawn_internal_controller(args=None):
     rs("lclick", options.m)
     rs("python_spawn_internal_controller", options.m)
 
+def spawn_internal_controller_smb(args=None):
+    options = globs.state.options
+
+    rs("lclick", options.m)
+    rs("python_spawn_internal_controller_smb", options.m)
+
 def spawn_internal_controller_no_thread(args=None):
     options = globs.state.options
 
@@ -81,6 +87,43 @@ def reset_tracer_controller_status(args=None):
     state.tracers_count = 0
     return
 
+def create_layout_2(path):
+    os.spawnv(os.P_WAIT, "/bin/mkdir", ["mkdir", "-p", path+"/samples/shared"])
+    os.spawnv(os.P_WAIT, "/bin/mkdir", ["mkdir", "-p", path+"/samples/saved"])
+    os.spawnv(os.P_WAIT, "/bin/mkdir", ["mkdir", "-p", path+"/samples/binned"])
+    os.spawnv(os.P_WAIT, "/bin/mkdir", ["mkdir", "-p", path+"/samples/other"])
+    os.spawnv(os.P_WAIT, "/bin/mkdir", ["mkdir", "-p", path+"/logs"])
+    os.spawnv(os.P_WAIT, "/bin/mkdir", ["mkdir", "-p", path+"/output"])
+    os.spawnv(os.P_WAIT, "/bin/mkdir", ["mkdir", "-p", path+"/server"])
+    # copy server files
+    os.spawnv(os.P_WAIT, "/bin/cp", ["cp", "-r", "../server", path])
+    os.spawnv(os.P_WAIT, "/bin/cp", ["cp", "-r", "../common", path])
+
+def host_deploy_input_glob(args=None):
+    from glob import glob
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+
+    state.samples_list = glob(options.glob_pattern)
+    for sample in state.samples_list:
+        new_sample = os.path.basename(sample)
+        print(globs.state.research_dir + "/samples/shared/" + new_sample)
+        os.spawnv(os.P_WAIT, "/bin/cp", ["cp", sample, globs.state.research_dir + "/samples/shared/"])
+
+def host_create_research_dir(args=None):
+    import tempfile
+
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+
+    path = tempfile.mktemp(suffix = "-research", dir=options.settings.host_data_research_path)
+    print path
+    os.spawnv(os.P_WAIT, "/bin/mkdir", ["mkdir", path])
+    globs.state.research_dir = path
+    create_layout_2(path)
+    
 def start_tracer(args=None):
     options = globs.state.options
     state = globs.state

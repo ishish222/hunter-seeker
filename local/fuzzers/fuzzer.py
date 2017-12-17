@@ -36,7 +36,6 @@ def preparse_script(script_path):
     global global_script
     global global_labels
 
-    print
     print bcolors.OKBLUE + "Preparsing script: [%s]" % script_path + bcolors.ENDC
     print
 
@@ -53,7 +52,7 @@ def preparse_script(script_path):
         line = line.replace('\t', '')
         line = line.strip()
 
-        print("Parsing: %s" % line)
+#        print("Parsing: %s" % line)
 
         if(line == ''):
             global_script.append(None)
@@ -106,17 +105,11 @@ def preparse_script(script_path):
             name = instr
             args = ""
 
-        if(name == "goto"):
-            unit = GoTo(args)
-        elif(name == "Include"):
+        if(name == "Include"):
             preparse_script(args)
             continue
-        elif(name == "Version"):
-            continue
-        elif(name == "Call"):
-            continue
-        elif(name == "Return"):
-            continue
+        elif(name == "goto"):
+            unit = GoTo(args)
         elif(ret_tab):
             unit = Decision(name, args, ret_tab)
         else:
@@ -133,12 +126,32 @@ def perform(script_path):
 
     global_script = []
     global_labels = {}
-
     global_stack = []
+
+    signal.signal(signal.SIGINT, sigkill_handler)
+    signal.signal(signal.SIGUSR1, sigkill_handler)
+    signal.signal(signal.SIGHUP, sigkill_handler)
 
     preparse_script(script_path)
 
-    ip = 1
+    if(False):
+        print "Labels:"
+        for key in global_labels.keys():
+            print '[%s]: %d' % (key, global_labels[key])
+            
+        print "Script length: %d" % len(global_script)
+        print "Script:"
+        for i in range(0, len(global_script)):
+            line = global_script[i]
+            if line is None:
+                continue
+            if(hasattr(line, 'args')):
+                print '[%d]: %s - %s' % (i, line.name, line.args)
+            else:
+                print '[%d] %s' % (i, line.name)
+        
+    # transfer control to Main label        
+    ip = global_labels['Main']
 
     while(1):
         if(ip < 0):
@@ -152,12 +165,12 @@ def perform(script_path):
             continue
 
         try:
-            #print "[%s] (%s)" % (instruction.name, script_path)
+#            print "[%s] (%s)" % (instruction.name, script_path)
             print bcolors.LIGHTBLUE + "===[%s]" % (instruction.name) + bcolors.ENDC
             if(instruction.name == 'Call'):
                 global_stack.insert(0, ip+1)
                 ret = instruction.args
-            if(instruction.name == 'Return'):
+            elif(instruction.name == 'Return'):
                 ret = global_stack.pop()
             else:
                 ret = instruction.execute()
@@ -181,9 +194,11 @@ def perform(script_path):
         else:
             try:
                 ip = int(ret, 10)
+            except TypeError:
+                ip = ret
             except ValueError:
                 try:
-                    ip = labels[ret]
+                    ip = global_labels[ret]
                 except KeyError:
                     globs.first_chance = 0x0
                     print 'Key error: %s' % ip

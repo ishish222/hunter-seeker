@@ -70,6 +70,8 @@ def write_monitor(pipe, data):
     return ret
 
 def translate(k):
+    if(k == ">"):
+        k = "shift-dot"
     if(k == "*"):
         k = "asterisk"
     if(k == "_"):

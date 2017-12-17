@@ -1,9 +1,16 @@
-1 - install OS
-2 - install virtio
-3 - install python, python-win32, pyserial, fix python-*(move dlls like Lib\site-packages\pywin32_system32\pywintypes.dll to Lib\site-packages\win32)
-4 - admin cmd in autostart (harmonogram), disable ASLR (regedit), disable UAC (Control Panel)
-5 - move to root.qcow2
-6 - create clone disk (qemu-img create -f qcow2 hs2-01.qcow2 -b root.qcow2)
-7 - create snapshot clean 
-8 - define operations in sudo: mount, umount
-9 - create attachable drives
+1 - install OS (Win7, 32bit)
+2 - extract libs (copy, convert to raw, testdisk)
+3 - install virtio
+4 - install python, python-win32, pyserial, fix python-*(move dlls like Lib\site-packages\pywin32_system32\pywintypes.dll to Lib\site-packages\win32)
+5 - admin cmd in autostart (harmonogram), disable ASLR (regedit), disable UAC (Control Panel)
+6 - move to root.qcow2
+7 - create clone disk (qemu-img create -f qcow2 hs2-01.qcow2 -b root.qcow2)
+8 - create snapshot clean 
+9 - define operations in sudo: mount, umount
+10 - create attachable drives
+
+FAQ:
+
+1. problems executing programs from shared location - verify if your network is "home network"
+2. Setup file invalid or damaged - verify you are using admin privileges. Check if you installed .net & wic
+

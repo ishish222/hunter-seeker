@@ -96,6 +96,7 @@ qemu_env = None
 qemu_drives_dir="/home/hs1/images"
 qemu_secondary=""
 qemu_drive_format = 'mkfs.ntfs'
+qemu_drive_offset = 0
 host_mount_options="loop,umask=0000"
 saved_dir="/mnt/1/raw/"
 log_dir="/mnt/1/log/"

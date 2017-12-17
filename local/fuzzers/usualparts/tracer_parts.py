@@ -347,7 +347,7 @@ def tracer_add_reaction(args):
     cmd = '';
 
     for part in parts:
-        if(len(cmd) + len(part) < 0x200):
+        if(len(cmd) + len(part) < 0x100):
             cmd += ';'
             cmd += part
         else:

@@ -5,7 +5,7 @@ import common
 def enable_logging(args=None):
     options = globs.state.options
 
-    log = open(options.settings.log_dir + "./log-%s-%s-%s" % (options.fuzzbox_name, common.timestamp2(), options.origin), "a")
+    log = open(options.settings.log_dir + "log-%s-%s-%s" % (options.fuzzbox_name, common.timestamp2(), options.origin), "a")
     common.report("Starting fuzzer")
     print("[%s] Stateful fuzzer" % common.timestamp())
     options.log = log
