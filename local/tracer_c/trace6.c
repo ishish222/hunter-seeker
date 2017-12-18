@@ -6395,6 +6395,7 @@ int handle_cmd(char* cmd)
     else if(!strncmp(cmd, CMD_SET_OUT_DIRECTORY, 2))
     {
         strcpy(my_trace->out_dir, cmd+3);
+        CreateDirectory(my_trace->out_dir, 0x0);
         d_print("Out dir set to: %s\n", my_trace->out_dir);
         send_report();
     }

@@ -1,5 +1,5 @@
 CC =g++
-CFLAGS = -rdynamic -I. -ggdb -w
+CFLAGS = -rdynamic -I. -ggdb -w -std=c++11 -D_GLIBCXX_USE_CXX11_ABI=0
 NAMES = taint show_taint caller_taint symbol_export ltrace strace
 OBJS = debug.o taint_x86.o main.c
 REVOBJS = debug.o rev_taint_x86.o rev_main.c

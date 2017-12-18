@@ -29,6 +29,8 @@ Change of endiannes takes place when reading and writing to memory (to_mem, from
 #include <sys/queue.h>
 #include <errno.h>
 
+#define _GLIBCXX_USE_CXX11_ABI 1 
+
 // compile-time options and parameters
 #define ANALYZE_JUMPS 
 #define ANALYZE_LOOPS 

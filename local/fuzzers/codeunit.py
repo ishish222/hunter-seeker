@@ -35,6 +35,7 @@ prototypes['StartQemuLoad']         = qemu_parts.qemu_start_revert
 prototypes['QemuMountDisks']        = qemu_parts.qemu_mount_disks
 prototypes['QemuMountDisksNoVirtio'] = qemu_parts.qemu_mount_disks_wo_virtio
 prototypes['SpawnInternalController'] = tracing_parts.spawn_internal_controller
+prototypes['SpawnInternalControllerFileLogSmb'] = tracing_parts.spawn_internal_controller_file_log_smb
 prototypes['SpawnInternalControllerSmb'] = tracing_parts.spawn_internal_controller_smb
 prototypes['SpawnInternalControllerWoThread'] = tracing_parts.spawn_internal_controller_no_thread
 prototypes['QemuConnectDevSocket']  = qemu_parts.qemu_connect_dev_socket_infinite

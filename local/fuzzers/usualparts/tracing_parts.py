@@ -66,6 +66,12 @@ def spawn_internal_controller(args=None):
     rs("lclick", options.m)
     rs("python_spawn_internal_controller", options.m)
 
+def spawn_internal_controller_file_log_smb(args=None):
+    options = globs.state.options
+
+    rs("lclick", options.m)
+    rs("python_spawn_internal_controller_file_log_smb", options.m)
+
 def spawn_internal_controller_smb(args=None):
     options = globs.state.options
 

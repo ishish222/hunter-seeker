@@ -742,9 +742,29 @@ def tracer_lower_anchors(args=None):
     status = globs.state.status
     
     if(hasattr(options.settings, "builtin_reactions_anchors")):
-        write_socket(options.s, "tracer_lower_reaction %s" % options.settings.builtin_reactions_anchors);
-        response, _, _ = read_socket(options.s)
-        globs.state.ret = response
+        args = options.settings.builtin_reactions_anchors
+
+
+        if(args[-1:] == ':'):
+            args = args[:-1]
+
+        parts = args.split(':');
+        cmd = '';
+
+        for part in parts:
+            if(len(cmd) + len(part) < 0x100):
+                cmd += ':'
+                cmd += part
+            else:
+                write_socket(options.s, "tracer_lower_reaction %s" % cmd[1:]);
+                response, _, _ = read_socket(options.s)
+                cmd = ''
+                cmd += ':'
+                cmd += part
+
+        if(len(cmd) > 0x1):
+            write_socket(options.s, "tracer_lower_reaction %s" % cmd[1:]);
+            response, _, _ = read_socket(options.s)
 
     return
 
@@ -754,9 +774,29 @@ def tracer_exclusive_anchors(args=None):
     status = globs.state.status
     
     if(hasattr(options.settings, "builtin_reactions_anchors")):
-        write_socket(options.s, "tracer_exclusive_reaction %s" % options.settings.builtin_reactions_anchors);
-        response, _, _ = read_socket(options.s)
-        globs.state.ret = response
+        args = options.settings.builtin_reactions_anchors
+
+
+        if(args[-1:] == ':'):
+            args = args[:-1]
+
+        parts = args.split(':');
+        cmd = '';
+
+        for part in parts:
+            if(len(cmd) + len(part) < 0x100):
+                cmd += ':'
+                cmd += part
+            else:
+                write_socket(options.s, "tracer_exclusive_reaction %s" % cmd[1:]);
+                response, _, _ = read_socket(options.s)
+                cmd = ''
+                cmd += ':'
+                cmd += part
+
+        if(len(cmd) > 0x1):
+            write_socket(options.s, "tracer_exclusive_reaction %s" % cmd[1:]);
+            response, _, _ = read_socket(options.s)
 
     return
 
@@ -766,8 +806,30 @@ def tracer_enable_anchors(args=None):
     status = globs.state.status
     
     if(hasattr(options.settings, "builtin_reactions_anchors")):
-        write_socket(options.s, "tracer_enable_reaction %s" % options.settings.builtin_reactions_anchors);
-        response, _, _ = read_socket(options.s)
+        args = options.settings.builtin_reactions_anchors
+
+
+        if(args[-1:] == ':'):
+            args = args[:-1]
+
+        parts = args.split(':');
+        cmd = '';
+
+        for part in parts:
+            if(len(cmd) + len(part) < 0x100):
+                cmd += ':'
+                cmd += part
+            else:
+                write_socket(options.s, "tracer_enable_reaction %s" % cmd[1:]);
+                response, _, _ = read_socket(options.s)
+                cmd = ''
+                cmd += ':'
+                cmd += part
+
+        if(len(cmd) > 0x1):
+            write_socket(options.s, "tracer_enable_reaction %s" % cmd[1:]);
+            response, _, _ = read_socket(options.s)
+
         globs.state.ret = response
 
     return
