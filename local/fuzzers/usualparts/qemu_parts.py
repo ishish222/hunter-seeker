@@ -396,9 +396,8 @@ def offline_revert(args=None):
 def revert_ready(args=None):
     options = globs.state.options
     state = globs.state
-    print("Reverting to: %s" % "ready")
-    os.spawnv(os.P_WAIT, "/usr/bin/qemu-img", ["qemu-img", "snapshot", "-a", "ready", options.machines + '/' + options.hda])
     
+    rs("load_ready", options.m)
 
 def shutdown(options, state):
     options.log.close()
