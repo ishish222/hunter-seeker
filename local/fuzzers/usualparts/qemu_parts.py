@@ -397,7 +397,11 @@ def revert_ready(args=None):
     options = globs.state.options
     state = globs.state
     
-    rs("load_ready", options.m)
+    if(hasattr(options.settings, 'qemu_revert_ready')):
+        if(options.settings.qemu_revert_ready == True):
+            rs("load_ready", options.m)
+    else:
+        print("Not configured")
 
 def shutdown(options, state):
     options.log.close()

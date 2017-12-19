@@ -129,6 +129,10 @@ def host_create_research_dir(args=None):
     os.spawnv(os.P_WAIT, "/bin/mkdir", ["mkdir", path])
     globs.state.research_dir = path
     create_layout_2(path)
+
+    if(hasattr(options.settings, 'host_output_link')):
+        os.spawnv(os.P_WAIT, "/bin/rm", ["rm", "-rf", path+"/output"])
+        os.spawnv(os.P_WAIT, "/bin/ln", ["ln", "-s", options.settings.host_output_link, path+"/output"])
     
 def start_tracer(args=None):
     options = globs.state.options
@@ -567,7 +571,7 @@ def load_ep(args = None):
 def set_glob_pattern(args = None):
     print "Setting glob pattern to %s" % args
     options = globs.state.options
-    options.glob_pattern = args
+    options.glob_pattern = '%s/%s' % (options.settings.host_sample_source, args)
 
 def set_sample_file(args = None):
     print "Setting sample file to %s" % args

@@ -47,6 +47,7 @@ qemu_drive_offset = 65536
 qemu_env = None
 qemu_secondary=""
 qemu_mount_options="loop,umask=0000"
+qemu_revert_ready = True
 
 hs_user="ish"
 revert_snapshot = 'clean'
