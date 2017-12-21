@@ -1064,6 +1064,21 @@ def tracer_read_tid(args = 0x0):
 
     return
 
+def tracer_set_pid(args = 0x0):
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+
+    # id source is null, use last ret
+    if(args == None):
+        args = globs.state.stack.pop()
+
+    if(type(args == 'str')):
+        globs.state.pid = int(args, 0x10)
+    print "Last PID: 0x%08x" % globs.state.pid
+
+    return
+
 def tracer_read_pid(args = 0x0):
     options = globs.state.options
     state = globs.state

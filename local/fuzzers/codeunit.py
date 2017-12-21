@@ -94,6 +94,7 @@ prototypes['Adjust']                = other_parts.adjust
 prototypes['ReadDword']             = tracer_parts.tracer_read_dword
 prototypes['WriteDword']            = tracer_parts.tracer_write_dword
 prototypes['ReadPID']               = tracer_parts.tracer_read_pid
+prototypes['SetPID']               = tracer_parts.tracer_set_pid
 prototypes['ReadTID']               = tracer_parts.tracer_read_tid
 prototypes['CurrentTID']            = tracer_parts.tracer_current_tid
 prototypes['ReadEP']                = tracer_parts.tracer_read_ep

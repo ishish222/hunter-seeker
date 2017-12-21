@@ -119,6 +119,7 @@ def host_deploy_input_glob(args=None):
 
 def host_create_research_dir(args=None):
     import tempfile
+    import os
 
     options = globs.state.options
     state = globs.state
@@ -131,8 +132,10 @@ def host_create_research_dir(args=None):
     create_layout_2(path)
 
     if(hasattr(options.settings, 'host_output_link')):
-        os.spawnv(os.P_WAIT, "/bin/rm", ["rm", "-rf", path+"/output"])
-        os.spawnv(os.P_WAIT, "/bin/ln", ["ln", "-s", options.settings.host_output_link, path+"/output"])
+        print " ".join(["/usr/bin/sudo", "sudo", "mount", "-o", "bind", options.settings.host_output_link, path+"/output"])
+        os.spawnv(os.P_WAIT, "/usr/bin/sudo", ["sudo", "mount", "-o", "bind", options.settings.host_output_link, path+"/output"])
+#        os.spawnv(os.P_WAIT, "/bin/rm", ["rm", "-rf", path+"/output"])
+#        os.spawnv(os.P_WAIT, "/bin/ln", ["ln", "-s", options.settings.host_output_link, path+"/output"])
     
 def start_tracer(args=None):
     options = globs.state.options
@@ -590,6 +593,7 @@ def set_out_dir(args = None):
 
 def check_dir(directory):
     import os
+    print 'Checking for: %s' % directory
     try:
         os.stat(directory)
     except:
