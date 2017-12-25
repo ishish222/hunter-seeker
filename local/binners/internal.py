@@ -12,6 +12,7 @@ import socket
 from subprocess import call, Popen, PIPE
 from glob import glob
 import pefile
+from functions import *
 
 PIPE_NAME = "\\\\.\\pipe\\control"
 PIPE_BUFF_SIZE = 4096
@@ -583,6 +584,12 @@ def execute(cmds, ext_pipe):
             trace_controller.disable_reaction(args)
             writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
             writePipe(ext_pipe, "tracer_disable_reaction "+bcolors.OK_STR)
+            ok(ext_pipe)
+
+        elif(cmd == "tracer_deautorepeat_reaction"):
+            trace_controller.deautorepeat_reaction(args)
+            writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
+            writePipe(ext_pipe, "tracer_deautorepeat_reaction "+bcolors.OK_STR)
             ok(ext_pipe)
 
         elif(cmd == "tracer_autorepeat_reaction"):

@@ -1,6 +1,5 @@
 from multiprocessing import Lock
 from datetime import datetime
-import settings
 import struct 
 
 def defined(name):
@@ -15,15 +14,6 @@ def defined(name):
         if(names[1] in dir(globals()[names[0]])):
             return True
     return False
-
-if(defined("settings.log_level") == True):
-    log_level = settings.log_level
-else:
-    log_level = 0
-
-if(defined("settings.debug") == True):
-    if(settings.debug == True):
-        last_log_file = open("e:\\logs\\last_log.txt", "a")
 
 def timestamp():
     d=datetime.now()

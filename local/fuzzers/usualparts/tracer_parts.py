@@ -676,6 +676,18 @@ def tracer_exclusive_reaction(args):
 
     return
 
+def tracer_deautorepeat_reaction(args):
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+    
+    write_socket(options.s, "tracer_deautorepeat_reaction %s" % args);
+    response, _, _ = read_socket(options.s)
+
+    globs.state.ret = response
+
+    return
+
 def tracer_autorepeat_reaction(args):
     options = globs.state.options
     state = globs.state
@@ -1026,6 +1038,24 @@ def tracer_list_all_tebs(args=None):
     status = globs.state.status
     
     write_socket(options.s, "tracer_list_all_tebs");
+    response, _, _ = read_socket(options.s)
+
+    globs.state.ret = response
+
+    return
+
+def tracer_get_caller(args = None):
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+    
+    if(args == None):
+        args = globs.state.stack.pop()
+
+    if(type(args) == 'str'):
+        args = int(args, 0x10)
+    
+    write_socket(options.s, "tracer_get_caller %s" % args);
     response, _, _ = read_socket(options.s)
 
     globs.state.ret = response

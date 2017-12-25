@@ -1508,6 +1508,52 @@ int lower_reaction(char* reaction_id)
     return 0x0;
 }
 
+int deautorepeat_reaction(char* reaction_id)
+{
+    d_print("[deautorepeat_reaction]\n");
+    unsigned i;
+
+    char another[MAX_LINE]; 
+    char* another_r;
+
+    /* take care of chained enabling */
+    strcpy(another, reaction_id);
+    d_print("React string: %s\n", another);
+    if(strstr(another, ":"))
+    {
+        another_r = strtok(another, ":");
+        while(another_r)
+        {
+            d_print("Found another reaction: %s\n", another_r);
+            deautorepeat_reaction(another_r);    
+            another_r = strtok(0x0, ":");
+        }
+        return 0x0;
+    }
+
+    REACTION* cur_reaction;
+    cur_reaction = 0x0;
+    for(i = 0x0; i< my_trace->reaction_count; i++)
+    {
+        if(!strcmp(reaction_id, my_trace->reactions[i].reaction_id))
+        {
+            cur_reaction = &my_trace->reactions[i];
+            d_print("Reaction found\n");
+            cur_reaction->autorepeat = 0;
+            break;
+        }
+    }
+
+    if(!cur_reaction)
+    {
+        d_print("Reaction not found\n");
+        return 0x1;
+    }
+        
+    d_print("[deautorepeat_reaction ends]\n");
+    return 0x0;
+}
+
 int autorepeat_reaction(char* reaction_id)
 {
     d_print("[autorepeat_reaction]\n");
@@ -1669,6 +1715,7 @@ int disable_reaction(char* reaction_id)
         {
             d_print("Disabling reaction %s\n", reaction_id);
             my_trace->reactions[i].enabled = 0x0;
+            my_trace->reactions[i].autorepeat = 0x0;
             found = 1;
             break;            
         }
@@ -3128,6 +3175,22 @@ int is_call(OFFSET eip)
 
 void noop_callback(void* data)
 {
+    if(my_trace->delayed_reaction!= 0x0)
+    {
+        d_print("Handling delayed reaction!\n");
+        if(my_trace->block_delayed_reaction != 0x0)
+        {
+            d_print("Blocked!\n");
+            my_trace->block_delayed_reaction = 0x0;
+        }
+        else
+        {
+            d_print("Enabling delayed reaction!\n");
+            enable_reaction(my_trace->delayed_reaction->reaction_id);
+            my_trace->delayed_reaction = 0x0;
+        }
+    }
+
     return;
 }
 
@@ -3209,13 +3272,15 @@ void ss_callback(void* data)
 
     if(my_trace->delayed_reaction!= 0x0)
     {
+        d_print("Handling delayed reaction!\n");
         if(my_trace->block_delayed_reaction != 0x0)
         {
+            d_print("Blocked!\n");
             my_trace->block_delayed_reaction = 0x0;
         }
         else
         {
-            d_print("Enabling delaued reaction!\n");
+            d_print("Enabling delayed reaction!\n");
             enable_reaction(my_trace->delayed_reaction->reaction_id);
             my_trace->delayed_reaction = 0x0;
         }
@@ -3711,9 +3776,10 @@ int handle_reaction(REACTION* cur_reaction, void* data)
     /* schedule breakpoint for this address */
     if(cur_reaction->autorepeat)
     {
+        d_print("Acheduling autorepeat for: %s\n", cur_reaction->reaction_id);
         my_trace->delayed_reaction = cur_reaction;
         /* enable SS for just one breakpoint */
-        set_ss(tid);
+        set_ss(0x0);
     }
 
     return 0x0;
@@ -6619,6 +6685,18 @@ int handle_cmd(char* cmd)
         dump_memory();
         send_report();
     }
+    else if(!strncmp(cmd, CMD_DEAUTOREPEAT_REACTION, 2))
+    {
+        char* mod;
+        char reaction_id[MAX_LINE];
+
+        mod = strtok(cmd, " ");
+        strcpy(reaction_id, strtok(0x0, " "));
+        
+        d_print("Setting deautorepeat for reaction %s\n", reaction_id);
+        deautorepeat_reaction(reaction_id);
+        send_report();
+    }
     else if(!strncmp(cmd, CMD_AUTOREPEAT_REACTION, 2))
     {
         char* mod;
@@ -6773,7 +6851,7 @@ int handle_cmd(char* cmd)
     else if(!strncmp(cmd, CMD_READ_ARG, 2))
     {
         unsigned argno;
-        argno = strtoul(cmd+3, 0x0, 10);
+        argno = strtoul(cmd+3, 0x0, 0x10);
 
         report_arg_x(argno+1);
         send_report();   
@@ -6781,7 +6859,7 @@ int handle_cmd(char* cmd)
     else if(!strncmp(cmd, CMD_READ_ARG_ANSI, 2))
     {
         unsigned argno;
-        argno = strtoul(cmd+3, 0x0, 10);
+        argno = strtoul(cmd+3, 0x0, 0x10);
 
         report_arg_string_x(argno+1);
         send_report();   
@@ -6789,7 +6867,7 @@ int handle_cmd(char* cmd)
     else if(!strncmp(cmd, CMD_READ_ARG_UNICODE, 2))
     {
         unsigned argno;
-        argno = strtoul(cmd+3, 0x0, 10);
+        argno = strtoul(cmd+3, 0x0, 0x10);
 
         report_arg_unicode_string_x(argno+1);
         send_report();   

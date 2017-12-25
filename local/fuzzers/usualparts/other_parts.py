@@ -215,8 +215,14 @@ def int16(args = None):
     else:
         globs.state.ret = int(args, 0x10)
 
-def set_counter(args):
-    globs.state.counter = int(args, 0x10)
+def set_counter(args = None):
+    if(args == None):
+        args = globs.state.stack.pop()
+
+    if(type(args) == 'str'):
+        args = int(args, 0x10)
+
+    globs.state.counter = args
     print "0x%08x" % globs.state.counter
 
 def get_counter(args = None):
@@ -439,7 +445,14 @@ def choosing_saved_disk_procedure(args=None):
 def check_equal(args=None):
     options = globs.state.options
 
+    if(type(globs.state.ret) != 'int'):
+        ret = int(globs.state.ret, 0x10)
+    else:
+        ret = globs.state.ret
+
     args = int(args, 0x10)
+
+    print "Checking 0x%08x == 0x%08x" % (ret, args)
 
     if(globs.state.ret == args):
         return "Y"

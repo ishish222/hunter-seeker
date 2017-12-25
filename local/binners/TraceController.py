@@ -859,6 +859,11 @@ class TraceController(object):
         self.last_report, self.last_answer = self.recv_report_active()
         return 
 
+    def get_caller(self, args):
+        self.send_command_active("GC %s" % args)
+        self.last_report, self.last_answer = self.recv_report_active()
+        return
+
     def read_string_ansi(self, args):
         self.send_command_active("RA %s" % args)
         self.last_report, self.last_answer = self.recv_report_active()
@@ -937,6 +942,11 @@ class TraceController(object):
 
     def autorepeat_reaction(self, idd):
         self.send_command_active("AR %s" % idd)
+        self.last_report, self.last_answer = self.recv_report_active()
+        return 
+
+    def deautorepeat_reaction(self, idd):
+        self.send_command_active("DR %s" % idd)
         self.last_report, self.last_answer = self.recv_report_active()
         return 
 

@@ -79,6 +79,7 @@ prototypes['RaiseReaction']         = tracer_parts.tracer_raise_reaction
 prototypes['LowerReaction']         = tracer_parts.tracer_lower_reaction
 prototypes['ExclusiveReaction']     = tracer_parts.tracer_exclusive_reaction
 prototypes['AutorepeatReaction']    = tracer_parts.tracer_autorepeat_reaction
+prototypes['DeautorepeatReaction']  = tracer_parts.tracer_deautorepeat_reaction
 prototypes['DisableReaction']       = tracer_parts.tracer_disable_reaction
 prototypes['EnableBuiltin']         = tracer_parts.tracer_enable_anchors
 prototypes['ExclusiveBuiltin']      = tracer_parts.tracer_exclusive_anchors
@@ -199,6 +200,7 @@ prototypes['SetPriorityHigh']          = tracer_parts.tracer_set_priority_high
 prototypes['CreateFolderGlob']      = disk_fs_parts.create_shared_folder_glob
 prototypes['HostCreateResearchDir']   = tracing_parts.host_create_research_dir
 prototypes['HostDeployInputGlob']   = tracing_parts.host_deploy_input_glob
+prototypes['GetCaller']   = tracer_parts.tracer_get_caller
 
 #keywords
 
