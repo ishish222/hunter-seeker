@@ -987,11 +987,11 @@ int main(int argc, char** argv)
     taint_eng.start_addr = start_addr;
     taint_eng.start_instr = start_instr;
 
-
     taint_eng.end_addr = end_addr;
     taint_eng.instr_limit = instr_limit;
 
     taint_eng.depth = depth;
+    taint_eng.depth += taint_eng.call_level_start; /* because we do not start at 0x0 */
 
 //#define CEBUG 
 #define DEBUG 

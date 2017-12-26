@@ -1229,7 +1229,15 @@ int taint_x86::handle_call(CONTEXT_INFO* info)
         else
         {
             d_print(2, "We do not have symbol\n");
-            if(this->check_addr_blacklist(target))
+
+            /* check if we do not exceed maximum depth */
+            d_print(2, "Current depth: 0%08x, analysis depth: 0x%08x\n", info->call_level, this->depth);
+            if(info->call_level+1 > this->depth)
+            {
+                d_print(2, "Analysis depth reached, not diving\n");
+                decision_dive = DECISION_NO_DIVE;
+            }
+            else if(this->check_addr_blacklist(target))
             {
                 /* target is blacklisted, we do not dive*/
                 d_print(2, "Target 0x%08x is blacklisted, we do not dive\n", target);
