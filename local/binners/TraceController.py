@@ -95,7 +95,7 @@ class TraceController(object):
                 return
             if(level > self.log_level):
                 return
-            self.last_log_file.write("[%s] %s\n" % (timestamp(), data))
+            self.last_log_file.write("%s\n" % data)
 #            print("[TracerController]: %s: %s\n" % (timestamp(), data))
 
     def ddlog(self, data, level=0):
