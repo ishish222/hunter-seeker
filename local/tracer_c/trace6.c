@@ -701,7 +701,7 @@ void react_output_p_eip_unicode(void* data)
 
 void report_arg_unicode_string_x(unsigned x)
 {
-    d_print("Outputting arg %d\n", x);
+    d_print("Reportin arg %d\n", x);
     char line[MAX_LINE];
     char snap[SNAP_SIZE*2];
 
@@ -721,6 +721,7 @@ void report_arg_unicode_string_x(unsigned x)
     {
         my_trace->report_code = REPORT_INFO;
         sprintf(line, "%ls", snap);
+        d_print("Reporting: %s\n", line);
         strcpy(my_trace->report_buffer, line);
     }
     else

@@ -104,6 +104,7 @@ prototypes['TracerNext']            = tracer_parts.trace_controller_activate_nex
 prototypes['TracerCurrent']         = tracer_parts.trace_controller_current_tracer
 prototypes['CloseTracer']           = tracing_parts.stop_tracer
 prototypes['CheckEqual']            = other_parts.check_equal
+prototypes['CheckStrStr']           = other_parts.check_strstr
 prototypes['AutoST']                = tracer_parts.tracer_auto_st
 prototypes['ResumeThread']          = tracer_parts.tracer_release_thread
 prototypes['ResumeAll']             = tracer_parts.tracer_release_all

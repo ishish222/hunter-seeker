@@ -442,6 +442,18 @@ def choosing_saved_disk_procedure(args=None):
     else:
         return "GM"
 
+def check_strstr(args=None):
+    options = globs.state.options
+
+    ret = globs.state.ret
+
+    print "Checking strstr %s in %s" % (args, ret)
+
+    if(args in ret):
+        return "Y"
+    else:
+        return "N"
+
 def check_equal(args=None):
     options = globs.state.options
 
