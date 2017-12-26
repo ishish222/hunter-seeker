@@ -173,7 +173,7 @@ kernel32.dll+0x000528c4,LoadLibraryW_end:LoadLibraryW_start,0x100;
 kernel32.dll+0x000528fc,CreateFileA_start:CreateFileA_end,0x311;
 kernel32.dll+0x00052942,CreateFileA_end:CreateFileA_start,0x330;
 kernel32.dll+0x00050b5d,CreateFileW_start:CreateFileW_end,0x321;
-kernel32.dll+0x00050ba8,CreateFileW_end:CreateFileW_start,0x220;
+kernel32.dll+0x00050ba8,CreateFileW_end:CreateFileW_start,0x330;
 kernel32.dll+0x000511cc,WriteFile_start:WriteFile_end,0x301;
 kernel32.dll+0x0005121b,WriteFile_end:WriteFile_start,0x100;
 kernel32.dll+0x0004daa9,ReadFile_start:ReadFile_end,0x301;
