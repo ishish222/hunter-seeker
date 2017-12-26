@@ -628,7 +628,7 @@ Kiedy oparte na ret, kiedy oparte na stosie
 
 --
 
-081 - ogarnac odczytywanie lancuchow
+[x] 081 - ogarnac odczytywanie lancuchow
 
 --
 
@@ -661,9 +661,12 @@ Przy olejnym nagraniu juz dziala :/
 
 --
 
-086 - zaimplementowac jakies latwe pomijanie nagrywania syscalli w stylu generowania kluczy (dlugich i nieprzydatnych)
+[x] 086 - zaimplementowac jakies latwe pomijanie nagrywania syscalli w stylu generowania kluczy (dlugich i nieprzydatnych)
 
 Propozycja - reakcje skip i unskip + consistency check na koniec unskip.
+
+Nie da sie tego latwo zrobic.
+Zamiast tego wprowadzono metode - nagrywania i renderowania fragmentow i laczenia w calosc.
 
 --
 
@@ -673,12 +676,18 @@ taint probowal zrobic update pamieci przed dumpem.
 
 --
 
-088 - zaimplementowac obsluge i raportowanie bledow
+[x] 088 - zaimplementowac obsluge i raportowanie bledow
 
 Na poziomie b.exe to chyba bedzie
 Wprowadzono kolorowanie informacji
 Mozliwe, ze najlepiej bedzie to zaczac od poziomu internal z lapaniem wyjatkow
 Pozniej poimplementowac raportowanie bledow w b.exe
+
+Jest raportowanie na poziomie:
+hs - colorowe stdio
+internal - do plikow
+TraceController - do plikow
+Tracerow - do plikow
 
 --
 
@@ -709,9 +718,11 @@ rlated to #90
 
 -- 
 
-094 - zaimplementowac RequireOnce
+[x] 094 - zaimplementowac RequireOnce
 
 Lub wymyslic inny sposob skracania tworzenia nowych skryptow na podstawie wyjsciowych dla malware
+
+Zaimplementowano calle i system Include'ow
 
 --
 
@@ -721,7 +732,9 @@ Wiekszosc tych ustawien zostalo przeniesionych do skryptow. Mozna sie pozbywac p
 
 --
 
-096 - trzeba sportowac do nowszych qemu
+[x] 096 - trzeba sportowac do nowszych qemu
+
+sportowano, dziala na vulpix 2.10.0 i na flareon 1.5.3
 
 --
 

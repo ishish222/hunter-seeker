@@ -1716,6 +1716,13 @@ int disable_reaction(char* reaction_id)
             d_print("Disabling reaction %s\n", reaction_id);
             my_trace->reactions[i].enabled = 0x0;
             my_trace->reactions[i].autorepeat = 0x0;
+
+            if(my_trace->delayed_reaction == &my_trace->reactions[i])
+            {
+                my_trace->delayed_reaction = 0x0;
+                d_print("Zeroing delayed reaction %s\n", reaction_id);
+            }
+
             found = 1;
             break;            
         }
@@ -6853,7 +6860,7 @@ int handle_cmd(char* cmd)
         unsigned argno;
         argno = strtoul(cmd+3, 0x0, 0x10);
 
-        report_arg_x(argno+1);
+        report_arg_x(argno);
         send_report();   
     }
     else if(!strncmp(cmd, CMD_READ_ARG_ANSI, 2))
@@ -6861,7 +6868,7 @@ int handle_cmd(char* cmd)
         unsigned argno;
         argno = strtoul(cmd+3, 0x0, 0x10);
 
-        report_arg_string_x(argno+1);
+        report_arg_string_x(argno);
         send_report();   
     }
     else if(!strncmp(cmd, CMD_READ_ARG_UNICODE, 2))
@@ -6869,7 +6876,7 @@ int handle_cmd(char* cmd)
         unsigned argno;
         argno = strtoul(cmd+3, 0x0, 0x10);
 
-        report_arg_unicode_string_x(argno+1);
+        report_arg_unicode_string_x(argno);
         send_report();   
     }
     else if(!strncmp(cmd, CMD_LIST_PS, 2))

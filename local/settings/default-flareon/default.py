@@ -15,6 +15,7 @@ host_machines_path = "/home/hs1/machines/qemu"
 host_images_path = host_data_path + "/images"
 host_sample_source = "/home/hs1/malware_samples"
 host_output_link = "/mnt/1/output"
+host_qemu_command = 'qemu-system-i386'
 
 # for creating drive
 host_samples_path = "samples"
@@ -42,7 +43,6 @@ host_machines = {
 }
 
 qemu_additional =  ['-enable-kvm']
-qemu_command = 'qemu-system-i386'
 qemu_drive_options = 'cache=none,if=virtio'
 qemu_drive_format = 'mkfs.ntfs'
 qemu_drive_offset = 65536

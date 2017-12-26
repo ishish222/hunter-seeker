@@ -308,7 +308,7 @@ def get_options(args=None):
         options.hda = settings.machines[options.fuzzbox_name]['disk']
 
     #qemu settings
-    options.qemu_command = settings.qemu_command
+    options.qemu_command = settings.host_qemu_command
     options.qemu_drive_options = settings.qemu_drive_options
 
     options.use_taskset = False
@@ -454,7 +454,7 @@ def check_equal(args=None):
 
     print "Checking 0x%08x == 0x%08x" % (ret, args)
 
-    if(globs.state.ret == args):
+    if(ret == args):
         return "Y"
     else:
         return "N"
