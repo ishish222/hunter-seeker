@@ -9,6 +9,7 @@ import usualparts.diagnostic as diagnostic
 import usualparts.qemu_parts as qemu_parts
 import usualparts.disk_fs_parts as disk_fs_parts
 import usualparts.responder_parts as responder_parts
+import usualparts.mutator_parts as mutator_parts
 
 global prototypes
 prototypes = {}
@@ -132,7 +133,7 @@ prototypes['ManualSTArg']           = tracer_parts.tracer_manual_st_from_arg
 prototypes['ManualSTwSelf']         = tracer_parts.tracer_manual_st_w_self
 prototypes['SetSampleFile']         = tracing_parts.set_sample_file
 prototypes['SetResearchDir']        = tracing_parts.set_research_dir
-prototypes['SetInDir']        = tracing_parts.set_research_dir
+prototypes['SetInDir']              = tracing_parts.set_research_dir
 prototypes['SetOutDir']             = tracing_parts.set_out_dir
 prototypes['CheckHostDir']          = tracing_parts.check_host_dir
 prototypes['ReadArgUni']            = tracer_parts.tracer_read_arg_uni
@@ -203,6 +204,20 @@ prototypes['HostCreateResearchDir']   = tracing_parts.host_create_research_dir
 prototypes['HostDeployInputGlob']   = tracing_parts.host_deploy_input_glob
 prototypes['GetCaller']   = tracer_parts.tracer_get_caller
 
+prototypes['MutatorInit']               = mutator_parts.init_mutator
+prototypes['MutatorSelectChanger']      = mutator_parts.select_changer
+prototypes['MutatorMutationCount']       = mutator_parts.mutation_count
+prototypes['MutatorBatchSize']          = mutator_parts.batch_size
+prototypes['MutatorOriginal']           = mutator_parts.original
+prototypes['MutatorDeployDir']          = mutator_parts.deploy_dir
+prototypes['MutatorBatchExhausted']     = mutator_parts.batch_exhausted
+prototypes['MutatorGetNextSample']      = mutator_parts.get_next_sample
+prototypes['MutatorGenerateBatch']      = mutator_parts.generate_batch
+prototypes['MutatorCurrentSampleName']  = mutator_parts.current_sample_name
+prototypes['MutatorCurrentSamplePath']  = mutator_parts.current_sample_path
+prototypes['MutatorCurrentSampleDrop']  = mutator_parts.current_sample_drop
+prototypes['MutatorSaveSample']         = mutator_parts.save_sample
+prototypes['MutatorExtension']         = mutator_parts.extension
 #keywords
 
 prototypes['Call']                  = other_parts.noop
