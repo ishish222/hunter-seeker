@@ -6497,6 +6497,24 @@ int handle_cmd(char* cmd)
         d_print("Args is set to: %s\n", my_trace->args);
         send_report();
     }
+    else if(!strncmp(cmd, CMD_GET_EXCEPTION_CODE, 2))
+    {
+        char line[MAX_LINE];
+        my_trace->report_code = REPORT_INFO;
+
+        sprintf(line, "0x%08x\n", my_trace->last_exception.ExceptionCode);
+        strcpy(my_trace->report_buffer, line);
+        send_report();
+    }
+    else if(!strncmp(cmd, CMD_GET_EXCEPTION_ADDR, 2))
+    {
+        char line[MAX_LINE];
+        my_trace->report_code = REPORT_INFO;
+
+        sprintf(line, "0x%08x\n", my_trace->last_exception.ExceptionAddress);
+        strcpy(my_trace->report_buffer, line);
+        send_report();
+    }
     else if(!strncmp(cmd, CMD_READ_PREFIX, 2))
     {
         my_trace->report_code = REPORT_INFO;

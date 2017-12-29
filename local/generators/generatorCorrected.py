@@ -38,10 +38,12 @@ class DirGenerator(object):
                     flist += glob.glob(target_pattern)
 
         for i in range(0, amt):
-            tname = tempfile.mkdtemp(dir = self.dest_path)
+            tname = self.dest_path
             bname = os.path.basename(tname)
-            L = ["cp", "-r", self.origin_path, tname]
-            os.spawnv(os.P_WAIT, "/bin/cp", L)
+#            tname = tempfile.mkdtemp(dir = self.dest_path)
+#            bname = os.path.basename(tname)
+#            L = ["cp", "-r", self.origin_path, tname]
+#            os.spawnv(os.P_WAIT, "/bin/cp", L)
 
             if(self.fname != None):
                 self.target_file = self.fname

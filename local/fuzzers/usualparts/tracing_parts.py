@@ -586,6 +586,12 @@ def set_research_dir(args = None):
     options = globs.state.options
     options.sample_options.research_dir = args
 
+def get_research_dir(args = None):
+    options = globs.state.options
+
+    globs.state.ret = options.sample_options.research_dir
+
+
 def set_out_dir(args = None):
     print "Setting out dir to %s" % args
     options = globs.state.options
@@ -641,7 +647,10 @@ def read_last_suspension(args = None):
 def decision(args=None):
     options = globs.state.options
 
-    if(globs.state.ret[1:3] == "RB"):
+    if('EXCEPTION' in globs.state.ret):
+        print bcolors.WARNING + bcolors.BOLD + 'EXCEPTION' + bcolors.ENDC
+        return 'EXCEPTION'   
+    elif(globs.state.ret[1:3] == "RB"):
         bp = globs.state.ret[3:].split('\n')[0]
         print bcolors.WARNING + bcolors.BOLD + bp + bcolors.ENDC
         return bp

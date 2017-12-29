@@ -78,21 +78,14 @@ class Mutator(file):
     def calcSizeTotal(self):
         for area in self.areas:
             self.sizeTotal += area.size
-#        print "Total " + str(self.sizeTotal)
 
     def pickVirtualOffset(self):
-#        random.seed()
-#        r = random.randint(0, self.sizeTotal)
         r = self.pickRandom(0, self.sizeTotal)
-#        print r
-#        print str(0)+" "+str(self.sizeTotal)
-#        print "v: "+str(r)
         return r
 
     def pickOffset(self):
         self.offset = 0
         self += self.pickVirtualOffset()
-#       print "r: "+str(self.offset)
 
     def pickRandom(self, from_, to_):
         r = random.randint(from_, to_)

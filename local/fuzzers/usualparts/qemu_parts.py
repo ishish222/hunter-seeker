@@ -326,6 +326,15 @@ def quit(args=None):
         print("Problems unmounting pci")
 
     rs("quit", options.m)
+    import os
+
+    options.ms.close()
+    options.ss.close()
+    options.ss_log.close()
+    if(os.path.exists(options.ms_path)): os.remove(options.ms_path)
+    if(os.path.exists(options.ss_path)): os.remove(options.ss_path)
+    if(os.path.exists(options.ss_path+'-log')): os.remove(options.ss_path+'-log')
+
 
 def poweroff_no_revert(args=None):
     options = globs.state.options

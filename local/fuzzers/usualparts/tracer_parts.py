@@ -920,7 +920,6 @@ def tracer_debug_continue(args):
     response, _, _ = read_socket(options.s)
 
     globs.state.ret = response
-
     return
 
 def tracer_debug_continue_1_second(args = globs.DEBUG_CONTINUE):
@@ -981,6 +980,32 @@ def tracer_list_markers(args=None):
     response, _, _ = read_socket(options.s)
 
     globs.state.ret = response
+
+    return
+
+def tracer_get_exception_code(args=None):
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+    
+    write_socket(options.s, "tracer_get_exception_code");
+    response, _, _ = read_socket(options.s)
+
+    globs.state.ret = response
+    globs.state.ret = 'Code: ' + globs.state.ret[3:].split('\n')[0]
+
+    return
+
+def tracer_get_exception_address(args=None):
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+    
+    write_socket(options.s, "tracer_get_exception_address");
+    response, _, _ = read_socket(options.s)
+
+    globs.state.ret = response
+    globs.state.ret = 'Address: ' + globs.state.ret[3:].split('\n')[0]
 
     return
 

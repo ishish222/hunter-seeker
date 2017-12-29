@@ -168,7 +168,8 @@ def perform(script_path):
 #            print "[%s] (%s)" % (instruction.name, script_path)
             print bcolors.LIGHTBLUE + "===[%s]" % (instruction.name) + bcolors.ENDC
             if(instruction.name == 'Call'):
-                global_stack.insert(0, ip+1)
+                print 'Calling: %s' % instruction.args
+                global_stack.append(ip+1)
                 ret = instruction.args
             elif(instruction.name == 'Return'):
                 ret = global_stack.pop()

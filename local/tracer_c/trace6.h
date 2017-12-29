@@ -191,6 +191,8 @@
 #define CMD_RESOLVE_LOCATION    "RL"
 #define CMD_SET_BASE            "SB"
 #define CMD_SET_PRIORITY_HIGH   "sp"
+#define CMD_GET_EXCEPTION_CODE  "EC"
+#define CMD_GET_EXCEPTION_ADDR  "EA"
 
 #define CMD_ROUTINE_1           "R1"
 #define CMD_ROUTINE_2           "R2"

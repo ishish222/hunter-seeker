@@ -22,7 +22,7 @@ class DirGenerator(object):
         self.dest_path = dest_path_
         if(fname != None):
             self.target_file = fname
-        elif(fext != None):
+        elif(fext != None):  # choose target file randomly based on extension
             target_pattern = "%s/%s" % (self.origin_path, fext)
             flist = glob.glob(target_pattern)
             flist_len = len(flist)
