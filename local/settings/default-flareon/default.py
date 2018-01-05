@@ -15,7 +15,8 @@ host_machines_path = "/home/hs1/machines/qemu"
 host_images_path = host_data_path + "/images"
 host_sample_source = "/home/hs1/malware_samples"
 host_output_link = "/mnt/1/output"
-host_qemu_command = 'qemu-system-i386'
+host_qemu_command = '/home/hs1/qemu-bin-2.11/qemu-2.11.0/deploy_dir/bin/qemu-system-i386'
+host_qemu_drive_options = 'if=virtio'
 
 # for creating drive
 host_samples_path = "samples"
@@ -44,12 +45,12 @@ host_machines = {
 }
 
 qemu_additional =  ['-enable-kvm']
-qemu_drive_options = 'cache=none,if=virtio'
 qemu_drive_format = 'mkfs.ntfs'
 qemu_drive_offset = 65536
 qemu_env = None
 qemu_secondary=""
 qemu_mount_options="loop,umask=0000"
+qemu_drive_options = host_qemu_drive_options
 
 hs_user="ish"
 revert_snapshot = 'clean'

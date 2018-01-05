@@ -141,6 +141,28 @@ def qemu_start_full(args=None):
 #    for s in globs.state.samples_list:
 #        print s
 
+def qemu_save(args=None):
+    options = globs.state.options
+
+    from script import write_monitor_2
+
+    ret = write_monitor_2(options.m, "savevm %s" % args)
+    print ret
+    time.sleep(options.revert_wait)
+
+    print("Saved: %s" % args)
+
+def qemu_load(args=None):
+    options = globs.state.options
+
+    from script import write_monitor_2
+
+    ret = write_monitor_2(options.m, "loadvm %s" % args)
+    time.sleep(options.revert_wait)
+    print ret
+
+    print("Loaded: %s" % args)
+
 def qemu_start_revert(args=None):
     options = globs.state.options
 

@@ -743,4 +743,10 @@ sportowano, dziala na vulpix 2.10.0 i na flareon 1.5.3
 Przeprowadzane za pomoca cmd.exe i ew. zaladowanych wartosci do kolejki lub ladowany dysk.
 Potrzebne skrypty do reuzycia
 
+--
+
+[x] 098 - savevm i loadvm 
+
+worky ^^
+
 
