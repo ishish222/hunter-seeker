@@ -146,14 +146,89 @@ def qemu_save(args=None):
 
     from script import write_monitor_2
 
+    write_socket(options.s, "disconnect");
+    response, _, _ = read_socket(options.s)
+
     ret = write_monitor_2(options.m, "savevm %s" % args)
-    print ret
     time.sleep(options.revert_wait)
+    print ret
+
+    import pickle
+
+    pickle_path = options.settings.host_machines_path
+    pickle_path += '/'
+    pickle_path += options.settings.machines[options.fuzzbox_name]['disk']
+    pickle_path += '.'
+    pickle_path += args
+    pickle_path += '.state'
+
+    current_state = {}
+    #current_state['options'] = globs.state.options
+    current_state['stack'] = globs.state.stack
+    current_state['stack2'] = globs.state.stack2
+    current_state['queue'] = globs.state.queue
+    current_state['queue2'] = globs.state.queue2
+    current_state['ret'] = globs.state.ret
+    current_state['eip'] = globs.state.eip
+    current_state['ep'] = globs.state.ep
+
+    f = open(pickle_path, 'wb')
+    pickle.dump(current_state, f)
+    f.close()
+    print 'Saved pickled state to: %s' % pickle_path
 
     print("Saved: %s" % args)
 
+def qemu_delete(args=None):
+    options = globs.state.options
+
+    pickle_path = options.settings.host_machines_path
+    pickle_path += '/'
+    pickle_path += options.settings.machines[options.fuzzbox_name]['disk']
+    pickle_path += '.'
+    pickle_path += args
+    pickle_path += '.state'
+
+    import os
+    print 'Deleting pickled state in: %s' % pickle_path
+
+    try:
+        os.remove(pickle_path)
+    except Exception:
+        pass
+    
+    from script import write_monitor_2
+
+    ret = write_monitor_2(options.m, "delvm %s" % args)
+    print ret
+
+    print("Deleted: %s" % args)
+
 def qemu_load(args=None):
     options = globs.state.options
+
+    import pickle
+
+    pickle_path = options.settings.host_machines_path
+    pickle_path += '/'
+    pickle_path += options.settings.machines[options.fuzzbox_name]['disk']
+    pickle_path += '.'
+    pickle_path += args
+    pickle_path += '.state'
+
+    print 'Loading pickled state from: %s' % pickle_path
+    f = open(pickle_path, 'rb')
+    current_state = pickle.load(f)
+    f.close()
+
+    #globs.state.options = current_state['options']
+    globs.state.stack = current_state['stack']
+    globs.state.stack2 = current_state['stack2']
+    globs.state.queue = current_state['queue']
+    globs.state.queue2 = current_state['queue2']
+    globs.state.ret = current_state['ret']
+    globs.state.eip = current_state['eip']
+    globs.state.ep = current_state['ep']
 
     from script import write_monitor_2
 
@@ -162,6 +237,10 @@ def qemu_load(args=None):
     print ret
 
     print("Loaded: %s" % args)
+
+def qemu_flush(args=None):
+    options = globs.state.options
+    common.read_socket(options.s)
 
 def qemu_start_revert(args=None):
     options = globs.state.options

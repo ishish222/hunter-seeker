@@ -35,6 +35,7 @@ prototypes['StartQemuFull']         = qemu_parts.qemu_start_full
 prototypes['StartQemuLoad']         = qemu_parts.qemu_start_revert
 prototypes['QemuLoad']              = qemu_parts.qemu_load
 prototypes['QemuSave']              = qemu_parts.qemu_save
+prototypes['QemuDel']              = qemu_parts.qemu_delete
 prototypes['QemuMountDisks']        = qemu_parts.qemu_mount_disks
 prototypes['QemuMountDisksNoVirtio'] = qemu_parts.qemu_mount_disks_wo_virtio
 prototypes['SpawnInternalController'] = tracing_parts.spawn_internal_controller

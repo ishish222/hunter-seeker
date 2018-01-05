@@ -748,5 +748,17 @@ Potrzebne skrypty do reuzycia
 [x] 098 - savevm i loadvm 
 
 worky ^^
+No, nie do konca... Czasem nie dziala. 
+Byl raz blad 0xc0000006
+Innym razem nie bylo interakcji miedzy fuzzerem a internalem
+
+Mozliwe rozwiazania:
+przelaczanie internala w petle podlaczania zaraz przed save oraz podlaczanie z fuzzera po load
+
+Zalatwiono tym rozwiazainem
+
+--
+
+[x] 099 - serializacja stanu fuzzers i powiazanie ze stanem klienta
 
 

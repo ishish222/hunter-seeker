@@ -1154,7 +1154,7 @@ def executing(cmd_q, ext_pipe):
     while True:
         cmds = cmd_q.get()
         execute(cmds, ext_pipe)
-        print 'Executed: %s\n' % cmds
+        print 'executing: %s\n' % cmds
 
 def executing_thread():
     import time
@@ -1169,7 +1169,7 @@ def executing_thread():
             execute(cmds, ext_pipe)
         except Interrupt:
             print 'Interrupted'
-        print 'Executed: %s\n' % cmds
+        print 'executing_thread: %s\n' % cmds
 
 def executing_no_thread():
     import time
@@ -1183,7 +1183,7 @@ def executing_no_thread():
         execute(cmds, ext_pipe)
     except Interrupt:
         print 'Interrupted'
-    print 'Executed: %s\n' % cmds
+    print 'executing_no_thread: %s\n' % cmds
 
 
 threading_enabled = True
@@ -1223,6 +1223,11 @@ Hunter-Seeker
         while True:
             print 'Reading...\n'
             cmd = readPipe(ext_pipe)
+            if(cmd == 'disconnect'):
+                writePipe(ext_pipe, 'disconnecting')
+                ok(ext_pipe)
+                ext_pipe.close()
+                return
             if(cmd == 'interrupt'):
     #            p.terminate()
                 p.raiseExc(Interrupt)
@@ -1234,17 +1239,19 @@ Hunter-Seeker
             cmds = cmd.split(" ")
     #        cmd_q.put(cmds)
             cmd_q2.insert(0, cmds)
-            print 'Inserted: %s\n' % cmds
+            print 'Inserted_thread: %s\n' % cmds
     else:
         while True:
             print 'Reading...\n'
             cmd = readPipe(ext_pipe)
             cmds = cmd.split(" ")
             cmd_q2.insert(0, cmds)
-            print 'Inserted: %s\n' % cmds
+            print 'Inserted_no_thread: %s\n' % cmds
             executing_no_thread()
 
 
 if __name__ == '__main__':
-    internal_routine()
+    while True:
+        internal_routine()
+        time.sleep(3)
 
