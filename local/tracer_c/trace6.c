@@ -93,8 +93,13 @@ int reopen_stdio()
     }
     else
     {
-/*        fclose(my_trace->stdout_destination);*/
+        fclose(my_trace->stdout_destination);
         my_trace->stdout_destination = fopen(my_trace->stdout_destination_path, "w");
+        while(my_trace->stdout_destination == 0x0)
+        {
+            Sleep(200);
+            my_trace->stdout_destination = fopen(my_trace->stdout_destination_path, "w");
+        }
         sprintf(buffer2, "Reopened stdout_destination %s: 0x%08x\n", my_trace->stdout_destination_path, my_trace->stdout_destination);
         strcpy(my_trace->report_buffer, buffer2);
     }

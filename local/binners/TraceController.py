@@ -1074,6 +1074,7 @@ class TraceController(object):
         for tracer in self.tracers:
             tracer.send_command("RO")
             tracer.recv_report()
+            print 'Tracer 0x%02x: %s\n\n' % (tracer.my_id, tracer.last_answer)
         return 
 
     def out_region(self, args):
