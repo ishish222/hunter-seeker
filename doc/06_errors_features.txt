@@ -767,4 +767,19 @@ W zwiazku
 
 [x] 099 - serializacja stanu fuzzers i powiazanie ze stanem klienta
 
+--
+
+[x] 100 - ogarniecie synchronizacji strumieni miedzy internal a external
+
+Propozycja:
+
+Utrzymywac scentralizowana liste strumieni, np w internal, ktore moge zostac "odswiezone" po load
+
+Ew. autonomiczne strumienie, ktore same sie "odswiezaja" po wykryciu bledu zapisu (moze byc trudne, bo jak strumien ma to wykryc, skoro jest przekierowany na poziomie OS?)
+
+Ew. 
+Utrzymywac wlasne kanaly IO
+Po wydaniu komendy propagowac komende odswiezenia wlasnych kanalow IO
+
+Etap 1: tracery
 
