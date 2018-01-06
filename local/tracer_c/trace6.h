@@ -193,6 +193,7 @@
 #define CMD_SET_PRIORITY_HIGH   "sp"
 #define CMD_GET_EXCEPTION_CODE  "EC"
 #define CMD_GET_EXCEPTION_ADDR  "EA"
+#define CMD_REOPEN_IO           "RO"
 
 #define CMD_ROUTINE_1           "R1"
 #define CMD_ROUTINE_2           "R2"
@@ -322,6 +323,10 @@ typedef struct TRACE_CONFIG_
     CREATE_PROCESS_DEBUG_INFO cpdi;
     unsigned PID;
     char args[MAX_NAME];
+
+    /* separate stdout (for synchronising after save/load) */
+    char stdout_destination_path[MAX_NAME];
+    FILE* stdout_destination;
     
     /* handles */
     HANDLE procHandle;

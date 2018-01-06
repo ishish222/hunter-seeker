@@ -437,7 +437,7 @@ class TraceController(object):
         return self.trace_count
 
     def spawn_tracer_remote_log(self):
-        Popen(["\\\\10.0.2.4\\qemu\\server\\b.exe", "127.0.0.1", "12341", ">", "\\\\10.0.2.4\\qemu\\logs\\log_%d.log" % self.trace_count], shell=True)
+        Popen(["\\\\10.0.2.4\\qemu\\server\\b.exe", "127.0.0.1", "12341", "\\\\10.0.2.4\\qemu\\logs\\log_%d.log" % self.trace_count], shell=True)
         socket, addr = self.main_socket.accept()
         self.tracers.append(Tracer())
         self.tracer_active_id = self.trace_count
@@ -452,7 +452,7 @@ class TraceController(object):
         return self.trace_count
 
     def spawn_tracer_log(self):
-        Popen(["\\\\10.0.2.4\\qemu\\server\\b.exe", "127.0.0.1", "12341", ">", "\\\\10.0.2.4\\qemu\\logs\\log_%x.log" % self.trace_count], shell=True)
+        Popen(["\\\\10.0.2.4\\qemu\\server\\b.exe", "127.0.0.1", "12341", "\\\\10.0.2.4\\qemu\\logs\\log_%x.log" % self.trace_count], shell=True)
         socket, addr = self.main_socket.accept()
         self.tracers.append(Tracer())
         self.tracer_active_id = self.trace_count
@@ -1068,6 +1068,12 @@ class TraceController(object):
     def print_sth(self, args):
         self.send_command_active("PR %s" % args)
         self.last_report, self.last_answer = self.recv_report_active()
+        return 
+
+    def reopen_io(self):
+        for tracer in self.tracers:
+            tracer.send_command("RO")
+            tracer.recv_report()
         return 
 
     def out_region(self, args):

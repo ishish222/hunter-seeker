@@ -60,6 +60,7 @@ prototypes['SpawnTracerLog']        = tracing_parts.start_tracer_log
 prototypes['GetSampleOptions']      = tracing_parts.get_sample_options
 prototypes['RevertClean']           = qemu_parts.offline_revert
 prototypes['RevertReady']           = qemu_parts.revert_ready
+prototypes['TracerReopenIO'] = tracer_parts.tracer_reopen_io
 prototypes['TracerConfigureSample'] = tracer_parts.tracer_configure_sample
 prototypes['TracerConfigureSamplePID'] = tracer_parts.tracer_configure_sample_pid
 prototypes['TracerConfigureOutDir'] = tracer_parts.tracer_configure_out_dir

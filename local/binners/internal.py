@@ -912,6 +912,10 @@ def execute(cmds, ext_pipe):
             writePipe(ext_pipe, "tracer_read_region "+bcolors.OK_STR);
             ok(ext_pipe)
 
+        elif(cmd == "tracer_reopen_io"):
+            trace_controller.reopen_io()
+            ok(ext_pipe)
+
         elif(cmd == "tracer_read_dword"):
             trace_controller.read_dword(args)
             writePipe(ext_pipe, "%s\n" % trace_controller.last_answer)
@@ -1251,6 +1255,7 @@ Hunter-Seeker
 
 
 if __name__ == '__main__':
+    trace_controller = None
     while True:
         internal_routine()
         time.sleep(3)

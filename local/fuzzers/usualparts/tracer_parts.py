@@ -321,6 +321,18 @@ def tracer_configure_sample_pid(args = None):
 
     return
 
+def tracer_reopen_io(args=None):
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+    
+    write_socket(options.s, "tracer_reopen_io");
+    response, _, _ = read_socket(options.s)
+
+    globs.state.ret = response
+
+    return
+
 def tracer_configure_sample(args=None):
     options = globs.state.options
     state = globs.state

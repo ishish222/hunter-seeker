@@ -782,4 +782,7 @@ Utrzymywac wlasne kanaly IO
 Po wydaniu komendy propagowac komende odswiezenia wlasnych kanalow IO
 
 Etap 1: tracery
+Zaimplementowano
+
+
 

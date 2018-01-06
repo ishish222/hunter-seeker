@@ -82,22 +82,38 @@ int check_status_for_ss(int status)
     return 0x0;
 }
 
+int reopen_stdio()
+{
+    char buffer2[MAX_LINE];
+
+    if(my_trace->stdout_destination == 0x0)
+    {
+        sprintf(buffer2, "stdout_destination is NULL, ignoring");
+        strcpy(my_trace->report_buffer, buffer2);
+    }
+    else
+    {
+/*        fclose(my_trace->stdout_destination);*/
+        my_trace->stdout_destination = fopen(my_trace->stdout_destination_path, "w");
+        sprintf(buffer2, "Reopened stdout_destination %s: 0x%08x\n", my_trace->stdout_destination_path, my_trace->stdout_destination);
+        strcpy(my_trace->report_buffer, buffer2);
+    }
+    return 0x0;
+}
+
 int d_print(const char* format, ...)
 {
     va_list argptr;
     char line[MAX_LINE];
 
-    //if(my_trace != 0x0)
-    if(0x0)
+    if(my_trace != 0x0)
     {
-        if(my_trace->log != 0x0)
+        if(my_trace->stdout_destination != 0x0)
         {
             va_start(argptr, format);
-            //vfd_print(line, my_trace->log, format, argptr);
-            vsprintf(line, format, argptr);
+            vfprintf(my_trace->stdout_destination, format, argptr);
             va_end(argptr);
-            fwrite(line, strlen(line), 1, my_trace->log);
-            fflush(my_trace->log);
+            fflush(my_trace->stdout_destination);
         }
     }
     else
@@ -7342,6 +7358,11 @@ int handle_cmd(char* cmd)
         send_report();
         
     }
+    else if(!strncmp(cmd, CMD_REOPEN_IO, 2))
+    {
+        reopen_stdio();
+        send_report();
+    }
     else if(!strncmp(cmd, CMD_ROUTINE_1, 2))
     {
         /* TODO: implement */    
@@ -7373,6 +7394,31 @@ int init_trace(TRACE_CONFIG* trace, char* host, short port)
     my_trace->last_tid = 0x0;
 
     my_trace->reactions = (REACTION*)malloc(sizeof(REACTION)*MAX_REACTIONS);
+}
+
+int init_trace(TRACE_CONFIG* trace, char* host, short port, char* stdout_destination_path)
+{
+    /* Initial trace config */
+    my_trace->thread_count = 0x0;
+    my_trace->reaction_count = 0x0;
+
+    strcpy(my_trace->host, host);
+    my_trace->port = port;
+
+    memset(my_trace->tid2index, -1, sizeof(my_trace->tid2index));
+
+    my_trace->mutex = CreateMutex(0x0, 0x0, 0x0);
+    my_trace->eventLock = CreateEvent(0x0, 0x0, 0x0, 0x0);
+    my_trace->eventUnlock = CreateEvent(0x0, 0x0, 0x0, 0x0);
+
+    my_trace->last_eip = 0x0;
+    my_trace->last_tid = 0x0;
+
+    my_trace->reactions = (REACTION*)malloc(sizeof(REACTION)*MAX_REACTIONS);
+
+    strcpy(my_trace->stdout_destination_path, stdout_destination_path);
+    my_trace->stdout_destination = fopen(my_trace->stdout_destination_path, "w");
+    /*setvbuf(my_trace->stdout_destination, 0x0, _IONBF, 0x0);*/
 }
 
 /* configure syscalls */
@@ -7838,7 +7884,17 @@ int main(int argc, char** argv)
         return -1;
     }
 
-    init_trace(my_trace, argv[1], atoi(argv[2]));
+    printf("[1]\n");
+
+    if(argc == 3)
+    {
+        init_trace(my_trace, argv[1], atoi(argv[2]));
+    }
+    else if(argc > 3)
+    {
+        /* Handle log destination */
+        init_trace(my_trace, argv[1], atoi(argv[2]), argv[3]);
+    }
 
     /*configure syscalls */
     configure_syscalls();
