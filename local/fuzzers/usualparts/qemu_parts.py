@@ -115,6 +115,7 @@ def qemu_start(args=None):
     print("[%s] Qemu full boot finished" % common.timestamp())
 #    for s in globs.state.samples_list:
 #        print s
+    read_monitor(options.m)
 
 def qemu_start_full(args=None):
     options = globs.state.options
@@ -140,18 +141,33 @@ def qemu_start_full(args=None):
     print("[%s] Qemu full boot finished" % common.timestamp())
 #    for s in globs.state.samples_list:
 #        print s
+    read_monitor(options.m)
 
 def qemu_save(args=None):
     options = globs.state.options
 
     from script import write_monitor_2
 
+    # check other save, ask to overwrite
+    ret = write_monitor_2(options.m, "info snapshots")
+    exploded = ret.split('xxx')
+    if(len(exploded) > 1):
+        last = exploded[1]
+        print 'Will overwrite snapshot: %s' % last
+        print 'Kill the process in order to abort'
+
+        import os
+        os.system('read -s -n 1 -p "Press any key to continue..."')
+        print
+
+        qemu_delete(last)
+
     write_socket(options.s, "disconnect");
     response, _, _ = read_socket(options.s)
 
-    ret = write_monitor_2(options.m, "savevm %s" % args)
+    ret = write_monitor_2(options.m, "savevm xxx%sxxx" % args)
     time.sleep(options.revert_wait)
-    print ret
+    print("Saved: %s" % args)
 
     import pickle
 
@@ -177,8 +193,6 @@ def qemu_save(args=None):
     f.close()
     print 'Saved pickled state to: %s' % pickle_path
 
-    print("Saved: %s" % args)
-
 def qemu_delete(args=None):
     options = globs.state.options
 
@@ -199,13 +213,29 @@ def qemu_delete(args=None):
     
     from script import write_monitor_2
 
-    ret = write_monitor_2(options.m, "delvm %s" % args)
+    ret = write_monitor_2(options.m, "delvm xxx%sxxx" % args)
     print ret
 
     print("Deleted: %s" % args)
 
 def qemu_load(args=None):
     options = globs.state.options
+
+    from script import write_monitor_2
+
+    # check other save, ask to overwrite
+    ret = write_monitor_2(options.m, "info snapshots")
+    exploded = ret.split('xxx')
+    if(len(exploded) > 1):
+        last = exploded[1]
+        if(last != args):
+            print 'Required state %s not found\nAborting' % args
+            raise Exception
+        else:
+            pass
+    else:
+        print 'Required state %s not found\nAborting' % args
+        raise Exception
 
     import pickle
 
@@ -230,9 +260,7 @@ def qemu_load(args=None):
     globs.state.eip = current_state['eip']
     globs.state.ep = current_state['ep']
 
-    from script import write_monitor_2
-
-    ret = write_monitor_2(options.m, "loadvm %s" % args)
+    ret = write_monitor_2(options.m, "loadvm xxx%sxxx" % args)
     time.sleep(options.revert_wait)
     print ret
 

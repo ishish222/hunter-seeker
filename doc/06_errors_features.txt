@@ -757,6 +757,12 @@ przelaczanie internala w petle podlaczania zaraz przed save oraz podlaczanie z f
 
 Zalatwiono tym rozwiazainem
 
+ALE:
+
+Nie da sie skorzystac z wiecej niz 1 snapshotu :/ (qemu sie wywala, nawet w najnowszej wersji)
+
+W zwiazku
+
 --
 
 [x] 099 - serializacja stanu fuzzers i powiazanie ze stanem klienta
