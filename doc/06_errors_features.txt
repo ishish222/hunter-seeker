@@ -785,4 +785,39 @@ Etap 1: tracery
 Zaimplementowano
 
 
+--
+
+[x] 101 - co ze sladami
+
+Zawieraja kluczowe informacje z przed nagrywania - zaladowanych bibliotek, byc moze kluczowych modyfikacji, etc.
+
+Propozycje:
+
+Wydzielic zapis prefixow do osobnego pliku, ulatwi skladanie sladu.
+
+W pewnym momencie (np. przy rekonfigurowaniu outputu, po aktualizacji prefiksu, przed prepare) skopiowac poprzedni slad  do nowych plikow
+(To chyba bedzie najlatwiej zrobic recznie i wlaczyc do procedur)
+
+Czyli:
+Odpowiedzialnosc za konstruowanie sladu ze stanu nie moze spoczywac na skrypcie (zbyt duze skomplikowanie), natomiast struktura sladu ulatwi to.
+Procedura uzupelniania sladu ciazy na operatorze w trakcie nagrywania transformacji stanow.
+
+Hmmm. Moze pozniej warto by to zaimplementowac w podprocedurach obslugi ladowania i zachowania stanu externala do pliku .state. Byc moze nie na skrypcie, ale ladowanie i zachowywanie stanu byc moez jest 1:1 z tymi transformacjami
+
+--
+
+102 - usystematyzowanie jezyka
+
+Instrukcje jezyka nalezy polaczyc lub rozdzielic
+Nazwac je w bardziej intuicyjny sposob (m. in. zastosowac system przedrostkow mowiacy nt. adresata instrukcji)
+To samo z procedurami
+
+--
+
+103 - usunac Decision
+
+jest niepotrzebne
+jesli brak obslugi BP w internalu, musi zostac obsluzony w externalu
+po prostu skok do funkcji o tej samej nazwie, co reakcja
+Jesli nie ma, zglosic blad, to cenna informacja (np. przy rekreowaniu skryptu do stanu)
 

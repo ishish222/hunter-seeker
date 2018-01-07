@@ -6595,14 +6595,6 @@ int handle_cmd(char* cmd)
         my_trace->out_postfix = -1;
         reload_out_file();
 
-        /* log */ 
-        strcpy(buffer2, "");
-        sprintf(buffer2, "%s\\%s.log", my_trace->out_dir, my_trace->out_prefix);
-        strcpy(my_trace->out_log, buffer2);
-        my_trace->log = fopen(my_trace->out_log, "w");
-        setvbuf(my_trace->log, 0x0, _IONBF, 0x0);
-        d_print("Log file: %s\n", my_trace->out_log);
-
         /* dump */ 
         strcpy(buffer2, "");
         sprintf(buffer2, "%s\\%s.dump", my_trace->out_dir, my_trace->out_prefix);
@@ -6616,22 +6608,30 @@ int handle_cmd(char* cmd)
         my_trace->mods = fopen(my_trace->out_mods, "wb");
         d_print("Mods file: %s\n", my_trace->out_mods);
 
-        /* write informaction on mod file */
+        /* write informaction on mod file TO SEPARATE prefix file! */
+        FILE* prefix;
+        sprintf(buffer2, "%s\\prefix.out", my_trace->out_dir);
+        prefix = fopen(buffer2, "w");
+
         char line[MAX_LINE];
         sprintf(line, "OM,%s.mod\n", my_trace->out_prefix);
-        add_to_buffer(line);
+        fprintf(prefix, line);
 
         /* information on prefix */
         sprintf(line, "SP,%s\n", my_trace->out_prefix);
-        add_to_buffer(line);
+        fprintf(prefix, line);
 
-        /* ini */ 
-        strcpy(buffer2, "");
-        sprintf(buffer2, "%s\\%s.ini", my_trace->out_dir, my_trace->out_prefix);
-        strcpy(my_trace->out_ini, buffer2);
-        my_trace->ini = fopen(my_trace->out_ini, "w");
-        d_print("Ini file: %s\n", my_trace->out_ini);
-    
+        sprintf(line, "LF,transfer.out\n");
+        fprintf(prefix, line);
+        fclose(prefix);
+
+        /* transfer file for easy replacement */
+        sprintf(buffer2, "%s\\transfer.out", my_trace->out_dir);
+        prefix = fopen(buffer2, "w");
+        sprintf(line, "LF,%s_%d.out\n", my_trace->out_prefix, my_trace->out_postfix);
+        fprintf(prefix, line);
+        fclose(prefix);
+
         send_report();
         my_trace->status = STATUS_CONFIGURED;
     }

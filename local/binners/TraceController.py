@@ -90,13 +90,15 @@ class TraceController(object):
             self.last_log_file = None
 
     def dlog(self, data, level=0):
+        print("[TracerController]: %s\n" % data)
+        """
         if(self.debug == True):
             if(self.log_level <0):
                 return
             if(level > self.log_level):
                 return
             self.last_log_file.write("%s\n" % data)
-#            print("[TracerController]: %s: %s\n" % (timestamp(), data))
+        """
 
     def ddlog(self, data, level=0):
         #pass to regular log facility
