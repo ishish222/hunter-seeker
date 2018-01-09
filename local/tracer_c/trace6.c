@@ -1667,6 +1667,7 @@ int exclusive_reaction(char* reaction_id)
             REACTION* cur_reaction = &my_trace->reactions[i];
 
             /* lower coupled */
+            /*
             unsigned k; 
             for(k = 0; k< MAX_COUPLES; k++)
             {
@@ -1678,6 +1679,7 @@ int exclusive_reaction(char* reaction_id)
                     coupled_reaction->exclusive = 0x1;
                 }
             }
+            */
         }
     }
     d_print("[exclusive_reaction ends]\n");
