@@ -111,31 +111,46 @@ def host_deploy_input_glob(args=None):
     state = globs.state
     status = globs.state.status
 
-    state.samples_list = glob(options.glob_pattern)
+    state.samples_list = glob(state.glob_pattern)
     for sample in state.samples_list:
         new_sample = os.path.basename(sample)
-        print(globs.state.research_dir + "/samples/shared/" + new_sample)
-        os.spawnv(os.P_WAIT, "/bin/cp", ["cp", sample, globs.state.research_dir + "/samples/shared/"])
+        print(options.external_paths_current_internal_input + '/' + new_sample)
+        os.spawnv(os.P_WAIT, "/bin/cp", ["cp", sample, options.external_paths_current_internal_input + '/' + new_sample])
 
 def host_create_research_dir(args=None):
     import tempfile
     import os
+    import globs
+
+    # w zasadzie to tmp_dir
 
     options = globs.state.options
     state = globs.state
     status = globs.state.status
 
-    path = tempfile.mktemp(suffix = "-research", dir=options.settings.host_data_research_path)
+    path = tempfile.mktemp(suffix = "-research", dir=options.external_paths_tmp_dst)
     print path
     os.spawnv(os.P_WAIT, "/bin/mkdir", ["mkdir", path])
-    globs.state.research_dir = path
-    create_layout_2(path)
+    globs.state.options.external_paths_current_tmp_dst = path
 
-    if(hasattr(options.settings, 'host_output_link')):
-        print " ".join(["/usr/bin/sudo", "sudo", "mount", "-o", "bind", options.settings.host_output_link, path+"/output"])
-        os.spawnv(os.P_WAIT, "/usr/bin/sudo", ["sudo", "mount", "-o", "bind", options.settings.host_output_link, path+"/output"])
-#        os.spawnv(os.P_WAIT, "/bin/rm", ["rm", "-rf", path+"/output"])
-#        os.spawnv(os.P_WAIT, "/bin/ln", ["ln", "-s", options.settings.host_output_link, path+"/output"])
+    internal_input = options.external_paths_current_tmp_dst + '/' + options.internal_paths_input.split('\\')[-1]
+    internal_output = options.external_paths_current_tmp_dst + '/' + options.internal_paths_output.split('\\')[-1]
+    internal_log = options.external_paths_current_tmp_dst + '/' + options.internal_paths_log.split('\\')[-1]
+
+    check_dir(internal_input)
+    check_dir(internal_output)
+    check_dir(internal_log)
+
+    options.external_paths_current_internal_input = internal_input
+    options.external_paths_current_internal_output = internal_output
+    options.external_paths_current_internal_log = internal_log
+
+    if(options.external_paths_link_tmp_dst):
+        print " ".join(["/usr/bin/sudo", "sudo", "mount", "-o", "bind", options.external_paths_current_internal_output, options.external_paths_dst])
+        os.spawnv(os.P_WAIT, "/usr/bin/sudo", ["sudo", "mount", "-o", "bind", options.external_paths_current_internal_output, options.external_paths_dst])
+
+    os.spawnv(os.P_WAIT, "/usr/bin/sudo", ["sudo", "cp", "-r", "../server", options.external_paths_current_internal_input])
+    os.spawnv(os.P_WAIT, "/usr/bin/sudo", ["sudo", "cp", "-r", "../common", options.external_paths_current_internal_input])
     
 def start_tracer(args=None):
     options = globs.state.options
@@ -573,29 +588,30 @@ def load_ep(args = None):
 
 def set_glob_pattern(args = None):
     print "Setting glob pattern to %s" % args
+    state = globs.state
     options = globs.state.options
-    options.glob_pattern = '%s/%s' % (options.settings.host_sample_source, args)
+    state.glob_pattern = '%s/%s' % (options.external_paths_src, args)
 
 def set_sample_file(args = None):
-    print "Setting sample file to %s" % args
-    options = globs.state.options
-    options.sample_options.sample_file = args
+    print "Setting sample name to %s" % args
+    state = globs.state
+    state.sample_name = args
 
 def set_research_dir(args = None):
-    print "Setting research dir to %s" % args
+    print "Setting internal input path to %s" % args
     options = globs.state.options
-    options.sample_options.research_dir = args
+    options.internal_paths_input = args
 
 def get_research_dir(args = None):
     options = globs.state.options
 
-    globs.state.ret = options.sample_options.research_dir
+    globs.state.ret = options.internal_paths_input
 
 
 def set_out_dir(args = None):
-    print "Setting out dir to %s" % args
+    print "Setting internal output path to %s" % args
     options = globs.state.options
-    options.sample_options.out_dir = args
+    options.internal_paths_output = args
 
 def check_dir(directory):
     import os
@@ -609,11 +625,14 @@ def check_host_dir(args = None):
     options = globs.state.options
 
     # here check for existence of all necessary dirs. If absent, create them
-    
-    check_dir(options.settings.qemu_shared_folder + '/' + options.sample_options.out_prefix)
-    check_dir(options.settings.log_dir)
-    check_dir(options.settings.saved_dir)
-    check_dir(options.settings.qemu_drives_dir)
+    check_dir(options.external_paths_machines)
+    check_dir(options.external_paths_src)
+    check_dir(options.external_paths_dst)
+    check_dir(options.external_paths_tmp_dst)
+    check_dir(options.external_paths_log)
+    check_dir(options.external_paths_images)
+    check_dir(options.external_paths_final_dst)
+
 
 def save_first_ep(args = None):
     options = globs.state.options

@@ -5,7 +5,7 @@ script = Script()
 cmds = list()
 
 cmds += ["_comment Spawning internal controller with args"]
-cmds += "\\\\10.0.2.4\\qemu\\server\\internal.py"
+cmds += "\\\\10.0.2.4\\qemu\\input\\server\\internal.py"
 cmds += ["_arg0"]
 cmds += " "
 cmds += ["_arg1"]

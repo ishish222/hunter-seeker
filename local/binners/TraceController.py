@@ -424,7 +424,7 @@ class TraceController(object):
 
     def spawn_tracer(self):
         print("Spawning tracer")
-        Popen(["\\\\10.0.2.4\\qemu\\server\\b.exe", "127.0.0.1", "12341"], shell=True)
+        Popen(["\\\\10.0.2.4\\qemu\\input\\server\\b.exe", "127.0.0.1", "12341"], shell=True)
         socket, addr = self.main_socket.accept()
         self.tracers.append(Tracer())
         self.tracer_active_id = self.trace_count
@@ -439,7 +439,7 @@ class TraceController(object):
         return self.trace_count
 
     def spawn_tracer_remote_log(self):
-        Popen(["\\\\10.0.2.4\\qemu\\server\\b.exe", "127.0.0.1", "12341", "\\\\10.0.2.4\\qemu\\logs\\log_%d.log" % self.trace_count], shell=True)
+        Popen(["\\\\10.0.2.4\\qemu\\input\\server\\b.exe", "127.0.0.1", "12341", "\\\\10.0.2.4\\qemu\\logs\\log_%d.log" % self.trace_count], shell=True)
         socket, addr = self.main_socket.accept()
         self.tracers.append(Tracer())
         self.tracer_active_id = self.trace_count
@@ -454,7 +454,7 @@ class TraceController(object):
         return self.trace_count
 
     def spawn_tracer_log(self):
-        Popen(["\\\\10.0.2.4\\qemu\\server\\b.exe", "127.0.0.1", "12341", "\\\\10.0.2.4\\qemu\\logs\\log_%x.log" % self.trace_count], shell=True)
+        Popen(["\\\\10.0.2.4\\qemu\\input\\server\\b.exe", "127.0.0.1", "12341", "\\\\10.0.2.4\\qemu\\logs\\log_%x.log" % self.trace_count], shell=True)
         socket, addr = self.main_socket.accept()
         self.tracers.append(Tracer())
         self.tracer_active_id = self.trace_count

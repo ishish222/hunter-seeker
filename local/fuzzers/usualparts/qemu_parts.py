@@ -17,9 +17,9 @@ write_socket = common.write_socket
 def qemu_prepare_pipes(args=None):
     options = globs.state.options
 
-    options.ms = common.prepare_monitor(options.ms_path)
-    options.ss = common.prepare_serial(options.ss_path)
-    options.ss_log = common.prepare_serial(options.ss_path + '-log')
+    globs.state.options.ms = common.prepare_pipe(options.external_machine['monitor'])
+    globs.state.options.ss = common.prepare_pipe(options.external_machine['serial'])
+    globs.state.options.ss_log = common.prepare_pipe(options.external_machine['serial'] + '-log')
 
 
 def qemu_ready(args=None):
@@ -98,50 +98,19 @@ def qemu_args_research_dir(args=None):
 
 def qemu_start(args=None):
     options = globs.state.options
+    qemu_commandline = common.get_qemu_cmdline()
+    qemu_prepare_pipes()
 
-    print("[%s] Starting" % common.timestamp())
-    print " ".join(options.qemu_args)
+    print " ".join(qemu_commandline)
 
-    myErr = open("./err", "w+")
-
-    m = Popen(options.qemu_args, stdout=PIPE, stdin=PIPE, stderr=myErr.fileno(), env=os.environ, preexec_fn=preexec_function)
+    m = Popen(qemu_commandline, stdout=PIPE, stdin=PIPE, env=os.environ, preexec_fn=preexec_function)
     time.sleep(3)
-    options.m, _ = options.ms.accept()
-    options.s, _ = options.ss.accept()
 
-#    time.sleep(options.boot_wait)
-    #TODO!!! wee nedd to perform test, not wait!
+    globs.state.options.m, _ = options.ms.accept()
+    globs.state.options.s, _ = options.ss.accept()
 
-    print("[%s] Qemu full boot finished" % common.timestamp())
-#    for s in globs.state.samples_list:
-#        print s
-    read_monitor(options.m)
-
-def qemu_start_full(args=None):
-    options = globs.state.options
-
-    if(hasattr(options, 'tmp_disk_img')):
-        options.log.write("[%s]\n" % options.tmp_disk_img)
-        options.log.flush()
-        print("Spawning fuzz for batch: %s" % options.tmp_disk_img)
-
-    print("[%s] Starting" % common.timestamp())
-    print " ".join(options.qemu_args)
-
-    myErr = open("./err", "w+")
-
-    m = Popen(options.qemu_args, stdout=PIPE, stdin=PIPE, stderr=myErr.fileno(), env=os.environ, preexec_fn=preexec_function)
-    time.sleep(3)
-    options.m, _ = options.ms.accept()
-    options.s, _ = options.ss.accept()
-
-#    time.sleep(options.boot_wait)
-    #TODO!!! wee nedd to perform test, not wait!
-
-    print("[%s] Qemu full boot finished" % common.timestamp())
-#    for s in globs.state.samples_list:
-#        print s
-    read_monitor(options.m)
+    read_monitor(globs.state.options.m)
+    print("Qemu full boot finished")
 
 def qemu_save(args=None):
     options = globs.state.options
@@ -411,7 +380,7 @@ def qemu_connect_dev_socket_infinite(args=None):
 #    dt = socket.getdefaulttimeout()
 #    socket.setdefaulttimeout(options.init_timeout)
 #    dts = s.gettimeout()
-    s.settimeout(options.init_timeout)
+    s.settimeout(options.external_qemu_socket_init_timeout)
 
 #    while True:
     try:
@@ -458,27 +427,21 @@ def temu_poweroff_no_revert(args=None):
 def quit(args=None):
     options = globs.state.options
     
-    options.shutting_down.set()
-
     write_socket(options.s, "logStop")
-    if(hasattr(options, 'tmp_mountpoint')):
-        common.del_mountpoint(options)
-
-    try:
-        common.pci_umount(options.slot_shared)
-        common.pci_umount(options.slot_saved)
-    except Exception:
-        print("Problems unmounting pci")
-
     rs("quit", options.m)
     import os
 
     options.ms.close()
     options.ss.close()
     options.ss_log.close()
-    if(os.path.exists(options.ms_path)): os.remove(options.ms_path)
-    if(os.path.exists(options.ss_path)): os.remove(options.ss_path)
-    if(os.path.exists(options.ss_path+'-log')): os.remove(options.ss_path+'-log')
+
+    if(os.path.exists(options.external_machine['monitor'])): os.remove(options.external_machine['monitor'])
+    if(os.path.exists(options.external_machine['serial'])): os.remove(options.external_machine['serial'])
+    if(os.path.exists(options.external_machine['serial']+'-log')): os.remove(options.external_machine['serial']+'-log')
+
+    if(options.external_paths_link_tmp_dst):
+        print " ".join(["/usr/bin/sudo", "sudo", "umount", options.external_paths_final_dst])
+        os.spawnv(os.P_WAIT, "/usr/bin/sudo", ["sudo", "umount", options.external_paths_final_dst])
 
 
 def poweroff_no_revert(args=None):
@@ -544,8 +507,8 @@ def poweroff_revert(options, state):
 def offline_revert(args=None):
     options = globs.state.options
     state = globs.state
-    print("Reverting to: %s" % options.settings.revert_snapshot)
-    os.spawnv(os.P_WAIT, "/usr/bin/qemu-img", ["qemu-img", "snapshot", "-a", options.settings.revert_snapshot, options.machines + '/' + options.hda])
+    print("Reverting to: %s" % args)
+    os.spawnv(os.P_WAIT, "/usr/bin/qemu-img", ["qemu-img", "snapshot", "-a", args, options.external_paths_machines + '/' + options.external_machine['disk']])
     
 def revert_ready(args=None):
     options = globs.state.options

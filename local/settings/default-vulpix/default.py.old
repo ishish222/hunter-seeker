@@ -1,25 +1,29 @@
 # important ones
 
-# new options
+guest_samples_path = "e:\\samples"
+guest_samples_shared_path = guest_samples_path + "\\shared"
+guest_samples_saved_path = guest_samples_path + "\\saved"
+guest_samples_binned_path = "f:\\"
+guest_samples_original_path = "d:\\samples\\original"
 
-# external
 
-external_paths_machines = '/home/ish/machines/qemu-hs2'
-external_paths_src = '/home/ish/malware_malware_malware'
-external_paths_dst = '/home/ish/hs2-data/output'
-external_paths_tmp_dst = '/home/ish/hs2-data/research'
-external_paths_log = '/home/ish/hs2-data/log'
-external_paths_images = '/home/ish/hs2-data/images'
-external_paths_link_tmp_dst = True
+host_data_path = "/home/ish/hs2-data"
+host_data_output_path = host_data_path + "/output"
+host_data_research_path = host_data_path + "/research"
+host_log_dir = host_data_path + "/log"
+host_machines_path = "/home/ish/machines/qemu-hs2"
+host_images_path = host_data_path + "/images"
+host_sample_source = "/home/ish/malware_malware_malware"
+host_qemu_command = 'qemu-system-i386'
+host_qemu_drive_options = 'if=virtio'
 
-external_qemu_socket_init_timeout = 10
-external_qemu_binary_path = 'qemu-system-i386'
-external_qemu_memory_options = '3G'
-external_qemu_drive_options = 'if=virtio'
-external_qemu_use_vnc = True
-external_qemu_use_taskset = False
-external_qemu_additional_options = '-enable-kvm'
-external_qemu_machines = {
+# for creating drive
+host_samples_path = "samples"
+host_samples_shared_path = host_samples_path + "/shared"
+host_samples_saved = host_data_path + "/raw"
+
+
+host_machines = {
     'hs2-01': {'disk' : 'hs2-01-win7.qcow2', 'vnc' : ':1', 'taskset' : '1,2,3',     'monitor' : '/tmp/monitor-hs1', 'serial' : '/tmp/serial-hs1'},
     'hs2-02': {'disk' : 'hs2-02-win7.qcow2', 'vnc' : ':2', 'taskset' : '4,5,6',     'monitor' : '/tmp/monitor-hs2', 'serial' : '/tmp/serial-hs2'},
     'hs2-03': {'disk' : 'hs2-03-win7.qcow2', 'vnc' : ':3', 'taskset' : '7,8,9',     'monitor' : '/tmp/monitor-hs3', 'serial' : '/tmp/serial-hs3'},
@@ -40,15 +44,107 @@ external_qemu_machines = {
     'r1-03': {'disk' : 'r1-03.qcow2', 'vnc' : ':3', 'taskset' : '7,8,9',     'monitor' : '/tmp/monitor-hs3', 'serial' : '/tmp/serial-hs3'}
 }
 
-# for creating drive
-internal_paths_root = '\\\\10.0.2.4\\qemu'
-internal_paths_input = internal_paths_root + '\\input'
-internal_paths_output = internal_paths_root + '\\output'
-internal_paths_log = internal_paths_root + '\\logs'
+qemu_additional =  ['-enable-kvm']
+qemu_drive_options = host_qemu_drive_options
+qemu_drive_format = 'mkfs.ntfs'
+qemu_drive_offset = 65536
+qemu_env = None
+qemu_secondary=""
+qemu_mount_options="loop,umask=0000"
+qemu_revert_ready = False
 
-internal_sys_reactions_anchors = "ExitProcess_start:GetModuleHandleA_start:LoadLibraryA_start:LoadLibraryW_start:CreateFileA_start:CreateFileW_start:WriteFile_start:ReadFile_start:GetModuleFileNameA_start:GetModuleFileNameW_start:GetModuleHandleW_start:GetThreadContext_start:SetThreadContext_start:OpenThread_start:VirtualAllocEx_start:WriteProcessMemory_start:SetUnhandledExceptionFilter_start:SHGetFolderPathA_start:SHGetFolderPathW_start:SHGetSpecialFolderPathA_start:SHGetSpecialFolderPathW_start:LoadStringA_start:LoadStringW_start:DeleteFileA_start:DeleteFileW_start:RegCreateKeyA_start:RegCreateKeyW_start:RegCreateKeyExA_start:RegCreateKeyExW_start:RegSetKeyValueA_start:RegSetKeyValueW_start:RegSetValueA_start:RegSetValueW_start:RegSetValueExA_start:RegSetValueExW_start:RegQueryValueA_start:RegQueryValueW_start:RegQueryValueExA_start:RegQueryValueExW_start:RegOpenKeyA_start:RegOpenKeyW_start:RegOpenKeyExA_start:RegOpenKeyExW_start:RegEnumValueA_start:RegEnumValueW_start:CreateProcessA_start:CreateProcessW_start:ShellExecuteA_start:ShellExecuteW_start:InternetConnectA_start:InternetConnectW_start:HttpSendRequestA_start:HttpSendRequestW_start:InternetSetOptionA_start:InternetSetOptionW_start:InternetReadFile_start:HttpOpenRequestA_start:HttpOpenRequestW_start:GetLastError_start:CreateMutexA_start:CreateMutexW_start:OpenMutexW_start:WideCharToMultiByte_start:WaitForSingleObject_start:WaitForSingleObjectEx_start:WaitForMultipleObjects_start:WaitForMultipleObjectsEx_start:OpenMutexA_start:KiFastSystemCall_start:strstr_start:strcat_start:strcmp_start:strcpy_start:strncat_start:strncmp_start:LdrGetProcedureAddress_start:LdrGetProcedureAddressEx_start"
+hs_user="ish"
+revert_snapshot = 'clean'
 
-internal_sys_reactions = """
+# backward compatibility mapping
+
+samples_shared_path = guest_samples_shared_path
+samples_shared_subdir = host_samples_shared_path
+samples_saved = guest_samples_saved_path
+samples_binned = guest_samples_binned_path
+samples_original = guest_samples_original_path
+
+samples_size_margin = 0.3
+log_path = "../logs"
+qemu_machines = host_machines_path
+qemu_drives_dir = host_images_path
+qemu_shared_folder = host_data_output_path
+host_mount_options = qemu_mount_options
+saved_dir = host_samples_saved
+log_dir = host_log_dir
+machines = host_machines
+template_offset = qemu_drive_offset
+
+
+# probably deprecated
+
+DBG_CONTINUE = 0x00010002
+DBG_EXCEPTION_NOT_HANDLED      = 0x80010001
+HIT_COUNT = 1
+PASS_COUNT = 0
+MIN_DISK_SIZE = 4000000
+MAX_DISK_SIZE = 2000000000
+SERVER_SIZE = 50000000
+
+visible = False
+testing = False
+breaking = False
+debug = False
+vnc = True
+profiling = False
+use_taskset = True
+use_snapshots = False
+dry_run = False
+needs_ready = False
+ff = True
+save_disks = False
+save_shared = False
+cooldown_level = 20
+
+script_codes = {}
+
+ma_addrs = []
+ma_rvas = []
+ma_st_addrs = []
+ma_st_rvas = []
+ma_end_addrs = []
+ma_end_rvas = []
+ma_react_addrs = []
+ma_react_rvas = []
+ma_rd_addrs = []
+ma_rd_rvas = []
+
+corrector = None
+buffer_size = 4096
+log_name = "HS:Unknown"
+extension = "sample"
+wait_sleep = 5
+fuzzbox_timeout = 20
+start_sleep = 60
+revert_sleep = 40
+settle_sleep = 3
+restart_count = 100000
+closing_plugin_name = "close_sample_opera"
+revert_scripts = ["load_ready"]
+slowdown = 1
+mutations = 3
+mutator = None
+generator = "generatorCorrected.Generator"
+metric_res = 100
+to_mult_factor = 30
+boot_wait = 25
+revert_wait = 20
+shutdown_wait = 25
+init_timeout = 10 
+log_level = 4
+#smp = 2
+smp = 4 # in order to precisely measure usage
+large_results_dir = '/mnt/2/output'
+qemu_m = "3G"
+drive_mount=1
+#builtin_reactions_anchors="ExitProcess_start:s1:GetModuleHandleA_start:a1:GetModuleHandleA_start:a5:e6:LoadLibraryA_start:LoadLibraryW_start:CreateFileA_start:CreateFileW_start:WriteFile_start:c2:c6:c8:d0:d2:d4:d6:d8:e0:e1:e3:e5:e7:e9:f1:f3:f5:f7:f9:g1:g3:g5:g7:g9:h1:h3:h4:h6:h7:h9:i2:i3:i5:i7:i9:j1:j3:j5:j6:j8:j9:k0:k1:k3:k4:k6:k7:k9:k0:l2:l6:l8:l0:m2:m3:m5:m6:m8:m0:n2:n4:n0:o2:o4:o6:o8:o0:p2:p4:p6:p8:r0:r2:r4:r6:r8:t1:t3:t5"
+builtin_reactions_anchors="ExitProcess_start:GetModuleHandleA_start:LoadLibraryA_start:LoadLibraryW_start:CreateFileA_start:CreateFileW_start:WriteFile_start:ReadFile_start:GetModuleFileNameA_start:GetModuleFileNameW_start:GetModuleHandleW_start:GetThreadContext_start:SetThreadContext_start:OpenThread_start:VirtualAllocEx_start:WriteProcessMemory_start:SetUnhandledExceptionFilter_start:SHGetFolderPathA_start:SHGetFolderPathW_start:SHGetSpecialFolderPathA_start:SHGetSpecialFolderPathW_start:LoadStringA_start:LoadStringW_start:DeleteFileA_start:DeleteFileW_start:RegCreateKeyA_start:RegCreateKeyW_start:RegCreateKeyExA_start:RegCreateKeyExW_start:RegSetKeyValueA_start:RegSetKeyValueW_start:RegSetValueA_start:RegSetValueW_start:RegSetValueExA_start:RegSetValueExW_start:RegQueryValueA_start:RegQueryValueW_start:RegQueryValueExA_start:RegQueryValueExW_start:RegOpenKeyA_start:RegOpenKeyW_start:RegOpenKeyExA_start:RegOpenKeyExW_start:RegEnumValueA_start:RegEnumValueW_start:CreateProcessA_start:CreateProcessW_start:ShellExecuteA_start:ShellExecuteW_start:InternetConnectA_start:InternetConnectW_start:HttpSendRequestA_start:HttpSendRequestW_start:InternetSetOptionA_start:InternetSetOptionW_start:InternetReadFile_start:HttpOpenRequestA_start:HttpOpenRequestW_start:GetLastError_start:CreateMutexA_start:CreateMutexW_start:OpenMutexW_start:WideCharToMultiByte_start:WaitForSingleObject_start:WaitForSingleObjectEx_start:WaitForMultipleObjects_start:WaitForMultipleObjectsEx_start:OpenMutexA_start:KiFastSystemCall_start:strstr_start:strcat_start:strcmp_start:strcpy_start:strncat_start:strncmp_start:LdrGetProcedureAddress_start:LdrGetProcedureAddressEx_start"
+builtin_reactions="""
 kernel32.dll+0x0005214f,ExitProcess_start,0x0;
 kernel32.dll+0x00090193,SetThreadContext_start,0x0;
 kernel32.dll+0x00002082,CreateProcessA_start:CreateProcessA_end,0x0;

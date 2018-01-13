@@ -9,5 +9,5 @@ SCRIPT=$3
 FOLDER=$4
 
 ./deploy-local $1
-screen -L -S $MACHINE sh -c "cd /home/ish/hs2-current-deploy/$TARGET/client; ./fuzzer.py --out-prefix $FOLDER $MACHINE $SCRIPT; bash"
+screen -L -S $MACHINE sh -c "cd /home/ish/hs2-current-deploy/$TARGET/client; ./fuzzer.py $MACHINE $SCRIPT $FOLDER; bash"
 

@@ -131,7 +131,7 @@ def tracer_configure_in_dir(args=None):
     state = globs.state
     status = globs.state.status
     
-    write_socket(options.s, "tracer_configure_in_dir %s" % options.sample_options.research_dir);
+    write_socket(options.s, "tracer_configure_in_dir %s" % options.internal_paths_input);
     response, _, _ = read_socket(options.s)
 
     globs.state.ret = response
@@ -143,7 +143,12 @@ def tracer_configure_out_dir(args=None):
     state = globs.state
     status = globs.state.status
     
-    write_socket(options.s, "tracer_configure_out_dir %s\\%s" % (options.sample_options.out_dir, options.sample_options.out_prefix));
+    if(not hasattr(state, 'out_prefix')):
+        state.out_prefix = ''
+    else:
+        state.out_prefix = '\\%s' % state.out_prefix
+
+    write_socket(options.s, "tracer_configure_out_dir %s%s" % (options.internal_paths_output, state.out_prefix));
     response, _, _ = read_socket(options.s)
 
     globs.state.ret = response
@@ -155,7 +160,7 @@ def tracer_configure_out_prefix(args=None):
     state = globs.state
     status = globs.state.status
     
-    write_socket(options.s, "tracer_configure_out_prefix %s" % options.sample_options.out_prefix);
+    write_socket(options.s, "tracer_configure_out_prefix %s" % state.out_prefix);
     response, _, _ = read_socket(options.s)
     globs.state.ret = response
 
@@ -178,7 +183,7 @@ def tracer_append_out_prefix(args=None):
     state = globs.state
     status = globs.state.status
     
-    write_socket(options.s, "tracer_append_out_prefix %s" % options.sample_options.out_prefix);
+    write_socket(options.s, "tracer_append_out_prefix %s" % state.out_prefix);
     response, _, _ = read_socket(options.s)
     globs.state.ret = response
 
@@ -338,13 +343,9 @@ def tracer_configure_sample(args=None):
     state = globs.state
     status = globs.state.status
     
-    if(options.sample_options.sample_file != "none.exe"):
-        write_socket(options.s, "tracer_configure_sample_file %s" % options.sample_options.sample_file);
+    if(state.sample_name != "none.exe"):
+        write_socket(options.s, "tracer_configure_sample_file %s" % state.sample_name);
         response, _, _ = read_socket(options.s)
-
-#    if(options.sample_options.sample_process != "none"):
-#        write_socket(options.s, "tracer_configure_sample_pname %s" % options.sample_options.sample_process);
-#        response, _, _ = read_socket(options.s)
 
     globs.state.ret = response
 
@@ -565,7 +566,7 @@ def tracer_register_builtin(args=None):
     state = globs.state
     status = globs.state.status
     
-    args = options.settings.builtin_reactions
+    args = options.internal_sys_reactions
 
     # remove comments after ;
     import re
@@ -765,8 +766,8 @@ def tracer_lower_anchors(args=None):
     state = globs.state
     status = globs.state.status
     
-    if(hasattr(options.settings, "builtin_reactions_anchors")):
-        args = options.settings.builtin_reactions_anchors
+    if(hasattr(options, "builtin_reactions_anchors")):
+        args = options.internal_sys_reactions_anchors
 
 
         if(args[-1:] == ':'):
@@ -797,8 +798,8 @@ def tracer_exclusive_anchors(args=None):
     state = globs.state
     status = globs.state.status
     
-    if(hasattr(options.settings, "builtin_reactions_anchors")):
-        args = options.settings.builtin_reactions_anchors
+    if(hasattr(options, "builtin_reactions_anchors")):
+        args = options.internal_sys_reactions_anchors
 
 
         if(args[-1:] == ':'):
@@ -829,8 +830,8 @@ def tracer_enable_anchors(args=None):
     state = globs.state
     status = globs.state.status
     
-    if(hasattr(options.settings, "builtin_reactions_anchors")):
-        args = options.settings.builtin_reactions_anchors
+    if(hasattr(options, "builtin_reactions_anchors")):
+        args = options.internal_sys_reactions_anchors
 
 
         if(args[-1:] == ':'):
@@ -975,8 +976,8 @@ def tracer_set_limit(args=None):
     state = globs.state
     status = globs.state.status
     
-    if(options.sample_options.instr_limit > 0x0):
-        write_socket(options.s, "tracer_set_limit %d" % options.sample_options.instr_limit);
+    if(state.instr_limit > 0x0):
+        write_socket(options.s, "tracer_set_limit %d" % state.instr_limit);
     response, _, _ = read_socket(options.s)
 
     globs.state.ret = response

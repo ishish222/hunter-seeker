@@ -10,4 +10,4 @@ FOLDER=$4
 
 ./deploy-remote $1
 
-ssh -t hs1@flareon "cd hs2-current-deploy/$TARGET/client; screen -L -S $MACHINE sh -c \"cd .; ./fuzzer.py --out-prefix $FOLDER $MACHINE $SCRIPT; bash\""
+ssh -t hs1@flareon "cd hs2-current-deploy/$TARGET/client; screen -L -S $MACHINE sh -c \"cd .; ./fuzzer.py $MACHINE $SCRIPT $FOLDER; bash\""

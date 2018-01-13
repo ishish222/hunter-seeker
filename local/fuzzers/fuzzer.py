@@ -6,9 +6,6 @@ import sys
 sys.path += ["./scripters"]
 sys.path += ["../common"]
 
-import usualparts.globs as globs
-globs.init()
-
 import codeunit
 from codeunit import Instruction, Decision, GoTo
 
@@ -358,7 +355,13 @@ def check_version(script_path):
     return 0
 
 if __name__ == '__main__':
-    if(check_version(sys.argv[len(sys.argv) -1]) == 2):
-        perform(sys.argv[len(sys.argv) -1])
+    import globs
+    import common
+
+    common.get_options()
+    options = globs.state.options
+
+    if(check_version(options.external_script_name) == 2):
+        perform(options.external_script_name)
     else:
-        stateful_routine(sys.argv[len(sys.argv) -1])
+        stateful_routine(options.external_script_name)
