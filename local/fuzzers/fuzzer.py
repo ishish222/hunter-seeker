@@ -298,16 +298,6 @@ def stateful_routine(script_path):
         # create object from class
         script.append(unit)
 
-#    print "Script length: %d" % len(script)
-#    print "Script:"
-#    for line in script:
-#        if line is None:
-#            continue
-#        if(hasattr(line, 'args')):
-#            print '%s - %s' % (line.name, line.args)
-#        else:
-#            print '%s' % (line.name)
-        
     # stage 2
     while(1):
         if(ip < 0):

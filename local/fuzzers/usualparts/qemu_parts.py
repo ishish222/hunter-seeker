@@ -191,6 +191,10 @@ def qemu_save(args=None):
         current_state['tid'] = globs.state.tid
     if(hasattr(globs.state, 'pid')):
         current_state['pid'] = globs.state.pid
+    if(hasattr(globs.state, 'tracers')):
+        current_state['tracers'] = globs.state.tracers
+    if(hasattr(globs.state, 'tracers_count')):
+        current_state['tracers_count'] = globs.state.tracers_count
 
     f = open(pickle_path, 'wb')
     pickle.dump(current_state, f)
@@ -267,6 +271,10 @@ def qemu_load(args=None):
         globs.state.pid = current_state['pid']
     if(current_state.has_key('tid')):
         globs.state.tid = current_state['tid']
+    if(current_state.has_key('tracers')):
+        globs.state.tracers = current_state['tracers']
+    if(current_state.has_key('tracers_count')):
+        globs.state.tracers_count = current_state['tracers_count']
 
     ret = write_monitor_2(options.m, "loadvm xxx%sxxx" % args)
     time.sleep(options.revert_wait)

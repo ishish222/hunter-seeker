@@ -15,6 +15,7 @@ host_machines_path = "/home/ish/machines/qemu-hs2"
 host_images_path = host_data_path + "/images"
 host_sample_source = "/home/ish/malware_malware_malware"
 host_qemu_command = 'qemu-system-i386'
+host_qemu_drive_options = 'if=virtio'
 
 # for creating drive
 host_samples_path = "samples"
@@ -44,13 +45,13 @@ host_machines = {
 }
 
 qemu_additional =  ['-enable-kvm']
-qemu_drive_options = 'cache=none,if=virtio'
+qemu_drive_options = host_qemu_drive_options
 qemu_drive_format = 'mkfs.ntfs'
 qemu_drive_offset = 65536
 qemu_env = None
 qemu_secondary=""
 qemu_mount_options="loop,umask=0000"
-qemu_revert_ready = True
+qemu_revert_ready = False
 
 hs_user="ish"
 revert_snapshot = 'clean'

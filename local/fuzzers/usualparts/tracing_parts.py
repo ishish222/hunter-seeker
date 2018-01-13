@@ -89,8 +89,8 @@ def reset_tracer_controller_status(args=None):
     state = globs.state
     status = globs.state.status
     
-    state.tracers = []
-    state.tracers_count = 0
+    globs.state.tracers = []
+    globs.state.tracers_count = 0
     return
 
 def create_layout_2(path):
@@ -146,8 +146,8 @@ def start_tracer(args=None):
     response, _, _ = read_socket(options.s)
 
     # register controller on success
-    state.tracers.append(response)
-    state.tracers_count += 1
+    globs.state.tracers.append(response)
+    globs.state.tracers_count += 1
 
 def start_tracer_no_log(args=None):
     options = globs.state.options
@@ -158,8 +158,8 @@ def start_tracer_no_log(args=None):
     response, _, _ = read_socket(options.s)
 
     # register controller on success
-    state.tracers.append(response)
-    state.tracers_count += 1
+    globs.state.tracers.append(response)
+    globs.state.tracers_count += 1
 
 def start_tracer_log(args=None):
     options = globs.state.options
@@ -170,8 +170,8 @@ def start_tracer_log(args=None):
     response, _, _ = read_socket(options.s)
 
     # register controller on success
-    state.tracers.append(response)
-    state.tracers_count += 1
+    globs.state.tracers.append(response)
+    globs.state.tracers_count += 1
 
 def start_tracer_log_remote(args=None):
     options = globs.state.options
@@ -182,8 +182,8 @@ def start_tracer_log_remote(args=None):
     response, _, _ = read_socket(options.s)
 
     # register controller on success
-    state.tracers.append(response)
-    state.tracers_count += 1
+    globs.state.tracers.append(response)
+    globs.state.tracers_count += 1
 
 def read_prefix(args=None):
     options = globs.state.options
@@ -202,8 +202,8 @@ def stop_tracer(args=None):
     response, _, _ = read_socket(options.s)
 
     # register controller on success
-    state.tracers.append(response)
-    state.tracers_count -= 1
+    globs.state.tracers.append(response)
+    globs.state.tracers_count -= 1
 
 def more_tracers(args=None):
     options = globs.state.options
