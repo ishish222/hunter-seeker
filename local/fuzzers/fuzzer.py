@@ -201,9 +201,10 @@ def perform(script_path):
                 try:
                     ip = global_labels[ret]
                 except KeyError:
-                    globs.first_chance = 0x0
-                    print 'Key error: %s' % ip
-                    raise MachineError
+                    #globs.first_chance = 0x0
+                    #print 'Key error: %s' % ip
+                    #raise MachineError
+                    ip = global_labels['Default']
 
         print
 

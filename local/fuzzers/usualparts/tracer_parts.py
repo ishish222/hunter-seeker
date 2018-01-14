@@ -11,6 +11,16 @@ report = common.report
 write_socket = common.write_socket
 read_socket = common.read_socket
 
+class bcolors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+
 def tracer_prepare_trace(args=None):
     options = globs.state.options
     state = globs.state
@@ -928,6 +938,16 @@ def tracer_debug_continue_decision(args):
     response, _, _ = read_socket(options.s)
 
     globs.state.ret = response
+
+    if(globs.state.ret[1:3] == "RB"):
+        bp = globs.state.ret[3:].split('\n')[0]
+        print bcolors.WARNING + bcolors.BOLD + bp + bcolors.ENDC
+        print 'Retirning: %s' % bp
+        return bp
+    else:
+        print 'Returning: %s' % globs.state.ret[1:3]
+        return globs.state.ret[1:3]
+
     return
 
 def tracer_debug_continue(args):
@@ -944,16 +964,6 @@ def tracer_debug_continue(args):
     response, _, _ = read_socket(options.s)
 
     globs.state.ret = response
-
-    if(globs.state.ret[1:3] == "RB"):
-        bp = globs.state.ret[3:].split('\n')[0]
-        print bcolors.WARNING + bcolors.BOLD + bp + bcolors.ENDC
-        print 'Retirning: %s' % bp
-        return bp
-    else:
-        print 'Returning: %s' % globs.state.ret[1:3]
-        return globs.state.ret[1:3]
-
     return
 
 def tracer_debug_continue_1_second(args = globs.DEBUG_CONTINUE):
