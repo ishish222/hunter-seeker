@@ -945,14 +945,13 @@ def tracer_debug_continue(args):
 
     globs.state.ret = response
 
-    if('EXCEPTION' in globs.state.ret):
-        print bcolors.WARNING + bcolors.BOLD + 'EXCEPTION' + bcolors.ENDC
-        return 'EXCEPTION'
-    elif(globs.state.ret[1:3] == "RB"):
+    if(globs.state.ret[1:3] == "RB"):
         bp = globs.state.ret[3:].split('\n')[0]
         print bcolors.WARNING + bcolors.BOLD + bp + bcolors.ENDC
+        print 'Retirning: %s' % bp
         return bp
     else:
+        print 'Returning: %s' % globs.state.ret[1:3]
         return globs.state.ret[1:3]
 
     return
