@@ -6,14 +6,15 @@
 
 external_paths_machines = '/home/hs1/machines/qemu'
 external_paths_src = '/home/hs1/malware_samples'
-external_paths_dst = '/mnt/1/output'
-external_paths_tmp_dst = '/mnt/1/research'
+external_paths_final_all_output = '/mnt/1/output'
+external_paths_tmp_all_input_output = '/mnt/1/research'
 external_paths_log = '/mnt/1/log'
 external_paths_images = '/mnt/1/images'
 
-external_paths_link_tmp_dst= True
+external_paths_link_tmp_output_final_output = True
 
-external_qemu_socket_init_timeout = 10
+external_qemu_socket_timeout_step = 10
+external_qemu_socket_timeout_mult = 1
 external_qemu_binary_path = '/home/hs1/qemu-bin-2.11/qemu-2.11.0/deploy_dir/bin/qemu-system-i386'
 external_qemu_memory_options = '3G'
 external_qemu_drive_options = 'if=virtio'

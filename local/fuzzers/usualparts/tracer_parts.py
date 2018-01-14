@@ -143,12 +143,7 @@ def tracer_configure_out_dir(args=None):
     state = globs.state
     status = globs.state.status
     
-    if(not hasattr(state, 'out_prefix')):
-        state.out_prefix = ''
-    else:
-        state.out_prefix = '\\%s' % state.out_prefix
-
-    write_socket(options.s, "tracer_configure_out_dir %s%s" % (options.internal_paths_output, state.out_prefix));
+    write_socket(options.s, "tracer_configure_out_dir %s" % (options.internal_paths_output));
     response, _, _ = read_socket(options.s)
 
     globs.state.ret = response
@@ -160,7 +155,7 @@ def tracer_configure_out_prefix(args=None):
     state = globs.state
     status = globs.state.status
     
-    write_socket(options.s, "tracer_configure_out_prefix %s" % state.out_prefix);
+    write_socket(options.s, "tracer_configure_out_prefix %s" % state.out_folder);
     response, _, _ = read_socket(options.s)
     globs.state.ret = response
 
@@ -919,6 +914,22 @@ def tracer_debug_sample(args=None):
 
     return
 
+def tracer_debug_continue_decision(args):
+    if(args == None):
+        args = globs.DEBUG_CONTINUE
+    else:
+        args = int(args, 0x10)
+
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+    
+    write_socket(options.s, "tracer_debug_continue 0x%08x" % args);
+    response, _, _ = read_socket(options.s)
+
+    globs.state.ret = response
+    return
+
 def tracer_debug_continue(args):
     if(args == None):
         args = globs.DEBUG_CONTINUE
@@ -933,6 +944,17 @@ def tracer_debug_continue(args):
     response, _, _ = read_socket(options.s)
 
     globs.state.ret = response
+
+    if('EXCEPTION' in globs.state.ret):
+        print bcolors.WARNING + bcolors.BOLD + 'EXCEPTION' + bcolors.ENDC
+        return 'EXCEPTION'
+    elif(globs.state.ret[1:3] == "RB"):
+        bp = globs.state.ret[3:].split('\n')[0]
+        print bcolors.WARNING + bcolors.BOLD + bp + bcolors.ENDC
+        return bp
+    else:
+        return globs.state.ret[1:3]
+
     return
 
 def tracer_debug_continue_1_second(args = globs.DEBUG_CONTINUE):

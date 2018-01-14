@@ -913,8 +913,8 @@ def execute(cmds, ext_pipe):
             ok(ext_pipe)
 
         elif(cmd == "tracer_reopen_io"):
-            if(trace_controller != None):
-                trace_controller.reopen_io()
+            #if(trace_controller != None):
+            trace_controller.reopen_io()
             ok(ext_pipe)
 
         elif(cmd == "tracer_read_dword"):

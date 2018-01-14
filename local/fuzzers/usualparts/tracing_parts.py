@@ -114,8 +114,8 @@ def host_deploy_input_glob(args=None):
     state.samples_list = glob(state.glob_pattern)
     for sample in state.samples_list:
         new_sample = os.path.basename(sample)
-        print(options.external_paths_current_internal_input + '/' + new_sample)
-        os.spawnv(os.P_WAIT, "/bin/cp", ["cp", sample, options.external_paths_current_internal_input + '/' + new_sample])
+        print(options.external_paths_tmp_input + '/' + new_sample)
+        os.spawnv(os.P_WAIT, "/bin/cp", ["cp", sample, options.external_paths_tmp_input + '/' + new_sample])
 
 def host_create_research_dir(args=None):
     import tempfile
@@ -128,29 +128,30 @@ def host_create_research_dir(args=None):
     state = globs.state
     status = globs.state.status
 
-    path = tempfile.mktemp(suffix = "-research", dir=options.external_paths_tmp_dst)
-    print path
-    os.spawnv(os.P_WAIT, "/bin/mkdir", ["mkdir", path])
-    globs.state.options.external_paths_current_tmp_dst = path
+    globs.state.options.external_paths_final_output = options.external_paths_final_all_output + '/' + state.out_folder
 
-    internal_input = options.external_paths_current_tmp_dst + '/' + options.internal_paths_input.split('\\')[-1]
-    internal_output = options.external_paths_current_tmp_dst + '/' + options.internal_paths_output.split('\\')[-1]
-    internal_log = options.external_paths_current_tmp_dst + '/' + options.internal_paths_log.split('\\')[-1]
+    path = tempfile.mktemp(suffix = "-research", dir=options.external_paths_tmp_all_input_output)
+    os.spawnv(os.P_WAIT, "/bin/mkdir", ["mkdir", path])
+    globs.state.options.external_paths_tmp_input_output = path
+
+    internal_input = options.external_paths_tmp_input_output+ '/' + options.internal_paths_input.split('\\')[-1]
+    internal_output = options.external_paths_tmp_input_output + '/' + options.internal_paths_output.split('\\')[-1]
+    internal_log = options.external_paths_tmp_input_output + '/' + options.internal_paths_log.split('\\')[-1]
 
     check_dir(internal_input)
     check_dir(internal_output)
     check_dir(internal_log)
 
-    options.external_paths_current_internal_input = internal_input
-    options.external_paths_current_internal_output = internal_output
-    options.external_paths_current_internal_log = internal_log
+    options.external_paths_tmp_input = internal_input
+    options.external_paths_tmp_output = internal_output
+    options.external_paths_tmp_log = internal_log
 
-    if(options.external_paths_link_tmp_dst):
-        print " ".join(["/usr/bin/sudo", "sudo", "mount", "-o", "bind", options.external_paths_current_internal_output, options.external_paths_dst])
-        os.spawnv(os.P_WAIT, "/usr/bin/sudo", ["sudo", "mount", "-o", "bind", options.external_paths_current_internal_output, options.external_paths_dst])
+    if(options.external_paths_link_tmp_output_final_output):
+        print " ".join(["/usr/bin/sudo", "sudo", "mount", "-o", "bind", options.external_paths_final_output, options.external_paths_tmp_output])
+        os.spawnv(os.P_WAIT, "/usr/bin/sudo", ["sudo", "mount", "-o", "bind", options.external_paths_final_output, options.external_paths_tmp_output])
 
-    os.spawnv(os.P_WAIT, "/usr/bin/sudo", ["sudo", "cp", "-r", "../server", options.external_paths_current_internal_input])
-    os.spawnv(os.P_WAIT, "/usr/bin/sudo", ["sudo", "cp", "-r", "../common", options.external_paths_current_internal_input])
+    os.spawnv(os.P_WAIT, "/usr/bin/sudo", ["sudo", "cp", "-r", "../server", options.external_paths_tmp_input])
+    os.spawnv(os.P_WAIT, "/usr/bin/sudo", ["sudo", "cp", "-r", "../common", options.external_paths_tmp_input])
     
 def start_tracer(args=None):
     options = globs.state.options
@@ -627,12 +628,13 @@ def check_host_dir(args = None):
     # here check for existence of all necessary dirs. If absent, create them
     check_dir(options.external_paths_machines)
     check_dir(options.external_paths_src)
-    check_dir(options.external_paths_dst)
-    check_dir(options.external_paths_tmp_dst)
+    check_dir(options.external_paths_final_all_output)
+    check_dir(options.external_paths_final_output)
+    check_dir(options.external_paths_tmp_all_input_output)
     check_dir(options.external_paths_log)
     check_dir(options.external_paths_images)
-    check_dir(options.external_paths_final_dst)
 
+    host_create_research_dir(args)
 
 def save_first_ep(args = None):
     options = globs.state.options

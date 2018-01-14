@@ -69,10 +69,13 @@ def get_options():
     globs.state.options.external_qemu_memory_options = cmdline_options.external_qemu_memory_options
     globs.state.options.external_qemu_use_vnc = cmdline_options.external_qemu_use_vnc
     globs.state.options.external_qemu_use_taskset = cmdline_options.external_qemu_use_taskset
-    globs.state.options.external_paths_final_dst = globs.state.options.external_paths_dst + '/' + sys.argv[len(sys.argv) -1]
+
     globs.state.options.external_script_name = sys.argv[len(sys.argv) -2]
     globs.state.options.external_machine_name = sys.argv[len(sys.argv) -3]
     globs.state.options.external_machine = options.external_qemu_machines[options.external_machine_name]
+    globs.state.out_folder = sys.argv[len(sys.argv) -1]
+
+    globs.state.options.external_paths_final_output = globs.state.options.external_paths_final_all_output + '/' + globs.state.out_folder
 
 def get_qemu_cmdline():
     options = globs.state.options
@@ -97,7 +100,7 @@ def get_qemu_cmdline():
 
     # mount external folder via smb
 
-    commandline += ['-net', 'nic,model=rtl8139', '-net', 'user,smb=%s' % options.external_paths_current_tmp_dst]
+    commandline += ['-net', 'nic,model=rtl8139', '-net', 'user,smb=%s' % options.external_paths_tmp_input_output]
 
     # monitor and serials
 

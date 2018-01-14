@@ -6,13 +6,14 @@
 
 external_paths_machines = '/home/ish/machines/qemu-hs2'
 external_paths_src = '/home/ish/malware_malware_malware'
-external_paths_dst = '/home/ish/hs2-data/output'
-external_paths_tmp_dst = '/home/ish/hs2-data/research'
+external_paths_final_all_output = '/home/ish/hs2-data/output'
+external_paths_tmp_all_input_output = '/home/ish/hs2-data/research'
 external_paths_log = '/home/ish/hs2-data/log'
 external_paths_images = '/home/ish/hs2-data/images'
-external_paths_link_tmp_dst = True
+external_paths_link_tmp_output_final_output = True
 
-external_qemu_socket_init_timeout = 10
+external_qemu_socket_timeout_step = 10
+external_qemu_socket_timeout_mult = 1
 external_qemu_binary_path = 'qemu-system-i386'
 external_qemu_memory_options = '3G'
 external_qemu_drive_options = 'if=virtio'

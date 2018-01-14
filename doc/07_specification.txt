@@ -1,3 +1,22 @@
+### oznaczenie sciezek z punktu widzenia fuzzer:
+external_paths_machines - katalog, gdzie znajduja sie dyski maszyn
+external_paths_src - katalog, skad zaciagane sa probki i do ktorego odnosi sie np GlobPattern
+external_paths_log - katalog, w ktorym gromadzone sa logi 
+external_paths_images - katalog, w ktorym gromadzone sa obrazy
+
+external_paths_final_all_output - sciezka OSTATECZNYCH WYNIKOW WSZYSTKICH badan
+external_paths_final_output - OSTATECZNA sciezka AKTUALNEGO WYNIKU
+
+external_paths_tmp_all_input_output - sciezka TYMCZASOWYCH WKLADOW i WYNIKOW WSZYSTKICH badan
+
+external_paths_tmp_input_output - TYMCZASOWA sciezka WKLADU i WYNIKU AKTUALNEGO badania
+external_paths_tmp_input - TYMCZASOWA sciezka AKTUALNEGO WKLADU 
+external_paths_tmp_output - TYMCZASOWA sciezka AKTUALNEGO WYNIKU
+external_paths_tmp_log - TYMCZASOWA sciezka AKTUALNYCH LOGÓW
+
+
+external_paths_link_tmp_output_final_output - czy linkowac TYMCZASOWE WYNIKI AKTUALNEGO badania do OSTATECZNEGO katalogu WSZYSTKICH badan
+
 ### caller_taint:
 
 commandline options:

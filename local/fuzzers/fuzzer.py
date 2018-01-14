@@ -86,7 +86,10 @@ def preparse_script(script_path):
 
         if "=" in line:
             instr, ret_tab = line.split("=")
-            ret_tab = ret_tab[1:-1]
+            if(ret_tab == ''):
+                ret_tab = None
+            else:
+                ret_tab = ret_tab[1:-1]
         else:
             instr = line
             ret_tab = None

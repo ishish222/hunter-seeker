@@ -135,14 +135,14 @@ def qemu_save(args=None):
     response, _, _ = read_socket(options.s)
 
     ret = write_monitor_2(options.m, "savevm xxx%sxxx" % args)
-    time.sleep(options.revert_wait)
+    time.sleep(options.external_qemu_socket_timeout_step * options.external_qemu_socket_timeout_mult)
     print("Saved: %s" % args)
 
     import pickle
 
-    pickle_path = options.settings.host_machines_path
+    pickle_path = options.external_paths_machines
     pickle_path += '/'
-    pickle_path += options.settings.machines[options.fuzzbox_name]['disk']
+    pickle_path += options.external_machine['disk']
     pickle_path += '.'
     pickle_path += args
     pickle_path += '.state'
@@ -173,9 +173,9 @@ def qemu_save(args=None):
 def qemu_delete(args=None):
     options = globs.state.options
 
-    pickle_path = options.settings.host_machines_path
+    pickle_path = options.external_paths_machines
     pickle_path += '/'
-    pickle_path += options.settings.machines[options.fuzzbox_name]['disk']
+    pickle_path += options.external_machine['disk']
     pickle_path += '.'
     pickle_path += args
     pickle_path += '.state'
@@ -216,9 +216,9 @@ def qemu_load(args=None):
 
     import pickle
 
-    pickle_path = options.settings.host_machines_path
+    pickle_path = options.external_paths_machines
     pickle_path += '/'
-    pickle_path += options.settings.machines[options.fuzzbox_name]['disk']
+    pickle_path += options.external_machine['disk']
     pickle_path += '.'
     pickle_path += args
     pickle_path += '.state'
@@ -246,7 +246,7 @@ def qemu_load(args=None):
         globs.state.tracers_count = current_state['tracers_count']
 
     ret = write_monitor_2(options.m, "loadvm xxx%sxxx" % args)
-    time.sleep(options.revert_wait)
+    time.sleep(options.external_qemu_socket_timeout_step * options.external_qemu_socket_timeout_mult)
     print ret
 
     print("Loaded: %s" % args)
@@ -377,10 +377,7 @@ def qemu_connect_dev_socket_infinite(args=None):
     state = globs.state
 
     s = options.s
-#    dt = socket.getdefaulttimeout()
-#    socket.setdefaulttimeout(options.init_timeout)
-#    dts = s.gettimeout()
-    s.settimeout(options.external_qemu_socket_init_timeout)
+    s.settimeout(options.external_qemu_socket_timeout_step* options.external_qemu_socket_timeout_mult)
 
 #    while True:
     try:
@@ -439,9 +436,9 @@ def quit(args=None):
     if(os.path.exists(options.external_machine['serial'])): os.remove(options.external_machine['serial'])
     if(os.path.exists(options.external_machine['serial']+'-log')): os.remove(options.external_machine['serial']+'-log')
 
-    if(options.external_paths_link_tmp_dst):
-        print " ".join(["/usr/bin/sudo", "sudo", "umount", options.external_paths_final_dst])
-        os.spawnv(os.P_WAIT, "/usr/bin/sudo", ["sudo", "umount", options.external_paths_final_dst])
+    if(options.external_paths_link_tmp_output_final_output):
+        print " ".join(["/usr/bin/sudo", "sudo", "umount", options.external_paths_tmp_output])
+        os.spawnv(os.P_WAIT, "/usr/bin/sudo", ["sudo", "umount", options.external_paths_tmp_output])
 
 
 def poweroff_no_revert(args=None):
