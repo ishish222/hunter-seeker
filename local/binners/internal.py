@@ -14,6 +14,8 @@ from glob import glob
 import pefile
 from functions import *
 
+
+
 PIPE_NAME = "\\\\.\\pipe\\control"
 PIPE_BUFF_SIZE = 4096
 
@@ -52,11 +54,11 @@ def readPipe(pipe):
     return data[:-6]
 
 def writePipe(pipe, data):
-#    pipe.write(data + "-=OK=-")
-    pipe.write(data)
+#    pipe.write(data)
+    pipe.write(bytes(data))
 
 def ok(pipe):
-    pipe.write("-=OK=-")
+    pipe.write(b"-=OK=-")
 
 ### TODO: trzeba dopracowac!
 
@@ -187,6 +189,9 @@ def execute(cmds, ext_pipe):
     global trace_controller
     global responder
     global mailslot_client
+
+    import wmi
+    mywmi = wmi.WMI()
 
     cmd = cmds[0]
     args = " ".join(cmds[1:])
@@ -891,10 +896,25 @@ def execute(cmds, ext_pipe):
             writePipe(ext_pipe, "tracer_list_tebs "+bcolors.OK_STR)
             ok(ext_pipe)
 
+        elif(cmd == "get_pid_by_match"):
+            response = 'Not found'
+            for process in mywmi.Win32_Process():
+                if args in process.Name:
+                    response = '0x%08x' % process.ProcessId
+            writePipe(ext_pipe, response)
+            writePipe(ext_pipe, "get_pid_by_match"+bcolors.OK_STR)
+            ok(ext_pipe)
+
         elif(cmd == "tracer_list_ps"):
-            trace_controller.list_ps()
-            writePipe(ext_pipe, "%s" % trace_controller.last_answer)
-            writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
+            response = ''
+
+            for process in mywmi.Win32_Process():
+                response += "0x%03x %s\n" % (process.ProcessId, process.Name)
+            writePipe(ext_pipe, response)
+
+#            trace_controller.list_ps()
+#            writePipe(ext_pipe, "%s" % trace_controller.last_answer)
+#            writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
             writePipe(ext_pipe, "tracer_list_ps "+bcolors.OK_STR)
             ok(ext_pipe)
 

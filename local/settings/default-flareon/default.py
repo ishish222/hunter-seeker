@@ -19,6 +19,7 @@ external_qemu_binary_path = '/home/hs1/qemu-bin-2.11/qemu-2.11.0/deploy_dir/bin/
 external_qemu_memory_options = '3G'
 external_qemu_drive_options = 'if=virtio'
 external_qemu_use_vnc = True
+#external_qemu_smp = 4
 external_qemu_use_taskset = False
 external_qemu_additional_options = '-enable-kvm'
 external_qemu_machines = {

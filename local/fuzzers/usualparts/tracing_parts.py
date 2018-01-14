@@ -93,6 +93,18 @@ def reset_tracer_controller_status(args=None):
     globs.state.tracers_count = 0
     return
 
+def get_pid_by_match(args=None):
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+    
+    write_socket(options.s, "get_pid_by_match %s" % args);
+    response, _, _ = read_socket(options.s)
+
+    globs.state.ret = int(response[3:11], 0x10)
+
+    return
+
 def create_layout_2(path):
     os.spawnv(os.P_WAIT, "/bin/mkdir", ["mkdir", "-p", path+"/samples/shared"])
     os.spawnv(os.P_WAIT, "/bin/mkdir", ["mkdir", "-p", path+"/samples/saved"])

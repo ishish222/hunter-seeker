@@ -18,6 +18,7 @@ s:tracer_c/32/b.exe
 s:paimei
 s:binners/binner-generic.py
 s:binners/binner.py
+s:binners/wmi.py
 s:binners/debugger.py
 s:binners/functions.py
 s:binners/internal.py

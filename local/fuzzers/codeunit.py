@@ -128,6 +128,7 @@ prototypes['WhichTracer']           = tracing_parts.which_tracer
 prototypes['MoreTracers']           = tracing_parts.more_tracers
 prototypes['ReadPrefix']            = tracing_parts.read_prefix
 prototypes['ListProcesses']         = tracer_parts.tracer_ps
+prototypes['GetPIDByMatch']         = tracing_parts.get_pid_by_match
 prototypes['ListTebs']              = tracer_parts.tracer_list_tebs
 prototypes['ListAllTebs']           = tracer_parts.tracer_list_all_tebs
 prototypes['LoadEP']                = tracing_parts.load_ep

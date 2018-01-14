@@ -19,6 +19,7 @@ s:paimei
 s:binners/binner-generic.py
 s:binners/binner.py
 s:binners/debugger.py
+s:binners/wmi.py
 s:binners/functions.py
 s:binners/internal.py
 s:binners/internal_no_threads.py
