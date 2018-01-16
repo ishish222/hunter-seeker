@@ -1,0 +1,125 @@
+#!/usr/bin/env python
+
+from optparse import OptionParser
+
+outputs = {}
+
+def add_tid(line):
+    outputs[tid].write('%s' % line)
+
+def add_all(line):
+    for output in outputs.values():
+        output.write('%s' % line)
+
+def reopen(file_path):
+    try:
+        f = open(file_path, 'r', buffering=-1)
+    except Exception, e:
+        print str(e)
+        f = None
+    return f
+
+if __name__ == '__main__':
+    tid_all = False
+
+    parser = OptionParser()
+
+    parser.add_option("-f", "--infile", dest="infile")
+    parser.add_option("-t", "--tid", dest="tid")
+    parser.add_option("-e", "--end", dest="end")
+    parser.add_option("-p", "--prefix", dest="prefix", default="")
+    parser.add_option("-i", "--interval", dest="interval", default="1000000")
+
+    (options, args) = parser.parse_args()
+
+    if(options.tid == None):
+        tid_all = True
+    else:
+        tid = int(options.tid, 0x10)
+        tid = '0x%08x' % tid
+
+    if(options.end == None):
+        end = 0
+    else:
+        end = int(options.end, 0x10)
+
+    if(options.interval == None):
+        interval = 0
+    else:
+        interval = int(options.interval, 10)
+
+    print 'Opening: %s' % options.infile
+    line_count = 0
+
+    infile_path = options.infile
+    infile = reopen(infile_path)
+
+    class TestExc(Exception):
+        def __init__(self):
+            pass
+
+    while(infile != None):
+        try:
+            for line in infile:
+                if(line[0] == "#"):
+                    continue
+
+                fields = line.split(',')
+                if(len(fields) <= 1):
+                    fields = line.split()
+    
+                    tid_no = int(fields[0], 0x10)
+                    tid = '0x%08x' % tid_no
+    
+                    if(not tid in outputs.keys()):
+                        fname = '%s_%s.out' % (options.prefix, tid[2:])
+                        outputs[tid] = open(fname, 'w+')
+        
+                    add_tid(line)
+        
+                elif(fields[0] == "RT"):
+                    tid = fields[1]
+                    if(not tid in outputs.keys()):
+                        fname = '%s_%s.out' % (options.prefix, tid[2:])
+                        outputs[tid] = open(fname, 'w+')
+                    add_tid(line)
+    
+                elif(fields[0] == "DT"):
+                    tid = fields[1]
+                    if(not tid in outputs.keys()):
+                        fname = '%s_%s.out' % (options.prefix, tid[2:])
+                        outputs[tid] = open(fname, 'w+')
+                    add_tid(line)
+        
+                elif(fields[0] == "LF"):
+                    raise TestExc
+        
+                elif(fields[0] in ["OU", "SC", "SE"]):
+                    pass
+        
+                else:
+                    if(tid_all):
+                        add_all(line)
+                    else:
+                        add_tid(options.tid)
+        
+                line_count = line_count +1
+            
+                if((line_count % interval) == 0):
+                    print 'Processed: %s lines' % line_count
+        
+                if(end > 0):
+                    if(line_count >= end):
+                        break
+
+        except TestExc:
+            infile.close()
+            infile_path = fields[1][:-2]
+            print 'Opening: %s' % infile_path
+            infile = reopen(infile_path)
+            continue
+
+
+    for output in outputs.values():
+        output.close()
+

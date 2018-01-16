@@ -3,3 +3,4 @@ c:taint/ltrace
 c:taint/strace
 c:taint/taint
 c:taint/lists
+c:taint/extract_tid

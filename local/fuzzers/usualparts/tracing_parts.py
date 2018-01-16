@@ -127,7 +127,7 @@ def host_deploy_input_glob(args=None):
     for sample in state.samples_list:
         new_sample = os.path.basename(sample)
         print(options.external_paths_tmp_input + '/' + new_sample)
-        os.spawnv(os.P_WAIT, "/bin/cp", ["cp", sample, options.external_paths_tmp_input + '/' + new_sample])
+        os.spawnv(os.P_WAIT, "/bin/cp", ["cp", "-r", sample, options.external_paths_tmp_input + '/' + new_sample])
 
 def host_create_research_dir(args=None):
     import tempfile
