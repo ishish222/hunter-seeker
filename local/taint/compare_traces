@@ -1,0 +1,80 @@
+#!/usr/bin/env python
+
+from optparse import OptionParser
+
+class trace(object):
+    def __init__(self, path, offset):
+        self.file_path = path
+        self.last_executed = None
+        self.last_line = None
+        self.offset = offset
+        self.address = None
+        
+        self.file = open(self.file_path, 'r')
+        
+    def finish(self):
+        self.file.close()
+
+    def extract(self):
+        fields = self.last_line.split()
+    
+        if(len(fields) <= 1):
+            return (None, None)
+        else:
+            return (fields[1], fields[2])
+
+    def fetch(self):
+        self.last_line = self.file.readline()
+        self.address, self.offset = self.extract()
+        while(self.address == None):
+            self.last_line = self.file.readline()
+            self.address, self.offset = self.extract()
+            
+
+    def prepare(self):
+        self.last_line = self.file.readline()
+        address, offset = self.extract()
+
+        while(offset != self.offset):
+            self.last_line = self.file.readline()
+            address, offset = self.extract()
+
+        print 'Prepared'
+
+    
+if __name__ == '__main__':
+    parser = OptionParser()
+
+    parser.add_option("-1", "--trace1", dest="trace1")
+    parser.add_option("-2", "--trace2", dest="trace2")
+    parser.add_option("-o", "--offset1", dest="offset1")
+    parser.add_option("-p", "--offset2", dest="offset2")
+    parser.add_option("-i", "--interval", dest="interval", default="1000000")
+
+    (options, args) = parser.parse_args()
+
+    if(options.interval == None):
+        interval = 0
+    else:
+        interval = int(options.interval, 10)
+
+    trace1 = trace(options.trace1, options.offset1)
+    trace2 = trace(options.trace2, options.offset2)
+ 
+    trace1.prepare()
+    trace2.prepare()
+
+    while(True):
+        trace1.fetch()
+        trace2.fetch()
+        #print 'Compare %s:%s, %s:%s' % (trace1.offset, trace1.address, trace2.offset, trace2.address)
+
+        if(trace1.address[-4:] != trace2.address[-4:]):
+            print 'Difference at offset1: %s, offset2: %s' % (trace1.offset, trace2.offset)
+            print 'address1: %s, address2: %s' % (trace1.address[-4:], trace2.address[-4:])
+            break
+
+    print 'Finished'
+    trace1.finish()
+    trace2.finish()
+

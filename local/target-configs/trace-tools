@@ -4,3 +4,4 @@ c:taint/strace
 c:taint/taint
 c:taint/lists
 c:taint/extract_tid
+c:taint/compare_traces
