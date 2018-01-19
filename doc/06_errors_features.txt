@@ -806,18 +806,51 @@ Hmmm. Moze pozniej warto by to zaimplementowac w podprocedurach obslugi ladowani
 
 --
 
-102 - usystematyzowanie jezyka
+[x] 102 - usystematyzowanie jezyka
 
 Instrukcje jezyka nalezy polaczyc lub rozdzielic
 Nazwac je w bardziej intuicyjny sposob (m. in. zastosowac system przedrostkow mowiacy nt. adresata instrukcji)
 To samo z procedurami
+Przedrostki sa wkurzajace i niepotrzebne. Trzeba sie uczyc po prostu i nadawac intuicyjne nazwy. Usunalem reszte.
 
 --
 
-103 - usunac Decision
+[x] 103 - usunac Decision
 
 jest niepotrzebne
 jesli brak obslugi BP w internalu, musi zostac obsluzony w externalu
 po prostu skok do funkcji o tej samej nazwie, co reakcja
 Jesli nie ma, zglosic blad, to cenna informacja (np. przy rekreowaniu skryptu do stanu)
 
+--
+
+[x] 104 - ableton_008
+
+Dlaczego wykrywa rzekomy skok:
+(3087179)0x01e74923 jb_jc_jnae 0x01e74929
+
+Trzeba zaimplementowac system breakpointow do debugowania takich rzeczy.
+
+Juz zaimplementowane. Stara, zapomniana funkcjonalnosc. Breakpointy podaje sie na wejscie w formacie:
+
+BREAKPOINT1+BREAKPOINT2+...
+
+gdzie BREAKPOINTx:
+
+offset,mem_offset,mode
+
+gdzie:
+
+offset - 
+mem_offset - 
+mode - {READ | WRITE | EXECUTE} (moze byc kombinacja)
+
+Rozroznienie na offset i mem_offset jest niepotrzebne
+
+Heh, dziala :)
+
+--
+
+105 - ableton_008 dlaczego adresy w poblizu 0x01e74923 sa modyfikowane?
+
+Dowod na modyfikacje w log1.txt po: caller_taint -i intro.out -I -M 0x300 -D 3 -l 10 -b 0x01e74923,0x01e74923,WRITE 2> log1.txt
