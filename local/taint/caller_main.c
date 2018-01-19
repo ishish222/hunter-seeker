@@ -132,7 +132,7 @@ int register_symbol(char* line, taint_x86* taint_eng)
     cmd = strtok(line, ",");
     lib_name = strtok(0x0, ",");
     func_name = strtok(0x0, ",");
-    off = (OFFSET)strtol(strtok(0x0, ","), 0x0, 0x10);
+    off = (OFFSET)strtoul(strtok(0x0, ","), 0x0, 0x10);
 
     //printf("%s@%s @ 0x%08x\n", lib_name, func_name, off);
     taint_eng->add_symbol(&taint_eng->symbols, off, lib_name, func_name);
@@ -158,7 +158,7 @@ unsigned get_instr_interval(char* line)
     unsigned interval;
 
     cmd = strtok(line, ",");
-    interval = strtol(strtok(0x0, ","), 0x0, 10);
+    interval = strtoul(strtok(0x0, ","), 0x0, 10);
 
     return interval;
 }
@@ -166,10 +166,10 @@ unsigned get_instr_interval(char* line)
 int register_blacklist_addr(char* line, taint_x86* taint_eng)
 {
     char* cmd;
-    DWORD addr;
+    OFFSET addr;
 
     cmd = strtok(line, ",");
-    addr = strtol(strtok(0x0, ","), 0x0, 0x10);
+    addr = strtoul(strtok(0x0, ","), 0x0, 0x10);
     taint_eng->add_blacklist_addr(addr);
 
     return 0x0;
@@ -177,10 +177,10 @@ int register_blacklist_addr(char* line, taint_x86* taint_eng)
 int register_silenced_addr(char* line, taint_x86* taint_eng)
 {
     char* cmd;
-    DWORD addr;
+    OFFSET addr;
 
     cmd = strtok(line, ",");
-    addr = strtol(strtok(0x0, ","), 0x0, 0x10);
+    addr = strtoul(strtok(0x0, ","), 0x0, 0x10);
     taint_eng->add_silenced_addr(addr);
 
     return 0x0;
@@ -193,7 +193,7 @@ int register_wanted_i(char* line, taint_x86* taint_eng)
     unsigned instr;
 
     cmd = strtok(line, ",");
-    instr = strtol(strtok(0x0, ","), 0x0, 10);
+    instr = strtoul(strtok(0x0, ","), 0x0, 10);
     taint_eng->add_wanted_i(instr);
 
     return 0x0;
@@ -202,10 +202,10 @@ int register_wanted_i(char* line, taint_x86* taint_eng)
 int register_wanted_e(char* line, taint_x86* taint_eng)
 {
     char* cmd;
-    DWORD addr;
+    OFFSET addr;
 
     cmd = strtok(line, ",");
-    addr = strtol(strtok(0x0, ","), 0x0, 0x10);
+    addr = strtoul(strtok(0x0, ","), 0x0, 0x10);
     taint_eng->add_wanted_e(addr);
 
     return 0x0;
@@ -220,10 +220,10 @@ int register_fence(char* line, taint_x86* taint_eng)
     OFFSET count;
 
     cmd = strtok(line, ",");
-    entry = strtol(strtok(0x0, ","), 0x0, 0x10);
-    start = strtol(strtok(0x0, ","), 0x0, 0x10);
-    size = strtol(strtok(0x0, ","), 0x0, 0x10);
-    count  = strtol(strtok(0x0, ","), 0x0, 0x10);
+    entry = strtoul(strtok(0x0, ","), 0x0, 0x10);
+    start = strtoul(strtok(0x0, ","), 0x0, 0x10);
+    size = strtoul(strtok(0x0, ","), 0x0, 0x10);
+    count  = strtoul(strtok(0x0, ","), 0x0, 0x10);
     taint_eng->add_fence(entry, start, size, count);
 
     return 0x0;
@@ -451,11 +451,11 @@ int check_consistency(char* line, taint_x86* taint_eng)
 int register_update(char* line, taint_x86* taint_eng)
 {
     char* cmd;
-    DWORD offset, size;
+    OFFSET offset, size;
 
     cmd = strtok(line, ",");
-    offset = strtol(strtok(0x0, ","), 0x0, 0x10);
-    size = strtol(strtok(0x0, ","), 0x0, 0x10);
+    offset = strtoul(strtok(0x0, ","), 0x0, 0x10);
+    size = strtoul(strtok(0x0, ","), 0x0, 0x10);
 
     taint_eng->apply_memory(offset, size);
 
@@ -494,11 +494,11 @@ int set_prefix(char* line, taint_x86* taint_eng)
 int register_security(char* line, taint_x86* taint_eng)
 {
     char* cmd;
-    DWORD offset, size;
+    OFFSET offset, size;
 
     cmd = strtok(line, ",");
-    offset = strtol(strtok(0x0, ","), 0x0, 0x10);
-    size = strtol(strtok(0x0, ","), 0x0, 0x10);
+    offset = strtoul(strtok(0x0, ","), 0x0, 0x10);
+    size = strtoul(strtok(0x0, ","), 0x0, 0x10);
 
     taint_eng->apply_security(offset, size);
 
@@ -513,10 +513,10 @@ int register_lib(char* line, taint_x86* taint_eng)
     char* name;
 
     cmd = strtok(line, ",");
-    off = strtol(strtok(0x0, ","), 0x0, 0x10);
+    off = strtoul(strtok(0x0, ","), 0x0, 0x10);
     name = strtok(0x0, ",");
     name[strlen(name)] = 0x0;
-//    size = strtol(strtok(0x0, ","), 0x0, 0x10);
+//    size = strtoul(strtok(0x0, ","), 0x0, 0x10);
 
 //    printf("Registering lib: %s at 0x%08x\n", name, off);
     taint_eng->add_lib(off, name);
@@ -530,7 +530,7 @@ int deregister_lib(char* line, taint_x86* taint_eng)
     OFFSET off;
 
     cmd = strtok(line, ",");
-    off = strtol(strtok(0x0, ","), 0x0, 0x10);
+    off = strtoul(strtok(0x0, ","), 0x0, 0x10);
 
     //printf("Deregistering lib at 0x%08x\n", off);
     taint_eng->del_lib(off);
@@ -566,8 +566,8 @@ int decode_instruction(DWORD* tid, OFFSET* addr, long long unsigned* instr_count
 
 
     *tid = strtol(tid_s, 0x0, 0x10);
-    *addr = strtol(addr_s, 0x0, 0x10);
-    *instr_count = strtol(ic_s, 0x0, 10);
+    *addr = strtoul(addr_s, 0x0, 0x10);
+    *instr_count = strtoul(ic_s, 0x0, 10);
 
     return 0x0;
 }
@@ -586,7 +586,7 @@ BREAKPOINT parse_breakpoint(char* string)
         exit(1);
     }
 
-    bp.offset = strtol(current, 0x0, 10);
+    bp.offset = strtoul(current, 0x0, 10);
     current = strtok(0x0, ",");
     if(!current)
     {
@@ -594,7 +594,7 @@ BREAKPOINT parse_breakpoint(char* string)
         exit(1);
     }
 
-    bp.mem_offset = strtol(current, 0x0, 0x10);
+    bp.mem_offset = strtoul(current, 0x0, 0x10);
     current = strtok(0x0, "+");
     if(!current)
     {
@@ -636,7 +636,7 @@ TRACE_WATCHPOINT parse_trace_watchpoint(char* string, taint_x86* taint_eng)
     }
     else twp.interactive = 0x0;
 
-    twp.offset = strtol(current, 0x0, 10);
+    twp.offset = strtoul(current, 0x0, 10);
     fprintf(stderr, "Instr count: %lld\n", twp.offset);
 
     current = strtok(0x0, ",");
@@ -645,7 +645,7 @@ TRACE_WATCHPOINT parse_trace_watchpoint(char* string, taint_x86* taint_eng)
         fprintf(stderr, "Error parsing breakpoint: %s\n", string);
         exit(1);
     }
-    twp.mem_offset = strtol(current, 0x0, 0x10);
+    twp.mem_offset = strtoul(current, 0x0, 0x10);
     fprintf(stderr, "Offset: 0x%08x\n", twp.mem_offset);
 
     current = strtok(0x0, ",");
@@ -654,7 +654,7 @@ TRACE_WATCHPOINT parse_trace_watchpoint(char* string, taint_x86* taint_eng)
         fprintf(stderr, "Error parsing breakpoint: %s\n", string);
         exit(1);
     }
-    twp.tid = strtol(current, 0x0, 0x10);
+    twp.tid = strtoul(current, 0x0, 0x10);
     fprintf(stderr, "TID: 0x%08x\n", twp.tid);
 
     current = strtok(0x0, "+");
@@ -840,7 +840,7 @@ int main(int argc, char** argv)
         switch (opt) 
         {
             case 'M': 
-                max_levels = strtol(optarg, 0x0, 0x10);
+                max_levels = strtoul(optarg, 0x0, 0x10);
                 break;
             case 'i': 
                 strcpy(instr_file_path, optarg); 

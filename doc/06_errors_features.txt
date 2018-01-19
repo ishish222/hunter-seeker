@@ -851,6 +851,21 @@ Heh, dziala :)
 
 --
 
-105 - ableton_008 dlaczego adresy w poblizu 0x01e74923 sa modyfikowane?
+[x] 105 - ableton_008 dlaczego adresy w poblizu 0x01e74923 sa modyfikowane?
 
 Dowod na modyfikacje w log1.txt po: caller_taint -i intro.out -I -M 0x300 -D 3 -l 10 -b 0x01e74923,0x01e74923,WRITE 2> log1.txt
+
+Security layer zastosowana, dowod - wpis 
+Registering security layer: 0x00400000 - 0x03098000
+tamze
+
+Ustawiono wczesniej nieustawiona opcje: OPTION_VERIFY_SEG_SEC
+
+Czesciowo poprawiono strtol na strtoul
+
+To powinno byc: OP,VERIFY_SEG_SEC
+
+--
+
+106 - ableton_008 skad sie biora RN,xxx 
+

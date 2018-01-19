@@ -3237,6 +3237,8 @@ class taint_x86
     int print_err_t_mem(OFFSET, DWORD);
     int print_mem(int, OFFSET, DWORD);
     int print_t_mem(int, OFFSET, DWORD);
+    int print_security_layers(int);
+    int print_security_layers(int, OFFSET);
     int print_bt_buffer(BYTE_t*, DWORD);
     int print_all_regs();
     int decode_modrm_byte(BYTE_t*, DWORD_t*, DWORD_t*);

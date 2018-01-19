@@ -1732,7 +1732,7 @@ inline int taint_x86::verify_seg_sec(OFFSET off)
     
     for(i = 0x0; i< this->security_layer_count; i++)
     {
-        if((this->security_layer[i].off <= off) && (this->security_layer[i].off + this->security_layer[i].size >= off))
+        if((this->security_layer[i].off <= off) && ((this->security_layer[i].off + this->security_layer[i].size) >= off))
         {
             d_print(1, "[IMPERFECTION DETECTED] Attempt of write to secured segment @ instr no: %d, eip: 0x%08x\n", this->current_instr_count, this->reg_restore_32(EIP).get_DWORD());
             return 0x1;
@@ -1784,6 +1784,7 @@ if(this->options & OPTION_VERIFY_SEG_SEC)
             print_mem(1, off, 0x10);
             v.to_mem(&this->memory[off], 1);
             print_mem(1, off, 0x10);
+            print_security_layers(1, off);
             return;
         }
 #endif
@@ -1930,6 +1931,7 @@ if(this->options & OPTION_VERIFY_SEG_SEC)
             print_mem(1, off, 0x10);
             v.to_mem(&this->memory[off], 1);
             print_mem(1, off, 0x10);
+            print_security_layers(1, off);
             return;
         }
 #endif
@@ -2066,6 +2068,7 @@ if(this->options & OPTION_VERIFY_SEG_SEC)
             print_mem(1, off, 0x10);
             v.to_mem(&this->memory[off]);
             print_mem(1, off, 0x10);
+            print_security_layers(1, off);
             return;
         }
 #endif
@@ -17973,6 +17976,50 @@ int taint_x86::r_idiv_rm_16_32(BYTE_t* instr_ptr)
 /* decoded implementation ends */
 
 // rest of main functions
+
+
+int taint_x86::print_security_layers(int level, OFFSET off)
+{
+    unsigned i;
+   
+    d_print(level, "Security layers:\n");
+
+    for(i = 0x0; i< this->security_layer_count; i++)
+    {
+        d_print(level, "0x%x +0x%x\n", this->security_layer[i].off, this->security_layer[i].size);
+        d_print(level, "0x%x +0x%x\n", this->security_layer[i].off, this->security_layer[i].size);
+        if(off >= this->security_layer[i].off)
+        {
+            d_print(1, "Offset 0x%08x above 0x%08x\n", off, this->security_layer[i].off);
+        }
+        if(off <= (this->security_layer[i].off + this->security_layer[i].size))
+        {
+            d_print(1, "Offset 0x%08x below 0x%08x\n", off, (this->security_layer[i].off + this->security_layer[i].size));
+        }
+        if((this->security_layer[i].off <= off) && ((this->security_layer[i].off + this->security_layer[i].size) >= off))
+        {
+            d_print(1, "Offset 0x%08x in range\n", off);
+        }
+    }
+
+    return 0x0;
+}
+
+
+int taint_x86::print_security_layers(int level)
+{
+    unsigned i;
+   
+    d_print(level, "Security layers:\n");
+
+    for(i = 0x0; i< this->security_layer_count; i++)
+    {
+        d_print(level, "0x%x +0x%x\n", this->security_layer[i].off, this->security_layer[i].size);
+    }
+
+    return 0x0;
+}
+
 
 int taint_x86::print_mem(int level, OFFSET start, DWORD len)
 {
