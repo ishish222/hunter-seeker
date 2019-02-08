@@ -1,0 +1,8 @@
+0. Wymagane - doinstalowanie skladnika, badanie markerow
+
+1. Okreslam badaniem markery (aplikacja gotowa, ST, MA, EX)
+2. Przygotowuje skrypt transferujacy stan do aplikacji gotowej
+3. Przygotowuje skrypt fuzzujacy w oparciu o markery i zaprogramowane reakcje wraz z przygotowywaniem kolejki probek
+4. Fuzzuje az do EX
+5. Zachowuje EX
+6. Restartuje maszyne

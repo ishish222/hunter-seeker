@@ -1,0 +1,5 @@
+1. Zdobywam instalke
+2. Kopiuje podstawe wirtualnej maszyny (nowy dysk roznicowy? do procedur zarzadzania dyskami)
+3. Instaluje oprogramowanie
+4. Zachowuje jako clean (czy ready?)
+5. I dalej to co w 1.
