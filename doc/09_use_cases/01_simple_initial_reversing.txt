@@ -1,0 +1,11 @@
+1. Dostaje probke
+2. Umieszczam ja w konfiguracji deploymentu
+3. Pisze skrypt generujacy trace
+    3.1. Skonfigurowanie badania 
+    3.2. Skonfigurowanie maszyny
+    3.3. Opisanie skryptu, ktory ma analizowac od EP do konca lub do momentu nacisniecia Ctrl-C
+4. Uruchomienie i przeprowadzenie trasowania
+5. Uruchomienie analizatora calli
+6. sciagniecie mapy calli
+7. Dalsza analiza
+

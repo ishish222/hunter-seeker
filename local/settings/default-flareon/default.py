@@ -15,7 +15,8 @@ external_paths_link_tmp_output_final_output = True
 
 external_qemu_socket_timeout_step = 10
 external_qemu_socket_timeout_mult = 1
-external_qemu_binary_path = '/home/hs1/qemu-bin-2.11/qemu-2.11.0/deploy_dir/bin/qemu-system-i386'
+#external_qemu_binary_path = '/home/hs1/qemu-bin-2.11/qemu-2.11.0/deploy_dir/bin/qemu-system-i386'
+external_qemu_binary_path = 'qemu-system-i386'
 external_qemu_memory_options = '3G'
 external_qemu_drive_options = 'if=virtio'
 external_qemu_use_vnc = True

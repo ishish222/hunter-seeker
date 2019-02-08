@@ -1,0 +1,10 @@
+1. Kopiuje skrypt startowy napisany w 01, dodaje identyfikator oznaczajacy nowa galaz kodu (np. 01, 02, etc.) oraz podejscie (np. 001)
+2. Modyfikuje skrypt generujacy trace (np. zmieniam flage)
+    2.1. Zmieniam flage
+    2.2. Zmieniam zawartosc pamieci
+    2.3. Dodaje markery i podprocedury ich obslugi
+4. Uruchomienie i przeprowadzenie trasowania
+5. Uruchomienie analizatora calli
+6. sciagniecie mapy calli
+7. Dalsza analiza
+
