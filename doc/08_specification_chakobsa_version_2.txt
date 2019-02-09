@@ -185,13 +185,43 @@ What does it do?
 Register Regions for later use by the tracer according to Regions syntax
 
 - TracerRegisterReactions
-Register Ractions for later use by the tracer according to Reactions syntax
+String a1 - reactions string conforming to Reaction syntax
+Register Ractions for later use by the tracer according to Reactions syntax [TODO - describe syntax here]
+Reaction syntax: 
+- entries separated with ;
+- each entry has 3 parts:
+    1. location (based on symbol, register, offset, etc.)
+    2. label (and optional target label for activation in case of hit)
+    3. reaction type (defined in 10_internal_reactions.txt)
+
+- RegisterReactions (alias to: TracerRegisterReactions)
+
+- TracerRegisterReactionsAt
+DWORD location - from stack
+Similar to TracerRegisterReactions, but location is loaded from the stack
 
 - TracerRegisterBuiltin
+Rsgister Builtin Reactions that are predefined in host configuration file
+
+- RegisterBuiltin (alias: TracerRegisterBuiltin)
+
+- GetExceptionCode
+- GetExceptionAddress
+- TracerGetExceptionCode
+- TracerGetExceptionAddress
+
 - DisableReactions
+Args: String a1
+Disable selected or all Reactions. the argument is reaction labels separated by ;
+
 - TracerDebugSample
+Create process with debug on selected sample
+
 - TracerAttachSample
+Attach to process with debug on selected PID
+
 - TracerDebugContinueInf
+
 - Decision
 - EnableReaction
 - RaiseReaction

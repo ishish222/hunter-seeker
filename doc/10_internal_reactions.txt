@@ -1,0 +1,103 @@
+Based on: local/tracer_c/trace6.c
+
+    /* handling syscalls in regular tracing */
+    my_trace->routines[0x001] = &react_sysenter_callback;
+    my_trace->routines[0x002] = &react_sysret_callback;
+    my_trace->routines[0x003] = &react_sysret_refresh;
+
+    /* handling syscalls in IoC research */
+    my_trace->routines[0x011] = &react_sysenter_callback_wo_reregister;
+    my_trace->routines[0x012] = &react_sysret_callback_wo_reregister;
+
+    my_trace->routines[0x100] = &react_sample_routine_1;
+    my_trace->routines[0x101] = &react_zero_SF;
+    my_trace->routines[0x102] = &react_set_ZF;
+    my_trace->routines[0x103] = &react_zero_ZF;
+    my_trace->routines[0x104] = &react_zero_EAX;
+    my_trace->routines[0x105] = &react_flip_ZF;
+    my_trace->routines[0x106] = &react_flip_CF;
+    my_trace->routines[0x107] = &react_flip_SF;
+    my_trace->routines[0x108] = &react_zero_CF;
+    my_trace->routines[0x109] = &react_set_CF;
+    my_trace->routines[0x10a] = &react_set_SF;
+
+    my_trace->routines[0x201] = &react_update_region_1;
+    my_trace->routines[0x202] = &react_cry_antidebug_1;
+    my_trace->routines[0x203] = &react_skip_on;
+    my_trace->routines[0x204] = &react_skip_off;
+    my_trace->routines[0x205] = &react_update_region_2;
+
+    /* outputting DWORDs */
+    my_trace->routines[0x300] = &react_output_arg_0;
+    my_trace->routines[0x301] = &react_output_arg_1;
+    my_trace->routines[0x302] = &react_output_arg_2;
+    my_trace->routines[0x303] = &react_output_arg_3;
+    my_trace->routines[0x304] = &react_output_arg_4;
+    my_trace->routines[0x305] = &react_output_arg_5;
+    my_trace->routines[0x306] = &react_output_arg_6;
+    my_trace->routines[0x307] = &react_output_arg_7;
+    my_trace->routines[0x308] = &react_output_arg_8;
+
+    /* outputting ANSI strings */
+    my_trace->routines[0x310] = &react_output_arg_str_0;
+    my_trace->routines[0x311] = &react_output_arg_str_1;
+    my_trace->routines[0x312] = &react_output_arg_str_2;
+    my_trace->routines[0x313] = &react_output_arg_str_3;
+    my_trace->routines[0x314] = &react_output_arg_str_4;
+    my_trace->routines[0x315] = &react_output_arg_str_5;
+    my_trace->routines[0x316] = &react_output_arg_str_6;
+    my_trace->routines[0x317] = &react_output_arg_str_7;
+    my_trace->routines[0x318] = &react_output_arg_str_8;
+
+    /* outputting UNICODE strings */
+    my_trace->routines[0x320] = &react_output_arg_unicode_str_0;
+    my_trace->routines[0x321] = &react_output_arg_unicode_str_1;
+    my_trace->routines[0x322] = &react_output_arg_unicode_str_2;
+    my_trace->routines[0x323] = &react_output_arg_unicode_str_3;
+    my_trace->routines[0x324] = &react_output_arg_unicode_str_4;
+    my_trace->routines[0x325] = &react_output_arg_unicode_str_5;
+    my_trace->routines[0x326] = &react_output_arg_unicode_str_6;
+    my_trace->routines[0x327] = &react_output_arg_unicode_str_7;
+    my_trace->routines[0x328] = &react_output_arg_unicode_str_8;
+
+    /* outputting registers */
+    my_trace->routines[0x330] = &react_output_eax;
+    my_trace->routines[0x331] = &react_output_ebx;
+    my_trace->routines[0x332] = &react_output_ecx;
+    my_trace->routines[0x333] = &react_output_edx;
+    my_trace->routines[0x334] = &react_output_esi;
+    my_trace->routines[0x335] = &react_output_edi;
+    my_trace->routines[0x336] = &react_output_esp;
+    my_trace->routines[0x337] = &react_output_eip;
+
+    /* outputting pointed DWORDs */
+    my_trace->routines[0x340] = &react_output_p_arg_0;
+    my_trace->routines[0x341] = &react_output_p_arg_1;
+    my_trace->routines[0x342] = &react_output_p_arg_2;
+    my_trace->routines[0x343] = &react_output_p_arg_3;
+    my_trace->routines[0x344] = &react_output_p_arg_4;
+    my_trace->routines[0x345] = &react_output_p_arg_5;
+    my_trace->routines[0x346] = &react_output_p_arg_6;
+    my_trace->routines[0x347] = &react_output_p_arg_7;
+    my_trace->routines[0x348] = &react_output_p_arg_8;
+
+    /* outputting strs pointed by regs*/
+    my_trace->routines[0x350] = &react_output_p_eax_string;
+    my_trace->routines[0x351] = &react_output_p_ebx_string;
+    my_trace->routines[0x352] = &react_output_p_ecx_string;
+    my_trace->routines[0x353] = &react_output_p_edx_string;
+    my_trace->routines[0x354] = &react_output_p_esi_string;
+    my_trace->routines[0x355] = &react_output_p_edi_string;
+    my_trace->routines[0x356] = &react_output_p_esp_string;
+    my_trace->routines[0x357] = &react_output_p_eip_string;
+
+    /* outputting unicode strs pointed by regs*/
+    my_trace->routines[0x360] = &react_output_p_eax_unicode;
+    my_trace->routines[0x361] = &react_output_p_ebx_unicode;
+    my_trace->routines[0x362] = &react_output_p_ecx_unicode;
+    my_trace->routines[0x363] = &react_output_p_edx_unicode;
+    my_trace->routines[0x364] = &react_output_p_esi_unicode;
+    my_trace->routines[0x365] = &react_output_p_edi_unicode;
+    my_trace->routines[0x366] = &react_output_p_esp_unicode;
+    my_trace->routines[0x367] = &react_output_p_eip_unicode;
+

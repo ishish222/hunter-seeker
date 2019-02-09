@@ -1,57 +1,25 @@
-#!/bin/sh
+#!/bin/bash
 
-LOCAL_ROOT=../
-TARGET=$1
-TARGETS_DIR=../../targets/
-TARGET_DIR=$TARGETS_DIR$TARGET
-TARGET_CONFIGS_DIR=$LOCAL_ROOT/target-configs/
+. settings
 
-echo "cleaning"
-rm -rf $TARGET_DIR
+PACKAGE=$1
+PACKAGE_DIR=$PACKAGES_DIR/$PACKAGE
 
-mkdir -p $TARGET_DIR/server
-mkdir -p $TARGET_DIR/client
-mkdir -p $TARGET_DIR/common
-mkdir -p $TARGET_DIR/samples/shared
-mkdir -p $TARGET_DIR/samples/saved
-mkdir -p $TARGET_DIR/samples/other
-mkdir -p $TARGET_DIR/samples/binned
-mkdir -p $TARGET_DIR/samples/original
+./make $PACKAGE
 
-echo "server"
-cat $TARGET_CONFIGS_DIR$TARGET | grep s: | cut -d":" -f2 |
-while read line;
-do
-    target_line=$(basename $line)
-    echo "cp -rH $LOCAL_ROOT$line $TARGET_DIR/server/$target_line"
-    cp -rH $LOCAL_ROOT$line $TARGET_DIR/server/$target_line
-done
-    
-echo "client"
-cat $TARGET_CONFIGS_DIR$TARGET | grep c: | cut -d":" -f2 |
-while read line;
-do
-    target_line=$(basename $line)
-    echo "cp -rH $LOCAL_ROOT$line $TARGET_DIR/client/$target_line"
-    cp -rH $LOCAL_ROOT$line $TARGET_DIR/client/$target_line
-done
+if [ $PACKAGE_HOST != "local" ];
+then
+    echo "Pushing to remote host: $PACKAGE_HOST"
+    ./push-remote $PACKAGE
+else
+    echo "Local deploy started"
 
-echo "settings"
-cat $TARGET_CONFIGS_DIR$TARGET | grep t: | cut -d":" -f2 |
-while read line;
-do
-    target_line=$(basename $line)
-    echo "cp -rH $LOCAL_ROOT$line $TARGET_DIR/settings/$target_line"
-    cp -rH $LOCAL_ROOT$line $TARGET_DIR/common/$target_line
-done
+    DATE=$(date --iso)
+    rm -rf $DEPLOY_PATH/$PACKAGE/$DATE
+    mkdir -p $DEPLOY_PATH/$PACKAGE/$DATE
+    cp -r $PACKAGE_DIR/* $DEPLOY_PATH/$PACKAGE/$DATE/
+    rm -f $CURRENT_DEPLOY_PATH/$PACKAGE
+    ln -s $DEPLOY_PATH/$PACKAGE/$DATE $CURRENT_DEPLOY_PATH/$PACKAGE
 
-echo "original samples"
-cat $TARGET_CONFIGS_DIR$TARGET | grep o: | cut -d":" -f2 |
-while read line;
-do
-    target_line=$(basename $line)
-    echo "cp -rH $LOCAL_ROOT$line $TARGET_DIR/samples/original/$target_line"
-    cp -rH $LOCAL_ROOT$line $TARGET_DIR/samples/original/$target_line
-done
-
-echo "Finished deploying"
+    echo "Local deploy finished"
+fi

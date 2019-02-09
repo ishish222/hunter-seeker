@@ -1,0 +1,9 @@
+#!/bin/bash
+
+LOCAL_ROOT=..
+PACKAGES_DIR=../../packages
+PACKAGE_CONFIGS_DIR=$LOCAL_ROOT/package-configs
+DEPLOY_ROOT=/home/ish/hs2-data
+DEPLOY_PATH=$DEPLOY_ROOT/hs2-deploys
+CURRENT_DEPLOY_PATH=$DEPLOY_ROOT/hs2-current-deploys
+PACKAGE_HOST="local"

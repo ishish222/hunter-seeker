@@ -1,0 +1,14 @@
+#!/bin/sh
+#
+# usage: $0 PACKAGE MACHINE SCRIPT
+
+. settings
+
+PACKAGE=$1
+MACHINE=$2
+SCRIPT=$3
+FOLDER=$4
+
+./deploy $1
+screen -L -S $MACHINE sh -c "cd $CURRENT_DEPLOY_PATH/$PACKAGE/client; ./fuzzer.py $MACHINE $SCRIPT $FOLDER; bash"
+

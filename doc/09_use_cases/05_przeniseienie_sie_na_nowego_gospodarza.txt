@@ -5,4 +5,17 @@
 2. Kopiuje istniejace domyslne ustawienia hosta (settings/default-x [TODO])
 3. Modyfikuje wybrane fragmenty (ustawienia sciezek, maszyny) (tutaj czesc ustawien jest chyba zdeprecjonowana, moze oczyscic? [TODO])
 4. Jesli instaluje z innego zrodla, modyfikuje ustawienia symboli (TRZEBA POWIAZAC SYMBOLE Z INSTALKA, CZY JA JA MAM JESZCZE GDZIES? [TODO])
+5. Tworze baze maszyn
+    5.1 Tworze graf [host]_hs_machines.graphml w $ZAKLAD_ROOT/ZASOBY_INFRASTRUKTURA/
+    5.2 Tworze maszyne z podstawowa instalacja (Windows + $KORRINO_ROOT/doc/05_deployment/deploy-qemu-machine.txt) - to jest root_[x]
+    5.3 Tworze maszynke nr x - z root_[x] jako backing drive
+
+Test:
+
+Ad. 2.: 
+Zgadza sie + tworze sciezki. 
+
+Pomysl - potraktowac settings.py jako przeslanianie domyslnych wartosci hosta?
+
+Ad. 4.: zaraz przetestuje symbole
 

@@ -1,0 +1,57 @@
+#!/bin/bash
+
+. settings
+
+PACKAGE=$1
+PACKAGE_DIR=$PACKAGES_DIR/$PACKAGE
+
+echo "Package making started"
+echo "cleaning"
+rm -rf $PACKAGE_DIR
+
+mkdir -p $PACKAGE_DIR/server
+mkdir -p $PACKAGE_DIR/client
+mkdir -p $PACKAGE_DIR/common
+mkdir -p $PACKAGE_DIR/samples/shared
+mkdir -p $PACKAGE_DIR/samples/saved
+mkdir -p $PACKAGE_DIR/samples/other
+mkdir -p $PACKAGE_DIR/samples/binned
+mkdir -p $PACKAGE_DIR/samples/original
+
+echo "server"
+cat $PACKAGE_CONFIGS_DIR/$PACKAGE | grep s: | cut -d":" -f2 |
+while read line;
+do
+    package_line=$(basename $line)
+    echo "cp -rH $LOCAL_ROOT/$line $PACKAGE_DIR/server/$package_line"
+    cp -rH $LOCAL_ROOT/$line $PACKAGE_DIR/server/$package_line
+done
+    
+echo "client"
+cat $PACKAGE_CONFIGS_DIR/$PACKAGE | grep c: | cut -d":" -f2 |
+while read line;
+do
+    package_line=$(basename $line)
+    echo "cp -rH $LOCAL_ROOT/$line $PACKAGE_DIR/client/$package_line"
+    cp -rH $LOCAL_ROOT/$line $PACKAGE_DIR/client/$package_line
+done
+
+echo "settings"
+cat $PACKAGE_CONFIGS_DIR/$PACKAGE | grep t: | cut -d":" -f2 |
+while read line;
+do
+    package_line=$(basename $line)
+    echo "cp -rH $LOCAL_ROOT/$line $PACKAGE_DIR/settings/$package_line"
+    cp -rH $LOCAL_ROOT/$line $PACKAGE_DIR/common/$package_line
+done
+
+echo "original samples"
+cat $PACKAGE_CONFIGS_DIR/$PACKAGE | grep o: | cut -d":" -f2 |
+while read line;
+do
+    package_line=$(basename $line)
+    echo "cp -rH $LOCAL_ROOT/$line $PACKAGE_DIR/samples/original/$package_line"
+    cp -rH $LOCAL_ROOT/$line $PACKAGE_DIR/samples/original/$package_lin2
+done
+
+echo "Package making finished"
