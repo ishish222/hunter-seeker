@@ -126,7 +126,7 @@ def host_deploy_input_glob(args=None):
     state.samples_list = glob(state.glob_pattern)
     for sample in state.samples_list:
         new_sample = os.path.basename(sample)
-        print(options.external_paths_tmp_input + '/' + new_sample)
+        print(' '.join(["cp", "-r", sample, options.external_paths_tmp_input + '/' + new_sample]))
         os.spawnv(os.P_WAIT, "/bin/cp", ["cp", "-r", sample, options.external_paths_tmp_input + '/' + new_sample])
 
 def host_create_research_dir(args=None):
@@ -162,8 +162,11 @@ def host_create_research_dir(args=None):
         print " ".join(["/usr/bin/sudo", "sudo", "mount", "-o", "bind", options.external_paths_final_output, options.external_paths_tmp_output])
         os.spawnv(os.P_WAIT, "/usr/bin/sudo", ["sudo", "mount", "-o", "bind", options.external_paths_final_output, options.external_paths_tmp_output])
 
-    os.spawnv(os.P_WAIT, "/usr/bin/sudo", ["sudo", "cp", "-r", "../server", options.external_paths_tmp_input])
-    os.spawnv(os.P_WAIT, "/usr/bin/sudo", ["sudo", "cp", "-r", "../common", options.external_paths_tmp_input])
+    #os.spawnv(os.P_WAIT, "/usr/bin/sudo", ["sudo", "cp", "-r", "../server", options.external_paths_tmp_input])
+    #os.spawnv(os.P_WAIT, "/usr/bin/sudo", ["sudo", "cp", "-r", "../common", options.external_paths_tmp_input])
+    # why sudo?
+    os.spawnv(os.P_WAIT, "/bin/cp", ["cp", "-r", "../server", options.external_paths_tmp_input])
+    os.spawnv(os.P_WAIT, "/bin/cp", ["cp", "-r", "../common", options.external_paths_tmp_input])
     
 def start_tracer(args=None):
     options = globs.state.options

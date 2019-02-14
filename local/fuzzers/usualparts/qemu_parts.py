@@ -507,6 +507,13 @@ def offline_revert(args=None):
     print("Reverting to: %s" % args)
     os.spawnv(os.P_WAIT, "/usr/bin/qemu-img", ["qemu-img", "snapshot", "-a", args, options.external_paths_machines + '/' + options.external_machine['disk']])
     
+def offline_revert_clean(args=None):
+    options = globs.state.options
+    state = globs.state
+    args = "clean"
+    print("Reverting to: %s" % args)
+    os.spawnv(os.P_WAIT, "/usr/bin/qemu-img", ["qemu-img", "snapshot", "-a", args, options.external_paths_machines + '/' + options.external_machine['disk']])
+    
 def revert_ready(args=None):
     options = globs.state.options
     state = globs.state
