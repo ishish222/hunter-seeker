@@ -942,7 +942,7 @@ def tracer_debug_continue_decision(args):
     if(globs.state.ret[1:3] == "RB"):
         bp = globs.state.ret[3:].split('\n')[0]
         print bcolors.WARNING + bcolors.BOLD + bp + bcolors.ENDC
-        print 'Retirning: %s' % bp
+        print 'Returning: %s' % bp
         return bp
     else:
         print 'Returning: %s' % globs.state.ret[1:3]
@@ -1280,7 +1280,7 @@ def tracer_write_dword(args = 0x0):
 
     args = int(args, 0x10)
     
-    # id source is null, use last ret
+    # if source is null, use last ret
     args = (globs.state.stack.pop(), args)
 
     write_socket(options.s, "tracer_write_dword 0x%08x 0x%08x" % args);

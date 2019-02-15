@@ -1,7 +1,5 @@
 ### Fuzzer scripts:
 
-Internal supervisor commands:
-
 External supervisor commands:
 
 - Test
@@ -64,11 +62,21 @@ Mounts shared and saved disks w virtio drivers based on parameters in settings
 - QemuMountDisksNoVirtio
 Mounts shared and saved disk w/o virtio drivers based on parameters in settings
 
-- SpawnInternalController
-Spawns internal controller
+- SpawnInternalController (old)
+Spawns internal controller via interaction scripts.
+Executes: e:\\server\\internal.py arg0 arg1
 
-- SpawnInternalControllerWoThread
+- SpawnInternalControllerFileLogSmb (new)
+Spawns internal controller via interaction scripts with logging onto samba share.
+Executes: \\\\10.0.2.4\\qemu\\input\\server\\internal.py > \\\\10.0.2.4\\qemu\\logs\\internal.log arg0 arg1
+
+- SpawnInternalControllerSmb (new) 
+Spawns internal controller via interaction scripts from samba share with logging onto screen.
+Executes: \\\\10.0.2.4\\qemu\\input\\server\\internal.py arg0 arg1
+
+- SpawnInternalControllerWoThread (old)
 Spawns internal controller w/o threads
+Executes: e:\\server\\internal_no_threads.py arg0 arg1
 
 - QemuConnectDevSocket
 Attempts to connect to qemu control socket
@@ -81,126 +89,436 @@ Decides if qemu control socket has been connected to successfully
 Waits 10 seconds
 
 - KillExplorer
-- ResetTracers
+Kills explorer.exe process
+
+- HostResetTracers
+Resets tracer status on host
+
 - SpawnTracerController
+Internal controller spawns a tracer controller
+
 - SpawnTracerScrLog
+TracerController spawns a tracer with logging onto screen.
+With the command: "\\\\10.0.2.4\\qemu\\input\\server\\b.exe", "127.0.0.1", "12341" 
+
 - SpawnTracerFileLog
+TracerController spawns a tracer with logging into file.
+With the command: "\\\\10.0.2.4\\qemu\\input\\server\\b.exe", "127.0.0.1", "12341", "\\\\10.0.2.4\\qemu\\logs\\log_%x.log"
+
 - SpawnTracerRemoteLog
+TracerController spawns a tracer with logging into file.
+With the command: "\\\\10.0.2.4\\qemu\\input\\server\\b.exe", "127.0.0.1", "12341", "\\\\10.0.2.4\\qemu\\logs\\log_%d.log"
+
 - SpawnTracerNoLog
-# for backward compatibility
+TracerController spawns a tracer with no logging (fastest).
+With the command: "\\\\10.0.2.4\\qemu\\server\\b.exe", "127.0.0.1", "12341", ">", "NUL"
+
 - SpawnTracer
+Alias to: SpawnTracerScrLog
+
 - SpawnTracerLog
-# ends
-- GetSampleOptions
+Alias to: SpawnTracerFileLog
+
+- GetSampleOptions (deprecated, options are set with the script commands)
+Gets sample specific options from fuzzer arguments
 
 - RevertClean
 Perform offline qemu image revert to state from settings
 
 - TracerConfigureSample
+args: sample name
+ustawia nazwe probki badania (my_trace->in_sample_path)
+
 - TracerConfigureSamplePID
+args: sample PID
+Ustawia PID docelowego procesu badania (my_trace->in_sample_pid)
+
 - TracerConfigureOutDir
-- TracerAppendOutPrefix
-- TracerAppendPIDPrefix
+args: out_dir
+Ustawia out_dir badania (my_trace->out_dir)
+
 - TracerConfigureOutPrefix
+args: prefix
+ustawia out_prefix badania (my_trace->out_prefix)
+
 - TracerConfigurePIDPrefix
+args: prefix
+ustawia PID jako out_prefix badania (my_trace->out_prefix)
+
+- TracerAppendOutPrefix
+args: prefix_addition
+Dodaje prefix_addition do out_prefix badania (my_trace->out_prefix)
+
+- TracerAppendPIDPrefix
+Dodaje PID do out_prefix badania (my_trace->out_prefix)
+
 - TracerConfigureInDir
+args: in_dir
+Ustawia out_dir tracera (my_trace->in_research_dir)
+
 - TracerPrepareTrace
+Resetuje badanie: 
+1. resetuje nazwe aktualnego out i przelacza na niego
+2. ustawia dump file
+3. ustawia mods file
+4. wpisuje prefix do pliku out
+5. wpisuje mod do pliku out
+6. generuje transfer.out do latwej wymiany
+
 - TracerRegisterRegions
+args: region syntax line
+Registers regions by parsing the region line according to region syntax
+
 - TracerRegisterReactions
+args: region syntax line
+Registers reactions by parsing the reaction line according to reaction syntax
+
+- RegisterReactions
+Alias to: TracerRegisterReactions
+
+- TracerRegisterReactionsAt
+args: region syntax line w/o location
+stack: location
+Registers reactions by parsing the reaction line according to reaction syntax with location read from the stack
+
 - TracerRegisterBuiltin
+Registers builtin reactions based on symbols data in host configuration
+
+- RegisterBuiltin
+Alias to: TracerRegisterBuiltin
+
+- TracerGetExceptionCode
+Retrieves exception code and puts into ret
+
+- TracerGetExceptionAddress
+Retrieves exception address and puts into ret
+
+- GetExceptionCode
+Alias to: TracerGetExceptionCode
+
+- GetExceptionAddress
+Alias to: TracerGetExceptionAddress
+
+- TracerDisableAllReactions
+Disables all registered reactions 
+
+- TracerDisableReactions
+Alias to: TracerDisableAllReactions
+
+- DisableAllReactions
+Alias to: TracerDisableAllReactions
+
 - DisableReactions
+Alias to: TracerDisableAllReactions
+
 - TracerDebugSample
+Creates sample process with debug
+
 - TracerAttachSample
+Attaches to selected process with debug
+
+- DebugSample
+Alias to: TracerDebugSample
+
+- AttachSample
+Alias to: TracerAttachSample
+
+- TracerDebugContinue
+Continues debugging until next event
+
 - TracerDebugContinueInf
+Alias to: TracerDebugContinue
+
+- DebugContinue
+Alias to: TracerDebugContinue
+
 - Decision
+A decision declaration in decision syntax
+You need to implement available decisions in codeunit.py
+
+- Continue
+args: continue with exception decision
+A decision to continue with continue status (default - DBG_CONTINUE 0x00010002L, popular - DBG_EXCEPTION_NOT_HANDLED 0x80010001L) 
+Based on returned reaction code can redirect traffic into a particular label
+
 - EnableReaction
+args: label
+Enables reaction identified by label
+
 - RaiseReaction
+args: label
+Raises the level of a reaction identified by label
+Higher reaction level means that the reaction can interrupt another reaction
+
 - LowerReaction
+args: label
+Lowers the level of a reaction identified by label
+Higher reaction level means that the reaction can interrupt another reaction
+
 - ExclusiveReaction
+args: label
+Configures reaction identified by label as exclusive (czy wyzsza moze przerwac? TODO)
+
 - AutorepeatReaction
+args: label
+Configures reaction identified by label as autorepeated (enabled upon servicing)
+
 - DisableReaction
+args: label
+Disables reaction identified by label
+
 - EnableBuiltin
+Enables builtin reactions (defined in host configuration with anchors)
+
 - ExclusiveBuiltin
+Sets all Builtin reactions as exclusive (see: ExclusiveReaction)
+
 - LowerBuiltin
+Lowers the level of the builtin reactions
+Higher reaction level means that the reaction can interrupt another reaction (TODO: opisac najpopularniejsza sekwencje konfiguracji tych reakcji)
+
 - DumpMemory
+Dumps contents of the memory into preconfigured file in research directory
+
 - TracerStartTrace
+Starts tracing execution.
+Writes output into output file (switching with prefixes).
+Writes all executed instructions.
+
+- StartTrace
+Alias to: TracerStartTrace
+
 - TracerStartStrace
+Starts tracing syscalls (sets syscall_callback as trace callback for the research)
+Writes output into output file (switching with prefixes).
+Writes ONLY syscalls in format: "SC,0x%08x,0x%08x,0x%08x\n", syscall_no, tid, eip
+
 - TracerStartTraceDebug
+Starts a debugged trace (similar to standard trace, but adds thread dump after each instruction for debugging with the trace analysis tool)
+Writes output into output file (switching with prefixes).
+
 - TracerStartTraceLight
+Starts a light debugged trace (similar to standard trace, but adds thread dump after each call for debugging with the trace analysis tool (we need to use it now with call_analysis))
+Writes output into output file (switching with prefixes).
+
 - ReadRegister
+args: register (default: EIP)
+Reads a register content and puts it into ret (reports the register). 
+Only 32bit registers for now (TODO)
+
 - WriteRegister
+args: value 
+Writes a register content
+Only 32bit registers for now (TODO)
 
 - Adjust
 Args: Integer a1
 Adds a1 to the value on internal stack
 
-ReadDword
-WriteDword
-ReadPID
-ReadTID
-ReadEP
-TracerPrev
-TracerNext
-CloseTracer
+- ReadDword
+stack: address
+Reads a contents of an address and puts it into ret (reports memory value)
+Maybe add location_descriptors (TODO)
+
+- WriteDword
+args: content
+stack: address
+Writes contents at an address
+Maybe add location_descriptors (TODO)
+
+- ReadPID
+Not sure how this works (perhaps TODO)
+
+- ReadTID
+Not sure how this works (perhaps TODO)
+
+- ReadEP
+Not sure how this works (perhaps TODO)
+
+- TracerPrev
+Sets the active tracer to the previous one
+
+- TracerNext
+Sets the active tracer to the next one
+
+- CloseTracer
+Closes the active tracer
 
 - CheckEqual
 Args: Integer a1
 Decision: "Y" or "N"
 Checks if internal ret is equal to a1
 
-AutoST
-ResumeThread
-WriteLastSuspension
-ReadLastSuspension
-WhichTracer
-MoreTracers
-ReadPrefix
-ListProcesses
-ListTebs
-ListAllTebs
-LoadEP
-SaveFirstEP
-SaveEP
-SaveOffset
-SaveSize
-ReadRegion
-OutRegion
-ManualST
-ManualSTArg
-ManualSTwSelf
-SetSampleFile
-SetResearchDir
-SetOutDir
-CheckHostDir
-ReadArgUni
-ReadArgAnsi
-ReadArg
-SecureAllSections
-ExtractEP
-RunRoutine
-Spawn
-Cooldown
-ReadStack
-SpawnResponder80
-SpawnResponder
-NextResponse
-SpawnMailslot
-MailslotNextResponse
-ResolveDNS
-GetHTTP
-StartLog
-ChangeIP
-RunCmd
+- AutoST
+Sets ST reaction based on the sample
+
+- ResumeThread
+args: TID 
+Releases paused thread
+
+- WriteLastSuspension
+ret: last_suspension value to write
+Modifies host state's last_suspension
+
+- ReadLastSuspension
+ret: last_suspension read from state
+Reads host state's last_suspension
+
+- WhichTracer
+TODO: why was here closing_active_tracer??
+Prints active tracer id to standard output
+
+- MoreTracers (Decision)
+Check if there are any tracers left
+
+- ReadPrefix
+Prints the prefix that is currently set for the active tracer.
+
+- ListProcesses
+Prints the list of active processes
+
+- GetPIDByMatch
+Retrieves the PID of the current process based on the process's executable module name
+
+- ListTebs
+Prints the list of TEBs in the debugged process
+
+- ListAllTebs
+Prints the list of all TEBs 
+
+- LoadEP
+Read ep from state into ret
+
+- SaveFirstEP (deprecated)
+Read ep from parameters passed to the fuzzer 
+
+- SaveEP
+Sets ep to the arg or (if arg is None) to ret 
+
+- SaveOffset
+Set the state's offset to args or (if arg is None) to ret
+
+- SaveSize
+Set the state's size to args or (if arg is None) to ret
+
+- ReadRegion
+stack: Offset, Size
+Reads region and prints to the standard output (reports region)
+
+- OutRegion
+Outputs hexified region to the output file
+
+- ManualST
+Sets ST reaction based on state.ep. (TODO: perhaps we should use stack or ret)
+
+- ManualSTArg (deprecated)
+Sets ST reaction based arguments passed via fuzzer parameters.
+
+- ManualSTwSelf
+Sets ST reaction based on state.ep as an offset from self. (TODO: perhaps we should use stack or ret)
+
+- SetSampleFile
+Configures sample file in active tracer
+
+- SetResearchDir
+Configures research dir in active tracer
+
+- SetOutDir
+Configures output dir in active tracer
+
+- CheckHostDir
+Check if all the host dirs exist (based on host configuration)
+
+- ReadArgUni
+args: number of arg
+Reads and prints UNICODE string from stack (reports UNICODE argument)
+
+- ReadArgAnsi
+args: number of arg
+Reads and prints ANSI string from stack (reports ANSI argument)
+
+- ReadArg
+args: number of arg
+Reads and prints DWORD string from stack (reports DWORD argument)
+
+- SecureAllSections
+Enable write denial on registered memory sections (protects from code overwrite redulting from bug)
+
+- ExtractEP
+args: path to PE file
+Extracts EP from PE file and puts it into ret
+
+- RunRoutine
+args: routine number
+Runs tracer routine number x
+
+- Spawn
+args: path to the sample
+Create process from PE EXE
+
+- Cooldown
+Not implemented? TODO
+
+- ReadStack
+args: number of arguments
+Reads and prints the stack (reports stack)
+
+- SpawnResponder80
+Creates a simple responder on port 80
+
+- SpawnResponder
+args: port for responder
+Creates a simple responder on port defined by arg
+
+- NextResponse
+Load next response to responder
+
+- SpawnMailslot
+Creates a mailslot responder
+
+- MailslotNextResponse
+Loads next response to mailslot responder
+
+- ResolveDNS
+args: domain
+Internal controller resolves domain with socket.gethostbyname
+
+- GetHTTP
+args: URL
+Internal controller gets HTTP webpage from URL pointed in args
+
+- StartLog
+Starts logging from internal controller (it may be deprecated, because logf is not set anywhere)
+
+- ChangeIP
+TODO: not implemented
+
+- RunCmd
+args: Command
+Runs the command a1 in internal host
 
 - RunCmdHost
 Args: String a1
 Runs the command a1 in external host
 WARNING!!! Disable before parsing untrusted scripts!!!
 
-ReadAnsi
-WriteAnsi
-ReadUnicode
-WriteUnicode
+- ReadAnsi
+args: address in arg or ret
+Reads ANSI string from selected address and prints (reports ANSI)
+
+- WriteAnsi
+ret: address
+args or stack: string
+Writes ANSI string into address (TODO: uporzadkowac argumenty) 
+
+- ReadUnicode
+args: address in arg or ret
+Reads UNICODE string from selected address and prints (reports UNICODE)
+
+- WriteUnicode
+ret: address
+args or stack: string
+Writes UNICODE string into address (TODO: uporzadkowac argumenty) 
 
 - Execute
 Do nothing [? for backward compatibility ?]
@@ -227,12 +545,15 @@ Dequeues from internal queue
 Clears internal stack
 [TODO: create clear queue command]
 
-Interrupt
+- Interrupt
+Execute interrupt procedure with internal controller (TODO: jak to jest robione, kiedy, w jakim celu?)
 
 - QemuQuit
 Turns off logging and executes quit command in qemu control socket
 
-TracerSetParameters
+- TracerSetParameters
+args: parameters
+Sets parameters for starting sample process with.
 
 - Beep
 Executes 'beeep' command, which should be a script notifying the user
@@ -247,12 +568,16 @@ Prints data to host results file (default: results.txt, can be overwritten with 
 - HostPrint
 Print something to the screen (in red)
 
-DumpFile
+- DumpFile
+Copying file (e.g. additional artifacts into output)
+Executed with: run_cmd copy %s \\\\10.0.2.4\\qemu\\dump" % args
 
 - Pause
 Waits for user interaction before proceeding
 
-ResolveLocation
+- ResolveLocation
+args: location in parse_location syntax
+Resolves location in parse_location and reports
 
 - Int10
 Args: String a1 or internal ret

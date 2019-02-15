@@ -1082,7 +1082,7 @@ def execute(cmds, ext_pipe):
             ok(ext_pipe)
 
         elif(cmd == "which_tracer"):
-            trace_controller.close_active_tracer()
+#            trace_controller.close_active_tracer()
             writePipe(ext_pipe, "%d" % trace_controller.tracer_active_id)
             writePipe(ext_pipe, "which_tracer "+bcolors.OK_STR)
             ok(ext_pipe)
