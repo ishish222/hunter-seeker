@@ -127,6 +127,7 @@ def perform(script_path):
     global_script = []
     global_labels = {}
     global_stack = []
+    prefix_stack = []
 
     signal.signal(signal.SIGINT, sigkill_handler)
     signal.signal(signal.SIGUSR1, sigkill_handler)
@@ -166,12 +167,18 @@ def perform(script_path):
 
         try:
 #            print "[%s] (%s)" % (instruction.name, script_path)
-            print bcolors.LIGHTBLUE + "===[%s]" % (instruction.name) + bcolors.ENDC
+            display_name = "==="
+            for prefix in prefix_stack:
+                display_name = '%s[%s]' % (display_name, prefix)
+            display_name = '%s[%s]' % (display_name, instruction.name)
+            print bcolors.LIGHTBLUE + display_name + bcolors.ENDC
             if(instruction.name == 'Call'):
                 print 'Calling: %s' % instruction.args
                 global_stack.append(ip+1)
+                prefix_stack.append(instruction.args)
                 ret = instruction.args
             elif(instruction.name == 'Return'):
+                prefix_stack.pop()
                 ret = global_stack.pop()
             else:
                 ret = instruction.execute()

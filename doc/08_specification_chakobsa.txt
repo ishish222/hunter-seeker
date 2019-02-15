@@ -237,7 +237,16 @@ TracerSetParameters
 - Beep
 Executes 'beeep' command, which should be a script notifying the user
 
-Print
+- TracerPrintResult
+Prints OU into result file
+
+- HostPrintResult
+args - str or int (will be converted). If None, value from stack
+Prints data to host results file (default: results.txt, can be overwritten with options.host_result_file)
+
+- HostPrint
+Print something to the screen (in red)
+
 DumpFile
 
 - Pause

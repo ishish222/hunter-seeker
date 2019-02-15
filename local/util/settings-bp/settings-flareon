@@ -1,0 +1,9 @@
+#!/bin/bash
+
+LOCAL_ROOT=..
+PACKAGES_DIR=../../packages
+PACKAGE_CONFIGS_DIR=$LOCAL_ROOT/package-configs
+DEPLOY_ROOT=/home/hs1/
+DEPLOY_PATH=$DEPLOY_ROOT/hs2-deploy
+CURRENT_DEPLOY_PATH=$DEPLOY_ROOT/hs2-current-deploy
+PACKAGE_HOST="hs1@flareon"

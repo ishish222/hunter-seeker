@@ -8,7 +8,7 @@ import Queue
 
 options = globs.state.options
 
-def print_result(args=None):
+def host_print_result(args=None):
     options = globs.state.options
 
     if(args is None):
@@ -21,6 +21,20 @@ def print_result(args=None):
         options.host_result_file = open("results.txt", "w", 0)
     options.host_result_file.write(args)
     options.host_result_file.write('\n')
+
+    return
+
+def host_print(args=None):
+    options = globs.state.options
+
+    if(args is None):
+        args = globs.state.stack.pop()
+
+    if(type(args) == int):
+        args = '0x%08x' % args
+
+    print('%s%s%s' % ('\033[91m', args, '\033[0m'))
+    print('\n')
 
     return
 

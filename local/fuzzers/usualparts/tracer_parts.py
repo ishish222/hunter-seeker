@@ -1216,7 +1216,7 @@ def tracer_read_ep(args = 0x0):
 
     return
 
-def tracer_print(args = None):
+def tracer_print_result(args = None):
     options = globs.state.options
     state = globs.state
     status = globs.state.status

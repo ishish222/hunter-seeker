@@ -28,6 +28,9 @@ syntax: glob
 #mercurial
 *.orig
 
+#screenlogs 
+screenlog.*
+
 #dirs
 origins/*
 samples_shared/*
@@ -38,4 +41,3 @@ local/blob/*
 targets/*
 packages/*
 research/*
-utils/screenlog*
