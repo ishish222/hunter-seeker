@@ -869,3 +869,15 @@ To powinno byc: OP,VERIFY_SEG_SEC
 
 106 - ableton_008 skad sie biora RN,xxx 
 
+--
+[x] 107 - nie mozna zaalokowac
+
+fopen("ab_intro_001.dump", "rb")                                                                                                   = 0xf35910
+__xstat(1, "ab_intro_001.dump", 0x7ffced1a70c0)                                                                                    = 0
+malloc(34359738368)                                                                                                                = 0
+__errno_location()                                                                                                                 = 0x2aee17c6b5b8
+fwrite("Failed to allocate memory\n", 1, 26, 0x2aee18b33520Failed to allocate memory
+)                                                                       = 26
+
+Program alokuje 32 GB a fizycznej jest 32. Swap on my friend.
+

@@ -24,25 +24,25 @@ external_qemu_use_vnc = True
 external_qemu_use_taskset = False
 external_qemu_additional_options = '-enable-kvm'
 external_qemu_machines = {
-    'hs2-01': {'disk' : 'hs2-01-win7.qcow2', 'vnc' : ':1', 'taskset' : '1,2,3',     'monitor' : '/tmp/monitor-hs1', 'serial' : '/tmp/serial-hs1'},
-    'hs2-02': {'disk' : 'hs2-02-win7.qcow2', 'vnc' : ':2', 'taskset' : '4,5,6',     'monitor' : '/tmp/monitor-hs2', 'serial' : '/tmp/serial-hs2'},
-    'hs2-03': {'disk' : 'hs2-03-win7.qcow2', 'vnc' : ':3', 'taskset' : '7,8,9',     'monitor' : '/tmp/monitor-hs3', 'serial' : '/tmp/serial-hs3'},
-    'hs2-04': {'disk' : 'hs2-04-win7.qcow2', 'vnc' : ':4', 'taskset' : '10,11,12',  'monitor' : '/tmp/monitor-hs4', 'serial' : '/tmp/serial-hs4'},
-    'hs2-05': {'disk' : 'hs2-05-win7.qcow2', 'vnc' : ':5', 'taskset' : '13,14,15',  'monitor' : '/tmp/monitor-hs5', 'serial' : '/tmp/serial-hs5'},
-    'hs2-06': {'disk' : 'hs2-06-win7.qcow2', 'vnc' : ':6', 'taskset' : '16,17,18',  'monitor' : '/tmp/monitor-hs6', 'serial' : '/tmp/serial-hs6'},
-    'hs2-07': {'disk' : 'hs2-07-win7.qcow2', 'vnc' : ':7', 'taskset' : '19,20,21',  'monitor' : '/tmp/monitor-hs7', 'serial' : '/tmp/serial-hs7'},
-    'hs2-08': {'disk' : 'hs2-08-win7.qcow2', 'vnc' : ':8', 'taskset' : '22,23,24',  'monitor' : '/tmp/monitor-hs8', 'serial' : '/tmp/serial-hs8'},
-    'hs2-09': {'disk' : 'hs2-09-win7.qcow2', 'vnc' : ':9', 'taskset' : '1,2,3',     'monitor' : '/tmp/monitor-hs9', 'serial' : '/tmp/serial-hs9'},
-    'hs2-10': {'disk' : 'hs2-10-win7.qcow2', 'vnc' : ':10', 'taskset' : '4,5,6',    'monitor' : '/tmp/monitor-hs10', 'serial' : '/tmp/serial-hs10'},
-    'hs2-11': {'disk' : 'hs2-11-win7.qcow2', 'vnc' : ':11', 'taskset' : '7,8,9',    'monitor' : '/tmp/monitor-hs11', 'serial' : '/tmp/serial-hs11'},
-    'hs2-12': {'disk' : 'hs2-12-win7.qcow2', 'vnc' : ':12', 'taskset' : '10,11,12', 'monitor' : '/tmp/monitor-hs12', 'serial' : '/tmp/serial-hs12'},
-    'sc-01': {'disk' : 'sc-01.qcow2', 'vnc' : ':1', 'taskset' : '1,2,3',     'monitor' : '/tmp/monitor-hs1', 'serial' : '/tmp/serial-hs1'},
-    'sc-02': {'disk' : 'sc-02.qcow2', 'vnc' : ':2', 'taskset' : '4,5,6',     'monitor' : '/tmp/monitor-hs2', 'serial' : '/tmp/serial-hs2'},
-    'sc-03': {'disk' : 'sc-03.qcow2', 'vnc' : ':3', 'taskset' : '7,8,9',     'monitor' : '/tmp/monitor-hs3', 'serial' : '/tmp/serial-hs3'},
-    'rzut_1-01': {'disk' : 'rzut_1-01.qcow2', 'vnc' : ':1', 'taskset' : '1,2,3',     'monitor' : '/tmp/rzut-1_01-monitor', 'serial' : '/tmp/rzut-1_01-serial'},
-    'rzut_1-02': {'disk' : 'rzut_1-02.qcow2', 'vnc' : ':2', 'taskset' : '4,5,6',     'monitor' : '/tmp/rzut-1_02-monitor', 'serial' : '/tmp/rzut-1_02-serial'},
-    'ORAN1701-01': {'disk' : 'ORAN1701-01.qcow2', 'vnc' : ':1', 'taskset' : '1,2,3',     'monitor' : '/tmp/rzut-1_01-monitor', 'serial' : '/tmp/rzut-1_01-serial'},
-    'ORAN1701-02': {'disk' : 'ORAN1701-02.qcow2', 'vnc' : ':2', 'taskset' : '4,5,6',     'monitor' : '/tmp/rzut-1_02-monitor', 'serial' : '/tmp/rzut-1_02-serial'}
+    'hs2-01': {'disk' : 'hs2-01-win7.leaf', 'vnc' : ':1', 'taskset' : '1,2,3',     'monitor' : '/tmp/monitor-hs1', 'serial' : '/tmp/serial-hs1'},
+    'hs2-02': {'disk' : 'hs2-02-win7.leaf', 'vnc' : ':2', 'taskset' : '4,5,6',     'monitor' : '/tmp/monitor-hs2', 'serial' : '/tmp/serial-hs2'},
+    'hs2-03': {'disk' : 'hs2-03-win7.leaf', 'vnc' : ':3', 'taskset' : '7,8,9',     'monitor' : '/tmp/monitor-hs3', 'serial' : '/tmp/serial-hs3'},
+    'hs2-04': {'disk' : 'hs2-04-win7.leaf', 'vnc' : ':4', 'taskset' : '10,11,12',  'monitor' : '/tmp/monitor-hs4', 'serial' : '/tmp/serial-hs4'},
+    'hs2-05': {'disk' : 'hs2-05-win7.leaf', 'vnc' : ':5', 'taskset' : '13,14,15',  'monitor' : '/tmp/monitor-hs5', 'serial' : '/tmp/serial-hs5'},
+    'hs2-06': {'disk' : 'hs2-06-win7.leaf', 'vnc' : ':6', 'taskset' : '16,17,18',  'monitor' : '/tmp/monitor-hs6', 'serial' : '/tmp/serial-hs6'},
+    'hs2-07': {'disk' : 'hs2-07-win7.leaf', 'vnc' : ':7', 'taskset' : '19,20,21',  'monitor' : '/tmp/monitor-hs7', 'serial' : '/tmp/serial-hs7'},
+    'hs2-08': {'disk' : 'hs2-08-win7.leaf', 'vnc' : ':8', 'taskset' : '22,23,24',  'monitor' : '/tmp/monitor-hs8', 'serial' : '/tmp/serial-hs8'},
+    'hs2-09': {'disk' : 'hs2-09-win7.leaf', 'vnc' : ':9', 'taskset' : '1,2,3',     'monitor' : '/tmp/monitor-hs9', 'serial' : '/tmp/serial-hs9'},
+    'hs2-10': {'disk' : 'hs2-10-win7.leaf', 'vnc' : ':10', 'taskset' : '4,5,6',    'monitor' : '/tmp/monitor-hs10', 'serial' : '/tmp/serial-hs10'},
+    'hs2-11': {'disk' : 'hs2-11-win7.leaf', 'vnc' : ':11', 'taskset' : '7,8,9',    'monitor' : '/tmp/monitor-hs11', 'serial' : '/tmp/serial-hs11'},
+    'hs2-12': {'disk' : 'hs2-12-win7.leaf', 'vnc' : ':12', 'taskset' : '10,11,12', 'monitor' : '/tmp/monitor-hs12', 'serial' : '/tmp/serial-hs12'},
+    'sc-01': {'disk' : 'sc-01.leaf', 'vnc' : ':1', 'taskset' : '1,2,3',     'monitor' : '/tmp/monitor-hs1', 'serial' : '/tmp/serial-hs1'},
+    'sc-02': {'disk' : 'sc-02.leaf', 'vnc' : ':2', 'taskset' : '4,5,6',     'monitor' : '/tmp/monitor-hs2', 'serial' : '/tmp/serial-hs2'},
+    'sc-03': {'disk' : 'sc-03.leaf', 'vnc' : ':3', 'taskset' : '7,8,9',     'monitor' : '/tmp/monitor-hs3', 'serial' : '/tmp/serial-hs3'},
+    'rzut_1-01': {'disk' : 'rzut_1-01.leaf', 'vnc' : ':1', 'taskset' : '1,2,3',     'monitor' : '/tmp/rzut-1_01-monitor', 'serial' : '/tmp/rzut-1_01-serial'},
+    'rzut_1-02': {'disk' : 'rzut_1-02.leaf', 'vnc' : ':2', 'taskset' : '4,5,6',     'monitor' : '/tmp/rzut-1_02-monitor', 'serial' : '/tmp/rzut-1_02-serial'},
+    'ORAN1701-01': {'disk' : 'ORAN1701-01.leaf', 'vnc' : ':1', 'taskset' : '1,2,3',     'monitor' : '/tmp/rzut-1_01-monitor', 'serial' : '/tmp/rzut-1_01-serial'},
+    'ORAN1701-02': {'disk' : 'ORAN1701-02.leaf', 'vnc' : ':2', 'taskset' : '4,5,6',     'monitor' : '/tmp/rzut-1_02-monitor', 'serial' : '/tmp/rzut-1_02-serial'}
 }
 
 # for creating drive
