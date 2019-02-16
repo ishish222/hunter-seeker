@@ -1,0 +1,3 @@
+put this to .bashrc
+
+export PATH=$PATH:/home/ish/projects/korrino/implementation-6/local/util

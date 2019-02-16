@@ -65,12 +65,12 @@ Performs qemu start with revert to state with name defined in settings
 - QemuLoad
 Args: String a1
 Loads a Fuzzer state with id a1.
-Note: Fuzzer state means Qemu state + pickled fuzzer state (loaded from .state file)
+Note: Fuzzer state means Qemu state + pickled fuzzer globs.state (loaded from .state file)
 
 - QemuSave
 Args: String a1
-Save a Fuzzer state with id a1.
-Note: Fuzzer state means Qemu state + pickled fuzzer state (saved into .state file)
+Save a Fuzzer state with id a1. If some other Fuzzer state exists, asks if you want to delete (any key to confirm, Ctrl-C to deny)
+Note: Fuzzer state means Qemu state + pickled fuzzer globs.state (saved into .state file)
 
 - QemuDel
 Args: String a1
