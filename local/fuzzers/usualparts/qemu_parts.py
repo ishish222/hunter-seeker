@@ -131,9 +131,11 @@ def qemu_save(args=None):
 
         qemu_delete(last)
 
-    write_socket(options.s, "disconnect");
-    response, _, _ = read_socket(options.s)
+    # proceed with saving VM, start with disconnecting
+#    write_socket(options.s, "disconnect");
+#    response, _, _ = read_socket(options.s)
 
+    ret = write_monitor_2(options.m, "stop") # in order to stop from reconnecting to Serial before savevm is finished
     ret = write_monitor_2(options.m, "savevm xxx%sxxx" % args)
     time.sleep(options.external_qemu_socket_timeout_step * options.external_qemu_socket_timeout_mult)
     print("Saved: %s" % args)
@@ -246,6 +248,7 @@ def qemu_load(args=None):
         globs.state.tracers_count = current_state['tracers_count']
 
     ret = write_monitor_2(options.m, "loadvm xxx%sxxx" % args)
+    ret = write_monitor_2(options.m, "cont")
     time.sleep(options.external_qemu_socket_timeout_step * options.external_qemu_socket_timeout_mult)
     print ret
 

@@ -189,9 +189,9 @@ def execute(cmds, ext_pipe):
     global trace_controller
     global responder
     global mailslot_client
+    global mywmi
 
-    import wmi
-    mywmi = wmi.WMI()
+    print('in internal')
 
     cmd = cmds[0]
     args = " ".join(cmds[1:])
@@ -1178,11 +1178,15 @@ class ThreadWithExc(threading.Thread):
 def executing(cmd_q, ext_pipe):
     while True:
         cmds = cmd_q.get()
-        execute(cmds, ext_pipe)
         print 'executing: %s\n' % cmds
+        execute(cmds, ext_pipe)
 
 def executing_thread():
     import time
+    import pythoncom
+
+    print 'Initializing COM'
+    pythoncom.CoInitialize()
     global cmd_q2
 
     while True:
@@ -1219,6 +1223,7 @@ def internal_routine():
     global log_pipe
     global main_binner
     global trace_controller
+    global mywmi
 
 #    dlog("In main", 2)
     logo = """
@@ -1233,6 +1238,9 @@ Hunter-Seeker
     from multiprocessing import Process, Queue
 
     print(logo)
+
+    import wmi
+    mywmi = wmi.WMI()
 
     cmd_q = Queue()
     cmd_q2 = []
@@ -1250,8 +1258,6 @@ Hunter-Seeker
             cmd = readPipe(ext_pipe)
             if(cmd == 'disconnect'):
                 writePipe(ext_pipe, 'disconnecting')
-                ok(ext_pipe)
-                ext_pipe.close()
                 return
             if(cmd == 'interrupt'):
     #            p.terminate()
@@ -1279,5 +1285,9 @@ if __name__ == '__main__':
     trace_controller = None
     while True:
         internal_routine()
-        time.sleep(3)
+        print "saving state"
+        #ok(ext_pipe)
+        ext_pipe.close()
+        time.sleep(3) # here we are saving the state
+        print "loading state"
 
