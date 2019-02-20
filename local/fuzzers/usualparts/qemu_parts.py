@@ -131,13 +131,10 @@ def qemu_save(args=None):
 
         qemu_delete(last)
 
-    # proceed with saving VM, start with disconnecting
-#    write_socket(options.s, "disconnect");
-#    response, _, _ = read_socket(options.s)
-
-    ret = write_monitor_2(options.m, "stop") # in order to stop from reconnecting to Serial before savevm is finished
+    ret = write_monitor_2(options.m, "stop") 
     ret = write_monitor_2(options.m, "savevm xxx%sxxx" % args)
-    time.sleep(options.external_qemu_socket_timeout_step * options.external_qemu_socket_timeout_mult)
+    print "Waiting some more"
+    time.sleep(options.external_qemu_socket_timeout_step * options.external_qemu_socket_timeout_mult * 2)
     print("Saved: %s" % args)
 
     import pickle

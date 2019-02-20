@@ -151,7 +151,7 @@ args: sample name
 ustawia nazwe probki badania (my_trace->in_sample_path)
 
 - TracerConfigureSamplePID
-args: sample PID
+args: sample PID, if None, takes from state.pid
 Ustawia PID docelowego procesu badania (my_trace->in_sample_pid)
 
 - TracerConfigureOutDir
@@ -192,6 +192,7 @@ Registers regions by parsing the region line according to region syntax
 
 - TracerRegisterReactions
 args: region syntax line
+aliases: TracerRegisterReaction, RegisterReactions, RegisterReaction
 Registers reactions by parsing the reaction line according to reaction syntax
 
 - RegisterReactions
@@ -200,6 +201,7 @@ Alias to: TracerRegisterReactions
 - TracerRegisterReactionsAt
 args: region syntax line w/o location
 stack: location
+aliases: TracerRegisterReactionAt, RegisterReactionsAt, RegisterReactionAt
 Registers reactions by parsing the reaction line according to reaction syntax with location read from the stack
 
 - TracerRegisterBuiltin

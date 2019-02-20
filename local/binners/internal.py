@@ -190,8 +190,8 @@ def execute(cmds, ext_pipe):
     global responder
     global mailslot_client
     global mywmi
-
-    print('in internal')
+    import wmi
+    mywmi = wmi.WMI()
 
     cmd = cmds[0]
     args = " ".join(cmds[1:])
