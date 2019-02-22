@@ -356,6 +356,18 @@ def tracer_configure_sample(args=None):
 
     return
 
+def tracer_get_current_config(args=None):
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+    
+    write_socket(options.s, "tracer_get_current_config");
+    response, _, _ = read_socket(options.s)
+
+    globs.state.ret = response
+
+    return
+
 def tracer_add_reaction(args):
     options = globs.state.options
     state = globs.state

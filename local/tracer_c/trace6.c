@@ -4402,6 +4402,33 @@ BREAKPOINT* add_breakpoint(char* location_str, REACTION*  reaction)
     return &my_trace->breakpoints[my_bpt_index];
 }
 
+void get_process_creation_line()
+{
+    char line[MAX_NAME];
+    char final_args[MAX_NAME]; 
+
+    d_print("Reporting process name\n");
+
+    if(strlen(my_trace->args) > 0x0)
+    {
+        strcpy(final_args, my_trace->process_fname);
+        strcat(final_args, " ");
+        strcat(final_args, my_trace->args);
+
+        my_trace->report_code = REPORT_INFO;
+        sprintf(line, "%s %s", my_trace->process_fname, final_args);
+        d_print("Reporting: %s\n", line);
+        strcpy(my_trace->report_buffer, line);
+    }
+    else
+    {
+        my_trace->report_code = REPORT_INFO;
+        sprintf(line, "%s", my_trace->process_fname);
+        d_print("Reporting: %s\n", line);
+        strcpy(my_trace->report_buffer, line);
+    }
+
+}
 
 
 void start_trace_fname()
@@ -6518,6 +6545,11 @@ int handle_cmd(char* cmd)
         strcpy(my_trace->args, my_trace->process_fname);
         strcat(my_trace->args, cmd+3);
         d_print("Args is set to: %s\n", my_trace->args);
+        send_report();
+    }
+    else if(!strncmp(cmd, CMD_GET_CONFIG, 2))
+    {
+        get_process_creation_line();
         send_report();
     }
     else if(!strncmp(cmd, CMD_GET_EXCEPTION_CODE, 2))

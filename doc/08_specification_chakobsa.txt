@@ -177,6 +177,10 @@ Dodaje PID do out_prefix badania (my_trace->out_prefix)
 args: in_dir
 Ustawia out_dir tracera (my_trace->in_research_dir)
 
+- TracerGetCurrentConfig
+Aliases: GetCurrentConfig
+Retrieves current trace configuration from active tracer
+
 - TracerPrepareTrace
 Resetuje badanie: 
 1. resetuje nazwe aktualnego out i przelacza na niego

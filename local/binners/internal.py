@@ -542,6 +542,13 @@ def execute(cmds, ext_pipe):
             writePipe(ext_pipe, "tracer_configure_sample_file "+bcolors.OK_STR)
             ok(ext_pipe)
 
+        elif(cmd == "tracer_get_current_config"):
+            trace_controller.get_current_config()
+            writePipe(ext_pipe, "%s\n" % trace_controller.last_answer)
+            writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
+            writePipe(ext_pipe, "tracer_configure_sample_file "+bcolors.OK_STR)
+            ok(ext_pipe)
+
         elif(cmd == "tracer_configure_in_dir"):
             trace_controller.configure_in_dir(args)
             trace_controller.in_dir = args

@@ -743,6 +743,11 @@ class TraceController(object):
         self.last_report, self.last_answer = self.recv_report_active()
         return 
 
+    def get_current_config(self):
+        self.send_command_active("GC")
+        self.last_report, self.last_answer = self.recv_report_active()
+        return 
+
     def configure_in_dir(self, filee):
         self.send_command_active("SD %s" % filee)
         self.last_report, self.last_answer = self.recv_report_active()

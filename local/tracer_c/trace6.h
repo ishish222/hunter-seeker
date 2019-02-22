@@ -123,6 +123,7 @@
 #define CMD_SET_OUT_PREFIX      "Sp"
 #define CMD_APP_OUT_PREFIX      "Ap"
 #define CMD_SET_PARAMETERS      "SP"
+#define CMD_GET_CONFIG          "GC"
 #define CMD_READ_PREFIX         "Rp"
 #define CMD_PREPARE_TRACE       "PT"
 #define CMD_SET_E_REACTION_1        "M1"
