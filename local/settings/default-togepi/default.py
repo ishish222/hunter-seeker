@@ -22,7 +22,9 @@ external_qemu_use_taskset = False
 external_qemu_additional_options = '-enable-kvm'
 external_qemu_machines = {
     'hs2-01': {'disk' : 'hs2-01-win7.leaf', 'vnc' : ':1', 'taskset' : '1,2,3',     'monitor' : '/tmp/monitor-hs1', 'serial' : '/tmp/serial-hs1'},
-    'hs2-02': {'disk' : 'hs2-02-win7.leaf', 'vnc' : ':2', 'taskset' : '4,5,6',     'monitor' : '/tmp/monitor-hs2', 'serial' : '/tmp/serial-hs2'}
+    'hs2-02': {'disk' : 'hs2-02-win7.leaf', 'vnc' : ':2', 'taskset' : '4,5,6',     'monitor' : '/tmp/monitor-hs2', 'serial' : '/tmp/serial-hs2'},
+    'rzut_1-01': {'disk' : 'rzut_1-01.leaf', 'vnc' : ':1', 'taskset' : '1,2,3',     'monitor' : '/tmp/rzut-1_01-monitor', 'serial' : '/tmp/rzut-1_01-serial'},
+    'rzut_1-02': {'disk' : 'rzut_1-02.leaf', 'vnc' : ':2', 'taskset' : '4,5,6',     'monitor' : '/tmp/rzut-1_02-monitor', 'serial' : '/tmp/rzut-1_02-serial'}
 }
 
 # for creating drive

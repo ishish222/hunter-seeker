@@ -267,28 +267,34 @@ Based on returned reaction code can redirect traffic into a particular label
 - EnableReaction
 args: label
 Enables reaction identified by label
+For now handling multiple labels is disabled
 
 - RaiseReaction
 args: label
 Raises the level of a reaction identified by label
 Higher reaction level means that the reaction can interrupt another reaction
+For now handling multiple labels is disabled
 
 - LowerReaction
 args: label
 Lowers the level of a reaction identified by label
 Higher reaction level means that the reaction can interrupt another reaction
+For now handling multiple labels is disabled
 
 - ExclusiveReaction
 args: label
 Configures reaction identified by label as exclusive (czy wyzsza moze przerwac? TODO)
+For now handling multiple labels is disabled
 
 - AutorepeatReaction
 args: label
 Configures reaction identified by label as autorepeated (enabled upon servicing)
+For now handling multiple labels is disabled
 
 - DisableReaction
 args: label
 Disables reaction identified by label
+For now handling multiple labels is disabled
 
 - EnableBuiltin
 Enables builtin reactions (defined in host configuration with anchors)
