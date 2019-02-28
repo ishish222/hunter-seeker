@@ -1183,7 +1183,7 @@ def tracer_set_pid(args = None):
     if(args == None):
         args = globs.state.stack.pop()
 
-    if(type(args) == 'str'):
+    if(type(args) == str):
         globs.state.pid = int(args, 0x10)
     else:
         globs.state.pid = args

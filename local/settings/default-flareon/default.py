@@ -41,6 +41,7 @@ external_qemu_machines = {
     'sc-03': {'disk' : 'sc-03.leaf', 'vnc' : ':3', 'taskset' : '7,8,9',     'monitor' : '/tmp/monitor-hs3', 'serial' : '/tmp/serial-hs3'},
     'rzut_1-01': {'disk' : 'rzut_1-01.leaf', 'vnc' : ':1', 'taskset' : '1,2,3',     'monitor' : '/tmp/rzut-1_01-monitor', 'serial' : '/tmp/rzut-1_01-serial'},
     'rzut_1-02': {'disk' : 'rzut_1-02.leaf', 'vnc' : ':2', 'taskset' : '4,5,6',     'monitor' : '/tmp/rzut-1_02-monitor', 'serial' : '/tmp/rzut-1_02-serial'},
+    'rzut_1-03': {'disk' : 'rzut_1-03.leaf', 'vnc' : ':3', 'taskset' : '7,8,9',     'monitor' : '/tmp/rzut-1_03-monitor', 'serial' : '/tmp/rzut-1_03-serial'},
     'ORAN1701-01': {'disk' : 'ORAN1701-01.leaf', 'vnc' : ':1', 'taskset' : '1,2,3',     'monitor' : '/tmp/rzut-1_01-monitor', 'serial' : '/tmp/rzut-1_01-serial'},
     'ORAN1701-02': {'disk' : 'ORAN1701-02.leaf', 'vnc' : ':2', 'taskset' : '4,5,6',     'monitor' : '/tmp/rzut-1_02-monitor', 'serial' : '/tmp/rzut-1_02-serial'}
 }

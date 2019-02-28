@@ -2256,7 +2256,11 @@ void register_lib(LOAD_DLL_DEBUG_INFO info)
     strcpy(my_trace->libs[my_trace->lib_count].lib_name, "UNKNOWN");
     strcpy(my_trace->libs[my_trace->lib_count].lib_path, "UNKNOWN");
 #endif
-    //d_print("Name pointer: %p, len: 0x%08x\n", libs[my_trace->lib_count].lib_name, strlen(libs[my_trace->lib_count].lib_name));
+    /* print commented lib path */
+
+    d_print("# %s\n", my_trace->libs[my_trace->lib_count].lib_path);
+    sprintf(line, "# %s\n", my_trace->libs[my_trace->lib_count].lib_path);
+    add_to_buffer(line);
 
     my_trace->libs[my_trace->lib_count].lib_offset = (DWORD)info.lpBaseOfDll;
     d_print("RL,0x%08x,%s\n", my_trace->libs[my_trace->lib_count].lib_offset, my_trace->libs[my_trace->lib_count].lib_name);
@@ -4441,12 +4445,14 @@ void start_trace_fname()
 
     if(strlen(my_trace->args) > 0x0)
     {
-        strcpy(final_args, my_trace->process_fname);
-        strcat(final_args, " ");
+        strcpy(final_args, "\"");
+        strcat(final_args, my_trace->process_fname);
+        strcat(final_args, "\" \"");
         strcat(final_args, my_trace->args);
+        strcat(final_args, "\"");
         //res = CreateProcess(my_trace->process_fname, my_trace->args, 0x0, 0x0, 0x0, DEBUG_ONLY_THIS_PROCESS, 0x0, 0x0, &my_trace->si, &my_trace->pi);
         res = CreateProcess(my_trace->process_fname, final_args, 0x0, 0x0, 0x0, DEBUG_ONLY_THIS_PROCESS, 0x0, 0x0, &my_trace->si, &my_trace->pi);
-        d_print("Args: %s\n", my_trace->args);
+        d_print("Final args: %s\n", final_args);
     }
     else
     {
