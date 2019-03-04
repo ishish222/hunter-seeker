@@ -79,7 +79,7 @@ def original(args = None):
     
     from os.path import basename, dirname
 
-    globs.state.mutator.original_path = globs.state.research_dir+ '/samples/shared/' + args
+    globs.state.mutator.original_path = globs.state.options.external_paths_tmp_all_input_output+ '/samples/shared/' + args
     globs.state.mutator.original_dirname = dirname(globs.state.mutator.original_path)
     globs.state.mutator.original_basename = basename(globs.state.mutator.original_path)
     globs.state.mutator.original_extension = globs.state.mutator.original_basename.split(".")[-1]
@@ -98,7 +98,7 @@ def deploy_dir(args = None):
     if(args == None):
         args = ''
 
-    globs.state.mutator.deploy_dir = globs.state.research_dir+ '/samples/shared/' + args
+    globs.state.mutator.deploy_dir = globs.state.options.external_paths_tmp_all_input_output+ '/samples/shared/' + args
     print 'Mutator deploy dir: %s' % globs.state.mutator.deploy_dir
 
     return
