@@ -634,3 +634,56 @@ Returns internal counter and decreases by 1
 Decision: "Y" or "N"
 Makes decision if internal counter is 0x0 or decreases by 1
 
+- MutatorInit
+Inits globs.mutator object
+
+- MutatorSelectChanger
+Selects changer as mutator
+
+- MutatorMutationCount
+Args: Integer a1 (hex)
+Sets mutation count for mutator to a1
+
+- MutatorBatchSize
+Args: Integer a1 (hex)
+Sets batch size for mutator to a1
+
+- MutatorOriginal
+Configures paths to original based on research dir (see: SetResearchDir)
+
+- MutatorDeployDir
+Args: String s1
+Configures deploy dir based on research dir (see: SetResearchDir) and s1
+
+- MutatorBatchExhausted
+Decision: "Y" or "N"
+Makes decision if tha samples batch has been exhausted
+
+- MutatorGetNextSample
+Loads the next sample paths into: state.mutator.current_sample_*
+
+- MutatorGetCurrentSample
+Puts state.mutator.current_sample_name into ret
+
+- MutatorGenerateBatch
+Generates samples batch based on deploy_dir (see: MutatorDeployDir)
+TODO: how to configure correctors?
+
+- MutatorCurrentSampleName
+Puts the current sample name into ret
+
+- MutatorCurrentSamplePath
+Puts the current sample path into ret
+
+- MutatorCurrentSampleDrop
+Deletes the current sample
+
+- MutatorSaveSample 
+Saves the current sample
+
+- MutatorSaveCrashData
+Saves the crash data (exception details) current sample
+
+- MutatorExtension
+Configures mutator extension
+
