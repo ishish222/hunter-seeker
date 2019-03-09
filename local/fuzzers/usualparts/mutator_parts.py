@@ -3,6 +3,7 @@ import globs
 import os
 import Queue 
 import generators.generatorCorrected as generatorCorrected
+from datetime import datetime, timedelta
 
 options = globs.state.options
 
@@ -25,6 +26,7 @@ class Mutator(object):
         self.extension = None
         self.samples_list = []
         self.samples_tested = 0
+        self.start_time = datetime.now()
         
 
 def init_mutator(args = None):
@@ -84,6 +86,9 @@ def report(args = None):
     print 'Original extension: %s' % globs.state.mutator.original_extension
     print 'Tested %s samples' % globs.state.mutator.samples_tested
     print 'Current sample: %s' % globs.state.mutator.current_sample_name
+    time_elapsed = datetime.now() - globs.state.mutator.start_time
+    print 'Time elapsed: %s' % time_elapsed
+    print 'Fuzzing speed in this session: %s/sample' % (time_elapsed / globs.state.mutator.samples_tested)
 
     return
 
