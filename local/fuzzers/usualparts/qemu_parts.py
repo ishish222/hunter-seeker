@@ -246,7 +246,7 @@ def qemu_load(args=None):
 
     ret = write_monitor_2(options.m, "loadvm xxx%sxxx" % args)
     ret = write_monitor_2(options.m, "cont")
-    time.sleep(options.external_qemu_socket_timeout_step * options.external_qemu_socket_timeout_mult)
+    #time.sleep(options.external_qemu_socket_timeout_step * options.external_qemu_socket_timeout_mult)
     print ret
 
     print("Loaded: %s" % args)

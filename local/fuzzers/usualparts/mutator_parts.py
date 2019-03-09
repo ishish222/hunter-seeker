@@ -25,6 +25,8 @@ class Mutator(object):
         self.current_sample_path = None
         self.extension = None
         self.samples_list = []
+        self.interesting_list = []
+        self.samples_interesting = 0
         self.samples_tested = 0
         self.start_time = datetime.now()
         
@@ -85,6 +87,13 @@ def report(args = None):
     print 'Basename path: %s' % globs.state.mutator.original_basename
     print 'Original extension: %s' % globs.state.mutator.original_extension
     print 'Tested %s samples' % globs.state.mutator.samples_tested
+    print 'Found %s interesting samples' % globs.state.mutator.samples_interesting
+    if(globs.state.mutator.samples_interesting > 0):
+        print '==='
+        print 'Interesting samples:'
+        for interesting_sample in globs.state.mutator.interesting_list:
+            print '\t%s' % interesting_sample
+        print '==='
     print 'Current sample: %s' % globs.state.mutator.current_sample_name
     time_elapsed = datetime.now() - globs.state.mutator.start_time
     print 'Time elapsed: %s' % time_elapsed
@@ -243,6 +252,9 @@ def save_sample(args = None):
     from shutil import copyfile
 
     copyfile(state.mutator.current_sample_path, state.mutator.current_sample_base+'/../saved/'+state.mutator.current_sample_name)
+
+    state.mutator.interesting_list.append(state.mutator.current_sample_name)
+    state.mutator.samples_interesting = state.mutator.samples_interesting +1
 
     return
 
