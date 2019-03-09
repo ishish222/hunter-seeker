@@ -687,3 +687,6 @@ Saves the crash data (exception details) current sample
 - MutatorExtension
 Configures mutator extension
 
+- MutatorReport
+Reports fuzzing session summary (time elaped, samples tested, interesting samples, samples / time ratio, etc.)
+
