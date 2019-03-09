@@ -684,13 +684,17 @@ def decision(args=None):
 
     if('EXCEPTION' in globs.state.ret):
         print bcolors.WARNING + bcolors.BOLD + 'EXCEPTION' + bcolors.ENDC
+        globs.state.ret = ''
         return 'EXCEPTION'   
     elif(globs.state.ret[1:3] == "RB"):
         bp = globs.state.ret[3:].split('\n')[0]
         print bcolors.WARNING + bcolors.BOLD + bp + bcolors.ENDC
+        globs.state.ret = ''
         return bp
     else:
-        return globs.state.ret[1:3]
+        ret = globs.state.ret[1:3]
+        globs.state.ret = ''
+        return ret
 
 
 def interrupt(args=None):

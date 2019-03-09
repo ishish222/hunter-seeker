@@ -250,6 +250,7 @@ prototypes['MutatorCurrentSampleDrop']  = mutator_parts.current_sample_drop
 prototypes['MutatorSaveSample']         = mutator_parts.save_sample
 prototypes['MutatorSaveCrashData']      = mutator_parts.save_crash_data
 prototypes['MutatorExtension']         = mutator_parts.extension
+prototypes['MutatorReport']         = mutator_parts.report
 #keywords
 
 prototypes['Call']                  = other_parts.noop

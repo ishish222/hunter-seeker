@@ -402,6 +402,8 @@ def check_strstr(args=None):
     options = globs.state.options
 
     ret = globs.state.ret
+    if(type(ret) is not str):
+        ret = str(ret)
 
     print "Checking strstr %s in %s" % (args, ret)
 

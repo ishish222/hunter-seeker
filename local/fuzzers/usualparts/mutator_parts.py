@@ -24,6 +24,7 @@ class Mutator(object):
         self.current_sample_path = None
         self.extension = None
         self.samples_list = []
+        self.samples_tested = 0
         
 
 def init_mutator(args = None):
@@ -69,6 +70,20 @@ def batch_size(args = None):
     status = globs.state.status
     
     globs.state.mutator.batch_size = int(args, 0x10)
+
+    return
+
+def report(args = None):
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+
+    print 'Original path: %s' % globs.state.mutator.original_path
+    print 'Dirname path: %s' % globs.state.mutator.original_dirname
+    print 'Basename path: %s' % globs.state.mutator.original_basename
+    print 'Original extension: %s' % globs.state.mutator.original_extension
+    print 'Tested %s samples' % globs.state.mutator.samples_tested
+    print 'Current sample: %s' % globs.state.mutator.current_sample_name
 
     return
 
@@ -169,6 +184,7 @@ def get_next_sample(args = None):
     state.mutator.current_sample_name = basename(state.mutator.current_sample_path)
     state.mutator.current_sample_base = dirname(state.mutator.current_sample_path)
     state.mutator.left_in_batch = state.mutator.left_in_batch -1
+    state.mutator.samples_tested = state.mutator.samples_tested +1
     print 'Loaded sample: %s' % state.mutator.current_sample_name
     print 'Samples left: 0x%08x' % state.mutator.left_in_batch
 
