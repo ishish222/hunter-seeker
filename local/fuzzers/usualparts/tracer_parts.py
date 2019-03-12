@@ -978,6 +978,27 @@ def tracer_debug_continue(args):
     globs.state.ret = response
     return
 
+def tracer_debug_continue_time(args = globs.DEBUG_CONTINUE):
+    if(args == None):
+        args = globs.DEBUG_CONTINUE
+    else:
+        args = int(args, 0x10)
+
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+    
+    time = globs.state.stack.pop()
+    if(type(time) != int):
+        time = int(time, 10)
+
+    write_socket(options.s, "tracer_debug_continue_time %d 0x%08x" % (time, args));
+    response, _, _ = read_socket(options.s)
+
+    globs.state.ret = response
+
+    return
+
 def tracer_debug_continue_1_second(args = globs.DEBUG_CONTINUE):
     if(args == None):
         args = globs.DEBUG_CONTINUE
@@ -1006,6 +1027,20 @@ def tracer_debug_continue_10_seconds(args = globs.DEBUG_CONTINUE):
     status = globs.state.status
     
     write_socket(options.s, "tracer_debug_continue_time 10000 %x" % args);
+    response, _, _ = read_socket(options.s)
+
+    globs.state.ret = response
+
+    return
+
+def tracer_set_debug_timeout(args=None):
+    args = int(args, 10)
+
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+    
+    write_socket(options.s, "tracer_set_debug_timeout %d" % args);
     response, _, _ = read_socket(options.s)
 
     globs.state.ret = response

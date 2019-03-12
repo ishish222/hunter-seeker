@@ -818,6 +818,11 @@ class TraceController(object):
         self.last_report, self.last_answer = self.recv_report_active()
         return 
 
+    def set_debug_timeout(self, args):
+        self.send_command_active("St %s" % args)
+        self.last_report, self.last_answer = self.recv_report_active()
+        return 
+
     def dump_memory(self):
         self.send_command_active("DM")
         self.last_report, self.last_answer = self.recv_report_active()

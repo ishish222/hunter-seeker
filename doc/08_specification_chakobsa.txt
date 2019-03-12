@@ -250,11 +250,18 @@ Alias to: TracerDebugSample
 - AttachSample
 Alias to: TracerAttachSample
 
+- TracerDebugContinueTime
+Args: arg1 - continue code, stack - timeout in miliseconds
+Continues debugging until next event
+
 - TracerDebugContinue
 Continues debugging until next event
 
 - TracerDebugContinueInf
 Alias to: TracerDebugContinue
+
+- DebugContinueTime
+Alias to: TracerDebugContinueTime
 
 - DebugContinue
 Alias to: TracerDebugContinue
@@ -690,3 +697,6 @@ Configures mutator extension
 - MutatorReport
 Reports fuzzing session summary (time elaped, samples tested, interesting samples, samples / time ratio, etc.)
 
+- TracerSetDebugTimeout
+Aliased: SetDebugTimeout
+Sets the timeout for all TracerDebugContinue instructions

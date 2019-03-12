@@ -5957,6 +5957,12 @@ int continue_routine(DWORD time, unsigned stat)
 
     status = stat;
 
+    /* if debug timeout is set, it overrides INFINITE */
+    if(my_trace->debug_timeout > 0)
+    {
+        time = my_trace->debug_timeout;
+    }
+    
     if(my_trace->last_event.dwProcessId == 0x0)
     {
         //ContinueDebugEvent(my_trace->pi.dwProcessId, my_trace->pi.dwThreadId, status);
@@ -6586,6 +6592,12 @@ int handle_cmd(char* cmd)
     {
         my_trace->instr_limit = strtoul(cmd+3, 0x0, 10);
         d_print("Trace limit set to: %d\n", my_trace->instr_limit);
+        send_report();
+    }
+    else if(!strncmp(cmd, CMD_SET_DEBUG_TIMEOUT, 2))
+    {
+        my_trace->debug_timeout = strtoul(cmd+3, 0x0, 10);
+        d_print("Trace debug timeout set to: %d\n", my_trace->debug_timeout);
         send_report();
     }
     else if(!strncmp(cmd, CMD_SET_TRACE_NAME, 2))
@@ -7295,6 +7307,7 @@ int handle_cmd(char* cmd)
         time = strtoul(strtok(0x0, " "), 0x0, 0x10);
         status = strtoul(strtok(0x0, " "), 0x0, 0x10);
 
+        d_print("Continuing with status: 0x%08x for %d miliseconds\n", status, time);
         continue_routine(time, status);
         send_report();   
     }

@@ -150,6 +150,7 @@
 #define CMD_CONTINUE            "cn"
 #define CMD_CONTINUE_TIME       "cN"
 #define CMD_SET_LIMIT           "SL"
+#define CMD_SET_DEBUG_TIMEOUT   "St"
 #define CMD_SET_TRACE_NAME      "ST"
 #define CMD_SET_DUMP_NAME       "sD"
 #define CMD_INFO_NAME           "SI"
@@ -369,6 +370,7 @@ typedef struct TRACE_CONFIG_
     unsigned long long instr_count;
     unsigned long long instr_dbg;
     unsigned long long instr_limit;
+    unsigned long long debug_timeout;
     unsigned long long scan_count; /*scan_count*/
     unsigned long long thread_count;
     unsigned long long lib_count;

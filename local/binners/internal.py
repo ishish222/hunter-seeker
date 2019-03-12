@@ -742,6 +742,12 @@ def execute(cmds, ext_pipe):
             writePipe(ext_pipe, "tracer_set_limit "+bcolors.OK_STR)
             ok(ext_pipe)
 
+        elif(cmd == "tracer_set_debug_timeout"):
+            trace_controller.set_debug_timeout(args)
+            writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
+            writePipe(ext_pipe, "tracer_set_debug_timeout "+bcolors.OK_STR)
+            ok(ext_pipe)
+
         elif(cmd == "tracer_dump_memory"):
             trace_controller.dump_memory()
             writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
