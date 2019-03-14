@@ -27,13 +27,15 @@ if __name__ == '__main__':
         line_1 = cextract_1.readline()
         line_2 = cextract_2.readline()
 
-        src_1, target_1 = line_1.split()
-        src_2, target_2 = line_2.split()
+        #src_1, target_1 = line_1.split()
+        #src_2, target_2 = line_2.split()
+        src_1, instr_1_no = line_1.split()
+        src_2, instr_2_no = line_2.split()
     
+#        if(not src_1[-4:] == src_2[-4:]):
+#            print "src diff"
         if(not src_1[-4:] == src_2[-4:]):
-            print "src diff"
-        if(not target_1[-4:] == target_2[-4:]):
-            print "Target diff @ %d: %s - %s" % (line_no, target_1, target_2)
+            print "Call source diff @ %d: %s (%s) - %s (%s)" % (line_no, src_1.strip(), instr_1_no, src_2.strip(), instr_2_no)
             break
 
         line_no = line_no + 1
