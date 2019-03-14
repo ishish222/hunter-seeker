@@ -114,7 +114,8 @@ if __name__ == '__main__':
 
         except TestExc:
             infile.close()
-            infile_path = fields[1][:-2]
+            filename = fields[1]
+            infile_path = filename.strip()
             print 'Opening: %s' % infile_path
             infile = reopen(infile_path)
             continue

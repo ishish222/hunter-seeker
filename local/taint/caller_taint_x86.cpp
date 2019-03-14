@@ -1624,7 +1624,7 @@ int taint_x86::handle_ret(CONTEXT_INFO* cur_ctx, OFFSET eip)
     /* Ret matched */
     for(i = cur_ctx->call_level-1; i >= cur_ctx->call_level_smallest, i > 0; i--)
     {
-        if(abs(cur_ctx->levels[i].ret - eip) < 0x5)
+        if(abs(int(cur_ctx->levels[i].ret) - int(eip)) < 0x5)
         {
             diff = cur_ctx->call_level - i;
             d_print(1, "[0x%08x] (%d) Matched ret 0x%08x on pos: %d, handling diff: %d\n", this->cur_tid, this->current_instr_count, cur_ctx->levels[i].ret, i, diff);
@@ -2212,7 +2212,7 @@ int taint_x86::pre_execute_instruction(DWORD eip)
         cur_info->jumping = 0;
     }
 
-    if(abs(cur_info->waiting - eip )<0x5) 
+    if(abs(int(cur_info->waiting) - int(eip) )<0x5) 
     {
         /* stop waiting */
         d_print(1, "[0x%08x] Waiting: 0x%08x, eip: 0x%08x\n", this->cur_tid, cur_info->waiting, eip);
@@ -2572,9 +2572,9 @@ int taint_x86::finish()
 
         open = cur_tid->call_level - cur_tid->call_level_smallest;
         d_print(1, "[0x%08x] Left with %d nodes open\n", cur_tid->tid, open);
-        d_print(1, "[0x%08x] First: %d - %d = %d\n", cur_tid->tid, cur_tid->call_level_smallest, abs(this->call_level_start - cur_tid->call_level_smallest));
+        d_print(1, "[0x%08x] First: %d - %d = %d\n", cur_tid->tid, cur_tid->call_level_smallest, abs(int(this->call_level_start) - int(cur_tid->call_level_smallest)));
 
-        diff_first = abs(this->call_level_start - cur_tid->call_level_smallest);
+        diff_first = abs(int(this->call_level_start) - int(cur_tid->call_level_smallest));
         diff_last = open;
 
         d_print(1, "[0x%08x] Diff_last: %d\n", cur_tid->tid, diff_last);
