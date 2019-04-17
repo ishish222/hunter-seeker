@@ -932,7 +932,7 @@ int main(int argc, char** argv)
 
     /* finished parsing args and preparing params */
 
-    printf("Here we go - 2.0\n");
+    printf("Here we go - 3.0\n");
 
     printf("BYTE_t size: 0x%08x\n", sizeof(BYTE_t));
 

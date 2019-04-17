@@ -620,8 +620,9 @@ void taint_x86::print_ret(CONTEXT_INFO* cur_ctx)
 
 
     d_print(1, "Printing ret\n");
-    strcat(out_line, "</node>\n");
+/*    strcat(out_line, "</node>\n");
     fwrite(out_line, strlen(out_line), 0x1, f);
+*/
 }
 
 /* handling conditional jumps  */
@@ -1109,15 +1110,6 @@ int taint_x86::handle_call(CONTEXT_INFO* info)
     DWORD_t waiting;
     OFFSET source = info->source;
     OFFSET target = info->target;
-
-    /* to w zasadzie juz wystarczy */
-    source &= 0xffff;
-    target &= 0xffff;
-    sprintf(out_line, "0x%08x %d", source, this->current_instr_count);
-    //sprintf(out_line, "0x%08x 0x%08x", source, target);
-    print_call_open(info, out_line, 0x0);
-
-    return 0x0;
     OFFSET next = info->next;
     CALL_LEVEL* cur_level;
 
@@ -1297,138 +1289,23 @@ int taint_x86::handle_call(CONTEXT_INFO* info)
     {
         d_print(2, "Emitting\n");
 
-        if(decision_dive == DECISION_DIVE)
-        {
-            d_print(2, "Emitting diving\n");
-        
-            if(decision_template == DECISION_LAYOUT_SYMBOL_WANTED)
-            {
-                /* we assume we have symbol */
-//                if(this->enumerate) sprintf(out_line, "[x] (%d)0x%08x call %s!%s", this->current_instr_count ,this->current_eip, s->lib_name, s->func_name);
-//                else sprintf(out_line, "[x] 0x%08x call %s!%s", this->current_eip, s->lib_name, s->func_name);
-                if(this->enumerate) sprintf(out_line, "[x] (%d)0x%08x call %s!%s", this->current_instr_count-1 ,source, s->lib_name, s->func_name);
-                else sprintf(out_line, "[x] 0x%08x call %s!%s", source, s->lib_name, s->func_name);
-                print_call(info, out_line, colors[CODE_RED]);
-            }
-            else if(decision_template == DECISION_LAYOUT_SYMBOL)
-            {
-                /* we assume we have symbol */
-//                if(this->enumerate) sprintf(out_line, "(%d)0x%08x call %s!%s", this->current_instr_count ,this->current_eip, s->lib_name, s->func_name);
-//                else sprintf(out_line, "0x%08x call %s!%s", this->current_eip, s->lib_name, s->func_name);
-                if(this->enumerate) sprintf(out_line, "(%d)0x%08x call %s!%s", this->current_instr_count-1 ,source, s->lib_name, s->func_name);
-                else sprintf(out_line, "0x%08x call %s!%s", source, s->lib_name, s->func_name);
-                print_call(info, out_line, colors[CODE_BLUE]);
-            }
-            else
-            {
-                /* regular emission with dive */
-//                if(this->enumerate) sprintf(out_line, "(%d)0x%08x call 0x%08x", this->current_instr_count ,this->current_eip, target);
-//                else sprintf(out_line, "0x%08x call 0x%08x", this->current_eip, target);
-                if(this->enumerate) sprintf(out_line, "(%d)0x%08x call 0x%08x", this->current_instr_count-1 ,source, target);
-                else sprintf(out_line, "0x%08x call 0x%08x", source, target);
-                print_call(info, out_line, colors[CODE_BLACK]);
-            }
-        }
-        else /* DECISION_NO_DIVE */
-        {
-            d_print(2, "Emitting not diving\n");
-
-            if(decision_template == DECISION_LAYOUT_SYMBOL_WANTED)
-            {
-                /* we assume we have symbol */
-//                if(this->enumerate) sprintf(out_line, "[x] (%d)0x%08x call %s!%s", this->current_instr_count ,this->current_eip, s->lib_name, s->func_name);
-//                else sprintf(out_line, "[x] 0x%08x call %s!%s", this->current_eip, s->lib_name, s->func_name);
-                if(this->enumerate) sprintf(out_line, "[x] (%d)0x%08x call %s!%s", this->current_instr_count-1 ,source, s->lib_name, s->func_name);
-                else sprintf(out_line, "[x] 0x%08x call %s!%s", source, s->lib_name, s->func_name);
-                print_call_open(info, out_line, colors[CODE_RED]);
-            }
-            else if(decision_template == DECISION_LAYOUT_SYMBOL)
-            {
-                /* we assume we have symbol */
-//                if(this->enumerate) sprintf(out_line, "(%d)0x%08x call %s!%s", this->current_instr_count ,this->current_eip, s->lib_name, s->func_name);
-//                else sprintf(out_line, "0x%08x call %s!%s", this->current_eip, s->lib_name, s->func_name);
-                if(this->enumerate) sprintf(out_line, "(%d)0x%08x call %s!%s", this->current_instr_count-1 ,source, s->lib_name, s->func_name);
-                else sprintf(out_line, "0x%08x call %s!%s", source, s->lib_name, s->func_name);
-                print_call_open(info, out_line, colors[CODE_BLUE]);
-            }
-            else
-            {
-                /* regular emission with dive */
-//                if(this->enumerate) sprintf(out_line, "(%d)0x%08x call 0x%08x", this->current_instr_count ,this->current_eip, target);
-//                else sprintf(out_line, "0x%08x call 0x%08x", this->current_eip, target);
-                if(this->enumerate) sprintf(out_line, "(%d)0x%08x call 0x%08x", source, this->current_eip, target);
-                else sprintf(out_line, "0x%08x call 0x%08x", source, target);
-                print_call_open(info, out_line, colors[CODE_BLACK]);
-            }
-        
-        }
-        
-        /* log emission */
-        for(i=this->call_level_start; i< info->call_level; i++)
-        {
-            d_print(1, " ");
-        }
-    
-/*        d_print(1, "[0x%08x] (%d)0x%08x call 0x%08x, pos: %d, small: %d, ignored: %d: \n", 
-                this->cur_tid, this->current_instr_count, this->current_eip, target, 
-                this->ctx_info[this->tids[this->cur_tid]].call_level, 
-                this->ctx_info[this->tids[this->cur_tid]].call_level_smallest, 
-                this->ctx_info[this->tids[this->cur_tid]].call_level_ignored, 
-                this->ctx_info[this->tids[this->cur_tid]].call_level_largest);*/
-    
-        d_print(1, "[0x%08x] (%d)0x%08x call 0x%08x, pos: %d, small: %d, ignored: %d: \n", 
-                this->cur_tid, this->current_instr_count-1, source, target, 
-                this->ctx_info[this->tids[this->cur_tid]].call_level, 
-                this->ctx_info[this->tids[this->cur_tid]].call_level_smallest, 
-                this->ctx_info[this->tids[this->cur_tid]].call_level_ignored, 
-                this->ctx_info[this->tids[this->cur_tid]].call_level_largest);
-
+        /* to w zasadzie juz wystarczy */
+        source &= 0xffff;
+        target &= 0xffff;
+        sprintf(out_line, "0x%08x %d", source, this->current_instr_count);
+        //sprintf(out_line, "0x%08x 0x%08x", source, target);
+        print_call_open(info, out_line, 0x0);
     }
     else if(decision_emit == DECISION_EMIT_NESTED)
     {
         d_print(2, "Emitting nested\n");
 
-        if(decision_template == DECISION_LAYOUT_SYMBOL_WANTED)
-        {
-            /* we assume we have symbol */
-//            if(this->enumerate) sprintf(out_line, "[x] (%d)0x%08x call %s!%s", this->current_instr_count ,this->current_eip, s->lib_name, s->func_name);
-//            else sprintf(out_line, "[x] 0x%08x call %s!%s", this->current_eip, s->lib_name, s->func_name);
-            if(this->enumerate) sprintf(out_line, "[x] (%d)0x%08x call %s!%s", this->current_instr_count-1 ,source, s->lib_name, s->func_name);
-            else sprintf(out_line, "[x] 0x%08x call %s!%s", source, s->lib_name, s->func_name);
-            print_call(info, out_line, colors[CODE_RED]);
-            print_ret(info);
-        }
-        else
-        {
-            /* we assume we have symbol */
-//            if(this->enumerate) sprintf(out_line, "(%d)0x%08x call %s!%s", this->current_instr_count ,this->current_eip, s->lib_name, s->func_name);
-//            else sprintf(out_line, "0x%08x call %s!%s", this->current_eip, s->lib_name, s->func_name);
-            if(this->enumerate) sprintf(out_line, "(%d)0x%08x call %s!%s", this->current_instr_count-1 ,source, s->lib_name, s->func_name);
-            else sprintf(out_line, "0x%08x call %s!%s", source, s->lib_name, s->func_name);
-            print_call(info, out_line, colors[CODE_BLACK]);
-            print_ret(info);
-        
-        }
-
-        /* log emission */
-        for(i=this->call_level_start; i< info->call_level; i++)
-        {
-            d_print(1, " ");
-        }
-/*    
-        d_print(1, "[0x%08x] (%d)0x%08x call 0x%08x, pos: %d, small: %d, ignored: %d: \n", 
-                this->cur_tid, this->current_instr_count, this->current_eip, target, 
-                this->ctx_info[this->tids[this->cur_tid]].call_level, 
-                this->ctx_info[this->tids[this->cur_tid]].call_level_smallest, 
-                this->ctx_info[this->tids[this->cur_tid]].call_level_ignored, 
-                this->ctx_info[this->tids[this->cur_tid]].call_level_largest);*/
-    
-        d_print(1, "[0x%08x] (%d)0x%08x call 0x%08x, pos: %d, small: %d, ignored: %d: \n", 
-                this->cur_tid, this->current_instr_count-1, source, target, 
-                this->ctx_info[this->tids[this->cur_tid]].call_level, 
-                this->ctx_info[this->tids[this->cur_tid]].call_level_smallest, 
-                this->ctx_info[this->tids[this->cur_tid]].call_level_ignored, 
-                this->ctx_info[this->tids[this->cur_tid]].call_level_largest);
+        /* to w zasadzie juz wystarczy */
+        source &= 0xffff;
+        target &= 0xffff;
+        sprintf(out_line, "0x%08x %d", source, this->current_instr_count);
+        //sprintf(out_line, "0x%08x 0x%08x", source, target);
+        print_call_open(info, out_line, 0x0);
     }
     else
     {
@@ -1443,7 +1320,7 @@ int taint_x86::handle_call(CONTEXT_INFO* info)
     else
     {
         d_print(2, "Not diving!\n");
-        if(info->waiting == 0x0) 
+        if(info->waiting == 0x0)
         {
             info->waiting = next;
             info->last_emit_decision = decision_emit;
@@ -2583,7 +2460,7 @@ int taint_x86::finish()
 #endif
 */
 
-        sprintf(out_line, "</node></map>\n");
+/*        sprintf(out_line, "</node></map>\n");
         fwrite(out_line, strlen(out_line), 0x1, cur_tid->graph_file);
 
         d_print(1, "[0x%08x] Diff_first: %d\n", cur_tid->tid, diff_first);
@@ -2597,7 +2474,7 @@ int taint_x86::finish()
             //print_call(cur_tid, "unknown", colors[CODE_BLACK]);
         //print_call(cur_tid->graph_file, "unknown", colors[CODE_BLACK]);
         }
-
+*/
         unsigned k;
         d_print(1, "JXX stats:\n");
         for(k = cur_tid->call_level_smallest; k< cur_tid->call_level_largest; k++)

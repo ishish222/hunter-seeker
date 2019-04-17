@@ -24,13 +24,29 @@ if __name__ == '__main__':
     line_no = 0
 
     while True:
-        line_1 = cextract_1.readline()
-        line_2 = cextract_2.readline()
+        try:
+            line_1 = cextract_1.readline()
+            line_2 = cextract_2.readline()
+        except Exception as e:
+            print e
+            break
 
-        #src_1, target_1 = line_1.split()
-        #src_2, target_2 = line_2.split()
-        src_1, instr_1_no = line_1.split()
-        src_2, instr_2_no = line_2.split()
+        if(line_1 == ''): break
+        if(line_2 == ''): break
+
+        try:
+            src_1, instr_1_no = line_1.split()
+        except ValueError:
+            print 'Value error in source 1 at (%d) : %s, skipping' % (line_no, line_1)
+            line_no = line_no + 1
+            continue
+    
+        try:
+            src_2, instr_2_no = line_2.split()
+        except ValueError:
+            print 'Value error in source 2 at (%d) : %s, skipping' % (line_no, line_2)
+            line_no = line_no + 1
+            continue
     
 #        if(not src_1[-4:] == src_2[-4:]):
 #            print "src diff"
