@@ -2,6 +2,28 @@
 
 from optparse import OptionParser
 
+class EmptyLine(Exception):
+    pass
+
+def parse_cextract(cextract):
+    line = cextract.readline()
+    print line
+
+    if(line == ''): 
+        print 'Empty line'
+        cextract_1.close()
+        cextract_2.close()
+        exit(-1)
+
+    try:
+        src, instr_no = line.split()
+    except ValueError:
+        print 'Value error in line: %s, skipping' % (line)
+        raise ValueError
+
+    return src, instr_no
+
+
 if __name__ == '__main__':
     parser = OptionParser()
 
@@ -23,36 +45,60 @@ if __name__ == '__main__':
     
     line_no = 0
 
+    # rewind to offsets
+    print 'rewinding'
+
+    # source  1
+    print 'rewinding source 1'
     while True:
         try:
-            line_1 = cextract_1.readline()
-            line_2 = cextract_2.readline()
-        except Exception as e:
-            print e
+            src_1, instr_1_no = parse_cextract(cextract_1)
+        except ValueError:
+            continue
+
+        instr_no = int(instr_1_no.strip())
+        offset_no = int(options.offset1.strip())
+        if(instr_no < offset_no): 
+            continue
+        else:
             break
 
-        if(line_1 == ''): break
-        if(line_2 == ''): break
+    # source  2
+    print 'rewinding source 2'
+    while True:
+        try:
+            src_2, instr_2_no = parse_cextract(cextract_2)
+        except ValueError:
+            continue
 
-        try:
-            src_1, instr_1_no = line_1.split()
-        except ValueError:
-            print 'Value error in source 1 at (%d) : %s, skipping' % (line_no, line_1)
-            line_no = line_no + 1
+        instr_no = int(instr_2_no.strip())
+        offset_no = int(options.offset2.strip())
+        if(instr_no < offset_no): 
             continue
-    
+        else:
+            break
+
+    found = False
+
+    # compare lines at offset
+    if(not src_1[-4:] == src_2[-4:]):
+        print "Call source diff @ %d: %s (%s) - %s (%s)" % (line_no, src_1.strip(), instr_1_no, src_2.strip(), instr_2_no)
+        cextract_1.close()
+        cextract_2.close()
+        found = True
+
+    line_no = line_no + 1
+
+    while not found:
         try:
-            src_2, instr_2_no = line_2.split()
+            src_1, instr_1_no = parse_cextract(cextract_1)
+            src_2, instr_2_no = parse_cextract(cextract_2)
         except ValueError:
-            print 'Value error in source 2 at (%d) : %s, skipping' % (line_no, line_2)
-            line_no = line_no + 1
             continue
-    
-#        if(not src_1[-4:] == src_2[-4:]):
-#            print "src diff"
+
         if(not src_1[-4:] == src_2[-4:]):
             print "Call source diff @ %d: %s (%s) - %s (%s)" % (line_no, src_1.strip(), instr_1_no, src_2.strip(), instr_2_no)
-            break
+            found = True
 
         line_no = line_no + 1
 
@@ -61,4 +107,3 @@ if __name__ == '__main__':
 
     cextract_1.close()
     cextract_2.close()
-

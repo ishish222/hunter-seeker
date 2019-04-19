@@ -1345,7 +1345,7 @@ int taint_x86::handle_call(CONTEXT_INFO* info)
                 /* regular emission with dive */
 //                if(this->enumerate) sprintf(out_line, "(%d)0x%08x call 0x%08x", this->current_instr_count ,this->current_eip, target);
 //                else sprintf(out_line, "0x%08x call 0x%08x", this->current_eip, target);
-                if(this->enumerate) sprintf(out_line, "(%d)0x%08x call 0x%08x", this->current_instr_count-1, source, this->current_eip, target);
+                if(this->enumerate) sprintf(out_line, "(%d)0x%08x call 0x%08x", this->current_instr_count-1, source, target);
                 else sprintf(out_line, "0x%08x call 0x%08x", source, target);
                 print_call_open(info, out_line, colors[CODE_BLACK]);
             }
