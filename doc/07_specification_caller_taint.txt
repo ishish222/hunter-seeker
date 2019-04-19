@@ -54,17 +54,17 @@ OP - set option
 BA - blacklist address
     syntax: BA,<address>
 
-    if address is without symbol and is blacklisted, caller will not dive
+    if address is without symbol and is blacklisted, caller will not dive. WARNING!!!: add space at the end (to fix)
     
 SA - silence address
     syntax: SA,<address>
 
-    if SOURCE address is silenced, caller will not emit
+    if SOURCE address is silenced, caller will not emit. WARNING!!!: add space at the end (to fix)
     
 BL - blacklist library
     syntax: BL,<lib_name>
 
-    All addresses in blacklisted library will be blacklisted
+    All addresses in blacklisted library will be blacklisted. WARNING!!!: add space at the end (to fix)
     
 IN - include symbol in call analysis
     syntax: IN,<func_name>
