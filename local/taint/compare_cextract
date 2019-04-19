@@ -56,9 +56,11 @@ if __name__ == '__main__':
         except ValueError:
             continue
 
+        if(options.offset1 == None): break
+
         instr_no = int(instr_1_no.strip())
         offset_no = int(options.offset1.strip())
-        if(instr_no < offset_no): 
+        if((options.offset1.strip() != '') and (instr_no < offset_no)): 
             continue
         else:
             break
@@ -70,6 +72,8 @@ if __name__ == '__main__':
             src_2, instr_2_no = parse_cextract(cextract_2)
         except ValueError:
             continue
+
+        if(options.offset2 == None): break
 
         instr_no = int(instr_2_no.strip())
         offset_no = int(options.offset2.strip())
