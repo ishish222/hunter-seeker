@@ -1292,7 +1292,7 @@ int taint_x86::handle_call(CONTEXT_INFO* info)
         /* to w zasadzie juz wystarczy */
         source &= 0xffff;
         target &= 0xffff;
-        sprintf(out_line, "0x%08x %d", source, this->current_instr_count);
+        sprintf(out_line, "0x%08x %d", source, this->current_instr_count-1);
         //sprintf(out_line, "0x%08x 0x%08x", source, target);
         print_call_open(info, out_line, 0x0);
     }
@@ -1303,7 +1303,7 @@ int taint_x86::handle_call(CONTEXT_INFO* info)
         /* to w zasadzie juz wystarczy */
         source &= 0xffff;
         target &= 0xffff;
-        sprintf(out_line, "0x%08x %d", source, this->current_instr_count);
+        sprintf(out_line, "0x%08x %d", source, this->current_instr_count-1);
         //sprintf(out_line, "0x%08x 0x%08x", source, target);
         print_call_open(info, out_line, 0x0);
     }
@@ -1459,7 +1459,6 @@ int taint_x86::check_rets(OFFSET ret)
 
 int taint_x86::handle_ret(CONTEXT_INFO* cur_ctx, OFFSET eip)
 {
-    return 0x0;
     if((!this->started) || (this->finished))
         return 0x0;
 

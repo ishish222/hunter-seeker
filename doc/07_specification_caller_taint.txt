@@ -27,13 +27,13 @@ commandline options:
 -E end addr (if starts with '0x') or end instruction number, multiplied by 1000000
 -e end addr (if starts with '0x') or end instruction number, multiplied by 1000000
 -T dump taint file path [TODO - what is it]
--l depth [TODO - what is it]
+-l depth, hexadecimal. Defines how many levels will the analyzer dive into. [TODO - verify, seems like its diving much further]
 -m loadable dir path [TODO - what is it]
 -b breakpoint_optarg [TODO - remind how it works]
 -t breakpoint_t_optarg [TODO - remind how it works]
 -w watchpoint_optarg [TODO - remind how it works]
 -h history_path
--D depth  [TODO - what is it]
+-D depth, hexadecimal. Defines how many levels will the analyzer dive into. [TODO - verify, seems like its diving much further]
 -I include instruction numbers
 
 Configuration in script:
