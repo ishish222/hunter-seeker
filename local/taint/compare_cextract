@@ -7,7 +7,6 @@ class EmptyLine(Exception):
 
 def parse_cextract(cextract):
     line = cextract.readline()
-    print line
 
     if(line == ''): 
         print 'Empty line'
