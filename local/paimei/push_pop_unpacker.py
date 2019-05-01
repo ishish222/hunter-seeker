@@ -37,14 +37,14 @@ if not os.path.exists(target):
     sys.exit(1)
 
 def end_of_packer (dbg):
-    print "%08x: end of packer reached?!?" % dbg.exception_address
+    print("%08x: end of packer reached?!?" % dbg.exception_address)
     dbg.terminate_process()
     return DBG_CONTINUE
 
 def set_stack_bp (dbg):
     global monitor
-    print "current ESP: %08x" % dbg.context.Esp
-    print "setting hw bp at: %08x" % monitor
+    print("current ESP: %08x" % dbg.context.Esp)
+    print("setting hw bp at: %08x" % monitor)
     dbg.bp_set_hw(monitor, 4, HW_ACCESS, handler=end_of_packer, restore=False)
 
     return DBG_CONTINUE
@@ -53,12 +53,12 @@ def set_stack_bp_helper (dbg):
     global monitor
     monitor = dbg.context.Esp - 4
 
-    print "setting breakpoint to call set_stack_bp() with monitor at %08x" % monitor
+    print("setting breakpoint to call set_stack_bp() with monitor at %08x" % monitor)
     dbg.bp_set(dbg.exception_address + dbg.instruction.length, handler=set_stack_bp, restore=False)
 
 def entry_point (dbg):
     disasm = dbg.disasm(dbg.exception_address)
-    print "%08x: %s" % (dbg.exception_address, disasm)
+    print("%08x: %s" % (dbg.exception_address, disasm))
 
     if not disasm.startswith("pusha"):
         dbg.single_step(True)
@@ -69,7 +69,7 @@ def entry_point (dbg):
 
 def single_step (dbg):
     disasm = dbg.disasm(dbg.exception_address)
-    print "%08x: %s" % (dbg.exception_address, disasm)
+    print("%08x: %s" % (dbg.exception_address, disasm))
 
     if not disasm.startswith("pusha"):
         dbg.single_step(True)

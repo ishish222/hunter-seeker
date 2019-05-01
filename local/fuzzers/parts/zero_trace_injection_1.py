@@ -498,70 +498,70 @@ TracerDebugSample.consequence               = TracerDebugContinueInf
 def decision():
     options = globs.state.options
 
-    print "received signal"
-    print globs.state.ret[1:3]
+    print("received signal")
+    print(globs.state.ret[1:3])
 
     if(globs.state.ret[1:3] == "RR"):
-        print "Decision is: Continuing"
+        print("Decision is: Continuing")
         ### RR ###
         return TracerManualSt
 
     if(globs.state.ret[1:3] == "RE"):
-        print "Decision is: Continuing UH"
+        print("Decision is: Continuing UH")
         ### RE ###
         return TracerDebugContinueUnhandledInf
 
     if(globs.state.ret[1:3] == "RX"):
-        print "Process is exiting, finishing up"
+        print("Process is exiting, finishing up")
         ### RX ###
         return TracerEndTrace
 
     if(globs.state.ret[1:3] == "RB"):
         if(globs.state.ret[3:5] == "ST"):
-            print "Decision is: StartTrace"
+            print("Decision is: StartTrace")
             ### RB - ST ###
             return TracerEnableBasic
         if(globs.state.ret[3:5] == "A2"):
-            print "Decision is: StartTrace"
+            print("Decision is: StartTrace")
             ### RB - ST ###
             return TracerEnableBasic
 
         if(globs.state.ret[3:5] == "EN"):
-            print "Decision is: EndTrace"
+            print("Decision is: EndTrace")
             ### RB - EN ###
             return TracerEndTrace
 
         if(globs.state.ret[3:5] == "C1"):
-            print "Decision is: Modifying process creation"
+            print("Decision is: Modifying process creation")
             ### C1 ###
             return CreateSuspended
 
         if(globs.state.ret[3:5] == "C3"):
-            print "Decision is: Modifying process creation"
+            print("Decision is: Modifying process creation")
             ### C1 ###
             return CreateSuspended
 
         if(globs.state.ret[3:5] == "C2"):
-            print "Decision is: Reading spawned process information"
+            print("Decision is: Reading spawned process information")
             ### C2 ###
             return ReadProcessInfo
 
         if(globs.state.ret[3:5] == "C3"):
-            print "Decision is: Reading spawned process information"
+            print("Decision is: Reading spawned process information")
             ### C3 ###
             return GetPID
 
         if(globs.state.ret[3:5] == "C4"):
-            print "Decision is: Reading spawned process information"
+            print("Decision is: Reading spawned process information")
             ### C4 ###
             return CreateSuspendedThread
 
         if(globs.state.ret[3:5] == "C5"):
-            print "Decision is: Reading spawned process information"
+            print("Decision is: Reading spawned process information")
             ### C5 ###
             return CreateSuspendedThread
 
-    print "Decision is: Continuing"
+    print("Decision is: Continuing")
     return TracerDebugContinueInf
 
 

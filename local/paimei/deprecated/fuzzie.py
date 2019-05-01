@@ -13,7 +13,7 @@
 
 import os
 import time
-import thread
+import _thread
 from win32com.client import Dispatch
 
 from pydbg import *
@@ -37,9 +37,9 @@ def access_violation_handler (debugger, dbg, context):
     global crash_number
     global ie_ok
 
-    print
-    print "test case #%d caused access violation #%d" % (test_number, crash_number)
-    print
+    print()
+    print("test case #%d caused access violation #%d" % (test_number, crash_number))
+    print()
 
     exception_address = dbg.u.Exception.ExceptionRecord.ExceptionAddress
     write_violation   = dbg.u.Exception.ExceptionRecord.ExceptionInformation[0]
@@ -108,7 +108,7 @@ while 1:
             break
 
     # thread out debugger.
-    thread.start_new_thread(start_debugger, (debugger, pid))
+    _thread.start_new_thread(start_debugger, (debugger, pid))
 
     # IE is healthy and running.
     ie_ok = True
@@ -126,21 +126,21 @@ while 1:
         user32.GetWindowThreadProcessId(ie.HWND, byref(ie_pid))
         if ie_pid.value == pid:
             break
-    print "dispatch took %d seconds.\r" % (int(time.time()) - start),
+    print("dispatch took %d seconds.\r" % (int(time.time()) - start), end=' ')
 
     # loop through test cases while IE is healthy, if it dies the main loop we restart it.
     while ie_ok:
         # generate a test case.
         start = int(time.time())
         os.system("c:\\ruby\\bin\\ruby.exe bnf_reader.rb > bin-%d\\%d.html" % (crash_number, test_number))
-        print "test case gen #%d took %d seconds.\r" % (test_number, int(time.time()) - start),
+        print("test case gen #%d took %d seconds.\r" % (test_number, int(time.time()) - start), end=' ')
 
         # make IE navigate to the generated test case.
         try:
             ie.Navigate("file:///c:/fuzzie/bin-%d/%d.html" % (crash_number, test_number))
         except:
-            print
-            print "no instance of IE found"
+            print()
+            print("no instance of IE found")
             ie_ok = False
 
         # give IE a window of opportunity to crash before moving on.
@@ -149,4 +149,4 @@ while 1:
         # increment the test count
         test_number += 1
 
-    print "IE is not ok ... restarting."
+    print("IE is not ok ... restarting.")

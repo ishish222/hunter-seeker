@@ -2,7 +2,7 @@
 
 # $Id: __install_requirements.py 194 2007-04-05 15:31:53Z cameron $
 
-import urllib
+import urllib.request, urllib.parse, urllib.error
 import os
 import shutil
 
@@ -20,125 +20,125 @@ def urllib_hook (idx, slice, total):
     if completed > 100:
         completed = 100
 
-    print "\tdownloading ... %d%%\r" % completed,
+    print("\tdownloading ... %d%%\r" % completed, end=' ')
 
 
 def get_it (url, file_name):
     global downloaded
 
     downloaded = 0
-    u = urllib.urlretrieve(url, reporthook=urllib_hook)
-    print
+    u = urllib.request.urlretrieve(url, reporthook=urllib_hook)
+    print()
     shutil.move(u[0], file_name)
     os.system("start " + file_name)
 
 ########################################################################################################################
 
 try:
-    print "looking for ctypes ...",
+    print("looking for ctypes ...", end=' ')
     import ctypes
-    print "FOUND"
+    print("FOUND")
 except:
-    print "NOT FOUND"
-    choice = raw_input("\tWant me to get it? ").lower()
+    print("NOT FOUND")
+    choice = input("\tWant me to get it? ").lower()
     if choice.startswith("y"):
         get_it("http://superb-east.dl.sourceforge.net/sourceforge/ctypes/ctypes-0.9.9.6.win32-py2.4.exe", "installers/ctypes-0.9.9.6.win32-py2.4.exe")
 
 try:
-    print "looking for pydot ...",
+    print("looking for pydot ...", end=' ')
     import pydot
-    print "FOUND"
+    print("FOUND")
 except:
-    print "NOT FOUND"
+    print("NOT FOUND")
 
 try:
-    print "looking for wxPython ...",
+    print("looking for wxPython ...", end=' ')
     import wx
-    print "FOUND"
+    print("FOUND")
 except:
-    print "NOT FOUND"
-    choice = raw_input("\tWant me to get it? ").lower()
+    print("NOT FOUND")
+    choice = input("\tWant me to get it? ").lower()
     if choice.startswith("y"):
         get_it("http://umn.dl.sourceforge.net/sourceforge/wxpython/wxPython2.6-win32-ansi-2.6.3.2-py24.exe", "installers/wxPython2.6-win32-ansi-2.6.3.2-py24.exe")
 
 try:
-    print "looking for MySQLdb ...",
+    print("looking for MySQLdb ...", end=' ')
     import MySQLdb
-    print "FOUND"
+    print("FOUND")
 except:
-    print "NOT FOUND"
-    choice = raw_input("\tWant me to get it? ").lower()
+    print("NOT FOUND")
+    choice = input("\tWant me to get it? ").lower()
     if choice.startswith("y"):
         get_it("http://superb-east.dl.sourceforge.net/sourceforge/mysql-python/MySQL-python.exe-1.2.1_p2.win32-py2.4.exe", "installers/MySQL-python.exe-1.2.1_p2.win32-py2.4.exe")
 
 try:
-    print "looking for GraphViz in default directory ...",
+    print("looking for GraphViz in default directory ...", end=' ')
     fh = open("c:\\program files\\graphviz")
     close(fh)
-except IOError, e:
+except IOError as e:
     if e.errno == 2:
-        print "NOT FOUND"
+        print("NOT FOUND")
     else:
-        print "FOUND"
+        print("FOUND")
 
 try:
-    print "looking for Oreas GDE in default directory ...",
+    print("looking for Oreas GDE in default directory ...", end=' ')
     fh = open("c:\\program files\\govisual diagram editor")
     close(fh)
-except IOError, e:
+except IOError as e:
     if e.errno == 2:
-        print "NOT FOUND"
-        choice = raw_input("\tWant me to get it? ").lower()
+        print("NOT FOUND")
+        choice = input("\tWant me to get it? ").lower()
         if choice.startswith("y"):
             get_it("http://www.oreas.com/download/get_gde_win.php", "installers/gde-win.exe")
     else:
-        print "FOUND"
+        print("FOUND")
 
 try:
-    print "looking for uDraw(Graph) in default directory ...",
+    print("looking for uDraw(Graph) in default directory ...", end=' ')
     fh = open("c:\\program files\\udraw(graph)")
     close(fh)
-except IOError, e:
+except IOError as e:
     if e.errno == 2:
-        print "NOT FOUND"
-        choice = raw_input("\tWant me to get it? ").lower()
+        print("NOT FOUND")
+        choice = input("\tWant me to get it? ").lower()
         if choice.startswith("y"):
             get_it("http://www.informatik.uni-bremen.de/uDrawGraph/download/uDrawGraph-3.1.1-0-win32-en.exe", "installers/uDrawGraph-3.1.1-0-win32-en.exe")
     else:
-        print "FOUND"
+        print("FOUND")
 
 try:
-    print "looking for PaiMei -> PyDbg ...",
+    print("looking for PaiMei -> PyDbg ...", end=' ')
     import pydbg
-    print "FOUND"
+    print("FOUND")
 except:
-    print "NOT FOUND"
+    print("NOT FOUND")
 
 try:
-    print "looking for PaiMei -> PIDA ...",
+    print("looking for PaiMei -> PIDA ...", end=' ')
     import pida
-    print "FOUND"
+    print("FOUND")
 except:
-    print "NOT FOUND"
+    print("NOT FOUND")
 
 try:
-    print "looking for PaiMei -> pGRAPH ...",
+    print("looking for PaiMei -> pGRAPH ...", end=' ')
     import pgraph
-    print "FOUND"
+    print("FOUND")
 except:
-    print "NOT FOUND"
+    print("NOT FOUND")
 
 try:
-    print "looking for PaiMei -> Utilities ...",
+    print("looking for PaiMei -> Utilities ...", end=' ')
     import utils
-    print "FOUND"
+    print("FOUND")
 except:
-    print "NOT FOUND"
+    print("NOT FOUND")
 
-choice = raw_input("\nInstall PaiMei framework libraries to Python site packages? ").lower()
+choice = input("\nInstall PaiMei framework libraries to Python site packages? ").lower()
 if choice.startswith("y"):
     os.system("start installers/PaiMei-1.1.win32.exe")
 
-print "\nRun __setup_mysql.py to setup database and complete installation. Then run console\PAIMEIconsole.py"
+print("\nRun __setup_mysql.py to setup database and complete installation. Then run console\PAIMEIconsole.py")
 
-raw_input("\nHit enter to exit installer.")
+input("\nHit enter to exit installer.")

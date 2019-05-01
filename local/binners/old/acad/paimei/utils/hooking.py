@@ -80,7 +80,7 @@ class hook_container:
         '''
 
         # ensure a hook doesn't already exist at the requested address.
-        if address in self.hooks.keys():
+        if address in list(self.hooks.keys()):
             return
 
         # create a new hook instance and activate it.
@@ -108,7 +108,7 @@ class hook_container:
         '''
 
         # ensure the address maps to a valid hook point.
-        if address not in self.hooks.keys():
+        if address not in list(self.hooks.keys()):
             return
 
         # de-activate the hook.
@@ -129,7 +129,7 @@ class hook_container:
         @return: Iterated hook entries.
         '''
 
-        for hook in self.hooks.values():
+        for hook in list(self.hooks.values()):
             yield hook
 
 
@@ -197,7 +197,7 @@ class hook:
         pydbg.bp_del(self.address)
 
         # ensure no breakpoints exist on any registered return addresses.
-        for address in self.exit_bps.keys():
+        for address in list(self.exit_bps.keys()):
             pydbg.bp_del(address)
 
 
@@ -226,7 +226,7 @@ class hook:
         tid = pydbg.dbg.dwThreadId
         self.arguments[tid] = []
 
-        for i in xrange(1, self.num_args + 1):
+        for i in range(1, self.num_args + 1):
             self.arguments[tid].append(pydbg.get_arg(i))
 
         # if an entry point callback was specified, call it and grab the return value.
@@ -271,7 +271,7 @@ class hook:
         '''
 
         # if we are in this function, then an exit point callback was specified, call it and grab the return value.
-        if pydbg.dbg.dwThreadId not in self.arguments.keys():
+        if pydbg.dbg.dwThreadId not in list(self.arguments.keys()):
             return
 
         continue_status = self.exit_hook(pydbg, self.arguments[pydbg.dbg.dwThreadId], pydbg.context.Eax)

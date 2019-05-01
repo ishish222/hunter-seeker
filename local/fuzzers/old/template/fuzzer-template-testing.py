@@ -52,11 +52,11 @@ def prepare_fuzzbox():
 
 def read_socket(s):
     data = s.recv(buffer_size)
-    print("< " + str(data))
+    print(("< " + str(data)))
     return data
 
 def write_socket(s, data):
-    print("> " + str(data))
+    print(("> " + str(data)))
     s.send(data)
 
 def powerofff():
@@ -145,7 +145,7 @@ def proceed():
     target = read_socket(s)
     target_class = target.split("-")[1]
     read_socket(s)
-    print("Setting target: " + str(target_class))
+    print(("Setting target: " + str(target_class)))
     
     #assuming target class is Afx:00400000:b:00010011:00000006:0038052 / changes every spawn?
     write_socket(s, "pipe SetTargetClass " + str(target_class))
@@ -206,7 +206,7 @@ if(settings.testing):
             read_socket(s)
             break
         except socket.timeout:
-            print "timeout/restarting"
+            print("timeout/restarting")
             restart()
             connect()
             init()
@@ -230,8 +230,8 @@ while(True):
         else:
              raise ErrorDetectedException
     except socket.timeout:
-        print "timeout, saving & restarting"
-        print "saving " + str(sample_path)
+        print("timeout, saving & restarting")
+        print("saving " + str(sample_path))
         command = ["cp", sample_path, samples_saved]
         os.spawnv(os.P_WAIT, "/bin/cp", command)
         restart()
@@ -239,7 +239,7 @@ while(True):
         init()
         proceed()
     except ErrorDetectedException:
-        print "error, restarting"
+        print("error, restarting")
         write_socket(s, "testmode exit")
         read_socket(s)
         killLast()

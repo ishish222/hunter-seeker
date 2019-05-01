@@ -85,7 +85,7 @@ def make_after_test_decision():
     state = globs.state
 
     if(state == None): 
-        print "Unable to handle state: %s, shutting down" % status
+        print("Unable to handle state: %s, shutting down" % status)
         globs.state.status = "ER"
         usualparts.testing_parts.log_result()
         return ShutdownSequence
@@ -123,7 +123,7 @@ def make_after_test_decision():
         usualparts.testing_parts.log_result()
         return HandleCrash
 
-    print "Unable to handle state: %s, shutting down" % status
+    print("Unable to handle state: %s, shutting down" % status)
     globs.state.status = "ER"
     usualparts.testing_parts.log_result()
 

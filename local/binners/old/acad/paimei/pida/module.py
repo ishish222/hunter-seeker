@@ -32,8 +32,8 @@ except:
 import sys
 import pgraph
 
-from function import *
-from defines  import *
+from .function import *
+from .defines  import *
 
 class module (pgraph.graph):
     '''
@@ -88,7 +88,7 @@ class module (pgraph.graph):
 
         # enumerate and add the functions within the module.
         if self.log:
-            print "Analyzing functions..."
+            print("Analyzing functions...")
 
         for ea in Functions(MinEA(), MaxEA()):
             func = function(ea, self.depth, self.analysis, self)
@@ -98,22 +98,22 @@ class module (pgraph.graph):
         # enumerate and add nodes for each import within the module.
         if self.depth & DEPTH_INSTRUCTIONS and self.analysis & ANALYSIS_IMPORTS:
             if self.log:
-                print"Enumerating imports..."
+                print("Enumerating imports...")
 
             self.__init_enumerate_imports__()
 
         # enumerate and propogate attributes for any discovered RPC interfaces.
         if self.analysis & ANALYSIS_RPC:
             if self.log:
-                print "Enumerating RPC interfaces..."
+                print("Enumerating RPC interfaces...")
 
             self.__init_enumerate_rpc__()
 
         # enumerate and add the intramodular cross references.
         if self.log:
-            print "Enumerating intramodular cross references..."
+            print("Enumerating intramodular cross references...")
 
-        for func in self.nodes.values():
+        for func in list(self.nodes.values()):
             xrefs = list(CodeRefsTo(func.ea_start, 0))
             xrefs.extend(list(DataRefsTo(func.ea_start)))
 
@@ -122,7 +122,7 @@ class module (pgraph.graph):
 
                 if from_func:
                     # GHETTO - add the actual source EA to the function.
-                    if not self.nodes[from_func.startEA].outbound_eas.has_key(ref):
+                    if ref not in self.nodes[from_func.startEA].outbound_eas:
                         self.nodes[from_func.startEA].outbound_eas[ref] = []
 
                     self.nodes[from_func.startEA].outbound_eas[ref].append(func.ea_start)
@@ -139,9 +139,9 @@ class module (pgraph.graph):
         module structure.
         '''
 
-        for func in self.nodes.values():
-            for bb in func.nodes.values():
-                for instruction in bb.instructions.values():
+        for func in list(self.nodes.values()):
+            for bb in list(func.nodes.values()):
+                for instruction in list(bb.instructions.values()):
                     if instruction.refs_api:
                         (address, api) = instruction.refs_api
 
@@ -175,7 +175,7 @@ class module (pgraph.graph):
             if length == 0x44 and magic == 0x8A885D04:
                 # grab the rpc interface uuid.
                 uuid = ""
-                for x in xrange(ea+4, ea+4+16):
+                for x in range(ea+4, ea+4+16):
                     uuid += chr(Byte(x))
 
                 # jump to MIDL_SERVER_INFO.
@@ -200,11 +200,11 @@ class module (pgraph.graph):
                     if not len(GetFunctionName(addr)):
                         break
 
-                    if self.nodes.has_key(addr):
+                    if addr in self.nodes:
                         self.nodes[addr].rpc_uuid   = self.uuid_bin_to_string(uuid)
                         self.nodes[addr].rpc_opcode = opcode
                     else:
-                        print "PIDA.MODULE> No function node for RPC routine @%08X" % addr
+                        print("PIDA.MODULE> No function node for RPC routine @%08X" % addr)
 
                     ea     += 4
                     opcode += 1
@@ -222,12 +222,12 @@ class module (pgraph.graph):
         @return: The function that contains the given address or None if not found.
         '''
 
-        for func in self.nodes.values():
+        for func in list(self.nodes.values()):
             # this check is necessary when analysis_depth == DEPTH_FUNCTIONS
             if func.ea_start == ea:
                 return func
 
-            for bb in func.nodes.values():
+            for bb in list(func.nodes.values()):
                 if bb.ea_start <= ea <= bb.ea_end:
                     return func
 
@@ -257,8 +257,8 @@ class module (pgraph.graph):
 
         ea_list = []
 
-        for bb in function.nodes.values():
-            ea_list.extend(bb.instructions.keys())
+        for bb in list(function.nodes.values()):
+            ea_list.extend(list(bb.instructions.keys()))
 
         ea_list.sort()
 
@@ -297,8 +297,8 @@ class module (pgraph.graph):
 
         ea_list = []
 
-        for bb in function.nodes.values():
-            ea_list.extend(bb.instructions.keys())
+        for bb in list(function.nodes.values()):
+            ea_list.extend(list(bb.instructions.keys()))
 
         ea_list.sort()
 
@@ -329,7 +329,7 @@ class module (pgraph.graph):
             return
 
         # rebase each function in the module.
-        for function in self.nodes.keys():
+        for function in list(self.nodes.keys()):
             self.nodes[function].id       = self.nodes[function].id       - self.base + new_base
             self.nodes[function].ea_start = self.nodes[function].ea_start - self.base + new_base
             self.nodes[function].ea_end   = self.nodes[function].ea_end   - self.base + new_base
@@ -337,7 +337,7 @@ class module (pgraph.graph):
             function = self.nodes[function]
 
             # rebase each basic block in the function.
-            for bb in function.nodes.keys():
+            for bb in list(function.nodes.keys()):
                 function.nodes[bb].id       = function.nodes[bb].id       - self.base + new_base
                 function.nodes[bb].ea_start = function.nodes[bb].ea_start - self.base + new_base
                 function.nodes[bb].ea_end   = function.nodes[bb].ea_end   - self.base + new_base
@@ -345,25 +345,25 @@ class module (pgraph.graph):
                 bb = function.nodes[bb]
 
                 # rebase each instruction in the basic block.
-                for ins in bb.instructions.keys():
+                for ins in list(bb.instructions.keys()):
                     bb.instructions[ins].ea = bb.instructions[ins].ea - self.base + new_base
 
                 # fixup the instructions dictionary.
                 old_dictionary  = bb.instructions
                 bb.instructions = {}
 
-                for key, val in old_dictionary.items():
+                for key, val in list(old_dictionary.items()):
                     bb.instructions[key - self.base + new_base] = val
 
             # fixup the functions dictionary.
             old_dictionary = function.nodes
             function.nodes = {}
 
-            for key, val in old_dictionary.items():
+            for key, val in list(old_dictionary.items()):
                 function.nodes[val.id] = val
 
             # rebase each edge between the basic blocks in the function.
-            for edge in function.edges.keys():
+            for edge in list(function.edges.keys()):
                 function.edges[edge].src =  function.edges[edge].src - self.base + new_base
                 function.edges[edge].dst =  function.edges[edge].dst - self.base + new_base
                 function.edges[edge].id  = (function.edges[edge].src << 32) + function.edges[edge].dst
@@ -372,18 +372,18 @@ class module (pgraph.graph):
             old_dictionary = function.edges
             function.edges = {}
 
-            for key, val in old_dictionary.items():
+            for key, val in list(old_dictionary.items()):
                 function.edges[val.id] = val
 
         # fixup the modules dictionary.
         old_dictionary = self.nodes
         self.nodes     = {}
 
-        for key, val in old_dictionary.items():
+        for key, val in list(old_dictionary.items()):
             self.nodes[val.id] = val
 
         # rebase each edge between the functions in the module.
-        for edge in self.edges.keys():
+        for edge in list(self.edges.keys()):
             self.edges[edge].src =  self.edges[edge].src - self.base + new_base
             self.edges[edge].dst =  self.edges[edge].dst - self.base + new_base
             self.edges[edge].id  = (self.edges[edge].src << 32) + self.edges[edge].dst

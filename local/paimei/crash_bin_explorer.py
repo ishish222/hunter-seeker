@@ -35,7 +35,7 @@ try:
 
     opts, args = getopt.getopt(sys.argv[2:], "t:g:", ["test=", "graph="])
 except:
-    print USAGE
+    print(USAGE)
     sys.exit(1)
 
 test_id = graph_name = graph = None
@@ -48,7 +48,7 @@ try:
     crashbin = utils.crash_binning.crash_binning()
     crashbin.import_file(sys.argv[1])
 except:
-    print "unable to open crashbin: '%s'." % sys.argv[1]
+    print("unable to open crashbin: '%s'." % sys.argv[1])
     sys.exit(1)
 
 #
@@ -56,10 +56,10 @@ except:
 #
 
 if test_id:
-    for bin, crashes in crashbin.bins.iteritems():
+    for bin, crashes in crashbin.bins.items():
         for crash in crashes:
             if test_id == crash.extra:
-                print crashbin.crash_synopsis(crash)
+                print(crashbin.crash_synopsis(crash))
                 sys.exit(0)
 
 #
@@ -69,7 +69,7 @@ if test_id:
 if graph_name:
     graph = pgraph.graph()
 
-for bin, crashes in crashbin.bins.iteritems():
+for bin, crashes in crashbin.bins.items():
     synopsis = crashbin.crash_synopsis(crashes[0]).split("\n")[0]
 
     if graph:
@@ -78,14 +78,14 @@ for bin, crashes in crashbin.bins.iteritems():
         crash_node.label = "[%d] %s.%08x" % (crash_node.count, crashes[0].exception_module, crash_node.id)
         graph.add_node(crash_node)
 
-    print "[%d] %s" % (len(crashes), synopsis)
-    print "\t",
+    print("[%d] %s" % (len(crashes), synopsis))
+    print("\t", end=' ')
 
     for crash in crashes:
         if graph:
             last = crash_node.id
             for entry in crash.stack_unwind:
-                address = long(entry.split(":")[1], 16)
+                address = int(entry.split(":")[1], 16)
                 n = graph.find_node("id", address)
 
                 if not n:
@@ -100,9 +100,9 @@ for bin, crashes in crashbin.bins.iteritems():
                 edge = pgraph.edge(n.id, last)
                 graph.add_edge(edge)
                 last = n.id
-        print "%s," % crash.extra,
+        print("%s," % crash.extra, end=' ')
 
-    print "\n"
+    print("\n")
 
 if graph:
     fh = open("%s.udg" % graph_name, "w+")

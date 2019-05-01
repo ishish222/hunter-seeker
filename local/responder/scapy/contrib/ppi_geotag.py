@@ -262,7 +262,7 @@ def _FlagsList(myfields):
     flags = []
     for i in range(32):
         flags.append("Reserved%02d" % i)
-    for i in myfields.keys():
+    for i in list(myfields.keys()):
         flags[i] = myfields[i]
     return flags
 

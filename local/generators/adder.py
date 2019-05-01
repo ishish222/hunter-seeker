@@ -1,4 +1,4 @@
-from mutator import Mutator
+from .mutator import Mutator
 import random
 
 minShortAdd = 2

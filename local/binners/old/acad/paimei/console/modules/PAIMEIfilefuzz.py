@@ -22,7 +22,7 @@
 @organization: www.tippingpoint.com
 '''
 
-import sys, os, thread, time, datetime, copy, struct, smtplib, shutil
+import sys, os, _thread, time, datetime, copy, struct, smtplib, shutil
 from email.MIMEMultipart import MIMEMultipart
 from email.MIMEBase import MIMEBase
 from email.MIMEText import MIMEText
@@ -86,7 +86,7 @@ class TestCase:
         self.running = True
                
         try:
-            thread.start_new_thread(self.Run, ())
+            _thread.start_new_thread(self.Run, ())
         except:
             evt = ThreadEventLog(msg = "Problem Starting Thread")
             wx.PostEvent(self.main_window, evt)
@@ -137,7 +137,7 @@ class TestCase:
                 while self.paused:
                     time.sleep(1)
             
-            for key in item.keys():
+            for key in list(item.keys()):
                 dbg = pydbg()
                 
                 self.current_pos = key
@@ -156,7 +156,7 @@ class TestCase:
                     evt = ThreadEventLog(msg = "Checking extension %s" % extension)
                     wx.PostEvent(self.main_window, evt)
                     
-                    if self.program_cache.has_key(extension):
+                    if extension in self.program_cache:
                         command = self.program_cache[extension]
                     else:
                         command = self.get_handler(extension, self.current_file)
@@ -170,19 +170,19 @@ class TestCase:
                     else:
                         try:
                             dbg.load(command, "\"" + self.current_file + "\"", show_window=self.show_window)
-                        except pdx, x:
+                        except pdx as x:
                             evt = ThreadEventLog(msg = "Problem Starting Program (%s): %s %s" % (x. __str__(), self.program_name, self.current_file))
                             wx.PostEvent(self.main_window, evt)
                 else:   
                     try:
                         dbg.load(self.program_name, "\"" + self.current_file + "\"", show_window=self.show_window)
-                    except pdx, x:
+                    except pdx as x:
                         evt = ThreadEventLog(msg = "Problem Starting Program (%s): %s %s" % (x. __str__(), self.program_name, self.current_file))
                         wx.PostEvent(self.main_window, evt)
                     
                 # Create watchdog thread
                 try:
-                    thread.start_new_thread(self.Watch, (dbg, self.current_file))
+                    _thread.start_new_thread(self.Watch, (dbg, self.current_file))
                 except:
                     evt = ThreadEventLog(msg = "Problem Starting Thread")
                     wx.PostEvent(self.main_window, evt)
@@ -191,7 +191,7 @@ class TestCase:
                 #Continue execution
                 try:
                     dbg.debug_event_loop()
-                except pdx, x:
+                except pdx as x:
                     evt = ThreadEventLog(msg = "Problem in debug_Event_loop() (%s): %s %s" % (x.__str__(), self.program_name, self.current_file))
                     wx.PostEvent(self.main_window, evt)
 
@@ -219,7 +219,7 @@ class TestCase:
         if pydbg.debugger_active:
 	        try:
 	            pydbg.terminate_process()
-	        except pdx, x:
+	        except pdx as x:
 	            evt = ThreadEventLog(msg = "Couldnt Terminate Process (%s): %s %s" % (x.__str__(), self.program_name, current_file))
 	            wx.PostEvent(self.main_window, evt)
 	            
@@ -283,7 +283,7 @@ class TestCase:
         
         try:
             pydbg.terminate_process()
-        except pdx, x:
+        except pdx as x:
             evt = ThreadEventLog(msg = "Couldnt Terminate Process (%s): %s %s" % (x.__str__(), self.program_name, self.current_file))
             wx.PostEvent(self.main_window, evt)
         
@@ -832,7 +832,7 @@ class PAIMEIfilefuzz(wx.Panel):
         
         contents = infile.read()
         
-        for byte in xrange(start, end+1, self.byte_length):
+        for byte in range(start, end+1, self.byte_length):
             newcontents = ""
             
             newfile = str(byte) + "." + extension
@@ -877,7 +877,7 @@ class PAIMEIfilefuzz(wx.Panel):
         # Set static stats
         self.start_time = int(time.time())
         self.end_time = (end - start) * self.timeout
-        for count in xrange(start, end, 1):    
+        for count in range(start, end, 1):    
        
             self.file_list_box_control.SetSelection(count)
             self.get_file_view()
@@ -964,7 +964,7 @@ class PAIMEIfilefuzz(wx.Panel):
         bytepos = 0
         length  = 0
         
-        for filepos in xrange(start, end, 1):
+        for filepos in range(start, end, 1):
             byte = filecontents[filepos]
 
             if counter == 0:

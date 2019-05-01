@@ -42,7 +42,7 @@ class PAIMEIdocs(wx.Panel):
     selection  = None     # selected help section.
 
     def __init__ (self, *args, **kwds):
-        self.choices = self.sections.keys()
+        self.choices = list(self.sections.keys())
         self.choices.sort()
 
         # begin wxGlade: PAIMEIdocs.__init__

@@ -210,7 +210,7 @@ for func in functions:
                 ### peek a call with format string arguments
                 ###
 
-                if functions[func].has_key("fs_arg"):
+                if "fs_arg" in functions[func]:
                     fs_arg = functions[func]["fs_arg"]
 
                     format_string = get_arg(xref, fs_arg)
@@ -240,4 +240,4 @@ for func in functions:
                     write_line("%08x:3:%s" % (xref, func))
 
 peek_file.close()
-print "done."
+print("done.")

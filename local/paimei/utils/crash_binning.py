@@ -24,7 +24,7 @@
 
 import sys
 import zlib
-import cPickle
+import pickle
 
 class __crash_bin_struct__(object):
     exception_module    = None
@@ -99,7 +99,7 @@ class crash_binning(object):
         crash.extra               = extra
 
         # add module names to the stack unwind.
-        for i in xrange(len(crash.stack_unwind)):
+        for i in range(len(crash.stack_unwind)):
             addr   = crash.stack_unwind[i]
             module = pydbg.addr_to_module(addr)
 
@@ -112,7 +112,7 @@ class crash_binning(object):
 
 
         # add module names to the SEH unwind.
-        for i in xrange(len(crash.seh_unwind)):
+        for i in range(len(crash.seh_unwind)):
             (addr, handler) = crash.seh_unwind[i]
 
             module = pydbg.addr_to_module(handler)
@@ -124,7 +124,7 @@ class crash_binning(object):
 
             crash.seh_unwind[i] = (addr, handler, "%s:%08x" % (module, handler))
 
-        if not self.bins.has_key(crash.exception_address):
+        if crash.exception_address not in self.bins:
             self.bins[crash.exception_address] = []
 
         self.bins[crash.exception_address].append(crash)
@@ -190,7 +190,7 @@ class crash_binning(object):
         pydbg      = self.pydbg
 
         self.last_crash = self.pydbg = None
-        data = zlib.compress(cPickle.dumps(self, protocol=2))
+        data = zlib.compress(pickle.dumps(self, protocol=2))
 
         self.last_crash = last_crash
         self.pydbg      = pydbg
@@ -218,7 +218,7 @@ class crash_binning(object):
         self.last_crash = self.pydbg = None
 
         fh = open(file_name, "wb+")
-        fh.write(zlib.compress(cPickle.dumps(self, protocol=2)))
+        fh.write(zlib.compress(pickle.dumps(self, protocol=2)))
         fh.close()
 
         self.last_crash = last_crash
@@ -229,7 +229,7 @@ class crash_binning(object):
 
     ####################################################################################################################
     def import_string (self, string):
-        tmp = cPickle.loads(zlib.decompress(string))
+        tmp = pickle.loads(zlib.decompress(string))
         self.bins = tmp.bins
 
         return self
@@ -249,7 +249,7 @@ class crash_binning(object):
         '''
 
         fh  = open(file_name, "rb")
-        tmp = cPickle.loads(zlib.decompress(fh.read()))
+        tmp = pickle.loads(zlib.decompress(fh.read()))
         fh.close()
 
         self.bins = tmp.bins

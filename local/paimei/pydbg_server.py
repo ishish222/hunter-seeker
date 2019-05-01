@@ -16,7 +16,7 @@
 import socket
 import sys
 import threading
-import cPickle
+import pickle
 import getopt
 
 from pydbg import *
@@ -79,7 +79,7 @@ class pydbg_server_thread (threading.Thread):
                 if method_pointer:
                     try:
                         ret_message = method_pointer(*args, **kwargs)
-                    except pdx, x:
+                    except pdx as x:
                         ret_message = ("exception", x.__str__())
 
             try:
@@ -90,10 +90,10 @@ class pydbg_server_thread (threading.Thread):
 
     def pickle_recv (self):
         try:
-            length   = long(self.client.recv(4), 16)
+            length   = int(self.client.recv(4), 16)
             received = self.client.recv(length)
 
-            return cPickle.loads(received)
+            return pickle.loads(received)
         except:
             log("connection severed to %s:%d" % (self.client_address[0], self.client_address[1]))
             self.connected = False
@@ -102,8 +102,8 @@ class pydbg_server_thread (threading.Thread):
 
 
     def pickle_send (self, data):
-        print "sending", data
-        data = cPickle.dumps(data)
+        print("sending", data)
+        data = pickle.dumps(data)
 
         try:
             self.client.send("%04x" % len(data))
@@ -128,7 +128,7 @@ class pydbg_server_thread (threading.Thread):
             #       recv at some later point.
             try:
                 (method, (args, kwargs)) = pickled
-                print method, args, kwargs
+                print(method, args, kwargs)
             except:
                 continue
 
@@ -150,7 +150,7 @@ class pydbg_server_thread (threading.Thread):
                 if method_pointer:
                     try:
                         ret_message = method_pointer(*args, **kwargs)
-                    except pdx, x:
+                    except pdx as x:
                         ret_message = ("exception", x.__str__())
 
             try:

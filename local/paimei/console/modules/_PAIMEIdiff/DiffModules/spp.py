@@ -29,7 +29,7 @@ class spp:
         self.parent.register_module(self)                                               # register our module in the module table
         
     def match_function_by_spp(self, function_a, function_b):
-        if not function_a.ext.has_key("PAIMEIDiffFunction") or not function_b.ext.has_key("PAIMEIDiffFunction"):
+        if "PAIMEIDiffFunction" not in function_a.ext or "PAIMEIDiffFunction" not in function_b.ext:
             return 0
             
         if function_a.ext["PAIMEIDiffFunction"].spp == function_b.ext["PAIMEIDiffFunction"].spp:

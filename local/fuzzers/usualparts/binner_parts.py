@@ -129,7 +129,7 @@ def binner_save(args=None):
 #    time.sleep(30)
 #    read_socket(options.s) #waiting for "saved"
     
-    print "Saved automatically"
+    print("Saved automatically")
 
 def binner_close_sample(args=None):
     options = globs.state.options

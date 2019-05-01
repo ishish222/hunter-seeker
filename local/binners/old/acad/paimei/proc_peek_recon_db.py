@@ -96,7 +96,7 @@ def token_count (format_string):
 
 
 def ida_log (message):
-    print "RECON> " + message
+    print("RECON> " + message)
 
 
 def add_recon (mysql, module_id, offset, stack_depth, reason, status):
@@ -115,7 +115,7 @@ def add_recon (mysql, module_id, offset, stack_depth, reason, status):
 
     try:
         cursor.execute(sql)
-    except MySQLdb.Error, e:
+    except MySQLdb.Error as e:
         ida_log("MySQL error %d: %s" % (e.args[0], e.args[1]))
         ida_log(sql)
         return False
@@ -141,7 +141,7 @@ def meat_and_potatoes (mysql):
 
     try:
         cursor.execute("INSERT INTO pp_modules SET name = '%s', base = '%d', notes = ''" % (GetInputFile(), base_address))
-    except MySQLdb.Error, e:
+    except MySQLdb.Error as e:
         ida_log("MySQL error %d: %s" % (e.args[0], e.args[1]))
         ida_log(sql)
         return
@@ -263,7 +263,7 @@ def meat_and_potatoes (mysql):
                     ### peek a call with format string arguments
                     ###
 
-                    if functions[func].has_key("fs_arg"):
+                    if "fs_arg" in functions[func]:
                         fs_arg = functions[func]["fs_arg"]
 
                         format_string = get_arg(xref, fs_arg)
@@ -331,7 +331,7 @@ def mysql_connect ():
     # connect to mysql
     try:
         mysql = MySQLdb.connect(host=mysql_host, user=mysql_user, passwd=mysql_pass, db="paimei")
-    except MySQLdb.OperationalError, err:
+    except MySQLdb.OperationalError as err:
         ida_log("failed connecting to MySQL server: %s" % err[1])
         mysql = None
 

@@ -69,30 +69,30 @@ Start.consequence = dm.PrintLogo
 def decision():
     options = globs.state.options
 
-    print "received signal"
-    print globs.state.ret[1:3]
+    print("received signal")
+    print(globs.state.ret[1:3])
 
     if(globs.state.ret[1:3] == "RR"):
-        print "Decision is: Continuing"
+        print("Decision is: Continuing")
         return TracerAutoSt
 
     if(globs.state.ret[1:3] == "RE"):
-        print "Decision is: Continuing UH"
+        print("Decision is: Continuing UH")
         return TracerDebugContinueUnhandledInf
 
     if(globs.state.ret[1:3] == "RX"):
-        print "Process is exiting, finishing up"
+        print("Process is exiting, finishing up")
         return TracerEndTrace
 
     if(globs.state.ret[1:3] == "RB"):
         if(globs.state.ret[3:5] == "ST"):
-            print "Decision is: StartTrace"
+            print("Decision is: StartTrace")
             return DumpMemory
         if(globs.state.ret[3:5] == "EN"):
-            print "Decision is: EndTrace"
+            print("Decision is: EndTrace")
             return TracerEndTrace
 
-    print "Decision is: Continuing"
+    print("Decision is: Continuing")
     return TracerDebugContinueInf
 
 Decision.name = "Making decision"

@@ -17,7 +17,7 @@ password = sys.argv[3]
 
 try:
     mysql = MySQLdb.connect(host=host, user=username, passwd=password)
-except MySQLdb.OperationalError, err:
+except MySQLdb.OperationalError as err:
     error("Failed connecting to MySQL server: %s" % err[1])
 
 cursor = mysql.cursor()
@@ -136,7 +136,7 @@ try:
         PRIMARY KEY  (id)
         ) ENGINE=MyISAM""")
 
-except MySQLdb.ProgrammingError, err:
+except MySQLdb.ProgrammingError as err:
     error("Failed creating db / tables: %s" % err[1])
 
 cursor.close()

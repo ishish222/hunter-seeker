@@ -59,22 +59,22 @@ output_file = AskFile(1, GetInputFile() + ".pida", "Save PIDA file to?")
 if not output_file:
     Warning("Cancelled.")
 else:
-    print "Analyzing IDB..."
+    print("Analyzing IDB...")
     start = time.time()
 
     try:
         signature = pida.signature(GetInputFilePath())
     except:
-        print "PIDA.DUMP> Could not calculate signature for %s, perhaps the file was moved?" % GetInputFilePath()
+        print("PIDA.DUMP> Could not calculate signature for %s, perhaps the file was moved?" % GetInputFilePath())
         signature = ""
 
     module = pida.module(GetInputFile(), signature, depth, analysis)
-    print "Done. Completed in %f seconds.\n" % round(time.time() - start, 3)
+    print("Done. Completed in %f seconds.\n" % round(time.time() - start, 3))
 
-    print "Saving to file...",
+    print("Saving to file...", end=' ')
     start = time.time()
     pida.dump(output_file, module, progress_bar="ascii")
-    print "Done. Completed in %f seconds." % round(time.time() - start, 3)
+    print("Done. Completed in %f seconds." % round(time.time() - start, 3))
 
     # clean up memory.
     # XXX - this is not working...

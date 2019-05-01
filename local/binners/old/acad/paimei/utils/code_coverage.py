@@ -28,7 +28,7 @@ except: pass
 
 import time
 import zlib
-import cPickle
+import pickle
 
 class __code_coverage_struct__:
     eip         = 0x00000000
@@ -141,7 +141,7 @@ class code_coverage:
             ccs.esp_c_deref  = context_list["esp+0c"]["desc"]
             ccs.esp_10_deref = context_list["esp+10"]["desc"]
 
-        if not self.hits.has_key(ccs.eip):
+        if ccs.eip not in self.hits:
             self.hits[ccs.eip] = []
 
         self.hits[ccs.eip].append(ccs)
@@ -171,10 +171,10 @@ class code_coverage:
 
         try:
             cursor.execute("DELETE FROM cc_hits WHERE target_id = '%d' AND tag_id = '%d'" % (target_id, tag_id))
-        except MySQLdb.Error, e:
-            print "Error %d: %s" % (e.args[0], e.args[1])
-            print sql
-            print
+        except MySQLdb.Error as e:
+            print("Error %d: %s" % (e.args[0], e.args[1]))
+            print(sql)
+            print()
 
         cursor.close()
         return self
@@ -219,7 +219,7 @@ class code_coverage:
         '''
 
         fh = open(file_name, "wb+")
-        fh.write(zlib.compress(cPickle.dumps(self, protocol=2)))
+        fh.write(zlib.compress(pickle.dumps(self, protocol=2)))
         fh.close()
 
         return self
@@ -243,7 +243,7 @@ class code_coverage:
 
         cursor = self.mysql.cursor()
 
-        for hits in self.hits.values():
+        for hits in list(self.hits.values()):
             for ccs in hits:
                 sql  = "INSERT INTO cc_hits"
                 sql += " SET target_id    = '%d'," % target_id
@@ -282,10 +282,10 @@ class code_coverage:
 
                 try:
                     cursor.execute(sql)
-                except MySQLdb.Error, e:
-                    print "Error %d: %s" % (e.args[0], e.args[1])
-                    print sql
-                    print
+                except MySQLdb.Error as e:
+                    print("Error %d: %s" % (e.args[0], e.args[1]))
+                    print(sql)
+                    print()
 
         cursor.close()
         return self
@@ -306,7 +306,7 @@ class code_coverage:
         '''
 
         fh  = open(file_name, "rb")
-        tmp = cPickle.loads(zlib.decompress(fh.read()))
+        tmp = pickle.loads(zlib.decompress(fh.read()))
         fh.close()
 
         self.hits        = tmp.hits
@@ -377,7 +377,7 @@ class code_coverage:
                 ccs.esp_C_deref  = hit["esp_c_deref"]
                 ccs.esp_10_deref = hit["esp_10_deref"]
 
-            if not self.hits.has_key(ccs.eip):
+            if ccs.eip not in self.hits:
                 self.hits[ccs.eip] = []
 
             self.hits[ccs.eip].append(ccs)

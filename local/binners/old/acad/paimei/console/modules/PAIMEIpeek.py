@@ -269,7 +269,7 @@ class PAIMEIpeek(wx.Panel):
                 self.addr_to_recon[self.module["base"] + row["offset"]] = row
 
             # set breakpoints at each recon point.
-            self.dbg.bp_set(self.addr_to_recon.keys())
+            self.dbg.bp_set(list(self.addr_to_recon.keys()))
             self.msg("Watching %d points" % len(self.addr_to_recon))
 
             # close the MySQL cursor and continue execution.
@@ -447,7 +447,7 @@ class PAIMEIpeek(wx.Panel):
         for hit in hits.fetchall():
             choices[hit["name"]] = hit["id"]
 
-        dlg = wx.SingleChoiceDialog(self, "", "Select Module", choices.keys(), wx.CHOICEDLG_STYLE)
+        dlg = wx.SingleChoiceDialog(self, "", "Select Module", list(choices.keys()), wx.CHOICEDLG_STYLE)
 
         if dlg.ShowModal() == wx.ID_OK:
             name = dlg.GetStringSelection()

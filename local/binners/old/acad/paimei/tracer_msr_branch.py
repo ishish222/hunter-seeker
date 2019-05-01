@@ -35,8 +35,8 @@ def read_msr():
                                                byref(msr),
                                                sizeof(SYSDBG_MSR),
                                                0);
-    print "ret code: %x" % status
-    print "%08x.%s" % (msr.Address, dbg.to_binary(msr.Data, 8))
+    print("ret code: %x" % status)
+    print("%08x.%s" % (msr.Address, dbg.to_binary(msr.Data, 8)))
 
 def write_msr():
     msr = SYSDBG_MSR()
@@ -54,24 +54,24 @@ def handler_breakpoint (dbg):
     global begin, end
 
     if not begin or not end:
-        print "initial breakpoint hit at %08x: %s" % (dbg.exception_address, dbg.disasm(dbg.exception_address))
-        print "putting all threads into single step mode"
+        print("initial breakpoint hit at %08x: %s" % (dbg.exception_address, dbg.disasm(dbg.exception_address)))
+        print("putting all threads into single step mode")
 
         for module in dbg.iterate_modules():
             if module.szModule.lower().endswith(".exe"):
                 begin = module.modBaseAddr
                 end   = module.modBaseAddr + module.modBaseSize
-                print "%s %08x -> %08x" % (module.szModule, begin, end)
+                print("%s %08x -> %08x" % (module.szModule, begin, end))
 
         for tid in dbg.enumerate_threads():
-            print "    % 4d -> setting single step" % tid
+            print("    % 4d -> setting single step" % tid)
             handle = dbg.open_thread(tid)
             dbg.single_step(True, handle)
             write_msr()
             dbg.close_handle(handle)
 
     elif begin <= dbg.exception_address <= end:
-        print "bp: %08x: %s" % (dbg.exception_address, dbg.disasm(dbg.exception_address))
+        print("bp: %08x: %s" % (dbg.exception_address, dbg.disasm(dbg.exception_address)))
 
     dbg.single_step(True)
     write_msr()
@@ -88,7 +88,7 @@ def handler_single_step (dbg):
 
 
     if begin <= dbg.exception_address <= end:
-        print "ss: %08x: %s" % (dbg.exception_address, disasm)
+        print("ss: %08x: %s" % (dbg.exception_address, disasm))
         in_module = True
 
     # if the current instructon is 'sysenter', set a breakpoint at the return address to bypass it.

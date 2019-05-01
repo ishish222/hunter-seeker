@@ -35,7 +35,7 @@ class __global:
     def __repr__ (self):
         rep = ""
 
-        for key, val in self.__dict__.items():
+        for key, val in list(self.__dict__.items()):
             if type(val) is int:
                 rep += "  %s: 0x%08x, %d\n" % (key, val, val)
             else:
@@ -91,7 +91,7 @@ def handle_av (dbg):
     crash_bin = utils.crash_binning.crash_binning()
     crash_bin.record_crash(dbg)
 
-    print crash_bin.crash_synopsis()
+    print(crash_bin.crash_synopsis())
     dbg.terminate_process()
 
 
@@ -138,7 +138,7 @@ def handle_bp (dbg):
         if deref != "N/A":
             status += " -> %s" % deref
 
-        print status
+        print(status)
 
     # when we first get control, save the context of the thread we are about to muck around with.
     if not saved_context:
@@ -147,7 +147,7 @@ def handle_bp (dbg):
     # command loop.
     while 1:
         try:
-            command = raw_input("\n[%03d] CMD> " % cmd_num)
+            command = input("\n[%03d] CMD> " % cmd_num)
         except:
             return DBG_CONTINUE
 
@@ -266,7 +266,7 @@ def dpc (address, *args, **kwargs):
         dbg.write(eip, assembled)
         eip += len(assembled)
 
-    for reg, arg in kwargs.items():
+    for reg, arg in list(kwargs.items()):
         log("processing register %s argument: %s" % (reg, arg))
 
         if reg.upper() not in ("EAX", "EBX", "ECX", "EDX", "ESI", "EDI", "ESP", "EBP", "EIP"):
@@ -305,7 +305,7 @@ def show_all ():
     global dbg, allocations
 
     for address, size in allocations:
-        print dbg.hex_dump(dbg.read(address, size), address)
+        print(dbg.hex_dump(dbg.read(address, size), address))
 
 
 ########################################################################################################################
@@ -326,7 +326,7 @@ except:
             found_target = True
             break
 
-print "attaching to %d" % pid
+print("attaching to %d" % pid)
 
 if found_target:
     dbg.attach(pid)

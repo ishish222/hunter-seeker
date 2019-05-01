@@ -52,7 +52,7 @@ def choose_backtrace_target(ea):
     '''
     targets = []
     
-    for op_index in xrange(3):
+    for op_index in range(3):
         current_tgt = GetOpnd(ea, op_index)
         if (current_tgt != None and current_tgt != "" and not (current_tgt in targets)):
             targets.append(current_tgt)
@@ -172,7 +172,7 @@ else:
             bb_targets[block] = target
     
     while len(bb_targets) > 0:
-        bb = bb_targets.keys()[0]        
+        bb = list(bb_targets.keys())[0]        
         target = bb_targets[bb]
         del bb_targets[bb]
         
@@ -201,7 +201,7 @@ else:
                 break
                 
 ida_log("Possible sources detected: %d" % len(var_src))
-for key in var_src.keys():
+for key in list(var_src.keys()):
     if var_src[key] == "zero":
         ida_log("%08x: Memory Zeroed" % key)
     elif var_src[key] == "call":

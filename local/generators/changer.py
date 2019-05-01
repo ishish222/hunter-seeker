@@ -1,4 +1,4 @@
-from mutator import Mutator
+from .mutator import Mutator
 from mmap import mmap
 import random
 

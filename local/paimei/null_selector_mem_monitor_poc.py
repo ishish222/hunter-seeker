@@ -43,8 +43,8 @@ def set_selectors(dbg, val, thread_id=None):
         dbg.close_handle(handle)
 
 def entry_point (dbg):
-    print "%08x: %s" % (dbg.exception_address, dbg.disasm(dbg.exception_address))
-    print "%08x" % dbg.context.SegDs
+    print("%08x: %s" % (dbg.exception_address, dbg.disasm(dbg.exception_address)))
+    print("%08x" % dbg.context.SegDs)
     set_selectors(dbg, 0)
     return DBG_CONTINUE
 

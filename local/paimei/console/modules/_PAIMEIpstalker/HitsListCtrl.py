@@ -130,7 +130,7 @@ class HitsListCtrl (wx.ListCtrl, ListCtrlAutoWidthMixin, ColumnSorterMixin):
         '''
 
         # find the first occurence of address in the list and set the focus on it.
-        for (idx, hit) in self.hits_by_index.items():
+        for (idx, hit) in list(self.hits_by_index.items()):
             if hit["eip"] == address:
                 state = state_mask = wx.LIST_STATE_FOCUSED | wx.LIST_STATE_SELECTED
                 self.SetItemState(idx, state, state_mask)

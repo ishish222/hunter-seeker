@@ -71,7 +71,7 @@ def add_integer_boundaries (integer):
     '''
     global fuzz_library, fuzz_width, max_num
 
-    for i in xrange(-10, 10):
+    for i in range(-10, 10):
         case = integer + i
 
         # ensure the border case falls within the valid range for this field.
@@ -98,7 +98,7 @@ def bp_handler (dbg):
 
     # this shouldn't happen, but i'd like to know if it does.
     else:
-        raw_input("how did we get here?....")
+        input("how did we get here?....")
 
     return DBG_CONTINUE
 
@@ -148,10 +148,10 @@ def insert_threaded_timer (dbg):
 ########################################################################################################################
 
 
-print "[*] tickling target file %s" % target_file
-print "[*] through %s" % parent_program
-print "[*] at mutant offset %d (0x%x)" % (offending_offset-1, offending_offset-1)
-print "[*] with fuzz width %d" % fuzz_width
+print("[*] tickling target file %s" % target_file)
+print("[*] through %s" % parent_program)
+print("[*] at mutant offset %d (0x%x)" % (offending_offset-1, offending_offset-1))
+print("[*] with fuzz width %d" % fuzz_width)
 
 # initialize our fuzz library based on fuzz width.
 max_num = 2** (fuzz_width * 8) - 1
@@ -165,7 +165,7 @@ add_integer_boundaries(max_num / 16)
 add_integer_boundaries(max_num / 32)
 add_integer_boundaries(max_num)
 
-print "[*] fuzz library initialized with %d entries" % len(fuzz_library)
+print("[*] fuzz library initialized with %d entries" % len(fuzz_library))
 
 # add the base line crash to the crash bin.
 extra  = "BASELINE"
@@ -181,7 +181,7 @@ fh.close()
 # fuzz through all possible fuzz values at offending offset.
 ###
 
-print "[*] fuzzing at offending offset"
+print("[*] fuzzing at offending offset")
 i = 0
 
 for value in fuzz_library:
@@ -203,17 +203,17 @@ for value in fuzz_library:
     i       += 1
     crashes  = 0
 
-    for bin in crash_bin.bins.itervalues():
+    for bin in crash_bin.bins.values():
         crashes += len(bin)
 
-    print "\tcompleted %d of %d in this set (bins: %d, crashes: %d)\r" % (i, len(fuzz_library), len(crash_bin.bins), crashes),
+    print("\tcompleted %d of %d in this set (bins: %d, crashes: %d)\r" % (i, len(fuzz_library), len(crash_bin.bins), crashes), end=' ')
 
 
 ###########################################################
 # now fuzz through all possible fuzz values at offending offset - fuzz_width.
 ###
 
-print "\n[*] fuzzing at offending offset - fuzz width"
+print("\n[*] fuzzing at offending offset - fuzz width")
 i = 0
 new_offset = offending_offset - fuzz_width
 
@@ -235,17 +235,17 @@ for value in fuzz_library:
     i       += 1
     crashes  = 0
 
-    for bin in crash_bin.bins.itervalues():
+    for bin in crash_bin.bins.values():
         crashes += len(bin)
 
-    print "\tcompleted %d of %d in this set (bins: %d, crashes: %d)\r" % (i, len(fuzz_library), len(crash_bin.bins), crashes),
+    print("\tcompleted %d of %d in this set (bins: %d, crashes: %d)\r" % (i, len(fuzz_library), len(crash_bin.bins), crashes), end=' ')
 
 
 ###########################################################
 # now fuzz through all possible fuzz values at offending offset + fuzz_width.
 ###
 
-print "\n[*] fuzzing at offending offset + fuzz width"
+print("\n[*] fuzzing at offending offset + fuzz width")
 i = 0
 new_offset = offending_offset + fuzz_width
 
@@ -267,25 +267,25 @@ for value in fuzz_library:
     i       += 1
     crashes  = 0
 
-    for bin in crash_bin.bins.itervalues():
+    for bin in crash_bin.bins.values():
         crashes += len(bin)
 
-    print "\tcompleted %d of %d in this set (bins: %d, crashes: %d)\r" % (i, len(fuzz_library), len(crash_bin.bins), crashes),
+    print("\tcompleted %d of %d in this set (bins: %d, crashes: %d)\r" % (i, len(fuzz_library), len(crash_bin.bins), crashes), end=' ')
 
 
 ###########################################################
 # now do some random fuzzing around the offending offset.
 ###
 
-print "\n[*] fuzzing with random data at offending offset +/- 8"
+print("\n[*] fuzzing with random data at offending offset +/- 8")
 
-for i in xrange(100):
+for i in range(100):
     extra  = "random: "
     top    = data[:offending_offset - 8]
     bottom = data[ offending_offset + 8:]
     middle = ""
 
-    for o in xrange(16):
+    for o in range(16):
         byte    = random.randint(0, 255)
         middle += chr(byte)
         extra  += "%02x " % byte
@@ -301,10 +301,10 @@ for i in xrange(100):
 
     crashes = 0
 
-    for bin in crash_bin.bins.itervalues():
+    for bin in crash_bin.bins.values():
         crashes += len(bin)
 
-    print "\tcompleted %d of %d in this set (bins: %d, crashes: %d)\r" % (i, len(fuzz_library), len(crash_bin.bins), crashes),
+    print("\tcompleted %d of %d in this set (bins: %d, crashes: %d)\r" % (i, len(fuzz_library), len(crash_bin.bins), crashes), end=' ')
 
 
 ###########################################################
@@ -312,13 +312,13 @@ for i in xrange(100):
 ###
 
 crashes = 0
-for bin in crash_bin.bins.itervalues():
+for bin in crash_bin.bins.values():
     crashes += len(bin)
 
-print
-print "[*] fuzz tickling complete."
-print "[*] crash bin contains %d crashes across %d containers" % (crashes, len(crash_bin.bins))
-print "[*] saving crash bin to file_fuzz_tickler.crash_bin"
+print()
+print("[*] fuzz tickling complete.")
+print("[*] crash bin contains %d crashes across %d containers" % (crashes, len(crash_bin.bins)))
+print("[*] saving crash bin to file_fuzz_tickler.crash_bin")
 
 crash_bin.export_file("file_fuzz_tickler.crash_bin")
 

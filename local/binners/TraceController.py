@@ -1,5 +1,5 @@
 import sys
-from Queue import PriorityQueue
+from queue import PriorityQueue
 from threading import Event
 from multiprocessing import Lock, Process, Pipe
 from subprocess import Popen, PIPE
@@ -90,7 +90,7 @@ class TraceController(object):
             self.last_log_file = None
 
     def dlog(self, data, level=0):
-        print("[TracerController]: %s\n" % data)
+        print(("[TracerController]: %s\n" % data))
         """
         if(self.debug == True):
             if(self.log_level <0):
@@ -137,16 +137,16 @@ class TraceController(object):
         try:
             self.write_debugger(self.tracer_active.socket, cmd)
         except Exception:
-            print("Failed to send %s to tracer no: %d" % (cmd, self.tracer_active_id))
+            print(("Failed to send %s to tracer no: %d" % (cmd, self.tracer_active_id)))
         self.dlog("Sent: %s to tracer no: %d" % (cmd, self.tracer_active_id), 3)
 
     def recv_report_active2(self):
         try:
             self.read_debugger(self.tracer_active.socket)
         except Exception as inst:
-            print("Failed to receive from tracer no: %d" % (self.tracer_active_id))
-            print(type(inst))
-            print(inst.args)
+            print(("Failed to receive from tracer no: %d" % (self.tracer_active_id)))
+            print((type(inst)))
+            print((inst.args))
             print(inst)
         self.dlog("Read: %s from tracer no: %d" % (self.last_answer, self.trace_active), 3)
         return self.last_report
@@ -168,16 +168,16 @@ class TraceController(object):
     def poll_debuggers(self, to = None):
         if(to != None):
             self.dlog("TO = %d seconds" % to, 3)
-            readable = self.sockets.values()
+            readable = list(self.sockets.values())
             ready, _, _ = select(readable, [], [], to)
         else:
             self.dlog("Polling until readable", 2)
-            readable = self.sockets.values()
+            readable = list(self.sockets.values())
             ready, _, _ = select(readable, [], [])
         return ready
 
     def read_debuggers(self):
-        for dbg in self.debuggers.values():
+        for dbg in list(self.debuggers.values()):
             self.dlog(self.read_debugger(dbg))
             self.read_debugger(dbg)
 
@@ -407,7 +407,7 @@ class TraceController(object):
 #TODO: is this necessary?
 
     def spawn(self, path):
-        print("Spawning: %s", path)
+        print(("Spawning: %s", path))
         self.proc = Popen(path)
 
     def close_active_tracer(self):
@@ -471,9 +471,9 @@ class TraceController(object):
     def spawn_tracer_no_log(self):
         print("Spawning tracer w/o log")
         Popen(["\\\\10.0.2.4\\qemu\\server\\b.exe", "127.0.0.1", "12341", ">", "NUL"], shell=True)
-        print 2
+        print(2)
         socket, addr = self.main_socket.accept()
-        print 3
+        print(3)
         self.tracers.append(Tracer())
         self.tracer_active_id = self.trace_count
         self.tracer_active = self.tracers[self.tracer_active_id]
@@ -495,12 +495,12 @@ class TraceController(object):
     def activate_prev_tracer(self):
         self.tracer_active_id = (self.tracer_active_id + 1) % self.trace_count
         self.tracer_active = self.tracers[self.tracer_active_id]
-        print("Active tracer: %d out of %d" % (self.tracer_active_id, self.trace_count))
+        print(("Active tracer: %d out of %d" % (self.tracer_active_id, self.trace_count)))
 
     def activate_next_tracer(self):
         self.tracer_active_id = (self.tracer_active_id + 1) % self.trace_count
         self.tracer_active = self.tracers[self.tracer_active_id]
-        print("Active tracer: %d out of %d" % (self.tracer_active_id, self.trace_count))
+        print(("Active tracer: %d out of %d" % (self.tracer_active_id, self.trace_count)))
 
 # modify
     def attach(self, pid):
@@ -642,7 +642,7 @@ class TraceController(object):
 
     def start_log(self, name):
 #        self.debug = True
-        print("Binner starting log: %s-binner.txt" % name)
+        print(("Binner starting log: %s-binner.txt" % name))
         if(self.last_log_file != None):
             self.last_log_file.close()
         self.last_log_file = open("%s-binner.txt" % name, "a", 0)
@@ -718,7 +718,7 @@ class TraceController(object):
         if(dir2[-1:] == "\\"): dir2 = dir2[:-1]
         #cmd = "xcopy /R /Y /I /E %s %s" % (dir1, dir2)
         cmd = "copy %s %s" % (dir1, dir2)
-        print "%s" % cmd
+        print("%s" % cmd)
         os.system(cmd)
         #os.system("copy %s %s%s\\%s" % (filee, settings.samples_binned, self.ea, fname))
 
@@ -1088,7 +1088,7 @@ class TraceController(object):
         for tracer in self.tracers:
             tracer.send_command("RO")
             tracer.recv_report()
-            print 'Tracer 0x%02x: %s\n\n' % (tracer.my_id, tracer.last_answer)
+            print('Tracer 0x%02x: %s\n\n' % (tracer.my_id, tracer.last_answer))
         return 
 
     def out_region(self, args):

@@ -12,7 +12,7 @@ class simple_responder(object):
         self.working = True
         self.logf = open(log_fname, 'w', 1)
         self.thread.start()
-        print "Responder started at 127.0.0.1:%d\n" % port
+        print("Responder started at 127.0.0.1:%d\n" % port)
         self.logf.write("Responder started at 127.0.0.1:%d\n" % port)
 
     def load_next_response_from_file(self, fname):
@@ -55,7 +55,7 @@ class simple_responder(object):
                 'Connection': 'close',
             }
 
-            response_headers_raw = ''.join('%s: %s\n' % (k, v) for k, v in response_headers.iteritems())
+            response_headers_raw = ''.join('%s: %s\n' % (k, v) for k, v in response_headers.items())
 
             # Reply as HTTP/1.1 server, saying "HTTP OK" (code 200).
             response_proto = 'HTTP/1.1'

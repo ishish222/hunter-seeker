@@ -30,8 +30,8 @@ def access_violation (dbg):
     crash_bin = utils.crash_binning.crash_binning()
     crash_bin.record_crash(dbg)
 
-    print "***** process access violated *****"
-    print crash_bin.crash_synopsis()
+    print("***** process access violated *****")
+    print(crash_bin.crash_synopsis())
     dbg.terminate_process()
 
 
@@ -52,7 +52,7 @@ def dll_load_handler (dbg):
         hooks.add(dbg, addrRtlFreeHeap,       3, None, RtlFreeHeap)
         hooks.add(dbg, addrRtlReAllocateHeap, 4, None, RtlReAllocateHeap)
 
-        print "rtl heap manipulation routines successfully hooked"
+        print("rtl heap manipulation routines successfully hooked")
 
     return DBG_CONTINUE
 
@@ -116,35 +116,35 @@ def monitor_add (dbg, address, size):
 def monitor_bp (dbg):
     global allocs
 
-    print "heap bound exceeded at %08x by %08x" % (dbg.violation_address, dbg.exception_address)
+    print("heap bound exceeded at %08x by %08x" % (dbg.violation_address, dbg.exception_address))
 
     for call in dbg.stack_unwind():
-        print "\t%08x" % call
+        print("\t%08x" % call)
 
     # determine which chunk was violated.
-    for addr, alloc in allocs.iteritems():
+    for addr, alloc in allocs.items():
         if addr + alloc.size < dbg.violation_address < addr + alloc.size + 4:
             violated_chunk = addr
             break
 
-    print "violated chunk:"
+    print("violated chunk:")
 
-    print "0x%08x: %d" % (violated_chunk, allocs[violated_chunk].size)
+    print("0x%08x: %d" % (violated_chunk, allocs[violated_chunk].size))
 
     for call in allocs[violated_chunk].call_stack:
-        print "\t%08x" % call
+        print("\t%08x" % call)
 
-    raw_input("")
+    input("")
 
     # XXX - add check for Rtl addresses in call stack and ignore
 
 
 def monitor_print ():
-    for addr, alloc in allocs.iteritems():
-        print "0x%08x: %d" % (addr, alloc.size)
+    for addr, alloc in allocs.items():
+        print("0x%08x: %d" % (addr, alloc.size))
 
         for call in alloc.call_stack:
-            print "\t%08x" % call
+            print("\t%08x" % call)
 
 
 def monitor_remove (dbg, address):
@@ -160,7 +160,7 @@ def monitor_remove (dbg, address):
 def outstanding_bytes ():
     outstanding = 0
 
-    for node in graph.nodes.values():
+    for node in list(graph.nodes.values()):
         if hasattr(node, "size"):
             outstanding += node.size
 
@@ -171,7 +171,7 @@ def RtlAllocateHeap (dbg, args, ret):
     global graph
 
     # heap id, flags, size
-    print "[%04d] %08x: RtlAllocateHeap(%08x, %08x, %d) == %08x" % (len(graph.nodes), dbg.context.Eip, args[0], args[1], args[2], ret)
+    print("[%04d] %08x: RtlAllocateHeap(%08x, %08x, %d) == %08x" % (len(graph.nodes), dbg.context.Eip, args[0], args[1], args[2], ret))
 
     monitor_add(dbg, ret, args[2])
 
@@ -183,8 +183,8 @@ def RtlFreeHeap (dbg, args, ret):
     global graph
 
     # heap id, flags, address
-    print "[%04d] %08x: RtlFreeHeap(%08x, %08x, %08x) == %08x" % (len(graph.nodes), dbg.context.Eip, args[0], args[1], args[2], ret)
-    print "%d bytes outstanding" % outstanding_bytes()
+    print("[%04d] %08x: RtlFreeHeap(%08x, %08x, %08x) == %08x" % (len(graph.nodes), dbg.context.Eip, args[0], args[1], args[2], ret))
+    print("%d bytes outstanding" % outstanding_bytes())
 
     monitor_remove(dbg, args[2])
 
@@ -199,7 +199,7 @@ def RtlReAllocateHeap (dbg, args, ret):
     global graph
 
     # heap id, flags, address, new size
-    print "[%04d] %08x: RtlReAllocateHeap(%08x, %08x, %08x, %d) == %08x" % (len(graph.nodes), dbg.context.Eip, args[0], args[1], args[2], args[3], ret)
+    print("[%04d] %08x: RtlReAllocateHeap(%08x, %08x, %08x, %d) == %08x" % (len(graph.nodes), dbg.context.Eip, args[0], args[1], args[2], args[3], ret))
 
     monitor_remove(dbg, args[2])
     monitor_add(dbg, ret, args[3])
@@ -240,7 +240,7 @@ if not pid and not filename:
 
 if udraw:
     udraw = utils.udraw_connector(host, port)
-    print "connection to udraw established..."
+    print("connection to udraw established...")
 
 dbg = pydbg()
 

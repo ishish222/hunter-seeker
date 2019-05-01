@@ -16,12 +16,12 @@ class MachineError(Exception):
 
 def stateful_routine():
     machine_file = sys.argv[len(sys.argv) -1]
-    print
-    print "Loading machine: [%s]" % machine_file
-    print
+    print()
+    print("Loading machine: [%s]" % machine_file)
+    print()
 
     import_stat = "import parts.%s as machine" % machine_file
-    exec import_stat
+    exec(import_stat)
 
     current_state = machine.Start
     default_shutdown = machine.DefaultShutdown
@@ -32,8 +32,8 @@ def stateful_routine():
 #        if(state.shutting_down):
 #            current_state = default_shutdown
 
-        print ""
-        print "=> Current state: [%s]" % current_state.name
+        print("")
+        print("=> Current state: [%s]" % current_state.name)
         if(current_state.consequence != None):
             try:
                 if(hasattr(current_state, "args")):
@@ -41,7 +41,7 @@ def stateful_routine():
                 else:
                     current_state.executing_routine()
             except statemachine.MachineError:
-                print "Got state transition error"
+                print("Got state transition error")
                 if(current_state.attempts < current_state.acceptable_error_count):
                     current_state.attempts = current_state.attempts +1
                     current_state.trans_error_handler() # this handler is only for preparing for repeat, fuzzing decisions should be made elsewhere
@@ -54,7 +54,7 @@ def stateful_routine():
               
         else:
             current_state = current_state.choosing_consequence()
-            print "Choosing: [%s]" % current_state.name
+            print("Choosing: [%s]" % current_state.name)
 
 
 if __name__ == '__main__':

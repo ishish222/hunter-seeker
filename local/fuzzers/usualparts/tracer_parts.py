@@ -4,8 +4,8 @@ from statemachine import MachineError
 import common
 import globs
 import os
-from other_parts import defined
-from taint_parts import find_pid
+from .other_parts import defined
+from .taint_parts import find_pid
 
 report = common.report
 write_socket = common.write_socket
@@ -456,7 +456,7 @@ def tracer_read_arg_ansi(args=None):
 
     globs.state.ret = response[3:]
     globs.state.ret = globs.state.ret.split()[0]
-    print 'ret is: %s ' % globs.state.ret
+    print('ret is: %s ' % globs.state.ret)
 
 def tracer_read_arg_uni(args=None):
     options = globs.state.options
@@ -465,7 +465,7 @@ def tracer_read_arg_uni(args=None):
 
     globs.state.ret = response[3:]
     globs.state.ret = globs.state.ret.split()[0]
-    print 'ret is: %s ' % globs.state.ret
+    print('ret is: %s ' % globs.state.ret)
 
 def tracer_read_arg(args=None):
     options = globs.state.options
@@ -953,11 +953,11 @@ def tracer_debug_continue_decision(args):
 
     if(globs.state.ret[1:3] == "RB"):
         bp = globs.state.ret[3:].split('\n')[0]
-        print bcolors.WARNING + bcolors.BOLD + bp + bcolors.ENDC
-        print 'Returning: %s' % bp
+        print(bcolors.WARNING + bcolors.BOLD + bp + bcolors.ENDC)
+        print('Returning: %s' % bp)
         return bp
     else:
-        print 'Returning: %s' % globs.state.ret[1:3]
+        print('Returning: %s' % globs.state.ret[1:3])
         return globs.state.ret[1:3]
 
     return
@@ -1205,7 +1205,7 @@ def tracer_read_tid(args = 0x0):
     response, _, _ = read_socket(options.s)
 
     globs.state.tid = int(response[3:11], 0x10)
-    print "Last TID: 0x%08x" % globs.state.tid
+    print("Last TID: 0x%08x" % globs.state.tid)
     globs.state.ret = response
 
     return
@@ -1223,7 +1223,7 @@ def tracer_set_pid(args = None):
     else:
         globs.state.pid = args
 
-    print "Last PID: 0x%08x" % globs.state.pid
+    print("Last PID: 0x%08x" % globs.state.pid)
 
     return
 
@@ -1240,7 +1240,7 @@ def tracer_read_pid(args = 0x0):
     response = response[3:11]
 
     globs.state.pid = int(response, 0x10)
-    print "Last PID: 0x%08x" % globs.state.pid
+    print("Last PID: 0x%08x" % globs.state.pid)
     globs.state.ret = response
 
     return
@@ -1258,7 +1258,7 @@ def tracer_read_ep(args = 0x0):
     response = response[3:11]
 
     globs.state.ep = int(response, 0x10)
-    print "Last EP: 0x%08x" % globs.state.ep
+    print("Last EP: 0x%08x" % globs.state.ep)
     globs.state.ret = response
 
     return

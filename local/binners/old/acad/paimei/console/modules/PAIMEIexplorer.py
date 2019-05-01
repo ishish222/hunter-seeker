@@ -187,7 +187,7 @@ class PAIMEIexplorer (wx.Panel):
 
         other = self.main_frame.modules["pstalker"].pida_modules
 
-        if not other.has_key(module_name):
+        if module_name not in other:
             self.err("Specified module name %s, not found." % module_name)
             return
 
@@ -197,7 +197,7 @@ class PAIMEIexplorer (wx.Panel):
         function_count    = len(self.pida_modules[module_name].nodes)
         basic_block_count = 0
 
-        for function in self.pida_modules[module_name].nodes.values():
+        for function in list(self.pida_modules[module_name].nodes.values()):
             basic_block_count += len(function.nodes)
 
         idx = len(self.pida_modules) - 1

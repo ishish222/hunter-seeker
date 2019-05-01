@@ -28,7 +28,7 @@ import MySQLdb
 import sys
 import os
 import time
-import PAIMEIDiffFunction
+from . import PAIMEIDiffFunction
 import pida
 
 
@@ -85,7 +85,7 @@ class ExplorerTreeCtrl (wx.TreeCtrl):
 
             module_name = path[path.rfind("\\")+1:path.rfind(".pida")].lower()
             
-            if self.top.pida_modules.has_key(module_name):
+            if module_name in self.top.pida_modules:
                 self.top.err("Module %s already loaded ... skipping." % module_name)
                 continue
     
@@ -118,7 +118,7 @@ class ExplorerTreeCtrl (wx.TreeCtrl):
             self.SetItemImage(tree_module, self.icon_folder,      wx.TreeItemIcon_Normal)
             self.SetItemImage(tree_module, self.icon_folder_open, wx.TreeItemIcon_Expanded)
         
-            sorted_functions = [f.id for f in self.top.pida_modules[module_name].nodes.values() if not f.is_import]
+            sorted_functions = [f.id for f in list(self.top.pida_modules[module_name].nodes.values()) if not f.is_import]
             sorted_functions.sort()
         
             for func_key in sorted_functions:
@@ -130,7 +130,7 @@ class ExplorerTreeCtrl (wx.TreeCtrl):
                 self.SetItemImage(tree_function, self.icon_folder,      wx.TreeItemIcon_Normal)
                 self.SetItemImage(tree_function, self.icon_folder_open, wx.TreeItemIcon_Expanded)
                 
-                sorted_bbs = function.nodes.keys()
+                sorted_bbs = list(function.nodes.keys())
                 sorted_bbs.sort()
         
 

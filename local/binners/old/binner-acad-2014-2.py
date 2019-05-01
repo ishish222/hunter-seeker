@@ -140,7 +140,7 @@ def handle_crash(dbg, reason=""):
         print("Probable crash reason: uaf")
         print("")
 
-    print(crash_bin.crash_synopsis())
+    print((crash_bin.crash_synopsis()))
 
     #save sample
     #separate dirs for uafs & hcs
@@ -269,13 +269,13 @@ dbg.set_callback(EXCEPTION_ACCESS_VIOLATION, handle_av)
 #logf.write("test3\n")
 for (pid, name) in dbg.enumerate_processes():
     if imagename in name:
-        print(imagename + " in " + name)
+        print((imagename + " in " + name))
         try:
-            print "[*] Attaching to %s (%d)" % (name, pid)
+            print("[*] Attaching to %s (%d)" % (name, pid))
 #            logf.write("[*] Attaching to " + name + " " + str( pid) + "\n")
             dbg.attach(pid)
         except:
-            print "[!] Problem attaching to %s" % name
+            print("[!] Problem attaching to %s" % name)
 #            logf.write("[*] Problem attaching to " + name)
 #                windows_kill(pid)
             continue

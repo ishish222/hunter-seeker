@@ -7,7 +7,7 @@ def enable_logging(args=None):
 
     log = open(options.settings.log_dir + "log-%s-%s-%s" % (options.fuzzbox_name, common.timestamp2(), options.origin), "a")
     common.report("Starting fuzzer")
-    print("[%s] Stateful fuzzer" % common.timestamp())
+    print(("[%s] Stateful fuzzer" % common.timestamp()))
     options.log = log
 
 def disable_logging(args=None):

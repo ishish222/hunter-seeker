@@ -345,11 +345,11 @@ class PAIMEIDiffReport:
     ################################################################################################################
     def get_unmatched_bb(self, func):
         i = 0
-        while i < len(func.nodes.values()):
-            if not func.nodes.values()[i].ext["PAIMEIDiffBasicBlock"].touched:
-                if not func.nodes.values()[i].ext["PAIMEIDiffBasicBlock"].matched or func.nodes.values()[i].ext["PAIMEIDiffBasicBlock"].ignore:
-                    func.nodes.values()[i].ext["PAIMEIDiffBasicBlock"].touched = 1
-                    return func.nodes.values()[i]
+        while i < len(list(func.nodes.values())):
+            if not list(func.nodes.values())[i].ext["PAIMEIDiffBasicBlock"].touched:
+                if not list(func.nodes.values())[i].ext["PAIMEIDiffBasicBlock"].matched or list(func.nodes.values())[i].ext["PAIMEIDiffBasicBlock"].ignore:
+                    list(func.nodes.values())[i].ext["PAIMEIDiffBasicBlock"].touched = 1
+                    return list(func.nodes.values())[i]
             i+=1
         return None
         
@@ -366,7 +366,7 @@ class PAIMEIDiffReport:
         lines.append(BEGIN_LIST)
         
         lines.append( BEGIN_LI + "BB Count: " + FONT_COLOR % default_integer_color)
-        lines.append( "%d" % len(func.nodes.values()))
+        lines.append( "%d" % len(list(func.nodes.values())))
         lines.append(FONT_COLOR  % default_font_color)
         lines.append(END_LI)
         

@@ -24,7 +24,7 @@
 
 import md5
 import pida
-import PAIMEIDiffInstruction
+from . import PAIMEIDiffInstruction
 
 
 
@@ -52,7 +52,7 @@ class PAIMEIDiffBasicBlock:
         self.ea_start           = self.pida_basic_block.ea_start        # the ea start of the basic block
         self.size               = self.pida_basic_block.ea_end - self.pida_basic_block.ea_start # the size of the basic block
         self.eci                = None                                  # the edge call instruction count
-        self.crc                = 0xFFFFFFFFL                           # initially crc value
+        self.crc                = 0xFFFFFFFF                           # initially crc value
         self.refs_strings       = []                                    # a list of strings referenced in the basic block
         self.touched            = 0 
         self.parent             = parent
@@ -94,7 +94,7 @@ class PAIMEIDiffBasicBlock:
                 self.refs_strings.append(ii.refs_string)
         
         # generate eci signature                
-        self.eci = ( self.pida_function.edges_from(self.pida_basic_block.ea_start), self.num_calls, len(self.pida_basic_block.instructions.values()))
+        self.eci = ( self.pida_function.edges_from(self.pida_basic_block.ea_start), self.num_calls, len(list(self.pida_basic_block.instructions.values())))
         
         # generate smart md5 signature
         self.generate_smart_md5()
@@ -141,6 +141,6 @@ class PAIMEIDiffBasicBlock:
             i = 0
             while i < len(inst.bytes):
                 byte = inst.bytes[i]
-                self.crc = (self.crc >> 8) ^ self.parent.crc_table[ ( self.crc ^ byte ) & 0xFFL ]
+                self.crc = (self.crc >> 8) ^ self.parent.crc_table[ ( self.crc ^ byte ) & 0xFF ]
                 i+=1
-        self.crc = self.crc ^ 0xFFFFFFFFL
+        self.crc = self.crc ^ 0xFFFFFFFF

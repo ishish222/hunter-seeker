@@ -99,7 +99,7 @@ class FunctionViewListCtrl (wx.ListCtrl, ListCtrlAutoWidthMixin):
         #self.curr = event.m_itemIndex
         item = self.GetItem(self.curr, 0)
         bb = item.GetText()
-        print bb
+        print(bb)
         if len(bb) == 0:
             return
         self.parent.FunctionViewStatsListCtrl.load_basic_block_stats(bb)

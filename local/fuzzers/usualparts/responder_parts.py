@@ -4,8 +4,8 @@ from statemachine import MachineError
 import common
 import globs
 import os
-from other_parts import defined
-from taint_parts import find_pid
+from .other_parts import defined
+from .taint_parts import find_pid
 
 report = common.report
 write_socket = common.write_socket

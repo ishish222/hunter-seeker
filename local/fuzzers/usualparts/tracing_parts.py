@@ -4,8 +4,8 @@ from statemachine import MachineError
 import common
 import globs
 import os
-from other_parts import defined
-from taint_parts import find_pid
+from .other_parts import defined
+from .taint_parts import find_pid
 
 report = common.report
 write_socket = common.write_socket
@@ -126,7 +126,7 @@ def host_deploy_input_glob(args=None):
     state.samples_list = glob(state.glob_pattern)
     for sample in state.samples_list:
         new_sample = os.path.basename(sample)
-        print(' '.join(["cp", "-r", sample, options.external_paths_tmp_input + '/' + new_sample]))
+        print((' '.join(["cp", "-r", sample, options.external_paths_tmp_input + '/' + new_sample])))
         os.spawnv(os.P_WAIT, "/bin/cp", ["cp", "-r", sample, options.external_paths_tmp_input + '/' + new_sample])
 
 def host_create_research_dir(args=None):
@@ -159,7 +159,7 @@ def host_create_research_dir(args=None):
     options.external_paths_tmp_log = internal_log
 
     if(options.external_paths_link_tmp_output_final_output):
-        print " ".join(["/usr/bin/sudo", "sudo", "mount", "-o", "bind", options.external_paths_final_output, options.external_paths_tmp_output])
+        print(" ".join(["/usr/bin/sudo", "sudo", "mount", "-o", "bind", options.external_paths_final_output, options.external_paths_tmp_output]))
         os.spawnv(os.P_WAIT, "/usr/bin/sudo", ["sudo", "mount", "-o", "bind", options.external_paths_final_output, options.external_paths_tmp_output])
 
     #os.spawnv(os.P_WAIT, "/usr/bin/sudo", ["sudo", "cp", "-r", "../server", options.external_paths_tmp_input])
@@ -294,7 +294,7 @@ def extract_ep(args=None):
     response = response.split('\n')
     response = response[1]
     globs.state.ret = response
-    print 'r'+response+'r'
+    print('r'+response+'r')
     return
 
 def stop_tracer_controller(args=None):
@@ -316,8 +316,8 @@ def trace_sample2(args=None):
 
     try:
         sample_path = globs.state.samples_list.pop()
-    except Exception, e:
-        print e
+    except Exception as e:
+        print(e)
         globs.state.samples_exhausted = True
         return
 
@@ -341,7 +341,7 @@ def trace_sample2(args=None):
     options.log.write("%s: " % test_file)
     options.log.flush()
 #    
-    print "Waiting for instruction"
+    print("Waiting for instruction")
 ##    lastResponse = ''
 ##
 ##    while(lastResponse!='end'):
@@ -370,8 +370,8 @@ def trace_sample2_2(args=None):
 
     try:
         sample_path = globs.state.samples_list.pop()
-    except Exception, e:
-        print e
+    except Exception as e:
+        print(e)
         globs.state.samples_exhausted = True
         return
 
@@ -391,7 +391,7 @@ def trace_sample2_2(args=None):
     options.log.write("%s: " % test_file)
     options.log.flush()
     
-    print "Waiting for instruction"
+    print("Waiting for instruction")
     while True:
         pass
 
@@ -421,8 +421,8 @@ def trace_sample(args=None):
 
     try:
         sample_path = globs.state.samples_list.pop()
-    except Exception, e:
-        print e
+    except Exception as e:
+        print(e)
         globs.state.samples_exhausted = True
         return
 
@@ -450,7 +450,7 @@ def trace_sample(args=None):
     options.log.write("%s: " % test_file)
     options.log.flush()
 #    
-    print "Waiting for instruction"
+    print("Waiting for instruction")
 
 def test_sample(args=None):
     # test single sample
@@ -465,8 +465,8 @@ def test_sample(args=None):
 
     try:
         sample_path = globs.state.samples_list.pop()
-    except Exception, e:
-        print e
+    except Exception as e:
+        print(e)
         globs.state.samples_exhausted = True
         return
 
@@ -492,8 +492,8 @@ def open_sample(args=None):
 
     try:
         sample_path = globs.state.samples_list.pop()
-    except Exception, e:
-        print e
+    except Exception as e:
+        print(e)
         globs.state.samples_exhausted = True
         return
 
@@ -569,7 +569,7 @@ def read_output(args=None):
         globs.state.lastResponse = lastResponse
         globs.state.reqScript = reqScript
 
-    except Exception, e:
+    except Exception as e:
         globs.state.timeout = True
         raise MachineError
 
@@ -603,18 +603,18 @@ def load_ep(args = None):
     globs.state.ret = globs.state.ep
 
 def set_glob_pattern(args = None):
-    print "Setting glob pattern to %s" % args
+    print("Setting glob pattern to %s" % args)
     state = globs.state
     options = globs.state.options
     state.glob_pattern = '%s/%s' % (options.external_paths_src, args)
 
 def set_sample_file(args = None):
-    print "Setting sample name to %s" % args
+    print("Setting sample name to %s" % args)
     state = globs.state
     state.sample_name = args
 
 def set_research_dir(args = None):
-    print "Setting internal input path to %s" % args
+    print("Setting internal input path to %s" % args)
     options = globs.state.options
     options.internal_paths_input = args
 
@@ -625,13 +625,13 @@ def get_research_dir(args = None):
 
 
 def set_out_dir(args = None):
-    print "Setting internal output path to %s" % args
+    print("Setting internal output path to %s" % args)
     options = globs.state.options
     options.internal_paths_output = args
 
 def check_dir(directory):
     import os
-    print 'Checking for: %s' % directory
+    print('Checking for: %s' % directory)
     try:
         os.stat(directory)
     except:
@@ -683,12 +683,12 @@ def decision(args=None):
     options = globs.state.options
 
     if('EXCEPTION' in globs.state.ret):
-        print bcolors.WARNING + bcolors.BOLD + 'EXCEPTION' + bcolors.ENDC
+        print(bcolors.WARNING + bcolors.BOLD + 'EXCEPTION' + bcolors.ENDC)
         globs.state.ret = ''
         return 'EXCEPTION'   
     elif(globs.state.ret[1:3] == "RB"):
         bp = globs.state.ret[3:].split('\n')[0]
-        print bcolors.WARNING + bcolors.BOLD + bp + bcolors.ENDC
+        print(bcolors.WARNING + bcolors.BOLD + bp + bcolors.ENDC)
         globs.state.ret = ''
         return bp
     else:

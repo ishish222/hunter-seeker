@@ -12,9 +12,9 @@ def load_option(opt):
 
     ret = None
 
-    if(config.has_key(opt) == True):
+    if((opt in config) == True):
         ret = config[opt]
-    if(options.has_key(opt) == True):
+    if((opt in options) == True):
         ret = options[opt]
     return ret
 
@@ -36,31 +36,31 @@ for maj_arg in ["hda", "hdb", "cdrom", "m"]:
 
 qemuargs += config["other_args"]
 
-print "Script list: " + str(scriptlist)
-print "Qemu args: " + str(qemuargs)
+print("Script list: " + str(scriptlist))
+print("Qemu args: " + str(qemuargs))
 
 p = Popen(qemuargs, stdout=PIPE, stdin=PIPE)
 
-print(p.stdout.readline())
+print((p.stdout.readline()))
 #Give qemu just a sec :)
 time.sleep(3)
 
-if(config.has_key("snap") and config["snap"] is not None):
-    print("loadvm " + config["snap"])
+if("snap" in config and config["snap"] is not None):
+    print(("loadvm " + config["snap"]))
     p.stdin.write("loadvm " + config["snap"] + "\n")
     #p.stdout.read()
     time.sleep(50)
 
 
-print "Executing scripts"
+print("Executing scripts")
 
 for sc in scriptlist:
-    print("[Executing: " + sc + "]")
+    print(("[Executing: " + sc + "]"))
     scriptmod = importlib.import_module("scripts."+sc)
     script = scriptmod.script
-    print("[ETA: " + script.eta_str + "]")
+    print(("[ETA: " + script.eta_str + "]"))
     script.run(p)
-    print("[Executing: " + sc + " finished]")
+    print(("[Executing: " + sc + " finished]"))
 
 print("Executing scripts completed")
 

@@ -22,8 +22,8 @@
 @organization: www.openrce.org
 '''
 
-import PAIMEIDiffBasicBlock
-import PAIMEIDiffInstruction
+from . import PAIMEIDiffBasicBlock
+from . import PAIMEIDiffInstruction
 import pida
 import time
 
@@ -39,7 +39,7 @@ class PAIMEIDiffFunction:
         self.spp                = 1                         # the initial value of the SPP
         self.smart_md5          = ""                        # smart md5
         self.crc_table          = {}                        # the crc table 
-        self.crc                = 0xFFFFFFFFL               # the crc signature of the whole function
+        self.crc                = 0xFFFFFFFF               # the crc signature of the whole function
         self.neci               = []                        # the neci of the function
         self.recursive          = []                        # not use atm
         self.num_calls          = 0                         # number of calls throughout the function
@@ -81,20 +81,20 @@ class PAIMEIDiffFunction:
         '''
         Loop through the function and create to create CRC sig
         '''
-        crc = 0xFFFFFFFFL
+        crc = 0xFFFFFFFF
         
         for bb in self.pida_function.sorted_nodes():
-            crc = 0xFFFFFFFFL
+            crc = 0xFFFFFFFF
             for inst in bb.sorted_instructions():                    
                 size = len(inst.bytes)
                 i = 0
                 while i < len(inst.bytes):
                     byte = inst.bytes[i]
-                    self.crc = (self.crc >> 8) ^ self.crc_table[ ( self.crc ^ byte ) & 0xFFL ]
-                    crc = (crc >> 8) ^ self.crc_table[ ( crc ^ byte ) & 0xFFL ]
+                    self.crc = (self.crc >> 8) ^ self.crc_table[ ( self.crc ^ byte ) & 0xFF ]
+                    crc = (crc >> 8) ^ self.crc_table[ ( crc ^ byte ) & 0xFF ]
                     i+=1
-            crc = crc ^ 0xFFFFFFFFL               
+            crc = crc ^ 0xFFFFFFFF               
             bb.ext["PAIMEIDiffBasicBlock"].crc = crc
 #            if bb.ext["PAIMEIDiffBasicBlock"].crc == crc:
 #                print "CRC 0x%08x != CRC 0x%08x" % (crc, bb.ext["PAIMEIDiffBasicBlock"].crc)
-        self.crc = self.crc ^ 0xFFFFFFFFL
+        self.crc = self.crc ^ 0xFFFFFFFF

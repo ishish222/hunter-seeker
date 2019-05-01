@@ -41,18 +41,18 @@ __all__ = \
     "InsigList"
 ]
 
-import DiffConfigureDlg
-import ExplorerTreeCtrl
-import MatchedListCtrl
-import UnmatchedListCtrl
-import ModuleMatcher
-import ModuleDiffer
-import FunctionViewDiffListCtrl
-import FunctionViewStatsListCtrl
-import FunctionViewDifferDlg
-import FunctionViewDlg
-import FunctionViewListCtrl
-import PAIMEIDiffReport
-import MatchedList
-import UnmatchedList
-import InsigList
+from . import DiffConfigureDlg
+from . import ExplorerTreeCtrl
+from . import MatchedListCtrl
+from . import UnmatchedListCtrl
+from . import ModuleMatcher
+from . import ModuleDiffer
+from . import FunctionViewDiffListCtrl
+from . import FunctionViewStatsListCtrl
+from . import FunctionViewDifferDlg
+from . import FunctionViewDlg
+from . import FunctionViewListCtrl
+from . import PAIMEIDiffReport
+from . import MatchedList
+from . import UnmatchedList
+from . import InsigList

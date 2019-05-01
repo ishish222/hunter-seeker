@@ -31,8 +31,8 @@ except:
 
 import pgraph
 
-from instruction import *
-from defines     import *
+from .instruction import *
+from .defines     import *
 
 class basic_block (pgraph.node):
     '''
@@ -109,7 +109,7 @@ class basic_block (pgraph.node):
         @return: True if the register is modified by any instruction in this block.
         '''
 
-        for ins in self.instructions.values():
+        for ins in list(self.instructions.values()):
             if ins.overwrites_register(register):
                 return True
 
@@ -122,7 +122,7 @@ class basic_block (pgraph.node):
         TODO: deprecated by sorted_instructions().
         '''
 
-        temp = [key for key in self.instructions.keys()]
+        temp = [key for key in list(self.instructions.keys())]
         temp.sort()
         return [self.instructions[key] for key in temp]
 
@@ -242,7 +242,7 @@ class basic_block (pgraph.node):
         @return: List of instructions, sorted by id.
         '''
 
-        instruction_keys = self.instructions.keys()
+        instruction_keys = list(self.instructions.keys())
         instruction_keys.sort()
 
         return [self.instructions[key] for key in instruction_keys]

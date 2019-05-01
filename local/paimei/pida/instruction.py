@@ -30,7 +30,7 @@ try:
 except:
     pass
 
-from defines import *
+from .defines import *
 
 class instruction:
     '''
@@ -87,7 +87,7 @@ class instruction:
         self.op2  = GetOpnd(ea, 1)
         self.op3  = GetOpnd(ea, 2)
 
-        for address in xrange(ea, ItemEnd(ea)):
+        for address in range(ea, ItemEnd(ea)):
             self.bytes.append(Byte(address))
 
         # XXX - this is a dirty hack to determine if and any API reference.
@@ -143,7 +143,7 @@ class instruction:
         if self._get_constant_ref(op_num):
             return None
 
-        if self.basic_block.function.args.has_key(offset):
+        if offset in self.basic_block.function.args:
             return self.basic_block.function.args[offset]
 
         return None
@@ -224,7 +224,7 @@ class instruction:
             if offset == BADADDR:
                 return None
 
-        if self.basic_block.function.local_vars.has_key(offset):
+        if offset in self.basic_block.function.local_vars:
             return self.basic_block.function.local_vars[offset]
 
         return None

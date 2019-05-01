@@ -285,7 +285,7 @@ def add_ofp_oxm_fields(i, org):
         ofp_oxm_fields[i].append(BitField(org[1]+"_mask", 0, 8*org[2]))
 
 # some HM classes are not supported par OFv1.3 but we will create them anyway
-for i,cls in ofp_oxm_constr.items():
+for i,cls in list(ofp_oxm_constr.items()):
     add_ofp_oxm_fields(2*i, cls)
     add_ofp_oxm_fields(2*i+1, cls)
 
@@ -551,7 +551,7 @@ class OXMPacketListField(PacketListField):
             for oxm in fix_val:
                 f = 2*oxm.field
                 fix_index = list(self.index)
-                while f in need_prereq.keys():
+                while f in list(need_prereq.keys()):
                 # this loop enables a small recursion
                 # e.g. ipv6_nd<--icmpv6<--ip_proto<--eth_type
                     prereq = need_prereq[f]
@@ -2624,7 +2624,7 @@ class OFPMPRequestGroupFeatures(_ofp_header):
                     XIntField("pad1", 0) ]
     overload_fields = {TCP: {"sport": 6653}}
 
-ofp_action_types_flags = ofp_action_types.values()[:-1]  # no ofpat_experimenter flag
+ofp_action_types_flags = list(ofp_action_types.values())[:-1]  # no ofpat_experimenter flag
 class OFPMPReplyGroupFeatures(_ofp_header):
     name = "OFPMP_REPLY_GROUP_FEATURES"
     fields_desc = [ ByteEnumField("version", 0x04, ofp_version),

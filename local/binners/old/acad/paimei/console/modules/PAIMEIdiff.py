@@ -399,7 +399,7 @@ class PAIMEIdiff(wx.Panel):
 
         '''
         crc = 0
-        polynomial = 0xEDB88320L
+        polynomial = 0xEDB88320
         i = 0
         j = 0
         for i in range(i, 256,1):

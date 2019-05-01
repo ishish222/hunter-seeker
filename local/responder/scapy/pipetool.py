@@ -5,17 +5,17 @@
 ## Copyright (C) Philippe Biondi <phil@secdev.org>
 ## This program is published under a GPLv2 license
 
-from __future__ import with_statement
+
 
 import scapy.utils
 from scapy.config import conf
-import os,thread,select
+import os,_thread,select
 import subprocess
 import itertools
 import collections
 import time
 from scapy.error import log_interactive,warning
-import Queue
+import queue
 
 class PipeEngine:
     pipes = {}
@@ -25,14 +25,14 @@ class PipeEngine:
             doc = pc.__doc__ or ""
             if doc:
                 doc = doc.splitlines()[0]
-            print "%20s: %s" % (pn, doc)
+            print("%20s: %s" % (pn, doc))
     @classmethod
     def list_pipes_detailed(cls):
         for pn,pc in sorted(cls.pipes.items()):
             if pc.__doc__:
-                print "###### %s\n %s" % (pn ,pc.__doc__)
+                print("###### %s\n %s" % (pn ,pc.__doc__))
             else:
-                print "###### %s" % pn
+                print("###### %s" % pn)
     
     def __init__(self, *pipes):
         self.active_pipes = set()
@@ -40,8 +40,8 @@ class PipeEngine:
         self.active_drains = set()
         self.active_sinks = set()
         self._add_pipes(*pipes)
-        self.thread_lock = thread.allocate_lock()
-        self.command_lock = thread.allocate_lock()
+        self.thread_lock = _thread.allocate_lock()
+        self.command_lock = _thread.allocate_lock()
         self.__fdr,self.__fdw = os.pipe()
         self.threadid = None
     def __getattr__(self, attr):
@@ -113,7 +113,7 @@ class PipeEngine:
                     elif fd in sources:
                         try:
                             fd.deliver()
-                        except Exception,e:
+                        except Exception as e:
                             log_interactive.exception("piping from %s failed: %s" % (fd.name, e))
                         else:
                             if fd.exhausted():
@@ -131,7 +131,7 @@ class PipeEngine:
 
     def start(self):
         if self.thread_lock.acquire(0):
-            self.threadid = thread.start_new_thread(self.run,())
+            self.threadid = _thread.start_new_thread(self.run,())
         else:
             warning("Pipe engine already running")
     def wait_and_stop(self):
@@ -147,7 +147,7 @@ class PipeEngine:
                 else:
                     warning("Pipe engine thread not running")
         except KeyboardInterrupt:
-            print "Interrupted by user."
+            print("Interrupted by user.")
 
     def add(self, *pipes):
         pipes = self._add_pipes(*pipes)
@@ -338,7 +338,7 @@ class ThreadGenSource(AutoSource):
         pass
     def start(self):
         self.RUN = True
-        thread.start_new_thread(self.generate,())
+        _thread.start_new_thread(self.generate,())
     def stop(self):
         self.RUN = False
 
@@ -353,9 +353,9 @@ class ConsoleSink(Sink):
      +-------+
 """
     def push(self, msg):
-        print ">%r" % msg
+        print(">%r" % msg)
     def high_push(self, msg):
-        print ">>%r" % msg
+        print(">>%r" % msg)
 
 class RawConsoleSink(Sink):
     """Print messages on low and high entries
@@ -485,7 +485,7 @@ class QueueSink(Sink):
 """
     def __init__(self, name=None):
         Sink.__init__(self, name=name)
-        self.q = Queue.Queue()
+        self.q = queue.Queue()
     def push(self, msg):
         self.q.put(msg)
     def high_push(self, msg):
@@ -494,7 +494,7 @@ class QueueSink(Sink):
         while True:
             try:
                 return self.q.get(True, timeout=0.1)
-            except Queue.Empty:
+            except queue.Empty:
                 pass
 
 
@@ -556,7 +556,7 @@ def _testmain():
     p.graph(type="png",target="> /tmp/pipe.png")
 
     p.start()
-    print p.threadid
+    print(p.threadid)
     time.sleep(5)
     p.stop()
 

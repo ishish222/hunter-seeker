@@ -24,7 +24,7 @@
 
 import sys
 import zlib
-import cPickle
+import pickle
 
 class __crash_bin_struct__(object):
     exception_module    = None
@@ -120,7 +120,7 @@ class crash_binning(object):
 
         self.last_crash = self.pydbg = None
 #        data = zlib.compress(cPickle.dumps(self, protocol=2))
-        data = cPickle.dumps(self, protocol=2)
+        data = pickle.dumps(self, protocol=2)
 
         self.last_crash = last_crash
         self.pydbg      = pydbg
@@ -148,7 +148,7 @@ class crash_binning(object):
         self.last_crash = self.pydbg = None
 
         fh = open(file_name, "wb+")
-        fh.write(zlib.compress(cPickle.dumps(self, protocol=2)))
+        fh.write(zlib.compress(pickle.dumps(self, protocol=2)))
         fh.close()
 
         self.last_crash = last_crash
@@ -160,7 +160,7 @@ class crash_binning(object):
     ####################################################################################################################
     def import_string (self, string):
 #        tmp = cPickle.loads(zlib.decompress(string))
-        tmp = cPickle.loads(string)
+        tmp = pickle.loads(string)
         self.bins = tmp.bins
 
         return self
@@ -180,7 +180,7 @@ class crash_binning(object):
         '''
 
         fh  = open(file_name, "rb")
-        tmp = cPickle.loads(zlib.decompress(fh.read()))
+        tmp = pickle.loads(zlib.decompress(fh.read()))
         fh.close()
 
         self.bins = tmp.bins

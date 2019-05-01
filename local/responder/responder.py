@@ -37,9 +37,9 @@ while True:
             response = DNS(
                 id=dns.id, ancount=1, qr=1,
                 an=DNSRR(rrname=str(query), type='A', rdata=str('127.0.0.1'), ttl=1234))
-            print(repr(response))
+            print((repr(response)))
             sock.sendto(bytes(response), addr)
 
     except Exception as e:
-        print e
+        print(e)
 

@@ -30,7 +30,7 @@ import time
 from wx.lib.mixins.listctrl import ColumnSorterMixin
 from wx.lib.mixins.listctrl import ListCtrlAutoWidthMixin
 
-import FunctionViewDlg
+from . import FunctionViewDlg
 
 sys.path.append("..")
 

@@ -23,8 +23,8 @@
 '''
 
 import wx
-import FunctionViewListCtrl
-import FunctionViewStatsListCtrl
+from . import FunctionViewListCtrl
+from . import FunctionViewStatsListCtrl
 
 # begin wxGlade: dependencies
 # end wxGlade

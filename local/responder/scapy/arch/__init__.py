@@ -69,15 +69,15 @@ ARM_64 = not WINDOWS and (os.uname()[4] == 'aarch64')
 
 
 if LINUX:
-    from linux import *
+    from .linux import *
     if scapy.config.conf.use_pcap or scapy.config.conf.use_dnet:
-        from pcapdnet import *
+        from .pcapdnet import *
 elif OPENBSD or FREEBSD or NETBSD or DARWIN:
-    from bsd import *
+    from .bsd import *
 elif SOLARIS:
-    from solaris import *
+    from .solaris import *
 elif WINDOWS:
-    from windows import *
+    from .windows import *
 
 if scapy.config.conf.iface is None:
     scapy.config.conf.iface = LOOPBACK_NAME

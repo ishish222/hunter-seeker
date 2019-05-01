@@ -92,7 +92,7 @@ class DbgException:
         try:
             fh = open(filename + ".txt", "w")
         except:
-            print "[!] Problem opening exception file %s" % filename
+            print("[!] Problem opening exception file %s" % filename)
             sys.exit(-1)
         
         fh.write("\nException [0x%08x]\n" % self.address)
@@ -112,7 +112,7 @@ class DbgException:
         try:
             fh = open(filename + ".html", "w")
         except:
-            print "[!] Problem opening exception file %s" % filename
+            print("[!] Problem opening exception file %s" % filename)
             sys.exit(-1)
         
         fh.write("<html><head><title>Exception 0x%x</title></head><body><br>" % self.address)
@@ -129,15 +129,15 @@ class DbgException:
         fh.close()
         
     def display(self,dbg):
-        print "\nException [0x%08x]" % self.address
-        print "=" * 72
-        print "Direction: %s" % self.direction
-        print "Disasm: %s" % self.disasm
-        print "Context:\n%s" % self.context_dump
-        print "Call Stack:" 
+        print("\nException [0x%08x]" % self.address)
+        print("=" * 72)
+        print("Direction: %s" % self.direction)
+        print("Disasm: %s" % self.disasm)
+        print("Context:\n%s" % self.context_dump)
+        print("Call Stack:") 
         for addr in self.call_stack:
-            print "  %s!0x%08x" % (dbg.addr_to_module(addr).szModule, addr)
-        print "\n"
+            print("  %s!0x%08x" % (dbg.addr_to_module(addr).szModule, addr))
+        print("\n")
 
 class Offset:
     
@@ -164,7 +164,7 @@ class Offset:
         self.description = "No description"
         
     def offset_handler(self, dbg):
-        print "[*] Hit Offset Handler @ [%04d] 0x%08x 0x%08x" % (self.last_exception_id, dbg.exception_address, self.mod_addr)
+        print("[*] Hit Offset Handler @ [%04d] 0x%08x 0x%08x" % (self.last_exception_id, dbg.exception_address, self.mod_addr))
         
         if dbg.exception_address != self.mod_addr:
             self.modifications.append((self.last_exception_id, dbg.read_process_memory(self.parent.address + self.offset, 4)))
@@ -181,7 +181,7 @@ class Offset:
         try:
             fh = open(filename + ".txt", "w")
         except:
-            print "[!] Problem offset opening %s" % filename
+            print("[!] Problem offset opening %s" % filename)
             sys.exit(-1)
         
         fh.write("\nOffset [0x%08xx+0x%x]:\n" % (self.parent.address, self.offset))
@@ -207,7 +207,7 @@ class Offset:
         try:
             fh = open(filename + ".html", "w")
         except:
-            print "[!] Problem offset opening %s" % filename
+            print("[!] Problem offset opening %s" % filename)
             sys.exit(-1)
         
         fh.write("<html><head><title>Offset 0x%08x+%x</title></head><body><br>" % (self.parent.address, self.offset))
@@ -243,20 +243,20 @@ class Offset:
         fh.close()
         
     def display(self, dbg, excepts=True):
-        print "\nOffset [0x%08xx+0x%x]:" % (self.parent.address, self.offset)
-        print "=" * 72
-        print "Description: %s" % self.description
-        print "Address: 0x%08x" % (self.parent.address + self.offset)
-        print "Size: %d" % self.size
-        print "Read Count: %d" % self.read_count
-        print "Last Read: 0x%08x" % self.last_read
-        print "Write Count: %d" % self.write_count
-        print "Last Write: 0x%08x" % self.last_write
-        print "Last Module: %s" % self.last_module
+        print("\nOffset [0x%08xx+0x%x]:" % (self.parent.address, self.offset))
+        print("=" * 72)
+        print("Description: %s" % self.description)
+        print("Address: 0x%08x" % (self.parent.address + self.offset))
+        print("Size: %d" % self.size)
+        print("Read Count: %d" % self.read_count)
+        print("Last Read: 0x%08x" % self.last_read)
+        print("Write Count: %d" % self.write_count)
+        print("Last Write: 0x%08x" % self.last_write)
+        print("Last Module: %s" % self.last_module)
         if excepts:
             for dbgexcept in self.dbg_exceptions:
                 dbgexcept.display(dbg)
-        print "\n"
+        print("\n")
     
 
 class Structure:
@@ -294,10 +294,10 @@ class Structure:
             off = dbg.violation_address - self.address
             exists = False
             
-            print "[*] Hit @ 0x%08x offset 0x%04x" % (dbg.violation_address, off)
+            print("[*] Hit @ 0x%08x offset 0x%04x" % (dbg.violation_address, off))
             
             # Do the offset creation
-            for o in xrange(0, len(self.offsets)):
+            for o in range(0, len(self.offsets)):
                 if self.offsets[o].offset == off:
                     offset = self.offsets[o]
                     offset.data = dbg.read_process_memory(dbg.violation_address, 1)
@@ -321,7 +321,7 @@ class Structure:
             
             offset.last_module = dbgexcept.module
             
-            print "[*] [%s!0x%08x] %s [%s]" % (offset.last_module, dbgexcept.address, dbg.disasm(dbgexcept.address), dbgexcept.direction)
+            print("[*] [%s!0x%08x] %s [%s]" % (offset.last_module, dbgexcept.address, dbg.disasm(dbgexcept.address), dbgexcept.direction))
             
             offset.mod_addr = dbgexcept.address + dbg.instruction.length
             offset.dbg_exceptions.append(dbgexcept)
@@ -344,7 +344,7 @@ class Structure:
         try:
             fh = open(filename + ".txt", "w")
         except:
-            print "[!] Problem offset structure %s" % filename
+            print("[!] Problem offset structure %s" % filename)
             sys.exit(-1)
         
         fh.write("\nStructure [0x%08x]:\n" % self.address)
@@ -453,7 +453,7 @@ class Structure:
         try:
             fh = open(filename + ".html", "w")
         except:
-            print "[!] Problem offset structure %s" % filename
+            print("[!] Problem offset structure %s" % filename)
             sys.exit(-1)
             
         fh.write("<html><head><title>Structure 0x%08x</title></head><body><br>" % self.address)
@@ -487,15 +487,15 @@ class Structure:
         fh.close()
         
     def display(self, dbg, offsets=True):
-        print "\nStructure [0x%08x]:"
-        print "=" * 72
-        print "Address: 0x%08x" % self.address
-        print "Size: %d" % self.size
-        print "\n"
+        print("\nStructure [0x%08x]:")
+        print("=" * 72)
+        print("Address: 0x%08x" % self.address)
+        print("Size: %d" % self.size)
+        print("\n")
         for offset in self.offsets:
             if offset.write_count > 0:
                 offset.display(dbg)
-        print "\n\n"
+        print("\n\n")
         
 
 ######################################################################
@@ -507,7 +507,7 @@ class Structure:
 def handler_breakpoint(dbg):
     if dbg.first_breakpoint:
         # We need to set our code bp
-        print "[*] Setting bp @ 0x%08x" % dbg.args["address"]
+        print("[*] Setting bp @ 0x%08x" % dbg.args["address"])
         
         # Might want to keep this but not for now
         dbg.bp_set(dbg.args["address"], restore=False, handler=handler_our_breakpoint)
@@ -525,17 +525,17 @@ def handler_our_breakpoint(dbg):
     value = get_register(dbg, register)
     
     if not value:
-        print "[!] Problem getting %s" % register
+        print("[!] Problem getting %s" % register)
         
         return DBG_CONTINUE
     
-    print "[*] Hit code bp @ [0x%08x] %s = 0x%08x" % (dbg.exception_address, register, value)
+    print("[*] Hit code bp @ [0x%08x] %s = 0x%08x" % (dbg.exception_address, register, value))
     
-    print "[*] Creating Structure(0x%08x, %d)" % (value, dbg.args["size"])
+    print("[*] Creating Structure(0x%08x, %d)" % (value, dbg.args["size"]))
     dbg.structure = Structure(value, dbg.args["size"], dbg.args["timestamp"])
     dbg.structure.orig_data = dbg.read_process_memory(dbg.structure.address, dbg.structure.size)
     
-    print "[*] Setting mem bp @ 0x%08x size %d" % (dbg.structure.address, dbg.structure.size)
+    print("[*] Setting mem bp @ 0x%08x size %d" % (dbg.structure.address, dbg.structure.size))
     dbg.bp_set_mem(dbg.structure.address, dbg.structure.size, handler=dbg.structure.handler)
     
     return DBG_CONTINUE
@@ -580,34 +580,34 @@ def numeri(x, y):
 
 def attach_target_proc(dbg, procname):
     imagename = procname.rsplit('\\')[-1]
-    print "[*] Trying to attach to existing %s" % imagename
+    print("[*] Trying to attach to existing %s" % imagename)
     for (pid, name) in dbg.enumerate_processes():
         if imagename in name:
             try:
-                print "[*] Attaching to %s (%d)" % (name, pid)
+                print("[*] Attaching to %s (%d)" % (name, pid))
                 dbg.attach(pid)
             except:
-                print "[!] Problem attaching to %s" % name
+                print("[!] Problem attaching to %s" % name)
                 
                 return False
             
             return True
     
     try:
-        print "[*] Trying to load %s %s" % (procname)
+        print("[*] Trying to load %s %s" % (procname))
         dbg.load(procname, "")
         
     except:
-        print "[!] Problem loading %s" % (procname)
+        print("[!] Problem loading %s" % (procname))
         
         return False
     
     return True
 
 def exitfunc(dbg):
-    print "[!] Exiting"
+    print("[!] Exiting")
     if dbg:
-        print "[!] Cleaning up pydbg"
+        print("[!] Cleaning up pydbg")
         if hasattr(dbg, "structure"):
             #dbg.structure.display(dbg)
             dbg.structure.data = dbg.read_process_memory(dbg.structure.address, dbg.structure.size)
@@ -633,7 +633,7 @@ dbg = ""
 
 # track.py dps.exe 0x006AC928 ebx 256 [read|write|both]*
 if len(sys.argv) < 5:
-    print "Usage: %s <process name> <address of bp> <register> <size of struct>" % sys.argv[0]
+    print("Usage: %s <process name> <address of bp> <register> <size of struct>" % sys.argv[0])
     
     sys.exit(-1)
 
@@ -651,7 +651,7 @@ dbg.set_callback(EXCEPTION_BREAKPOINT, handler_breakpoint)
 atexit.register(exitfunc, dbg)
 
 if not attach_target_proc(dbg, procname):
-    print "[!] Couldnt load/attach to %s" % procname
+    print("[!] Couldnt load/attach to %s" % procname)
     
     sys.exit(-1)
 

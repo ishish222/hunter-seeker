@@ -31,7 +31,7 @@ def create_temu_samples_disk():
     df.create_layout(options)
 
     for sample in state.samples_list:
-        print(options.tmp_mountpoint + '/' + sample)
+        print((options.tmp_mountpoint + '/' + sample))
         os.spawnv(os.P_WAIT, '/usr/bin/sudo', ['sudo', 'cp', sample, '%s/%s' % (options.tmp_mountpoint, options.settings.samples_shared_subdir)])
 
     df.umount_drive_host(options)
@@ -52,7 +52,7 @@ def find_pid():
     pid_re = '0x[0-9A-Fa-f]+ (0x[0-9A-Fa-f]+) (\S+)'
     pids = re.findall(pid_re, lastResponse)
 
-    print pids
+    print(pids)
 
     globs.state.pid = 0
 
@@ -60,7 +60,7 @@ def find_pid():
         if(name == options.settings.app_module):
             globs.state.pid = int(pid, 16)
 
-    print 'Found: 0x%x' % globs.state.pid
+    print('Found: 0x%x' % globs.state.pid)
 
 def temu_configure_tracecap():
     options = globs.state.options
@@ -71,12 +71,12 @@ def temu_configure_tracecap():
     qemu_dir = globs.state.options.qemu_dir
 
     write_monitor_2(options.m, 'load_plugin %s/tracecap.so\n' % qemu_dir)
-    print read_monitor(options.m)
-    print 'plgin loaded'
+    print(read_monitor(options.m))
+    print('plgin loaded')
     time.sleep(1)
     write_monitor_2(options.m, "load_config %s/main.ini\n" % qemu_dir)
-    print read_monitor(options.m)
-    print 'config loaded'
+    print(read_monitor(options.m))
+    print('config loaded')
     time.sleep(1)
 
 def temu_taint_start():
@@ -87,8 +87,8 @@ def temu_taint_start():
     sample_path = state.samples_list.pop()
     sample_file = path.basename(sample_path)
     
-    print sample_path
-    print sample_file
+    print(sample_path)
+    print(sample_file)
     
     write_monitor_2(options.m, "enable_emulation\n")
     read_monitor(options.m)
@@ -96,16 +96,16 @@ def temu_taint_start():
 
 
     wo_drive = '/'.join(options.settings.samples_shared_path.split('\\')[1:])
-    print "taint_file %s/%s 1 0\n" % (wo_drive, sample_path)
+    print("taint_file %s/%s 1 0\n" % (wo_drive, sample_path))
     write_monitor_2(options.m, "taint_file %s/%s 1 0\n" % (wo_drive, sample_path))
-    print(read_monitor(options.m))
+    print((read_monitor(options.m)))
     time.sleep(1)
 
 #    state.pid=1
 
-    print "trace %s %s\n" % (state.pid, '%s/%s-%s.out' % (options.settings.large_results_dir, common.timestamp2(), sample_file))
+    print("trace %s %s\n" % (state.pid, '%s/%s-%s.out' % (options.settings.large_results_dir, common.timestamp2(), sample_file)))
     write_monitor_2(options.m, "trace %s \"%s\"\n" % (state.pid, '%s/%s-%s.out' % (options.settings.large_results_dir, common.timestamp2(), sample_file)))
-    print(read_monitor(options.m))
+    print((read_monitor(options.m)))
     time.sleep(1)
 
     # prepare sample
@@ -118,9 +118,9 @@ def temu_taint_start():
     options.settings.runner_0(options, [test_file])
     options.log.write("%s: " % test_file)
 
-    print(read_monitor(options.m))
-    print(read_monitor(options.m))
-    print(read_monitor(options.m))
+    print((read_monitor(options.m)))
+    print((read_monitor(options.m)))
+    print((read_monitor(options.m)))
 
 def temu_taint_conclude():
     options = globs.state.options
@@ -128,10 +128,10 @@ def temu_taint_conclude():
     status = globs.state.status
 
     write_monitor_2(options.m, "trace_stop\n")
-    print(read_monitor(options.m))
+    print((read_monitor(options.m)))
     time.sleep(1)
     write_monitor_2(options.m, "disable_emulation\n")
-    print(read_monitor(options.m))
+    print((read_monitor(options.m)))
     time.sleep(1)
 
 def open_sample():
@@ -140,14 +140,14 @@ def open_sample():
     status = globs.state.status
 
     for s in globs.state.samples_list:
-        print s
+        print(s)
     #this should be on run end
 #    print("Current stats (SA/MA/TO): %d/%d/%d" % (stats.sample_count, stats.ma_count, stats.to_count))
 
     try:
         sample_path = globs.state.samples_list.pop()
-    except Exception, e:
-        print e
+    except Exception as e:
+        print(e)
         globs.state.samples_exhausted = True
         return
 
@@ -176,7 +176,7 @@ def perform_after_test():
 def cooldown_temu():
     options = globs.state.options
 
-    print "Cooling down for Temu"
+    print("Cooling down for Temu")
     #write_socket(options.s, "cooldown2 5 30")
     write_socket(options.s, "cooldown2 5 101")
     read_socket(options.s)

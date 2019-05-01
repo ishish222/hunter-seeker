@@ -83,7 +83,7 @@ class FunctionViewStatsListCtrl (wx.ListCtrl, ListCtrlAutoWidthMixin):
         idx+=1
         self.InsertStringItem(idx, "")
         self.SetStringItem(idx, 0, "BB Count")
-        self.SetStringItem(idx, 1, "%d" % len(func.nodes.values()))
+        self.SetStringItem(idx, 1, "%d" % len(list(func.nodes.values())))
         idx+=1
         self.InsertStringItem(idx, "")
         self.SetStringItem(idx, 0, "Call Count")

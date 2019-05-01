@@ -10,7 +10,7 @@ __all__ = \
     "HitsListCtrl",
 ]
 
-import TargetsTreeCtrl
-import ProcessListCtrl
-import PIDAModulesListCtrl
-import HitsListCtrl
+from . import TargetsTreeCtrl
+from . import ProcessListCtrl
+from . import PIDAModulesListCtrl
+from . import HitsListCtrl

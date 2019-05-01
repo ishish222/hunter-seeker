@@ -11,7 +11,7 @@ from scapy.sendrecv import sniff
 
 def detect_dhcp(pkt):
     if((DHCP in pkt) and (pkt[DHCP].options[0][1] == 1)):
-        print "DHCP discover detected\n"
+        print("DHCP discover detected\n")
         sendp(Ether(src = server_mac, dst = "ff:ff:ff:ff:ff:ff") / 
             IP(src = server_ip, dst = "255.255.255.255") / 
             UDP(sport = 67, dport = 68) / 
@@ -21,7 +21,7 @@ def detect_dhcp(pkt):
             DHCP(options = [('server_id', server_ip), ('end')]))
 
     if((DHCP in pkt) and (pkt[DHCP].options[0][1] == 3)):
-        print "DHCP request detected\n"
+        print("DHCP request detected\n")
         sendp(Ether(src = server_mac, dst = "ff:ff:ff:ff:ff:ff") / 
             IP(src = server_ip, dst = "255.255.255.255") / 
             UDP(sport = 67, dport = 68) / 

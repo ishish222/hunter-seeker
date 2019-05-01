@@ -51,15 +51,15 @@ def dll_load_handler (dbg):
         addrRtlReAllocateHeap = dbg.func_resolve_debuggee("ntdll", "RtlReAllocateHeap")
 
         if(addrRtlCreateHeap != None):
-            print(hex(addrRtlCreateHeap))
+            print((hex(addrRtlCreateHeap)))
         if(addrRtlDestroyHeap != None):
-            print(hex(addrRtlDestroyHeap))
+            print((hex(addrRtlDestroyHeap)))
         if(addrRtlAllocateHeap != None):
-            print(hex(addrRtlAllocateHeap))
+            print((hex(addrRtlAllocateHeap)))
         if(addrRtlFreeHeap != None):
-            print(hex(addrRtlFreeHeap))
+            print((hex(addrRtlFreeHeap)))
         if(addrRtlReAllocateHeap != None):
-            print(hex(addrRtlReAllocateHeap))
+            print((hex(addrRtlReAllocateHeap)))
 
 
         hooks.add(dbg, addrRtlCreateHeap,     6, None, RtlCreateHeap)
@@ -138,7 +138,7 @@ def monitor_bp (dbg):
         log("\t%08x" % call)
 
     # determine which chunk was violated.
-    for addr, alloc in allocs.iteritems():
+    for addr, alloc in allocs.items():
         if addr + alloc.size < dbg.violation_address < addr + alloc.size + 4:
             violated_chunk = addr
             break
@@ -150,13 +150,13 @@ def monitor_bp (dbg):
     for call in allocs[violated_chunk].call_stack:
         log("\t%08x" % call)
 
-    raw_input("")
+    input("")
 
     # XXX - add check for Rtl addresses in call stack and ignore
 
 
 def monitor_print():
-    for addr, alloc in allocs.iteritems():
+    for addr, alloc in allocs.items():
         log("0x%08x: %d" % (addr, alloc.size))
 
         for call in alloc.call_stack:
@@ -176,7 +176,7 @@ def monitor_remove (dbg, address):
 def outstanding_bytes ():
     outstanding = 0
 
-    for node in graph.nodes.values():
+    for node in list(graph.nodes.values()):
         if hasattr(node, "size"):
             outstanding += node.size
 

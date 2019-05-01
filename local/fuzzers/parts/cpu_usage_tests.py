@@ -8,7 +8,7 @@ import usualparts.globs as globs
 
 def ask_for_cpu_usage():
     options = globs.state.options
-    print "Checking usage"
+    print("Checking usage")
     write_socket(options.s, "getCPUUsage")
     read_socket(options.s)
 

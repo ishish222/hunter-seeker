@@ -17,7 +17,7 @@ import scapy.arch
 
 scapy.config.conf.use_pcap = 1
 scapy.config.conf.use_dnet = 1
-from pcapdnet import *
+from .pcapdnet import *
 
 
 ##################
@@ -66,8 +66,8 @@ def read_routes():
         if flg.find("Lc") >= 0:
             continue                
         if dest == "default":
-            dest = 0L
-            netmask = 0L
+            dest = 0
+            netmask = 0
         else:
             if scapy.arch.SOLARIS:
                 netmask = scapy.utils.atol(mask)
@@ -118,7 +118,7 @@ def _in6_getifaddr(ifname):
     # Get the output of ifconfig
     try:
         f = os.popen("%s %s" % (conf.prog.ifconfig, ifname))
-    except OSError,msg:
+    except OSError as msg:
         log_interactive.warning("Failed to execute ifconfig.")
         return []
 
@@ -157,7 +157,7 @@ def in6_getifaddr():
     # List all network interfaces
     try:
 	f = os.popen("%s -l" % conf.prog.ifconfig)
-    except OSError,msg:
+    except OSError as msg:
 	log_interactive.warning("Failed to execute ifconfig.")
 	return []
 
@@ -192,7 +192,7 @@ def read_routes6():
             dev = lspl[5+mtu_present+prio_present]
         else:       # FREEBSD or DARWIN 
             d,nh,fl,dev = l.split()[:4]
-        if filter(lambda x: x[2] == dev, lifaddr) == []:
+        if [x for x in lifaddr if x[2] == dev] == []:
             continue
         if 'L' in fl: # drop MAC addresses
             continue
@@ -216,7 +216,7 @@ def read_routes6():
             cset = ['::1']
             nh = '::'
         else:
-            devaddrs = filter(lambda x: x[2] == dev, lifaddr)
+            devaddrs = [x for x in lifaddr if x[2] == dev]
             cset = scapy.utils6.construct_source_candidate_set(d, dp, devaddrs, scapy.arch.LOOPBACK_NAME)
 
         if len(cset) != 0:

@@ -122,7 +122,7 @@ def read_socket(s):
 #        print(data[off:off+10])
         status = data[off+8:off+10]
     
-    print("" + str(data[:-6]))
+    print(("" + str(data[:-6])))
     print("")
     return lastResponse
 
@@ -132,7 +132,7 @@ def read_socket(s):
 #    return data
 
 def write_socket(s, data):
-    print("> " + str(data))
+    print(("> " + str(data)))
     s.send(data)
 
 #def write_monitor(data):
@@ -164,7 +164,7 @@ def revert():
 def start():
     print("Starting")
     global m
-    print qemu_args
+    print(qemu_args)
     m = Popen(qemu_args, stdout=PIPE, stdin=PIPE)
     time.sleep(3)
     revert()
@@ -402,14 +402,14 @@ def looop():
             read_socket(s)
 
         except socket.timeout:
-            print "socket timeout, restarting"
+            print("socket timeout, restarting")
             report("Socket timeout after " + str(sample_count) + " samples")
             restart()
             connect()
             proceed1()
-        except Exception, e:
-            print "Unknown error, restarting"
-            print e
+        except Exception as e:
+            print("Unknown error, restarting")
+            print(e)
             report("Unknown error after " + str(sample_count) + " samples")
             restart()
             connect()

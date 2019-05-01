@@ -33,8 +33,8 @@ def preparse_script(script_path):
     global global_script
     global global_labels
 
-    print bcolors.OKBLUE + "Preparsing script: [%s]" % script_path + bcolors.ENDC
-    print
+    print((bcolors.OKBLUE + "Preparsing script: [%s]" % script_path + bcolors.ENDC))
+    print()
 
     script_file = open(script_path)
 
@@ -136,20 +136,20 @@ def perform(script_path):
     preparse_script(script_path)
 
     if(False):
-        print "Labels:"
-        for key in global_labels.keys():
-            print '[%s]: %d' % (key, global_labels[key])
+        print("Labels:")
+        for key in list(global_labels.keys()):
+            print(('[%s]: %d' % (key, global_labels[key])))
             
-        print "Script length: %d" % len(global_script)
-        print "Script:"
+        print(("Script length: %d" % len(global_script)))
+        print("Script:")
         for i in range(0, len(global_script)):
             line = global_script[i]
             if line is None:
                 continue
             if(hasattr(line, 'args')):
-                print '[%d]: %s - %s' % (i, line.name, line.args)
+                print(('[%d]: %s - %s' % (i, line.name, line.args)))
             else:
-                print '[%d] %s' % (i, line.name)
+                print(('[%d] %s' % (i, line.name)))
         
     # transfer control to Main label        
     ip = global_labels['Main']
@@ -171,9 +171,9 @@ def perform(script_path):
             for prefix in prefix_stack:
                 display_name = '%s[%s]' % (display_name, prefix)
             display_name = '%s[%s]' % (display_name, instruction.name)
-            print bcolors.LIGHTBLUE + display_name + bcolors.ENDC
+            print((bcolors.LIGHTBLUE + display_name + bcolors.ENDC))
             if(instruction.name == 'Call'):
-                print 'Calling: %s' % instruction.args
+                print(('Calling: %s' % instruction.args))
                 global_stack.append(ip+1)
                 prefix_stack.append(instruction.args)
                 ret = instruction.args
@@ -183,19 +183,19 @@ def perform(script_path):
             else:
                 ret = instruction.execute()
         except MachineError:
-            print("Exception:", sys.exc_info()[0])
+            print(("Exception:", sys.exc_info()[0]))
             if(hasattr(globs, 'first_chance')):
                 if(globs.first_chance == 1):
-                    print 'First chance handler finished'
-                    print 'Exiting'
+                    print('First chance handler finished')
+                    print('Exiting')
                     exit(0)
             else:
-                print 'First chance handler'
+                print('First chance handler')
                 globs.first_chance = 1
 
             if(globs.exc_label != None):
                 ret = globs.exc_label
-                print 'ret = %s' % ret
+                print(('ret = %s' % ret))
 
         if(ret == None):
             ip += 1
@@ -213,7 +213,7 @@ def perform(script_path):
                     #raise MachineError
                     ip = global_labels['Default']
 
-        print
+        print()
 
     return True
 
@@ -227,9 +227,9 @@ def stateful_routine(script_path):
     signal.signal(signal.SIGUSR1, sigkill_handler)
     signal.signal(signal.SIGHUP, sigkill_handler)
 
-    print
-    print bcolors.OKBLUE + "Loading script: [%s]" % script_path + bcolors.ENDC
-    print
+    print()
+    print((bcolors.OKBLUE + "Loading script: [%s]" % script_path + bcolors.ENDC))
+    print()
 
     script_file = open(script_path)
 
@@ -320,26 +320,26 @@ def stateful_routine(script_path):
 
         try:
             #print "[%s] (%s)" % (instruction.name, script_path)
-            print bcolors.LIGHTBLUE + "===[%s]" % (instruction.name) + bcolors.ENDC
+            print((bcolors.LIGHTBLUE + "===[%s]" % (instruction.name) + bcolors.ENDC))
             if(instruction.name == 'Execute'):
                 stateful_routine(instruction.args)
                 ret = None
             else:
                 ret = instruction.execute()
         except MachineError:
-            print("Exception:", sys.exc_info()[0])
+            print(("Exception:", sys.exc_info()[0]))
             if(hasattr(globs, 'first_chance')):
                 if(globs.first_chance == 1):
-                    print 'First chance handler finished'
-                    print 'Exiting'
+                    print('First chance handler finished')
+                    print('Exiting')
                     exit(0)
             else:
-                print 'First chance handler'
+                print('First chance handler')
                 globs.first_chance = 1
 
             if(globs.exc_label != None):
                 ret = globs.exc_label
-                print 'ret = %s' % ret
+                print(('ret = %s' % ret))
 
         if(ret == None):
             ip += 1
@@ -351,12 +351,12 @@ def stateful_routine(script_path):
                     ip = labels[ret]
                 except KeyError:
                     globs.first_chance = 0x0
-                    print 'Key error: %s' % ip
+                    print(('Key error: %s' % ip))
                     raise MachineError
     
-        print
+        print()
 
-    print "Finished: %s" % script_path
+    print(("Finished: %s" % script_path))
 
 def check_version(script_path):
     script_file = open(script_path)

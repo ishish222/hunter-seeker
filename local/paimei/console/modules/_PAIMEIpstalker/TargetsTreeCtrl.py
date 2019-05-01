@@ -25,10 +25,10 @@
 import wx
 
 import MySQLdb
-import thread
+import _thread
 
-import export_idc_dialog
-import target_properties
+from . import export_idc_dialog
+from . import target_properties
 import utils
 import pgraph
 
@@ -208,7 +208,7 @@ class TargetsTreeCtrl (wx.TreeCtrl):
         no_modules = []
         new_hits   = []
 
-        for ea in cc.hits.keys():
+        for ea in list(cc.hits.keys()):
             hit = cc.hits[ea][0]
 
             # we are expanding out all the basic blocks of the hit functions.
@@ -216,7 +216,7 @@ class TargetsTreeCtrl (wx.TreeCtrl):
                 continue
 
             # if we don't have the module for this hit, continue to the next one.
-            if not self.top.pida_modules.has_key(hit.module):
+            if hit.module not in self.top.pida_modules:
                 if not no_modules.count(hit.module):
                     no_modules.append(hit.module)
                     self.top.err("Necessary module '%s' for part of tag expansion missing, ignoring." % hit.module)
@@ -228,8 +228,8 @@ class TargetsTreeCtrl (wx.TreeCtrl):
             # grab the appropriate PIDA function.
             function = self.top.pida_modules[hit.module].functions[hit.eip]
 
-            for bb_ea in function.basic_blocks.keys():
-                if not cc.hits.has_key(bb_ea):
+            for bb_ea in list(function.basic_blocks.keys()):
+                if bb_ea not in cc.hits:
                     ccs             = utils.code_coverage.__code_coverage_struct__()
                     ccs.eip         = bb_ea
                     ccs.tid         = 0
@@ -246,7 +246,7 @@ class TargetsTreeCtrl (wx.TreeCtrl):
 
         # manually propagate the new hits into the code coverage data structure.
         for ccs in new_hits:
-            if not cc.hits.has_key(ccs.eip):
+            if ccs.eip not in cc.hits:
                 cc.hits[ccs.eip] = []
 
             cc.hits[ccs.eip].append(ccs)
@@ -518,11 +518,11 @@ class TargetsTreeCtrl (wx.TreeCtrl):
         self.udraw_in_function    = False
         no_modules                = []
 
-        for hit_list in self.cc.hits.values():
+        for hit_list in list(self.cc.hits.values()):
             hit = hit_list[0]
 
             # we can't graph what we don't have a module loaded for.
-            if not self.top.pida_modules.has_key(hit.module):
+            if hit.module not in self.top.pida_modules:
                 if not no_modules.count(hit.module):
                     no_modules.append(hit.module)
                     self.top.err("Necessary module '%s' to build part of graph missing, ignoring." % hit.module)
@@ -566,7 +566,7 @@ class TargetsTreeCtrl (wx.TreeCtrl):
         self.udraw.graph_new(self.udraw_current_graph)
 
         # thread out the udraw connector message loop.
-        thread.start_new_thread(self.udraw.message_loop, (None, None))
+        _thread.start_new_thread(self.udraw.message_loop, (None, None))
 
 
     ####################################################################################################################
@@ -606,7 +606,7 @@ class TargetsTreeCtrl (wx.TreeCtrl):
 
             # if a previous item was selected, and it matches the id of the target we are adding, then set this
             # entry as the restore item.
-            if selected and selected.has_key("target") and selected["id"] == target["id"]:
+            if selected and "target" in selected and selected["id"] == target["id"]:
                 restore = target_to_append
 
             self.SetPyData(target_to_append, target)
@@ -622,7 +622,7 @@ class TargetsTreeCtrl (wx.TreeCtrl):
 
                 # if a previous item was selected, and it matches the id of the tag we are adding, then set this entry
                 # as the restore item.
-                if selected and selected.has_key("tag") and selected["id"] == tag["id"]:
+                if selected and "tag" in selected and selected["id"] == tag["id"]:
                     restore = tag_to_append
 
                 self.SetPyData(tag_to_append, tag)
@@ -652,11 +652,11 @@ class TargetsTreeCtrl (wx.TreeCtrl):
             pass
 
         # target node.
-        elif selected.has_key("target"):
+        elif "target" in selected:
             pass
 
         # tag node.
-        elif selected.has_key("tag"):
+        elif "tag" in selected:
             pass
 
 
@@ -689,7 +689,7 @@ class TargetsTreeCtrl (wx.TreeCtrl):
             menu.Destroy()
 
         # target node.
-        elif selected.has_key("target"):
+        elif "target" in selected:
             # we only have to do this once, that is what the hasattr() check is for.
             if not hasattr(self, "right_click_popup_add_tag"):
                 self.right_click_popup_add_tag       = wx.NewId()
@@ -712,7 +712,7 @@ class TargetsTreeCtrl (wx.TreeCtrl):
             menu.Destroy()
 
         # tag node.
-        elif selected.has_key("tag"):
+        elif "tag" in selected:
             # we only have to do this once, that is what the hasattr() check is for.
             if not hasattr(self, "right_click_popup_load_hits"):
                 self.right_click_popup_load_hits     = wx.NewId()
@@ -748,7 +748,7 @@ class TargetsTreeCtrl (wx.TreeCtrl):
             menu.AppendSeparator()
             menu.Append(self.right_click_popup_use_for_stalk, "Use for Stalking")
 
-            if selected.has_key("filtered"):
+            if "filtered" in selected:
                 menu.Append(self.right_click_popup_unfilter_tag, "Remove Tag Filter")
             else:
                 menu.Append(self.right_click_popup_filter_tag, "Filter Tag")
@@ -798,7 +798,7 @@ class TargetsTreeCtrl (wx.TreeCtrl):
 
         try:
             self.udraw_last_selected = args
-            selected = long(self.udraw_last_selected[0], 16)
+            selected = int(self.udraw_last_selected[0], 16)
         except:
             return
 
@@ -815,7 +815,7 @@ class TargetsTreeCtrl (wx.TreeCtrl):
         uDraw callback handler for node double click.
         '''
 
-        selected = long(self.udraw_last_selected[0], 16)
+        selected = int(self.udraw_last_selected[0], 16)
 
         # if the activated node is a hit function, expand it.
         if selected in self.udraw_hit_funcs:
@@ -841,10 +841,10 @@ class TargetsTreeCtrl (wx.TreeCtrl):
             window_title             = self.udraw_base_graph.nodes[selected].name
 
             # highlight the hit basic blocks within the function.
-            for hit_list in self.cc.hits.values():
+            for hit_list in list(self.cc.hits.values()):
                 hit = hit_list[0]
 
-                if self.udraw_current_graph.nodes.has_key(hit.eip):
+                if hit.eip in self.udraw_current_graph.nodes:
                     self.udraw_current_graph.nodes[hit.eip].color = 0xFF8000
 
         # render the new graph.
@@ -877,12 +877,12 @@ class TargetsTreeCtrl (wx.TreeCtrl):
                 return
 
         # if the current view doesn't have the requested address.
-        if not self.udraw_current_graph.nodes.has_key(address):
+        if address not in self.udraw_current_graph.nodes:
             # determine if it belongs to one of the hit functions.
             containing_function = None
 
             for hit_func in self.udraw_hit_funcs:
-                if address in self.udraw_base_graph.nodes[hit_func].nodes.keys():
+                if address in list(self.udraw_base_graph.nodes[hit_func].nodes.keys()):
                     containing_function = hit_func
 
             # if the address could not be found in any of the hit functions, then return.

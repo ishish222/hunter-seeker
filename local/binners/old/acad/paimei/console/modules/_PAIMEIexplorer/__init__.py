@@ -9,6 +9,6 @@ __all__ = \
     "HtmlWindow",
 ]
 
-import ExplorerTreeCtrl
-import PIDAModulesListCtrl
-import HtmlWindow
+from . import ExplorerTreeCtrl
+from . import PIDAModulesListCtrl
+from . import HtmlWindow

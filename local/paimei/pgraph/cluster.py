@@ -22,7 +22,7 @@
 @organization: www.openrce.org
 '''
 
-import node
+from . import node
 
 class cluster (object):
     '''

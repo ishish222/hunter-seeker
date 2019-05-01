@@ -10,10 +10,10 @@ import pydbg
 
 def monitor_updates (md):
     # grab the snapshot keys and sort alphabetically (we assume this is the correct order)
-    snap_keys =  md.snapshots.keys()
+    snap_keys =  list(md.snapshots.keys())
     snap_keys.sort()
     
-    for i in xrange(len(snap_keys)):
+    for i in range(len(snap_keys)):
         self.diff(snap_keys[i], snap_keys[i+1])
 
 
@@ -40,7 +40,7 @@ class memory_differ:
         min_len = min(len(a), len(b))
         changes = max_len - min_len
 
-        for idx in xrange(min_len):
+        for idx in range(min_len):
             if a[idx] != b[idx]:
                 changes += 1
 
@@ -57,8 +57,8 @@ class memory_differ:
 
         diffs = []
 
-        for address_b, block_b in b.iteritems():
-            if address_b not in a.keys():
+        for address_b, block_b in b.items():
+            if address_b not in list(a.keys()):
                 diffs.append("new block in %s @%08x:%d" % (key_b, address_b, len(block_b.data)))
             else:
                 block_a = a[address_b]
@@ -98,7 +98,7 @@ class memory_differ:
         if format != "binary" and ext == "bin":
             ext = "txt"
 
-        for address, block in self.snapshots[key].iteritems():
+        for address, block in self.snapshots[key].items():
             self.export_block(block, "%s/%s%08x%s.%s" % (path, prefix, address, suffix, ext), format)
 
         return self
@@ -130,7 +130,7 @@ class memory_differ:
         key = sh["key"]
 
         snapshot = {}
-        for address, block in sh.iteritems():
+        for address, block in sh.items():
             # the one NON address/block pair is the key/name pair, so skip that one.
             if address == "key":
                 continue
@@ -152,7 +152,7 @@ class memory_differ:
         sh["key"] = key
 
         # we store the snapshot dictionary piece by piece to avoid out of memory conditions.
-        for address, block in self.snapshots[key].iteritems():
+        for address, block in self.snapshots[key].items():
             sh["%08x" % address] = block
             sh.sync()
     
@@ -179,10 +179,10 @@ class memory_differ:
     def search (self, key, value, length="L"):
         matches = []
 
-        for address, block in self.snapshots[key].iteritems():
+        for address, block in self.snapshots[key].items():
             indices = []
 
-            if type(value) in [int, long]:
+            if type(value) in [int, int]:
                 for endian in [">", "<"]:
                     indices.extend(self.find_all_occurences(struct.pack("%c%c" % (endian, length), value), block.data))
             else:

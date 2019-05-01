@@ -44,7 +44,7 @@ class ICMPExtensionHeader(Packet):
 
         for fval, cls in self.payload_guess:
             ok = 1
-            for k, v in fval.iteritems():
+            for k, v in fval.items():
                 if not hasattr(ieo, k) or v != ieo.getfieldval(k):
                     ok = 0
                     break

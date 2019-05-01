@@ -9,13 +9,13 @@ import usualparts.globs as globs
 
 def ask_for_cpu_usage():
     options = globs.state.options
-    print "Checking usage"
+    print("Checking usage")
     write_socket(options.s, "getCPUUsage")
     read_socket(options.s)
 
 def cooldown():
     options = globs.state.options
-    print "Cooling down"
+    print("Cooling down")
     write_socket(options.s, "cooldown")
     read_socket(options.s)
 

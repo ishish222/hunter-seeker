@@ -9,7 +9,7 @@ import wx
 import os
 import re
 import sys
-import InsignificantConfigDlg
+from . import InsignificantConfigDlg
 
 
 FUNCTION_LEVEL    = 0x0001
@@ -55,19 +55,19 @@ class DiffConfigureDlg(wx.Dialog):
         self.InsignificantCheckBox.SetValue(self.parent.ignore_insignificant)
   
         i = 0        
-        for method in self.parent.module_table.values():
+        for method in list(self.parent.module_table.values()):
             if method.attributes["Level"] & FUNCTION_LEVEL and method.attributes["Match"]:
                 self.FunctionMatchListCtrl.Insert(method.module_name, i)
                 i+=1
             
         i = 0        
-        for method in self.parent.module_table.values():
+        for method in list(self.parent.module_table.values()):
             if method.attributes["Level"] & BASIC_BLOCK_LEVEL and method.attributes["Match"]:
                 self.BasicBlockMatchListCtrl.Insert(method.module_name, i)
                 i+=1
 
         i = 0        
-        for method in self.parent.module_table.values():
+        for method in list(self.parent.module_table.values()):
             if method.attributes["Level"] & FUNCTION_LEVEL and method.attributes["Diff"]:
                 self.FunctionDiffListCtrl.Insert(method.module_name, i)
                 i+=1
@@ -220,7 +220,7 @@ class DiffConfigureDlg(wx.Dialog):
    
         i = 0
         num = self.UsedFunctionMatchListCtrl.GetCount()
-        for i in xrange(num):
+        for i in range(num):
             try:
                 self.parent.used_match_function_table[ alpha[i] + self.UsedFunctionMatchListCtrl.GetString(i) ] = self.parent.match_function_table[ self.UsedFunctionMatchListCtrl.GetString(i) ]
             except:
@@ -228,7 +228,7 @@ class DiffConfigureDlg(wx.Dialog):
         
         i = 0
         num = self.UsedBasicBlockMatchListCtrl.GetCount()
-        for i in xrange(num):
+        for i in range(num):
             try:
                 self.parent.used_match_basic_block_table[ alpha[i] + self.UsedBasicBlockMatchListCtrl.GetString(i) ] = self.parent.match_basic_block_table[ self.UsedBasicBlockMatchListCtrl.GetString(i) ]
             except:
@@ -237,7 +237,7 @@ class DiffConfigureDlg(wx.Dialog):
         
         i = 0
         num = self.UsedFunctionDiffListCtrl.GetCount()
-        for i in xrange(num):
+        for i in range(num):
             try:
                 self.parent.used_diff_function_table[ alpha[i] + self.UsedFunctionDiffListCtrl.GetString(i) ] = self.parent.diff_function_table[ self.UsedFunctionDiffListCtrl.GetString(i) ]
             except:
@@ -277,17 +277,17 @@ class DiffConfigureDlg(wx.Dialog):
         i = 0
         num = self.UsedFunctionMatchListCtrl.GetCount()
         
-        for i in xrange(num):
+        for i in range(num):
             dcfg_file.write("function_match_method=%s\n" % self.UsedFunctionMatchListCtrl.GetString(i))
         
         i = 0
         num = self.UsedBasicBlockMatchListCtrl.GetCount()
-        for i in xrange(num):
+        for i in range(num):
             dcfg_file.write("bb_match_method=%s\n" % self.UsedBasicBlockMatchListCtrl.GetString(i))
                 
         i = 0
         num = self.UsedFunctionDiffListCtrl.GetCount()
-        for i in xrange(num):
+        for i in range(num):
             dcfg_file.write("function_diff_method=%s\n" % self.UsedFunctionDiffListCtrl.GetString(i))
         
    
@@ -323,7 +323,7 @@ class DiffConfigureDlg(wx.Dialog):
                 if not m:
                     self.parent.err("%s is not a valid method" % line)
                 else:
-                    for n in self.parent.match_function_table.keys():
+                    for n in list(self.parent.match_function_table.keys()):
                         if n.upper() == m.group(1):
                             self.UsedFunctionMatchListCtrl.Insert( n, self.UsedFunctionMatchListCtrl.GetCount())
             elif line.find("BB_MATCH_METHOD") != -1:
@@ -332,7 +332,7 @@ class DiffConfigureDlg(wx.Dialog):
                 if not m:
                     self.parent.err("%s is not a valid method" % line)
                 else:
-                    for n in self.parent.match_basic_block_table.keys():
+                    for n in list(self.parent.match_basic_block_table.keys()):
                         if n.upper() == m.group(1):
                             self.UsedBasicBlockMatchListCtrl.Insert(n, self.UsedBasicBlockMatchListCtrl.GetCount())
             elif line.find("FUNCTION_DIFF_METHOD") != -1:
@@ -341,7 +341,7 @@ class DiffConfigureDlg(wx.Dialog):
                 if not m:
                     self.parent.err("%s is not a valid method" % line)
                 else:
-                    for n in self.parent.diff_function_table.keys():
+                    for n in list(self.parent.diff_function_table.keys()):
                         if n.upper() == m.group(1):
                             self.UsedFunctionDiffListCtrl.Insert( n, self.UsedFunctionDiffListCtrl.GetCount())
             elif line.find("NOCHANGE") != -1:

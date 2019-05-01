@@ -89,7 +89,7 @@ class Buffer:
 def handler_breakpoint(dbg):
     if dbg.first_breakpoint:
         if not set_library_hooks(dbg):
-            print "[!] Couldnt set breakpoints"
+            print("[!] Couldnt set breakpoints")
     
             sys.exit(-1)
     
@@ -105,7 +105,7 @@ def handler_buffer(dbg):
         return DBG_CONTINUE
     
     module = dbg.addr_to_module(dbg.exception_address).szModule
-    for buffer in xrange(0, len(dbg.buffers)):
+    for buffer in range(0, len(dbg.buffers)):
         if dbg.bp_is_ours_mem(dbg.buffers[buffer]["address"]):
             if module in dbg.filters:
                 # We filter some dlls
@@ -124,7 +124,7 @@ def handler_buffer(dbg):
                                 
                 return DBG_CONTINUE
             
-            print "[*] BP on buffer [%s] [0x%08x] [0x%08x %s]" % (module, dbg.violation_address, dbg.exception_address, dbg.disasm(dbg.exception_address))
+            print("[*] BP on buffer [%s] [0x%08x] [0x%08x %s]" % (module, dbg.violation_address, dbg.exception_address, dbg.disasm(dbg.exception_address)))
             
             #if dbg.mnemonic.startswith("rep"):
             #    dbg.page_guard_clear()
@@ -148,7 +148,7 @@ def handler_ReadFile(dbg, args, ret):
     hi = args[0]
     requested_bytes = args[2]
     
-    for lib in xrange(0, len(dbg.library)):
+    for lib in range(0, len(dbg.library)):
         if dbg.library[lib]["func"] == "ReadFile":
             break
         
@@ -162,15 +162,15 @@ def handler_ReadFile(dbg, args, ret):
                     
                     return DBG_CONTINUE
                 
-                print "[*] ReadFile %s [%d] [%d] Req:%d Read:%d\n[0x%08x][%s]" % (handle["filename"], buffer["id"], handle["id"], requested_bytes, buffer["size"], buffer["address"], dbg.smart_dereference(buffer["address"]))
+                print("[*] ReadFile %s [%d] [%d] Req:%d Read:%d\n[0x%08x][%s]" % (handle["filename"], buffer["id"], handle["id"], requested_bytes, buffer["size"], buffer["address"], dbg.smart_dereference(buffer["address"])))
                 
                 # print call stack, 15 calls deep
-                print "CALL STACK:"
+                print("CALL STACK:")
                 call_stack = dbg.stack_unwind()
                 call_stack.reverse()
                 for address in call_stack[:15]:
-                    print "%s: 0x%08x" % (dbg.addr_to_module(address).szModule, address)
-                print "...\n---------------------"
+                    print("%s: 0x%08x" % (dbg.addr_to_module(address).szModule, address))
+                print("...\n---------------------")
 
                 for dbgbuffer in dbg.buffers:
                     if buffer["address"] == dbgbuffer:
@@ -211,7 +211,7 @@ def handler_CreateFileW(dbg, args, ret):
 
     if filename:
         if dbg.filename.lower() in filename.lower():
-            print "[*] CreateFileW %s returned 0x%x" % (filename, ret)
+            print("[*] CreateFileW %s returned 0x%x" % (filename, ret))
     else:
         return DBG_CONTINUE    
     
@@ -224,7 +224,7 @@ def handler_CreateFileW(dbg, args, ret):
     return DBG_CONTINUE
 
 def handler_MapViewOfFile(dbg, args, ret):
-    print "[*] MapViewOfFile [%x] return [0x%08x]"% (args[0], ret)
+    print("[*] MapViewOfFile [%x] return [0x%08x]"% (args[0], ret))
     
     return DBG_CONTINUE
 
@@ -248,25 +248,25 @@ def handler__read(dbg, args, ret):
 
 def attach_target_proc(dbg, procname, filename):
     imagename = procname.rsplit('\\')[-1]
-    print "[*] Trying to attach to existing %s" % imagename
+    print("[*] Trying to attach to existing %s" % imagename)
     for (pid, name) in dbg.enumerate_processes():
         if imagename in name.lower():
             try:
-                print "[*] Attaching to %s (%d)" % (name, pid)
+                print("[*] Attaching to %s (%d)" % (name, pid))
                 dbg.attach(pid)
             except:
-                print "[!] Problem attaching to %s" % name
+                print("[!] Problem attaching to %s" % name)
                 
                 return False
             
             return True
     
     try:
-        print "[*] Trying to load %s %s" % (procname, filename)
+        print("[*] Trying to load %s %s" % (procname, filename))
         dbg.load(procname, "\"" + filename + "\"")
         
     except:
-        print "[!] Problem loading %s %s" % (procname, filename)
+        print("[!] Problem loading %s %s" % (procname, filename))
         
         return False
     
@@ -280,11 +280,11 @@ def set_library_hooks(dbg):
             continue
         
         address = dbg.func_resolve(lib["dll"], lib["func"])
-        print "[*] Setting hook @ 0x%08x %s!%s" % (address, lib["dll"], lib["func"])
+        print("[*] Setting hook @ 0x%08x %s!%s" % (address, lib["dll"], lib["func"]))
         try:
             dbg.hooks.add(dbg, address, lib["args"], None, lib["handler"])
         except:
-            print "[!] Problem setting hook @ 0x%08x %s!%s" % (address, lib["dll"], lib["func"])
+            print("[!] Problem setting hook @ 0x%08x %s!%s" % (address, lib["dll"], lib["func"]))
             
             return False
     
@@ -302,13 +302,13 @@ def close_handle(dbg, id):
     if not kernel32.CloseHandle(handle):
         return False
     
-    for hi in xrange(0, len(dbg.handles)):
+    for hi in range(0, len(dbg.handles)):
         if dbg.handles[hi]["id"] == id:
             dbg.handles.remove(hi)
             
             return True
 
-    print "[!] Couldnt find handle id 0x%x" % id
+    print("[!] Couldnt find handle id 0x%x" % id)
     
     return False
 
@@ -376,7 +376,7 @@ loop_limit = 10
 ######################################################################
 
 if len(sys.argv) < 3:
-    print "Usage: %s <process name> <file name to track> [buffer to track]" % sys.argv[0]
+    print("Usage: %s <process name> <file name to track> [buffer to track]" % sys.argv[0])
     
     sys.exit(-1)
 
@@ -401,17 +401,17 @@ dbg.trackbuffer = trackbuffer
 dbg.set_callback(EXCEPTION_BREAKPOINT, handler_breakpoint)
 
 if not attach_target_proc(dbg, procname, filename):
-    print "[!] Couldnt load/attach to %s" % procname
+    print("[!] Couldnt load/attach to %s" % procname)
     
     sys.exit(-1)
 
 dbg.debug_event_loop()
 
-print "\nBuffers hit:\n"
+print("\nBuffers hit:\n")
 for buf in dbg.buffers:
-    print "%d" % buf["id"]
-    print "=" * 72
-    print "Address:      0x%08x" % buf["address"]
-    print "Size:         0x%x" % buf["size"]
-    print "Last Address: 0x%08x" % buf["last_addr"]
-    print "Last Hit:     0x%08x\n" % buf["last_hit"]
+    print("%d" % buf["id"])
+    print("=" * 72)
+    print("Address:      0x%08x" % buf["address"])
+    print("Size:         0x%x" % buf["size"])
+    print("Last Address: 0x%08x" % buf["last_addr"])
+    print("Last Hit:     0x%08x\n" % buf["last_hit"])

@@ -4,7 +4,7 @@ from statemachine import MachineError
 import common
 import globs
 import os
-from other_parts import defined
+from .other_parts import defined
 
 report = common.report
 write_socket = common.write_socket
@@ -20,8 +20,8 @@ def walk_sample():
 
     try:
         sample_path = globs.state.samples_list.pop()
-    except Exception, e:
-        print e
+    except Exception as e:
+        print(e)
         globs.state.samples_exhausted = True
         return
 
@@ -52,8 +52,8 @@ def test_sample():
 
     try:
         sample_path = globs.state.samples_list.pop()
-    except Exception, e:
-        print e
+    except Exception as e:
+        print(e)
         globs.state.samples_exhausted = True
         return
 
@@ -129,7 +129,7 @@ def read_output():
         globs.state.lastResponse = lastResponse
         globs.state.reqScript = reqScript
 
-    except Exception, e:
+    except Exception as e:
         globs.state.timeout = True
         raise MachineError
 

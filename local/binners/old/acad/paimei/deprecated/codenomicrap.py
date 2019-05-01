@@ -7,7 +7,7 @@
 #
 
 import time
-import thread
+import _thread
 
 from pydbg import *
 from pydbg.defines import *
@@ -48,9 +48,9 @@ def access_violation_handler (debugger, dbg, context):
     global crash_number
     global target_healthy
 
-    print
-    print "test case #%d caused access violation #%d" % (test_number, crash_number)
-    print
+    print()
+    print("test case #%d caused access violation #%d" % (test_number, crash_number))
+    print()
 
     exception_address = dbg.u.Exception.ExceptionRecord.ExceptionAddress
     write_violation   = dbg.u.Exception.ExceptionRecord.ExceptionInformation[0]
@@ -115,14 +115,14 @@ while 1:
             break
 
     # thread out the debugger.
-    thread.start_new_thread(start_debugger, (debugger, pid))
+    _thread.start_new_thread(start_debugger, (debugger, pid))
 
     # loop through test cases while the target is healthy, if it dies the main loop will restart it.
     while target_healthy:
         # generate a test case.
         start = int(time.time())
         os.system(codenomicon_command_line % test_number)
-        print "test case #%d took %d seconds to transmit.\r" % (test_number, int(time.time()) - start),
+        print("test case #%d took %d seconds to transmit.\r" % (test_number, int(time.time()) - start), end=' ')
 
         # give the target a window of opportunity to crash before moving on.
         time.sleep(crash_wait_time)
@@ -130,4 +130,4 @@ while 1:
         # increment the test count
         test_number += 1
 
-    print "target is not healthy ... restarting."
+    print("target is not healthy ... restarting.")

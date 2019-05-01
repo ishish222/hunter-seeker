@@ -210,7 +210,7 @@ class PydbgClient:
 
     ####################################################################################################################
     def list_breakpoints(self, *arguments, **keywords):
-        for i in xrange(0, len(self.breakpoints)):
+        for i in range(0, len(self.breakpoints)):
             address = self.breakpoints[i]
             sys.stdout.write("[%d] %s!%08x\n" %
             (i, self.dbg.addr_to_module(address).szModule, address))
@@ -425,25 +425,25 @@ if __name__ == "__main__":
         '''
         
         imagename = procname.rsplit('\\')[-1]
-        print "[*] Trying to attach to existing %s" % imagename
+        print("[*] Trying to attach to existing %s" % imagename)
         for (pid, name) in dbg.enumerate_processes():
             if imagename in name:
                 try:
-                    print "[*] Attaching to %s (%d)" % (name, pid)
+                    print("[*] Attaching to %s (%d)" % (name, pid))
                     dbg.attach(pid)
                 except:
-                    print "[!] Problem attaching to %s" % name
+                    print("[!] Problem attaching to %s" % name)
 
                     return False
 
                 return True
 
         try:
-            print "[*] Trying to load %s" % (procname)
+            print("[*] Trying to load %s" % (procname))
             dbg.load(procname, "")
 
         except:
-            print "[!] Problem loading %s" % (procname)
+            print("[!] Problem loading %s" % (procname))
 
             return False
 
@@ -451,7 +451,7 @@ if __name__ == "__main__":
 
     ####################################################################################################################
     if len(sys.argv) < 2 or len(sys.argv) > 3:
-        print "%s <process name> [attach breakpoint]" % sys.argv[0]
+        print("%s <process name> [attach breakpoint]" % sys.argv[0])
         sys.exit(-1)
     elif len(sys.argv) == 3:
         option = int(sys.argv[2])
@@ -471,7 +471,7 @@ if __name__ == "__main__":
     dbg.set_callback(EXCEPTION_SINGLE_STEP, dbg.pydbgc.single_step_handler)
 
     if not attach_target_proc(dbg, process):
-        print "[!] Couldnt load/attach to %s" % process
+        print("[!] Couldnt load/attach to %s" % process)
 
         sys.exit(-1)
 

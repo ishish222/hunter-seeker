@@ -29,12 +29,12 @@ import sys
 import copy
 import signal
 import struct
-import pydasm
+from . import pydasm
 import socket
 
-from my_ctypes  import *
-from defines    import *
-from windows_h  import *
+from .my_ctypes  import *
+from .defines    import *
+from .windows_h  import *
 
 # macos compatability.
 try:
@@ -46,13 +46,13 @@ except:
     kernel32 = CDLL(os.path.join(os.path.dirname(__file__), "libmacdll.dylib"))
     advapi32 = kernel32
 
-from breakpoint              import *
-from hardware_breakpoint     import *
-from memory_breakpoint       import *
-from memory_snapshot_block   import *
-from memory_snapshot_context import *
-from pdx                     import *
-from system_dll              import *
+from .breakpoint              import *
+from .hardware_breakpoint     import *
+from .memory_breakpoint       import *
+from .memory_snapshot_block   import *
+from .memory_snapshot_context import *
+from .pdx                     import *
+from .system_dll              import *
 
 class pydbg(object):
     '''
@@ -371,7 +371,7 @@ class pydbg(object):
         self._log("bp_del(0x%08x)" % address)
 
         # ensure a breakpoint exists at the target address.
-        if self.breakpoints.has_key(address):
+        if address in self.breakpoints:
             # restore the original byte.
             self.write_process_memory(address, self.breakpoints[address].original_byte)
             self.set_attr("dirty", True)
@@ -396,7 +396,7 @@ class pydbg(object):
 
         self._log("bp_del_all()")
 
-        for bp in self.breakpoints.keys():
+        for bp in list(self.breakpoints.keys()):
             self.bp_del(bp)
 
         return self.ret_self()
@@ -423,7 +423,7 @@ class pydbg(object):
         if address == slot == None:
             raise pdx("hw bp address or slot # must be specified.")
 
-        if not address and slot not in xrange(4):
+        if not address and slot not in range(4):
             raise pdx("invalid hw bp slot: %d. valid range is 0 through 3" % slot)
 
         # de-activate the hardware breakpoint for all active threads.
@@ -475,10 +475,10 @@ class pydbg(object):
         @return:    Self
         '''
 
-        if self.hardware_breakpoints.has_key(0): self.bp_del_hw(slot=0)
-        if self.hardware_breakpoints.has_key(1): self.bp_del_hw(slot=1)
-        if self.hardware_breakpoints.has_key(2): self.bp_del_hw(slot=2)
-        if self.hardware_breakpoints.has_key(3): self.bp_del_hw(slot=3)
+        if 0 in self.hardware_breakpoints: self.bp_del_hw(slot=0)
+        if 1 in self.hardware_breakpoints: self.bp_del_hw(slot=1)
+        if 2 in self.hardware_breakpoints: self.bp_del_hw(slot=2)
+        if 3 in self.hardware_breakpoints: self.bp_del_hw(slot=3)
 
         return self.ret_self()
 
@@ -501,7 +501,7 @@ class pydbg(object):
         self._log("bp_del_mem(0x%08x)" % address)
 
         # ensure a memory breakpoint exists at the target address.
-        if self.memory_breakpoints.has_key(address):
+        if address in self.memory_breakpoints:
             size = self.memory_breakpoints[address].size
             mbi  = self.memory_breakpoints[address].mbi
 
@@ -517,7 +517,7 @@ class pydbg(object):
             for page in range(start, end, self.page_size):
                 other_bp_found = False
 
-                for mem_bp in self.memory_breakpoints.values():
+                for mem_bp in list(self.memory_breakpoints.values()):
                     if page <= mem_bp.address < page + self.page_size:
                         other_bp_found = True
                         break
@@ -551,7 +551,7 @@ class pydbg(object):
 
         self._log("bp_del_mem_all()")
 
-        for address in self.memory_breakpoints.keys():
+        for address in list(self.memory_breakpoints.keys()):
             self.bp_del_mem(address)
 
         return self.ret_self()
@@ -571,7 +571,7 @@ class pydbg(object):
         @return: True if breakpoint in question is ours, False otherwise
         '''
 
-        if self.breakpoints.has_key(address_to_check):
+        if address_to_check in self.breakpoints:
             return True
 
         return False
@@ -642,7 +642,7 @@ class pydbg(object):
         self._log("bp_set(0x%08x)" % address)
 
         # ensure a breakpoint doesn't already exist at the target address.
-        if not self.breakpoints.has_key(address):
+        if address not in self.breakpoints:
 #        if True:
             try:
                 # save the original byte at the requested breakpoint address.
@@ -738,13 +738,13 @@ class pydbg(object):
         #
         # but since we are doing global hardware breakpoints, we rely on ourself for tracking open slots.
 
-        if not self.hardware_breakpoints.has_key(0):
+        if 0 not in self.hardware_breakpoints:
             available = 0
-        elif not self.hardware_breakpoints.has_key(1):
+        elif 1 not in self.hardware_breakpoints:
             available = 1
-        elif not self.hardware_breakpoints.has_key(2):
+        elif 2 not in self.hardware_breakpoints:
             available = 2
-        elif not self.hardware_breakpoints.has_key(3):
+        elif 3 not in self.hardware_breakpoints:
             available = 3
         else:
             raise pdx("no hw breakpoint slots available.")
@@ -869,14 +869,14 @@ class pydbg(object):
         # ensure we have an up to date context for the current thread.
         context = self.get_thread_context(self.h_thread)
 
-        print "eip = %08x" % context.Eip
-        print "Dr0 = %08x" % context.Dr0
-        print "Dr1 = %08x" % context.Dr1
-        print "Dr2 = %08x" % context.Dr2
-        print "Dr3 = %08x" % context.Dr3
-        print "Dr7 = %s"   % self.to_binary(context.Dr7)
-        print "      10987654321098765432109876543210"
-        print "      332222222222111111111"
+        print("eip = %08x" % context.Eip)
+        print("Dr0 = %08x" % context.Dr0)
+        print("Dr1 = %08x" % context.Dr1)
+        print("Dr2 = %08x" % context.Dr2)
+        print("Dr3 = %08x" % context.Dr3)
+        print("Dr7 = %s"   % self.to_binary(context.Dr7))
+        print("      10987654321098765432109876543210")
+        print("      332222222222111111111")
 
 
     ####################################################################################################################
@@ -899,7 +899,7 @@ class pydbg(object):
 
             if mbi.Protect & PAGE_GUARD:
                 address = mbi.BaseAddress
-                print "PAGE GUARD on %08x" % mbi.BaseAddress
+                print("PAGE GUARD on %08x" % mbi.BaseAddress)
 
                 while 1:
                     address += self.page_size
@@ -908,7 +908,7 @@ class pydbg(object):
                     if not tmp_mbi.Protect & PAGE_GUARD:
                         break
 
-                    print "PAGE GUARD on %08x" % address
+                    print("PAGE GUARD on %08x" % address)
 
             cursor += mbi.RegionSize
 
@@ -983,7 +983,7 @@ class pydbg(object):
                 elif ec == EXCEPTION_SINGLE_STEP:
                     continue_status = self.exception_handler_single_step()
                 # generic callback support.
-                elif self.callbacks.has_key(ec):
+                elif ec in self.callbacks:
                     continue_status = self.callbacks[ec](self)
                 elif self.default_exc_callback != None:
                     continue_status = self.default_exc_callback(self, ec)
@@ -1025,7 +1025,7 @@ class pydbg(object):
                 pass
 
             # if a user callback was specified, call it.
-            if self.callbacks.has_key(USER_CALLBACK_DEBUG_EVENT):
+            if USER_CALLBACK_DEBUG_EVENT in self.callbacks:
                 # user callbacks do not / should not access debugger or contextual information.
                 self.dbg = self.context = None
                 self.callbacks[USER_CALLBACK_DEBUG_EVENT](self)
@@ -1235,7 +1235,7 @@ class pydbg(object):
         context_dump += "  EBP: %08x (%10d) -> %s\n" % (context.Ebp, context.Ebp, context_list["ebp"])
         context_dump += "  ESP: %08x (%10d) -> %s\n" % (context.Esp, context.Esp, context_list["esp"])
 
-        for offset in xrange(0, stack_depth + 1):
+        for offset in range(0, stack_depth + 1):
             context_dump += "  +%02x: %08x (%10d) -> %s\n" %    \
             (                                                   \
                 offset * 4,                                     \
@@ -1286,7 +1286,7 @@ class pydbg(object):
         context_list["ebp"] = self.smart_dereference(context.Ebp, print_dots, hex_dump)
         context_list["esp"] = self.smart_dereference(context.Esp, print_dots, hex_dump)
 
-        for offset in xrange(0, stack_depth + 1):
+        for offset in range(0, stack_depth + 1):
             try:
                 esp = self.flip_endian_dword(self.read_process_memory(context.Esp + offset * 4, 4))
 
@@ -1510,7 +1510,7 @@ class pydbg(object):
         if not self.follow_forks:
             return DBG_CONTINUE
 
-        if self.callbacks.has_key(CREATE_PROCESS_DEBUG_EVENT):
+        if CREATE_PROCESS_DEBUG_EVENT in self.callbacks:
             return self.callbacks[CREATE_PROCESS_DEBUG_EVENT](self)
         else:
             return DBG_CONTINUE
@@ -1543,7 +1543,7 @@ class pydbg(object):
         self.tebs[thread_id] = teb
 
         #  apply any existing hardware breakpoints to this new thread.
-        for slot, hw_bp in self.hardware_breakpoints.items():
+        for slot, hw_bp in list(self.hardware_breakpoints.items()):
             # mark available debug register as active (L0 - L3).
             thread_context.Dr7 |= 1 << (slot * 2)
 
@@ -1563,7 +1563,7 @@ class pydbg(object):
             self.set_thread_context(thread_context, thread_id=thread_id)
 
         # pass control to user defined callback.
-        if self.callbacks.has_key(CREATE_THREAD_DEBUG_EVENT):
+        if CREATE_THREAD_DEBUG_EVENT in self.callbacks:
             return self.callbacks[CREATE_THREAD_DEBUG_EVENT](self)
         else:
             return DBG_CONTINUE
@@ -1579,7 +1579,7 @@ class pydbg(object):
 
         self.set_debugger_active(False)
 
-        if self.callbacks.has_key(EXIT_PROCESS_DEBUG_EVENT):
+        if EXIT_PROCESS_DEBUG_EVENT in self.callbacks:
             return self.callbacks[EXIT_PROCESS_DEBUG_EVENT](self)
         else:
             return DBG_CONTINUE
@@ -1595,13 +1595,13 @@ class pydbg(object):
         '''
 
         # before we remove the TEB entry from our internal list, let's give the user a chance to do something with it.
-        if self.callbacks.has_key(EXIT_THREAD_DEBUG_EVENT):
+        if EXIT_THREAD_DEBUG_EVENT in self.callbacks:
             continue_status = self.callbacks[EXIT_THREAD_DEBUG_EVENT](self)
         else:
             continue_status = DBG_CONTINUE
 
         # remove the TEB entry for the exiting thread id.
-        if self.tebs.has_key(self.dbg.dwThreadId):
+        if self.dbg.dwThreadId in self.tebs:
             del(self.tebs[self.dbg.dwThreadId])
 
         return continue_status
@@ -1626,7 +1626,7 @@ class pydbg(object):
         dll = system_dll(self.dbg.u.LoadDll.hFile, self.dbg.u.LoadDll.lpBaseOfDll)
         self.system_dlls.append(dll)
 
-        if self.callbacks.has_key(LOAD_DLL_DEBUG_EVENT):
+        if LOAD_DLL_DEBUG_EVENT in self.callbacks:
             return self.callbacks[LOAD_DLL_DEBUG_EVENT](self)
         else:
             return DBG_CONTINUE
@@ -1650,7 +1650,7 @@ class pydbg(object):
                 break
 
         # before we remove the system dll from our internal list, let's give the user a chance to do something with it.
-        if self.callbacks.has_key(UNLOAD_DLL_DEBUG_EVENT):
+        if UNLOAD_DLL_DEBUG_EVENT in self.callbacks:
             continue_status = self.callbacks[UNLOAD_DLL_DEBUG_EVENT](self)
         else:
             continue_status = DBG_CONTINUE
@@ -1682,7 +1682,7 @@ class pydbg(object):
         @return: Debug event continue status.
         '''
 
-        if self.callbacks.has_key(EXCEPTION_ACCESS_VIOLATION):
+        if EXCEPTION_ACCESS_VIOLATION in self.callbacks:
             return self.callbacks[EXCEPTION_ACCESS_VIOLATION](self)
         else:
             return DBG_EXCEPTION_NOT_HANDLED
@@ -1705,7 +1705,7 @@ class pydbg(object):
             # system breakpoints.
             if self.exception_address == self.system_break:
                 # pass control to user registered call back.
-                if self.callbacks.has_key(EXCEPTION_BREAKPOINT):
+                if EXCEPTION_BREAKPOINT in self.callbacks:
                     continue_status = self.callbacks[EXCEPTION_BREAKPOINT](self)
                 else:
                     continue_status = DBG_CONTINUE
@@ -1737,7 +1737,7 @@ class pydbg(object):
                 continue_status = self.breakpoints[self.exception_address].handler(self)
 
             # pass control to default user registered call back handler, if it is specified.
-            elif self.callbacks.has_key(EXCEPTION_BREAKPOINT):
+            elif EXCEPTION_BREAKPOINT in self.callbacks:
                 continue_status = self.callbacks[EXCEPTION_BREAKPOINT](self)
 
             else:
@@ -1746,7 +1746,7 @@ class pydbg(object):
             # if the breakpoint still exists, ie: the user didn't erase it during the callback, and the breakpoint is
             # flagged for restore, then tell the single step handler about it. furthermore, check if the debugger is
             # still active, that way we don't try and single step if the user requested a detach.
-            if self.get_attr("debugger_active") and self.breakpoints.has_key(self.exception_address):
+            if self.get_attr("debugger_active") and self.exception_address in self.breakpoints:
                 if self.breakpoints[self.exception_address].restore:
                     self._restore_breakpoint = self.breakpoints[self.exception_address]
                     self.single_step(True)
@@ -1792,7 +1792,7 @@ class pydbg(object):
             continue_status = self.memory_breakpoints[self.memory_breakpoint_hit].handler(self)
 
         # pass control to default user registered call back handler, if it is specified.
-        elif self.callbacks.has_key(EXCEPTION_GUARD_PAGE):
+        elif EXCEPTION_GUARD_PAGE in self.callbacks:
             continue_status = self.callbacks[EXCEPTION_GUARD_PAGE](self)
 
         else:
@@ -1842,16 +1842,16 @@ class pydbg(object):
         # determine if this single step event occured in reaction to a hardware breakpoint and grab the hit breakpoint.
         # according to the Intel docs, we should be able to check for the BS flag in Dr6. but it appears that windows
         # isn't properly propogating that flag down to us.
-        if self.context.Dr6 & 0x1 and self.hardware_breakpoints.has_key(0):
+        if self.context.Dr6 & 0x1 and 0 in self.hardware_breakpoints:
             self.hardware_breakpoint_hit = self.hardware_breakpoints[0]
 
-        elif self.context.Dr6 & 0x2 and self.hardware_breakpoints.has_key(1):
+        elif self.context.Dr6 & 0x2 and 1 in self.hardware_breakpoints:
             self.hardware_breakpoint_hit = self.hardware_breakpoints[1]
 
-        elif self.context.Dr6 & 0x4 and self.hardware_breakpoints.has_key(2):
+        elif self.context.Dr6 & 0x4 and 2 in self.hardware_breakpoints:
             self.hardware_breakpoint_hit = self.hardware_breakpoints[2]
 
-        elif self.context.Dr6 & 0x8 and self.hardware_breakpoints.has_key(3):
+        elif self.context.Dr6 & 0x8 and 3 in self.hardware_breakpoints:
             self.hardware_breakpoint_hit = self.hardware_breakpoints[3]
 
         # if we are dealing with a hardware breakpoint and there is a specific handler registered, pass control to it.
@@ -1859,7 +1859,7 @@ class pydbg(object):
             continue_status = self.hardware_breakpoint_hit.handler(self)
 
         # pass control to default user registered call back handler, if it is specified.
-        elif self.callbacks.has_key(EXCEPTION_SINGLE_STEP):
+        elif EXCEPTION_SINGLE_STEP in self.callbacks:
             continue_status = self.callbacks[EXCEPTION_SINGLE_STEP](self)
 
         # if we single stepped to handle a breakpoint restore.
@@ -1881,7 +1881,7 @@ class pydbg(object):
         if self.hardware_breakpoint_hit != None and self.get_attr("debugger_active"):
             slot = self.hardware_breakpoint_hit.slot
 
-            if self.hardware_breakpoints.has_key(slot):
+            if slot in self.hardware_breakpoints:
                 curr = self.hardware_breakpoints[slot]
                 prev = self.hardware_breakpoint_hit
 
@@ -2774,7 +2774,7 @@ class pydbg(object):
 
         # step through the entries. we only want ports that have the listening flag set. snag the port, address and
         # protocol tuple and add it to port_list.
-        for i in xrange(tcp_table.dwNumEntries):
+        for i in range(tcp_table.dwNumEntries):
             if tcp_table.table[i].dwOwningPid == pid:
                 if tcp_table.table[i].dwState == MIB_TCP_STATE_LISTEN:
                     listening_port = "%d" % socket.ntohs(tcp_table.table[i].dwLocalPort)
@@ -2842,7 +2842,7 @@ class pydbg(object):
         for memory_block in self.memory_snapshot_blocks:
             try:
                 self.write_process_memory(memory_block.mbi.BaseAddress, memory_block.data, memory_block.mbi.RegionSize)
-            except pdx, x:
+            except pdx as x:
                 self._err("-- IGNORING ERROR --")
                 self._err("process_restore: " + x.__str__().rstrip("\r\n"))
                 pass
@@ -3340,7 +3340,7 @@ class pydbg(object):
             return "N/A"
 
         # if the address does point to writeable memory, ensure it doesn't sit on the PEB or any of the TEBs.
-        if mbi.BaseAddress == self.peb or mbi.BaseAddress in self.tebs.values():
+        if mbi.BaseAddress == self.peb or mbi.BaseAddress in list(self.tebs.values()):
             return "N/A"
 
         try:
@@ -3569,7 +3569,7 @@ class pydbg(object):
         @return: Specified integer as a binary string
         '''
 
-        return "".join(map(lambda x:str((number >> x) & 1), range(bit_count -1, -1, -1)))
+        return "".join([str((number >> x) & 1) for x in range(bit_count -1, -1, -1)])
 
 
     ####################################################################################################################

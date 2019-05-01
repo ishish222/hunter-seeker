@@ -106,7 +106,7 @@ class EditReconDlg(wx.Dialog):
         '''
 
         try:
-            address = long(self.address.GetLineText(0), 16)
+            address = int(self.address.GetLineText(0), 16)
         except:
             dlg = wx.MessageDialog(self, "Invalid 'address' value, expecting a DWORD. Ex: 0xdeadbeef", "Error", wx.OK | wx.ICON_WARNING)
             dlg.ShowModal()
@@ -144,7 +144,7 @@ class EditReconDlg(wx.Dialog):
 
         try:
             cursor.execute(sql)
-        except MySQLdb.Error, e:
+        except MySQLdb.Error as e:
             msg  = "MySQL error %d: %s\n" % (e.args[0], e.args[1])
             msg += sql
             dlg = wx.lib.dialogs.ScrolledMessageDialog(self, msg, "Failed Adding RECON Point")
@@ -172,7 +172,7 @@ class EditReconDlg(wx.Dialog):
 
         try:
             cursor.execute("SELECT * FROM pp_recon WHERE id = '%d'" % recon_id)
-        except MySQLdb.Error, e:
+        except MySQLdb.Error as e:
             msg  = "MySQL error %d: %s\n" % (e.args[0], e.args[1])
             msg += sql
             dlg = wx.lib.dialogs.ScrolledMessageDialog(self, msg, "Failed Editing RECON Point")

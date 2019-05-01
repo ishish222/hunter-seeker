@@ -109,7 +109,7 @@ class mysql_connect_dialog(wx.Dialog):
     def mysql_connect (self, host, username, password):
         try:
             self.parent.mysql = MySQLdb.connect(host=host, user=username, passwd=password, db="paimei")
-        except MySQLdb.OperationalError, err:
+        except MySQLdb.OperationalError as err:
             self.parent.status_bar.SetStatusText("Failed connecting to MySQL server: %s" % err[1])
             return
 

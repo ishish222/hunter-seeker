@@ -47,7 +47,7 @@ class Tracer(object):
         try:
             self.write_debugger(self.socket, cmd)
         except Exception:
-            print("Failed to send %s" % cmd)
+            print(("Failed to send %s" % cmd))
         self.dlog("Sent: %s" % cmd, 3)
 
     def recv_report(self):
@@ -55,8 +55,8 @@ class Tracer(object):
             self.read_debugger(self.socket)
         except Exception as inst:
             print("Failed to receive")
-            print(type(inst))
-            print(inst.args)
+            print((type(inst)))
+            print((inst.args))
             print(inst)
         self.dlog("Read: %s" % self.last_answer, 3)
         return (self.last_report, self.last_answer)

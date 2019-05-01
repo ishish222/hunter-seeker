@@ -1,6 +1,6 @@
-from mutator import Mutator
+from .mutator import Mutator
 import random
-import js.jsparser as jsparser
+from . import js.jsparser as jsparser
 
 class nodeSwitcher(Mutator):
     def prepare(self):

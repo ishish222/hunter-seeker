@@ -138,7 +138,7 @@ class udraw_connector:
                 from_server = self.sock.recv(1024)
                 (command, args) = self.parse(from_server)
 
-                if self.command_handlers.has_key(command):
+                if command in self.command_handlers:
                     self.command_handlers[command](self, args)
             except:
                 # connection severed.

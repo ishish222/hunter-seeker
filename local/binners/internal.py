@@ -118,7 +118,7 @@ def dlog(data, level=0):
         return
 
     if(logStarted == False):
-        print("[internal]: %s" % data)
+        print(("[internal]: %s" % data))
     logf.write("[internal]: %s" % data)
 
 def verify():
@@ -161,13 +161,13 @@ def process_status_queue(satisfying = None):
             dlog("Queue size after script: %d" % status.qsize())
             continue
 
-        print("Got status: %s " % status)
+        print(("Got status: %s " % status))
         if(satisfying != None):
             if(status in satisfying):
-                print("Status %s is satisfying" % status)
+                print(("Status %s is satisfying" % status))
                 satisfied = True
             else:
-                print("Status %s is not satisfying" % status)
+                print(("Status %s is not satisfying" % status))
                 print("Satisfying statuses:")
                 print(satisfying)
         prev_status = status
@@ -228,7 +228,7 @@ def execute(cmds, ext_pipe):
             ok(ext_pipe)
 
         if(cmd == "cooldown"):
-            print "here2"
+            print("here2")
             from functions import getCPU
 
             print("Waiting for cooldown")
@@ -240,7 +240,7 @@ def execute(cmds, ext_pipe):
             while(count < cool_count):
                 time.sleep(cool_wait)
                 val = getCPU()
-                print("CPU usage: %d" % val)
+                print(("CPU usage: %d" % val))
                 if val < cool_level:
                     count = count+1
                 else:
@@ -258,14 +258,14 @@ def execute(cmds, ext_pipe):
             cool_wait = 5
 
             writePipe(ext_pipe, "Waiting for cooldown: level %d, count %d\n" % (cool_level, cool_count))
-            print("Waiting for cooldown: level %d, count %d\n" % (cool_level, cool_count))
+            print(("Waiting for cooldown: level %d, count %d\n" % (cool_level, cool_count)))
 
             count = 0
             while(count < cool_count):
                 time.sleep(cool_wait)
                 val = getCPU()
                 writePipe(ext_pipe, "CPU usage: %d\n" % val)
-                print 'val: %d, cool_level: %d' % (val, cool_level)
+                print('val: %d, cool_level: %d' % (val, cool_level))
                 if val < cool_level:
                     count = count+1
                 else:
@@ -283,14 +283,14 @@ def execute(cmds, ext_pipe):
             cool_wait = 1
 
             writePipe(ext_pipe, "Waiting for cooldown: level %d, count %d\n" % (cool_level, cool_count))
-            print("Waiting for cooldown: level %d, count %d\n" % (cool_level, cool_count))
+            print(("Waiting for cooldown: level %d, count %d\n" % (cool_level, cool_count)))
 
             count = 0
             while(count < cool_count):
                 time.sleep(cool_wait)
                 val = getCPU()
                 writePipe(ext_pipe, "CPU usage: %d\n" % val)
-                print 'val: %d, cool_level: %d' % (val, cool_level)
+                print('val: %d, cool_level: %d' % (val, cool_level))
                 if val < cool_level:
                     count = count+1
                 else:
@@ -308,7 +308,7 @@ def execute(cmds, ext_pipe):
             try:
                 ext_pipe2 = serial.Serial(1)
             except Exception:
-                print "No second serial"
+                print("No second serial")
             ext_pipe2.write("test-=OK=-") 
             print("done")
             ok(ext_pipe)
@@ -403,9 +403,9 @@ def execute(cmds, ext_pipe):
             ok(ext_pipe)
 
         elif(cmd == "tracer_spawn"):
-            print("Spawning: %s" % args)
+            print(("Spawning: %s" % args))
             Popen([args], stdin = PIPE, stdout = PIPE, stderr = PIPE)
-            print "here1"
+            print("here1")
             writePipe(ext_pipe, "tracer_spawn "+bcolors.OKGREEN+"OK"+bcolors.ENDC)
             ok(ext_pipe)
 
@@ -414,7 +414,7 @@ def execute(cmds, ext_pipe):
             ok(ext_pipe)
 
         elif(cmd == "kill"):
-            print("Killing %s" % args)
+            print(("Killing %s" % args))
             call("taskkill /F /IM %s" % args)
             writePipe(ext_pipe, "kill "+bcolors.OK_STR)
             ok(ext_pipe)
@@ -987,8 +987,8 @@ def execute(cmds, ext_pipe):
             ok(ext_pipe)
 
         elif(cmd == "get_http"):
-            import urllib2
-            response = urllib2.urlopen(args).read()
+            import urllib.request, urllib.error, urllib.parse
+            response = urllib.request.urlopen(args).read()
             writePipe(ext_pipe, "%s" % response)
             writePipe(ext_pipe, "get_http "+bcolors.OK_STR)
             ok(ext_pipe)
@@ -996,7 +996,7 @@ def execute(cmds, ext_pipe):
         elif(cmd == "run_cmd"):
             import subprocess
             cmd = "cmd.exe /c %s" % args
-            print 'CMD: %s\n' % cmd
+            print('CMD: %s\n' % cmd)
             p = subprocess.Popen(cmd.split(), stdout=subprocess.PIPE, stderr = subprocess.PIPE)
             out, err = p.communicate()
             writePipe(ext_pipe, out)
@@ -1154,7 +1154,7 @@ class ThreadWithExc(threading.Thread):
             return self._thread_id
 
         # no, look for it in the _active dict
-        for tid, tobj in threading._active.items():
+        for tid, tobj in list(threading._active.items()):
             if tobj is self:
                 self._thread_id = tid
                 return tid
@@ -1191,14 +1191,14 @@ class ThreadWithExc(threading.Thread):
 def executing(cmd_q, ext_pipe):
     while True:
         cmds = cmd_q.get()
-        print 'executing: %s\n' % cmds
+        print('executing: %s\n' % cmds)
         execute(cmds, ext_pipe)
 
 def executing_thread():
     import time
     import pythoncom
 
-    print 'Initializing COM'
+    print('Initializing COM')
     pythoncom.CoInitialize()
     global cmd_q2
 
@@ -1210,8 +1210,8 @@ def executing_thread():
         try:
             execute(cmds, ext_pipe)
         except Interrupt:
-            print 'Interrupted'
-        print 'executing_thread: %s\n' % cmds
+            print('Interrupted')
+        print('executing_thread: %s\n' % cmds)
 
 def executing_no_thread():
     import time
@@ -1224,8 +1224,8 @@ def executing_no_thread():
     try:
         execute(cmds, ext_pipe)
     except Interrupt:
-        print 'Interrupted'
-    print 'executing_no_thread: %s\n' % cmds
+        print('Interrupted')
+    print('executing_no_thread: %s\n' % cmds)
 
 
 threading_enabled = True
@@ -1267,7 +1267,7 @@ Hunter-Seeker
         p.start()
 
         while True:
-            print 'Reading...\n'
+            print('Reading...\n')
             cmd = readPipe(ext_pipe)
             if(cmd == 'disconnect'):
                 writePipe(ext_pipe, 'disconnecting')
@@ -1277,20 +1277,20 @@ Hunter-Seeker
                 p.raiseExc(Interrupt)
                 p = ThreadWithExc(None, executing_thread)
                 p.start()
-                print 'Interrupted'
+                print('Interrupted')
                 ok(ext_pipe)
                 continue
             cmds = cmd.split(" ")
     #        cmd_q.put(cmds)
             cmd_q2.insert(0, cmds)
-            print 'Inserted_thread: %s\n' % cmds
+            print('Inserted_thread: %s\n' % cmds)
     else:
         while True:
-            print 'Reading...\n'
+            print('Reading...\n')
             cmd = readPipe(ext_pipe)
             cmds = cmd.split(" ")
             cmd_q2.insert(0, cmds)
-            print 'Inserted_no_thread: %s\n' % cmds
+            print('Inserted_no_thread: %s\n' % cmds)
             executing_no_thread()
 
 
@@ -1298,9 +1298,9 @@ if __name__ == '__main__':
     trace_controller = None
     while True:
         internal_routine()
-        print "saving state"
+        print("saving state")
         #ok(ext_pipe)
         ext_pipe.close()
         time.sleep(3) # here we are saving the state
-        print "loading state"
+        print("loading state")
 

@@ -38,7 +38,7 @@ def qemu_prepare(options, state):
     #necessary?
     options.log = open("./log-%s-%s-%s" % (options.fuzzbox_name, common.timestamp2(), options.origin), "a")
     report("Starting fuzzer")
-    print("[%s] Generic fuzzer" % common.timestamp())
+    print(("[%s] Generic fuzzer" % common.timestamp()))
 
     state.reqScript = ""
     state.status = "RD"
@@ -101,7 +101,7 @@ def qemu_start(args=None):
     qemu_commandline = common.get_qemu_cmdline()
     qemu_prepare_pipes()
 
-    print " ".join(qemu_commandline)
+    print(" ".join(qemu_commandline))
 
     m = Popen(qemu_commandline, stdout=PIPE, stdin=PIPE, env=os.environ, preexec_fn=preexec_function)
     time.sleep(3)
@@ -122,20 +122,20 @@ def qemu_save(args=None):
     exploded = ret.split('xxx')
     if(len(exploded) > 1):
         last = exploded[1]
-        print 'Will overwrite snapshot: %s' % last
-        print 'Kill the process in order to abort'
+        print('Will overwrite snapshot: %s' % last)
+        print('Kill the process in order to abort')
 
         import os
         os.system('read -s -n 1 -p "Press any key to continue..."')
-        print
+        print()
 
         qemu_delete(last)
 
     ret = write_monitor_2(options.m, "stop") 
     ret = write_monitor_2(options.m, "savevm xxx%sxxx" % args)
-    print "Waiting some more"
+    print("Waiting some more")
     time.sleep(options.external_qemu_socket_timeout_step * options.external_qemu_socket_timeout_mult * 2)
-    print("Saved: %s" % args)
+    print(("Saved: %s" % args))
 
     import pickle
 
@@ -167,7 +167,7 @@ def qemu_save(args=None):
     f = open(pickle_path, 'wb')
     pickle.dump(current_state, f)
     f.close()
-    print 'Saved pickled state to: %s' % pickle_path
+    print('Saved pickled state to: %s' % pickle_path)
 
 def qemu_delete(args=None):
     options = globs.state.options
@@ -180,7 +180,7 @@ def qemu_delete(args=None):
     pickle_path += '.state'
 
     import os
-    print 'Deleting pickled state in: %s' % pickle_path
+    print('Deleting pickled state in: %s' % pickle_path)
 
     try:
         os.remove(pickle_path)
@@ -190,9 +190,9 @@ def qemu_delete(args=None):
     from script import write_monitor_2
 
     ret = write_monitor_2(options.m, "delvm xxx%sxxx" % args)
-    print ret
+    print(ret)
 
-    print("Deleted: %s" % args)
+    print(("Deleted: %s" % args))
 
 def qemu_load(args=None):
     options = globs.state.options
@@ -205,12 +205,12 @@ def qemu_load(args=None):
     if(len(exploded) > 1):
         last = exploded[1]
         if(last != args):
-            print 'Required state %s not found\nAborting' % args
+            print('Required state %s not found\nAborting' % args)
             raise Exception
         else:
             pass
     else:
-        print 'Required state %s not found\nAborting' % args
+        print('Required state %s not found\nAborting' % args)
         raise Exception
 
     import pickle
@@ -222,7 +222,7 @@ def qemu_load(args=None):
     pickle_path += args
     pickle_path += '.state'
 
-    print 'Loading pickled state from: %s' % pickle_path
+    print('Loading pickled state from: %s' % pickle_path)
     f = open(pickle_path, 'rb')
     current_state = pickle.load(f)
     f.close()
@@ -235,21 +235,21 @@ def qemu_load(args=None):
     globs.state.ret = current_state['ret']
     globs.state.eip = current_state['eip']
     globs.state.ep = current_state['ep']
-    if(current_state.has_key('pid')):
+    if('pid' in current_state):
         globs.state.pid = current_state['pid']
-    if(current_state.has_key('tid')):
+    if('tid' in current_state):
         globs.state.tid = current_state['tid']
-    if(current_state.has_key('tracers')):
+    if('tracers' in current_state):
         globs.state.tracers = current_state['tracers']
-    if(current_state.has_key('tracers_count')):
+    if('tracers_count' in current_state):
         globs.state.tracers_count = current_state['tracers_count']
 
     ret = write_monitor_2(options.m, "loadvm xxx%sxxx" % args)
     ret = write_monitor_2(options.m, "cont")
     #time.sleep(options.external_qemu_socket_timeout_step * options.external_qemu_socket_timeout_mult)
-    print ret
+    print(ret)
 
-    print("Loaded: %s" % args)
+    print(("Loaded: %s" % args))
 
 def qemu_flush(args=None):
     options = globs.state.options
@@ -261,10 +261,10 @@ def qemu_start_revert(args=None):
     if(hasattr(options, 'tmp_disk_img')):
         options.log.write("[%s]\n" % options.tmp_disk_img)
         options.log.flush()
-        print("Spawning fuzz for batch: %s" % options.tmp_disk_img)
+        print(("Spawning fuzz for batch: %s" % options.tmp_disk_img))
 
-    print("[%s] Starting" % common.timestamp())
-    print " ".join(options.qemu_args)
+    print(("[%s] Starting" % common.timestamp()))
+    print(" ".join(options.qemu_args))
 
     myErr = open("./err", "w+")
 
@@ -278,7 +278,7 @@ def qemu_start_revert(args=None):
 #    time.sleep(options.boot_wait)
     #TODO!!! wee nedd to perform test, not wait!
 
-    print("[%s] Qemu full boot finished" % common.timestamp())
+    print(("[%s] Qemu full boot finished" % common.timestamp()))
 #    for s in globs.state.samples_list:
 #        print s
 
@@ -306,7 +306,7 @@ def qemu_mount_disks(args=None):
     read_monitor(options.m)
 
     if(hasattr(options,'tmp_disk_img')):
-        print options.tmp_disk_img
+        print(options.tmp_disk_img)
         if(hasattr(options.settings, 'drive_mount')):
             options.slot_shared = common.drive_mount(options, options.tmp_disk_img, 'shared') #hotplug should be completed during bootup
         else:
@@ -315,7 +315,7 @@ def qemu_mount_disks(args=None):
     time.sleep(1)
 
     if(hasattr(options,'saved_disk_img')):
-        print options.saved_disk_img
+        print(options.saved_disk_img)
         if(hasattr(options.settings, 'drive_mount')):
             options.slot_saved = common.drive_mount(options, options.saved_disk_img, 'shared') #hotplug should be completed during bootup
         else:
@@ -361,12 +361,12 @@ def qemu_connect_dev_socket(args=None):
         print("Waiting for connection....")
         read_socket(options.s)
         state.initialized = True
-        print 'Initialized: %s' % state.initialized
+        print('Initialized: %s' % state.initialized)
     except socket.timeout:
         print("Accpet timed out")
         state.initialized = False
-        print "raising machine error"
-        print 'Initialized: %s' % state.initialized
+        print("raising machine error")
+        print('Initialized: %s' % state.initialized)
 #        raise MachineError
     s.settimeout(options.settings.fuzzbox_timeout)
     #trying infinite
@@ -384,12 +384,12 @@ def qemu_connect_dev_socket_infinite(args=None):
         print("Waiting for connection...")
         read_socket(options.s)
         state.initialized = True
-        print 'Initialized: %s' % state.initialized
+        print('Initialized: %s' % state.initialized)
     except socket.timeout:
         print("Accpet timed out")
         state.initialized = False
-        print "raising machine error"
-        print 'Initialized: %s' % state.initialized
+        print("raising machine error")
+        print('Initialized: %s' % state.initialized)
 #        raise MachineError
     #s.settimeout(options.settings.fuzzbox_timeout)
     #trying infinite
@@ -418,8 +418,8 @@ def temu_poweroff_no_revert(args=None):
     options.shutting_down = True
     time.sleep(options.shutdown_wait)
     options.m = None
-    print("Last batch: %s" % options.tmp_disk_img)
-    print("Last saved: %s" % options.saved_disk_img)
+    print(("Last batch: %s" % options.tmp_disk_img))
+    print(("Last saved: %s" % options.saved_disk_img))
 
 def quit(args=None):
     options = globs.state.options
@@ -437,7 +437,7 @@ def quit(args=None):
     if(os.path.exists(options.external_machine['serial']+'-log')): os.remove(options.external_machine['serial']+'-log')
 
     if(options.external_paths_link_tmp_output_final_output):
-        print " ".join(["/usr/bin/sudo", "sudo", "umount", options.external_paths_tmp_output])
+        print(" ".join(["/usr/bin/sudo", "sudo", "umount", options.external_paths_tmp_output]))
         os.spawnv(os.P_WAIT, "/usr/bin/sudo", ["sudo", "umount", options.external_paths_tmp_output])
 
 
@@ -464,10 +464,10 @@ def poweroff_no_revert(args=None):
     print("[Powering off]")
     rs("powerdown", options.m)
     time.sleep(options.shutdown_wait)
-    print("Shutdown: %s" % options.shutting_down.is_set())
+    print(("Shutdown: %s" % options.shutting_down.is_set()))
     options.m = None
-    print("Last batch: %s" % options.tmp_disk_img)
-    print("Last saved: %s" % options.saved_disk_img)
+    print(("Last batch: %s" % options.tmp_disk_img))
+    print(("Last saved: %s" % options.saved_disk_img))
 
 def check_cr(options, state):
     if(state.got_cr):
@@ -498,20 +498,20 @@ def poweroff_revert(options, state):
     print("[Powering off]")
     rs("quit", options.m)
     options.m = None
-    print("Last batch: %s" % options.tmp_disk_img)
-    print("Last saved: %s" % options.saved_disk_img)
+    print(("Last batch: %s" % options.tmp_disk_img))
+    print(("Last saved: %s" % options.saved_disk_img))
 
 def offline_revert(args=None):
     options = globs.state.options
     state = globs.state
-    print("Reverting to: %s" % args)
+    print(("Reverting to: %s" % args))
     os.spawnv(os.P_WAIT, "/usr/bin/qemu-img", ["qemu-img", "snapshot", "-a", args, options.external_paths_machines + '/' + options.external_machine['disk']])
     
 def offline_revert_clean(args=None):
     options = globs.state.options
     state = globs.state
     args = "clean"
-    print("Reverting to: %s" % args)
+    print(("Reverting to: %s" % args))
     os.spawnv(os.P_WAIT, "/usr/bin/qemu-img", ["qemu-img", "snapshot", "-a", args, options.external_paths_machines + '/' + options.external_machine['disk']])
     
 def revert_ready(args=None):
@@ -542,7 +542,7 @@ def is_socket_connected(args = None):
     options = globs.state.options
     state = globs.state
 
-    print 'Initialized: %s' % state.initialized
+    print('Initialized: %s' % state.initialized)
 
     if(state.initialized == True):    
         return "Y"

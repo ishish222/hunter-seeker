@@ -663,7 +663,7 @@ class OFPTFeaturesRequest(_ofp_header):
                     IntField("xid", 0) ]
     overload_fields = {TCP: {"sport": 6653}}
 
-ofp_action_types_flags = ofp_action_types.values()[:-1]  # no ofpat_vendor flag
+ofp_action_types_flags = list(ofp_action_types.values())[:-1]  # no ofpat_vendor flag
 
 class OFPTFeaturesReply(_ofp_header):
     name = "OFPT_FEATURES_REPLY"

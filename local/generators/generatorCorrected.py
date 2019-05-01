@@ -50,14 +50,14 @@ class DirGenerator(object):
             elif(self.fext != None):
                 flist_len = len(flist)
                 if(flist_len <1):
-                    print "No candidates found"
+                    print("No candidates found")
                     raise GeneratorException
                 fnum = random.randint(0, flist_len-1)
     #            self.target_file = os.path.basename(flist[fnum]) # TODO:what if deeper in directories?
                 self.target_file = flist[fnum]
                 self.target_file.replace(self.origin_path, "")
             else:
-                print "Need to specify target file name or extension"
+                print("Need to specify target file name or extension")
                 raise GeneratorException
 #            print "Target file: %s" % self.target_file
             #add four letters of original name

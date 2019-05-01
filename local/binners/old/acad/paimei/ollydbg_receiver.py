@@ -24,7 +24,7 @@
 @organization: www.openrce.org
 '''
 
-import thread
+import _thread
 import sys
 import time
 import socket
@@ -64,11 +64,11 @@ ida_handle           = None
 ########################################################################################################################
 
 def udraw_node_selections_labels (udraw, args):
-    print "udraw_node_selections_labels", args
+    print("udraw_node_selections_labels", args)
 
 
 def udraw_node_double_click (udraw, args):
-    print "udraw_node_double_click", args
+    print("udraw_node_double_click", args)
 
 
 WNDENUMPROC = CFUNCTYPE(c_int, c_int, c_int)
@@ -104,8 +104,8 @@ try:
     udraw.set_command_handler("node_selections_labels", udraw_node_selections_labels)
 
     # thread out the udraw connector message loop.
-    thread.start_new_thread(udraw.message_loop, (None, None))
-except socket.error, err:
+    _thread.start_new_thread(udraw.message_loop, (None, None))
+except socket.error as err:
     sys.stderr.write("Socket error: %s.\nIs uDraw(Graph) running on %s:%d?\n" % (err[1], udraw_host, udraw_port))
     udraw = None
     
@@ -123,32 +123,32 @@ except:
 
 # accept connections.
 while 1:
-    print "ollydbg receiver waiting for connection"
+    print("ollydbg receiver waiting for connection")
 
     if mode == PURE_PROXIMITY:
-        print "mode: pure proximity graphing"
+        print("mode: pure proximity graphing")
     else:
-        print "module: persistant proximity graphing"
+        print("module: persistant proximity graphing")
 
     (client, client_address) = server.accept()
 
-    print "client connected."
+    print("client connected.")
 
     # connected client message handling loop.
     while 1:
         try:
             received = client.recv(128)
         except:
-            print "connection severed."
+            print("connection severed.")
             break
 
         try:
             (module, offset) = received.split(":")
 
             module = module.lower()
-            offset = long(offset, 16)
+            offset = int(offset, 16)
         except:
-            print "malformed data received: '%s'" % received
+            print("malformed data received: '%s'" % received)
             continue
 
         #
@@ -164,7 +164,7 @@ while 1:
             windll.user32.ShowWindow(ida_handle, SW_SHOW)
             #SendKeys("+{F2}Jump+9MinEA+9+0{+}0x%08x+0;{TAB}" % (offset-0x1000), pause=0)
             SendKeys("+{F2}Jump+9MinEA+9+0{+}0x000279e7+0;{TAB}{ENTER}", pause=0)
-            print "jumping to offset 0x%08x in %s" % ((offset-0x1000), module)
+            print("jumping to offset 0x%08x in %s" % ((offset-0x1000), module))
 
 
         #
@@ -175,18 +175,18 @@ while 1:
             continue
 
         # if we haven't already loaded the specified module, do so now.
-        if not modules.has_key(module):
+        if module not in modules:
             for name in os.listdir("."):
                 name = name.lower()
 
                 if name.startswith(module) and name.endswith(".pida"):
                     start = time.time()
-                    print "loading %s ..." % name
+                    print("loading %s ..." % name)
                     modules[module] = pida.load(name, progress_bar="ascii")
-                    print "done. completed in %.02f" % (time.time() - start)
+                    print("done. completed in %.02f" % (time.time() - start))
 
         # if the module wasn't found, ignore the command.
-        if not modules.has_key(module):
+        if module not in modules:
             continue
 
         module  = modules[module]
@@ -196,14 +196,14 @@ while 1:
         function = module.find_function(ea)
 
         if not function:
-            print "unrecognized address: %08x" % ea
+            print("unrecognized address: %08x" % ea)
             continue
 
         # determine which basic block the address lies in.
         bb = module.functions[function.ea_start].find_basic_block(ea)
 
         if not bb:
-            print "unrecognized address: %08x" % ea
+            print("unrecognized address: %08x" % ea)
             continue
 
         # if the hit basic block has not already been recorded, do so now.
@@ -248,7 +248,7 @@ while 1:
         last_bb = bb.ea_start
 
         # color all the previously hit nodes appropriately.
-        for ea in current_graph.nodes.keys():
+        for ea in list(current_graph.nodes.keys()):
             if hits.count(ea):
                 current_graph.nodes[ea].color = COLOR_VISITED
 
@@ -256,7 +256,7 @@ while 1:
         current_graph.nodes[bb.ea_start].color = COLOR_CURRENT
 
         try:
-            print "ea: %08x, bb: %08x, func: %08x" % (ea, bb.ea_start, function.ea_start)
+            print("ea: %08x, bb: %08x, func: %08x" % (ea, bb.ea_start, function.ea_start))
 
             # XXX - graph updates are not working correctly, so we generate a new graph every time.
 
@@ -273,5 +273,5 @@ while 1:
             udraw.change_element_color("node", bb.ea_start, COLOR_CURRENT)
             udraw.focus_node(bb.ea_start, animated=True)
         except:
-            print "connection severed."
+            print("connection severed.")
             break

@@ -59,8 +59,8 @@ Start.consequence = dm.PrintLogo
 def decision():
     options = globs.state.options
 
-    print "received signal"
-    print globs.state.ret
+    print("received signal")
+    print(globs.state.ret)
 
     return TracerDebugContinueInf
 

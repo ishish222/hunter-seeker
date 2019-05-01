@@ -139,7 +139,7 @@ class ReconListCtrl (wx.ListCtrl, ListCtrlAutoWidthMixin, ColumnSorterMixin):
         Load the PIDA module into the browser tree ctrl.
         '''
 
-        recon_id = long(self.GetItem(event.m_itemIndex, 0).GetText(), 16)
+        recon_id = int(self.GetItem(event.m_itemIndex, 0).GetText(), 16)
         dlg      = _PAIMEIpeek.EditReconDlg.EditReconDlg(parent=self)
 
         dlg.propagate(recon_id)
@@ -268,7 +268,7 @@ class ReconListCtrl (wx.ListCtrl, ListCtrlAutoWidthMixin, ColumnSorterMixin):
         A line item in the recon list control was selected, load the hits list.
         '''
 
-        recon_id         = long(self.GetItem(event.m_itemIndex, 0).GetText(), 16)
+        recon_id         = int(self.GetItem(event.m_itemIndex, 0).GetText(), 16)
         self.selected_id = recon_id
 
         # clear the hit list control.

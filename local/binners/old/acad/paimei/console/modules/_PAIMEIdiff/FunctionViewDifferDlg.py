@@ -6,8 +6,8 @@
 
 
 import wx
-import FunctionViewDiffListCtrl
-import FunctionViewStatsListCtrl
+from . import FunctionViewDiffListCtrl
+from . import FunctionViewStatsListCtrl
 # begin wxGlade: dependencies
 # end wxGlade
 

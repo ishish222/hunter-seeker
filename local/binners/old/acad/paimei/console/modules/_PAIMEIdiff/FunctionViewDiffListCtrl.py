@@ -84,7 +84,7 @@ class FunctionViewDiffListCtrl (wx.ListCtrl, ListCtrlAutoWidthMixin):
         i = 0
         spacer = 0
         idx = 0
-        max_num = func.num_instructions + len(func.nodes.values())
+        max_num = func.num_instructions + len(list(func.nodes.values()))
         
         while i <= max_num:
             self.InsertStringItem(idx, "")

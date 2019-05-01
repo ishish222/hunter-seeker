@@ -32,7 +32,7 @@ from wx.lib.mixins.listctrl import ColumnSorterMixin
 from wx.lib.mixins.listctrl import ListCtrlAutoWidthMixin
 import wx.lib.mixins.listctrl as listmix
 
-import FunctionViewDifferDlg
+from . import FunctionViewDifferDlg
 
 sys.path.append("..")
 

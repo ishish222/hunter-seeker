@@ -122,11 +122,11 @@ for filee in os.listdir(samples_dir):
     for (pid, name) in dbg.enumerate_processes():
         if imagename in name:
             try:
-                print "[*] Attaching to %s (%d)" % (name, pid)
+                print("[*] Attaching to %s (%d)" % (name, pid))
                 logf.write("[*] Attaching to " + name + " " + str( pid) + "\n")
                 dbg.attach(pid)
             except:
-                print "[!] Problem attaching to %s" % name
+                print("[!] Problem attaching to %s" % name)
                 logf.write("[*] Problem attaching to " + name)
 #                windows_kill(pid)
                 continue
@@ -143,7 +143,7 @@ for filee in os.listdir(samples_dir):
     count += 1
 #    break
 
-print("Got " + str(count) + " crashes, exporting to: " + cb_file)
+print(("Got " + str(count) + " crashes, exporting to: " + cb_file))
 logf.write("Got " + str(count) + " crashes, exporting to: " + cb_file)
 
 cb.export_file(cb_file)

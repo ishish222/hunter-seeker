@@ -1,4 +1,4 @@
-import other_parts
+from . import other_parts
 
 class step(object):
     def __init__(self,

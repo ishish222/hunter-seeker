@@ -7,7 +7,7 @@ import struct
 import tempfile
 import glob
 import random
-import changer
+from . import changer
 
 #log_info = log.log_info
 #log_debug = log.log_debug
@@ -31,9 +31,9 @@ class DirGenerator(object):
             self.target_file = flist[fnum]
             self.target_file.replace(self.origin_path, "")
         else:
-            print "Need to specify target file name or extension"
+            print("Need to specify target file name or extension")
             raise GeneratorException
-        print "Target file: %s" % self.target_file
+        print("Target file: %s" % self.target_file)
         self.dest_suffix = "."+self.target_file.split(".")[-1]
         self.mutator = mutator_
         self.mutations = mutations_
@@ -42,7 +42,7 @@ class DirGenerator(object):
         #TODO: replace with testdir?
         os.spawnv(os.P_WAIT, "/bin/mkdir", ["mkdir", "-p", self.dest_path])
         for i in range(0, amt):
-            print "."
+            print(".")
             tmp, tname = tempfile.mkdtemp(dir = self.dest_path)
             L = ["cp", "-r", self.origin_path, tname]
             os.spawnv(os.P_WAIT, "/bin/cp", L)

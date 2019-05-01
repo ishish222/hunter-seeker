@@ -306,9 +306,9 @@ class Decision(CodeUnit):
         ret = self.routine(self.args)
         if(self.ret_tab == None):
             return ret
-        elif(ret in self.ret_tab.keys()):
-            print 'Decided on: %s:%s' % (ret, self.ret_tab[ret])
+        elif(ret in list(self.ret_tab.keys())):
+            print('Decided on: %s:%s' % (ret, self.ret_tab[ret]))
             return self.ret_tab[ret]
-        elif('default' in self.ret_tab.keys()):
-            print 'Decided on: default:%s' % (self.ret_tab['default'])
+        elif('default' in list(self.ret_tab.keys())):
+            print('Decided on: default:%s' % (self.ret_tab['default']))
             return self.ret_tab['default']

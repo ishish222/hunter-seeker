@@ -4,7 +4,7 @@ sys.path += ["../common"]
 import statemachine
 import globs
 import os
-import Queue 
+import queue 
 
 options = globs.state.options
 
@@ -33,7 +33,7 @@ def host_print(args=None):
     if(type(args) == int):
         args = '0x%08x' % args
 
-    print('%s%s%s' % ('\033[91m', args, '\033[0m'))
+    print(('%s%s%s' % ('\033[91m', args, '\033[0m')))
     print('\n')
 
     return
@@ -66,14 +66,14 @@ def fail_check(options, state):
     if(not state.failed):
         return True
     else: 
-        print "Failed"
+        print("Failed")
         state.failed = False
         state.failure_reason = ""
         return False
 
 def fuzzing_loop(options, state):
     stats = state.stats
-    print("Current stats (SA/MA/TO): %d/%d/%d" % (stats.sample_count, stats.ma_count, stats.to_count))
+    print(("Current stats (SA/MA/TO): %d/%d/%d" % (stats.sample_count, stats.ma_count, stats.to_count)))
 
 def noop(args = None):
     pass
@@ -82,10 +82,10 @@ def nop(options, state):
     pass
 
 def exit_failure(options, state):
-    print(state.failure_info)
+    print((state.failure_info))
     state.failure_count +=1
     if(state.failure_count > 3): 
-        print "Too many failures, exiting"
+        print("Too many failures, exiting")
         exit()
 
 def next_test2(options, state):
@@ -187,38 +187,38 @@ def enqueue2(args = None):
 
 def pop(args = None):
     globs.state.ret = globs.state.stack.pop()
-    print "Popped: %s" % globs.state.ret
+    print("Popped: %s" % globs.state.ret)
 
 def pop2(args = None):
     globs.state.ret = globs.state.stack2.pop()
-    print "Popped: %s" % globs.state.ret
+    print("Popped: %s" % globs.state.ret)
 
 def dequeue(args = None):
     globs.state.ret = globs.state.queue2.pop()
-    print "Dequeued: %s" % globs.state.ret
+    print("Dequeued: %s" % globs.state.ret)
 
 def dequeue2(args = None):
     globs.state.ret = globs.state.queue2.pop()
-    print "Dequeued: %s" % globs.state.ret
+    print("Dequeued: %s" % globs.state.ret)
 
 def str_cat(args = None):
     if(args == None):
         globs.state.ret = '%s%s' % (globs.state.ret, globs.state.stack.pop())
     else:
         globs.state.ret = '%s%s' % (globs.state.ret, args)
-    print 'Result string: %s' % globs.state.ret
+    print('Result string: %s' % globs.state.ret)
 
 def str_extract_extension(args = None):
     globs.state.ret = '%s' % (globs.state.ret.split(".")[-1:][0])
-    print 'Result string: %s' % globs.state.ret
+    print('Result string: %s' % globs.state.ret)
 
 def str_cat_queue(args = None):
     globs.state.ret = '%s%s' % (globs.state.ret, globs.state.queue2.pop())
-    print 'Result string: %s' % globs.state.ret
+    print('Result string: %s' % globs.state.ret)
 
 def strr(args):
     globs.state.ret = '%s' % (args)
-    print 'Result string: %s' % globs.state.ret
+    print('Result string: %s' % globs.state.ret)
 
 def int10(args = None):
     if(args == None):
@@ -240,15 +240,15 @@ def set_counter(args = None):
         args = int(args, 0x10)
 
     globs.state.counter = args
-    print "0x%08x" % globs.state.counter
+    print("0x%08x" % globs.state.counter)
 
 def get_counter(args = None):
-    print "0x%08x" % globs.state.counter
+    print("0x%08x" % globs.state.counter)
     globs.state.ret = globs.state.counter
     globs.state.counter = globs.state.counter-1
 
 def check_counter(args = None):
-    print "0x%08x" % globs.state.counter
+    print("0x%08x" % globs.state.counter)
     if(globs.state.counter == 0x0):
         globs.state.counter = globs.state.counter-1
         return "Y"
@@ -354,9 +354,9 @@ def get_qemu_cmdline(args=None):
 def sigkill_handler(signum, frame):
     options = globs.state.options
 
-    print "Detected sigkill from user"
+    print("Detected sigkill from user")
 #    raise statemachine.MachineExit
-    import qemu_parts
+    from . import qemu_parts
     qemu_parts.poweroff_no_revert()
     
     return
@@ -385,7 +385,7 @@ def wait_100_seconds(args=None):
 
 def wait_for_keypress(args=None):
     os.system('read -s -n 1 -p "Press any key to continue..."')
-    print
+    print()
 
 def noop(args=None):
     pass
@@ -405,7 +405,7 @@ def check_strstr(args=None):
     if(type(ret) is not str):
         ret = str(ret)
 
-    print "Checking strstr %s in %s" % (args, ret)
+    print("Checking strstr %s in %s" % (args, ret))
 
     if(args in ret):
         return "Y"
@@ -422,7 +422,7 @@ def check_equal(args=None):
 
     args = int(args, 0x10)
 
-    print "Checking 0x%08x == 0x%08x" % (ret, args)
+    print("Checking 0x%08x == 0x%08x" % (ret, args))
 
     if(ret == args):
         return "Y"
@@ -463,6 +463,6 @@ def run_cmd_host(args=None):
 def pause(aegs = None):
     import os
     os.system('read -s -n 1 -p "Press any key to continue..."')
-    print
+    print()
     return
 

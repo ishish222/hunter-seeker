@@ -22,11 +22,11 @@ def prepare_fuzzbox():
 
 def read_socket(s):
     data = s.recv(buffer_size)
-    print("< " + str(data))
+    print(("< " + str(data)))
     return data
 
 def write_socket(s, data):
-    print("> " + str(data))
+    print(("> " + str(data)))
     s.send(data)
 
 if(len(sys.argv) < 2):

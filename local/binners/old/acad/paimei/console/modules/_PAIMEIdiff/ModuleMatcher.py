@@ -45,11 +45,11 @@ class ModuleMatcher:
         remove_count = 0
         
         while i < len(self.mod_a.nodes):
-            if self.mod_a.nodes.values()[i].is_import:
-                del self.mod_a.nodes[ self.mod_a.nodes.keys()[i] ]
+            if list(self.mod_a.nodes.values())[i].is_import:
+                del self.mod_a.nodes[ list(self.mod_a.nodes.keys())[i] ]
                 remove_count+=1
-            elif self.is_function_insignificant(self.mod_a.nodes.values()[i]):
-                del self.mod_a.nodes[ self.mod_a.nodes.keys()[i] ]
+            elif self.is_function_insignificant(list(self.mod_a.nodes.values())[i]):
+                del self.mod_a.nodes[ list(self.mod_a.nodes.keys())[i] ]
                 remove_count+=1
             else:
                 i+=1
@@ -58,11 +58,11 @@ class ModuleMatcher:
         i = 0
         remove_count = 0
         while i < len(self.mod_b.nodes):
-            if self.mod_b.nodes.values()[i].is_import:
-                del self.mod_b.nodes[ self.mod_b.nodes.keys()[i] ]
+            if list(self.mod_b.nodes.values())[i].is_import:
+                del self.mod_b.nodes[ list(self.mod_b.nodes.keys())[i] ]
                 remove_count+=1
-            elif self.is_function_insignificant(self.mod_b.nodes.values()[i]):
-                del self.mod_b.nodes[ self.mod_b.nodes.keys()[i] ]
+            elif self.is_function_insignificant(list(self.mod_b.nodes.values())[i]):
+                del self.mod_b.nodes[ list(self.mod_b.nodes.keys())[i] ]
                 remove_count+=1
             else:
                 i+=1        
@@ -70,7 +70,7 @@ class ModuleMatcher:
         
     ####################################################################################################################        
     def is_function_insignificant(self, function):
-        if function.ext["PAIMEIDiffFunction"].num_calls <= self.ignore_num_calls and function.num_instructions <= self.ignore_num_instructions and len(function.nodes.values()) <= self.ignore_num_nodes:
+        if function.ext["PAIMEIDiffFunction"].num_calls <= self.ignore_num_calls and function.num_instructions <= self.ignore_num_instructions and len(list(function.nodes.values())) <= self.ignore_num_nodes:
             return 1
         else:
             return 0           
@@ -94,12 +94,12 @@ class ModuleMatcher:
         self.match_basic_block()
         self.parent.msg("matched %d basic block(s) and ignored %d basic block(s) in %.2f seconds." % (self.parent.matched_list.num_matched_basic_block, self.parent.matched_list.num_ignored_basic_block, round(time.time() - start, 3) ) ) 
         i = 0
-        while i < len(self.mod_a.nodes.values()):
-            self.parent.unmatched_list.add_to_unmatched_a(self.mod_a.nodes.values()[i])
+        while i < len(list(self.mod_a.nodes.values())):
+            self.parent.unmatched_list.add_to_unmatched_a(list(self.mod_a.nodes.values())[i])
             i+=1
         i = 0
-        while i < len(self.mod_b.nodes.values()):
-            self.parent.unmatched_list.add_to_unmatched_b(self.mod_b.nodes.values()[i])
+        while i < len(list(self.mod_b.nodes.values())):
+            self.parent.unmatched_list.add_to_unmatched_b(list(self.mod_b.nodes.values())[i])
             i+=1
 
     ####################################################################################################################
@@ -129,20 +129,20 @@ class ModuleMatcher:
                     name = match_functions[i]
                     
                     # for all the functions in module b
-                    while b < len(self.mod_b.nodes.values()):
+                    while b < len(list(self.mod_b.nodes.values())):
                         a = 0            
                         
                         #for all the functions in module b
-                        while a < len(self.mod_a.nodes.values()):
+                        while a < len(list(self.mod_a.nodes.values())):
                             # match function_a to function_b 
-                            if self.parent.used_match_function_table[ name ](self.mod_a.nodes.values()[a], self.mod_b.nodes.values()[b]):
+                            if self.parent.used_match_function_table[ name ](list(self.mod_a.nodes.values())[a], list(self.mod_b.nodes.values())[b]):
                                 # if we found a match to function b using function a then we save the state
                                 if not dup:
                                     found = 1
                                     saved_a = a
                                     saved_b = b
-                                    func_a = self.mod_a.nodes.values()[a]
-                                    func_b = self.mod_b.nodes.values()[b]
+                                    func_a = list(self.mod_a.nodes.values())[a]
+                                    func_b = list(self.mod_b.nodes.values())[b]
                                     if self.parent.module_table[name [1:]].accuracy == 0x003:
                                         break
                                 else:
@@ -157,9 +157,9 @@ class ModuleMatcher:
                             curr_change+=1
                             # add functions to matched list
                             self.parent.matched_list.add_matched_function(func_a, func_b, name[1:])
-                            key = self.mod_a.nodes.keys()[saved_a]
+                            key = list(self.mod_a.nodes.keys())[saved_a]
                             del self.mod_a.nodes[ key ]
-                            key = self.mod_b.nodes.keys()[saved_b]
+                            key = list(self.mod_b.nodes.keys())[saved_b]
                             del self.mod_b.nodes[ key ]
                         else:
                             # we only add one to b if we did not find a match 
@@ -371,9 +371,9 @@ class ModuleMatcher:
         @return: None, or the function_a, and the index
         '''
         i = 0
-        while i < len(module.nodes.values()):
-            if module.nodes.values()[i].name == function_name:
-                return (module.nodes.values()[i], module.nodes.keys()[i])
+        while i < len(list(module.nodes.values())):
+            if list(module.nodes.values())[i].name == function_name:
+                return (list(module.nodes.values())[i], list(module.nodes.keys())[i])
             i+=1
         return (None,None)
         

@@ -49,9 +49,9 @@ conf.netcache.new_cache("arp_cache", 120) # cache entries expire after 120s
 def getmacbyip(ip, chainCC=0):
     """Return MAC address corresponding to a given IP address"""
     if isinstance(ip,Net):
-        ip = iter(ip).next()
+        ip = next(iter(ip))
     ip = inet_ntoa(inet_aton(ip))
-    tmp = map(ord, inet_aton(ip))
+    tmp = list(map(ord, inet_aton(ip)))
     if (tmp[0] & 0xf0) == 0xe0: # mcast @
         return "01:00:5e:%.2x:%.2x:%.2x" % (tmp[1]&0x7f,tmp[2],tmp[3])
     iff,a,gw = conf.route.route(ip)
@@ -339,7 +339,7 @@ class ARP(Packet):
     def route(self):
         dst = self.pdst
         if isinstance(dst,Gen):
-            dst = iter(dst).next()
+            dst = next(iter(dst))
         return conf.route.route(dst)
     def extract_padding(self, s):
         return "",s
@@ -457,7 +457,7 @@ class ARPingResult(SndRcvList):
 
     def show(self):
         for s,r in self.res:
-            print r.sprintf("%19s,Ether.src% %ARP.psrc%")
+            print(r.sprintf("%19s,Ether.src% %ARP.psrc%"))
 
 
 
@@ -535,7 +535,7 @@ class ARP_am(AnsweringMachine):
         ether = req.getlayer(Ether)
         arp = req.getlayer(ARP)
 
-        if self.optsend.has_key('iface'):
+        if 'iface' in self.optsend:
             iff = self.optsend.get('iface')
         else:
             iff,a,gw = conf.route.route(arp.psrc)
@@ -557,20 +557,20 @@ class ARP_am(AnsweringMachine):
         return resp
 
     def send_reply(self, reply):
-        if self.optsend.has_key('iface'):
+        if 'iface' in self.optsend:
             self.send_function(reply, **self.optsend)
         else:
             self.send_function(reply, iface=self.iff, **self.optsend)
 
     def print_reply(self, req, reply):
-        print "%s ==> %s on %s" % (req.summary(),reply.summary(),self.iff)
+        print("%s ==> %s on %s" % (req.summary(),reply.summary(),self.iff))
 
 
 @conf.commands.register
 def etherleak(target, **kargs):
     """Exploit Etherleak flaw"""
     return srpflood(Ether()/ARP(pdst=target), 
-                    prn=lambda (s,r): conf.padding_layer in r and hexstr(r[conf.padding_layer].load),
+                    prn=lambda s_r: conf.padding_layer in s_r[1] and hexstr(s_r[1][conf.padding_layer].load),
                     filter="arp", **kargs)
 
 

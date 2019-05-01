@@ -22,13 +22,13 @@
 @organization: www.openrce.org
 '''
 
-import thread
+import _thread
 import sys
 
 sys.path.append("..")
 
-import code_coverage
-import crash_binning
+from . import code_coverage
+from . import crash_binning
 import pida
 
 from pydbg import *
@@ -173,8 +173,8 @@ class process_stalker:
             self.log("debugger hit %08x cc #%d" % (dbg.exception_address, self.cc.num))
 
         is_function = 0
-        for module in self.pida_modules.values():
-            if module.nodes.has_key(dbg.context.Eip):
+        for module in list(self.pida_modules.values()):
+            if dbg.context.Eip in module.nodes:
                 is_function = 1
                 break
 
@@ -226,7 +226,7 @@ class process_stalker:
         @param last_dll: (Optional, def=None) System DLL instance, required for setting breakpoints in a DLL.
         '''
 
-        if module in self.pida_modules.keys():
+        if module in list(self.pida_modules.keys()):
             # if we are setting breakpoints in a DLL.
             if last_dll:
                 # if a signature is available, ensure we have a match before we start setting breakpoints in the loaded DLL.
@@ -252,11 +252,11 @@ class process_stalker:
             if self.depth == self.FUNCTIONS:
                 functions = []
 
-                for f in self.pida_modules[module].nodes.values():
+                for f in list(self.pida_modules[module].nodes.values()):
                     if f.is_import:
                         continue
 
-                    if self.filtered.has_key(module):
+                    if module in self.filtered:
                         if self.filtered[module].count(f.ea_start - self.pida_modules[module].base):
                             continue
 
@@ -274,9 +274,9 @@ class process_stalker:
             elif self.depth == self.BASIC_BLOCKS:
                 basic_blocks = []
 
-                for f in self.pida_modules[module].nodes.values():
-                    for bb in f.nodes.values():
-                        if self.filtered.has_key(module):
+                for f in list(self.pida_modules[module].nodes.values()):
+                    for bb in list(f.nodes.values()):
+                        if module in self.filtered:
                             if self.filtered[module].count(bb.ea_start - self.pida_modules[module].base):
                                 continue
 
@@ -314,9 +314,9 @@ class process_stalker:
 
             self.log("Filtering %d points from target id:%d tag id:%d" % (cc.num, target_id, tag_id))
 
-            for hit_list in cc.hits.values():
+            for hit_list in list(cc.hits.values()):
                 for hit in hit_list:
-                    if not self.filtered.has_key(hit.module):
+                    if hit.module not in self.filtered:
                         self.filtered[hit.module] = []
 
                     if not self.filtered[hit.module].count(hit.eip - hit.base):
@@ -329,7 +329,7 @@ class process_stalker:
                 self.pydbg.load(self.load, self.args)
             else:
                 self.pydbg.attach(self.attach)
-        except pdx, x:
+        except pdx as x:
             self.log(x.__str__())
             return
 
@@ -337,7 +337,7 @@ class process_stalker:
 
         try:
             self.pydbg.run()
-        except pdx, x:
+        except pdx as x:
             self.log(x.__str__())
 
         self.export_mysql()

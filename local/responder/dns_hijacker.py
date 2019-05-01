@@ -11,7 +11,7 @@ from scapy.sendrecv import sniff, sendp
 
 def detect_dns(pkt):
     if(DNS in pkt):
-        print '---'
+        print('---')
         #pkt.show()
         try:
             dns = pkt.getlayer(DNS)
@@ -27,26 +27,26 @@ def detect_dns(pkt):
 
             response = DNS(id=dns.id, ancount=1, qr=1, an=DNSRR(rrname=str(query), type='A', rdata=str('127.0.0.1'), ttl=1234))
 
-            print 'response'
-            print response
+            print('response')
+            print(response)
 
             e_src = pkt.getlayer(Ether).src
             e_dst = pkt.getlayer(Ether).dst
 
-            print 'response3'
+            print('response3')
             i_src = pkt[IP].src
             i_dst = pkt[IP].dst
 
-            print 'response4'
+            print('response4')
 
             u_src = pkt[UDP].sport
             u_dst = pkt[UDP].dport
 
-            print 'RESPONSE'
+            print('RESPONSE')
             p = Ether(src = e_dst, dst = e_src) / IP(src = i_dst, dst = i_src, id=pkt[IP].id+1)  / UDP(sport = u_dst, dport = u_src) / response
             p.show()
             send(p)
-            print 'SUCCESS'
+            print('SUCCESS')
 
         except Exception as e:
             pass

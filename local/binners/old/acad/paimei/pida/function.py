@@ -31,8 +31,8 @@ except:
 
 import pgraph
 
-from basic_block import *
-from defines     import *
+from .basic_block import *
+from .defines     import *
 
 class function (pgraph.graph, pgraph.node):
     '''
@@ -176,7 +176,7 @@ class function (pgraph.graph, pgraph.node):
         argument_boundary = self.local_var_size + self.saved_reg_size + self.ret_size
         frame_offset      = 0
 
-        for i in xrange(0, frame_struct.memqty):
+        for i in range(0, frame_struct.memqty):
             end_offset = frame_struct.get_member(i).soff
 
             if i == frame_struct.memqty - 1:
@@ -257,7 +257,7 @@ class function (pgraph.graph, pgraph.node):
                     
         basicBlocks = [basic_block(bs,be,self.depth, self.analysis, self)\
                         for (bs,be) in blocks]
-        map(self.add_node,basicBlocks)
+        list(map(self.add_node,basicBlocks))
         
         for (src, dst, color) in edges:
             edge = pgraph.edge(src, dst)
@@ -282,7 +282,7 @@ class function (pgraph.graph, pgraph.node):
         while status:
             chunk = iterator.chunk()
             chunks.append((chunk.startEA, chunk.endEA))
-            status = iterator.next()
+            status = next(iterator)
 
         return chunks
 
@@ -353,7 +353,7 @@ class function (pgraph.graph, pgraph.node):
         @return: The basic block that contains the given address or None if not found.
         '''
 
-        for bb in self.nodes.values():
+        for bb in list(self.nodes.values()):
             if bb.ea_start <= ea <= bb.ea_end:
                 return bb
 
@@ -383,7 +383,7 @@ class function (pgraph.graph, pgraph.node):
             self.label += "<b>size</b>: <font color=#FF8040>%d</font><br>" % (self.ea_end - self.ea_start)
             self.label += "<b>arguments</b>:<br>"
 
-            for key, arg in self.args.items():
+            for key, arg in list(self.args.items()):
                 self.label += "&nbsp;&nbsp;&nbsp;&nbsp;[%02x]%s<br>" % (key, arg)
 
                 required_width = (len(arg) + 10) * 10
@@ -395,7 +395,7 @@ class function (pgraph.graph, pgraph.node):
 
             self.label += "<b>local variables</b>:<br>"
 
-            for key, var in self.local_vars.items():
+            for key, var in list(self.local_vars.items()):
                 self.label += "&nbsp;&nbsp;&nbsp;&nbsp;[%02x] %s<br>" % (key, var)
 
                 required_width = (len(var) + 10) * 10

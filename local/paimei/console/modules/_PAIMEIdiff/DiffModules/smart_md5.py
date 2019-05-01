@@ -27,7 +27,7 @@ class smart_md5:
         self.parent.register_module(self)                                               # register our module in the module table
         
     def match_function_by_smart_md5(self, function_a, function_b):
-        if not function_a.ext.has_key("PAIMEIDiffFunction") or not function_b.ext.has_key("PAIMEIDiffFunction"):
+        if "PAIMEIDiffFunction" not in function_a.ext or "PAIMEIDiffFunction" not in function_b.ext:
             return 0
         if function_a.ext["PAIMEIDiffFunction"].smart_md5 == function_b.ext["PAIMEIDiffFunction"].smart_md5:
             return 1

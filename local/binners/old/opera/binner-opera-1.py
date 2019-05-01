@@ -12,7 +12,7 @@ import os
 import time
 import signal
 from threading import Thread
-import thread
+import _thread
 from threading import Lock
 import ctypes
 import win32pipe, win32file, win32gui
@@ -276,13 +276,13 @@ imagename = "opera.exe"
 def attach(dbg, imagename):
     for (pid, name) in dbg.enumerate_processes():
         if imagename in name:
-            print(imagename + " in " + name)
+            print((imagename + " in " + name))
             try:
-                print "[*] Attaching to %s (%d)" % (name, pid)
+                print("[*] Attaching to %s (%d)" % (name, pid))
                 log_write("[*] Attaching to " + name + " " + str(pid) + "\n")
                 dbg.attach(pid)
-            except Exception, e:
-                print "[!] Problem attaching to %s" % name
+            except Exception as e:
+                print("[!] Problem attaching to %s" % name)
                 log_write("[*] Problem attaching to " + name)
                 log_write(e)
     #                windows_kill(pid)
@@ -371,16 +371,16 @@ def goThread_routine():
         while (goThreadActive == True):
             print("running")
             time.sleep(1)
-    except Exception, e:
+    except Exception as e:
         print(e)
 
 def killing_routine():
     global dbg
 
-    print(hex(dbg.h_process))
+    print((hex(dbg.h_process)))
 #    print(hex(dbg.h_thread))
     dbg.open_process(dbg.pid)
-    print(hex(dbg.h_process))
+    print((hex(dbg.h_process)))
     time.sleep(3)
 #    dbg.terminate_process()
     dbg.debug_set_process_kill_on_exit(True)
@@ -401,7 +401,7 @@ def breaking_routine():
     addr = int(random.random() * 0xffffffff)
     threads =  dbg.enumerate_threads()
     thread_num = int(random.random() * len(threads))
-    print(str(thread_num) + ": " + str(threads[thread_num]))
+    print((str(thread_num) + ": " + str(threads[thread_num])))
     
     thread_handle = dbg.open_thread(threads[thread_num])
     thread_context = dbg.get_thread_context(thread_handle)
@@ -454,7 +454,7 @@ def execute(cmds):
             ok()
 
         if(cmd == "listTebs"):
-            for teb in dbg.tebs.keys():
+            for teb in list(dbg.tebs.keys()):
                 print(teb)
                 writePipe(hex(teb))
             ok()
@@ -532,7 +532,7 @@ def execute(cmds):
             writePipe("Communication with binner is working")
             ok()
         
-    except Exception, e:
+    except Exception as e:
         print(e)
             # loop so i can read it :)
         while True:
@@ -564,7 +564,7 @@ def main():
             cmd = readPipe()
             cmds = str.split(cmd[1])
             execute(cmds)
-    except Exception, e:
+    except Exception as e:
         print(e)
 
     cb_file = samples_dir + time.strftime("%Y%m%d-%H%M%S") + ".crash"
@@ -583,7 +583,7 @@ def main():
     dbg.detach()
     dbg = None
 
-    print("Got " + str(count) + " crashes, exporting to: " + cb_file)
+    print(("Got " + str(count) + " crashes, exporting to: " + cb_file))
     logf.write("Got " + str(count) + " crashes, exporting to: " + cb_file)
 
     cb.export_file(cb_file)

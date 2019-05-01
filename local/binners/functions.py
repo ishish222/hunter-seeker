@@ -68,7 +68,7 @@ def _async_raise(tid, excobj):
 class Thread(threading.Thread):
     def raise_exc(self, excobj):
         assert self.isAlive(), "thread must be started"
-        for tid, tobj in threading._active.items():
+        for tid, tobj in list(threading._active.items()):
             if tobj is self:
                 _async_raise(tid, excobj)
                 return
@@ -119,7 +119,7 @@ class QueryCPUUsageThread(threading.Thread):
                                  byref(self.hQuery)) == Error_Success:
             raise Exception
         if not pdh.PdhAddCounterW(self.hQuery,
-                                 u'''\\Processor(_Total)\\% Processor Time''',
+                                 '''\\Processor(_Total)\\% Processor Time''',
                                  0,
                                  byref(self.hCounter)) == Error_Success:
             raise Exception
@@ -128,7 +128,7 @@ class QueryCPUUsageThread(threading.Thread):
         while True:
             global g_cpu_usage
             g_cpu_usage = self.getCPUUsage()
-            print 'cpu_usage: %d' % g_cpu_usage
+            print('cpu_usage: %d' % g_cpu_usage)
         
     def getCPUUsage(self):
         PDH_FMT_LONG = 0x00000100
@@ -160,7 +160,7 @@ def getCPU():
     if not pdh.PdhOpenQueryW(None, 0, byref(hQuery)) == Error_Success:
         raise Exception
 
-    if not pdh.PdhAddCounterW(hQuery, u'''\\Processor(_Total)\\% Processor Time''', 0, byref(hCounter)) == Error_Success:
+    if not pdh.PdhAddCounterW(hQuery, '''\\Processor(_Total)\\% Processor Time''', 0, byref(hCounter)) == Error_Success:
         raise Exception
 
     PDH_FMT_LONG = 0x00000100

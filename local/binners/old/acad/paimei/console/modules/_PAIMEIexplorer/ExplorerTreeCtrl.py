@@ -201,7 +201,7 @@ class ExplorerTreeCtrl (wx.TreeCtrl):
         self.SetItemImage(tree_module, self.icon_folder,      wx.TreeItemIcon_Normal)
         self.SetItemImage(tree_module, self.icon_folder_open, wx.TreeItemIcon_Expanded)
 
-        sorted_functions = [f.ea_start for f in self.top.pida_modules[module_name].nodes.values() if not f.is_import]
+        sorted_functions = [f.ea_start for f in list(self.top.pida_modules[module_name].nodes.values()) if not f.is_import]
         sorted_functions.sort()
 
         for func_key in sorted_functions:
@@ -212,7 +212,7 @@ class ExplorerTreeCtrl (wx.TreeCtrl):
             self.SetItemImage(tree_function, self.icon_folder,      wx.TreeItemIcon_Normal)
             self.SetItemImage(tree_function, self.icon_folder_open, wx.TreeItemIcon_Expanded)
 
-            sorted_bbs = function.nodes.keys()
+            sorted_bbs = list(function.nodes.keys())
             sorted_bbs.sort()
 
             for bb_key in sorted_bbs:

@@ -11,17 +11,17 @@ __all__ = \
     "module",
 ]
 
-from basic_block import *
-from defines     import *
-from function    import *
-from instruction import *
-from module      import *
+from .basic_block import *
+from .defines     import *
+from .function    import *
+from .instruction import *
+from .module      import *
 
 # we don't want to make wx an required module for PIDA.
 try:    import wx
 except: pass
 
-import cPickle
+import pickle
 import zlib
 import hashlib
 import struct
@@ -101,15 +101,15 @@ def dump_custom (file_name, module, progress_bar=None):
     # remove the intra-object pointers and aliases.
     module.functions = None
 
-    for func in module.nodes.values():
+    for func in list(module.nodes.values()):
         func.module       = None
         func.basic_blocks = None
 
-        for bb in func.nodes.values():
+        for bb in list(func.nodes.values()):
             bb.function = None
             bb.nodes    = None
 
-            for ins in bb.instructions.values():
+            for ins in list(bb.instructions.values()):
                 ins.basic_block = None
 
     # detach the (possible large) nodes data structure from the module.
@@ -117,7 +117,7 @@ def dump_custom (file_name, module, progress_bar=None):
     module.nodes = {}
 
     # write the "rest" of the data structure to disk.
-    rest = zlib.compress(cPickle.dumps(module, protocol=2))
+    rest = zlib.compress(pickle.dumps(module, protocol=2))
     fh.write(struct.pack(">L", len(rest)))
     fh.write(rest)
 
@@ -136,9 +136,9 @@ def dump_custom (file_name, module, progress_bar=None):
             style   = wx.PD_CAN_ABORT | wx.PD_AUTO_HIDE | wx.PD_APP_MODAL | wx.PD_ELAPSED_TIME | wx.PD_REMAINING_TIME)
 
     # slice up the nodes attribute and individually store each node to disk.
-    for entry in nodes.values():
+    for entry in list(nodes.values()):
         count += 1
-        node   = zlib.compress(cPickle.dumps(entry, protocol=2))
+        node   = zlib.compress(pickle.dumps(entry, protocol=2))
 
         fh.write(struct.pack(">L", len(node)))
         fh.write(node)
@@ -153,13 +153,13 @@ def dump_custom (file_name, module, progress_bar=None):
             percent_complete = float(count) / float(num_nodes) * 100
 
             if percent_complete > 25 and percent_indicator == 0:
-                print "25%",
+                print("25%", end=' ')
                 percent_indicator += 1
             elif percent_complete > 50 and percent_indicator == 1:
-                print "50%",
+                print("50%", end=' ')
                 percent_indicator += 1
             elif percent_complete > 75 and percent_indicator == 2:
-                print "75%",
+                print("75%", end=' ')
                 percent_indicator += 1
 
     # restore the nodes attribute.
@@ -187,7 +187,7 @@ def dump_orig (file_name, module, progress_bar=None):
     '''
 
     fh   = open(file_name, "wb+")
-    dump = cPickle.dumps(module, protocol=2)
+    dump = pickle.dumps(module, protocol=2)
     comp = zlib.compress(dump)
     fh.write(comp)
     fh.close()
@@ -227,7 +227,7 @@ def dump_shelve (file_name, module, progress_bar=None):
     sh["nodes"]     = {}
 
     # we store the node dictionary piece by piece to avoid out of memory conditions.
-    for key, val in module.nodes.items():
+    for key, val in list(module.nodes.items()):
         sh["nodes"][key] = val
         sh.sync()
 
@@ -259,7 +259,7 @@ def load_custom (file_name, progress_bar=None):
     # read the "rest" of the data structure from disk.
     length = int(struct.unpack(">L", fh.read(4))[0])
     data   = fh.read(length)
-    module = cPickle.loads(zlib.decompress(data))
+    module = pickle.loads(zlib.decompress(data))
 
     # read the node count from disk.
     num_nodes         = int(struct.unpack(">L", fh.read(4))[0])
@@ -283,7 +283,7 @@ def load_custom (file_name, progress_bar=None):
             break
 
         data = fh.read(length)
-        node = cPickle.loads(zlib.decompress(data))
+        node = pickle.loads(zlib.decompress(data))
 
         module.nodes[node.id] = node
 
@@ -297,13 +297,13 @@ def load_custom (file_name, progress_bar=None):
             percent_complete = float(count) / float(num_nodes) * 100
 
             if percent_complete > 25 and percent_indicator == 0:
-                print "25%",
+                print("25%", end=' ')
                 percent_indicator += 1
             elif percent_complete > 50 and percent_indicator == 1:
-                print "50%",
+                print("50%", end=' ')
                 percent_indicator += 1
             elif percent_complete > 75 and percent_indicator == 2:
-                print "75%",
+                print("75%", end=' ')
                 percent_indicator += 1
 
     if progress_bar == "wx":
@@ -312,15 +312,15 @@ def load_custom (file_name, progress_bar=None):
     # restore the intra-object pointers and aliases.
     module.functions = module.nodes
 
-    for func in module.nodes.values():
+    for func in list(module.nodes.values()):
         func.module       = module
         func.basic_blocks = func.nodes
 
-        for bb in func.nodes.values():
+        for bb in list(func.nodes.values()):
             bb.function = func
             bb.nodes    = bb.instructions
 
-            for ins in bb.instructions.values():
+            for ins in list(bb.instructions.values()):
                 ins.basic_block = bb
 
     fh.close()
@@ -342,7 +342,7 @@ def load_orig (file_name, progress_bar=None):
     fh     = open(file_name, "rb")
     comp   = fh.read()
     dump   = zlib.decompress(comp)
-    module = cPickle.loads(dump)
+    module = pickle.loads(dump)
     fh.close()
 
     return module
@@ -383,7 +383,7 @@ def load_shelve (file_name, progress_bar=None):
     mod.nodes     = {}
 
     # we restore the node dictionary piece by piece to avoid out of memory conditions.
-    for key, val in sh["nodes"].items():
+    for key, val in list(sh["nodes"].items()):
         mod.nodes[key] = val
 
     return

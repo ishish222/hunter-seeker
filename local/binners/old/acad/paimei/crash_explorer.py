@@ -1,6 +1,6 @@
 #!c:\python\python.exe
 
-from __future__ import print_function
+
 import sys
 import struct
 import utils

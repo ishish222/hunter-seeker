@@ -14,11 +14,11 @@
 '''
 
 import socket
-import cPickle
+import pickle
 
-from pydbg   import *
-from defines import *
-from pdx     import *
+from .pydbg   import *
+from .defines import *
+from .pdx     import *
 
 class pydbg_client:
     '''
@@ -123,19 +123,19 @@ class pydbg_client:
                         exception_code = dbg.u.Exception.ExceptionRecord.ExceptionCode
                         ret            = DBG_CONTINUE
     
-                        if self.callbacks.has_key(exception_code):
-                            print "processing handler for %08x" % exception_code
+                        if exception_code in self.callbacks:
+                            print("processing handler for %08x" % exception_code)
                             ret = self.callbacks[exception_code](self)
                     
                     ## user callback event.
                     else:
-                        if self.callbacks.has_key(USER_CALLBACK_DEBUG_EVENT):                  
+                        if USER_CALLBACK_DEBUG_EVENT in self.callbacks:                  
                             ret = self.callbacks[USER_CALLBACK_DEBUG_EVENT](self)
                 
                 #### raised exception type.
                 elif received[0] == "exception":
                     (msg_type, exception_string) = received
-                    print exception_string
+                    print(exception_string)
                     raise pdx(exception_string)
                     
                 self.pickle_send(("**DONE**", ret))
@@ -190,12 +190,12 @@ class pydbg_client:
         '''
 
         try:
-            length   = long(self.sock.recv(4), 16)
+            length   = int(self.sock.recv(4), 16)
             received = self.sock.recv(length)
         except:
             raise pdx("connection severed")
         
-        return cPickle.loads(received)
+        return pickle.loads(received)
 
 
     ####################################################################################################################
@@ -211,7 +211,7 @@ class pydbg_client:
         @raise pdx: An exception is raised if the connection was severed.
         '''
 
-        data = cPickle.dumps(data)
+        data = pickle.dumps(data)
 
         try:
             self.sock.send("%04x" % len(data))

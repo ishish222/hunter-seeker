@@ -32,6 +32,6 @@ if not pida_name:
     Warning("Cancelled.")
 else:
     start = time.time()
-    print "Loading %s" % pida_name
+    print("Loading %s" % pida_name)
     module = pida.load(pida_name, progress_bar="ascii")
-    print "Done. Completed in %f seconds." % round(time.time() - start, 3)
+    print("Done. Completed in %f seconds." % round(time.time() - start, 3))

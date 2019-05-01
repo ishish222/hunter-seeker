@@ -732,7 +732,7 @@ class SecurityAssociation(object):
 
         if proto not in (ESP, AH, ESP.name, AH.name):
             raise ValueError("proto must be either ESP or AH")
-        if isinstance(proto, basestring):
+        if isinstance(proto, str):
             self.proto = eval(proto)
         else:
             self.proto = proto
@@ -743,7 +743,7 @@ class SecurityAssociation(object):
         if crypt_algo:
             if crypt_algo not in CRYPT_ALGOS:
                 raise TypeError('unsupported encryption algo %r, try %r' %
-                                (crypt_algo, CRYPT_ALGOS.keys()))
+                                (crypt_algo, list(CRYPT_ALGOS.keys())))
             self.crypt_algo = CRYPT_ALGOS[crypt_algo]
             self.crypt_algo.check_key(crypt_key)
             self.crypt_key = crypt_key
@@ -754,7 +754,7 @@ class SecurityAssociation(object):
         if auth_algo:
             if auth_algo not in AUTH_ALGOS:
                 raise TypeError('unsupported integrity algo %r, try %r' %
-                                (auth_algo, AUTH_ALGOS.keys()))
+                                (auth_algo, list(AUTH_ALGOS.keys())))
             self.auth_algo = AUTH_ALGOS[auth_algo]
             self.auth_algo.check_key(auth_key)
             self.auth_key = auth_key

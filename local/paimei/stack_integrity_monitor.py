@@ -56,14 +56,14 @@ def check_stack_integrity (dbg):
 
                 for a, v in dbg.mirror_stack:
                     if a == addr:
-                        print "%08x: %s.%08x --> %08x" % (a, dbg.addr_to_module(v).szModule, v, new_value)
+                        print("%08x: %s.%08x --> %08x" % (a, dbg.addr_to_module(v).szModule, v, new_value))
                     else:
-                        print "%08x: %s.%08x" % (a, dbg.addr_to_module(v).szModule, v)
+                        print("%08x: %s.%08x" % (a, dbg.addr_to_module(v).szModule, v))
 
-                print
-                print "STACK INTEGRITY VIOLATON AT: %s.%08x" % (dbg.addr_to_module(dbg.context.Eip).szModule, dbg.context.Eip)
-                print "analysis took %d seconds" % (time.time() - dbg.start_time)
-                print
+                print()
+                print("STACK INTEGRITY VIOLATON AT: %s.%08x" % (dbg.addr_to_module(dbg.context.Eip).szModule, dbg.context.Eip))
+                print("analysis took %d seconds" % (time.time() - dbg.start_time))
+                print()
 
                 d = pydbgc.PydbgClient(dbg, False)
                 d.command_line()
@@ -74,7 +74,7 @@ def check_stack_integrity (dbg):
 ########################################################################################################################
 def handler_trace_start (dbg):
     dbg.monitor_tid = dbg.dbg.dwThreadId
-    print "starting hit trace on thread %d at 0x%08x" % (dbg.monitor_tid, dbg.context.Eip)
+    print("starting hit trace on thread %d at 0x%08x" % (dbg.monitor_tid, dbg.context.Eip))
     dbg.single_step(True)
 
     return DBG_CONTINUE
@@ -135,7 +135,7 @@ def handler_access_violation (dbg):
     crash_bin = utils.crash_binning.crash_binning()
     crash_bin.record_crash(dbg)
 
-    print crash_bin.crash_synopsis()
+    print(crash_bin.crash_synopsis())
     dbg.terminate_process()
 
 
@@ -144,7 +144,7 @@ if len(sys.argv) != 3:
     error(USAGE)
 
 try:
-    bp_addr = long(sys.argv[1], 16)
+    bp_addr = int(sys.argv[1], 16)
     pid     = int(sys.argv[2])
 except:
     error(USAGE)
@@ -161,5 +161,5 @@ dbg.set_callback(EXCEPTION_ACCESS_VIOLATION, handler_access_violation)
 
 dbg.attach(pid)
 dbg.bp_set(bp_addr, handler=handler_trace_start, restore=False)
-print "watching for hit at %08x" % bp_addr
+print("watching for hit at %08x" % bp_addr)
 dbg.run()

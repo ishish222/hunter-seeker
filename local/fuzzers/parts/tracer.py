@@ -14,11 +14,11 @@ def make_trace_decision():
     state = globs.state
 
     if(state == None): 
-        print "State is None, shutting down"
+        print("State is None, shutting down")
         return dm.Shutdown
     
     if(state.samples_exhausted):
-        print 'Samples exhausted'
+        print('Samples exhausted')
         return dm.Shutdown
     if(status == "PT"):
         return TracePerform
@@ -43,7 +43,7 @@ def make_trace_decision():
     if(status == "CR"):
         return dm.HandleCrash
 
-    print "Unable to handle status %s, shutting down" %status
+    print("Unable to handle status %s, shutting down" %status)
     return dm.Shutdown
 
 TraceDecision.name = "Deciding on next step"

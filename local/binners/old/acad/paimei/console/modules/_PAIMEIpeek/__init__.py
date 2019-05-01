@@ -12,9 +12,9 @@ __all__ = \
     "ReconListCtrl",
 ]
 
-import AddReconDlg
-import EditReconDlg
-import PeekOptionsDlg
-import ProcessListCtrl
-import PyDbgDlg
-import ReconListCtrl
+from . import AddReconDlg
+from . import EditReconDlg
+from . import PeekOptionsDlg
+from . import ProcessListCtrl
+from . import PyDbgDlg
+from . import ReconListCtrl

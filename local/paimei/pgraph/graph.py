@@ -22,9 +22,9 @@
 @organization: www.openrce.org
 '''
 
-from node    import node
-from edge    import edge
-from cluster import cluster
+from .node    import node
+from .edge    import edge
+from .cluster import cluster
 
 import copy
 
@@ -117,7 +117,7 @@ class graph (object):
         '''
 
         if prevent_dups:
-            if self.edges.has_key(edge.id):
+            if edge.id in self.edges:
                 return self
 
         # ensure the source and destination nodes exist.
@@ -145,7 +145,7 @@ class graph (object):
 
         node.number = len(self.nodes)
 
-        if not self.nodes.has_key(node.id):
+        if node.id not in self.nodes:
             self.nodes[node.id] = node
 
             if len(self.history) == 2:
@@ -222,7 +222,7 @@ class graph (object):
         if not id:
             id = (src << 32) + dst
 
-        if self.edges.has_key(id):
+        if id in self.edges:
             del self.edges[id]
 
         return self
@@ -237,7 +237,7 @@ class graph (object):
         @param node_id: Identifier of node to remove from graph
         '''
 
-        if self.nodes.has_key(node_id):
+        if node_id in self.nodes:
             del self.nodes[node_id]
 
         return self
@@ -255,7 +255,7 @@ class graph (object):
         @return: List of edges from the specified node
         '''
 
-        return [edge for edge in self.edges.values() if edge.src == id]
+        return [edge for edge in list(self.edges.values()) if edge.src == id]
 
 
     ####################################################################################################################
@@ -270,7 +270,7 @@ class graph (object):
         @return: List of edges to the specified node
         '''
 
-        return [edge for edge in self.edges.values() if edge.dst == id]
+        return [edge for edge in list(self.edges.values()) if edge.dst == id]
 
 
     ####################################################################################################################
@@ -333,12 +333,12 @@ class graph (object):
         '''
 
         # if the attribute to search for is the id, simply return the edge from the internal hash.
-        if attribute == "id" and self.edges.has_key(value):
+        if attribute == "id" and value in self.edges:
             return self.edges[value]
 
         # step through all the edges looking for the given attribute/value pair.
         else:
-            for edges in self.edges.values():
+            for edges in list(self.edges.values()):
                 if hasattr(edge, attribute):
                     if getattr(edge, attribute) == value:
                         return edge
@@ -361,12 +361,12 @@ class graph (object):
         '''
 
         # if the attribute to search for is the id, simply return the node from the internal hash.
-        if attribute == "id" and self.nodes.has_key(value):
+        if attribute == "id" and value in self.nodes:
             return self.nodes[value]
 
         # step through all the nodes looking for the given attribute/value pair.
         else:
-            for node in self.nodes.values():
+            for node in list(self.nodes.values()):
                 if hasattr(node, attribute):
                     if getattr(node, attribute) == value:
                         return node
@@ -386,10 +386,10 @@ class graph (object):
         @param other_graph: Graph to concatenate into this one.
         '''
 
-        for other_node in other_graph.nodes.values():
+        for other_node in list(other_graph.nodes.values()):
             self.add_node(other_node)
 
-        for other_edge in other_graph.edges.values():
+        for other_edge in list(other_graph.edges.values()):
             self.add_edge(other_edge)
 
         return self
@@ -414,7 +414,7 @@ class graph (object):
         from_node  = self.find_node("id", from_node_id)
 
         if not from_node:
-            print "unable to resolve node %08x" % from_node_id
+            print("unable to resolve node %08x" % from_node_id)
             raise Exception
 
         levels_to_process = []
@@ -460,11 +460,11 @@ class graph (object):
         @param other_graph: Graph to intersect with
         '''
 
-        for node in self.nodes.values():
+        for node in list(self.nodes.values()):
             if not other_graph.find_node("id", node.id):
                 self.del_node(node.id)
 
-        for edge in self.edges.values():
+        for edge in list(self.edges.values()):
             if not other_graph.find_edge("id", edge.id):
                 self.del_edge(edge.id)
 
@@ -506,10 +506,10 @@ class graph (object):
         @param other_graph: Graph to diff/remove against
         '''
 
-        for other_node in other_graph.nodes.values():
+        for other_node in list(other_graph.nodes.values()):
             self.del_node(other_node.id)
 
-        for other_edge in other_graph.edges.values():
+        for other_edge in list(other_graph.edges.values()):
             self.del_edge(None, other_edge.src, other_edge.dst)
 
         return self
@@ -538,7 +538,7 @@ class graph (object):
         levels_to_process.append([from_node])
 
         if not self.nodes:
-            print "Error: nodes == null"
+            print("Error: nodes == null")
 
         for level in levels_to_process:
             next_level = []
@@ -582,11 +582,11 @@ class graph (object):
         gml += 'graph [\n'
 
         # add the nodes to the GML definition.
-        for node in self.nodes.values():
+        for node in list(self.nodes.values()):
             gml += node.render_node_gml(self)
 
         # add the edges to the GML definition.
-        for edge in self.edges.values():
+        for edge in list(self.edges.values()):
             gml += edge.render_edge_gml(self)
 
         # close the graph tag.
@@ -628,10 +628,10 @@ class graph (object):
 
         dot_graph = pydot.Dot()
 
-        for node in self.nodes.values():
+        for node in list(self.nodes.values()):
             dot_graph.add_node(node.render_node_graphviz(self))
 
-        for edge in self.edges.values():
+        for edge in list(self.edges.values()):
             dot_graph.add_edge(edge.render_edge_graphviz(self))
 
         return dot_graph
@@ -650,7 +650,7 @@ class graph (object):
 
         # render each of the nodes in the graph.
         # the individual nodes will handle their own edge rendering.
-        for node in self.nodes.values():
+        for node in list(self.nodes.values()):
             udraw += node.render_node_udraw(self)
             udraw += ','
 
@@ -671,11 +671,11 @@ class graph (object):
 
         udraw = '['
 
-        for node in self.nodes.values():
+        for node in list(self.nodes.values()):
             udraw += node.render_node_udraw_update()
             udraw += ','
 
-        for edge in self.edges.values():
+        for edge in list(self.edges.values()):
             udraw += edge.render_edge_udraw_update()
             udraw += ','
 
@@ -697,7 +697,7 @@ class graph (object):
         @param new_id:     New ID to update to.
         '''
 
-        if not self.nodes.has_key(current_id):
+        if current_id not in self.nodes:
             return
 
         # update the node.
@@ -707,7 +707,7 @@ class graph (object):
         self.nodes[node.id] = node
 
         # update the edges.
-        for edge in [edge for edge in self.edges.values() if current_id in (edge.src, edge.dst)]:
+        for edge in [edge for edge in list(self.edges.values()) if current_id in (edge.src, edge.dst)]:
             del self.edges[edge.id]
 
             if edge.src == current_id:
@@ -729,7 +729,7 @@ class graph (object):
         @return: List of nodes, sorted by id.
         '''
 
-        node_keys = self.nodes.keys()
+        node_keys = list(self.nodes.keys())
         node_keys.sort()
 
         return [self.nodes[key] for key in node_keys]

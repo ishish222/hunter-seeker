@@ -143,7 +143,7 @@ def prepare_fuzzbox():
 def read_log_socket(f, s):
     global lastResponse
     while True:
-        data = s.recv(options.settings.buffer_size)
+        data = s.recv(options.settings.buffer_size).decode('utf-8')
         
         f.write(data)
         if(data == "-=OK=-"): 
@@ -171,7 +171,7 @@ def read_socket(s):
     data = ""
 
     while True:
-        data += s.recv(1)
+        data += s.recv(1).decode('utf-8')
         if(data[-6:] == "-=OK=-"): 
             lastResponse = data[:-6]
             break
@@ -188,7 +188,7 @@ def read_socket(s):
             reqScript = data[scOff+8:scOff+8+lineEnd]
 
 #    print("%s %s" % (timestamp(), lastResponse))
-    print("%s" % (lastResponse))
+    print(("%s" % (lastResponse)))
     return (lastResponse, status, reqScript)
 
 def read_socket_q(s):
@@ -200,7 +200,7 @@ def read_socket_q(s):
     data = ""
 
     while True:
-        data += s.recv(1)
+        data += s.recv(1).decode('utf-8')
         
         if(data[-6:] == "-=OK=-"): 
             lastResponse = data[:-6]
@@ -225,7 +225,7 @@ def read_socket_q_deprecated(s):
     data = ""
 
     while True:
-        data += s.recv(options.settings.buffer_size)
+        data += s.recv(options.settings.buffer_size).decode('utf-8')
         
         if(data[-6:] == "-=OK=-"): 
             lastResponse = data[:-6]
@@ -240,7 +240,7 @@ def read_socket_q_deprecated(s):
             lineEnd = data[scOff+8:].find("\n")
             reqScript = data[scOff+8:scOff+8+lineEnd]
 
-    print(timestamp())
+    print((timestamp()))
     print("OK")
     return lastResponse
 
@@ -248,8 +248,8 @@ def write_socket(s, data):
     options = globs.state.options
 
 #    print(timestamp() + "> " + str(data))
-    print("> " + str(data))
-    s.send(data + "-=OK=-")
+    print(("> " + str(data)))
+    s.send((data + "-=OK=-").encode('utf-8'))
 
 def powerofff(options):
     options = globs.state.options
@@ -273,8 +273,8 @@ def powerofff(options):
     else:
         rs("quit", options.m)
     options.m = None
-    print("Last batch: %s" % options.tmp_disk_img)
-    print("Last saved: %s" % options.saved_disk_img)
+    print(("Last batch: %s" % options.tmp_disk_img))
+    print(("Last saved: %s" % options.saved_disk_img))
 
 def revert(options):
     options = globs.state.options
@@ -286,8 +286,8 @@ def revert(options):
 def start(options):
     options = globs.state.options
 
-    print("[%s] Starting" % timestamp())
-    print options.qemu_args
+    print(("[%s] Starting" % timestamp()))
+    print(options.qemu_args)
     m = Popen(options.qemu_args, stdout=PIPE, stdin=PIPE)
     time.sleep(3)
     options.m, _ = options.ms.accept()
@@ -308,7 +308,7 @@ def restart(options):
     start(options)
 
 def prepare_pipe(path):
-    print 'Preparing pipe: %s' % path
+    print('Preparing pipe: %s' % path)
     ms = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
     if(os.path.exists(path)): os.remove(path)
     ms.bind(path)
@@ -363,7 +363,7 @@ def wait_for_init(s):
 
     # we have cooldown, it requires long timeout. Lets test infinite
     s.settimeout(None)
-    print("Socket timeout set to: %f" % options.fuzzbox_timeout)
+    print(("Socket timeout set to: %f" % options.fuzzbox_timeout))
     options.s.settimeout(options.fuzzbox_timeout)
     return options.s
 
@@ -392,7 +392,7 @@ def accept_con(ss):
     print("Connected")
     socket.setdefaulttimeout(dt)
     ss.settimeout(options.fuzzbox_timeout)
-    print("Socket timeout set to: %f" % options.fuzzbox_timeout)
+    print(("Socket timeout set to: %f" % options.fuzzbox_timeout))
     options.s.settimeout(options.fuzzbox_timeout)
     return options.s
 
@@ -499,7 +499,7 @@ def handle_crashing_sample(dossier, sample_path, sample_file):
 
     suOff = dossier.find("stack unwind:")
     suEnd = dossier[suOff:].find("\n\n")
-    print("SU:\n%s" % dossier[suOff:suOff+suEnd])
+    print(("SU:\n%s" % dossier[suOff:suOff+suEnd]))
 
 #    write_socket(s, "cbStackUnwind")
 #    read_socket(s)
@@ -573,7 +573,7 @@ def register_script():
     scOff = lastResponse.find("Script: ")
     lineEnd = lastResponse[scOff+8:].find("\n")
     reqScript = lastResponse[scOff+8:scOff+8+lineEnd]
-    print("Registered script: %s" % reqScript)
+    print(("Registered script: %s" % reqScript))
 
 def execute_script(options, reqScript):
     if(reqScript != ""):
@@ -627,7 +627,7 @@ def pci_mount(options, filee):
         return
     slot_off = dev_str.find("slot ") + 5
     slot = int(dev_str[slot_off])
-    print("PCI dev mounted in slot: " + str(slot))
+    print(("PCI dev mounted in slot: " + str(slot)))
     return slot
 
 def pci_mount_wo_virtio(options, filee):
@@ -637,7 +637,7 @@ def pci_mount_wo_virtio(options, filee):
         return
     slot_off = dev_str.find("slot ") + 5
     slot = int(dev_str[slot_off])
-    print("PCI dev mounted in slot: " + str(slot))
+    print(("PCI dev mounted in slot: " + str(slot)))
     return slot
 
 def pci_umount(options, slot):
@@ -645,14 +645,14 @@ def pci_umount(options, slot):
 #    read_monitor(options.m)
 
 def mount_drive(options, offset=None):
-    print("Mounting %s" % options.tmp_mountpoint)
+    print(("Mounting %s" % options.tmp_mountpoint))
     if(offset == None):
         os.spawnv(os.P_WAIT, "/usr/bin/sudo", ["sudo", "mount", "-o", "loop,umask=0000", options.tmp_disk_img, options.tmp_mountpoint])
     else:
         os.spawnv(os.P_WAIT, "/usr/bin/sudo", ["sudo", "mount", "-o", "loop,umask=0000,offset=%s" % offset, options.tmp_disk_img, options.tmp_mountpoint])
 
 def umount_drive(options):
-    print("Umounting %s" % options.tmp_mountpoint)
+    print(("Umounting %s" % options.tmp_mountpoint))
     os.spawnv(os.P_WAIT, "/usr/bin/sudo", ["sudo", "umount", options.tmp_mountpoint])
 
 def calc_disk_size(options):
@@ -677,11 +677,11 @@ def create_drive(options, size=None, name=None, label=None):
 def create_mountpoint(options):
     options.tmp_mountpoint = tempfile.mktemp()
     os.spawnv(os.P_WAIT, "/bin/mkdir", ["mkdir", options.tmp_mountpoint])
-    print("Created mountpoint: %s" % options.tmp_mountpoint)
+    print(("Created mountpoint: %s" % options.tmp_mountpoint))
 
 def del_mountpoint(options):
     os.spawnv(os.P_WAIT, "/bin/rm", ["rm", "-rf", options.tmp_mountpoint])
-    print("Removed mountpoint: %s" % options.tmp_mountpoint)
+    print(("Removed mountpoint: %s" % options.tmp_mountpoint))
     
 def create_layout(options):
     os.spawnv(os.P_WAIT, "/bin/mkdir", ["mkdir", "-p", options.tmp_mountpoint+"/samples/shared"])
@@ -703,20 +703,20 @@ def generate(options):
     mutator_mod, mutator_class = options.mutator.split(".")
     
     import_stat = "import generators.%s as genmod" % generator_mod
-    exec import_stat
+    exec(import_stat)
     assign_stat = "genclass = genmod.%s" % generator_class
-    exec assign_stat
+    exec(assign_stat)
 
     import_stat = "import generators.%s as mutmod" % mutator_mod
-    exec import_stat
+    exec(import_stat)
     assign_stat = "mutclass = mutmod.%s" % mutator_class
-    exec assign_stat
+    exec(assign_stat)
 
     try:
         my_generator = genclass(options.origin, options.tmp_mountpoint+"/samples/shared", mutator_=mutclass, corrector=None)
         my_generator.mutations=int(options.mutations)
         samples_list += my_generator.generate(options.samples_count)
-    except Exception, e:
+    except Exception as e:
     
         print(e)
 

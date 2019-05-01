@@ -72,7 +72,7 @@ class PIDAModulesListCtrl (wx.ListCtrl, ListCtrlAutoWidthMixin):
             try:
                 module_name = path[path.rfind("\\")+1:path.rfind(".pida")].lower()
 
-                if self.top.pida_modules.has_key(module_name):
+                if module_name in self.top.pida_modules:
                     self.top.err("Module %s already loaded ... skipping." % module_name)
                     continue
 
@@ -98,7 +98,7 @@ class PIDAModulesListCtrl (wx.ListCtrl, ListCtrlAutoWidthMixin):
                 function_count    = len(self.top.pida_modules[module_name].nodes)
                 basic_block_count = 0
 
-                for function in self.top.pida_modules[module_name].nodes.values():
+                for function in list(self.top.pida_modules[module_name].nodes.values()):
                     basic_block_count += len(function.nodes)
 
                 self.top.function_count    += function_count
@@ -115,7 +115,7 @@ class PIDAModulesListCtrl (wx.ListCtrl, ListCtrlAutoWidthMixin):
                 self.SetColumnWidth(2, wx.LIST_AUTOSIZE)
             except:
                 self.top.err("FAILED LOADING MODULE: %s. Possibly corrupt or version mismatch?" % module_name)
-                if self.top.pida_modules.has_key(module_name):
+                if module_name in self.top.pida_modules:
                     del(self.top.pida_modules[module_name])
 
 
@@ -153,7 +153,7 @@ class PIDAModulesListCtrl (wx.ListCtrl, ListCtrlAutoWidthMixin):
         # add the function / basic blocks to the global count.
         self.top.function_count -= len(self.top.pida_modules[module].nodes)
 
-        for function in self.top.pida_modules[module].nodes.values():
+        for function in list(self.top.pida_modules[module].nodes.values()):
             self.top.basic_block_count -= len(function.nodes)
 
         self.top.update_gauges()
