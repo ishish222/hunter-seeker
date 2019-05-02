@@ -145,13 +145,13 @@ def process_status_queue(satisfying = None):
             main_binner.dlog("Queue size after script: %d" % main_binner.status.qsize())
             continue
 
-        print(("Got status: %s " % status))
+        print("Got status: %s " % status)
         if(satisfying != None):
             if(status in satisfying):
-                print(("Status %s is satisfying" % status))
+                print("Status %s is satisfying" % status)
                 satisfied = True
             else:
-                print(("Status %s is not satisfying" % status))
+                print("Status %s is not satisfying" % status)
                 print("Satisfying statuses:")
                 print(satisfying)
         main_binner.prev_status = status
@@ -235,14 +235,14 @@ def execute(cmds):
             cool_wait = 5
 
             main_binner.writePipe("Waiting for cooldown: level %d, count %d\n" % (cool_level, cool_count))
-            print(("Waiting for cooldown: level %d, count %d\n" % (cool_level, cool_count)))
+            print("Waiting for cooldown: level %d, count %d\n" % (cool_level, cool_count))
 
             count = 0
             while(count < cool_count):
                 time.sleep(cool_wait)
                 val = getCPU()
                 main_binner.writePipe("CPU usage: %d\n" % val)
-                print('val: %d, cool_level: %d' % (val, cool_level))
+                print 'val: %d, cool_level: %d' % (val, cool_level)
                 if val < cool_level:
                     count = count+1
                 else:
@@ -260,14 +260,14 @@ def execute(cmds):
             cool_wait = 1
 
             main_binner.writePipe("Waiting for cooldown: level %d, count %d\n" % (cool_level, cool_count))
-            print(("Waiting for cooldown: level %d, count %d\n" % (cool_level, cool_count)))
+            print("Waiting for cooldown: level %d, count %d\n" % (cool_level, cool_count))
 
             count = 0
             while(count < cool_count):
                 time.sleep(cool_wait)
                 val = getCPU()
                 main_binner.writePipe("CPU usage: %d\n" % val)
-                print('val: %d, cool_level: %d' % (val, cool_level))
+                print 'val: %d, cool_level: %d' % (val, cool_level)
                 if val < cool_level:
                     count = count+1
                 else:
@@ -289,7 +289,7 @@ def execute(cmds):
                     print("CRrrrrrrrrrr")
                     break
     
-                print(("Status: %s" % status))
+                print("Status: %s" % status)
     
                 main_binner.detach_st_markers()
                 main_binner.attach_end_markers()
@@ -302,7 +302,7 @@ def execute(cmds):
                     print("CRrrrrrrrrrr")
                     break
     
-                print(("Status: %s" % status))
+                print("Status: %s" % status)
 
                 main_binner.detach_end_markers()
                 main_binner.attach_rd_markers()
@@ -353,7 +353,7 @@ def execute(cmds):
 
             main_binner.writePipe("Status: %s" % status)
             main_binner.ok()
-            print("Send: %s" % status)
+            print "Send: %s" % status
 
             main_binner.detach_st_markers()
             main_binner.attach_end_markers()
@@ -362,16 +362,16 @@ def execute(cmds):
                 main_binner.loop_debuggers(settings.wait_sleep)
             if(status == "CR"):
 #                dlog("Processing CR2")
-                print("CR handling 1")
+                print "CR handling 1"
                 main_binner.get_ea()
                 main_binner.test_bin_dir()
                 main_binner.save_synopsis(args)
                 main_binner.save_sample(args)
 #                dlog("Hereeeeeee")
-                print("CR handling 2")
+                print "CR handling 2"
                 main_binner.writePipe("Status: CR")
                 main_binner.ok()
-                print("Send: %s" % status)
+                print "Send: %s" % status
                 return
 
             main_binner.writePipe("Status: %s" % status)
@@ -413,7 +413,7 @@ def execute(cmds):
             args2 = args.split("\"")
             cmds[1] = args2[1]
             cmds[2] = args2[3]
-            print(("0: %s\n1: %s\n2: %s\n" % (cmds[0], cmds[1], cmds[2])))
+            print("0: %s\n1: %s\n2: %s\n" % (cmds[0], cmds[1], cmds[2]))
             real_target = cmds[2]
             main_binner.attach_st_markers()
 
@@ -486,7 +486,7 @@ def execute(cmds):
 
         elif(cmd == "trace3"):
             filee = args
-            print(("Tracing %s" % (filee)))
+            print("Tracing %s" % (filee))
             main_binner.spawn(args)
             main_binner.writePipe("OK")
             main_binner.ok()
@@ -495,18 +495,18 @@ def execute(cmds):
 
         elif(cmd == "trace4"):
             filee = args
-            print(("Tracing %s" % (filee)))
+            print("Tracing %s" % (filee))
             main_binner.spawn(args)
             main_binner.writePipe("OK")
             main_binner.ok()
         
         elif(cmd == "trace"):
             filee = args
-            print(("Tracing %s" % (filee)))
+            print("Tracing %s" % (filee))
             
             main_binner.take_a_trace("%s" % 'NU')
 
-            print("About to release debugger")
+            print "About to release debugger"
             main_binner.loop_debuggers(invocation_args=filee)
             while(process_status_queue(["WS"]) != True):
                 main_binner.loop_debuggers()
@@ -516,9 +516,9 @@ def execute(cmds):
                 main_binner.ok()
                 return
 
-            print("About to release debugger")
+            print "About to release debugger"
 
-            print("here2")
+            print "here2"
             main_binner.writePipe("Status: %s" % status)
             main_binner.ok()
 
@@ -540,13 +540,13 @@ def execute(cmds):
             main_binner.readPipe()
             main_binner.stop_debuggers("Closing execution finished")
 
-            print("here3")
+            print "here3"
 #            main_binner.loop_debuggers()
             if(settings.needs_ready):
                 while(process_status_queue(["RD", "CR", "PTO"]) != True):
-                    print("waiting for RD")
+                    print "waiting for RD"
                     main_binner.loop_debuggers(settings.wait_sleep)
-                    print("got sth")
+                    print "got sth"
             else:
                 process_status_queue(["RD", "CR", "PTO"])
                 if(status != "CR"): status = "RD"
@@ -572,9 +572,9 @@ def execute(cmds):
             main_binner.ok()
 
         elif(cmd == "trace2"):
-            print(args)
+            print args
             filee, pid = args.split(' ')
-            print(("Tracing %s" % (filee)))
+            print("Tracing %s" % (filee))
             
             main_binner.take_a_trace2("%s" % pid)
 
@@ -592,9 +592,9 @@ def execute(cmds):
                 main_binner.ok()
                 return
 
-            print("About to release debugger")
+            print "About to release debugger"
 
-            print("here2")
+            print "here2"
             main_binner.writePipe("Status: %s" % status)
             main_binner.ok()
 
@@ -616,13 +616,13 @@ def execute(cmds):
             main_binner.readPipe()
             main_binner.stop_debuggers("Closing execution finished")
 
-            print("here3")
+            print "here3"
 #            main_binner.loop_debuggers()
             if(settings.needs_ready):
                 while(process_status_queue(["RD", "CR", "PTO"]) != True):
-                    print("waiting for RD")
+                    print "waiting for RD"
                     main_binner.loop_debuggers(settings.wait_sleep)
-                    print("got sth")
+                    print "got sth"
             else:
                 process_status_queue(["RD", "CR", "PTO"])
                 if(status != "CR"): status = "RD"
@@ -645,10 +645,10 @@ def execute(cmds):
 ### walk a file
 
         elif(cmd == "walk"):
-            print("here1")
+            print "here1"
             filee, depth, gf_file = args.split(" ")
             depth = int(depth)
-            print(("Walking %s for %d levels, generating graph into %s" % (filee, depth, gf_file)))
+            print("Walking %s for %d levels, generating graph into %s" % (filee, depth, gf_file))
             
             main_binner.take_a_walk("%s %s" % (depth, gf_file))
             time.sleep(2)
@@ -662,7 +662,7 @@ def execute(cmds):
                 main_binner.ok()
                 return
 
-            print("here2")
+            print "here2"
             main_binner.writePipe("Status: %s" % status)
             main_binner.ok()
 
@@ -684,13 +684,13 @@ def execute(cmds):
             main_binner.readPipe()
             main_binner.stop_debuggers("Closing execution finished")
 
-            print("here3")
+            print "here3"
 #            main_binner.loop_debuggers()
             if(settings.needs_ready):
                 while(process_status_queue(["RD", "CR", "PTO"]) != True):
-                    print("waiting for RD")
+                    print "waiting for RD"
                     main_binner.loop_debuggers(settings.wait_sleep)
-                    print("got sth")
+                    print "got sth"
             else:
                 process_status_queue(["RD", "CR", "PTO"])
                 if(status != "CR"): status = "RD"
@@ -715,7 +715,7 @@ def execute(cmds):
         elif(cmd == "walk2"):
             filee, depth, gf_file, addr = args.split(" ")
             depth = int(depth)
-            print(("Walking %s for %d levels, generating graph into %s" % (filee, depth, gf_file)))
+            print("Walking %s for %d levels, generating graph into %s" % (filee, depth, gf_file))
             
             main_binner.take_a_walk2("%s %s %s" % (depth, gf_file, addr))
             time.sleep(2)
@@ -753,9 +753,9 @@ def execute(cmds):
 #            main_binner.loop_debuggers()
             if(settings.needs_ready):
                 while(process_status_queue(["RD", "CR", "PTO"]) != True):
-                    print("waiting for RD")
+                    print "waiting for RD"
                     main_binner.loop_debuggers(settings.wait_sleep)
-                    print("got sth")
+                    print "got sth"
             else:
                 process_status_queue(["RD", "CR", "PTO"])
                 if(status != "CR"): status = "RD"
@@ -778,7 +778,7 @@ def execute(cmds):
         elif(cmd == "walk3"):
             filee, depth, gf_file, addr = args.split(" ")
             depth = int(depth)
-            print(("Walking %s for %d levels, generating graph into %s" % (filee, depth, gf_file)))
+            print("Walking %s for %d levels, generating graph into %s" % (filee, depth, gf_file))
             
             main_binner.take_a_walk2("%s %s %s" % (depth, gf_file, addr))
             time.sleep(2)
@@ -913,7 +913,7 @@ def execute(cmds):
             try:
                 ph2 = serial.Serial(1)
             except Exception:
-                print("No second serial")
+                print "No second serial"
             ph2.write("test-=OK=-") 
             print("done")
             main_binner.ok()
@@ -1039,7 +1039,7 @@ def execute(cmds):
             main_binner.ok()
 
         elif(cmd == "spawn"):
-            print(("Spawning: %s" % args))
+            print("Spawning: %s" % args)
             main_binner.spawn(args)
             main_binner.writePipe("OK")
             main_binner.ok()
@@ -1049,7 +1049,7 @@ def execute(cmds):
             main_binner.ok()
 
         elif(cmd == "kill"):
-            print(("Killing %s" % args))
+            print("Killing %s" % args)
             call("taskkill /F /IM %s" % args)
             main_binner.writePipe("OK")
             main_binner.ok()
@@ -1122,7 +1122,7 @@ Hunter-Seeker
         if(cmd == "quit"):
             break
 
-import cProfile, pstats, io
+import cProfile, pstats, StringIO
 pr = cProfile.Profile()
 pr.enable()
 f = open("e:\\logs\\stats-binner", "a", 0)
@@ -1132,7 +1132,7 @@ if __name__ == '__main__':
 #    profile.run("binner_routine()", "e:\\logs\\stats-binner")
 
 pr.disable()
-s = io.StringIO()
+s = StringIO.StringIO()
 sortby = 'cumulative'
 ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
 f.write("test")

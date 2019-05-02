@@ -2,6 +2,7 @@ import sys
 import os
 import random
 import time
+import io
 
 class Area:
     def __init__(self):
@@ -16,10 +17,10 @@ class Area:
         return self.offset < other.offset
 
 
-class Mutator(file):
+class Mutator(io.FileIO):
 
     def __init__(self, path):
-        file.__init__(self, path, "r+b")
+        io.FileIO.__init__(self, path, "r+b")
         random.seed(time.time())
         self.areasCount = 0
         self.offset = 0
@@ -32,9 +33,11 @@ class Mutator(file):
         else:
             self.readSize(path)
         self.calcSizeTotal()
-        self.prepare()
 
     def prepare(self):
+        pass
+
+    def finalize(self):
         pass
 
     def sortAreas(self):
@@ -72,8 +75,14 @@ class Mutator(file):
     def getOffset(self):
         return self.offset
 
+    def change(self):
+        pass
+
     def mutate(self):
-        pass 
+        self.prepare()
+        self.change()
+        self.finalize()
+        return
 
     def calcSizeTotal(self):
         for area in self.areas:

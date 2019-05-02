@@ -49,7 +49,7 @@ def handle_trace_end(dbg):
     dbg.trace.dlog("Reached trace end")
     print("current dbg breakpoints:")
     for b in dbg.breakpoints:
-        print(b)
+        print b
     print("[*] Reached trace end")
     dbg.single_step(False)
     dbg.trace.running = False
@@ -157,10 +157,10 @@ class trace():
         for (pid, name) in self.dbg.enumerate_processes():
             if imagename in name:
                 try:
-                    print(("[*] Attaching to " + str(pid)))
+                    print("[*] Attaching to " + str(pid))
                     self.dbg.attach(pid)
                 except:
-                    print(("[!] Problem attaching to " + str(pid)))
+                    print("[!] Problem attaching to " + str(pid))
                     windows_kill(pid)
                     raise AttachFail
         self.pid = pid

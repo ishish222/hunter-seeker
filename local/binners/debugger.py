@@ -3,7 +3,7 @@ import sys
 sys.path.append("e:\\server\\paimei")
 sys.path.append("e:\\common")
 
-import cProfile, pstats, io
+import cProfile, pstats, StringIO
 import settings
 from threading import Thread, Lock, ThreadError
 from multiprocessing import Process, Pipe
@@ -558,7 +558,7 @@ class debugger(pydbg):
             yield (mod_addr+off, ma_rva[2])
 
     def list_tebs(self):
-        for teb in list(self.tebs.keys()):
+        for teb in self.tebs.keys():
             yield hex(teb)
 
     def addr_to_module_name(self, e_addr):
@@ -903,7 +903,7 @@ class debugger(pydbg):
         self.logStarted = True
         if(self.last_log_file != None):
             self.last_log_file.close()
-        print(("debugger opening: %s-%d.txt" % (name, self.pid)))
+        print("debugger opening: %s-%d.txt" % (name, self.pid))
         self.last_log_file = open("%s-%d.txt" % (name, self.pid), "a", 0)
 
     def write_log(self, data):
@@ -1039,7 +1039,7 @@ class debugger(pydbg):
     def dump_stats(self, fname):
         if(self.pr != None):
             try:
-                s = io.StringIO()
+                s = StringIO.StringIO()
                 sortby = 'cumulative'
                 ps = pstats.Stats(self.pr, stream=s).sort_stats(sortby)
                 ps.dump_stats(fname)
@@ -1113,7 +1113,7 @@ def comm_routine(dbg):
             cmd, args = readline(dbg.binner)
             dbg.dlog("Received: %s" % cmd, 2)
             dbg.execute(cmd, args)
-    except Exception as e:
+    except Exception, e:
         dbg.dlog("Got exception in debugger_routine")
         dbg.dlog(e)
         dbg.dump_stats("e:\\logs\\debugger-%d-error" % dbg.pid)
@@ -1148,7 +1148,7 @@ def debugger_routine():
     ct.start()
 
     # dbg in main thread, all commands in additional threads
-    print((dbg.start_mutex))
+    print(dbg.start_mutex)
     while True:
 #        print("Waiting for mutex")
 #        dbg.dbg_lock_acquire(l)

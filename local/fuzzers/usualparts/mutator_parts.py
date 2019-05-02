@@ -41,13 +41,29 @@ def init_mutator(args = None):
     return
 
 def select_changer(args = None):
+    from importlib import import_module
+
+    def dynamic_import(abs_module_path, class_name):
+        module_object = import_module(abs_module_path)
+
+        target_class = getattr(module_object, class_name)
+
+        return target_class
+
     options = globs.state.options
     state = globs.state
     status = globs.state.status
 
-    import generators.changer as changer
+    if(args == None):
+        from generators.changer import Changer
+    else:
+#        code = 'import generators.{} as changer'.format(args)
+#        exec(code)
+#        import generators.changer as changer
+        Changer = dynamic_import('generators.{}'.format(args), 'Changer')
 
-    globs.state.mutator.mutator = changer.Changer
+    globs.state.mutator.mutator = Changer
+
     return
 
 def extension(args = None):
@@ -147,6 +163,7 @@ def generate_batch(args = None):
     state = globs.state
     status = globs.state.status
     mutator = state.mutator    
+
     from os.path import basename, dirname
     from os import spawnv
     import tempfile

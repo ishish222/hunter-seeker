@@ -260,6 +260,7 @@ prototypes['MutatorReport']         = mutator_parts.report
 prototypes['MLInit']                    = ml_parts.init_ml
 prototypes['MLLoadModel']               = ml_parts.load_ml
 prototypes['MLSaveModel']               = ml_parts.save_ml
+prototypes['MLRemoveModel']             = ml_parts.delete_ml
 prototypes['MLSetEpochs']               = ml_parts.set_epochs
 prototypes['MLSetInputFilename']        = ml_parts.set_input_filename
 prototypes['MLSetInputGlob']            = ml_parts.set_input_glob

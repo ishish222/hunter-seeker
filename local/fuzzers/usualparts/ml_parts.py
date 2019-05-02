@@ -7,17 +7,17 @@ import json
 
 from glob import glob
 
-from textgenrnn import textgenrnn
-
-class ML(object):
-    def __init__(self):
-        self.rnn = textgenrnn()
-        self.input_dir = ''
-        self.model_dir = ''
-        self.input_list = []
-        self.epochs = 1
-
 def init_ml(args=None):
+    from textgenrnn import textgenrnn
+
+    class ML(object):
+        def __init__(self):
+            self.rnn = textgenrnn()
+            self.input_dir = ''
+            self.model_dir = ''
+            self.input_list = []
+            self.epochs = 1
+
     options = globs.state.options
     state = globs.state
     status = globs.state.status
@@ -28,6 +28,16 @@ def init_ml(args=None):
     return
 
 def load_ml(args=None):
+    from textgenrnn import textgenrnn
+
+    class ML(object):
+        def __init__(self):
+            self.rnn = textgenrnn()
+            self.input_dir = ''
+            self.model_dir = ''
+            self.input_list = []
+            self.epochs = 1
+
     options = globs.state.options
     state = globs.state
     status = globs.state.status
@@ -41,6 +51,25 @@ def load_ml(args=None):
     config_path = '{}_config.json'.format(model_path)
 
     ml.rnn = textgenrnn(weights_path=weights_path, vocab_path=vocab_path, config_path=config_path)
+
+    return
+
+def delete_ml(args=None):
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+    ml = globs.state.ml
+
+    print('Deleting model: {}/{}'.format(ml.model_dir, args))
+    model_path = '{}/{}'.format(ml.model_dir, args)
+
+    weights_path = '{}_weights.hdf5'.format(model_path)
+    vocab_path = '{}_vocab.json'.format(model_path)
+    config_path = '{}_config.json'.format(model_path)
+
+    os.spawnv(os.P_WAIT, "/bin/rm", ["rm", weights_path])
+    os.spawnv(os.P_WAIT, "/bin/rm", ["rm", vocab_path])
+    os.spawnv(os.P_WAIT, "/bin/rm", ["rm", config_path])
 
     return
 

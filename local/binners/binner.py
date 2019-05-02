@@ -3,7 +3,7 @@ import sys
 sys.path.append("\\\\10.0.2.4\\qemu\\server\\paimei")
 sys.path.append("\\\\10.0.2.4\\common")
 
-from queue import PriorityQueue
+from Queue import PriorityQueue
 import settings
 from threading import Event
 from multiprocessing import Lock, Process, Pipe
@@ -144,16 +144,16 @@ class binner(object):
     def poll_debuggers(self, to = None):
         if(to != None):
             self.dlog("TO = %d seconds" % to, 3)
-            readable = list(self.sockets.values())
+            readable = self.sockets.values()
             ready, _, _ = select(readable, [], [], to)
         else:
             self.dlog("Polling until readable", 2)
-            readable = list(self.sockets.values())
+            readable = self.sockets.values()
             ready, _, _ = select(readable, [], [])
         return ready
 
     def read_debuggers(self):
-        for dbg in list(self.debuggers.values()):
+        for dbg in self.debuggers.values():
             self.dlog(self.read_debugger(dbg))
             self.read_debugger(dbg)
 
@@ -343,7 +343,7 @@ class binner(object):
         #    debugger.terminate()
 
     def spawn(self, path):
-        print(("Spawning: %s", path))
+        print("Spawning: %s", path)
         self.proc = Popen(path)
 
     def attach(self, pid):
@@ -474,7 +474,7 @@ class binner(object):
 
     def start_log(self, name):
 #        self.debug = True
-        print(("Binner starting log: %s-binner.txt" % name))
+        print("Binner starting log: %s-binner.txt" % name)
         if(self.last_log_file != None):
             self.last_log_file.close()
         self.last_log_file = open("%s-binner.txt" % name, "a", 0)
@@ -554,7 +554,7 @@ class binner(object):
         if(dir2[-1:] == "\\"): dir2 = dir2[:-1]
         #cmd = "xcopy /R /Y /I /E %s %s" % (dir1, dir2)
         cmd = "copy %s %s" % (dir1, dir2)
-        print("%s" % cmd)
+        print "%s" % cmd
         os.system(cmd)
         #os.system("copy %s %s%s\\%s" % (filee, settings.samples_binned, self.ea, fname))
 
