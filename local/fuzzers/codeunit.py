@@ -10,6 +10,7 @@ import usualparts.qemu_parts as qemu_parts
 import usualparts.disk_fs_parts as disk_fs_parts
 import usualparts.responder_parts as responder_parts
 import usualparts.mutator_parts as mutator_parts
+import usualparts.ml_parts as ml_parts
 
 global prototypes
 prototypes = {}
@@ -255,6 +256,20 @@ prototypes['MutatorSaveSample']         = mutator_parts.save_sample
 prototypes['MutatorSaveCrashData']      = mutator_parts.save_crash_data
 prototypes['MutatorExtension']         = mutator_parts.extension
 prototypes['MutatorReport']         = mutator_parts.report
+#ML
+prototypes['MLInit']                    = ml_parts.init_ml
+prototypes['MLLoadModel']               = ml_parts.load_ml
+prototypes['MLSaveModel']               = ml_parts.save_ml
+prototypes['MLSetEpochs']               = ml_parts.set_epochs
+prototypes['MLSetInputFilename']        = ml_parts.set_input_filename
+prototypes['MLSetInputGlob']            = ml_parts.set_input_glob
+prototypes['MLSetInputDir']             = ml_parts.set_input_dir
+prototypes['MLSetModelDir']            = ml_parts.set_model_dir
+prototypes['MLTrainModelStep']          = ml_parts.train_model_step
+prototypes['MLTrainModel']              = ml_parts.train_model
+prototypes['MLSaveSamples']             = ml_parts.save_samples
+prototypes['MLCheckMore']               = ml_parts.check_more
+
 #keywords
 
 prototypes['Call']                  = other_parts.noop
