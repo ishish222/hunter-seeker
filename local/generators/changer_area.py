@@ -6,15 +6,11 @@ maxAreaSize = 5
 
 class Changer(Mutator):
     def change(self):
-        print('child change')
         self.pickOffset()
+        size = self.pickRandom(1, maxAreaSize)
         fmap = mmap(self.fileno(), 0)
-        fmap[self.offset] = chr(random.randint(0,255))
+        for i in range(0, size):
+            fmap[self.offset] = chr(random.randint(0,255))
+            self.offset += 1
         fmap.close()
-
-    def mutate(self):
-        print('child mutate')
-        self.prepare()
-        self.change()
-        self.finalize()
 

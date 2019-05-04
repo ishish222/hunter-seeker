@@ -5,7 +5,6 @@ import logging.handlers
 import os
 from datetime import datetime
 from script import rs, rss, runscriptq, write_monitor, write_monitor_2
-import generators.generatorCorrected as generator
 import socket
 from subprocess import Popen, PIPE
 import time

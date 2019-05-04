@@ -2,7 +2,6 @@ import statemachine
 import globs
 import os
 import queue 
-import generators.generatorCorrected as generatorCorrected
 from datetime import datetime, timedelta
 
 options = globs.state.options
@@ -57,9 +56,6 @@ def select_changer(args = None):
     if(args == None):
         from generators.changer import Changer
     else:
-#        code = 'import generators.{} as changer'.format(args)
-#        exec(code)
-#        import generators.changer as changer
         Changer = dynamic_import('generators.{}'.format(args), 'Changer')
 
     globs.state.mutator.mutator = Changer

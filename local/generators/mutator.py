@@ -76,9 +76,11 @@ class Mutator(io.FileIO):
         return self.offset
 
     def change(self):
+        print('parent change')
         pass
 
     def mutate(self):
+        print('parent mutate')
         self.prepare()
         self.change()
         self.finalize()
