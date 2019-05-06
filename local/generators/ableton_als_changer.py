@@ -1,6 +1,8 @@
 from .mutator import Mutator
 from mmap import mmap
 import random
+import sys
+from ml import ML
 
 maxAreaSize = 5
 
@@ -10,10 +12,10 @@ class Changer(Mutator):
 
     def prepare(self):
 
-        print('child prepare')
+        print('ableton_als_changer prepare')
 
     def change(self):
-        print('child change')
+        print('ableton_als_changer child change')
         self.pickOffset()
         print('picked offset: {}'.format(self.offset))
         fmap = mmap(self.fileno(), 0)
@@ -22,5 +24,5 @@ class Changer(Mutator):
         fmap.close()
 
     def finalize(self):
-        print('child finalize')
+        print('ableton_als_changer child finalize')
 
