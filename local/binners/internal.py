@@ -993,6 +993,17 @@ def execute(cmds, ext_pipe):
             writePipe(ext_pipe, "get_http "+bcolors.OK_STR)
             ok(ext_pipe)
 
+        elif(cmd == "run_admin_cmd"):
+            import subprocess
+            cmd = "runas /user:Administrator cmd.exe /c %s" % args
+            print 'CMD: %s\n' % cmd
+            p = subprocess.Popen(cmd.split(), stdout=subprocess.PIPE, stderr = subprocess.PIPE)
+            out, err = p.communicate()
+            writePipe(ext_pipe, out)
+            writePipe(ext_pipe, err)
+            writePipe(ext_pipe, "run_cmd "+bcolors.OK_STR)
+            ok(ext_pipe)
+
         elif(cmd == "run_cmd"):
             import subprocess
             cmd = "cmd.exe /c %s" % args

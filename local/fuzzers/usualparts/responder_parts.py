@@ -139,6 +139,20 @@ def change_ip(args=None):
     globs.state.ret = response
     return
 
+def run_admin_cmd(args=None):
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+    
+    if(args == None):
+        args = globs.state.ret
+
+    write_socket(options.s, "run_admin_cmd %s" % args)
+    response, _, _ = read_socket(options.s)
+
+    globs.state.ret = response
+    return
+
 def run_cmd(args=None):
     options = globs.state.options
     state = globs.state

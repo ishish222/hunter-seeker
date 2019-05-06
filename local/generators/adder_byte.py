@@ -8,6 +8,7 @@ maxLongAdd = 255
 
 class Changer(Mutator):
     def change(self):
+        print('adder_byte.change()')
         self.pickOffset()
         self.seek(self.offset, 0)
 #        random.seed()

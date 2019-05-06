@@ -55,8 +55,10 @@ def select_changer(args = None):
 
     if(args == None):
         from generators.changer import Changer
+        print('Imported: {}.{}'.format('generators.{}'.format(args), 'Changer'))
     else:
         Changer = dynamic_import('generators.{}'.format(args), 'Changer')
+        print('Imported: {}.{}'.format('generators.{}'.format(args), 'Changer'))
 
     globs.state.mutator.mutator = Changer
 

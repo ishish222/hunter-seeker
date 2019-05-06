@@ -96,7 +96,7 @@ class Mutator(io.FileIO):
 
     def pickOffset(self):
         self.offset = 0
-        self += self.pickVirtualOffset()
+        self.offset += self.pickVirtualOffset()
 
     def pickRandom(self, from_, to_):
         r = random.randint(from_, to_)
