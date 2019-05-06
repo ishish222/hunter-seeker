@@ -7,6 +7,7 @@ c:fuzzers/parts
 c:fuzzers/globs.py
 c:fuzzers/usualparts
 c:fuzzers/statemachine.py
+c:ml_module
 t:settings/generic-zero-trace/settings.py
 t:settings/default-flareon/default.py
 t:generators

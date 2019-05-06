@@ -1,23 +1,13 @@
 import os
 import sys
-sys.path += ["../../common"]
-import common
+sys.path += ["./ml_module"]
+from ml import ML
 import globs 
 import json
 
 from glob import glob
 
 def init_ml(args=None):
-    from textgenrnn import textgenrnn
-
-    class ML(object):
-        def __init__(self):
-            self.rnn = textgenrnn()
-            self.input_dir = ''
-            self.model_dir = ''
-            self.input_list = []
-            self.epochs = 1
-
     options = globs.state.options
     state = globs.state
     status = globs.state.status
@@ -28,30 +18,12 @@ def init_ml(args=None):
     return
 
 def load_ml(args=None):
-    from textgenrnn import textgenrnn
-
-    class ML(object):
-        def __init__(self):
-            self.rnn = textgenrnn()
-            self.input_dir = ''
-            self.model_dir = ''
-            self.input_list = []
-            self.epochs = 1
-
     options = globs.state.options
     state = globs.state
     status = globs.state.status
     ml = globs.state.ml
 
-    print('Loading model from: {}/{}'.format(ml.model_dir, args))
-    model_path = '{}/{}'.format(ml.model_dir, args)
-
-    weights_path = '{}_weights.hdf5'.format(model_path)
-    vocab_path = '{}_vocab.json'.format(model_path)
-    config_path = '{}_config.json'.format(model_path)
-
-    ml.rnn = textgenrnn(weights_path=weights_path, vocab_path=vocab_path, config_path=config_path)
-
+    ml.load(args)
     return
 
 def delete_ml(args=None):
@@ -60,17 +32,7 @@ def delete_ml(args=None):
     status = globs.state.status
     ml = globs.state.ml
 
-    print('Deleting model: {}/{}'.format(ml.model_dir, args))
-    model_path = '{}/{}'.format(ml.model_dir, args)
-
-    weights_path = '{}_weights.hdf5'.format(model_path)
-    vocab_path = '{}_vocab.json'.format(model_path)
-    config_path = '{}_config.json'.format(model_path)
-
-    os.spawnv(os.P_WAIT, "/bin/rm", ["rm", weights_path])
-    os.spawnv(os.P_WAIT, "/bin/rm", ["rm", vocab_path])
-    os.spawnv(os.P_WAIT, "/bin/rm", ["rm", config_path])
-
+    ml.delete(args)
     return
 
 def save_ml(args=None):
@@ -79,37 +41,17 @@ def save_ml(args=None):
     status = globs.state.status
     ml = globs.state.ml
 
-    print('Saving model to: {}/{}'.format(ml.model_dir, args))
-    model_path = '{}/{}'.format(ml.model_dir, args)
-
-    weights_path = '{}_weights.hdf5'.format(model_path)
-    vocab_path = '{}_vocab.json'.format(model_path)
-    config_path = '{}_config.json'.format(model_path)
-
-    with open('{}_config.json'.format(model_path),'w', encoding='utf8') as outfile:
-        json.dump(ml.rnn.config, outfile, ensure_ascii=False)
-
-    with open('{}_vocab.json'.format(model_path),'w', encoding='utf8') as outfile:
-        json.dump(ml.rnn.tokenizer.word_index, outfile, ensure_ascii=False)
-
-    ml.rnn.save(weights_path)
+    ml.save(args)
 
     return
-
+    
 def save_samples(args=None):
     options = globs.state.options
     state = globs.state
     status = globs.state.status
     ml = globs.state.ml
 
-    out_path = '{}/{}'.format(ml.model_dir, args)
-    out = open(out_path, 'w+')
-
-    for input_ in ml.input_list:
-        out.write(input_)
-        out.write('\n')
-
-    out.close()
+    ml.save_samples(args)
     return
 
 def check_more(args=None):

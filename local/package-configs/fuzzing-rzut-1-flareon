@@ -10,6 +10,7 @@ t:settings/generic-zero-trace/settings.py
 t:settings/default-flareon/default.py
 t:generators
 t:correctors
+t:ml_module
 t:fuzzers/common.py
 c:util/extract-saved
 c:util/analyze-sample
