@@ -179,8 +179,7 @@ def generate_batch(args = None):
         current_file = mutator.mutator(tname)
     
         # mutate
-        for j in range(0, mutator.mutation_count):
-            current_file.mutate()
+        current_file.mutate(mutator.mutation_count)
 
         if(mutator.corrector != None):
             current_file = mutator.corrector(tname)

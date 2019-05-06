@@ -12,6 +12,8 @@ class Area:
     def __init__(self, offset, size):
         self.offset = offset
         self.size = size
+        self.prepared = False
+        self.finalized = False
 
     def __lt__(self, other):
         return self.offset < other.offset
@@ -28,11 +30,17 @@ class Mutator(io.FileIO):
         self.areas = list()
         self.selectorPath = "selector"
         if(os.path.isfile("selector")):
-            print("Selector loaded")
             self.readSelector()
         else:
             self.readSize(path)
         self.calcSizeTotal()
+
+    def get_size(self):
+        cur_pos = self.tell()
+        self.seek(0,2)
+        size = self.tell()
+        self.seek(cur_pos,0)
+        return size
 
     def prepare(self):
         pass
@@ -76,13 +84,15 @@ class Mutator(io.FileIO):
         return self.offset
 
     def change(self):
-        print('parent change')
+        print('NOT IMPLEMENTED!!!')
         pass
 
-    def mutate(self):
-        print('parent mutate')
+    def mutate(self, mutation_count=1):
         self.prepare()
-        self.change()
+
+        for j in range(0, mutation_count):
+            self.change()
+
         self.finalize()
         return
 
