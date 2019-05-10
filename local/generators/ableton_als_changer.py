@@ -8,7 +8,7 @@ from tempfile import TemporaryFile
 
 maxAreaSize = 5
 
-model_path = '/home/hs1/ml_models'
+model_path = '/home/hs1/_SAMPLES/_LEARNING/_MODELS'
 model_name = 'model_003_final'
 
 model = ML()
