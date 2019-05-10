@@ -5,7 +5,8 @@
 # external
 
 external_paths_machines = '/home/hs1/machines/qemu'
-external_paths_src = '/home/hs1/malware_samples'
+#external_paths_src = '/home/hs1/malware_samples'
+external_paths_src = '/home/hs1/_SAMPLES'
 external_paths_final_all_output = '/mnt/1/output'
 external_paths_tmp_all_input_output = '/mnt/1/research'
 external_paths_log = '/mnt/1/log'

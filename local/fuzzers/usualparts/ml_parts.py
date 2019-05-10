@@ -1,13 +1,14 @@
 import os
 import sys
 sys.path += ["./ml_module"]
-from ml import ML
 import globs 
 import json
 
 from glob import glob
 
 def init_ml(args=None):
+    from ml import ML
+
     options = globs.state.options
     state = globs.state
     status = globs.state.status
@@ -83,7 +84,7 @@ def set_input_dir(args = None):
     status = globs.state.status
     ml = globs.state.ml
 
-    ml.input_dir = args
+    ml.input_dir = '{}/{}'.format(options.external_paths_src, args)
 
     return
 
@@ -93,7 +94,7 @@ def set_model_dir(args = None):
     status = globs.state.status
     ml = globs.state.ml
 
-    ml.model_dir = args
+    ml.model_dir = '{}/{}'.format(options.external_paths_src, args)
 
     return
 
