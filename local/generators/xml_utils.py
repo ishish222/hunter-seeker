@@ -10,7 +10,7 @@ def convert_xml(data):
     current_node = None
     diving_chunks = data.split('>')
     for dchunk in diving_chunks:
-        print('Parsing dchunk: {}'.format(dchunk))
+#        print('Parsing dchunk: {}'.format(dchunk))
         if(len(dchunk) == 0): 
             continue
         if(current_node == None):
@@ -23,15 +23,15 @@ def convert_xml(data):
 
         surfacing_chunks = dchunk.split('<')
         for schunk in surfacing_chunks:
-            print('Parsing schunk: {}'.format(schunk))
+#            print('Parsing schunk: {}'.format(schunk))
             if(len(schunk) > 0):
                 attrs = re.findall(r'(?:[^\s,"]|"(?:\\.|[^"])*")+', schunk)
-                print('Attrs: {}'.format(attrs))
+#                print('Attrs: {}'.format(attrs))
                 try:
                     tag = attrs.pop(0)
                 except IndexError:
                     continue
-                print('Setting tag: {}'.format(tag))
+#                print('Setting tag: {}'.format(tag))
 
                 if(current_node == None):
                     current_node = etree.Element('child')
@@ -56,7 +56,7 @@ def convert_xml(data):
             else:
                 current_node = current_node.getparent()
 
-    print(etree.tostring(root, pretty_print=True))
+#    print(etree.tostring(root, pretty_print=True))
     return root
     
 

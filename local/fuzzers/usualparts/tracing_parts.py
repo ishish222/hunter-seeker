@@ -192,12 +192,12 @@ def start_tracer_no_log(args=None):
     globs.state.tracers.append(response)
     globs.state.tracers_count += 1
 
-def start_tracer_log(args=None):
+def start_tracer_log_local(args=None):
     options = globs.state.options
     state = globs.state
     status = globs.state.status
     
-    write_socket(options.s, "spawn_tracer_log");
+    write_socket(options.s, "spawn_tracer_log_local");
     response, _, _ = read_socket(options.s)
 
     # register controller on success
@@ -686,6 +686,10 @@ def decision(args=None):
         print(bcolors.WARNING + bcolors.BOLD + 'EXCEPTION' + bcolors.ENDC)
         globs.state.ret = ''
         return 'EXCEPTION'   
+    elif('TIMEOUT' in globs.state.ret):
+        print(bcolors.WARNING + bcolors.BOLD + 'TIMEOUT' + bcolors.ENDC)
+        globs.state.ret = ''
+        return 'TIMEOUT'   
     elif(globs.state.ret[1:3] == "RB"):
         bp = globs.state.ret[3:].split('\n')[0]
         print(bcolors.WARNING + bcolors.BOLD + bp + bcolors.ENDC)

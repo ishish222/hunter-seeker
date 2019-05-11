@@ -1071,11 +1071,11 @@ def execute(cmds, ext_pipe):
             writePipe(ext_pipe, "spawn_tracer "+bcolors.OK_STR)
             ok(ext_pipe)
 
-        elif(cmd == "spawn_tracer_log"):
-            new_tracer = trace_controller.spawn_tracer_log()
+        elif(cmd == "spawn_tracer_log_local"):
+            new_tracer = trace_controller.spawn_tracer_log_local()
             writePipe(ext_pipe, "[Trace controller]: "+bcolors.OK_STR)
             writePipe(ext_pipe, "Active tracers: %d" % trace_controller.trace_count)
-            writePipe(ext_pipe, "spawn_tracer_log "+bcolors.OK_STR)
+            writePipe(ext_pipe, "spawn_tracer_log_local "+bcolors.OK_STR)
             ok(ext_pipe)
 
         elif(cmd == "spawn_tracer_remote_log"):

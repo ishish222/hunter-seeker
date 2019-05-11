@@ -50,12 +50,12 @@ prototypes['KillExplorer']          = binner_parts.binner_kill_explorer
 prototypes['HostResetTracers']          = tracing_parts.reset_tracer_controller_status
 prototypes['SpawnTracerController'] = tracing_parts.spawn_tracer_controller
 prototypes['SpawnTracerScrLog']     = tracing_parts.start_tracer
-prototypes['SpawnTracerFileLog']    = tracing_parts.start_tracer_log
+prototypes['SpawnTracerFileLog']    = tracing_parts.start_tracer_log_local
 prototypes['SpawnTracerRemoteLog']  = tracing_parts.start_tracer_log_remote
 prototypes['SpawnTracerNoLog']      = tracing_parts.start_tracer_no_log
 # for backward compatibility
 prototypes['SpawnTracer']           = tracing_parts.start_tracer
-prototypes['SpawnTracerLog']        = tracing_parts.start_tracer_log
+prototypes['SpawnTracerLog']        = tracing_parts.start_tracer_log_local
 # ends
 prototypes['GetSampleOptions']      = tracing_parts.get_sample_options
 prototypes['OfflineRevert']           = qemu_parts.offline_revert

@@ -5867,6 +5867,10 @@ int create_report(int last_report)
             sprintf(buffer2, "REPORT_PROCESS_EXIT\n");
             break;
 
+        case REPORT_TIMEOUT:
+            sprintf(buffer2, "REPORT_TIMEOUT\n");
+            break;
+
         default:
             sprintf(buffer2, "REPORT_OTHER\n");
             sprintf(buffer3, "at: 0x%08x\n", my_trace->last_eip);
@@ -5976,10 +5980,22 @@ int continue_routine(DWORD time, unsigned stat)
     d_print("Continuing\n");
     while(1)
     {
+        DWORD ret;
 
-        WaitForDebugEvent(&(my_trace->last_event), time);
+        ret = WaitForDebugEvent(&(my_trace->last_event), time);
 
         //d_print("continue_routine: dwDebugEventCode: 0x%08x\n", my_trace->last_event.dwDebugEventCode);
+
+        if(ret == 0x0) //probably timeout
+        {
+            char line[SNAP_SIZE];
+            d_print("Timeout");
+            my_trace->report_code = REPORT_TIMEOUT;
+            sprintf(line, "Got timeout");
+            strcpy(my_trace->report_buffer, line);
+            last_report = REPORT_TIMEOUT;
+            break;
+        }
 
         last_report = process_last_event();
         if(last_report == REPORT_CONTINUE)

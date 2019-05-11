@@ -112,6 +112,7 @@
 #define REPORT_EXCEPTION        0x6
 #define REPORT_INFO             0x7
 #define REPORT_EXCEPTION_NH     0x8
+#define REPORT_TIMEOUT          0x9
 #define REPORT_NOTHING          0x99
 
 /* tracer commands */
