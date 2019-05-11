@@ -7,11 +7,12 @@ from gzip import GzipFile
 from tempfile import TemporaryFile
 from .xml_utils import convert_xml, convert_node
 from lxml import etree
+import tempfile
 
 maxAreaSize = 5
 
 model_path = '/home/hs1/_SAMPLES/_LEARNING/_MODELS'
-model_name = 'model_005_part'
+model_name = 'model_005'
 
 model = ML()
 model.model_dir = model_path
