@@ -27,6 +27,7 @@ class Mutator(object):
         self.interesting_list = []
         self.samples_interesting = 0
         self.samples_tested = 0
+        self.timeout_count = 0
         self.start_time = datetime.now()
         
 
@@ -102,6 +103,8 @@ def report(args = None):
     print('Original extension: %s' % globs.state.mutator.original_extension)
     print('Tested %s samples' % globs.state.mutator.samples_tested)
     print('Found %s interesting samples' % globs.state.mutator.samples_interesting)
+    print('Timout encountered %s times' % globs.state.mutator.timeout_count)
+    print('Timout factor is %s ' % (globs.state.mutator.timeout_count / globs.state.mutator.samples_tested))
     if(globs.state.mutator.samples_interesting > 0):
         print('===')
         print('Interesting samples:')
@@ -258,6 +261,15 @@ def current_sample_drop(args = None):
 
     return
 
+def report_timeout(args = None):
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+
+    state.mutator.timeout_count = state.mutator.timeout_count +1
+
+    return
+
 def save_sample(args = None):
     options = globs.state.options
     state = globs.state
@@ -265,7 +277,7 @@ def save_sample(args = None):
 
     from shutil import copyfile
 
-    copyfile(state.mutator.current_sample_path, state.mutator.current_sample_base+'/../saved/'+state.mutator.current_sample_name)
+    copyfile(state.mutator.current_sample_path, state.mutator.current_sample_base+'/../output/'+state.mutator.current_sample_name)
 
     state.mutator.interesting_list.append(state.mutator.current_sample_name)
     state.mutator.samples_interesting = state.mutator.samples_interesting +1
@@ -277,7 +289,7 @@ def save_crash_data(args = None):
     state = globs.state
     status = globs.state.status
 
-    crash_data_path = state.mutator.current_sample_base+'/../saved/'+state.mutator.current_sample_name+'.crash.txt'
+    crash_data_path = state.mutator.current_sample_base+'/../output/'+state.mutator.current_sample_name+'.crash.txt'
     f = open(crash_data_path, 'w+')
 
     count = globs.state.stack.pop()

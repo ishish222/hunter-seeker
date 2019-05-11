@@ -258,6 +258,7 @@ prototypes['MutatorSaveSample']         = mutator_parts.save_sample
 prototypes['MutatorSaveCrashData']      = mutator_parts.save_crash_data
 prototypes['MutatorExtension']         = mutator_parts.extension
 prototypes['MutatorReport']         = mutator_parts.report
+prototypes['MutatorReportTimeout']         = mutator_parts.report_timeout
 #ML
 prototypes['MLInit']                    = ml_parts.init_ml
 prototypes['MLLoadModel']               = ml_parts.load_ml
