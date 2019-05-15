@@ -392,8 +392,20 @@ Checks if internal ret is equal to a1
 - AutoST
 Sets ST reaction based on the sample
 
+- SuspendCurrentThread
+args: TID (if none, takes from state.tid)
+Suspends selected thread
+
+- SuspendThread
+args: TID (if none, takes from stack)
+Suspends selected thread
+
+- ResumeCurrentThread
+args: TID (if none, takes from state.tid)
+Releases paused thread
+
 - ResumeThread
-args: TID 
+args: TID (if none, takes from stack)
 Releases paused thread
 
 - WriteLastSuspension

@@ -62,6 +62,7 @@ def select_changer(args = None):
         print('Imported: {}.{}'.format('generators.{}'.format(args), 'Changer'))
 
     globs.state.mutator.mutator = Changer
+    globs.state.mutator.mutator_name = args
 
     return
 
@@ -97,6 +98,15 @@ def report(args = None):
     state = globs.state
     status = globs.state.status
 
+    if(globs.state.mutator.samples_interesting > 0):
+        print('===')
+        print('Interesting samples:')
+        for interesting_sample in globs.state.mutator.interesting_list:
+            print('\t%s' % interesting_sample)
+        print('===')
+    print('Fuzz started: %s' % globs.state.mutator.start_time)
+    print('Now its: %s' % datetime.now())
+    print('Selected chager: %s' % globs.state.mutator.mutator_name)
     print('Original path: %s' % globs.state.mutator.original_path)
     print('Dirname path: %s' % globs.state.mutator.original_dirname)
     print('Basename path: %s' % globs.state.mutator.original_basename)
@@ -104,13 +114,8 @@ def report(args = None):
     print('Tested %s samples' % globs.state.mutator.samples_tested)
     print('Found %s interesting samples' % globs.state.mutator.samples_interesting)
     print('Timout encountered %s times' % globs.state.mutator.timeout_count)
+    print('Crash factor is %s ' % (globs.state.mutator.samples_interesting / globs.state.mutator.samples_tested))
     print('Timout factor is %s ' % (globs.state.mutator.timeout_count / globs.state.mutator.samples_tested))
-    if(globs.state.mutator.samples_interesting > 0):
-        print('===')
-        print('Interesting samples:')
-        for interesting_sample in globs.state.mutator.interesting_list:
-            print('\t%s' % interesting_sample)
-        print('===')
     print('Current sample: %s' % globs.state.mutator.current_sample_name)
     time_elapsed = datetime.now() - globs.state.mutator.start_time
     print('Time elapsed: %s' % time_elapsed)

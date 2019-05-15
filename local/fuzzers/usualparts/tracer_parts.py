@@ -232,7 +232,7 @@ def tracer_set_priority_high(args = None):
 
     return
 
-def tracer_suspend_thread(args = None):
+def tracer_suspend_current_thread(args = None):
     options = globs.state.options
     state = globs.state
     status = globs.state.status
@@ -247,7 +247,7 @@ def tracer_suspend_thread(args = None):
 
     return
 
-def tracer_release_thread(args = None):
+def tracer_release_current_thread(args = None):
     options = globs.state.options
     state = globs.state
     status = globs.state.status
@@ -256,6 +256,40 @@ def tracer_release_thread(args = None):
         args = globs.state.tid
 
     write_socket(options.s, "tracer_release_thread 0x%08x" % args);
+    response, _, _ = read_socket(options.s)
+
+    globs.state.ret = response
+
+    return
+
+def tracer_suspend_thread(args = None):
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+    
+    val = globs.state.stack.pop()
+
+    if(type(val) is not int):
+        val = int(val, 0x10)
+
+    write_socket(options.s, "tracer_suspend_thread 0x%08x" % val);
+    response, _, _ = read_socket(options.s)
+
+    globs.state.ret = response
+
+    return
+
+def tracer_release_thread(args = None):
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+    
+    val = globs.state.stack.pop()
+
+    if(type(val) is not int):
+        val = int(val, 0x10)
+
+    write_socket(options.s, "tracer_release_thread 0x%08x" % val);
     response, _, _ = read_socket(options.s)
 
     globs.state.ret = response
@@ -1356,7 +1390,10 @@ def tracer_write_register(args):
     state = globs.state
     status = globs.state.status
     
-    val = int(globs.state.stack.pop(), 0x10)
+    val = globs.state.stack.pop()
+
+    if(type(val) is not int):
+        val = int(val, 0x10)
 
     write_socket(options.s, "tracer_write_register %s 0x%08x" % (args, val));
     response, _, _ = read_socket(options.s)
