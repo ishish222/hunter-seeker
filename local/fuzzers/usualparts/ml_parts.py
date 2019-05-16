@@ -107,6 +107,8 @@ def set_input_filename(args = None):
     input_path = '{}/{}'.format(ml.input_dir, args)
     ml.input_list.append(input_path)
 
+    ml.total_len = len(ml.input_list)
+    ml.done = 0
     return
 
 def set_input_glob(args = None):
@@ -124,6 +126,8 @@ def set_input_glob(args = None):
         print('Adding {} to list'.format(sample))
         ml.input_list.append(sample)
 
+    ml.total_len = len(ml.input_list)
+    ml.done = 0
     return
 
 def train_model(args = None):
@@ -133,9 +137,16 @@ def train_model(args = None):
     ml = globs.state.ml
 
     while(len(ml.input_list) > 0):
-        input_ = ml.input_list.pop()
-        print('Training model on: {}'.format(input_))
-        ml.rnn.train_from_largetext_file(input_, new_model=False, num_epochs=ml.epochs)
+        try:
+            input_ = ml.input_list.pop()
+            print('Training model on: {}'.format(input_))
+            ml.rnn.train_from_largetext_file(input_, new_model=False, num_epochs=ml.epochs)
+            ml.done = ml.done +1
+            print('Finished training on {} sample out of total {} samples.'.format(ml.done, ml.total_len))
+            print('Total training progress: {}%'.format(ml.done/ml.total_len*100))
+        except Exception as e:
+            print(e)
+            continue
 
     print('Training finished')
 
@@ -148,10 +159,16 @@ def train_model_step(args = None):
     ml = globs.state.ml
 
     input_ = ml.input_list.pop()
-    print('Training model on: {}'.format(input_))
-    ml.rnn.train_from_largetext_file(input_, new_model=False, num_epochs=ml.epochs)
+    try:
+        print('Training model on: {}'.format(input_))
+        ml.rnn.train_from_largetext_file(input_, new_model=False, num_epochs=ml.epochs)
+    except Exception as e:
+        print(e)
 
+    ml.done = ml.done +1
     print('Training step finished')
+    print('Finished training on {} sample out of total {} samples.'.format(ml.done, ml.total_len))
+    print('Total training progress: {}%'.format(ml.done/ml.total_len*100))
 
     return
 
