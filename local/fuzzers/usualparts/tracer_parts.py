@@ -463,6 +463,9 @@ def set_base(args=None):
     options = globs.state.options
     addr = globs.state.stack.pop()
 
+    if(type(addr) is not int):
+        addr = int(addr, 0x10)
+
     write_socket(options.s, "tracer_set_base %s 0x%08x" % (args, addr));
     response, _, _ = read_socket(options.s)
 

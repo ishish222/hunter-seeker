@@ -11,30 +11,13 @@
 #include <unistd.h>
 #include <signal.h>
 #include <utils.h>
+#include <breakpoint.h>
 
 #define STRUCTURED_BUFFER_LENGTH 0x10000
 #define MAX_LINE 0x1000
 #define INSTR_REPORT_INTERVAL 1000000
 
 taint_x86 taint_eng;
-
-void print_location(modrm_ptr a)
-{
-    switch(a.region)
-    {
-        case MODRM_REG:
-            printf("Region: MODRM_REG\n");
-            break;
-        case MODRM_MEM:
-            printf("Region: MODRM_MEM\n");
-            break;
-        default:
-            printf("Undeclared\n");
-            break;
-    }
-
-    printf("Offset: 0x%x\n", a.offset);
-}
 
 int decode_instruction(DWORD* tid, OFFSET* addr, long long unsigned* instr_count, char* line)
 {
@@ -54,177 +37,6 @@ int decode_instruction(DWORD* tid, OFFSET* addr, long long unsigned* instr_count
     return 0x0;
 }
 
-BREAKPOINT parse_breakpoint(char* string)
-{
-    BREAKPOINT bp;
-    char* current;
-
-    fprintf(stderr, "Parsing: %s\n", string);
-
-    current = strtok(string, ",");
-    if(!current)
-    {
-        fprintf(stderr, "Error parsing breakpoint: %s\n", string);
-        exit(1);
-    }
-
-    bp.offset = strtoul(current, 0x0, 10);
-    current = strtok(0x0, ",");
-    if(!current)
-    {
-        fprintf(stderr, "Error parsing breakpoint: %s\n", string);
-        exit(1);
-    }
-
-    bp.mem_offset = strtoul(current, 0x0, 0x10);
-    current = strtok(0x0, "+");
-    if(!current)
-    {
-        fprintf(stderr, "Error parsing breakpoint: %s\n", string);
-        exit(1);
-    }
-    
-    bp.mode = 0x0;
-//    fprintf(stderr, "%s\n", current);
-    if(strstr(current, "READ") != 0x0)
-        bp.mode |= BP_MODE_READ;
-    if(strstr(current, "WRITE") != 0x0)
-        bp.mode |= BP_MODE_WRITE;
-    if(strstr(current, "EXECUTE") != 0x0)
-        bp.mode |= BP_MODE_EXECUTE;
-
-    return bp;
-}
-
-TRACE_WATCHPOINT parse_trace_watchpoint(char* string, taint_x86* taint_eng)
-{
-    TRACE_WATCHPOINT twp;
-
-    fprintf(stderr, "Parsing: %s\n", string);
-
-    char* current;
-
-    current = strtok(string, ",");
-    if(!current)
-    {
-        fprintf(stderr, "Error parsing breakpoint: %s\n", string);
-        exit(1);
-    }
-
-    if(current[0] == 'i') 
-    {
-        twp.interactive = 1;
-        current ++;
-    }
-    else twp.interactive = 0x0;
-
-    twp.offset = strtoul(current, 0x0, 10);
-    fprintf(stderr, "Instr count: %lld\n", twp.offset);
-
-    current = strtok(0x0, ",");
-    if(!current)
-    {
-        fprintf(stderr, "Error parsing breakpoint: %s\n", string);
-        exit(1);
-    }
-    twp.mem_offset = strtoul(current, 0x0, 0x10);
-    fprintf(stderr, "Offset: 0x%08x\n", twp.mem_offset);
-
-    current = strtok(0x0, ",");
-    if(!current)
-    {
-        fprintf(stderr, "Error parsing breakpoint: %s\n", string);
-        exit(1);
-    }
-    twp.tid = strtoul(current, 0x0, 0x10);
-    fprintf(stderr, "TID: 0x%08x\n", twp.tid);
-
-    current = strtok(0x0, "+");
-    if(!current)
-    {
-        fprintf(stderr, "Error parsing breakpoint: %s\n", string);
-        exit(1);
-    }
-    strcpy(twp.name, current);
-    fprintf(stderr, "%s\n", twp.name);
-
-    return twp;
-}
-
-int parse_mem_breakpoints(char* string, taint_x86* taint_eng)
-{
-    fprintf(stderr, "Received bp string: %s\n", string);
-
-    char* current;
-    char buf[MAX_NAME];
-
-    current = string;
-    while((current != 0x0) && (strlen(current) > 0x0))
-    {
-        strcpy(buf, current);
-        taint_eng->add_breakpoint(parse_breakpoint(buf));
-        //current = strpbrk(current+1, "+");
-        current = strpbrk(current, "+");
-        if(current)
-            current++;
-    }
-
-    return 0x0;
-}
-
-int parse_taint_breakpoints(char* string, taint_x86* taint_eng)
-{
-    fprintf(stderr, "Received bp taint string: %s\n", string);
-
-    char* current;
-    char buf[MAX_NAME];
-
-    current = string;
-    while((current != 0x0) && (strlen(current) > 0x0))
-    {
-        strcpy(buf, current);
-        taint_eng->add_taint_breakpoint(parse_breakpoint(buf));
-        //current = strpbrk(current+1, "+");
-        current = strpbrk(current, "+");
-        if(current)
-            current++;
-    }
-
-    return 0x0;
-}
-
-int parse_trace_watchpoints(char* string, taint_x86* taint_eng)
-{
-    fprintf(stderr, "Received watchpoint string: %s\n", string);
-
-    char* current;
-    char buf[MAX_NAME];
-
-    current = string;
-    while((current != 0x0) && (strlen(current) > 0x0))
-    {
-        strcpy(buf, current);
-        taint_eng->add_trace_watchpoint(parse_trace_watchpoint(buf, taint_eng));
-        current = strpbrk(current, "+");
-        if(current)
-            current++;
-    }
-
-    return 0x0;
-}
-
-void print_usage()
-{
-    printf("Usage: taint -i <instr> -d <dump> -o <dump2> -t <taint> -T <taint_dump> -l <lost> -p <prefix> -n <count>\n");
-    printf("-i input  - forward instruction file\n");
-    printf("-d input  - memory dump in t1\n");
-    printf("-o input  - start addr\n");
-    printf("-t input  - end addr\n");
-    printf("-t input  - taint dump\n");
-    printf("-l input  - analysis depth\n");
-    printf("-L input  - loadable dir path\n");
-    return;
-}
 
 void handle_sigint(int signum)
 {
@@ -238,39 +50,14 @@ void handle_sigsegv(int signum)
     return;
 }
 
-void jxx_enable()
-{
-    taint_eng.jxx_set(0x1);
-    return;
-}
-
-void jxx_disable()
-{
-    taint_eng.jxx_set(0x0);
-    return;
-}
-
-void jxx_clear()
-{
-    taint_eng.jxx_clear();
-    return;
-}
-
-void _pause()
-{
-    fprintf(stdout, "Press any key\n");
-    getchar();
-    return;
-}
-
 int main(int argc, char** argv)
 {
     char structured_buffer[STRUCTURED_BUFFER_LENGTH];
     unsigned instr_report_interval = INSTR_REPORT_INTERVAL;
 
     // new
-    char instr_file_path[MAX_NAME];
     char dump1_file_path[MAX_NAME];
+    char instr_file_path[MAX_NAME];
     char history_path[MAX_NAME];
 
     DWORD start_addr;
@@ -282,7 +69,6 @@ int main(int argc, char** argv)
     char dump2_file_path[MAX_NAME];
     char dump2_taint_file_path[MAX_NAME];
     char lost_file_path[MAX_NAME];
-    char loadable_dir_path[MAX_NAME];
     char additional_info_prefix[MAX_NAME];
     char results_human_path[MAX_NAME];
     char results_structured_path[MAX_NAME];
@@ -292,9 +78,6 @@ int main(int argc, char** argv)
     char breakpoint_t_optarg[MAX_NAME];
     char watchpoint_optarg[MAX_NAME];
 
-    char taint_size[0x10];
-
-    CONTEXT_set ctx_set;
     OFFSET eip;
     DWORD tid;
 
@@ -306,16 +89,13 @@ int main(int argc, char** argv)
     instr_count = 0x0;
     unsigned max_levels = 0x0;
 
-    char* line;
-    size_t len = 0;
-    ssize_t read;
-
     char enumerate = 0x0;
+
+
+    /* started parsing args and preparing params */
 
     int opt;
     extern char *optarg;
-
-    /* started parsing args and preparing params */
 
     while ((opt = getopt(argc, argv, "M:i:d:s:E:e:T:l:m:b:t:w:h:D:I")) != -1) 
     {
@@ -364,9 +144,6 @@ int main(int argc, char** argv)
             case 'l': 
                 depth = strtol(optarg, 0x0, 0x10);
                 break;
-            case 'm': 
-                strcpy(loadable_dir_path, optarg); 
-                break;
             case 'b': 
                 strcpy(breakpoint_optarg, optarg);
                 break;
@@ -392,9 +169,6 @@ int main(int argc, char** argv)
         }
     }
 
-//    if((strlen(instr_file_path) == 0x0) 
-//        || (strlen(dump1_file_path) == 0x0)
-//        || (strlen(loadable_dir_path) == 0x0))
     if(strlen(instr_file_path) == 0x0) 
     {
         print_usage();
@@ -414,7 +188,7 @@ int main(int argc, char** argv)
 
     /* finished parsing args and preparing params */
 
-    printf("Here we go - 2.0\n");
+    printf("Here we go - 3.0\n");
 
     printf("BYTE_t size: 0x%08x\n", sizeof(BYTE_t));
 
@@ -463,7 +237,6 @@ int main(int argc, char** argv)
 //    taint_eng.load_mem_from_file(dump1_file_path);
     taint_eng.load_instr_from_file(instr_file_path);
     taint_eng.open_lost_file(lost_file_path);
-//    taint_eng.open_mod_file(loadable_dir_path);
 
     /* pass graph parameters */
     taint_eng.start_addr = start_addr;
@@ -475,53 +248,13 @@ int main(int argc, char** argv)
     taint_eng.depth = depth;
     taint_eng.depth += taint_eng.call_level_start; /* because we do not start at 0x0 */
 
-//#define CEBUG 
-#define DEBUG 
-    /* break points */
-
-#ifdef DEBUG
-    int bp_idx = 0x0;
-
-    taint_eng.my_bps[bp_idx].offset = 0x404832; taint_eng.my_bps[bp_idx++].mode = BP_MODE_WRITE;
-//    taint_eng.my_bps[bp_idx]_offset = 0x0040308c; taint_eng.my_bps[bp_idx++].mode = BP_MODE_READ | BP_MODE_WRITE;
-//    taint_eng.my_bps[bp_idx].offset = 0x0012fda8; taint_eng.my_bps[bp_idx++].mode = BP_MODE_READ | BP_MODE_WRITE;
-//    taint_eng.my_bps[bp_idx].offset = 0x0012f79c; taint_eng.my_bps[bp_idx++].mode = BP_MODE_READ | BP_MODE_WRITE;
-//    taint_eng.my_bps[bp_idx].offset = 0x0dd24774; taint_eng.my_bps[bp_idx++].mode = BP_MODE_READ | BP_MODE_WRITE;
-//    taint_eng.my_bps[bp_idx].offset = 0x00010b6c; taint_eng.my_bps[bp_idx++].mode = BP_MODE_READ | BP_MODE_WRITE;
-//    taint_eng.my_bps[bp_idx].offset = 0x0dd241ae; taint_eng.my_bps[bp_idx++].mode = BP_MODE_READ | BP_MODE_WRITE;
-#endif
-
-    bp_idx = 0x0;
-
-//    taint_eng.t8[bp_idx].count = ; taint_eng.t8[bp_idx++].watched = &taint_eng.ctx_info[0].registers[EAX];
-/*
-    taint_eng.t8[bp_idx].count = 3495778; taint_eng.t8[bp_idx++].watched = &taint_eng.ctx_info[0].registers[ECX];
-    taint_eng.t8[bp_idx].count = 886427; taint_eng.t8[bp_idx++].watched = &taint_eng.memory[0x0012f6a8];
-    taint_eng.t8[bp_idx].count = 992877; taint_eng.t8[bp_idx++].watched = &taint_eng.ctx_info[0].registers[EDI];
-    taint_eng.t8[bp_idx].count = 942799; taint_eng.t8[bp_idx++].watched = &taint_eng.ctx_info[0].registers[EAX];
-*/
-
-    bp_idx = 0x0;
-    
-    taint_eng.taint_checks[bp_idx++] = 98336; 
-
-    /* printing values at start */
-
-    /*
-    printf("Watched RW locations:\n");
-  
- 
-    for(i=0x0; i< bp_idx; i++)
-    {
-        if((taint_eng.my_bps[i].mode & BP_MODE_READ) || (taint_eng.my_bps[i].mode & BP_MODE_WRITE))
-        {
-            taint_eng.print_mem(3, taint_eng.my_bps[i].offset, 0x10);
-        }
-    }
-    */
     taint_eng.bp_hit = 0x0;
  
     /* executing instructions */
+    char* line;
+    size_t len = 0;
+    ssize_t read;
+
     while ((read = getline(&line, &len, taint_eng.instr_file)) != -1) 
     {
         if(taint_eng.aborted) 
@@ -532,8 +265,6 @@ int main(int argc, char** argv)
         if(line[0] != '0')
         {
             //printf("%s\n", line);
-            //strcat(structured_buffer, line);
-            // other operations
             if(line[0] == 'R' && line[1] == 'T')
                 register_thread(line, &taint_eng);
     
@@ -595,13 +326,13 @@ int main(int argc, char** argv)
                 register_fence(line, &taint_eng);
 
             if(line[0] == 'J' && line[1] == 'E')
-                jxx_enable();
+                taint_eng.jxx_set(0x1);
 
             if(line[0] == 'J' && line[1] == 'D')
-                jxx_disable();
+                taint_eng.jxx_set(0x0);
 
             if(line[0] == 'J' && line[1] == 'C')
-                jxx_clear();
+                taint_eng.jxx_clear();
 
             if(line[0] == 'P' && line[1] == 'A')
                 _pause();
@@ -647,17 +378,6 @@ int main(int argc, char** argv)
             taint_eng.verify_t_context(tid);
             //taint_eng.print_stack(3, 0x20);
             fflush(stdout);
-#ifdef DEBUG
-            if(taint_eng.bp_hit)
-            {
-#endif
-#ifdef CEBUG
-                printf("Press any key\n");
-                getchar();
-#else
-                ;
-#endif
-            }
         }
 
         if(!(instr_count % instr_report_interval))
@@ -681,10 +401,6 @@ int main(int argc, char** argv)
     printf("Writing human-readable taint information to %s\n", results_human_path);
 
     out = fopen(results_human_path, "w+");
-
-    // last instruction number
-
-    // last instruction offset
 
     // contexts in dump time
     DWORD tidn;
