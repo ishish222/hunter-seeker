@@ -1,7 +1,7 @@
 /*
 *   Tomasz Salacinski
-*   CERT Orange Polska
-*   tomasz.salacinski@orange.com
+*   Korrino
+*   tomasz.salacinski@korrino.com
 */
 
 #include <caller_taint_x86.h>

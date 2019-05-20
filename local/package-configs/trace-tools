@@ -7,3 +7,4 @@ c:taint/extract_tid
 c:taint/compare_traces
 c:taint/cextract
 c:taint/compare_cextract
+c:taint/call_analyze

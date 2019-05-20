@@ -161,17 +161,20 @@ Ustawia out_dir badania (my_trace->out_dir)
 - TracerConfigureOutPrefix
 args: prefix
 ustawia out_prefix badania (my_trace->out_prefix)
+out_prefix zostanie wykorzystany do stworzenia nazw plikow: sladu (dodane indexowanie i out), zmian pamieci (mod) i dump pamieci (dump).
 
 - TracerConfigurePIDPrefix
-args: prefix
-ustawia PID jako out_prefix badania (my_trace->out_prefix)
+ustawia PID (state.pid, ustawiany za pomoca ReadPID lub SetPID) jako out_prefix badania (my_trace->out_prefix)
+out_prefix zostanie wykorzystany do stworzenia nazw plikow: sladu (dodane indexowanie i out), zmian pamieci (mod) i dump pamieci (dump).
 
 - TracerAppendOutPrefix
 args: prefix_addition
 Dodaje prefix_addition do out_prefix badania (my_trace->out_prefix)
+out_prefix zostanie wykorzystany do stworzenia nazw plikow: sladu (dodane indexowanie i out), zmian pamieci (mod) i dump pamieci (dump).
 
 - TracerAppendPIDPrefix
-Dodaje PID do out_prefix badania (my_trace->out_prefix)
+Dodaje PID (state.pid, ustawiany za pomoca ReadPID lub SetPID) do out_prefix badania (my_trace->out_prefix)
+out_prefix zostanie wykorzystany do stworzenia nazw plikow: sladu (dodane indexowanie i out), zmian pamieci (mod) i dump pamieci (dump).
 
 - TracerConfigureInDir
 args: in_dir
@@ -367,13 +370,16 @@ Writes contents at an address
 Maybe add location_descriptors (TODO)
 
 - ReadPID
-Not sure how this works (perhaps TODO)
+stack: address
+Bierze adres ze stosu, odczytuje wartosc i ustawia jako PID (state.pid)
 
 - ReadTID
-Not sure how this works (perhaps TODO)
+stack: address
+Bierze adres ze stosu, odczytuje wartosc i ustawia jako TID (state.tid)
 
 - ReadEP
-Not sure how this works (perhaps TODO)
+stack: address
+Bierze adres ze stosu, odczytuje wartosc i ustawia jako EP (state.ep)
 
 - TracerPrev
 Sets the active tracer to the previous one
@@ -712,3 +718,9 @@ Reports fuzzing session summary (time elaped, samples tested, interesting sample
 - TracerSetDebugTimeout
 Aliased: SetDebugTimeout
 Sets the timeout for all TracerDebugContinue instructions
+
+- SetBase
+Sets the name and address of a segment
+
+- NameSegment
+Alias to: SetBase

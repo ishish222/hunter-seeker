@@ -1,7 +1,7 @@
 /*
 *   Tomasz Salacinski
 *   Korrino
-*   tomasz.salacinski@korrino.com
+*   info@korrino.com
 */
 
 
@@ -22,6 +22,9 @@ Change of endiannes takes place when reading and writing to memory (to_mem, from
 
 */
 
+#ifndef TAINT_EMUL_H
+#define TAINT_EMUL_H
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -29,19 +32,36 @@ Change of endiannes takes place when reading and writing to memory (to_mem, from
 #include <sys/queue.h>
 #include <errno.h>
 
-#define MAX_NAME 0x100
-#define MAX_SYMBOL_NAME 0x50
-#define MAX_SYMBOL_COUNT 0x1000
-#define MAX_THREADS 0x100
-#define MAX_THREAD_NUMBER 0x1000
+#define _GLIBCXX_USE_CXX11_ABI 1 
+
+// compile-time options and parameters
+#define ANALYZE_JUMPS 
+#define ANALYZE_LOOPS 
+//#define UNMATCHED_RET_INVALIDATES_STACK
+//#define UNMATCHED_RET_CREATES_CALL
+#define NOT_EMITTING_BLACKLISTED
+#define NO_LOOP 0xffffffff
+
+#define MAX_NAME                0x200
+#define MAX_SYMBOL_NAME         0x50
+#define MAX_SYMBOL_COUNT        0x1000000
+#define MAX_LIB_COUNT           0x100
+#define MAX_THREADS             0x100
+#define MAX_THREAD_NUMBER       0x1000
+#define MAX_CALL_LEVELS         0x200
+#define GRAPH_START             100
+#define MAX_LOOP_ADDRS          0x10
 //#define MAX_THREADS 0x1000000
 #define MAX_PRPAGATIONS_OBSERVED 0x4000000
-#define MAX_TAINTS_OBSERVED 0x400
-#define MAX_EXCEPTIONS_COUNT 0x10000
-#define MAX_BREAKPOINTS 0x10
-#define MAX_ 0x10
-#define MAX_OUT_TAB 0x5
-#define MAX_LAST_INSTRUCTIONS 0x50
+#define MAX_TAINTS_OBSERVED     0x400
+#define MAX_EXCEPTIONS_COUNT    0x100
+#define MAX_BREAKPOINTS         0x10
+#define MAX_SECURITY_LAYERS     0x1000
+#define MAX_BLACKLIST           0x50
+#define MAX_WANTED              0x100
+#define MAX_LOOP_FENCES         0x10
+#define MAX_LOOP_ADDR           0x50
+#define MAX_LIST_JXX            0x1000
 
 // deprecated
 #define MEM     0xff
@@ -224,6 +244,37 @@ Change of endiannes takes place when reading and writing to memory (to_mem, from
 #define MODRM_SIZE_16    0x2
 #define MODRM_SIZE_32    0x3
 #define MODRM_SIZE_64    0x4
+
+/* options */
+#define OPTION_ANALYZE_JUMPS                    0x1
+#define OPTION_ANALYZE_LOOPS                    0x2
+#define OPTION_UNMATCHED_RET_INVALIDATES_STACK  0x4
+#define OPTION_UNMATCHED_RET_CREATES_CALL       0x8
+#define OPTION_NOT_EMITTING_BLACKLISTED         0x10
+#define OPTION_VERIFY_ROP_RETS                  0x20
+#define OPTION_VERIFY_SEG_SEC                   0x40
+#define OPTION_ANALYZE_WANTED_IN_SYMBOLS        0x80
+#define OPTION_COUNT_INSTRUCTIONS               0x100
+
+/* jumping codes */
+
+#define JMP_CODE_JB_JC_JNAE     0x0
+#define JMP_CODE_JAE_JNB_JNC    0x1
+#define JMP_CODE_JE_JZ          0x2
+#define JMP_CODE_JNE_JNZ        0x3
+#define JMP_CODE_JBE_JNA        0x4
+#define JMP_CODE_JA_JNBE        0x5
+#define JMP_CODE_JS             0x6
+#define JMP_CODE_JNS            0x7
+#define JMP_CODE_JP_JPE         0x8
+#define JMP_CODE_JNP_JPO        0x9
+#define JMP_CODE_JL_JNGE        0xa
+#define JMP_CODE_JGE_JNL        0xb
+#define JMP_CODE_JLE_JNG        0xc
+#define JMP_CODE_JG_JNLE        0xd
+#define JMP_CODE_RM             0xe
+#define JMP_CODE_JXX            0xf
+
 
 /*
 
@@ -2159,6 +2210,25 @@ class DWORD_t
 
 };
 
+#define FENCE_INACTIVE          0x0
+#define FENCE_ACTIVE            0x1
+#define FENCE_COLLECTING        0x2
+#define FENCE_NOT_COLLECTING    0x3
+#define FENCE_FINISHED          0x4
+
+typedef struct LOOP_FENCE_
+{
+    OFFSET entry;
+    OFFSET start;
+    OFFSET limit;
+    OFFSET struct_size;
+    OFFSET struct_count;
+
+    char collecting;
+    char status;
+
+} LOOP_FENCE;
+
 typedef struct SYMBOL_
 {
     OFFSET addr;
@@ -2167,6 +2237,7 @@ typedef struct SYMBOL_
     struct SYMBOL_* next;
     DWORD resolved;
     DWORD wanted;
+    DWORD included;
 } SYMBOL;
 
 typedef struct modrm_op_ready_32_
@@ -2226,17 +2297,71 @@ typedef struct _EXCEPTION_INFO
     DWORD tid;
 } EXCEPTION_INFO;
 
+typedef struct _CALL_LEVEL
+{
+    DWORD ret;
+    OFFSET entry;
+    /* loops handling */
+
+    unsigned call_src_register_idx;
+    unsigned loop_start;
+
+    /* new loop handling */
+    unsigned loop_pos;
+    LOOP_FENCE* cur_fence;
+
+    /* new new loop handling */
+    unsigned loop_addr_idx;
+    unsigned loop_limit;
+    unsigned loop_struct_size;
+    unsigned loop_struct_count;
+    OFFSET   loop_addr[MAX_LOOP_ADDR];
+    char     loop_status;
+    unsigned jxx_handling;
+
+} CALL_LEVEL;
+
 typedef struct _CONTEXT_INFO
 {
     DWORD tid;
     BYTE_t registers[REG_SIZE];
     OFFSET seg_map[0x6];
-    DWORD graph_pos;
-    DWORD graph_pos_smallest;
-    DWORD graph_pos_largest;
-    DWORD graph_pos_ignored;
+
+    CALL_LEVEL* levels;
+
+    /* graph handling */
+    DWORD call_level;
+    DWORD call_level_smallest;
+    DWORD call_level_largest;
+    DWORD call_level_ignored;
+    char graph_filename[MAX_NAME];
     FILE* graph_file;
     OFFSET waiting;
+    unsigned lock_level;
+
+    /* call level handling */ 
+    unsigned ret_idx;
+    char calling;
+    char returning;
+    char before_calling;
+    char before_returning;
+    char before_waiting;
+    char last_emit_decision;
+
+    /* jmp analysis processing */
+    char jumping;
+    char before_jumping;
+    char jmp_code;
+    char before_jmp_code;
+
+    OFFSET source;
+    OFFSET target;
+    OFFSET next;
+    OFFSET last_eip;
+    DWORD list[MAX_CALL_LEVELS][MAX_LIST_JXX];
+    unsigned list_len[MAX_CALL_LEVELS];
+    unsigned jxx_total[MAX_CALL_LEVELS];
+
 } CONTEXT_INFO;
 
 #define BP_MODE_READ    0x1
@@ -2260,7 +2385,6 @@ typedef struct TRACE_WATCHPOINT_
     char name[MAX_NAME];
     DWORD tid;
     char interactive;
-    char branches;
 } TRACE_WATCHPOINT;
 
 typedef struct TAINT_WATCHPOINT_8_
@@ -2297,24 +2421,35 @@ class taint_x86
     FILE* instr_file;
     FILE* lost_file;
     FILE* mod_file;
-    FILE* prompt_file;
 
     /* graph parameters */
     DWORD start_addr;
     DWORD end_addr;
     OFFSET start_instr;
     OFFSET instr_limit;
+    unsigned max_call_levels;
+    unsigned call_level_start;
+    unsigned call_level_offset;
+
+    unsigned counter;
+
     DWORD depth;
 
     DWORD started;
     DWORD finished;
     DWORD aborted;
 
-    unsigned out_tab;
-
     /* memory parameters */
     BYTE_t* memory;
     DWORD mem_length;
+
+    /* analysis options */
+    DWORD options;
+
+    BYTE_t invalid_byte;
+    WORD_t invalid_word;
+    DWORD_t invalid_dword;
+
     int current_prefixes;
     BYTE_t* last_instr_byte;
     BYTE_t* current_instr_byte;
@@ -2341,15 +2476,21 @@ class taint_x86
     unsigned new_bpt_count;
     unsigned new_bpt_t_count;
     unsigned new_wpt_count;
+
+    /* some quick analysis improvements */
+    REGION  security_layer[MAX_SECURITY_LAYERS];
+    unsigned security_layer_count;
+    int verify_seg_sec(OFFSET);
  
     int add_breakpoint(BREAKPOINT);
     int add_taint_breakpoint(BREAKPOINT);
     int add_trace_watchpoint(TRACE_WATCHPOINT);
     int update_watchpoints(DWORD);
-    int trace_watchpoint_connect(TRACE_WATCHPOINT*);
 
-    CONTEXT_INFO ctx_info[MAX_THREADS];
+    CONTEXT_INFO* ctx_info;
     CONTEXT_INFO* cur_info;
+
+    char enumerate;
 
     REGION* taints;
     unsigned taint_count;
@@ -2366,11 +2507,28 @@ class taint_x86
     DWORD extended;
     DWORD rw_bp;
 
-    LIB_INFO libs[0x100];
+//    LIB_INFO libs[0x100];
+    LIB_INFO* libs;
     unsigned libs_count;
     char lib_dir_path[MAX_NAME];
-    char lib_blacklist[MAX_NAME][0x50];
-    char func_wanted[MAX_NAME][0x50];
+    char prefix[MAX_NAME];
+//    char lib_blacklist[MAX_NAME][MAX_BLACKLIST];
+    char* lib_blacklist[MAX_NAME];
+    unsigned blacklist_count;
+    DWORD addr_silenced[MAX_BLACKLIST];
+    unsigned addr_silenced_count;
+    DWORD addr_blacklist[MAX_BLACKLIST];
+    unsigned addr_blacklist_count;
+//    char func_wanted[MAX_NAME][MAX_WANTED];
+//    char func_included[MAX_NAME][MAX_WANTED];
+    char* func_wanted[MAX_NAME];
+    char* func_included[MAX_NAME];
+    unsigned instr_wanted[MAX_WANTED];
+    DWORD addr_wanted[MAX_WANTED];
+    unsigned wanted_count;
+    unsigned included_count;
+    unsigned wanted_count_e;
+    unsigned wanted_count_i;
 
     EXCEPTION_INFO exceptions[MAX_EXCEPTIONS_COUNT];
     DWORD exceptions_count;
@@ -2378,21 +2536,31 @@ class taint_x86
     SYMBOL* symbols; 
     unsigned symbols_count;
 
-    DWORD rets[0x50];
     unsigned ret_idx;
-
-    DWORD last_instructions[MAX_LAST_INSTRUCTIONS];
-    unsigned current_last = 0x0;
 
     int add_symbol(SYMBOL**, OFFSET, char*, char*);
     int remove_symbol(SYMBOL*);
     SYMBOL* get_symbol(OFFSET);
 
+    /* loop fences - new approach */
+    LOOP_FENCE loop_fences[MAX_LOOP_FENCES]; 
+    unsigned loop_fences_count;
+    
+    int enter_loop_demo(CONTEXT_INFO*);
+    int exit_loop_demo(CONTEXT_INFO*);
+    int enter_loop(CONTEXT_INFO*);
+    int exit_loop(CONTEXT_INFO*);
+    //int check_loop(CONTEXT_INFO*, OFFSET, OFFSET);
+    int check_loop(CONTEXT_INFO*);
+    int check_loop_2(CONTEXT_INFO*);
+    int check_collecting(CONTEXT_INFO*);
+    int comment_out(char*, DWORD);
+
     /* dumping taint transfer history */
     int write_history(FILE*);
     int dump_cmd(char*);
     int prompt_taint();
-    int parse_trace_string(char* string, TRACE_WATCHPOINT*);
+    TRACE_WATCHPOINT parse_trace_string(char* string);
     int query_history(TRACE_WATCHPOINT twp);
 
     int modrm_table_32[0x100];
@@ -2400,12 +2568,27 @@ class taint_x86
     typedef int (taint_x86::*instruction_routine)(BYTE_t* args);
     instruction_routine instructions_32[0x100];
     instruction_routine instructions_32_extended[0x100];
-    instruction_routine escaped_instructions_32[0x10000];
+//    instruction_routine escaped_instructions_32[0x10000];
 
 
     // instruction routines
     int r_noop(BYTE_t*);
     int r_noop_un(BYTE_t*);
+    int r_jxx(BYTE_t*);
+    int r_jb_jc_jnae(BYTE_t*);
+    int r_jae_jnb_jnc(BYTE_t*);
+    int r_je_jz(BYTE_t*);
+    int r_jne_jnz(BYTE_t*);
+    int r_jbe_jna(BYTE_t*);
+    int r_ja_jnbe(BYTE_t*);
+    int r_js(BYTE_t*);
+    int r_jns(BYTE_t*);
+    int r_jp_jpe(BYTE_t*);
+    int r_jnp_jpo(BYTE_t*);
+    int r_jl_jnge(BYTE_t*);
+    int r_jge_jnl(BYTE_t*);
+    int r_jle_jng(BYTE_t*);
+    int r_jg_jnle(BYTE_t*);
     int r_push_ax_eax(BYTE_t*);
     int r_push_cx_ecx(BYTE_t*);
     int r_push_dx_edx(BYTE_t*);
@@ -2685,6 +2868,9 @@ class taint_x86
     int r_call_rel(BYTE_t*);
     int r_call_abs_near(BYTE_t*);
     int r_call_abs_far(BYTE_t*);
+    int r_jmp_rel_16_32(BYTE_t*);
+    int r_jmp_rel_8(BYTE_t*);
+    int r_jmp_rm_16_32(BYTE_t*);
 
     // sysenter
     int r_sysenter(BYTE_t*);
@@ -2876,6 +3062,7 @@ class taint_x86
     int add_thread(CONTEXT_info);
     int mod_thread(CONTEXT_info);
     int del_thread(DWORD);
+    int del_thread_srsly(DWORD);
     int check_thread(CONTEXT_info);
     int add_taint(OFFSET start, UDWORD length);
     int add_lib(OFFSET, char*);
@@ -2884,22 +3071,45 @@ class taint_x86
     int load_mem_from_file(char*);
     int load_instr_from_file(char*);
     int open_lost_file(char*);
-    int open_prompt_file(char*);
+    int set_prefix(char*);
     int open_mod_file(char*);
     int close_files();
     int set_lib_dir_path(char*);
+    int add_blacklist(char*);
+    int add_blacklist_addr(DWORD);
+    int add_silenced_addr(DWORD);
+    int add_included(char*);
+    int add_wanted(char*);
+    int add_wanted_e(DWORD);
+    int add_wanted_i(unsigned);
+    int add_fence(OFFSET, OFFSET, OFFSET, OFFSET);
+    int check_fence(CALL_LEVEL*);
     int check_lib_blacklist(LIB_INFO*);
     int check_addr_blacklist(OFFSET);
+    int check_addr_silenced(OFFSET);
     int check_func_wanted(char*);
+    int check_func_included(char*);
     int check_rets(OFFSET);
     LIB_INFO* get_lib(OFFSET);
-    int handle_call(CONTEXT_INFO*, OFFSET, OFFSET);
-    int handle_ret(CONTEXT_INFO*);
+
+    /* handling jxx */
+    int handle_jmp(CONTEXT_INFO*);
+    int handle_jxx(CONTEXT_INFO*);
+    int handle_this_jxx(CONTEXT_INFO*, char*);
+
+
+    int handle_call(CONTEXT_INFO*);
+    int handle_ret(CONTEXT_INFO*, OFFSET);
+    int handle_exception(EXCEPTION_INFO);
     int apply_lib_layout(LIB_INFO*);
     int apply_lib_exports(LIB_INFO*);
     int apply_memory(DWORD, DWORD);
+    int apply_security(DWORD, DWORD);
     int add_symbols(LIB_INFO*);
     int copy_symbol(SYMBOL**, SYMBOL*);
+    int register_syscall(DWORD, DWORD);
+    int handle_sigsegv();
+    int handle_sigint();
 
 /*
     int from_mem(BYTE_t&, OFFSET, int);
@@ -2912,17 +3122,13 @@ class taint_x86
 
     // overriden for more effective debugging
     int d_print(int, const char*, ...);
-    int d_print_prompt(int, const char*, ...);
 
     /* propagation */
 
     int print_taint_ops(unsigned);
-    int print_taint_history(unsigned, unsigned);
-    int print_taint_history(BYTE_t*, unsigned);
-    int print_taint_history(BYTE_t*, OFFSET, unsigned);
-//    int print_taint_history(unsigned);
-//    int print_taint_history(BYTE_t*);
-//    int print_taint_history(BYTE_t*, OFFSET);
+    int print_taint_history(unsigned);
+    int print_taint_history(BYTE_t*);
+    int print_taint_history(BYTE_t*, OFFSET);
     int reg_propagation_op(BYTE_t*);
     int reg_propagation_op_r_8(OFFSET);
     int reg_propagation_op_r_16(OFFSET);
@@ -2936,7 +3142,6 @@ class taint_x86
     int attach_current_propagation_m_8(OFFSET);
     int attach_current_propagation_m_16(OFFSET);
     int attach_current_propagation_m_32(OFFSET);
-    int propagate_taint();
 
     /* 32 bit store / restore */
     void store_32(OFFSET, DWORD_t);
@@ -2993,7 +3198,22 @@ class taint_x86
     int post_execute_instruction(DWORD);
     int execute_instruction_at_eip(DWORD);
     int execute_instruction_at_eip(DWORD, DWORD);
+    int finish();
     int verify_t_context(int);
+
+    /* graph prints */
+
+    void print_call(CONTEXT_INFO*, char*, const char*);
+    void print_call_open(CONTEXT_INFO*, char*, const char*);
+    void print_empty_call(CONTEXT_INFO*, char*, const char*);
+    void print_a_ret(CONTEXT_INFO*);
+    void print_ret(CONTEXT_INFO*);
+    int dive(CONTEXT_INFO*, OFFSET, OFFSET);
+    int surface(CONTEXT_INFO*);
+    int jxx_set(unsigned);
+    int jxx_clear_level(unsigned);
+    int jxx_clear();
+    int start();
 
     int print_err_all_contexts();
     int print_err_all_t_contexts();
@@ -3020,6 +3240,8 @@ class taint_x86
     int print_err_t_mem(OFFSET, DWORD);
     int print_mem(int, OFFSET, DWORD);
     int print_t_mem(int, OFFSET, DWORD);
+    int print_security_layers(int);
+    int print_security_layers(int, OFFSET);
     int print_bt_buffer(BYTE_t*, DWORD);
     int print_all_regs();
     int decode_modrm_byte(BYTE_t*, DWORD_t*, DWORD_t*);
@@ -3149,20 +3371,20 @@ class taint_x86
         this->instructions_32[0x6b] = &taint_x86::r_imul_r_rm_16_32_imm_8;      // cf
         this->instructions_32[0x6f] = &taint_x86::r_noop_un;                    // cf
 
-        this->instructions_32[0x72] = &taint_x86::r_noop_un;                    // cf
-        this->instructions_32[0x73] = &taint_x86::r_noop_un;                    // cf
-        this->instructions_32[0x74] = &taint_x86::r_noop_un;                    // cf
-        this->instructions_32[0x75] = &taint_x86::r_noop_un;                    // cf
-        this->instructions_32[0x76] = &taint_x86::r_noop_un;                    // cf
-        this->instructions_32[0x77] = &taint_x86::r_noop_un;                    // cf
-        this->instructions_32[0x78] = &taint_x86::r_noop_un;                    // cf
-        this->instructions_32[0x79] = &taint_x86::r_noop_un;                    // cf
-        this->instructions_32[0x7a] = &taint_x86::r_noop_un;                    // cf
-        this->instructions_32[0x7b] = &taint_x86::r_noop_un;                    // cf
-        this->instructions_32[0x7c] = &taint_x86::r_noop_un;                    // cf
-        this->instructions_32[0x7d] = &taint_x86::r_noop_un;                    // cf
-        this->instructions_32[0x7e] = &taint_x86::r_noop_un;                    // cf
-        this->instructions_32[0x7f] = &taint_x86::r_noop_un;                    // cf
+        this->instructions_32[0x72] = &taint_x86::r_jb_jc_jnae; 
+        this->instructions_32[0x73] = &taint_x86::r_jae_jnb_jnc;
+        this->instructions_32[0x74] = &taint_x86::r_je_jz;
+        this->instructions_32[0x75] = &taint_x86::r_jne_jnz;
+        this->instructions_32[0x76] = &taint_x86::r_jbe_jna;
+        this->instructions_32[0x77] = &taint_x86::r_ja_jnbe;
+        this->instructions_32[0x78] = &taint_x86::r_js;
+        this->instructions_32[0x79] = &taint_x86::r_jns;
+        this->instructions_32[0x7a] = &taint_x86::r_jp_jpe;
+        this->instructions_32[0x7b] = &taint_x86::r_jnp_jpo;
+        this->instructions_32[0x7c] = &taint_x86::r_jl_jnge;
+        this->instructions_32[0x7d] = &taint_x86::r_jge_jnl;
+        this->instructions_32[0x7e] = &taint_x86::r_jle_jng;
+        this->instructions_32[0x7f] = &taint_x86::r_jg_jnle;
         this->instructions_32[0x80] = &taint_x86::r_decode_execute_80;          // cf
         this->instructions_32[0x81] = &taint_x86::r_decode_execute_81;          // cf
         this->instructions_32[0x83] = &taint_x86::r_decode_execute_83;          // cf
@@ -3240,8 +3462,8 @@ class taint_x86
         this->instructions_32[0xd3] = &taint_x86::r_decode_execute_d3;          // 
 
         this->instructions_32[0xe8] = &taint_x86::r_call_rel;                   // cf
-        this->instructions_32[0xe9] = &taint_x86::r_noop_un;                    // cf
-        this->instructions_32[0xeb] = &taint_x86::r_noop_un;                    // cf
+        this->instructions_32[0xe9] = &taint_x86::r_jmp_rel_16_32;              // cf
+        this->instructions_32[0xeb] = &taint_x86::r_jmp_rel_8;                   // cf
 
         this->instructions_32[0xf0] = &taint_x86::r_lock;                       // cf
         this->instructions_32[0xf2] = &taint_x86::r_repne;                      // cf
@@ -3264,20 +3486,20 @@ class taint_x86
 
         this->instructions_32_extended[0x80] = &taint_x86::r_noop_un; 
         this->instructions_32_extended[0x81] = &taint_x86::r_noop_un; 
-        this->instructions_32_extended[0x82] = &taint_x86::r_noop_un; 
-        this->instructions_32_extended[0x83] = &taint_x86::r_noop_un; 
-        this->instructions_32_extended[0x84] = &taint_x86::r_noop_un; 
-        this->instructions_32_extended[0x85] = &taint_x86::r_noop_un; 
-        this->instructions_32_extended[0x86] = &taint_x86::r_noop_un; 
-        this->instructions_32_extended[0x87] = &taint_x86::r_noop_un; 
-        this->instructions_32_extended[0x88] = &taint_x86::r_noop_un; 
-        this->instructions_32_extended[0x89] = &taint_x86::r_noop_un; 
-        this->instructions_32_extended[0x8a] = &taint_x86::r_noop_un; 
-        this->instructions_32_extended[0x8b] = &taint_x86::r_noop_un; 
-        this->instructions_32_extended[0x8c] = &taint_x86::r_noop_un; 
-        this->instructions_32_extended[0x8d] = &taint_x86::r_noop_un; 
-        this->instructions_32_extended[0x8e] = &taint_x86::r_noop_un; 
-        this->instructions_32_extended[0x8f] = &taint_x86::r_noop_un; 
+        this->instructions_32_extended[0x82] = &taint_x86::r_jb_jc_jnae;
+        this->instructions_32_extended[0x83] = &taint_x86::r_jae_jnb_jnc; 
+        this->instructions_32_extended[0x84] = &taint_x86::r_je_jz;
+        this->instructions_32_extended[0x85] = &taint_x86::r_jne_jnz;
+        this->instructions_32_extended[0x86] = &taint_x86::r_jbe_jna;
+        this->instructions_32_extended[0x87] = &taint_x86::r_ja_jnbe;
+        this->instructions_32_extended[0x88] = &taint_x86::r_js;
+        this->instructions_32_extended[0x89] = &taint_x86::r_jns;
+        this->instructions_32_extended[0x8a] = &taint_x86::r_jp_jpe;
+        this->instructions_32_extended[0x8b] = &taint_x86::r_jnp_jpo;
+        this->instructions_32_extended[0x8c] = &taint_x86::r_jl_jnge;
+        this->instructions_32_extended[0x8d] = &taint_x86::r_jge_jnl;
+        this->instructions_32_extended[0x8e] = &taint_x86::r_jle_jng;
+        this->instructions_32_extended[0x8f] = &taint_x86::r_jg_jnle; 
 
         this->instructions_32_extended[0xa4] = &taint_x86::r_shld_r_rm_16_32_imm_8; 
         this->instructions_32_extended[0xa5] = &taint_x86::r_shld_r_rm_16_32_cl; 
@@ -3298,43 +3520,6 @@ class taint_x86
 
         this->cur_tid = 0x0;
         this->tid_count = 0x0;
-
-        /* graph configuration */
-        unsigned j = 0x0;
-
-//        strcpy(this->lib_blacklist[j++], "kernel32.dll");
-        strcpy(this->lib_blacklist[j++], "ntdll.dll");
-        strcpy(this->lib_blacklist[j++], "user32.dll");
-        strcpy(this->lib_blacklist[j++], "KernelBase.dll");
-        strcpy(this->lib_blacklist[j++], "gdi32.dll");
-        strcpy(this->lib_blacklist[j++], "advapi32.dll");
-        strcpy(this->lib_blacklist[j++], "lpk.dll");
-        strcpy(this->lib_blacklist[j++], "dwmapi.dll");
-        strcpy(this->lib_blacklist[j++], "imm32.dll");
-        strcpy(this->lib_blacklist[j++], "msvcrt.dll");
-        strcpy(this->lib_blacklist[j++], "urlmon.dll");
-        strcpy(this->lib_blacklist[j++], "ole32.dll");
-        strcpy(this->lib_blacklist[j++], "normaliz.dll");
-        strcpy(this->lib_blacklist[j++], "sechost.dll");
-        strcpy(this->lib_blacklist[j++], "uxtheme.dll");
-        strcpy(this->lib_blacklist[j++], "usp10.dll");
-        strcpy(this->lib_blacklist[j++], "oleaut32.dll");
-        strcpy(this->lib_blacklist[j++], "crypt32.dll");
-        strcpy(this->lib_blacklist[j++], "iertutil.dll");
-        strcpy(this->lib_blacklist[j++], "shlwapi.dll");
-        strcpy(this->lib_blacklist[j++], "wininet.dll");
-        strcpy(this->lib_blacklist[j++], "msasn1.dll");
-        strcpy(this->lib_blacklist[j++], "rpcrt4.dll");
-        strcpy(this->lib_blacklist[j++], "msctf.dll");
-
-        j = 0x0;
-        strcpy(this->func_wanted[j++], "CreateFileA");
-        strcpy(this->func_wanted[j++], "CreateFileW");
-        strcpy(this->func_wanted[j++], "NtQueueApcThread");
-        strcpy(this->func_wanted[j++], "OpenProcess");
-        strcpy(this->func_wanted[j++], "CreateProcessA");
-        strcpy(this->func_wanted[j++], "CreateProcessW");
-        strcpy(this->func_wanted[j++], "CreateToolhelp32Snapshot");
 
         // fill the rest with noops
         for(unsigned int i = 0x0; i < 0x100; i++)
@@ -3368,10 +3553,48 @@ class taint_x86
         this->finished = 0x0;
         this->aborted = 0x0;
 
+        this->blacklist_count = 0x0;
+        this->wanted_count = 0x0;
+        this->wanted_count_i = 0x0;
+        this->wanted_count_e = 0x0;
+
+        this->max_call_levels = MAX_CALL_LEVELS;
+        this->call_level_start = this->max_call_levels/3;
+
+
+/*
         this->propagations = (PROPAGATION*)malloc(sizeof(PROPAGATION)*MAX_PRPAGATIONS_OBSERVED);
         if(this->propagations == 0x0)
         {
             printf("Not enough memory\n");
+        }
+*/
+        unsigned i;
+        for(i = 0x0; i< MAX_BLACKLIST; i++)
+        {
+            this->lib_blacklist[i] = (char*)malloc(MAX_NAME);
+            if(this->lib_blacklist[0] == 0x0)
+            {
+                printf("Not enough memory\n");
+            }
+        }
+
+        for(i = 0x0; i< MAX_WANTED; i++)
+        {
+            this->func_wanted[i] = (char*)malloc(MAX_NAME);
+            if(this->func_wanted[i] == 0x0)
+            {
+                printf("Not enough memory\n");
+            }
+        }
+
+        for(i = 0x0; i< MAX_WANTED; i++)
+        {
+            this->func_included[i] = (char*)malloc(MAX_NAME);
+            if(this->func_included[i] == 0x0)
+            {
+                printf("Not enough memory\n");
+            }
         }
 
         this->taints = (REGION*)malloc(sizeof(REGION)*MAX_TAINTS_OBSERVED);
@@ -3380,15 +3603,46 @@ class taint_x86
             printf("Not enough memory\n");
         }
 
-        this->out_tab = 0;
+        this->libs = (LIB_INFO*)malloc(sizeof(LIB_INFO)*MAX_LIB_COUNT);
+        if(this->libs == 0x0)
+        {
+            printf("Not enough memory\n");
+        }
+
+
+        this->ctx_info = (CONTEXT_INFO*)malloc(sizeof(CONTEXT_INFO)*MAX_THREADS);
+        if(this->ctx_info == 0x0)
+        {
+            printf("Not enough memory\n");
+        }
+
     }
 
     ~taint_x86() {
         free(this->memory);
-        free(this->propagations);
+//        free(this->propagations);
         free(this->taints);
+        free(this->libs);
+        free(this->ctx_info);
+
+        unsigned i;
+        for(i = 0x0; i< MAX_BLACKLIST; i++)
+        {
+            free(this->lib_blacklist[i]);
+        }
+
+        for(i = 0x0; i< MAX_WANTED; i++)
+        {
+            free(this->func_wanted[i]);
+        }
+
+        for(i = 0x0; i< MAX_WANTED; i++)
+        {
+            free(this->func_included[i]);
+        }
+
     }
 
 };
 
-
+#endif
