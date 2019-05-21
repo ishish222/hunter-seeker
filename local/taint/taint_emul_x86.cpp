@@ -9,6 +9,7 @@
 #include <iniparser.h>
 #include "inc/pe_bliss.h"
 #include <fstream>
+#include <plugin.h>
 
 #define MEM_ALLOC_DECLARED_SIZE
 #define VERIFY_OOB
@@ -50,13 +51,13 @@ int taint_x86::d_print(int level, const char* format, ...)
     return 0x0;
 }
 
-int taint_x86::handle_sigsegv()
+void taint_x86::handle_sigsegv(int signum)
 {
     
     d_print(1, "\n********* SEGMENTATION FAULT *********\n\n");
     d_print(1, "Instruction no: %d\n", this->current_instr_count);
     d_print(1, "EIP: 0x%08x\n", this->current_eip);
-    d_print(1, "Opcode: 0x%02x\n", this->current_instr_byte->get_BYTE());
+    if(this->current_instr_byte != 0x0) d_print(1, "Opcode: 0x%02x\n", this->current_instr_byte->get_BYTE());
 
     void *trace[32];
     size_t size, i;
@@ -76,16 +77,13 @@ int taint_x86::handle_sigsegv()
 
 
     exit(-1);  
-    return 0x0;
 }
 
-int taint_x86::handle_sigint()
+void taint_x86::handle_sigint(int signum)
 {
     this->finished = 0x1;
     this->aborted = 0x1;
     d_print(1, "Eip: 0x%08x, this->end_addr: 0x%08x, limit: %d, count: %d, finishing\n", this->current_eip, this->end_addr, this->instr_limit, this->current_instr_count);
-    
-    return 0x0;
 }
 
 int strcmpi(char const *a, char const *b)
@@ -309,7 +307,7 @@ int taint_x86::check_func_included(char* name)
 
 int taint_x86::start()
 {
-    if(this->start_callback) this->start_callback(this);
+    if(this->plugin) this->plugin->start_callback();
 
     char out_line[MAX_NAME];
 
@@ -2155,7 +2153,7 @@ BYTE_t taint_x86::reg_restore_8(DWORD_t off, int tid)
 
 int taint_x86::pre_execute_instruction(DWORD eip)
 {
-    if(this->pre_execute_instruction_callback) this->pre_execute_instruction_callback(this, eip);
+    if(this->plugin) this->plugin->pre_execute_instruction_callback(eip);
 
     /* graph start */
     if((this->start_addr == eip) || (this->current_instr_count == this->start_instr))
@@ -2210,7 +2208,7 @@ int taint_x86::pre_execute_instruction(DWORD eip)
 
 int taint_x86::post_execute_instruction(DWORD eip)
 {
-    if(this->post_execute_instruction_callback) this->post_execute_instruction_callback(this, eip);
+    if(this->plugin) this->plugin->post_execute_instruction_callback(eip);
 
     unsigned i, j, diff;
 
@@ -2444,10 +2442,20 @@ int taint_x86::already_added(DWORD tid)
     unsigned i;
     int ret = 0x0;
 
+    d_print(1, "Cheking thread 0x%08x\n", tid);
+
+    d_print(1, "this addr: 0x%08x\n", this);
+    d_print(1, "tids table addr: 0x%08x\n", &this->tids);
+
     if(this->tids[tid] != -1) 
     {
         ret = 0x1;
-        d_print(3, "Thread 0x%08x already added\n", tid);
+        d_print(1, "Thread 0x%08x already added\n", tid);
+    }
+    else
+    {
+        ret = 0x0;
+        d_print(1, "Thread 0x%08x NOT added\n", tid);
     }
     return ret;
 }
@@ -2510,7 +2518,7 @@ int taint_x86::check_thread(CONTEXT_info ctx_info)
 
 int taint_x86::finish()
 {
-    if(this->finish_callback) this->finish_callback(this);
+    if(this->plugin) this->plugin->finish_callback();
 
     unsigned i, j, k;
     CONTEXT_INFO* cur_tid;
@@ -2652,9 +2660,10 @@ int taint_x86::mod_thread(CONTEXT_info ctx_info)
 
 int taint_x86::add_thread(CONTEXT_info ctx_info)
 {
+    if(this->plugin) this->plugin->add_thread_callback(ctx_info);
+
     DWORD already_added = 0x0;
     unsigned i;
-//    char graph_filename[MAX_NAME];
     char out_line[MAX_NAME];
 
     d_print(3, "Adding thread: 0x%08x\n", ctx_info.thread_id);
@@ -3024,6 +3033,8 @@ int taint_x86::add_exception(EXCEPTION_INFO info)
 
 int taint_x86::del_thread(DWORD tid)
 {
+    if(this->plugin) this->plugin->del_thread_callback(tid);
+
     char out_line[MAX_NAME];
     unsigned int i, diff;
     unsigned thread_idx;
@@ -3033,6 +3044,8 @@ int taint_x86::del_thread(DWORD tid)
 
 int taint_x86::del_thread_srsly(DWORD tid)
 {
+    if(this->plugin) this->plugin->del_thread_srsly_callback(tid);
+
     char out_line[MAX_NAME];
     unsigned int i, diff;
 

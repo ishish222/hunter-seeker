@@ -12,7 +12,7 @@
 #define MAX_LOOP_ADDR           0x50
 #define MAX_LIST_JXX            0x1000
 
-class graph_engine
+class graph_engine : Plugin
 {
     public:
 
@@ -26,6 +26,7 @@ class graph_engine
     unsigned call_level_offset;
     DWORD depth;
     char enumerate;
+
 
     /* graph prefixes */
 //    int set_prefix(char*);
@@ -59,7 +60,7 @@ class graph_engine
     /* graph stuff - loop fences - new approach */
     LOOP_FENCE loop_fences[MAX_LOOP_FENCES]; 
     unsigned loop_fences_count;
-/*    int add_fence(OFFSET, OFFSET, OFFSET, OFFSET);
+    int add_fence(OFFSET, OFFSET, OFFSET, OFFSET);
     int check_fence(CALL_LEVEL*);
     int enter_loop_demo(CONTEXT_INFO*);
     int exit_loop_demo(CONTEXT_INFO*);
@@ -69,7 +70,7 @@ class graph_engine
     int check_loop_2(CONTEXT_INFO*);
     int check_collecting(CONTEXT_INFO*);
     int comment_out(char*, DWORD);
-*/
+
     /* graph stuff - emitting configuration */
 /*    int add_blacklist(char*);
     int add_blacklist_addr(DWORD);
@@ -90,11 +91,12 @@ class graph_engine
     int handle_ret(CONTEXT_INFO*, OFFSET);
 */
     /* graph stuff - prints */
-/*    void print_call(CONTEXT_INFO*, char*, const char*);
+    void print_call(CONTEXT_INFO*, char*, const char*);
     void print_call_open(CONTEXT_INFO*, char*, const char*);
     void print_empty_call(CONTEXT_INFO*, char*, const char*);
     void print_a_ret(CONTEXT_INFO*);
     void print_ret(CONTEXT_INFO*);
+/*
     int dive(CONTEXT_INFO*, OFFSET, OFFSET);
     int surface(CONTEXT_INFO*);
     int jxx_set(unsigned);
@@ -102,10 +104,85 @@ class graph_engine
     int jxx_clear();
 */
     /* new implementation */
-    int pre_execute_instruction_callback(taint_x86*, DWORD);
-    int post_execute_instruction_callback(taint_x86*, DWORD);
-    int start_callback(taint_x86*);
-    int finish_callback(taint_x86*);
+    virtual int pre_execute_instruction_callback(DWORD);
+    virtual int post_execute_instruction_callback(DWORD);
+    virtual int start_callback();
+    virtual int finish_callback();
+    virtual int add_thread_callback(CONTEXT_info);
+    virtual int del_thread_callback(DWORD);
+    virtual int del_thread_srsly_callback(DWORD);
+
+    graph_engine()
+    {
+        printf("Initializing graph_engine\n");
+
+        unsigned i;
+
+        for(i = 0x0; i< MAX_BLACKLIST; i++)
+        {
+            this->lib_blacklist[i] = (char*)malloc(MAX_NAME);
+            if(this->lib_blacklist[0] == 0x0)
+            {
+                printf("Not enough memory\n");
+            }
+        }
+
+        for(i = 0x0; i< MAX_WANTED; i++)
+        {
+            this->func_wanted[i] = (char*)malloc(MAX_NAME);
+            if(this->func_wanted[i] == 0x0)
+            {
+                printf("Not enough memory\n");
+            }
+        }
+
+        for(i = 0x0; i< MAX_WANTED; i++)
+        {
+            this->func_included[i] = (char*)malloc(MAX_NAME);
+            if(this->func_included[i] == 0x0)
+            {
+                printf("Not enough memory\n");
+            }
+        }
+
+        this->ctx_info = (CONTEXT_INFO*)malloc(sizeof(CONTEXT_INFO)*MAX_THREADS);
+
+        if(this->ctx_info == 0x0)
+        {
+            printf("Not enough memory\n");
+        }
+
+        this->blacklist_count = 0x0;
+        this->wanted_count = 0x0;
+        this->wanted_count_i = 0x0;
+        this->wanted_count_e = 0x0;
+
+        this->max_call_levels = MAX_CALL_LEVELS;
+        this->call_level_start = this->max_call_levels/3;
+
+    }
+
+    ~graph_engine() 
+    {
+        free(this->ctx_info);
+
+        unsigned i;
+        for(i = 0x0; i< MAX_BLACKLIST; i++)
+        {
+            free(this->lib_blacklist[i]);
+        }
+
+        for(i = 0x0; i< MAX_WANTED; i++)
+        {
+            free(this->func_wanted[i]);
+        }
+
+        for(i = 0x0; i< MAX_WANTED; i++)
+        {
+            free(this->func_included[i]);
+        }
+
+    }
 
 };
 

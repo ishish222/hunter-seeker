@@ -2357,14 +2357,9 @@ typedef struct REGION_
     OFFSET size;
 } REGION;
 
-/* callback types */
-class taint_x86;
-
-typedef int (*callback_type_1)(taint_x86*, DWORD);
-typedef int (*callback_type_2)(taint_x86*);
+#include <plugin.h>
 
 /* tha actual class */
-
 class taint_x86
 {
     public:
@@ -2963,8 +2958,8 @@ class taint_x86
     int add_symbols(LIB_INFO*);
     int copy_symbol(SYMBOL**, SYMBOL*);
     int register_syscall(DWORD, DWORD);
-    int handle_sigsegv();
-    int handle_sigint();
+    void handle_sigsegv(int);
+    void handle_sigint(int);
 
     // overriden for more effective debugging
     int d_print(int, const char*, ...);
@@ -3049,11 +3044,9 @@ class taint_x86
     int start();
     int finish();
 
-    /* callbacks */
-    callback_type_1 pre_execute_instruction_callback;
-    callback_type_1 post_execute_instruction_callback;
-    callback_type_2 start_callback;
-    callback_type_2 finish_callback;
+    /* plugins */
+    class Plugin* plugin;
+    //int register_plugin(Plugin*);
 
     /* printing methods */
     int print_err_all_contexts();
@@ -3469,17 +3462,13 @@ class taint_x86
                 this->instructions_32_extended[i] = &taint_x86::r_noop;
         }
 
-        /* initialize callbacks */
-        this->pre_execute_instruction_callback = 0x0;
-        this->post_execute_instruction_callback = 0x0;
-        this->start_callback = 0x0;
-        this->finish_callback = 0x0;
-
         for(unsigned int i = 0x0; i < MAX_THREAD_NUMBER; i++)
             this->tids[i] = -1;
 
+        /* taint stuff */
         this->current_propagation_count = 0x1;
 
+        /* graph stuff */
         this->started = 0x0;
         this->finished = 0x0;
         this->aborted = 0x0;
@@ -3493,6 +3482,7 @@ class taint_x86
         this->call_level_start = this->max_call_levels/3;
 
 
+        /* taint stuff */
 /*
         this->propagations = (PROPAGATION*)malloc(sizeof(PROPAGATION)*MAX_PRPAGATIONS_OBSERVED);
         if(this->propagations == 0x0)
@@ -3500,6 +3490,7 @@ class taint_x86
             printf("Not enough memory\n");
         }
 */
+        /* graph stuff */
         unsigned i;
         for(i = 0x0; i< MAX_BLACKLIST; i++)
         {
@@ -3528,6 +3519,7 @@ class taint_x86
             }
         }
 
+        /* taint stuff */
         this->taints = (REGION*)malloc(sizeof(REGION)*MAX_TAINTS_OBSERVED);
         if(this->taints == 0x0)
         {
@@ -3541,6 +3533,7 @@ class taint_x86
         }
 
 
+        /* graph stuff */
         this->ctx_info = (CONTEXT_INFO*)malloc(sizeof(CONTEXT_INFO)*MAX_THREADS);
         if(this->ctx_info == 0x0)
         {

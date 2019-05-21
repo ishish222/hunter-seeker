@@ -43,13 +43,13 @@ int decode_instruction(DWORD* tid, OFFSET* addr, long long unsigned* instr_count
 
 void handle_sigint(int signum)
 {
-    taint_eng.handle_sigint();
+    taint_eng.handle_sigint(signum);
     return;
 }
 
 void handle_sigsegv(int signum)
 {
-    taint_eng.handle_sigsegv();
+    taint_eng.handle_sigsegv(signum);
     return;
 }
 
@@ -252,11 +252,8 @@ int main(int argc, char** argv)
     taint_eng.bp_hit = 0x0;
 
     /* registering callbacks */
-    taint_eng.start_callback = (callback_type_2)&graph_engine::start_callback;
-    taint_eng.finish_callback = (callback_type_2)&graph_engine::finish_callback;
-    taint_eng.pre_execute_instruction_callback = (callback_type_1)&graph_eng.pre_execute_instruction_callback;
-    taint_eng.post_execute_instruction_callback = (callback_type_1)&graph_eng.post_execute_instruction_callback;
-    printf("pre_execute_instruction_callback: %d\n", taint_eng.pre_execute_instruction_callback);
+    taint_eng.plugin = (Plugin*)&graph_eng;
+    taint_eng.plugin->taint_eng = &taint_eng;
  
     /* executing instructions */
     char* line;

@@ -9,7 +9,7 @@ CEXTRACT_OBJS = debug.o cextract_taint_x86.o cextract_main.c
 SYMB_OBJS = symbol_export.o
 LTRACE_OBJS = debug.o ltrace_taint_x86.o ltrace_main.c
 STRACE_OBJS = debug.o caller_taint_x86.o strace_main.c 
-CALL_ANALYZE_OBJS = debug.o taint_emul_x86.o out_utils.o utils.o breakpoint.o graph_engine.o call_analyze.c
+CALL_ANALYZE_OBJS = debug.o taint_emul_x86.o out_utils.o utils.o breakpoint.o graph_engine.o call_analyze.c plugin.h
 
 INILIBS = -l iniparser
 BLISS_LIB = -lpebliss -Llib 
