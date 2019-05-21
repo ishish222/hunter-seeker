@@ -63,12 +63,6 @@ Change of endiannes takes place when reading and writing to memory (to_mem, from
 #define MAX_LOOP_ADDR           0x50
 #define MAX_LIST_JXX            0x1000
 
-// deprecated
-#define MEM     0xff
-#define RM_R    0x0
-#define RM_M    0x1
-
-// new modrm implementation
 #define MOD_OFF     0x6
 #define MOD_MASK    0x3
 #define RM_OFF      0x0
@@ -777,23 +771,6 @@ class BYTE_t
         target[0].set_BYTE_t(this->get_BYTE_t());
     }
 
-/*
-    void from_mem_off(OFFSET off)
-    {
-        BYTE_t* source;
-        source = &this->memory[off];
-        this->set_BYTE(source[0].get_BYTE());
-        this->set_BYTE_t(source[0].get_BYTE_t());
-    }
-
-    void to_mem_off(OFFSET off)
-    {
-        BYTE_t* target;
-        target = &this->memory[off];
-        target[0].get_BYTE()   = this->get_BYTE();
-        target[0].set_BYTE_t(this->get_BYTE_t());
-    }
-*/
 };
 
 class WORD_t
@@ -870,23 +847,12 @@ class WORD_t
     WORD_t operator=(WORD a)
     {
         this->set_WORD(a);
-/*
-        char* tmp;
-        tmp = (char*)&a;
-
-        this->val[0] = tmp[0];
-        this->val[1] = tmp[1];
-*/
     }
 
     WORD_t operator=(WORD_t a)
     {
         this->set_WORD(a.get_WORD());
         this->set_WORD_t(a.get_WORD_t());
-/*
-        this->val[0] = a.get_BYTE()[0];
-        this->val[1] = a.get_BYTE()[1];
-*/
     }
 
     WORD_t operator+(WORD b)
@@ -2368,8 +2334,6 @@ typedef struct _CONTEXT_INFO
 #define BP_MODE_WRITE   0x2
 #define BP_MODE_EXECUTE 0x4
 
-
-
 typedef struct BREAKPOINT_
 {
     OFFSET offset;
@@ -2387,53 +2351,26 @@ typedef struct TRACE_WATCHPOINT_
     char interactive;
 } TRACE_WATCHPOINT;
 
-typedef struct TAINT_WATCHPOINT_8_
-{
-    BYTE_t* watched;
-    char name[MAX_NAME];
-    unsigned long long count;
-} TAINT_WATCHPOINT_8;
-
-typedef struct TAINT_WATCHPOINT_16_
-{
-    WORD_t* watched;
-    char name[MAX_NAME];
-    unsigned long long count;
-} TAINT_WATCHPOINT_16;
-
-typedef struct TAINT_WATCHPOINT_32_
-{
-    DWORD_t* watched;
-    char name[MAX_NAME];
-    unsigned long long count;
-} TAINT_WATCHPOINT_32;
-
 typedef struct REGION_
 {
     OFFSET off;
     OFFSET size;
 } REGION;
 
+/* callback types */
+class taint_x86;
+
+typedef int (*callback_type_1)(taint_x86*, DWORD);
+typedef int (*callback_type_2)(taint_x86*);
+
+/* tha actual class */
+
 class taint_x86
 {
     public:
     FILE* dump_file;
     FILE* instr_file;
-    FILE* lost_file;
     FILE* mod_file;
-
-    /* graph parameters */
-    DWORD start_addr;
-    DWORD end_addr;
-    OFFSET start_instr;
-    OFFSET instr_limit;
-    unsigned max_call_levels;
-    unsigned call_level_start;
-    unsigned call_level_offset;
-
-    unsigned counter;
-
-    DWORD depth;
 
     DWORD started;
     DWORD finished;
@@ -2446,130 +2383,73 @@ class taint_x86
     /* analysis options */
     DWORD options;
 
+    /* identifying invelid bytes */
     BYTE_t invalid_byte;
     WORD_t invalid_word;
     DWORD_t invalid_dword;
 
+    /* handling prefixes */
+    int a_is_prefix(BYTE_t*);
     int current_prefixes;
+    BYTE current_prefix_length;
+    
+    /* counters */
     BYTE_t* last_instr_byte;
     BYTE_t* current_instr_byte;
     DWORD current_instr_is_jump;
     OFFSET current_eip;
     OFFSET last_eip;
-    char last_inconsistent;
     unsigned long long  last_instr_count;
     unsigned long long  current_instr_count;
     BYTE current_instr_length;
-    BYTE current_prefix_length;
-    
-    BREAKPOINT  my_bps[0x10];
-    TAINT_WATCHPOINT_8 t8[0x10];
-    TAINT_WATCHPOINT_16 t16[0x10];
-    TAINT_WATCHPOINT_32 t32[0x10];
-    OFFSET taint_checks[0x10];
 
-    /* new breakpoints & watchpoints */
+    /* consistency checking */
+    char last_inconsistent;
+    int check_thread(CONTEXT_info);
 
-    BREAKPOINT new_bps[MAX_BREAKPOINTS];
-    BREAKPOINT new_bps_t[MAX_BREAKPOINTS];
-    TRACE_WATCHPOINT new_wps[MAX_BREAKPOINTS];   
-    unsigned new_bpt_count;
-    unsigned new_bpt_t_count;
-    unsigned new_wpt_count;
-
-    /* some quick analysis improvements */
-    REGION  security_layer[MAX_SECURITY_LAYERS];
-    unsigned security_layer_count;
-    int verify_seg_sec(OFFSET);
- 
+    /* breakpoints & watchpoints */
+    DWORD bp_hit;
+    DWORD rw_bp;
+    BREAKPOINT bps[MAX_BREAKPOINTS];
+    BREAKPOINT bps_t[MAX_BREAKPOINTS];
+    TRACE_WATCHPOINT wps[MAX_BREAKPOINTS];   
+    unsigned bpt_count;
+    unsigned bpt_t_count;
+    unsigned wpt_count;
     int add_breakpoint(BREAKPOINT);
     int add_taint_breakpoint(BREAKPOINT);
     int add_trace_watchpoint(TRACE_WATCHPOINT);
     int update_watchpoints(DWORD);
 
-    CONTEXT_INFO* ctx_info;
-    CONTEXT_INFO* cur_info;
-
-    char enumerate;
-
-    REGION* taints;
-    unsigned taint_count;
-
-    unsigned current_propagation_count;
-    // moved to heap
-//    PROPAGATION propagations[MAX_PRPAGATIONS_OBSERVED];
-    PROPAGATION* propagations;
-
-    DWORD tids[MAX_THREAD_NUMBER];
-    DWORD tid_count;
-    DWORD cur_tid;
-    DWORD bp_hit;
-    DWORD extended;
-    DWORD rw_bp;
-
-//    LIB_INFO libs[0x100];
+    /* securing memory areas */
+    REGION  security_layer[MAX_SECURITY_LAYERS];
+    unsigned security_layer_count;
+    int verify_seg_sec(OFFSET);
+ 
+    /* handling libraries & symbols */
     LIB_INFO* libs;
     unsigned libs_count;
-    char lib_dir_path[MAX_NAME];
-    char prefix[MAX_NAME];
-//    char lib_blacklist[MAX_NAME][MAX_BLACKLIST];
-    char* lib_blacklist[MAX_NAME];
-    unsigned blacklist_count;
-    DWORD addr_silenced[MAX_BLACKLIST];
-    unsigned addr_silenced_count;
-    DWORD addr_blacklist[MAX_BLACKLIST];
-    unsigned addr_blacklist_count;
-//    char func_wanted[MAX_NAME][MAX_WANTED];
-//    char func_included[MAX_NAME][MAX_WANTED];
-    char* func_wanted[MAX_NAME];
-    char* func_included[MAX_NAME];
-    unsigned instr_wanted[MAX_WANTED];
-    DWORD addr_wanted[MAX_WANTED];
-    unsigned wanted_count;
-    unsigned included_count;
-    unsigned wanted_count_e;
-    unsigned wanted_count_i;
-
-    EXCEPTION_INFO exceptions[MAX_EXCEPTIONS_COUNT];
-    DWORD exceptions_count;
+    int add_lib(OFFSET, char*);
+    int del_lib(OFFSET);
+    LIB_INFO* get_lib(OFFSET);
 
     SYMBOL* symbols; 
     unsigned symbols_count;
-
-    unsigned ret_idx;
-
     int add_symbol(SYMBOL**, OFFSET, char*, char*);
     int remove_symbol(SYMBOL*);
     SYMBOL* get_symbol(OFFSET);
 
-    /* loop fences - new approach */
-    LOOP_FENCE loop_fences[MAX_LOOP_FENCES]; 
-    unsigned loop_fences_count;
-    
-    int enter_loop_demo(CONTEXT_INFO*);
-    int exit_loop_demo(CONTEXT_INFO*);
-    int enter_loop(CONTEXT_INFO*);
-    int exit_loop(CONTEXT_INFO*);
-    //int check_loop(CONTEXT_INFO*, OFFSET, OFFSET);
-    int check_loop(CONTEXT_INFO*);
-    int check_loop_2(CONTEXT_INFO*);
-    int check_collecting(CONTEXT_INFO*);
-    int comment_out(char*, DWORD);
+    /* handling exceptions */
+    EXCEPTION_INFO exceptions[MAX_EXCEPTIONS_COUNT];
+    DWORD exceptions_count;
+    int add_exception(EXCEPTION_INFO);
 
-    /* dumping taint transfer history */
-    int write_history(FILE*);
-    int dump_cmd(char*);
-    int prompt_taint();
-    TRACE_WATCHPOINT parse_trace_string(char* string);
-    int query_history(TRACE_WATCHPOINT twp);
 
     int modrm_table_32[0x100];
 
     typedef int (taint_x86::*instruction_routine)(BYTE_t* args);
     instruction_routine instructions_32[0x100];
     instruction_routine instructions_32_extended[0x100];
-//    instruction_routine escaped_instructions_32[0x10000];
-
 
     // instruction routines
     int r_noop(BYTE_t*);
@@ -2936,6 +2816,7 @@ class taint_x86
     int r_imul_r_rm_16_32(BYTE_t*);
  
     // process extended operands
+    DWORD extended;
     int r_extend(BYTE_t*);
 
     // auxilliary
@@ -2950,7 +2831,6 @@ class taint_x86
     DWORD_t a_pop_32();
     DWORD_t a_peek_32();
     int a_calculate_instr_length(BYTE_t*);
-    int a_is_prefix(BYTE_t*);
     int a_decode_modrm(BYTE_t*, modrm_ptr*, modrm_ptr*, int, int);
     OFFSET a_decode_sib(BYTE_t*);
     OFFSET a_decode_sib_mod(BYTE_t*, BYTE);
@@ -2958,10 +2838,6 @@ class taint_x86
     OFFSET a_offset_recalculate_8(OFFSET);
     int verify_oob_offset(OFFSET, OFFSET);
 
-    int a_push_lost_32(DWORD);
-    int a_push_lost_16(WORD);
-    int a_push_lost_8(BYTE);
-    DWORD a_pop_lost();
     int a_check_sign(BYTE);
     int a_check_sign(WORD);
     int a_check_sign(DWORD);
@@ -3055,42 +2931,23 @@ class taint_x86
     int a_rcl_8(BYTE_t&);
     int a_rcr_8(BYTE_t&);
 
-    // other
-    DWORD le2dword(char*);
-    CONTEXT_INFO* get_tid(DWORD);
+    /* thread-related functions */
     int already_added(DWORD);
     int add_thread(CONTEXT_info);
     int mod_thread(CONTEXT_info);
     int del_thread(DWORD);
     int del_thread_srsly(DWORD);
-    int check_thread(CONTEXT_info);
-    int add_taint(OFFSET start, UDWORD length);
-    int add_lib(OFFSET, char*);
-    int del_lib(OFFSET);
-    int add_exception(EXCEPTION_INFO);
+    CONTEXT_INFO* get_tid(DWORD);
+
+    /* I/O */
     int load_mem_from_file(char*);
     int load_instr_from_file(char*);
-    int open_lost_file(char*);
-    int set_prefix(char*);
     int open_mod_file(char*);
     int close_files();
+
+    // other
+    DWORD le2dword(char*);
     int set_lib_dir_path(char*);
-    int add_blacklist(char*);
-    int add_blacklist_addr(DWORD);
-    int add_silenced_addr(DWORD);
-    int add_included(char*);
-    int add_wanted(char*);
-    int add_wanted_e(DWORD);
-    int add_wanted_i(unsigned);
-    int add_fence(OFFSET, OFFSET, OFFSET, OFFSET);
-    int check_fence(CALL_LEVEL*);
-    int check_lib_blacklist(LIB_INFO*);
-    int check_addr_blacklist(OFFSET);
-    int check_addr_silenced(OFFSET);
-    int check_func_wanted(char*);
-    int check_func_included(char*);
-    int check_rets(OFFSET);
-    LIB_INFO* get_lib(OFFSET);
 
     /* handling jxx */
     int handle_jmp(CONTEXT_INFO*);
@@ -3098,8 +2955,6 @@ class taint_x86
     int handle_this_jxx(CONTEXT_INFO*, char*);
 
 
-    int handle_call(CONTEXT_INFO*);
-    int handle_ret(CONTEXT_INFO*, OFFSET);
     int handle_exception(EXCEPTION_INFO);
     int apply_lib_layout(LIB_INFO*);
     int apply_lib_exports(LIB_INFO*);
@@ -3110,15 +2965,6 @@ class taint_x86
     int register_syscall(DWORD, DWORD);
     int handle_sigsegv();
     int handle_sigint();
-
-/*
-    int from_mem(BYTE_t&, OFFSET, int);
-    int from_mem(WORD_t&, OFFSET, int);
-    int from_mem(DWORD_t&, OFFSET, int);
-    int to_mem(BYTE_t&, OFFSET, int);
-    int to_mem(WORD_t&, OFFSET, int);
-    int to_mem(DWORD_t&, OFFSET, int);
-*/
 
     // overriden for more effective debugging
     int d_print(int, const char*, ...);
@@ -3191,30 +3037,25 @@ class taint_x86
     BYTE_t reg_restore_8(OFFSET, int);
     BYTE_t reg_restore_8(DWORD_t, int);
 
-    // engine methods
-    //int execute_instruction(char*);
+    /* !!! engine methods */
     int pre_execute_instruction(DWORD);
     int execute_instruction(DWORD, DWORD);
     int post_execute_instruction(DWORD);
     int execute_instruction_at_eip(DWORD);
     int execute_instruction_at_eip(DWORD, DWORD);
-    int finish();
     int verify_t_context(int);
-
-    /* graph prints */
-
-    void print_call(CONTEXT_INFO*, char*, const char*);
-    void print_call_open(CONTEXT_INFO*, char*, const char*);
-    void print_empty_call(CONTEXT_INFO*, char*, const char*);
-    void print_a_ret(CONTEXT_INFO*);
-    void print_ret(CONTEXT_INFO*);
-    int dive(CONTEXT_INFO*, OFFSET, OFFSET);
-    int surface(CONTEXT_INFO*);
-    int jxx_set(unsigned);
-    int jxx_clear_level(unsigned);
-    int jxx_clear();
+    int decode_modrm_byte(BYTE_t*, DWORD_t*, DWORD_t*);
+    int decode_modrm_byte(BYTE_t*, OFFSET*, OFFSET*);
     int start();
+    int finish();
 
+    /* callbacks */
+    callback_type_1 pre_execute_instruction_callback;
+    callback_type_1 post_execute_instruction_callback;
+    callback_type_2 start_callback;
+    callback_type_2 finish_callback;
+
+    /* printing methods */
     int print_err_all_contexts();
     int print_err_all_t_contexts();
     int print_err_all_stacks();
@@ -3223,7 +3064,6 @@ class taint_x86
     int print_err_t_context(int);
     int print_err_stack(DWORD, DWORD);
     int print_err_t_stack(DWORD, DWORD);
-
     int print_context(int);
     int print_t_context(int);
     int print_context();
@@ -3244,8 +3084,106 @@ class taint_x86
     int print_security_layers(int, OFFSET);
     int print_bt_buffer(BYTE_t*, DWORD);
     int print_all_regs();
-    int decode_modrm_byte(BYTE_t*, DWORD_t*, DWORD_t*);
-    int decode_modrm_byte(BYTE_t*, OFFSET*, OFFSET*);
+
+    /* graph parameters */
+    DWORD start_addr;
+    DWORD end_addr;
+    OFFSET start_instr;
+    OFFSET instr_limit;
+    unsigned max_call_levels;
+    unsigned call_level_start;
+    unsigned call_level_offset;
+    DWORD depth;
+    char enumerate;
+
+
+    /* graph prefixes */
+    int set_prefix(char*);
+    char prefix[MAX_NAME];
+
+    /* graph stuff */
+    char lib_dir_path[MAX_NAME]; //is this necessary?
+    char* lib_blacklist[MAX_NAME];
+    unsigned blacklist_count;
+    DWORD addr_silenced[MAX_BLACKLIST];
+    unsigned addr_silenced_count;
+    DWORD addr_blacklist[MAX_BLACKLIST];
+    unsigned addr_blacklist_count;
+    char* func_wanted[MAX_NAME];
+    char* func_included[MAX_NAME];
+    unsigned instr_wanted[MAX_WANTED];
+    DWORD addr_wanted[MAX_WANTED];
+    unsigned wanted_count;
+    unsigned included_count;
+    unsigned wanted_count_e;
+    unsigned wanted_count_i;
+    unsigned ret_idx;
+
+    /* handling context info */
+    DWORD tids[MAX_THREAD_NUMBER];
+    DWORD tid_count;
+    DWORD cur_tid;
+    CONTEXT_INFO* cur_info;
+    CONTEXT_INFO* ctx_info;
+
+    /* graph stuff - loop fences - new approach */
+    LOOP_FENCE loop_fences[MAX_LOOP_FENCES]; 
+    unsigned loop_fences_count;
+    int add_fence(OFFSET, OFFSET, OFFSET, OFFSET);
+    int check_fence(CALL_LEVEL*);
+    int enter_loop_demo(CONTEXT_INFO*);
+    int exit_loop_demo(CONTEXT_INFO*);
+    int enter_loop(CONTEXT_INFO*);
+    int exit_loop(CONTEXT_INFO*);
+    int check_loop(CONTEXT_INFO*);
+    int check_loop_2(CONTEXT_INFO*);
+    int check_collecting(CONTEXT_INFO*);
+    int comment_out(char*, DWORD);
+
+    /* graph stuff - emitting configuration */
+    int add_blacklist(char*);
+    int add_blacklist_addr(DWORD);
+    int add_silenced_addr(DWORD);
+    int add_included(char*);
+    int add_wanted(char*);
+    int add_wanted_e(DWORD);
+    int add_wanted_i(unsigned);
+    int check_lib_blacklist(LIB_INFO*);
+    int check_addr_blacklist(OFFSET);
+    int check_addr_silenced(OFFSET);
+    int check_func_wanted(char*);
+    int check_func_included(char*);
+    int check_rets(OFFSET);
+
+    /* graph stuff - handlers */
+    int handle_call(CONTEXT_INFO*);
+    int handle_ret(CONTEXT_INFO*, OFFSET);
+
+    /* graph stuff - prints */
+    void print_call(CONTEXT_INFO*, char*, const char*);
+    void print_call_open(CONTEXT_INFO*, char*, const char*);
+    void print_empty_call(CONTEXT_INFO*, char*, const char*);
+    void print_a_ret(CONTEXT_INFO*);
+    void print_ret(CONTEXT_INFO*);
+    int dive(CONTEXT_INFO*, OFFSET, OFFSET);
+    int surface(CONTEXT_INFO*);
+    int jxx_set(unsigned);
+    int jxx_clear_level(unsigned);
+    int jxx_clear();
+
+    /* taint stuff */
+    REGION* taints;
+    unsigned taint_count;
+    unsigned current_propagation_count;
+    PROPAGATION* propagations;
+
+    /* taint stuff - dumping taint transfer history */
+    int add_taint(OFFSET start, UDWORD length);
+    int write_history(FILE*);
+    int dump_cmd(char*);
+    int prompt_taint();
+    TRACE_WATCHPOINT parse_trace_string(char* string);
+    int query_history(TRACE_WATCHPOINT twp);
 
     taint_x86()
     {
@@ -3531,19 +3469,12 @@ class taint_x86
                 this->instructions_32_extended[i] = &taint_x86::r_noop;
         }
 
-        // zero out bps
-        for(unsigned int i = 0x0; i < 0x10; i++)
-            this->my_bps[i].offset = 0x0;
-        // zero out t8
-        for(unsigned int i = 0x0; i < 0x10; i++)
-            this->t8[i].count = 0x0;
-        // zero out t16
-        for(unsigned int i = 0x0; i < 0x10; i++)
-            this->t16[i].count = 0x0;
-        // zero out t32
-        for(unsigned int i = 0x0; i < 0x10; i++)
-            this->t32[i].count = 0x0;
-        // zero out tids
+        /* initialize callbacks */
+        this->pre_execute_instruction_callback = 0x0;
+        this->post_execute_instruction_callback = 0x0;
+        this->start_callback = 0x0;
+        this->finish_callback = 0x0;
+
         for(unsigned int i = 0x0; i < MAX_THREAD_NUMBER; i++)
             this->tids[i] = -1;
 

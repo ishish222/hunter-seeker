@@ -1,5 +1,5 @@
 CC =g++
-CFLAGS = -rdynamic -I. -ggdb -w -std=c++11 -D_GLIBCXX_USE_CXX11_ABI=0 -DHANDLE_BREAKPOINTS
+CFLAGS = -rdynamic -I. -ggdb -w -std=c++11 -D_GLIBCXX_USE_CXX11_ABI=0 -DHANDLE_BREAKPOINTS -fpermissive
 NAMES = taint show_taint caller_taint symbol_export ltrace strace cextract call_analyze
 
 OBJS = debug.o taint_x86.o main.c
@@ -9,7 +9,7 @@ CEXTRACT_OBJS = debug.o cextract_taint_x86.o cextract_main.c
 SYMB_OBJS = symbol_export.o
 LTRACE_OBJS = debug.o ltrace_taint_x86.o ltrace_main.c
 STRACE_OBJS = debug.o caller_taint_x86.o strace_main.c 
-CALL_ANALYZE_OBJS = debug.o taint_emul_x86.o out_utils.o utils.o breakpoint.o call_analyze.c
+CALL_ANALYZE_OBJS = debug.o taint_emul_x86.o out_utils.o utils.o breakpoint.o graph_engine.o call_analyze.c
 
 INILIBS = -l iniparser
 BLISS_LIB = -lpebliss -Llib 
@@ -19,7 +19,7 @@ SDL_INCLUDE = -I/usr/local/include
 
 DISTORM_FLAGS = -Llib -l distorm3 -Iinc
 
-CXXFLAGS = -Wall -c -std=c++11 $(SDL_INCLUDE)
+CXXFLAGS = -Wall -c -std=c++11 -fpermissive $(SDL_INCLUDE)
 LDFLAGS = $(SDL_LIB)
 CXX = g++
 

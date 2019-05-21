@@ -12,12 +12,15 @@
 #include <signal.h>
 #include <utils.h>
 #include <breakpoint.h>
+#include <graph_engine.h>
 
 #define STRUCTURED_BUFFER_LENGTH 0x10000
 #define MAX_LINE 0x1000
 #define INSTR_REPORT_INTERVAL 1000000
 
 taint_x86 taint_eng;
+graph_engine graph_eng;
+
 
 int decode_instruction(DWORD* tid, OFFSET* addr, long long unsigned* instr_count, char* line)
 {
@@ -213,30 +216,28 @@ int main(int argc, char** argv)
     parse_trace_watchpoints(watchpoint_optarg, &taint_eng);
 
     unsigned i;
-    for(i=0x0; i< taint_eng.new_bpt_count; i++)
-        if((taint_eng.new_bps[i].offset != 0x0) || (taint_eng.new_bps[i].mem_offset != 0x0))
+    for(i=0x0; i< taint_eng.bpt_count; i++)
+        if((taint_eng.bps[i].offset != 0x0) || (taint_eng.bps[i].mem_offset != 0x0))
         {
-            fprintf(stderr, "Bp: %lld, 0x%08x, %d\n", taint_eng.new_bps[i].offset, taint_eng.new_bps[i].mem_offset, taint_eng.new_bps[i].mode);
+            fprintf(stderr, "Bp: %lld, 0x%08x, %d\n", taint_eng.bps[i].offset, taint_eng.bps[i].mem_offset, taint_eng.bps[i].mode);
         }
 
-    for(i=0x0; i< taint_eng.new_bpt_t_count; i++)
-        if((taint_eng.new_bps_t[i].offset != 0x0) || (taint_eng.new_bps_t[i].mem_offset != 0x0))
+    for(i=0x0; i< taint_eng.bpt_t_count; i++)
+        if((taint_eng.bps_t[i].offset != 0x0) || (taint_eng.bps_t[i].mem_offset != 0x0))
         {
-            fprintf(stderr, "Bp_t: %lld, 0x%08x, %d\n", taint_eng.new_bps_t[i].offset, taint_eng.new_bps_t[i].mem_offset, taint_eng.new_bps_t[i].mode);
+            fprintf(stderr, "Bp_t: %lld, 0x%08x, %d\n", taint_eng.bps_t[i].offset, taint_eng.bps_t[i].mem_offset, taint_eng.bps_t[i].mode);
         }
 
-    for(i=0x0; i< taint_eng.new_wpt_count; i++)
-        if((taint_eng.new_wps[i].offset != 0x0) || (taint_eng.new_wps[i].mem_offset != 0x0))
+    for(i=0x0; i< taint_eng.wpt_count; i++)
+        if((taint_eng.wps[i].offset != 0x0) || (taint_eng.wps[i].mem_offset != 0x0))
         {
-            fprintf(stderr, "Wp: %lld, 0x%08x\n", taint_eng.new_wps[i].offset, taint_eng.new_wps[i].mem_offset);
+            fprintf(stderr, "Wp: %lld, 0x%08x\n", taint_eng.wps[i].offset, taint_eng.wps[i].mem_offset);
         }
 
     /* load data to engine */
     //taint_eng.print_all_contexts();
 
-//    taint_eng.load_mem_from_file(dump1_file_path);
     taint_eng.load_instr_from_file(instr_file_path);
-    taint_eng.open_lost_file(lost_file_path);
 
     /* pass graph parameters */
     taint_eng.start_addr = start_addr;
@@ -249,6 +250,13 @@ int main(int argc, char** argv)
     taint_eng.depth += taint_eng.call_level_start; /* because we do not start at 0x0 */
 
     taint_eng.bp_hit = 0x0;
+
+    /* registering callbacks */
+    taint_eng.start_callback = (callback_type_2)&graph_engine::start_callback;
+    taint_eng.finish_callback = (callback_type_2)&graph_engine::finish_callback;
+    taint_eng.pre_execute_instruction_callback = (callback_type_1)&graph_eng.pre_execute_instruction_callback;
+    taint_eng.post_execute_instruction_callback = (callback_type_1)&graph_eng.post_execute_instruction_callback;
+    printf("pre_execute_instruction_callback: %d\n", taint_eng.pre_execute_instruction_callback);
  
     /* executing instructions */
     char* line;

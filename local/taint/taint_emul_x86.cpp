@@ -4,7 +4,7 @@
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <caller_taint_x86.h>
+#include <taint_emul_x86.h>
 #include "debug.h"
 #include <iniparser.h>
 #include "inc/pe_bliss.h"
@@ -309,6 +309,8 @@ int taint_x86::check_func_included(char* name)
 
 int taint_x86::start()
 {
+    if(this->start_callback) this->start_callback(this);
+
     char out_line[MAX_NAME];
 
     sprintf(out_line, "[ST]");
@@ -320,26 +322,26 @@ int taint_x86::start()
 
 int taint_x86::add_breakpoint(BREAKPOINT bp)
 {
-    if(this->new_bpt_count >= MAX_BREAKPOINTS) return -1;
+    if(this->bpt_count >= MAX_BREAKPOINTS) return -1;
 
-    this->new_bps[this->new_bpt_count].offset = bp.offset;
-    this->new_bps[this->new_bpt_count].mem_offset = bp.mem_offset;
-    this->new_bps[this->new_bpt_count].mode = bp.mode;
+    this->bps[this->bpt_count].offset = bp.offset;
+    this->bps[this->bpt_count].mem_offset = bp.mem_offset;
+    this->bps[this->bpt_count].mode = bp.mode;
 
-    this->new_bpt_count++;
+    this->bpt_count++;
 
     return 0x0;
 }
 
 int taint_x86::add_taint_breakpoint(BREAKPOINT bp)
 {
-    if(this->new_bpt_t_count >= MAX_BREAKPOINTS) return -1;
+    if(this->bpt_t_count >= MAX_BREAKPOINTS) return -1;
 
-    this->new_bps_t[this->new_bpt_t_count].offset = bp.offset;
-    this->new_bps_t[this->new_bpt_t_count].mem_offset = bp.mem_offset;
-    this->new_bps_t[this->new_bpt_t_count].mode = bp.mode;
+    this->bps_t[this->bpt_t_count].offset = bp.offset;
+    this->bps_t[this->bpt_t_count].mem_offset = bp.mem_offset;
+    this->bps_t[this->bpt_t_count].mode = bp.mode;
 
-    this->new_bpt_t_count++;
+    this->bpt_t_count++;
 
     return 0x0;
 }
@@ -347,48 +349,48 @@ int taint_x86::add_taint_breakpoint(BREAKPOINT bp)
 int taint_x86::update_watchpoints(DWORD tid)
 {
     unsigned i;
-    for(i=0x0; i< this->new_wpt_count; i++)
-        if(this->new_wps[i].tid == tid)
+    for(i=0x0; i< this->wpt_count; i++)
+        if(this->wps[i].tid == tid)
         {
-            if(strstr(this->new_wps[i].name, "EAX") != 0x0)
+            if(strstr(this->wps[i].name, "EAX") != 0x0)
             {
-                this->new_wps[i].watched = &this->ctx_info[this->tids[this->new_wps[i].tid]].registers[EAX];
+                this->wps[i].watched = &this->ctx_info[this->tids[this->wps[i].tid]].registers[EAX];
             }
-            else if(strstr(this->new_wps[i].name, "EBX") != 0x0)
+            else if(strstr(this->wps[i].name, "EBX") != 0x0)
             {
-                this->new_wps[i].watched = &this->ctx_info[this->tids[this->new_wps[i].tid]].registers[EBX];
+                this->wps[i].watched = &this->ctx_info[this->tids[this->wps[i].tid]].registers[EBX];
             }
-            else if(strstr(this->new_wps[i].name, "ECX") != 0x0)
+            else if(strstr(this->wps[i].name, "ECX") != 0x0)
             {
-                this->new_wps[i].watched = &this->ctx_info[this->tids[this->new_wps[i].tid]].registers[ECX];
+                this->wps[i].watched = &this->ctx_info[this->tids[this->wps[i].tid]].registers[ECX];
             }
-            else if(strstr(this->new_wps[i].name, "EDX") != 0x0)
+            else if(strstr(this->wps[i].name, "EDX") != 0x0)
             {
-                this->new_wps[i].watched = &this->ctx_info[this->tids[this->new_wps[i].tid]].registers[EDX];
+                this->wps[i].watched = &this->ctx_info[this->tids[this->wps[i].tid]].registers[EDX];
             }
-            else if(strstr(this->new_wps[i].name, "ESI") != 0x0)
+            else if(strstr(this->wps[i].name, "ESI") != 0x0)
             {
-                this->new_wps[i].watched = &this->ctx_info[this->tids[this->new_wps[i].tid]].registers[ESI];
+                this->wps[i].watched = &this->ctx_info[this->tids[this->wps[i].tid]].registers[ESI];
             }
-            else if(strstr(this->new_wps[i].name, "EDI") != 0x0)
+            else if(strstr(this->wps[i].name, "EDI") != 0x0)
             {
-                this->new_wps[i].watched = &this->ctx_info[this->tids[this->new_wps[i].tid]].registers[EDI];
+                this->wps[i].watched = &this->ctx_info[this->tids[this->wps[i].tid]].registers[EDI];
             }
-            else if(strstr(this->new_wps[i].name, "EBP") != 0x0)
+            else if(strstr(this->wps[i].name, "EBP") != 0x0)
             {
-                this->new_wps[i].watched = &(this->ctx_info[this->tids[this->new_wps[i].tid]].registers[EBP]);
+                this->wps[i].watched = &(this->ctx_info[this->tids[this->wps[i].tid]].registers[EBP]);
             }
-            else if(strstr(this->new_wps[i].name, "ESP") != 0x0)
+            else if(strstr(this->wps[i].name, "ESP") != 0x0)
             {
-                this->new_wps[i].watched = &this->ctx_info[this->tids[this->new_wps[i].tid]].registers[ESP];
+                this->wps[i].watched = &this->ctx_info[this->tids[this->wps[i].tid]].registers[ESP];
             }
-            else if(strstr(this->new_wps[i].name, "EIP") != 0x0)
+            else if(strstr(this->wps[i].name, "EIP") != 0x0)
             {
-                this->new_wps[i].watched = &this->ctx_info[this->tids[this->new_wps[i].tid]].registers[EIP];
+                this->wps[i].watched = &this->ctx_info[this->tids[this->wps[i].tid]].registers[EIP];
             }
-            else if(strtol(this->new_wps[i].name, 0x0, 0x10) != 0x0)
+            else if(strtol(this->wps[i].name, 0x0, 0x10) != 0x0)
             {
-                this->new_wps[i].watched = &this->memory[strtol(this->new_wps[i].name, 0x0, 0x10)];
+                this->wps[i].watched = &this->memory[strtol(this->wps[i].name, 0x0, 0x10)];
             }
         
         }
@@ -398,16 +400,16 @@ int taint_x86::update_watchpoints(DWORD tid)
 
 int taint_x86::add_trace_watchpoint(TRACE_WATCHPOINT wp)
 {
-    if(this->new_wpt_count >= MAX_BREAKPOINTS) return -1;
+    if(this->wpt_count >= MAX_BREAKPOINTS) return -1;
 
-    this->new_wps[this->new_wpt_count].offset = wp.offset;
-    this->new_wps[this->new_wpt_count].mem_offset = wp.mem_offset;
-    this->new_wps[this->new_wpt_count].watched = wp.watched;
-    this->new_wps[this->new_wpt_count].interactive = wp.interactive;
-    this->new_wps[this->new_wpt_count].tid = wp.tid;
-    strcpy(this->new_wps[this->new_wpt_count].name, wp.name);
+    this->wps[this->wpt_count].offset = wp.offset;
+    this->wps[this->wpt_count].mem_offset = wp.mem_offset;
+    this->wps[this->wpt_count].watched = wp.watched;
+    this->wps[this->wpt_count].interactive = wp.interactive;
+    this->wps[this->wpt_count].tid = wp.tid;
+    strcpy(this->wps[this->wpt_count].name, wp.name);
 
-    this->new_wpt_count++;
+    this->wpt_count++;
 
     return 0x0;
 }
@@ -1404,13 +1406,6 @@ int taint_x86::handle_call(CONTEXT_INFO* info)
         {
             d_print(1, " ");
         }
-/*    
-        d_print(1, "[0x%08x] (%d)0x%08x call 0x%08x, pos: %d, small: %d, ignored: %d: \n", 
-                this->cur_tid, this->current_instr_count, this->current_eip, target, 
-                this->ctx_info[this->tids[this->cur_tid]].call_level, 
-                this->ctx_info[this->tids[this->cur_tid]].call_level_smallest, 
-                this->ctx_info[this->tids[this->cur_tid]].call_level_ignored, 
-                this->ctx_info[this->tids[this->cur_tid]].call_level_largest);*/
     
         d_print(1, "[0x%08x] (%d)0x%08x call 0x%08x, pos: %d, small: %d, ignored: %d: \n", 
                 this->cur_tid, this->current_instr_count-1, source, target, 
@@ -1769,15 +1764,9 @@ if(this->options & OPTION_VERIFY_SEG_SEC)
     if(verify_seg_sec(off))
         return;
 
-#ifdef REVERSE_ANALYSIS
-    DWORD_t lost_val;
-    this->restore_32(off, lost_val);
-    this->a_push_lost_32(lost_val.get_DWORD());
-#endif
-
 #ifdef HANDLE_BREAKPOINTS
-    for(int i = 0x0; i< this->new_bpt_count; i++)
-        if(((off - this->new_bps[i].mem_offset) <= 0x4) && (this->new_bps[i].mode & BP_MODE_WRITE))
+    for(int i = 0x0; i< this->bpt_count; i++)
+        if(((off - this->bps[i].mem_offset) <= 0x4) && (this->bps[i].mode & BP_MODE_WRITE))
         {
             d_err_print("Mem dump in stderr @ 0x%08x\n", off);
             d_print(1, "Breakpoint RW: WRITE to 0x%x @ %lld, 0x%08x\n", off, this->current_instr_count, this->current_eip);
@@ -1802,8 +1791,8 @@ void taint_x86::restore_32(OFFSET off, DWORD_t& ret)
 #endif
 
 #ifdef HANDLE_BREAKPOINTS
-    for(int i = 0x0; i< this->new_bpt_count; i++)
-        if((this->new_bps[i].mem_offset == off) && (this->new_bps[i].mode & BP_MODE_READ))
+    for(int i = 0x0; i< this->bpt_count; i++)
+        if((this->bps[i].mem_offset == off) && (this->bps[i].mode & BP_MODE_READ))
         {
             d_err_print("Mem dump in stderr @ 0x%08x\n", off);
             d_print(1, "Breakpoint RW: READ from 0x%x @ %lld, 0x%08x\n", off, this->current_instr_count, this->current_eip);
@@ -1830,12 +1819,6 @@ void taint_x86::reg_store_32(OFFSET off, DWORD_t v, int tid)
 {
 #ifdef VERIFY_OOB
     if(this->verify_oob_offset(off, REG_SIZE) != 0x0) return;
-#endif
-
-#ifdef REVERSE_ANALYSIS
-    DWORD_t lost_val;
-    lost_val = this->reg_restore_32(off);
-    this->a_push_lost_32(lost_val.get_DWORD());
 #endif
 
     CONTEXT_INFO* info;
@@ -1917,14 +1900,9 @@ if(this->options & OPTION_VERIFY_SEG_SEC)
     if(verify_seg_sec(off))
         return;
 
-#ifdef REVERSE_ANALYSIS
-    WORD_t lost_val;
-    this->restore_16(off, lost_val);
-    this->a_push_lost_16(lost_val.get_WORD());
-#endif
 #ifdef HANDLE_BREAKPOINTS
-    for(int i = 0x0; i<  this->new_bpt_count; i++)
-        if(((off - this->new_bps[i].mem_offset) <= 0x2) && (this->new_bps[i].mode & BP_MODE_WRITE))
+    for(int i = 0x0; i<  this->bpt_count; i++)
+        if(((off - this->bps[i].mem_offset) <= 0x2) && (this->bps[i].mode & BP_MODE_WRITE))
         {
             d_err_print("Mem dump in stderr @ 0x%08x\n", off);
             d_print(1, "Breakpoint RW: WRITE to 0x%x @ %lld, 0x%08x\n", off, this->current_instr_count, this->current_eip);
@@ -1949,8 +1927,8 @@ void taint_x86::restore_16(OFFSET off, WORD_t& ret)
 #endif
 
 #ifdef HANDLE_BREAKPOINTS
-    for(int i = 0x0; i<  this->new_bpt_count; i++)
-        if((this->new_bps[i].mem_offset == off) && (this->new_bps[i].mode & BP_MODE_READ))
+    for(int i = 0x0; i<  this->bpt_count; i++)
+        if((this->bps[i].mem_offset == off) && (this->bps[i].mode & BP_MODE_READ))
         {
             d_err_print("Mem dump in stderr @ 0x%08x\n", off);
             d_print(1, "Breakpoint RW: READ from 0x%x @ %lld, 0x%08x\n", off, this->current_instr_count, this->current_eip);
@@ -1979,11 +1957,6 @@ void taint_x86::reg_store_16(OFFSET off, WORD_t v, int tid)
     if(this->verify_oob_offset(off, REG_SIZE) != 0x0) return;
 #endif
 
-#ifdef REVERSE_ANALYSIS
-    WORD_t lost_val;
-    lost_val = this->reg_restore_16(off);
-    this->a_push_lost_16(lost_val.get_WORD());
-#endif
     CONTEXT_INFO* info;
     info = this->get_tid(tid);
 
@@ -2060,8 +2033,8 @@ if(this->options & OPTION_VERIFY_SEG_SEC)
         return;
 
 #ifdef HANDLE_BREAKPOINTS
-    for(int i = 0x0; i< this->new_bpt_count; i++)
-        if((this->new_bps[i].mem_offset == off) && (this->new_bps[i].mode & BP_MODE_WRITE))
+    for(int i = 0x0; i< this->bpt_count; i++)
+        if((this->bps[i].mem_offset == off) && (this->bps[i].mode & BP_MODE_WRITE))
         {
             d_err_print("Mem dump in stderr @ 0x%08x\n", off);
             d_print(1, "Breakpoint RW: WRITE to 0x%x @ %lld, 0x%08x\n", off, this->current_instr_count, this->current_eip);
@@ -2086,8 +2059,8 @@ void taint_x86::restore_8(OFFSET off, BYTE_t& ret)
 #endif
 
 #ifdef HANDLE_BREAKPOINTS
-    for(int i = 0x0; i< this->new_bpt_count; i++)
-        if((this->new_bps[i].mem_offset == off) && (this->new_bps[i].mode & BP_MODE_READ))
+    for(int i = 0x0; i< this->bpt_count; i++)
+        if((this->bps[i].mem_offset == off) && (this->bps[i].mode & BP_MODE_READ))
         {
             d_err_print("Mem dump in stderr @ 0x%08x\n", off);
             d_print(1, "Breakpoint RW: READ from 0x%x @ %lld, 0x%08x\n", off, this->current_instr_count, this->current_eip);
@@ -2182,14 +2155,14 @@ BYTE_t taint_x86::reg_restore_8(DWORD_t off, int tid)
 
 int taint_x86::pre_execute_instruction(DWORD eip)
 {
+    if(this->pre_execute_instruction_callback) this->pre_execute_instruction_callback(this, eip);
+
     /* graph start */
     if((this->start_addr == eip) || (this->current_instr_count == this->start_instr))
     {
         d_print(1, "Got ST at 0x%08x, starting\n", eip);
         this->started = 0x1;
-//        this->counter = 0x0;
     }
-//    if(this->counter <0x10) this->counter++;
 
     this->cur_info = this->get_tid(this->cur_tid);
 
@@ -2237,6 +2210,8 @@ int taint_x86::pre_execute_instruction(DWORD eip)
 
 int taint_x86::post_execute_instruction(DWORD eip)
 {
+    if(this->post_execute_instruction_callback) this->post_execute_instruction_callback(this, eip);
+
     unsigned i, j, diff;
 
     this->extended = 0x0;
@@ -2311,17 +2286,17 @@ int taint_x86::post_execute_instruction(DWORD eip)
     /* regular breakpoints */
 
 #ifdef HANDLE_BREAKPOINTS
-    for(i=0x0; i<this->new_bpt_count; i++)
-        if((this->new_bps[i].offset == this->current_instr_count) && (this->new_bps[i].offset) && (this->new_bps[i].mode & BP_MODE_EXECUTE))
+    for(i=0x0; i<this->bpt_count; i++)
+        if((this->bps[i].offset == this->current_instr_count) && (this->bps[i].offset) && (this->bps[i].mode & BP_MODE_EXECUTE))
         {
-            d_err_print("Breakpoint @ %lld, 0x%08x, hit, dumping contexts & stacks\n", this->new_bps[i].offset, this->current_eip);
+            d_err_print("Breakpoint @ %lld, 0x%08x, hit, dumping contexts & stacks\n", this->bps[i].offset, this->current_eip);
             this->print_err_all_contexts();
             this->print_err_all_stacks();
             d_err_print("---\n");
         }
-        else if((this->new_bps[i].mem_offset == this->current_eip) && (this->new_bps[i].mem_offset) && (this->new_bps[i].mode & BP_MODE_EXECUTE))
+        else if((this->bps[i].mem_offset == this->current_eip) && (this->bps[i].mem_offset) && (this->bps[i].mode & BP_MODE_EXECUTE))
         {
-            d_err_print("Breakpoint @ %lld, 0x%08x, hit, dumping contexts & stacks\n", this->new_bps[i].offset, this->current_eip);
+            d_err_print("Breakpoint @ %lld, 0x%08x, hit, dumping contexts & stacks\n", this->bps[i].offset, this->current_eip);
             this->print_err_all_contexts();
             this->print_err_all_stacks();
             d_err_print("---\n");
@@ -2329,17 +2304,17 @@ int taint_x86::post_execute_instruction(DWORD eip)
 
     /* taint breakpoints */
 
-    for(i=0x0; i<this->new_bpt_t_count; i++)
-        if((this->new_bps_t[i].offset == this->current_instr_count) && (this->new_bps_t[i].offset))
+    for(i=0x0; i<this->bpt_t_count; i++)
+        if((this->bps_t[i].offset == this->current_instr_count) && (this->bps_t[i].offset))
         {
-            d_err_print("Breakpoint taint @ %lld, 0x%08x, hit, dumping contexts & stacks\n", this->new_bps[i].offset, this->current_eip);
+            d_err_print("Breakpoint taint @ %lld, 0x%08x, hit, dumping contexts & stacks\n", this->bps[i].offset, this->current_eip);
             this->print_err_all_t_contexts();
             this->print_err_all_t_stacks();
             d_err_print("---\n");
         }
-        else if((this->new_bps_t[i].mem_offset == this->current_eip) && (this->new_bps_t[i].mem_offset))
+        else if((this->bps_t[i].mem_offset == this->current_eip) && (this->bps_t[i].mem_offset))
         {
-            d_err_print("Breakpoint taint @ %lld, 0x%08x, hit, dumping contexts & stacks\n", this->new_bps[i].offset, this->current_eip);
+            d_err_print("Breakpoint taint @ %lld, 0x%08x, hit, dumping contexts & stacks\n", this->bps[i].offset, this->current_eip);
             this->print_err_all_t_contexts();
             this->print_err_all_t_stacks();
             d_err_print("---\n");
@@ -2347,25 +2322,25 @@ int taint_x86::post_execute_instruction(DWORD eip)
 
     /* trace watchpoints */
 
-    for(i=0x0; i<this->new_wpt_count; i++)
-        if((this->new_wps[i].offset == this->current_instr_count) && (this->new_wps[i].offset))
+    for(i=0x0; i<this->wpt_count; i++)
+        if((this->wps[i].offset == this->current_instr_count) && (this->wps[i].offset))
         {
-            d_err_print("Watchpoint @ %lld hit, dumping taint transfer history for %s for tid 0x%08x\n", this->new_wps[i].offset, this->new_wps[i].name, this->new_wps[i].tid);
-            this->print_taint_history(this->new_wps[i].watched);
-//            d_err_print("ptr: 0x%08x\n", &this->ctx_info[this->tids[this->new_wps[i].tid]].registers[EBP]);
-//            this->print_taint_history(&this->ctx_info[this->tids[this->new_wps[i].tid]].registers[EBP]);
+            d_err_print("Watchpoint @ %lld hit, dumping taint transfer history for %s for tid 0x%08x\n", this->wps[i].offset, this->wps[i].name, this->wps[i].tid);
+            this->print_taint_history(this->wps[i].watched);
+//            d_err_print("ptr: 0x%08x\n", &this->ctx_info[this->tids[this->wps[i].tid]].registers[EBP]);
+//            this->print_taint_history(&this->ctx_info[this->tids[this->wps[i].tid]].registers[EBP]);
             d_err_print("---\n");
-            if(this->new_wps[i].interactive)
+            if(this->wps[i].interactive)
             {
                 this->prompt_taint();
             }
         }
-        else if((this->new_wps[i].mem_offset == this->current_eip) && (this->new_wps[i].mem_offset))
+        else if((this->wps[i].mem_offset == this->current_eip) && (this->wps[i].mem_offset))
         {
-            d_err_print("Watchpoint @ %lld hit, dumping taint transfer history for %s\n", this->new_wps[i].mem_offset, this->new_wps[i].name);
-            this->print_taint_history(this->new_wps[i].watched);
+            d_err_print("Watchpoint @ %lld hit, dumping taint transfer history for %s\n", this->wps[i].mem_offset, this->wps[i].name);
+            this->print_taint_history(this->wps[i].watched);
             d_err_print("---\n");
-            if(this->new_wps[i].interactive)
+            if(this->wps[i].interactive)
             {
                 this->prompt_taint();
             }
@@ -2403,25 +2378,11 @@ int taint_x86::execute_instruction(DWORD eip, DWORD tid)
 
     this->cur_tid = tid;
 
-    /* debug */
-    /*
-    for(int i = 0x0; i< 0x10; i++)
-        if((this->my_bps[i].offset == eip) & (this->my_bps[i].mode == BP_MODE_EXECUTE))
-        {
-            d_print(3, "Breakpoint EXECUTE at 0x%x\n", eip);
-            this->bp_hit = 0x1;
-            //getchar();
-        }
-      */      
-
     this->current_instr_byte = &this->memory[eip];
-/*
-    if((this->started) && (this->counter <0x10))
-        d_print(1, "[0x%08x] 0x%08x: 0x%02x, count: %d\n", this->cur_tid, eip, *(this->current_instr_byte), this->current_instr_count);
-*/
+
     if(this->options & OPTION_COUNT_INSTRUCTIONS)
     {
-        this->current_instr_byte->set_BYTE_t(0xff); // taint executed?
+        this->current_instr_byte->set_BYTE_t(0xff); // taint executed? this should go to taint preexecution handler
     }
 
     //this->current_propagation->instruction = eip;
@@ -2442,11 +2403,11 @@ int taint_x86::execute_instruction(DWORD eip, DWORD tid)
     if(this->extended)
     {
         d_print(3, "Extended\n");
-        ret = (this->*(instructions_32_extended[current_instr_byte->get_BYTE()]))(current_instr_byte);
+        ret = (this->*(instructions_32_extended[current_instr_byte->get_BYTE()]))(current_instr_byte); /* here preexecution and postexecution handlers */
     }
     else
     {
-        ret = (this->*(instructions_32[current_instr_byte->get_BYTE()]))(current_instr_byte);
+        ret = (this->*(instructions_32[current_instr_byte->get_BYTE()]))(current_instr_byte); /* here preexecution and postexecution handlers */
     }
 
     return ret;
@@ -2549,6 +2510,8 @@ int taint_x86::check_thread(CONTEXT_info ctx_info)
 
 int taint_x86::finish()
 {
+    if(this->finish_callback) this->finish_callback(this);
+
     unsigned i, j, k;
     CONTEXT_INFO* cur_tid;
     char out_line[MAX_NAME];
@@ -2856,7 +2819,7 @@ int taint_x86::apply_memory(DWORD offset, DWORD size)
         unsigned j;
 
         for(j = 0x0; j< 0x10; j++)
-            if((this->my_bps[j].offset == offset+i) && (this->my_bps[j].mode & BP_MODE_WRITE))
+            if((this->bps[j].mem_offset == offset+i) && (this->bps[j].mode & BP_MODE_WRITE))
                 found = 1;
 
         if(found)
@@ -3065,31 +3028,6 @@ int taint_x86::del_thread(DWORD tid)
     unsigned int i, diff;
     unsigned thread_idx;
 
-/*    thread_idx = this->tids[tid];
-    free(this->ctx_info[tid].levels);
-*/
-/*
-    d_print(1, "Removing  thread: 0x%08x\n", tid);
-    //tid = this->tids[tid];
-
-
-    // close remaining nodes
-
-    if(this->ctx_info[tid].call_level <0) this->ctx_info[tid].call_level = 0;
-    for(i=0x0; i<this->ctx_info[tid].call_level; i++)
-        print_ret(this->ctx_info[tid].graph_file);
-
-    sprintf(out_line, "</node></map>\n");
-    fwrite(out_line, strlen(out_line), 0x1, this->ctx_info[tid].graph_file);
-
-    //print thread head
-    sprintf(out_line, "call unknown");
-
-    for(i=0x0; i<-this->ctx_info[tid].call_level_smallest ; i++)
-        print_call(this->ctx_info[tid].graph_file, out_line, "0xffffffff");
-
-    fclose(this->ctx_info[tid].graph_file);
-*/
     return 0x0;
 }
 
@@ -3099,24 +3037,7 @@ int taint_x86::del_thread_srsly(DWORD tid)
     unsigned int i, diff;
 
     d_print(1, "Removing  thread: 0x%08x\n", tid);
-    //tid = this->tids[tid];
 
-
-    // close remaining nodes
-/*
-    if(this->ctx_info[tid].call_level <0) this->ctx_info[tid].call_level = 0;
-    for(i=0x0; i<this->ctx_info[this->tids[tid]].call_level; i++)
-        print_ret(this->ctx_info[this->tids[tid]].graph_file);
-
-    sprintf(out_line, "</node></map>\n");
-    fwrite(out_line, strlen(out_line), 0x1, this->ctx_info[this->tids[tid]].graph_file);
-
-    //print thread head
-    sprintf(out_line, "call unknown");
-
-    for(i=0x0; i<-this->ctx_info[this->tids[tid]].call_level_smallest ; i++)
-        print_call(this->ctx_info[this->tids[tid]].graph_file, out_line, "0xffffffff");
-*/
     fclose(this->ctx_info[this->tids[tid]].graph_file);
 
     return 0x0;
@@ -3205,15 +3126,6 @@ int taint_x86::load_instr_from_file(char* path)
     return 0x0;
 }
 
-int taint_x86::open_lost_file(char* path)
-{
-#ifdef REVERSE_ANALYSIS
-    d_print(3, "Opening lost file: %s\n", path);
-    this->lost_file = fopen(path, "wb");
-#endif
-    return 0x0;
-}
-
 int taint_x86::open_mod_file(char* path)
 {
     d_print(1, "Opening mod file: %s\n", path);
@@ -3224,9 +3136,6 @@ int taint_x86::open_mod_file(char* path)
 
 int taint_x86::close_files()
 {
-#ifdef REVERSE_ANALYSIS
-    if(this->lost_file) fclose(this->lost_file);
-#endif
     if(this->mod_file) fclose(this->mod_file);
     return 0x0;
 }
@@ -4627,45 +4536,6 @@ int taint_x86::a_check_sign(DWORD a)
         return 0x1;
     else 
         return 0x0;
-}
-
-int taint_x86::a_push_lost_32(DWORD val)
-{
-#ifdef REVERSE_ANALYSIS
-    char line[0x20];
-    
-    sprintf(line, "0x%08x\n", val);
-    fwrite(line, strlen(line), 0x1, this->lost_file);
-#endif
-    return 0x0;
-}
-
-int taint_x86::a_push_lost_16(WORD val)
-{
-#ifdef REVERSE_ANALYSIS
-    char line[0x20];
-    
-    sprintf(line, "0x%04x\n", val);
-    fwrite(line, strlen(line), 0x1, this->lost_file);
-#endif
-    return 0x0;
-}
-
-int taint_x86::a_push_lost_8(BYTE val)
-{
-#ifdef REVERSE_ANALYSIS
-    char line[0x20];
-    
-    sprintf(line, "0x%02x\n", val);
-    fwrite(line, strlen(line), 0x1, this->lost_file);
-#endif
-    return 0x0;
-}
-
-DWORD taint_x86::a_pop_lost()
-{
-
-    return 0x0;
 }
 
 int taint_x86::r_noop(BYTE_t* b)
@@ -11539,10 +11409,6 @@ int taint_x86::r_retn(BYTE_t*)
     if(this->started && !this->finished)
         this->cur_info->returning = 0x3;
 
-    /*
-    if(this->ctx_info[this->tids[this->cur_tid]].call_level <= 0x0)
-        this->handle_ret(this->cur_info);
-    */
     OFFSET offset;
     WORD_t src_16;
     unsigned i, count;
@@ -11583,10 +11449,6 @@ int taint_x86::r_ret(BYTE_t*)
     if(this->started && !this->finished)
         this->cur_info->returning = 0x3;
 
-    /*
-    if(this->ctx_info[this->tids[this->cur_tid]].call_level <= 0x0)
-        this->handle_ret(this->cur_info);
-    */
     DWORD_t ret;
     ret = this->a_pop_32();
     d_print(3, "Will return to: 0x%08x\n", ret.get_DWORD());
