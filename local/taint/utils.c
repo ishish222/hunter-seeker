@@ -1,3 +1,4 @@
+#include <iostream>
 #include <string.h>
 #include <taint_emul_x86.h>
 
@@ -88,4 +89,14 @@ void _pause()
     getchar();
     return;
 }
+
+int strcmpi(char const *a, char const *b)
+{
+    for (;; a++, b++) {
+        int d = tolower(*a) - tolower(*b);
+        if (d != 0 || !*a)
+            return d;
+    }
+}
+
 

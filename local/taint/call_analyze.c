@@ -203,13 +203,6 @@ int main(int argc, char** argv)
     signal(SIGINT, handle_sigint);
 
     taint_eng.bp_hit = 0x1;
-    taint_eng.enumerate = enumerate;
-    if(max_levels == 0x0) max_levels = MAX_CALL_LEVELS;
-
-    taint_eng.max_call_levels = max_levels;
-    taint_eng.call_level_start = max_levels/3;
-    taint_eng.call_level_offset = max_levels/30;
-    printf("Setting max levels to: 0x%08x, start: 0x%08x, offset: 0x%08x\n", max_levels, taint_eng.call_level_start, taint_eng.call_level_offset);
  
     parse_mem_breakpoints(breakpoint_optarg, &taint_eng);
     parse_taint_breakpoints(breakpoint_t_optarg, &taint_eng);
@@ -245,16 +238,32 @@ int main(int argc, char** argv)
 
     taint_eng.end_addr = end_addr;
     taint_eng.instr_limit = instr_limit;
+    fprintf(stderr, "taint_eng.ctx_info: 0x%08x\n", &taint_eng.ctx_info[0]);
 
-    taint_eng.depth = depth;
-    taint_eng.depth += taint_eng.call_level_start; /* because we do not start at 0x0 */
 
     taint_eng.bp_hit = 0x0;
 
-    /* registering callbacks */
+    /* registering plugin */
+    graph_engine graph_eng;
     taint_eng.plugin = (Plugin*)&graph_eng;
+            fprintf(stderr, "taint_eng->ctx_info: 0x%08x\n", taint_eng.ctx_info);
     taint_eng.plugin->taint_eng = &taint_eng;
+
+//    graph_engine* graph_eng;
+            fprintf(stderr, "taint_eng->ctx_info: 0x%08x\n", taint_eng.ctx_info);
+//    graph_eng = (graph_engine*) &taint_eng.plugin;
+
+    /* configuring plugin */
+    if(max_levels == 0x0) max_levels = MAX_CALL_LEVELS;
+    graph_eng.enumerate = enumerate;
+    graph_eng.max_call_levels = max_levels;
+    graph_eng.call_level_start = max_levels/3;
+    graph_eng.call_level_offset = max_levels/30;
+    printf("Setting max levels to: 0x%08x, start: 0x%08x, offset: 0x%08x\n", max_levels, graph_eng.call_level_start, graph_eng.call_level_offset);
+    graph_eng.depth = depth;
+    graph_eng.depth += graph_eng.call_level_start; /* because we do not start at 0x0 */
  
+    fprintf(stderr, "taint_eng.ctx_info: 0x%08x\n", &taint_eng.ctx_info[0]);
     /* executing instructions */
     char* line;
     size_t len = 0;
@@ -338,7 +347,6 @@ int main(int argc, char** argv)
 
             if(line[0] == 'S' && line[1] == 'P')
                 taint_eng.plugin->parse_option(line);
-                //set_prefix(line, &taint_eng);
 
             if(line[0] == 'B' && line[1] == 'L')
                 taint_eng.plugin->parse_option(line);
@@ -384,7 +392,6 @@ int main(int argc, char** argv)
                 taint_eng.plugin->parse_option(line);
                 //comment_out(line, &taint_eng);
 
-
             if(line[0] == '#'); //comment
             
             continue;
@@ -409,109 +416,20 @@ int main(int argc, char** argv)
         }
 
     }
+
     taint_eng.finish();
  
     for(i = 0x0; i<taint_eng.tid_count; i++)
+    {
+        fprintf(stderr, "taint_eng.ctx_info: 0x%08x\n", &taint_eng.ctx_info[0]);
+        fprintf(stderr, "Thread entry no 0x%02x: TID: 0x%08x\n", i, taint_eng.ctx_info[i].tid);
+        fprintf(stderr, "Removing thread: 0x%08x\n", taint_eng.ctx_info[i].tid);
         taint_eng.del_thread_srsly(taint_eng.ctx_info[i].tid);
+    }
    
     fclose(taint_eng.instr_file);
     if(line)
         free(line); 
-
-    /* Writing out analysis data */
-
-    // dumping human-readable lib info, contexts & exceptions 
-    printf("Writing human-readable taint information to %s\n", results_human_path);
-
-    out = fopen(results_human_path, "w+");
-
-    // contexts in dump time
-    DWORD tidn;
-
-    fprintf(out, "[Threads]:\n");
-    for(i=0x0; i<taint_eng.tid_count; i++)
-    {
-        tidn = taint_eng.ctx_info[i].tid;
-        fprintf(out, "TID: 0x%08x\n", tidn);
-        fprintf(out, " EAX:\t 0x%08x\n", taint_eng.reg_restore_32(EAX, tidn).get_DWORD());
-        fprintf(out, " ECX:\t 0x%08x\n", taint_eng.reg_restore_32(ECX, tidn).get_DWORD());
-        fprintf(out, " EDX:\t 0x%08x\n", taint_eng.reg_restore_32(EDX, tidn).get_DWORD());
-        fprintf(out, " EBX:\t 0x%08x\n", taint_eng.reg_restore_32(EBX, tidn).get_DWORD());
-        fprintf(out, " ESI:\t 0x%08x\n", taint_eng.reg_restore_32(ESI, tidn).get_DWORD());
-        fprintf(out, " EDI:\t 0x%08x\n", taint_eng.reg_restore_32(EDI, tidn).get_DWORD());
-        fprintf(out, " EBP:\t 0x%08x\n", taint_eng.reg_restore_32(EBP, tidn).get_DWORD());
-        fprintf(out, " ESP:\t 0x%08x\n", taint_eng.reg_restore_32(ESP, tidn).get_DWORD());
-        fprintf(out, " EFLAGS: 0x%08x\n", taint_eng.reg_restore_32(EFLAGS, tidn).get_DWORD());
-        fprintf(out, " EIP:\t 0x%08x\n", taint_eng.reg_restore_32(EIP, tidn).get_DWORD());
-        fprintf(out, "\n");
-    }
-
-    // libraries in dump time
-
-    fprintf(out, "[Active libraries]:\n");
-    for(i=0x0; i<taint_eng.libs_count; i++)
-        if(taint_eng.libs[i].loaded)
-            fprintf(out, "0x%08x: %s", taint_eng.libs[i].offset, taint_eng.libs[i].name);
-    fprintf(out, "\n");
-
-    fprintf(out, "[Inactive libraries]:\n");
-    for(i=0x0; i<taint_eng.libs_count; i++)
-        if(taint_eng.libs[i].loaded == 0x0)
-            fprintf(out, "0x%08x: %s", taint_eng.libs[i].offset, taint_eng.libs[i].name);
-    fprintf(out, "\n");
-
-    fprintf(out, "[Exceptions]:\n");
-    for(i=0x0; i<taint_eng.exceptions_count; i++)
-        fprintf(out, " Exc. code: \t0x%08x\n TID: \t\t0x%08x\n Address: \t0x%08x\n Flags: \t0x%08x\n", taint_eng.exceptions[i].er.ExceptionCode, taint_eng.exceptions[i].tid, taint_eng.exceptions[i].er.ExceptionAddress, taint_eng.exceptions[i].er.ExceptionFlags);
-    fprintf(out, "\n");
-
-    fclose(out);
-
-    // dumping structured lib info, contexts & exceptions 
-    printf("Writing structured taint information to %s\n", results_structured_path);
-
-    out = fopen(results_structured_path, "w+");
-    fwrite(structured_buffer, strlen(structured_buffer), 0x1, out);
-    fclose(out);
-/*
-    // dumping memory
-    printf("Dumping memory: 0x0 - 0x%08x to %s\n", taint_eng.mem_length, dump2_file_path);
-    out = fopen(dump2_file_path, "w");    
-    write_region(out, taint_eng.memory, taint_eng.mem_length);
-    fclose(out);
-*/    
-
-    if(taint_eng.options & OPTION_COUNT_INSTRUCTIONS)
-    {
-        printf("Calculating executed unique instructions\n");
-        unsigned i;
-        unsigned executed = 0x0;
-        for(i=0x0; i< taint_eng.mem_length; i++)
-        {
-            if(taint_eng.memory[i].get_BYTE_t())
-            {
-                executed++;
-            }
-        }
-        printf("Executed 0x%08x (%d) unique instructions\n", executed, executed);
-    }
-
-    // dumping memory taint
-    printf("Dumping taint region: 0x0 - 0x%08x to %s\n", taint_eng.mem_length, dump2_taint_file_path);
-    if(strlen(dump2_taint_file_path) > 0x0)
-    {
-        out = fopen(dump2_taint_file_path, "w");    
-        write_t_region(out, taint_eng.memory, taint_eng.mem_length);
-        fclose(out);
-    }
-  
-    if(strlen(history_path) > 0x0)
-    {
-        out = fopen(history_path, "w");    
-        taint_eng.write_history(out);
-        fclose(out);
-    }
-
 
     taint_eng.close_files();
 

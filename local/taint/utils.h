@@ -11,5 +11,6 @@ int filter_str(char* str);
 int filter_str_2(char* str, char unwanted);
 void print_usage();
 void _pause();
+int strcmpi(char const*, char const*);
 
 #endif

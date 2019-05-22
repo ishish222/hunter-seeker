@@ -2822,7 +2822,7 @@ class taint_x86
     int mod_thread(CONTEXT_OUT);
     int del_thread(DWORD);
     int del_thread_srsly(DWORD);
-    CONTEXT_INFO* get_tid(DWORD);
+    CONTEXT_INFO* get_context_info(DWORD);
 
     /* I/O */
     int load_mem_from_file(char*);
@@ -2833,7 +2833,6 @@ class taint_x86
     // other
     DWORD le2dword(char*);
 
-    int handle_exception(EXCEPTION_INFO);
     int apply_memory(DWORD, DWORD);
     int apply_security(DWORD, DWORD);
     int register_syscall(DWORD, DWORD);
@@ -3292,6 +3291,12 @@ class taint_x86
             printf("Not enough memory\n");
         }
 
+        this->ctx_info = (CONTEXT_INFO*)malloc(sizeof(CONTEXT_INFO)*MAX_THREADS);
+        if(this->ctx_info == 0x0)
+        {
+            printf("Not enough memory\n");
+        }
+        fprintf(stderr, "this->ctx_info: 0x%08x\n", this->ctx_info);
     }
 
     ~taint_x86() {

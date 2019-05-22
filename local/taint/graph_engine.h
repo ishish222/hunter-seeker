@@ -31,6 +31,19 @@
 #define FENCE_NOT_COLLECTING    0x3
 #define FENCE_FINISHED          0x4
 
+typedef struct LOOP_FENCE_
+{
+    OFFSET entry;
+    OFFSET start;
+    OFFSET limit;
+    OFFSET struct_size;
+    OFFSET struct_count;
+
+    char collecting;
+    char status;
+
+} LOOP_FENCE;
+
 typedef struct SYMBOL_
 {
     OFFSET addr;
@@ -56,6 +69,30 @@ typedef struct _LIBRARY
     char blacklisted;
 } LIBRARY;
 
+typedef struct _CALL_LEVEL
+{
+    DWORD ret;
+    OFFSET entry;
+    /* loops handling */
+
+    unsigned call_src_register_idx;
+    unsigned loop_start;
+
+    /* new loop handling */
+    unsigned loop_pos;
+    LOOP_FENCE* cur_fence;
+
+    /* new new loop handling */
+    unsigned loop_addr_idx;
+    unsigned loop_limit;
+    unsigned loop_struct_size;
+    unsigned loop_struct_count;
+    OFFSET   loop_addr[MAX_LOOP_ADDR];
+    char     loop_status;
+    unsigned jxx_handling;
+
+} CALL_LEVEL;
+
 typedef struct _CONTEXT_GRAPH
 {
     DWORD tid;
@@ -63,6 +100,16 @@ typedef struct _CONTEXT_GRAPH
     OFFSET seg_map[0x6];
 
     CALL_LEVEL* levels;
+
+    /* graph handling */
+    DWORD call_level;
+    DWORD call_level_smallest;
+    DWORD call_level_largest;
+    DWORD call_level_ignored;
+    char graph_filename[MAX_NAME];
+    FILE* graph_file;
+    OFFSET waiting;
+    unsigned lock_level;
 
     /* call level handling */ 
     unsigned ret_idx;
@@ -131,6 +178,7 @@ class graph_engine : Plugin
     DWORD cur_tid;
     CONTEXT_GRAPH* cur_info;
     CONTEXT_GRAPH* ctx_info;
+    CONTEXT_GRAPH* get_context_graph(DWORD);
 
     /* graph stuff - loop fences - new approach */
     LOOP_FENCE loop_fences[MAX_LOOP_FENCES]; 
@@ -147,6 +195,7 @@ class graph_engine : Plugin
     int comment_out(char*, DWORD);
 
     /* parsing options from out file */
+    int register_prefix(char*);
     int register_blacklist(char*);
     int register_blacklist_addr(char*);
     int register_silenced_addr(char*);
@@ -156,7 +205,9 @@ class graph_engine : Plugin
     int register_fence(char*);
     int register_included(char* line);
     int register_comment(char* line);
-    
+    int register_symbol(char* line);
+    int register_lib(char* line);
+    int deregister_lib(char* line);
 
     /* graph stuff - emitting configuration */
     int add_blacklist(char*);
@@ -174,7 +225,6 @@ class graph_engine : Plugin
     int check_rets(OFFSET);
 
     /* graph stuff - handlers */
-    int handle_exception(EXCEPTION_INFO);
     int handle_call(CONTEXT_GRAPH*);
     int handle_ret(CONTEXT_GRAPH*, OFFSET);
     int handle_jmp(CONTEXT_GRAPH*);
@@ -224,6 +274,7 @@ class graph_engine : Plugin
     virtual int del_thread_callback(DWORD);
     virtual int del_thread_srsly_callback(DWORD);
     virtual int parse_option(char*);
+    virtual int handle_exception_callback(EXCEPTION_INFO);
 
     int r_jxx(BYTE_t*);
     int r_jb_jc_jnae(BYTE_t*);
@@ -260,27 +311,27 @@ class graph_engine : Plugin
     {
         printf("Initializing graph_engine\n");
 
-        printf("Registering routine callbacks\n")
+        printf("Registering routine callbacks\n");
 
-        this->instructions_32_start[0x72] = &graph_engine::r_jb_jc_jnae; 
-        this->instructions_32_start[0x73] = &graph_engine::r_jae_jnb_jnc;
-        this->instructions_32_start[0x74] = &graph_engine::r_je_jz;
-        this->instructions_32_start[0x75] = &graph_engine::r_jne_jnz;
-        this->instructions_32_start[0x76] = &graph_engine::r_jbe_jna;
-        this->instructions_32_start[0x77] = &graph_engine::r_ja_jnbe;
-        this->instructions_32_start[0x78] = &graph_engine::r_js;
-        this->instructions_32_start[0x79] = &graph_engine::r_jns;
-        this->instructions_32_start[0x7a] = &graph_engine::r_jp_jpe;
-        this->instructions_32_start[0x7b] = &graph_engine::r_jnp_jpo;
-        this->instructions_32_start[0x7c] = &graph_engine::r_jl_jnge;
-        this->instructions_32_start[0x7d] = &graph_engine::r_jge_jnl;
-        this->instructions_32_start[0x7e] = &graph_engine::r_jle_jng;
-        this->instructions_32_start[0x7f] = &graph_engine::r_jg_jnle;
+        this->instructions_32_start[0x72] = (Plugin::instruction_routine)&graph_engine::r_jb_jc_jnae; 
+        this->instructions_32_start[0x73] = (Plugin::instruction_routine)&graph_engine::r_jae_jnb_jnc;
+        this->instructions_32_start[0x74] = (Plugin::instruction_routine)&graph_engine::r_je_jz;
+        this->instructions_32_start[0x75] = (Plugin::instruction_routine)&graph_engine::r_jne_jnz;
+        this->instructions_32_start[0x76] = (Plugin::instruction_routine)&graph_engine::r_jbe_jna;
+        this->instructions_32_start[0x77] = (Plugin::instruction_routine)&graph_engine::r_ja_jnbe;
+        this->instructions_32_start[0x78] = (Plugin::instruction_routine)&graph_engine::r_js;
+        this->instructions_32_start[0x79] = (Plugin::instruction_routine)&graph_engine::r_jns;
+        this->instructions_32_start[0x7a] = (Plugin::instruction_routine)&graph_engine::r_jp_jpe;
+        this->instructions_32_start[0x7b] = (Plugin::instruction_routine)&graph_engine::r_jnp_jpo;
+        this->instructions_32_start[0x7c] = (Plugin::instruction_routine)&graph_engine::r_jl_jnge;
+        this->instructions_32_start[0x7d] = (Plugin::instruction_routine)&graph_engine::r_jge_jnl;
+        this->instructions_32_start[0x7e] = (Plugin::instruction_routine)&graph_engine::r_jle_jng;
+        this->instructions_32_start[0x7f] = (Plugin::instruction_routine)&graph_engine::r_jg_jnle;
 
-        this->instructions_32_start[0xc2] = &graph_engine::r_retn;                       // cf
-        this->instructions_32_start[0xc3] = &graph_engine::r_ret;                        // cf
+        this->instructions_32_start[0xc2] = (Plugin::instruction_routine)&graph_engine::r_retn;                       // cf
+        this->instructions_32_start[0xc3] = (Plugin::instruction_routine)&graph_engine::r_ret;                        // cf
 
-        this->instructions_32_start[0xff] = &graph_engine::r_decode_execute_ff;          // 
+        this->instructions_32_start[0xff] = (Plugin::instruction_routine)&graph_engine::r_decode_execute_ff;          // 
 
 
         unsigned i;

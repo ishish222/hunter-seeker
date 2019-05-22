@@ -102,6 +102,7 @@ int load_mem(char* line, taint_x86* taint_eng)
     filter_str(file_name);
 
     taint_eng->load_mem_from_file(file_name);
+    printf("Loaded\n");
 
     return 0x0;
 }

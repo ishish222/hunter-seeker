@@ -78,15 +78,6 @@ void taint_x86::handle_sigint(int signum)
     d_print(1, "Eip: 0x%08x, this->end_addr: 0x%08x, limit: %d, count: %d, finishing\n", this->current_eip, this->end_addr, this->instr_limit, this->current_instr_count);
 }
 
-int strcmpi(char const *a, char const *b)
-{
-    for (;; a++, b++) {
-        int d = tolower(*a) - tolower(*b);
-        if (d != 0 || !*a)
-            return d;
-    }
-}
-
 int taint_x86::start()
 {
     if(this->plugin) this->plugin->start_callback();
@@ -290,7 +281,7 @@ void taint_x86::reg_store_32(OFFSET off, DWORD_t v, int tid)
 #endif
 
     CONTEXT_INFO* info;
-    info = this->get_tid(tid);
+    info = this->get_context_info(tid);
 
     info->registers[off + 0] = v[0];
     info->registers[off + 1] = v[1];
@@ -310,7 +301,7 @@ DWORD_t taint_x86::reg_restore_32(OFFSET off, int tid)
 #endif
 
     CONTEXT_INFO* info;
-    info = this->get_tid(tid);
+    info = this->get_context_info(tid);
 
     DWORD_t ret;
 
@@ -426,7 +417,7 @@ void taint_x86::reg_store_16(OFFSET off, WORD_t v, int tid)
 #endif
 
     CONTEXT_INFO* info;
-    info = this->get_tid(tid);
+    info = this->get_context_info(tid);
 
     info->registers[off + 0] = v[0];
     info->registers[off + 1] = v[1];
@@ -444,7 +435,7 @@ WORD_t taint_x86::reg_restore_16(OFFSET off, int tid)
 #endif
 
     CONTEXT_INFO* info;
-    info = this->get_tid(tid);
+    info = this->get_context_info(tid);
 
     WORD_t ret;
 
@@ -558,7 +549,7 @@ void taint_x86::reg_store_8(OFFSET off, BYTE_t v, int tid)
 #endif
 
     CONTEXT_INFO* info;
-    info = this->get_tid(tid);
+    info = this->get_context_info(tid);
     
 
     info->registers[off] = v;
@@ -575,7 +566,7 @@ BYTE_t taint_x86::reg_restore_8(OFFSET off, int tid)
 #endif
 
     CONTEXT_INFO* info;
-    info = this->get_tid(tid);
+    info = this->get_context_info(tid);
 
     BYTE_t ret;
 
@@ -625,6 +616,8 @@ int taint_x86::pre_execute_instruction(DWORD eip)
 {
     if(this->plugin) this->plugin->pre_execute_instruction_callback(eip);
 
+    this->cur_info = this->get_context_info(this->cur_tid);
+
     this->current_instr_length = 0x0;
     this->current_prefixes = 0x0;
     this->current_prefix_length = 0x0;
@@ -637,10 +630,11 @@ int taint_x86::pre_execute_instruction(DWORD eip)
 
 int taint_x86::post_execute_instruction(DWORD eip)
 {
-    CONTEXT_INFO* cur_ctx;
-    cur_ctx = &this->ctx_info[this->tids[this->cur_tid]];
-
     if(this->plugin) this->plugin->post_execute_instruction_callback(eip);
+
+    CONTEXT_INFO* cur_ctx;
+    unsigned info_pos = this->tids[this->cur_tid];
+    cur_ctx = &this->ctx_info[info_pos];
 
     unsigned i, j, diff;
 
@@ -860,10 +854,14 @@ int taint_x86::execute_instruction_at_eip(DWORD eip)
     return this->execute_instruction_at_eip(eip, this->cur_tid);
 }
 
-CONTEXT_INFO* taint_x86::get_tid(DWORD tno)
+CONTEXT_INFO* taint_x86::get_context_info(DWORD tid)
 {
+    unsigned info_pos = this->tids[tid];
     CONTEXT_INFO* ret = 0x0;
-    ret = &this->ctx_info[this->tids[tno]];
+    d_print(3, "info_pos: 0x%08x\n", info_pos);
+    ret = &this->ctx_info[info_pos];
+    d_print(3, "this->ctx_info: 0x%08x\n", this->ctx_info);
+    d_print(3, "CONTEXT_INFO: 0x%08x\n", info_pos);
     return ret;
 }
 
@@ -1015,30 +1013,44 @@ int taint_x86::mod_thread(CONTEXT_OUT ctx_out)
 
 int taint_x86::add_thread(CONTEXT_OUT ctx_out)
 {
+    DWORD new_tid = ctx_out.thread_id;    
+
+    d_print(3, "2 this->ctx_info: 0x%08x\n", this->ctx_info);
     if(this->plugin) this->plugin->add_thread_callback(ctx_out);
 
     DWORD already_added = 0x0;
     unsigned i;
     char out_line[MAX_NAME];
 
-    d_print(3, "Adding thread: 0x%08x\n", ctx_out.thread_id);
 
-    this->update_watchpoints(ctx_out.thread_id);
+    if(!this->already_added(new_tid))
+    {
+        d_print(1, "test15\n");
+        d_print(3, "Adding thread: 0x%08x\n", new_tid);
+        this->tids[new_tid] = this->tid_count;
+        this->tid_count++;
+        d_print(1, "test16\n");
+    }
 
-    this->reg_store_32(EAX, ctx_out.ctx.Eax, ctx_out.thread_id);
-    this->reg_store_32(ECX, ctx_out.ctx.Ecx, ctx_out.thread_id);
-    this->reg_store_32(EDX, ctx_out.ctx.Edx, ctx_out.thread_id);
-    this->reg_store_32(EBX, ctx_out.ctx.Ebx, ctx_out.thread_id);
-    this->reg_store_32(ESI, ctx_out.ctx.Esi, ctx_out.thread_id);
-    this->reg_store_32(EDI, ctx_out.ctx.Edi, ctx_out.thread_id);
-    this->reg_store_32(ESP, ctx_out.ctx.Esp, ctx_out.thread_id);
-    this->reg_store_32(EBP, ctx_out.ctx.Ebp, ctx_out.thread_id);
-    this->reg_store_32(EFLAGS, ctx_out.ctx.EFlags, ctx_out.thread_id);
+    this->update_watchpoints(new_tid);
+    d_print(1, "test17\n");
 
+    this->reg_store_32(EAX, ctx_out.ctx.Eax, new_tid);
+    this->reg_store_32(ECX, ctx_out.ctx.Ecx, new_tid);
+    this->reg_store_32(EDX, ctx_out.ctx.Edx, new_tid);
+    this->reg_store_32(EBX, ctx_out.ctx.Ebx, new_tid);
+    this->reg_store_32(ESI, ctx_out.ctx.Esi, new_tid);
+    this->reg_store_32(EDI, ctx_out.ctx.Edi, new_tid);
+    this->reg_store_32(ESP, ctx_out.ctx.Esp, new_tid);
+    this->reg_store_32(EBP, ctx_out.ctx.Ebp, new_tid);
+    this->reg_store_32(EFLAGS, ctx_out.ctx.EFlags, new_tid);
+
+    d_print(1, "test18\n");
     OFFSET addr;
     CONTEXT_INFO* info;
 
-    info = this->get_tid(ctx_out.thread_id);
+    info = this->get_context_info(new_tid);
+    d_print(1, "test19\n");
 
     for(i=0x0; i<0x6; i++)
     {
@@ -1047,8 +1059,8 @@ int taint_x86::add_thread(CONTEXT_OUT ctx_out)
         info->seg_map[i] = addr;
     }
    
+    d_print(1, "test20\n");
     this->cur_tid = 0;
-    
     return 0x0;
 }
 
@@ -1134,6 +1146,7 @@ int taint_x86::apply_memory(DWORD offset, DWORD size)
 
 int taint_x86::add_exception(EXCEPTION_INFO info)
 {
+    if(this->plugin) this->plugin->handle_exception_callback(info);
     
     this->exceptions[exceptions_count] = info;
     fprintf(stderr, "Exception %08x in TID %08x, instr. no: %d, eip: 0x%08x\n", info.er.ExceptionCode, info.tid, this->current_instr_count, info.er.ExceptionAddress);
@@ -1151,7 +1164,6 @@ int taint_x86::add_exception(EXCEPTION_INFO info)
     d_print(1, "---\n");
 
     // TODO: how to handle EIP?
-    this->handle_exception(info);
     return 0x0;
 }
 
@@ -1159,18 +1171,12 @@ int taint_x86::del_thread(DWORD tid)
 {
     if(this->plugin) this->plugin->del_thread_callback(tid);
 
-    char out_line[MAX_NAME];
-    unsigned int i, diff;
-    unsigned thread_idx;
-
     return 0x0;
 }
 
 int taint_x86::del_thread_srsly(DWORD tid)
 {
     if(this->plugin) this->plugin->del_thread_srsly_callback(tid);
-
-    unsigned int i, diff;
 
     d_print(1, "Removing  thread: 0x%08x\n", tid);
 
@@ -1404,6 +1410,7 @@ int taint_x86::a_check_segment_override()
     OFFSET ret = 0x0;
 
     d_print(3, "Checking segment override 0x%08x\n", this->current_prefixes);
+    d_print(3, "this->cur_info: 0x%08x\n", this->cur_info);
 
     if(this->current_prefixes & PREFIX_GS_OVERRIDE) 
     {
@@ -1737,7 +1744,7 @@ int taint_x86::attach_current_propagation_r_8(OFFSET off)
 {
     return 0x0;
     CONTEXT_INFO* info;
-    info = this->get_tid(this->cur_tid);
+    info = this->get_context_info(this->cur_tid);
 
     if(off > REG_SIZE)
     {
@@ -1757,7 +1764,7 @@ int taint_x86::attach_current_propagation_r_16(OFFSET off)
 {
     return 0x0;
     CONTEXT_INFO* info;
-    info = this->get_tid(this->cur_tid);
+    info = this->get_context_info(this->cur_tid);
 
     if(off > REG_SIZE)
     {
@@ -1780,7 +1787,7 @@ int taint_x86::attach_current_propagation_r_32(OFFSET off)
 {
     return 0x0;
     CONTEXT_INFO* info;
-    info = this->get_tid(this->cur_tid);
+    info = this->get_context_info(this->cur_tid);
 
     if(off > REG_SIZE)
     {
@@ -2041,7 +2048,7 @@ int taint_x86::reg_propagation_op_r_8(OFFSET off)
 {
     return 0x0;
     CONTEXT_INFO* info;
-    info = this->get_tid(this->cur_tid);
+    info = this->get_context_info(this->cur_tid);
 
     this->verify_oob_offset(off, REG_SIZE);
 
@@ -2053,7 +2060,7 @@ int taint_x86::reg_propagation_op_r_16(OFFSET off)
 {
     return 0x0;
     CONTEXT_INFO* info;
-    info = this->get_tid(this->cur_tid);
+    info = this->get_context_info(this->cur_tid);
 
     this->verify_oob_offset(off, REG_SIZE);
 
@@ -2066,7 +2073,7 @@ int taint_x86::reg_propagation_op_r_32(OFFSET off)
 {
     return 0x0;
     CONTEXT_INFO* info;
-    info = this->get_tid(this->cur_tid);
+    info = this->get_context_info(this->cur_tid);
 
     this->verify_oob_offset(off, REG_SIZE);
 
