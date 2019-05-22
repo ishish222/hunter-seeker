@@ -12,7 +12,7 @@ typedef int (*PRE_EXECUTE_INSTRUCTION_CALLBACK)(DWORD);
 typedef int (*POST_EXECUTE_INSTRUCTION_CALLBACK)(DWORD);
 typedef int (*START_CALLBACK)();
 typedef int (*FINISH_CALLBACK)();
-typedef int (*ADD_THREAD_CALLBACK)(CONTEXT_info);
+typedef int (*ADD_THREAD_CALLBACK)(CONTEXT_OUT);
 typedef int (*DEL_THREAD_CALLBACK)(DWORD);
 typedef int (*DEL_THREAD_SRSLY_CALLBACK)(DWORD);
 */
@@ -24,22 +24,17 @@ class Plugin
     public:
     taint_x86* taint_eng;
 
-/*
-    PRE_EXECUTE_INSTRUCTION_CALLBACK pre_execute_instruction_callback;
-    POST_EXECUTE_INSTRUCTION_CALLBACK post_execute_instruction_callback;
-    START_CALLBACK start_callback;
-    FINISH_CALLBACK finish_callback();
-    ADD_THREAD_CALLBACK add_thread_callback;
-    DEL_THREAD_CALLBACK del_thread_callback;
-    DEL_THREAD_SRSLY_CALLBACK del_thread_srsly_callback;
-*/
     virtual int pre_execute_instruction_callback(DWORD) = 0;
     virtual int post_execute_instruction_callback(DWORD) = 0;
+
     virtual int start_callback() = 0;
     virtual int finish_callback() = 0;
-    virtual int add_thread_callback(CONTEXT_info) = 0;
+
+    virtual int add_thread_callback(CONTEXT_OUT) = 0;
     virtual int del_thread_callback(DWORD) = 0;
     virtual int del_thread_srsly_callback(DWORD) = 0;
+
+    virtual int parse_option(char*) = 0;
 
     int set_taint_eng(taint_x86*);
 

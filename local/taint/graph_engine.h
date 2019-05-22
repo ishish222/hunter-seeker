@@ -12,28 +12,103 @@
 #define MAX_LOOP_ADDR           0x50
 #define MAX_LIST_JXX            0x1000
 
+#define DECISION_NO_EMIT        0x0
+#define DECISION_EMIT           0x1
+#define DECISION_EMIT_NESTED    0x2
+
+#define DECISION_NO_DIVE        0x0
+#define DECISION_DIVE           0x1
+
+#define DECISION_LAYOUT_REGULAR 0x0
+#define DECISION_LAYOUT_SYMBOL  0x1
+#define DECISION_LAYOUT_SYMBOL_WANTED  0x2
+#define DECISION_LAYOUT_4       0x3
+#define DECISION_LAYOUT_5       0x4
+
+#define FENCE_INACTIVE          0x0
+#define FENCE_ACTIVE            0x1
+#define FENCE_COLLECTING        0x2
+#define FENCE_NOT_COLLECTING    0x3
+#define FENCE_FINISHED          0x4
+
+typedef struct SYMBOL_
+{
+    OFFSET addr;
+    char* lib_name;
+    char* func_name;
+    struct SYMBOL_* next;
+
+    DWORD resolved;
+    DWORD wanted;
+    DWORD included;
+} SYMBOL;
+
+typedef struct _LIBRARY
+{
+    OFFSET offset;
+    char name[MAX_NAME];
+    char path[MAX_NAME];
+    DWORD length;
+    DWORD loaded;
+    char* content;
+    SYMBOL* symbols;
+
+    char blacklisted;
+} LIBRARY;
+
+typedef struct _CONTEXT_GRAPH
+{
+    DWORD tid;
+    BYTE_t registers[REG_SIZE];
+    OFFSET seg_map[0x6];
+
+    CALL_LEVEL* levels;
+
+    /* call level handling */ 
+    unsigned ret_idx;
+    char calling;
+    char returning;
+    char before_calling;
+    char before_returning;
+    char before_waiting;
+    char last_emit_decision;
+
+    /* jmp analysis processing */
+    char jumping;
+    char before_jumping;
+    char jmp_code;
+    char before_jmp_code;
+
+    OFFSET source;
+    OFFSET target;
+    OFFSET next;
+    OFFSET last_eip;
+    DWORD list[MAX_CALL_LEVELS][MAX_LIST_JXX];
+    unsigned list_len[MAX_CALL_LEVELS];
+    unsigned jxx_total[MAX_CALL_LEVELS];
+
+} CONTEXT_GRAPH;
+
+
+
 class graph_engine : Plugin
 {
     public:
 
     /* graph parameters */
-    DWORD start_addr;
-    DWORD end_addr;
-    OFFSET start_instr;
-    OFFSET instr_limit;
     unsigned max_call_levels;
     unsigned call_level_start;
     unsigned call_level_offset;
     DWORD depth;
     char enumerate;
 
+    int d_print(int, const char*, ...);
 
     /* graph prefixes */
-//    int set_prefix(char*);
+    int set_prefix(char*);
     char prefix[MAX_NAME];
 
     /* graph stuff */
-    char lib_dir_path[MAX_NAME]; //is this necessary?
     char* lib_blacklist[MAX_NAME];
     unsigned blacklist_count;
     DWORD addr_silenced[MAX_BLACKLIST];
@@ -71,46 +146,84 @@ class graph_engine : Plugin
     int check_collecting(CONTEXT_INFO*);
     int comment_out(char*, DWORD);
 
+    /* parsing options from out file */
+    int register_blacklist(char*);
+    int register_blacklist_addr(char*);
+    int register_silenced_addr(char*);
+    int register_wanted(char*);
+    int register_wanted_i(char*);
+    int register_wanted_e(char*);
+    int register_fence(char*);
+    int register_included(char* line);
+    int register_comment(char* line);
+    
+
     /* graph stuff - emitting configuration */
-/*    int add_blacklist(char*);
+    int add_blacklist(char*);
     int add_blacklist_addr(DWORD);
     int add_silenced_addr(DWORD);
     int add_included(char*);
     int add_wanted(char*);
     int add_wanted_e(DWORD);
     int add_wanted_i(unsigned);
-    int check_lib_blacklist(LIB_INFO*);
+    int check_lib_blacklist(LIBRARY*);
     int check_addr_blacklist(OFFSET);
     int check_addr_silenced(OFFSET);
     int check_func_wanted(char*);
     int check_func_included(char*);
     int check_rets(OFFSET);
-*/
+
     /* graph stuff - handlers */
-/*    int handle_call(CONTEXT_INFO*);
+    int handle_exception(EXCEPTION_INFO);
+    int handle_call(CONTEXT_INFO*);
     int handle_ret(CONTEXT_INFO*, OFFSET);
-*/
+    int handle_jmp(CONTEXT_INFO*);
+    int handle_jxx(CONTEXT_INFO*);
+    int handle_this_jxx(CONTEXT_INFO*, char*);
+
+    /* symbols and libraries */
+    LIBRARY* libs;
+    unsigned libs_count;
+    int add_lib(OFFSET, char*);
+    int del_lib(OFFSET);
+    LIBRARY* get_lib(OFFSET);
+
+    SYMBOL* symbols; 
+    unsigned symbols_count;
+    int add_symbol(SYMBOL**, OFFSET, char*, char*);
+    int del_symbol(SYMBOL*);
+    int add_symbols(LIBRARY*);
+    int copy_symbol(SYMBOL**, SYMBOL*);
+    SYMBOL* get_symbol(OFFSET);
+
+    char lib_dir_path[MAX_NAME]; //is this necessary?
+    int set_lib_dir_path(char*);
+
+
     /* graph stuff - prints */
     void print_call(CONTEXT_INFO*, char*, const char*);
     void print_call_open(CONTEXT_INFO*, char*, const char*);
     void print_empty_call(CONTEXT_INFO*, char*, const char*);
     void print_a_ret(CONTEXT_INFO*);
     void print_ret(CONTEXT_INFO*);
-/*
+
+    /* diving and surfacing */
     int dive(CONTEXT_INFO*, OFFSET, OFFSET);
     int surface(CONTEXT_INFO*);
+
     int jxx_set(unsigned);
     int jxx_clear_level(unsigned);
     int jxx_clear();
-*/
+
     /* new implementation */
     virtual int pre_execute_instruction_callback(DWORD);
     virtual int post_execute_instruction_callback(DWORD);
     virtual int start_callback();
     virtual int finish_callback();
-    virtual int add_thread_callback(CONTEXT_info);
+    virtual int add_thread_callback(CONTEXT_OUT);
     virtual int del_thread_callback(DWORD);
     virtual int del_thread_srsly_callback(DWORD);
+    virtual int parse_option(char*);
 
     graph_engine()
     {
@@ -152,6 +265,12 @@ class graph_engine : Plugin
             printf("Not enough memory\n");
         }
 
+        this->libs = (LIBRARY*)malloc(sizeof(LIBRARY)*MAX_LIB_COUNT);
+        if(this->libs == 0x0)
+        {
+            printf("Not enough memory\n");
+        }
+
         this->blacklist_count = 0x0;
         this->wanted_count = 0x0;
         this->wanted_count_i = 0x0;
@@ -165,6 +284,7 @@ class graph_engine : Plugin
     ~graph_engine() 
     {
         free(this->ctx_info);
+        free(this->libs);
 
         unsigned i;
         for(i = 0x0; i< MAX_BLACKLIST; i++)

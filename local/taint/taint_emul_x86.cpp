@@ -27,14 +27,6 @@
 #define GET_RM(x)  (x >> RM_OFF )  & RM_MASK
 #define GET_REG(x) (x >> REG_OFF ) & REG_MASK;
 
-char colors[0x10][0x10] = {"#000000", "#0000FF", "#00FF00", "#FF0000", "#0055AA"};
-
-int taint_x86::set_prefix(char* prefix)
-{
-    strcpy(this->prefix, prefix);
-    return 0x0;
-}
-
 int taint_x86::d_print(int level, const char* format, ...)
 {
     va_list argptr;
@@ -95,224 +87,9 @@ int strcmpi(char const *a, char const *b)
     }
 }
 
-/*
-*  symbols 
-*/
-
-int taint_x86::copy_symbol(SYMBOL** dst, SYMBOL* src)
-{
-    SYMBOL* sp;
-    SYMBOL* old;
-
-    old = *dst;
-
-    sp = (SYMBOL*)malloc(sizeof(SYMBOL));
-    sp->addr = src->addr;
-    sp->lib_name = (char*)malloc(strlen(src->lib_name)+1);
-    sp->func_name = (char*)malloc(strlen(src->func_name)+1);
-    strcat(sp->lib_name, src->lib_name);
-    strcat(sp->func_name, src->func_name);
-    sp->next = old;
-
-    *dst = sp;
-
-    return 0x0;
-}
-
-int taint_x86::add_symbol(SYMBOL** s, OFFSET addr, char* lib_name, char* func_name)
-{
-    SYMBOL* sp;
-    SYMBOL* old;
-
-    old = *s;
-
-    if(this->symbols_count >= MAX_SYMBOL_COUNT)
-    {
-        d_print(1, "Error, maximum of symbols reached\n");
-        exit(-1);
-    }
-
-    sp = (SYMBOL*)malloc(sizeof(SYMBOL));
-    sp->addr = addr;
-    sp->lib_name = (char*)malloc(strlen(lib_name)+1);
-    sp->func_name = (char*)malloc(strlen(func_name)+1);
-    sp->resolved = 0x0;
-    sp->wanted = this->check_func_wanted(func_name);
-    sp->included = this->check_func_included(func_name);
-    strcat(sp->lib_name, lib_name);
-    strcat(sp->func_name, func_name);
-    sp->next = old;
-    this->symbols_count++;
-
-    *s = sp;
-
-    return 0x0;
-}
-
-int taint_x86::remove_symbol(SYMBOL* sp)
-{
-    if(sp->lib_name) free(sp->lib_name);
-    if(sp->func_name) free(sp->func_name);
-    free(sp);
-    return 0x0;
-}
-
-/* [TODO] need to optimize. Somehow. */
-SYMBOL* taint_x86::get_symbol(OFFSET addr)
-{
-    SYMBOL* s;
-    LIB_INFO* lib;
-
-    lib = this->get_lib(addr);
-    if(lib == 0x0) return 0x0;
-
-    s = lib->symbols;
-
-    if(s == 0x0) return 0x0;
-    do
-    {
-        if((s->addr == addr) && (s->resolved)) 
-        {
-            return s; 
-        }
-        else s = s->next;
-    } while(s);
-
-    return 0x0;
-}
-
-/*
-* adding to lists
-*/
-
-int taint_x86::add_blacklist(char* str)
-{
-    if(this->blacklist_count >= MAX_BLACKLIST)
-    {
-        d_print(1, "Error, maximum of blacklisted functions reached\n");
-        exit(-1);
-    }
-
-    strcpy(this->lib_blacklist[this->blacklist_count], str);
-    this->blacklist_count++;
-    return 0x0;
-}
-
-int taint_x86::add_silenced_addr(DWORD addr)
-{
-    if(this->addr_silenced_count >= MAX_BLACKLIST)
-    {
-        d_print(1, "Error, maximum of silenced functions reached\n");
-        exit(-1);
-    }
-
-    this->addr_silenced[this->addr_silenced_count] = addr;
-    this->addr_silenced_count++;
-    return 0x0;
-}
-
-int taint_x86::add_blacklist_addr(DWORD addr)
-{
-    if(this->addr_blacklist_count >= MAX_BLACKLIST)
-    {
-        d_print(1, "Error, maximum of blacklisted functions reached\n");
-        exit(-1);
-    }
-
-    this->addr_blacklist[this->addr_blacklist_count] = addr;
-    this->addr_blacklist_count++;
-    return 0x0;
-}
-
-int taint_x86::add_wanted_i(unsigned instr)
-{
-    if(this->wanted_count_i >= MAX_WANTED)
-    {
-        d_print(1, "Error, maximum of wanted functions reached\n");
-        exit(-1);
-    }
-    this->instr_wanted[this->wanted_count_i] = instr;
-    this->wanted_count_i++;
-    return 0x0;
-}
-
-int taint_x86::add_wanted_e(DWORD addr)
-{
-    if(this->wanted_count_e >= MAX_WANTED)
-    {
-        d_print(1, "Error, maximum of wanted functions reached\n");
-        exit(-1);
-    }
-    this->addr_wanted[this->wanted_count_e] = addr;
-    this->wanted_count_e++;
-    return 0x0;
-}
-
-int taint_x86::add_wanted(char* str)
-{
-    if(this->wanted_count >= MAX_WANTED)
-    {
-        d_print(1, "Error, maximum of wanted functions reached\n");
-        exit(-1);
-    }
-    strcpy(this->func_wanted[this->wanted_count], str);
-    this->func_wanted[this->wanted_count][strlen(this->func_wanted[this->wanted_count])] = 0x0;
-    this->func_wanted[this->wanted_count][strlen(this->func_wanted[this->wanted_count])-1] = 0x0;
-    d_print(1, "%s\n", this->func_wanted[this->wanted_count]);
-    this->wanted_count++;
-    return 0x0;
-}
-
-/*
-* looking up lists
-*/
-
-int taint_x86::check_func_wanted(char* name)
-{
-    unsigned i = 0x0;
-
-    //replace MAX_WANTED with wanted_count
-    for(i = 0x0; i < MAX_WANTED; i++)
-    {
-        if(strlen(this->func_wanted[i]) == 0x0) 
-            continue;
-
-        if(strcmp(name, this->func_wanted[i]) == 0x0)
-        {
-            return 0x1;
-        }
-    }
-
-    return 0x0;
-}
-
-int taint_x86::check_func_included(char* name)
-{
-    unsigned i = 0x0;
-
-    //replace MAX_WANTED with included_count
-    for(i = 0x0; i < MAX_WANTED; i++)
-    {
-        if(strlen(this->func_included[i]) == 0x0) 
-            continue;
-
-        if(strcmp(name, this->func_included[i]) == 0x0)
-        {
-            return 0x1;
-        }
-    }
-
-    return 0x0;
-}
-
 int taint_x86::start()
 {
     if(this->plugin) this->plugin->start_callback();
-
-    char out_line[MAX_NAME];
-
-    sprintf(out_line, "[ST]");
-    print_empty_call(&this->ctx_info[this->tids[this->cur_tid]], out_line, colors[CODE_RED]);
 
     this->started = 0x1;
     return 0x0;
@@ -409,1313 +186,6 @@ int taint_x86::add_trace_watchpoint(TRACE_WATCHPOINT wp)
 
     this->wpt_count++;
 
-    return 0x0;
-}
-
-/* blacklist routines */
-
-int taint_x86::add_fence(OFFSET entry, OFFSET start, OFFSET struct_size, OFFSET struct_count)
-{
-    if(this->loop_fences_count >= MAX_LOOP_FENCES)
-    {
-        d_print(1, "Error, maximum of loop fences reached\n");
-        exit(-1);
-    }
-
-    this->loop_fences[this->loop_fences_count].entry = entry;
-    this->loop_fences[this->loop_fences_count].start = start;
-    this->loop_fences[this->loop_fences_count].struct_size = struct_size;
-    this->loop_fences[this->loop_fences_count].struct_count = struct_count;
-    this->loop_fences[this->loop_fences_count].limit = struct_size * struct_count;
-    this->loop_fences_count++;
-    d_print(1, "Fence: Entry: 0x%08x Start: 0x%08x Size: 0x%08x Count: 0x%08x\n", entry, start, struct_size, struct_count);
-
-    return 0x0;
-}
-
-int taint_x86::add_included(char* str)
-{
-    if(this->included_count >= MAX_WANTED)
-    {
-        d_print(1, "Error, maximum of wanted functions reached\n");
-        exit(-1);
-    }
-    strcpy(this->func_included[this->included_count], str);
-    this->func_included[this->included_count][strlen(this->func_included[this->included_count])] = 0x0;
-    this->func_included[this->included_count][strlen(this->func_included[this->included_count])-1] = 0x0;
-    d_print(1, "%s\n", this->func_included[this->included_count]);
-    this->included_count++;
-    return 0x0;
-}
-
-int taint_x86::check_lib_blacklist(LIB_INFO* lib)
-{
-    unsigned i;
-
-    d_print(2, "Checking lib\n");
-
-    for(i=0x0; i<MAX_BLACKLIST; i++)
-    {
-        d_print(2, "%s - %s\n", this->lib_blacklist[i], lib->name);
-            
-        if(strlen(lib->name) == 0x0) break;
-        if(strlen(this->lib_blacklist[i]) == 0x0) break;
-        if(strstr(this->lib_blacklist[i], lib->name))
-        {
-            d_print(1, "Module blacklisted\n");
-            lib->blacklisted = 0x1;
-            return 0x1;
-        }
-    }
-    return 0x0;
-}
-
-int taint_x86::check_addr_silenced(OFFSET offset)
-{
-    LIB_INFO* lib;
-
-    unsigned i;
-
-    for(i = 0x0; i< this->addr_silenced_count; i++)
-    {
-        if(this->addr_silenced[i] == offset)
-            return 0x1;
-    }
-
-    return 0x0;
-}
-int taint_x86::check_addr_blacklist(OFFSET offset)
-{
-    LIB_INFO* lib;
-
-    unsigned i;
-
-    for(i = 0x0; i< this->addr_blacklist_count; i++)
-    {
-        if(this->addr_blacklist[i] == offset)
-            return 0x1;
-    }
-
-    lib = this->get_lib(offset);
-
-    if(lib!=0x0)
-    {
-        d_print(2, "Lib: %s, from 0x%08x to 0x%08x\n", lib->name, lib->offset, lib->offset + lib->length);
-        if(lib->blacklisted)
-        {
-            d_print(2, "Lib blacklisted\n");
-            return 0x1;
-        }
-    }
-
-    return 0x0;
-}
-
-LIB_INFO* taint_x86::get_lib(OFFSET offset)
-{
-    unsigned i=0x0;
-    unsigned highest = -1;
-
-    for(i = 0x0; i < this->libs_count; i++)
-    {
-        if(this->libs[i].offset < offset)
-        {
-            if(highest != -1)
-            {
-                if(this->libs[i].offset > this->libs[highest].offset) 
-                {
-                    highest = i;
-                }
-            }
-            else 
-            {
-                highest = i;
-            }
-        }
-    }
-    if(highest != -1) 
-    {
-        return &this->libs[highest];
-    }
-    else return 0x0;
-}
-
-
-/* graph output routines */
-
-void taint_x86::print_call_open(CONTEXT_INFO* cur_ctx, char* line, const char* color)
-{
-    char out_line[MAX_NAME];
-    char working_line[MAX_NAME];
-    FILE* f = cur_ctx->graph_file;   
-    unsigned i;
-
-//    if(check_collecting(cur_ctx)) return;
-
-    d_print(1, "Printing call into: %s\n", cur_ctx->graph_filename);
-
-    strcpy(out_line, "");
-
-    for(i = this->call_level_start-this->call_level_offset; i< cur_ctx->call_level; i++)
-        strcat(out_line, " ");
-
-    sprintf(working_line, "<node COLOR=\"%s\" CREATED=\"6666666666666\" ID=\"ID_1208439975\" MODIFIED=\"6666666666666\" TEXT=\"%s\">\n", color, line);
-
-    strcat(out_line, working_line);
-    fwrite(out_line, strlen(out_line), 0x1, f);
-}
-
-void taint_x86::print_call(CONTEXT_INFO* cur_ctx, char* line, const char* color)
-{
-    char out_line[MAX_NAME];
-    char working_line[MAX_NAME];
-    FILE* f = cur_ctx->graph_file;   
-    unsigned i;
-
-//    if(check_collecting(cur_ctx)) return;
-
-    d_print(1, "Printing call into: %s\n", cur_ctx->graph_filename);
-
-    strcpy(out_line, "");
-
-    for(i = this->call_level_start-this->call_level_offset; i< cur_ctx->call_level; i++)
-        strcat(out_line, " ");
-
-    sprintf(working_line, "<node COLOR=\"%s\" CREATED=\"6666666666666\" FOLDED=\"true\" ID=\"ID_1208439975\" MODIFIED=\"6666666666666\" TEXT=\"%s\">\n", color, line);
-
-    strcat(out_line, working_line);
-    fwrite(out_line, strlen(out_line), 0x1, f);
-}
-
-void taint_x86::print_empty_call(CONTEXT_INFO* cur_ctx, char* line, const char* color)
-{
-    unsigned i;
-    FILE* f = cur_ctx->graph_file;   
-    char out_line[MAX_NAME];
-    char working_line[MAX_NAME];
-    
-    d_print(1, "Printing empty call into: %s\n", cur_ctx->graph_filename);
-
-    strcpy(out_line, "");
-    
-    for(i = this->call_level_start-this->call_level_offset; i< cur_ctx->call_level; i++)
-        strcat(out_line, " ");
-    
-    sprintf(working_line, "<node COLOR=\"%s\" CREATED=\"6666666666666\" FOLDED=\"true\" ID=\"ID_1208439975\" MODIFIED=\"6666666666666\" TEXT=\"%s\"></node>\n", color, line);
-
-    strcat(out_line, working_line);
-    fwrite(out_line, strlen(out_line), 0x1, f);
-}
-
-void taint_x86::print_ret(CONTEXT_INFO* cur_ctx)
-{
-    FILE* f = cur_ctx->graph_file;   
-    char out_line[MAX_NAME];
-    unsigned i;
-
-    d_print(1, "Printing ret into: %s\n", cur_ctx->graph_filename);
-
-    strcpy(out_line, "");
-
-    for(i = this->call_level_start-this->call_level_offset; i< cur_ctx->call_level; i++)
-        strcat(out_line, " ");
-
-
-    d_print(1, "Printing ret\n");
-    strcat(out_line, "</node>\n");
-    fwrite(out_line, strlen(out_line), 0x1, f);
-}
-
-/* handling conditional jumps  */
-
-int taint_x86::jxx_set(unsigned state)
-{
-    char out_line[MAX_NAME]; 
-
-    this->cur_info->levels[this->cur_info->call_level].jxx_handling = state;
-
-    sprintf(out_line, "[x] JXX_STATUS: 0x%02x", state);
-    print_empty_call(&this->ctx_info[this->tids[this->cur_tid]], out_line, colors[CODE_RED]);
-
-    return 0x0;
-}
-
-int taint_x86::jxx_clear()
-{
-    unsigned level = this->cur_info->call_level;
-
-    jxx_clear_level(level);
-    return 0x0;
-}
-
-int taint_x86::jxx_clear_level(unsigned level)
-{
-    this->cur_info->list_len[level] = 0x0;
-    d_print(1, "Clearing JXX on level: %d\n", level);
-    return 0x0;
-}
-
-int is_on_list(CONTEXT_INFO* info, DWORD eip)
-{
-    unsigned i;
-
-    unsigned level = info->call_level;
-
-    for(i = 0x0; i< info->list_len[level]; i++)
-    {
-        if(eip == info->list[level][i])
-        {
-            info->jxx_total[level]++;
-            return 0x1;
-        }
-    }
-
-    return 0x0;
-}
-
-int add_to_list(CONTEXT_INFO* info, DWORD eip)
-{
-    unsigned level = info->call_level;
-
-    if(info->list_len[level] == MAX_LIST_JXX-1) return -0x1;
-    d_print(1, "Adding to list at level %d: 0x%08x\n", level, eip);
-    info->list[level][info->list_len[level]] = eip;
-    info->list_len[level]++;
-    d_print(1, "List len: %d\n", info->list_len[level]);
-    return 0x0;
-}
-
-int taint_x86::handle_jxx(CONTEXT_INFO* info)
-{
-    if(info->waiting != 0x0)
-    {
-        return 0x0;
-    }
-
-    if(is_on_list(info, this->last_eip)) 
-    {
-        d_print(1, "JXX Is on list, ignoring\n");
-        return 0x0;
-    }
-
-
-    this->check_loop_2(info);
-    CALL_LEVEL* cur_level;
-
-    cur_level = &info->levels[info->call_level];
-
-    if(cur_level->loop_status == FENCE_NOT_COLLECTING)
-    {
-        return 0x0;
-    }
-
-    switch(info->before_jmp_code)
-    {
-        case JMP_CODE_JB_JC_JNAE:
-            handle_this_jxx(info, "jb_jc_jnae");
-            break;
-
-        case JMP_CODE_JAE_JNB_JNC:
-            handle_this_jxx(info, "jae_jnb_jnc");
-            break;
-
-        case JMP_CODE_JE_JZ:
-            handle_this_jxx(info, "je_jz");
-            break;
-
-        case JMP_CODE_JNE_JNZ:
-            handle_this_jxx(info, "jne_jnz");
-            break;
-
-        case JMP_CODE_JBE_JNA:
-            handle_this_jxx(info, "jbe_jna");
-            break;
-
-        case JMP_CODE_JA_JNBE:
-            handle_this_jxx(info, "ja_jnbe");
-            break;
-
-        case JMP_CODE_JS:
-            handle_this_jxx(info, "js");
-            break;
-
-        case JMP_CODE_JNS:
-            handle_this_jxx(info, "jns");
-            break;
-
-        case JMP_CODE_JP_JPE:
-            handle_this_jxx(info, "jp_jpe");
-            break;
-
-        case JMP_CODE_JNP_JPO:
-            handle_this_jxx(info, "jnp_jpo");
-            break;
-
-        case JMP_CODE_JL_JNGE:
-            handle_this_jxx(info, "jl_jnge");
-            break;
-
-        case JMP_CODE_JGE_JNL:
-            handle_this_jxx(info, "jge_jnl");
-            break;
-
-        case JMP_CODE_JLE_JNG:
-            handle_this_jxx(info, "jle_jng");
-            break;
-
-        case JMP_CODE_JG_JNLE:
-            handle_this_jxx(info, "jg_jnle");
-            break;
-
-        case JMP_CODE_RM:
-            handle_this_jxx(info, "switch_jump");
-            break;
-
-    }
-
-    return 0x0;
-}
-
-int taint_x86::handle_this_jxx(CONTEXT_INFO* info, char* str)
-{
-    char out_line[MAX_NAME];
-
-    if(this->enumerate) sprintf(out_line, "(%d)0x%08x %s 0x%08x", this->current_instr_count-1, info->last_eip, str, this->current_eip);
-    else sprintf(out_line, "0x%08x %s 0x%08x", this->last_eip, str, this->current_eip);
-    print_empty_call(info, out_line, colors[CODE_GREEN]);
-
-    add_to_list(info, this->last_eip);
-
-    return 0x0;
-}
-
-/* precise jmp analysis */
-int taint_x86::handle_jmp(CONTEXT_INFO* info)
-{
-    if(!this->options & OPTION_ANALYZE_JUMPS)
-        return 0x0;
-
-    SYMBOL* s;
-    char out_line[MAX_NAME];
-    char* func_name;
-    DWORD_t current;
-    DWORD_t waiting;
-    OFFSET target = info->target;
-    OFFSET next = info->next;
-
-    unsigned color;
-    s = this->get_symbol(target);
-
-    if(info->waiting != 0x0)
-    {
-        /* wanted */
-        if((s != 0x0) && (s->wanted) && (this->options & OPTION_ANALYZE_WANTED_IN_SYMBOLS))
-        {
-            d_print(1, "Got wanted!\n");
-            if(this->enumerate) sprintf(out_line, "[x] (%d)0x%08x jmp %s!%s", this->current_instr_count ,this->current_eip, s->lib_name, s->func_name);
-            else sprintf(out_line, "[x] 0x%08x jmp %s!%s", this->current_eip, s->lib_name, s->func_name);
-            print_call(info, out_line, colors[CODE_RED]);
-            this->print_ret(info);
-        }
-        else
-        {
-            return 0x0;
-        }
-    }
-    else
-    {
-        if(s != 0x0)
-        {
-            if(s->wanted)
-            {
-                if(this->enumerate) sprintf(out_line, "[x] (%d)0x%08x jmp %s!%s", this->current_instr_count ,this->current_eip, s->lib_name, s->func_name);
-                else sprintf(out_line, "[x] 0x%08x jmp %s!%s", this->current_eip, s->lib_name, s->func_name);
-                print_call(info, out_line, colors[CODE_RED]);
-                print_ret(info);
-            }
-            else
-            {
-                if(this->enumerate) sprintf(out_line, "(%d)0x%08x jmp %s!%s", this->current_instr_count ,this->current_eip, s->lib_name, s->func_name);
-                else sprintf(out_line, "0x%08x jmp %s!%s", this->current_eip, s->lib_name, s->func_name);
-                print_call(info, out_line, colors[CODE_BLUE]);
-                print_ret(info);
-            }
-        }
-        else
-        {
-            return 0x0;
-        }
-    }
-
-    return 0x0;
-}
-
-/* loop routines */ 
-int taint_x86::enter_loop_demo(CONTEXT_INFO* info)
-{
-    if(!this->options & OPTION_ANALYZE_LOOPS)
-        return 0x0;
-
-    char out_line[MAX_NAME];
-    FILE* f = info->graph_file;   
-
-    unsigned cur_call_level;
-    cur_call_level = this->cur_info->call_level;
-
-    {
-        d_print(1, "Entering loop demo\n");
-        sprintf(out_line, "[loop]");
-        print_call(info, out_line, colors[CODE_BLACK]);
-//        sprintf(out_line, "<!-- started loop demo -->\n");
-//        fwrite(out_line, strlen(out_line), 0x1, f);
-    }
-
-    //info->loop_pos[cur_call_level]++;
-
-}
-
-int taint_x86::exit_loop_demo(CONTEXT_INFO* info)
-{
-    if(!this->options & OPTION_ANALYZE_LOOPS)
-        return 0x0;
-
-    unsigned level;
-    char out_line[MAX_NAME];
-    FILE* f = info->graph_file;   
-    CALL_LEVEL* cur_level;
-
-    level = this->cur_info->call_level;
-
-    d_print(1, "Exiting loop demo\n");
-    cur_level->cur_fence = 0x0;
-//    sprintf(out_line, "<!-- loop demo ended \n");
-//    fwrite(out_line, strlen(out_line), 0x1, f);
-
-    print_ret(info);
-}
-
-int taint_x86::enter_loop(CONTEXT_INFO* info)
-{
-    if(!this->options & OPTION_ANALYZE_LOOPS)
-        return 0x0;
-
-    char out_line[MAX_NAME];
-    FILE* f = info->graph_file;   
-
-    unsigned cur_call_level;
-    cur_call_level = this->cur_info->call_level;
-
-    {
-        d_print(1, "Entering loop\n");
-//        sprintf(out_line, "[loop]");
-//        print_call(info, out_line, colors[CODE_BLACK]);
-//        sprintf(out_line, "<!-- started loop -->\n");
-//        fwrite(out_line, strlen(out_line), 0x1, f);
-    }
-
-    //info->loop_pos[cur_call_level]++;
-
-}
-
-int taint_x86::exit_loop(CONTEXT_INFO* info)
-{
-    if(!this->options & OPTION_ANALYZE_LOOPS)
-        return 0x0;
-
-    unsigned level;
-    char out_line[MAX_NAME];
-    FILE* f = info->graph_file;   
-    CALL_LEVEL* cur_level;
-
-    level = this->cur_info->call_level;
-
-    d_print(1, "Exiting loop\n");
-    cur_level->cur_fence = 0x0;
-//    sprintf(out_line, "loop ended -->\n");
-//    fwrite(out_line, strlen(out_line), 0x1, f);
-
-//    print_ret(info);
-}
-
-int taint_x86::check_collecting(CONTEXT_INFO* info)
-{
-    unsigned i;
-
-    d_print(1, "Entered collecting verification\n");
-
-    for(i = info->call_level; i >= info->call_level_smallest; i--)
-    {
-        d_print(1, "Veryfing level: %d\n", i);
-        if(info->levels[i].cur_fence)
-            if(info->levels[i].cur_fence->collecting) return 0x1;
-    }
-
-    return 0x0;
-}
-
-int detox(char* s)
-{
-    unsigned size;
-    unsigned i;
-
-    size  = strlen(s);
-    for(i = 0; i< size; i++)
-    {
-        if(s[i] == '\"') s[i] = ' ';
-        if(s[i] == '\'') s[i] = ' ';
-        if(s[i] == '<') s[i] = ' ';
-        if(s[i] == '>') s[i] = ' ';
-    }
-
-    return 0x0;
-}
-
-int taint_x86::comment_out(char* comment, DWORD tid)
-{
-    if(!(this->started))
-    {
-        return 0x0;
-    }
-
-    /* we need to find proper ctx_info */
-    CONTEXT_INFO* info;
-    DWORD tid_no;
-
-    tid_no = this->tids[tid];
-
-    info = &this->ctx_info[tid_no];
-
-    detox(comment);
-
-    d_print(1, "Writing out comment @ %d: %s", this->last_instr_count, comment);
-    print_empty_call(info, comment, colors[CODE_COMMENT]);
-    return 0x0;
-}
-
-/* returns 1 if in loop, 0 otherwise */
-int taint_x86::check_loop_2(CONTEXT_INFO* info)
-{
-    if(!this->options & OPTION_ANALYZE_LOOPS)
-        return 0x0;
-
-    OFFSET offset;
-    unsigned cur_fence_idx;
-    unsigned cur_loop_addr_idx;
-    unsigned cur_loop_limit;
-    unsigned cur_loop_struct_size;
-    unsigned cur_loop_struct_count;
-    unsigned level;
-    LOOP_FENCE* cur_fence;
-    CALL_LEVEL* cur_level;
-
-
-    level = info->call_level;
-    cur_level = &info->levels[level];
-
-    offset = this->current_eip;
-    cur_fence = info->levels[level].cur_fence;
-
-    d_print(1, "Fence for graph pos: %d: 0x%08x\n", level, cur_fence);
-
-    if(cur_fence != 0x0)
-    {
-
-        d_print(1, "---\nActive fence: \nEntry: \t0x%08x\nStart: \t0x%08x\nLimit: \t%d\n", cur_fence->entry, cur_fence->start, cur_fence->limit);
-
-        /* on specific level, but not yet collecting */
-        if(cur_level->loop_status == FENCE_ACTIVE)
-        {
-/*            d_print(1, "Check for starting: %p - %p\n", cur_fence->start, offset);*/
-            d_print(1, "Check for starting: %p - %p\n", cur_fence->start, cur_info->source);
-            if(cur_fence->start == cur_info->source)
-            {
-                d_print(1, "Starting collecting\n");
-                cur_level->loop_status = FENCE_COLLECTING;
-                enter_loop(info);
-                enter_loop_demo(info);
-            }
-        }
-
-        /* in loop */
-        cur_loop_addr_idx   = cur_level->loop_addr_idx;
-        cur_loop_limit      = cur_level->loop_limit;
-        cur_loop_struct_size    = cur_level->loop_struct_size;
-        cur_loop_struct_count   = cur_level->loop_struct_count;
-
-        if(cur_level->loop_status == FENCE_NOT_COLLECTING)
-        {
-            cur_loop_addr_idx ++;
-            cur_level->loop_addr_idx = cur_loop_addr_idx;
-
-            d_print(1, "Not collected: %p\n", offset);
-
-            if(cur_loop_limit != 0x0)
-            if(cur_loop_addr_idx >= cur_loop_limit)
-            {
-                /* collecting finished */
-                cur_level->loop_addr_idx = 0x0;
-
-                cur_level->loop_status = FENCE_FINISHED;
-                exit_loop(info);
-
-                d_print(1, "Collected addrs:\n");
-
-                unsigned i;
-                for(i=0x0; i<cur_loop_struct_count; i++)
-                {
-                    d_print(1, "0x%08x\n", cur_level->loop_addr[i]);
-                }
-
-            }
-            return 0;
-        }
-
-        if(cur_level->loop_status == FENCE_COLLECTING)
-        {
-            d_print(1, "1");
-            cur_level->loop_addr[cur_loop_addr_idx] = offset;
-            d_print(1, "2");
-            cur_loop_addr_idx ++;
-            cur_level->loop_addr_idx = cur_loop_addr_idx;
-
-            d_print(1, "Collected: %p\n", offset);
-            d_print(1, "Level %d collection: idx: %d, limit: %d\n", level, cur_level->loop_addr_idx, cur_level->loop_limit);
-
-            if(cur_loop_addr_idx > cur_loop_struct_size)
-            {
-                /* we collected enough for demonstration */
-                cur_level->loop_status = FENCE_NOT_COLLECTING;
-                exit_loop_demo(info);
-            }
-
-            return 0;
-        } 
-    }
-    return 0x0;
-}
-
-/* handling call, diving, surfacing, outputting graph content */
-
-int taint_x86::handle_call(CONTEXT_INFO* info)
-{
-    d_print(1, "[handle call]\n");
-    d_print(1, "LL: 0x%08x\n", info->lock_level);
-    SYMBOL* s;
-    char out_line[MAX_NAME];
-    char* func_name;
-    DWORD_t current;
-    DWORD_t waiting;
-    OFFSET source = info->source;
-    OFFSET target = info->target;
-    OFFSET next = info->next;
-    CALL_LEVEL* cur_level;
-
-    d_print(1, "source: 0x%08x, target: 0x%08x\n", source, target);
-    #define DECISION_NO_EMIT        0x0
-    #define DECISION_EMIT           0x1
-    #define DECISION_EMIT_NESTED    0x2
-
-    #define DECISION_NO_DIVE        0x0
-    #define DECISION_DIVE           0x1
-
-    #define DECISION_LAYOUT_REGULAR 0x0
-    #define DECISION_LAYOUT_SYMBOL  0x1
-    #define DECISION_LAYOUT_SYMBOL_WANTED  0x2
-    #define DECISION_LAYOUT_4       0x3
-    #define DECISION_LAYOUT_5       0x4
-
-    char decision_emit;
-    char decision_dive;
-    char decision_template;
-    
-    unsigned color;
-    s = this->get_symbol(target);
-    unsigned i;
-
-    if((!this->started) || (this->finished))
-    {
-        d_print(1, "Not yet started\n");
-        return 0x0;
-    }
-
-    if(info->waiting != 0x0)
-    {
-        /* increase lock level */
-        info->lock_level++;
-    }
-
-    d_print(1, "Call\n");
-//    d_print(2, "Call: 0x%08x\n", this->reg_restore_32(EIP).get_DWORD());
-    d_print(2, "Call: 0x%08x\n", info->source);
-
-    /* decision about emission */
-
-    d_print(2, "Decision about emission\n");
-    if(this->check_addr_silenced(source))
-    {
-        decision_emit = DECISION_NO_EMIT;
-    }
-    else if(info->waiting != 0x0)
-    {
-        /* we are waiting for return */ 
-        d_print(2, "We are waiting for return \n");
-        if((s != 0x0) && (s->wanted))
-        {
-            /* wanted */
-            d_print(1, "Got wanted!\n");
-            decision_emit = DECISION_EMIT_NESTED;
-        }
-        else
-        {
-            /* not wanted */
-            d_print(2, "We are waiting and we do not want\n");
-            decision_emit = DECISION_NO_EMIT;
-        }
-        if(!(this->options & OPTION_ANALYZE_WANTED_IN_SYMBOLS))
-        {
-            decision_emit = DECISION_NO_EMIT;
-        }
-    }
-    else
-    {
-        d_print(2, "We are not waiting\n");
-
-//        current = this->reg_restore_32(EIP);
-        current = info->source;
-
-        /* check for loop bypasses */
-        this->check_loop_2(info);
-        cur_level = &info->levels[info->call_level];
-
-        if(cur_level->loop_status == FENCE_NOT_COLLECTING)
-        {
-            /* we are traversing known loop, do not want this, we wait for next */
-            d_print(2, "We are not collecting these calls\n");
-            decision_emit = DECISION_NO_EMIT;
-        }
-        else
-        {
-            /* we are not traversing a fully known loop, we want this */
-            d_print(2, "We are not traversing known loop, we are in active fence before start or we are collecting . Either way we want this\n");
-            decision_emit = DECISION_EMIT;
-        }
-    }
-            
-    /* decision about diving */
-    d_print(2, "Decision about diving\n");
-    if(info->waiting != 0x0)
-    {
-        d_print(2, "We are waiting, not diving\n");
-        decision_dive = DECISION_NO_DIVE;
-    }
-    else
-    {
-        d_print(2, "We are not waiting, checking for symbol\n");
-        if(s != 0x0)
-        {
-            d_print(2, "We have symbol\n");
-            if(s->included)
-            {
-                d_print(2, "The symbol is included, we dive\n");
-                decision_dive = DECISION_DIVE;
-            }
-            else
-            {
-                d_print(2, "The symbol is not included, we do not dive\n");
-                decision_dive = DECISION_NO_DIVE;
-            }
-            
-        }
-        else
-        {
-            d_print(2, "We do not have symbol\n");
-
-            /* check if we do not exceed maximum depth */
-            d_print(2, "Current depth: 0%08x, analysis depth: 0x%08x\n", info->call_level, this->depth);
-            if(info->call_level+1 > this->depth)
-            {
-                d_print(2, "Analysis depth reached, not diving\n");
-                decision_dive = DECISION_NO_DIVE;
-            }
-            else if(this->check_addr_blacklist(target))
-            {
-                /* target is blacklisted, we do not dive*/
-                d_print(2, "Target 0x%08x is blacklisted, we do not dive\n", target);
-                decision_dive = DECISION_NO_DIVE;
-                if(this->options & OPTION_NOT_EMITTING_BLACKLISTED)
-                {
-                    decision_emit = DECISION_NO_EMIT;
-                }
-            }
-            else
-            {
-                /* target is not blacklisted, we dive */
-                d_print(2, "Target is not blacklisted, we dive\n");
-                decision_dive = DECISION_DIVE;
-            }
-        }
-    }
-
-    /* decision about layout */
-    d_print(2, "Decision about layout\n");
-
-    if(s != 0x0)
-    {
-        /* we have symbol */
-        d_print(2, "We have symbol\n");
-        if(s->wanted)
-        {
-            d_print(2, "We have wanted symbol\n");
-            decision_template = DECISION_LAYOUT_SYMBOL_WANTED;
-        }
-        else
-        {
-            d_print(2, "Symbol is not wanted\n");
-            decision_template = DECISION_LAYOUT_SYMBOL;
-        }
-    }
-    else
-    {
-        d_print(2, "We do not have symbol\n");
-        decision_template = DECISION_LAYOUT_REGULAR;
-    }
-
-    d_print(2, "Executing decisions\n");
-
-    if(decision_emit == DECISION_EMIT)
-    {
-        d_print(2, "Emitting\n");
-
-        if(decision_dive == DECISION_DIVE)
-        {
-            d_print(2, "Emitting diving\n");
-        
-            if(decision_template == DECISION_LAYOUT_SYMBOL_WANTED)
-            {
-                /* we assume we have symbol */
-//                if(this->enumerate) sprintf(out_line, "[x] (%d)0x%08x call %s!%s", this->current_instr_count ,this->current_eip, s->lib_name, s->func_name);
-//                else sprintf(out_line, "[x] 0x%08x call %s!%s", this->current_eip, s->lib_name, s->func_name);
-                if(this->enumerate) sprintf(out_line, "[x] (%d)0x%08x call %s!%s", this->current_instr_count-1 ,source, s->lib_name, s->func_name);
-                else sprintf(out_line, "[x] 0x%08x call %s!%s", source, s->lib_name, s->func_name);
-                print_call(info, out_line, colors[CODE_RED]);
-            }
-            else if(decision_template == DECISION_LAYOUT_SYMBOL)
-            {
-                /* we assume we have symbol */
-//                if(this->enumerate) sprintf(out_line, "(%d)0x%08x call %s!%s", this->current_instr_count ,this->current_eip, s->lib_name, s->func_name);
-//                else sprintf(out_line, "0x%08x call %s!%s", this->current_eip, s->lib_name, s->func_name);
-                if(this->enumerate) sprintf(out_line, "(%d)0x%08x call %s!%s", this->current_instr_count-1 ,source, s->lib_name, s->func_name);
-                else sprintf(out_line, "0x%08x call %s!%s", source, s->lib_name, s->func_name);
-                print_call(info, out_line, colors[CODE_BLUE]);
-            }
-            else
-            {
-                /* regular emission with dive */
-//                if(this->enumerate) sprintf(out_line, "(%d)0x%08x call 0x%08x", this->current_instr_count ,this->current_eip, target);
-//                else sprintf(out_line, "0x%08x call 0x%08x", this->current_eip, target);
-                if(this->enumerate) sprintf(out_line, "(%d)0x%08x call 0x%08x", this->current_instr_count-1 ,source, target);
-                else sprintf(out_line, "0x%08x call 0x%08x", source, target);
-                print_call(info, out_line, colors[CODE_BLACK]);
-            }
-        }
-        else /* DECISION_NO_DIVE */
-        {
-            d_print(2, "Emitting not diving\n");
-
-            if(decision_template == DECISION_LAYOUT_SYMBOL_WANTED)
-            {
-                /* we assume we have symbol */
-//                if(this->enumerate) sprintf(out_line, "[x] (%d)0x%08x call %s!%s", this->current_instr_count ,this->current_eip, s->lib_name, s->func_name);
-//                else sprintf(out_line, "[x] 0x%08x call %s!%s", this->current_eip, s->lib_name, s->func_name);
-                if(this->enumerate) sprintf(out_line, "[x] (%d)0x%08x call %s!%s", this->current_instr_count-1 ,source, s->lib_name, s->func_name);
-                else sprintf(out_line, "[x] 0x%08x call %s!%s", source, s->lib_name, s->func_name);
-                print_call_open(info, out_line, colors[CODE_RED]);
-            }
-            else if(decision_template == DECISION_LAYOUT_SYMBOL)
-            {
-                /* we assume we have symbol */
-//                if(this->enumerate) sprintf(out_line, "(%d)0x%08x call %s!%s", this->current_instr_count ,this->current_eip, s->lib_name, s->func_name);
-//                else sprintf(out_line, "0x%08x call %s!%s", this->current_eip, s->lib_name, s->func_name);
-                if(this->enumerate) sprintf(out_line, "(%d)0x%08x call %s!%s", this->current_instr_count-1 ,source, s->lib_name, s->func_name);
-                else sprintf(out_line, "0x%08x call %s!%s", source, s->lib_name, s->func_name);
-                print_call_open(info, out_line, colors[CODE_BLUE]);
-            }
-            else
-            {
-                /* regular emission with dive */
-//                if(this->enumerate) sprintf(out_line, "(%d)0x%08x call 0x%08x", this->current_instr_count ,this->current_eip, target);
-//                else sprintf(out_line, "0x%08x call 0x%08x", this->current_eip, target);
-                if(this->enumerate) sprintf(out_line, "(%d)0x%08x call 0x%08x", this->current_instr_count-1, source, target);
-                else sprintf(out_line, "0x%08x call 0x%08x", source, target);
-                print_call_open(info, out_line, colors[CODE_BLACK]);
-            }
-        
-        }
-        
-        /* log emission */
-        for(i=this->call_level_start; i< info->call_level; i++)
-        {
-            d_print(1, " ");
-        }
-    
-/*        d_print(1, "[0x%08x] (%d)0x%08x call 0x%08x, pos: %d, small: %d, ignored: %d: \n", 
-                this->cur_tid, this->current_instr_count, this->current_eip, target, 
-                this->ctx_info[this->tids[this->cur_tid]].call_level, 
-                this->ctx_info[this->tids[this->cur_tid]].call_level_smallest, 
-                this->ctx_info[this->tids[this->cur_tid]].call_level_ignored, 
-                this->ctx_info[this->tids[this->cur_tid]].call_level_largest);*/
-    
-        d_print(1, "[0x%08x] (%d)0x%08x call 0x%08x, pos: %d, small: %d, ignored: %d: \n", 
-                this->cur_tid, this->current_instr_count-1, source, target, 
-                this->ctx_info[this->tids[this->cur_tid]].call_level, 
-                this->ctx_info[this->tids[this->cur_tid]].call_level_smallest, 
-                this->ctx_info[this->tids[this->cur_tid]].call_level_ignored, 
-                this->ctx_info[this->tids[this->cur_tid]].call_level_largest);
-
-    }
-    else if(decision_emit == DECISION_EMIT_NESTED)
-    {
-        d_print(2, "Emitting nested\n");
-
-        if(decision_template == DECISION_LAYOUT_SYMBOL_WANTED)
-        {
-            /* we assume we have symbol */
-//            if(this->enumerate) sprintf(out_line, "[x] (%d)0x%08x call %s!%s", this->current_instr_count ,this->current_eip, s->lib_name, s->func_name);
-//            else sprintf(out_line, "[x] 0x%08x call %s!%s", this->current_eip, s->lib_name, s->func_name);
-            if(this->enumerate) sprintf(out_line, "[x] (%d)0x%08x call %s!%s", this->current_instr_count-1 ,source, s->lib_name, s->func_name);
-            else sprintf(out_line, "[x] 0x%08x call %s!%s", source, s->lib_name, s->func_name);
-            print_call(info, out_line, colors[CODE_RED]);
-            print_ret(info);
-        }
-        else
-        {
-            /* we assume we have symbol */
-//            if(this->enumerate) sprintf(out_line, "(%d)0x%08x call %s!%s", this->current_instr_count ,this->current_eip, s->lib_name, s->func_name);
-//            else sprintf(out_line, "0x%08x call %s!%s", this->current_eip, s->lib_name, s->func_name);
-            if(this->enumerate) sprintf(out_line, "(%d)0x%08x call %s!%s", this->current_instr_count-1 ,source, s->lib_name, s->func_name);
-            else sprintf(out_line, "0x%08x call %s!%s", source, s->lib_name, s->func_name);
-            print_call(info, out_line, colors[CODE_BLACK]);
-            print_ret(info);
-        
-        }
-
-        /* log emission */
-        for(i=this->call_level_start; i< info->call_level; i++)
-        {
-            d_print(1, " ");
-        }
-    
-        d_print(1, "[0x%08x] (%d)0x%08x call 0x%08x, pos: %d, small: %d, ignored: %d: \n", 
-                this->cur_tid, this->current_instr_count-1, source, target, 
-                this->ctx_info[this->tids[this->cur_tid]].call_level, 
-                this->ctx_info[this->tids[this->cur_tid]].call_level_smallest, 
-                this->ctx_info[this->tids[this->cur_tid]].call_level_ignored, 
-                this->ctx_info[this->tids[this->cur_tid]].call_level_largest);
-    }
-    else
-    {
-        d_print(2, "Not emitting\n");
-    }
-
-    if(decision_dive == DECISION_DIVE)
-    {
-        d_print(2, "Diving!\n");
-        this->dive(info, target, next);
-    }
-    else
-    {
-        d_print(2, "Not diving!\n");
-        if(info->waiting == 0x0) 
-        {
-            info->waiting = next;
-            info->last_emit_decision = decision_emit;
-        }
-
-    }
-        
-    d_print(1, "[handle call finishes]\n");
-    return 0x0;
-}
-
-int taint_x86::check_fence(CALL_LEVEL* cur_level)
-{
-    /* check fences for activation */
-    unsigned i;
-    LOOP_FENCE* cur_fence;
-
-    for(i=0x0; i < this->loop_fences_count; i++)
-    {
-        cur_fence = &this->loop_fences[i];
-        if(cur_fence->entry == cur_level->entry)
-        {
-            cur_level->cur_fence = cur_fence;
-            cur_level->loop_status = FENCE_ACTIVE;
-            cur_level->loop_limit = cur_fence->limit;
-            cur_level->loop_struct_size = cur_fence->struct_size;
-            cur_level->loop_struct_count = cur_fence->struct_count;
-
-            d_print(1, "!!! Activated fence: 0x%08x - 0x%08x - 0x%08x\n", cur_fence->entry, cur_fence->start, cur_fence->limit);
-        }
-    }
-
-    return 0x0;
-}
-
-
-int taint_x86::dive(CONTEXT_INFO* info, OFFSET target, OFFSET next)
-{
-    unsigned i, level;
-    CALL_LEVEL* prev_level;
-    CALL_LEVEL* cur_level;
-
-    /* check if we don't exceed ret table size */
-    level = info->call_level;
-    if(level == this->max_call_levels-1) 
-    {
-        d_print(1, "We reached max ret table depth. If you need to register following calls, you need to extend ret table\n");
-        exit(-1);
-        return 0x1; 
-    }
-
-    /* things to do in previous level */
-    prev_level = &info->levels[level];
-    prev_level->ret = next;
-    info->call_level++;
-
-    /* OK, new level */
-    level = info->call_level;
-    d_print(1, "Entering level %d\n", level);
-    cur_level = &info->levels[level];
-    memset(cur_level, 0x0, sizeof(CALL_LEVEL));
-
-    /* clear jumps for jxx */
-    jxx_clear_level(level);
-
-//    cur_level->loop_addr = (OFFSET*)malloc(sizeof(OFFSET) * MAX_LOOP_ADDR);
-    cur_level->entry = target;
-
-    d_print(1, "Entry at level %d is: %p\n", level, cur_level->entry);
-    cur_level->cur_fence = 0x0;
-
-    /* prepare loop detection structures OBSOLETE
-    info->call_src_register_idx[level] = 0x0;
-    info->loop_start[level] = NO_LOOP;
-    */
-
-    /* if there is collecting going on on previous level, we do not check fences, we just collect */
-    if(prev_level->loop_status == FENCE_COLLECTING) 
-    {
-        cur_level->loop_status = FENCE_COLLECTING;
-    }
-    else if(prev_level->loop_status == FENCE_NOT_COLLECTING) 
-    {
-        cur_level->loop_status = FENCE_NOT_COLLECTING;
-        cur_level->loop_limit = 0x99999999;
-    }
-    else
-    {
-        this->check_fence(cur_level);
-    }
-
-    /* other stuff */ 
-
-    d_print(1, "[0x%08x] Ret table:\n", this->cur_tid);
-    for(i=info->call_level_smallest; i<info->call_level; i++)
-    {
-        d_print(1, "[0x%08x] 0x%08x\n", this->cur_tid, this->ctx_info[this->tids[this->cur_tid]].levels[i].ret);
-    }
-
-    return 0x0;
-}
-
-int taint_x86::surface(CONTEXT_INFO* info)
-{
-    CALL_LEVEL* cur_level;
-    
-    cur_level = &info->levels[info->call_level];
-    
-    info->call_level--;
-
-    if(info->call_level < 0x0) 
-    {
-        d_print(1, "Error, minimum available level reached");
-        d_print(1, "Rerun with larger max_level (-M <level>). Current setting is: 0x%08x\n", this->max_call_levels);
-        exit(-1);
-    }
-
-    if(info->call_level_smallest > info->call_level) info->call_level_smallest = info->call_level;
-
-    return 0x0;
-}
-
-int taint_x86::check_rets(OFFSET ret)
-{
-    return 0x0;
-    /*
-    unsigned i;
-    for(i = 0x0; i< this->ret_idx; i++)
-    {
-        if(this->rets[i] == ret)
-            return i;
-    }
-    return -1;
-    */
-}
-
-int taint_x86::handle_ret(CONTEXT_INFO* cur_ctx, OFFSET eip)
-{
-    if((!this->started) || (this->finished))
-        return 0x0;
-
-    d_print(1, "[handle ret]\n");
-    d_print(1, "Eip: 0x%08x\n", eip);
-    d_print(1, "LL: 0x%08x\n", cur_ctx->lock_level);
-    /* verify if ret points to a symbol */
-    
-    if(cur_ctx->waiting != 0x0) 
-    {
-        /* decrease lock_level */
-        if(cur_ctx->lock_level > 0x0) cur_ctx->lock_level--;
-    }
-
-    if(this->options & OPTION_VERIFY_ROP_RETS)
-    {
-        d_print(1, "[Checking for ROP ret]\n");
-        SYMBOL* s;
-        char out_line[MAX_NAME]; 
-        
-        d_print(1, "Searching for symbol: 0x%08x\n", eip);
-
-        s = this->get_symbol(eip);
-
-        if(s != 0x0)
-        {
-            if(this->enumerate) sprintf(out_line, "[x] (%d)0x%08x call %s!%s", this->current_instr_count, this->current_eip, s->lib_name, s->func_name);
-            else sprintf(out_line, "[x] 0x%08x call %s!%s", this->current_eip, s->lib_name, s->func_name);
-            print_empty_call(cur_ctx, out_line, colors[CODE_BLACK]);
-        }
-        d_print(1, "[Checking for ROP ret finishes]\n");
-    }
-
-    unsigned i,j,diff;
-    /* new begins */
-
-
-    /* check surface */
-
-    d_print(1, "We are on level: %d\n", cur_ctx->call_level);
-
-    if(cur_ctx->call_level <= 0x0) return -1;
-
-    d_print(1, "[0x%08x] Ret table:\n", this->cur_tid);
-    for(i=cur_ctx->call_level_smallest; i<cur_ctx->call_level; i++)
-    {
-        d_print(1, "[0x%08x] 0x%08x\n", this->cur_tid, cur_ctx->levels[i].ret);
-    }
-
-    d_print(1, "Trying to match ret addr: 0x%08x\n", eip);
-    /* Ret matched */
-    for(i = cur_ctx->call_level-1; i >= cur_ctx->call_level_smallest, i > 0; i--)
-    {
-        if(abs(int(cur_ctx->levels[i].ret) - int(eip)) < 0x5)
-        {
-            diff = cur_ctx->call_level - i;
-            d_print(1, "[0x%08x] (%d) Matched ret 0x%08x on pos: %d, handling diff: %d\n", this->cur_tid, this->current_instr_count, cur_ctx->levels[i].ret, i, diff);
-
-            /* is this correct? */
-            if(cur_ctx->waiting != 0x0)
-            {
-                print_ret(cur_ctx);
-            }
-            if(cur_ctx->waiting != 0x0) cur_ctx->waiting = 0x0;
-            for(j=0x0; j<diff; j++)
-            {
-                if(cur_ctx->levels[cur_ctx->call_level].loop_status != FENCE_NOT_COLLECTING)
-                {
-                    print_ret(cur_ctx);
-                }
-                surface(cur_ctx);
-            }
-            d_print(1, "[handle ret finishes]\n");
-            return 0x0;
-        }
-    }
-
-    d_print(1, "Failed do match\n");
-    /* unmatched rets ignored rets */
-    if(cur_ctx->waiting != 0x0) 
-    {
-        d_print(2, "We are waiting\n");
-        return 0x0;
-    }
-    else if(cur_ctx->before_waiting)
-    {
-        cur_ctx->before_waiting = 0x0;
-        d_print(2, "We just matched waiting\n");
-        d_print(1, "[handle ret finishes]\n");
-        return 0x0;
-    }
-    else
-    {
-        d_print(2, "We are not waiting\n");
-        
-        /* reset lock_level */
-        /* [TODO] this should be somewhere else, but it's not consuimng */
-        cur_ctx->lock_level = 0x0;
-    }
-
-    /* ret unmatched */
-    if(this->options & OPTION_UNMATCHED_RET_INVALIDATES_STACK)
-    {
-        d_print(1, "Enabled: OPTION_UNMATCHED_RET_INVALIDATES_STACK\n");
-        /* handle under surface */
-        if(cur_ctx->call_level == cur_ctx->call_level_smallest) //we have to use all stacked rets
-        {
-                /* pos */
-                d_print(1, "[0x%08x] Unmatched ret 0x%08x on pos: %d\n", this->cur_tid, eip, cur_ctx->call_level);
-                if(cur_ctx->levels[cur_ctx->call_level].loop_status != FENCE_NOT_COLLECTING)
-                {
-                    print_ret(cur_ctx);
-                }
-                surface(cur_ctx);
-                
-                /* smallest */
-                cur_ctx->call_level_smallest--;
-        }
-    }
-    else if(this->options & OPTION_UNMATCHED_RET_CREATES_CALL)
-    {
-    /* handle under surface */
-        d_print(1, "Enabled: OPTION_UNMATCHED_RET_CREATES_CALL\n");
-        if(cur_ctx->call_level == cur_ctx->call_level_smallest) //we have to use all stacked rets
-        {
-                /* pos */
-                d_print(1, "[0x%08x] Unmatched ret 0x%08x on pos: %d\n", this->cur_tid, eip, cur_ctx->call_level);
-                if(cur_ctx->levels[cur_ctx->call_level].loop_status != FENCE_NOT_COLLECTING)
-                {
-                    print_ret(cur_ctx);
-                }
-                surface(cur_ctx);
-                
-                /* smallest */
-                cur_ctx->call_level_smallest--;
-        }
-    }
-    else
-    {
-        d_print(1, "Enabled: default\n");
-        d_print(1, "ignoring\n");
-        /*
-        if(cur_ctx->levels[cur_ctx->call_level].loop_status != FENCE_NOT_COLLECTING)
-        {
-            print_ret(cur_ctx);
-        }
-        surface(cur_ctx);
-        */
-    }
-
-    /* new ends */
-    d_print(1, "[handle ret finishes]\n");
     return 0x0;
 }
 
@@ -2155,47 +625,6 @@ int taint_x86::pre_execute_instruction(DWORD eip)
 {
     if(this->plugin) this->plugin->pre_execute_instruction_callback(eip);
 
-    /* graph start */
-    if((this->start_addr == eip) || (this->current_instr_count == this->start_instr))
-    {
-        d_print(1, "Got ST at 0x%08x, starting\n", eip);
-        this->started = 0x1;
-    }
-
-    this->cur_info = this->get_tid(this->cur_tid);
-
-    if(cur_info->returning)
-    {
-        cur_info->before_returning = 1;
-        cur_info->returning = 0;
-    }
-
-    if(cur_info->calling)
-    {
-        cur_info->before_calling = 1;
-        cur_info->calling = 0;
-    }
-
-    if(cur_info->jumping)
-    {
-        cur_info->before_jumping = 1;
-        cur_info->before_jmp_code = cur_info->jmp_code;
-        cur_info->jumping = 0;
-    }
-
-    if(abs(int(cur_info->waiting) - int(eip) )<0x5) 
-    {
-        /* stop waiting */
-        d_print(1, "[0x%08x] Waiting: 0x%08x, eip: 0x%08x\n", this->cur_tid, cur_info->waiting, eip);
-        cur_info->waiting = 0x0;
-        cur_info->before_waiting = 0x1;
-        if((cur_info->last_emit_decision == DECISION_EMIT) || (cur_info->last_emit_decision == DECISION_EMIT_NESTED))
-        {
-            print_ret(cur_info);
-            cur_info->last_emit_decision = 0x0; 
-        }
-    }
-
     this->current_instr_length = 0x0;
     this->current_prefixes = 0x0;
     this->current_prefix_length = 0x0;
@@ -2208,6 +637,9 @@ int taint_x86::pre_execute_instruction(DWORD eip)
 
 int taint_x86::post_execute_instruction(DWORD eip)
 {
+    CONTEXT_INFO* cur_ctx;
+    cur_ctx = &this->ctx_info[this->tids[this->cur_tid]];
+
     if(this->plugin) this->plugin->post_execute_instruction_callback(eip);
 
     unsigned i, j, diff;
@@ -2217,60 +649,7 @@ int taint_x86::post_execute_instruction(DWORD eip)
     this->last_instr_byte = this->current_instr_byte;
     this->last_instr_count = this->current_instr_count;
 
-    /* graph */
-
-    CONTEXT_INFO* cur_ctx;
-    cur_ctx = &this->ctx_info[this->tids[this->cur_tid]];
-
-    /* handle waiting rets */
-
-//    if(cur_ctx->returning > 0x0) cur_ctx->returning--;
-
-    if((cur_ctx->before_returning == 1))
-    {
-        handle_ret(cur_ctx, eip);
-        cur_ctx->before_returning = 0;
-    }
-
-    if(cur_ctx->before_calling)
-    {
-        cur_ctx->target = eip;
-        d_print(1, "Next call target = 0x%08x\n", eip);
-        handle_call(cur_ctx);
-        cur_ctx->before_calling = 0;
-    }
-
-    if(cur_ctx->before_jumping)
-    {
-        cur_ctx->target = eip;
-        handle_jxx(cur_ctx);
-        cur_ctx->before_jumping = 0;
-    }
-
-    /* handle surface rets */
-
-    char out_line[MAX_NAME];
-
-    /* wanted */
-    for(i=0x0; i<this->wanted_count_i; i++)
-        if(this->instr_wanted[i] == this->current_instr_count)
-        {
-            sprintf(out_line, "[x] (%d)0x%08x", this->current_instr_count ,this->current_eip);
-            print_call(cur_ctx, out_line, colors[CODE_RED]);
-            print_ret(cur_ctx);
- 
-        }
-
-    for(i=0x0; i<this->wanted_count_e; i++)
-        if(this->addr_wanted[i] == this->current_eip)
-        {
-            if(this->enumerate) sprintf(out_line, "[x] (%d)0x%08x", this->current_instr_count ,this->current_eip);
-            else sprintf(out_line, "[x] 0x%08x", this->current_eip);
-            print_call(cur_ctx, out_line, colors[CODE_RED]);
-            print_ret(cur_ctx);
-        }
-
-    // probable eip
+    // probable eip //is this graph stff or not?
     if(!this->current_instr_is_jump)
         reg_store_32(EIP, this->reg_restore_32(EIP) + this->current_instr_length);
 
@@ -2460,7 +839,7 @@ int taint_x86::already_added(DWORD tid)
     return ret;
 }
 
-int taint_x86::check_thread(CONTEXT_info ctx_info)
+int taint_x86::check_thread(CONTEXT_OUT ctx_out)
 {
     DWORD already_added = 0x0;
     DWORD tid;
@@ -2468,17 +847,17 @@ int taint_x86::check_thread(CONTEXT_info ctx_info)
     char graph_filename[MAX_NAME];
     char out_line[MAX_NAME];
 
-    tid = ctx_info.thread_id;
+    tid = ctx_out.thread_id;
 
-    if(this->reg_restore_32(EAX, tid).get_DWORD() != ctx_info.ctx.Eax) goto error;
-    if(this->reg_restore_32(ECX, tid).get_DWORD() != ctx_info.ctx.Ecx) goto error;
-    if(this->reg_restore_32(EDX, tid).get_DWORD() != ctx_info.ctx.Edx) goto error;
-    if(this->reg_restore_32(EBX, tid).get_DWORD() != ctx_info.ctx.Ebx) goto error;
-    if(this->reg_restore_32(ESI, tid).get_DWORD() != ctx_info.ctx.Esi) goto error;
-    if(this->reg_restore_32(EDI, tid).get_DWORD() != ctx_info.ctx.Edi) goto error;
-    if(this->reg_restore_32(EBP, tid).get_DWORD() != ctx_info.ctx.Ebp) goto error;
-    if(this->reg_restore_32(ESP, tid).get_DWORD() != ctx_info.ctx.Esp) goto error;
-    if(this->reg_restore_32(EIP, tid).get_DWORD() != ctx_info.ctx.Eip) goto error;
+    if(this->reg_restore_32(EAX, tid).get_DWORD() != ctx_out.ctx.Eax) goto error;
+    if(this->reg_restore_32(ECX, tid).get_DWORD() != ctx_out.ctx.Ecx) goto error;
+    if(this->reg_restore_32(EDX, tid).get_DWORD() != ctx_out.ctx.Edx) goto error;
+    if(this->reg_restore_32(EBX, tid).get_DWORD() != ctx_out.ctx.Ebx) goto error;
+    if(this->reg_restore_32(ESI, tid).get_DWORD() != ctx_out.ctx.Esi) goto error;
+    if(this->reg_restore_32(EDI, tid).get_DWORD() != ctx_out.ctx.Edi) goto error;
+    if(this->reg_restore_32(EBP, tid).get_DWORD() != ctx_out.ctx.Ebp) goto error;
+    if(this->reg_restore_32(ESP, tid).get_DWORD() != ctx_out.ctx.Esp) goto error;
+    if(this->reg_restore_32(EIP, tid).get_DWORD() != ctx_out.ctx.Eip) goto error;
 
     goto noerror;
 
@@ -2492,20 +871,20 @@ int taint_x86::check_thread(CONTEXT_info ctx_info)
         //this->print_context();
 
         d_print(4, "\nShould be:\n");
-        d_print(4, "EAX: 0x%08x\n", ctx_info.ctx.Eax);
-        d_print(4, "EBX: 0x%08x\n", ctx_info.ctx.Ebx);
-        d_print(4, "ECX: 0x%08x\n", ctx_info.ctx.Ecx);
-        d_print(4, "EDX: 0x%08x\n", ctx_info.ctx.Edx);
-        d_print(4, "ESI: 0x%08x\n", ctx_info.ctx.Esi);
-        d_print(4, "EDI: 0x%08x\n", ctx_info.ctx.Edi);
-        d_print(4, "EBP: 0x%08x\n", ctx_info.ctx.Ebp);
-        d_print(4, "ESP: 0x%08x\n", ctx_info.ctx.Esp);
-        d_print(4, "EIP: 0x%08x\n", ctx_info.ctx.Eip);
+        d_print(4, "EAX: 0x%08x\n", ctx_out.ctx.Eax);
+        d_print(4, "EBX: 0x%08x\n", ctx_out.ctx.Ebx);
+        d_print(4, "ECX: 0x%08x\n", ctx_out.ctx.Ecx);
+        d_print(4, "EDX: 0x%08x\n", ctx_out.ctx.Edx);
+        d_print(4, "ESI: 0x%08x\n", ctx_out.ctx.Esi);
+        d_print(4, "EDI: 0x%08x\n", ctx_out.ctx.Edi);
+        d_print(4, "EBP: 0x%08x\n", ctx_out.ctx.Ebp);
+        d_print(4, "ESP: 0x%08x\n", ctx_out.ctx.Esp);
+        d_print(4, "EIP: 0x%08x\n", ctx_out.ctx.Eip);
 
         this->last_inconsistent = 0x1;
 
 #ifdef UPDATE_THREAD
-        this->mod_thread(ctx_info);
+        this->mod_thread(ctx_out);
 #endif
 
     return 0x0;
@@ -2520,91 +899,16 @@ int taint_x86::finish()
 {
     if(this->plugin) this->plugin->finish_callback();
 
-    unsigned i, j, k;
-    CONTEXT_INFO* cur_tid;
-    char out_line[MAX_NAME];
-    int diff_last, diff_first;
-    unsigned open;
-
-    d_print(1, "Closing %d tids\n", this->tid_count);
-    for(i=0x0; i<this->tid_count; i++)
-    {
-        cur_tid = &this->ctx_info[i];
-        d_print(1, "Closing 0x%08x\n", cur_tid->tid);
-
-        if(cur_tid->waiting != 0x0)
-        {
-            if((cur_tid->last_emit_decision == DECISION_EMIT) || (cur_tid->last_emit_decision == DECISION_EMIT_NESTED))
-            {
-                print_ret(cur_tid);
-                cur_tid->last_emit_decision = 0x0;
-            }
-        }
-
-        open = cur_tid->call_level - cur_tid->call_level_smallest;
-        d_print(1, "[0x%08x] Left with %d nodes open\n", cur_tid->tid, open);
-        d_print(1, "[0x%08x] First: %d - %d = %d\n", cur_tid->tid, cur_tid->call_level_smallest, abs(int(this->call_level_start) - int(cur_tid->call_level_smallest)));
-
-        diff_first = abs(int(this->call_level_start) - int(cur_tid->call_level_smallest));
-        diff_last = open;
-
-        d_print(1, "[0x%08x] Diff_last: %d\n", cur_tid->tid, diff_last);
-        for(j=0x0; j < diff_last; j++)
-        {
-/*
-#ifdef ANALYZE_LOOPS
-            for(k = 0x0; k<cur_tid->loop_pos[cur_tid->call_level]; k++)
-            {
-                exit_loop(cur_tid);
-            }
-#endif
-*/
-            print_ret(cur_tid);
-            cur_tid->call_level--;
-        }
-
-/*
-#ifdef ANALYZE_LOOPS
-        for(k = 0x0; k<cur_tid->loop_pos[cur_tid->call_level]; k++)
-        {
-            exit_loop(cur_tid);
-        }
-#endif
-*/
-
-        sprintf(out_line, "</node></map>\n");
-        fwrite(out_line, strlen(out_line), 0x1, cur_tid->graph_file);
-
-        d_print(1, "[0x%08x] Diff_first: %d\n", cur_tid->tid, diff_first);
-        sprintf(out_line, "<map version=\"1.0.1\">\n<node TEXT=\"start\">\n");
-        fwrite(out_line, strlen(out_line), 0x1, cur_tid->graph_file);
-
-        cur_tid->call_level--;
-        for(j=0x0; j < diff_first; j++)
-        {
-            cur_tid->call_level++;
-            print_call(cur_tid, "unknown", colors[CODE_BLACK]);
-        //print_call(cur_tid->graph_file, "unknown", colors[CODE_BLACK]);
-        }
-
-        unsigned k;
-        d_print(1, "JXX stats:\n");
-        for(k = cur_tid->call_level_smallest; k< cur_tid->call_level_largest; k++)
-        {
-            d_print(1, "Level %d: %d\n", cur_tid->jxx_total[k]);
-        }
-
-    }
     return 0x0;    
 }
 
-int taint_x86::mod_thread(CONTEXT_info ctx_info)
+int taint_x86::mod_thread(CONTEXT_OUT ctx_out)
 {
     DWORD already_added = 0x0;
 
-    d_print(3, "Updating thread: 0x%08x\n", ctx_info.thread_id);
+    d_print(3, "Updating thread: 0x%08x\n", ctx_out.thread_id);
 
-    if(!this->already_added(ctx_info.thread_id))
+    if(!this->already_added(ctx_out.thread_id))
     {
         return 0x0;
     }
@@ -2612,44 +916,44 @@ int taint_x86::mod_thread(CONTEXT_info ctx_info)
     DWORD_t reg;
 
     reg = this->reg_restore_32(EAX);
-    reg.set_DWORD(ctx_info.ctx.Eax);
-    this->reg_store_32(EAX, reg, ctx_info.thread_id);
+    reg.set_DWORD(ctx_out.ctx.Eax);
+    this->reg_store_32(EAX, reg, ctx_out.thread_id);
 
     reg = this->reg_restore_32(ECX);
-    reg.set_DWORD(ctx_info.ctx.Ecx);
-    this->reg_store_32(ECX, reg, ctx_info.thread_id);
+    reg.set_DWORD(ctx_out.ctx.Ecx);
+    this->reg_store_32(ECX, reg, ctx_out.thread_id);
 
     reg = this->reg_restore_32(EDX);
-    reg.set_DWORD(ctx_info.ctx.Edx);
-    this->reg_store_32(EDX, reg, ctx_info.thread_id);
+    reg.set_DWORD(ctx_out.ctx.Edx);
+    this->reg_store_32(EDX, reg, ctx_out.thread_id);
 
     reg = this->reg_restore_32(EBX);
-    reg.set_DWORD(ctx_info.ctx.Ebx);
-    this->reg_store_32(EBX, reg, ctx_info.thread_id);
+    reg.set_DWORD(ctx_out.ctx.Ebx);
+    this->reg_store_32(EBX, reg, ctx_out.thread_id);
 
     reg = this->reg_restore_32(ESI);
-    reg.set_DWORD(ctx_info.ctx.Esi);
-    this->reg_store_32(ESI, reg, ctx_info.thread_id);
+    reg.set_DWORD(ctx_out.ctx.Esi);
+    this->reg_store_32(ESI, reg, ctx_out.thread_id);
 
     reg = this->reg_restore_32(EDI);
-    reg.set_DWORD(ctx_info.ctx.Edi);
-    this->reg_store_32(EDI, reg, ctx_info.thread_id);
+    reg.set_DWORD(ctx_out.ctx.Edi);
+    this->reg_store_32(EDI, reg, ctx_out.thread_id);
 
     reg = this->reg_restore_32(ESP);
-    reg.set_DWORD(ctx_info.ctx.Esp);
-    this->reg_store_32(ESP, reg, ctx_info.thread_id);
+    reg.set_DWORD(ctx_out.ctx.Esp);
+    this->reg_store_32(ESP, reg, ctx_out.thread_id);
 
     reg = this->reg_restore_32(EBP);
-    reg.set_DWORD(ctx_info.ctx.Ebp);
-    this->reg_store_32(EBP, reg, ctx_info.thread_id);
+    reg.set_DWORD(ctx_out.ctx.Ebp);
+    this->reg_store_32(EBP, reg, ctx_out.thread_id);
 
     reg = this->reg_restore_32(EIP);
-    reg.set_DWORD(ctx_info.ctx.Eip);
-    this->reg_store_32(EIP, reg, ctx_info.thread_id);
+    reg.set_DWORD(ctx_out.ctx.Eip);
+    this->reg_store_32(EIP, reg, ctx_out.thread_id);
 
     reg = this->reg_restore_32(EFLAGS);
-    reg.set_DWORD(ctx_info.ctx.EFlags);
-    this->reg_store_32(EFLAGS, reg, ctx_info.thread_id);
+    reg.set_DWORD(ctx_out.ctx.EFlags);
+    this->reg_store_32(EFLAGS, reg, ctx_out.thread_id);
 
     //this->print_context(this->cur_tid);
 
@@ -2658,126 +962,44 @@ int taint_x86::mod_thread(CONTEXT_info ctx_info)
     return 0x0;
 }
 
-int taint_x86::add_thread(CONTEXT_info ctx_info)
+int taint_x86::add_thread(CONTEXT_OUT ctx_out)
 {
-    if(this->plugin) this->plugin->add_thread_callback(ctx_info);
+    if(this->plugin) this->plugin->add_thread_callback(ctx_out);
 
     DWORD already_added = 0x0;
     unsigned i;
     char out_line[MAX_NAME];
 
-    d_print(3, "Adding thread: 0x%08x\n", ctx_info.thread_id);
+    d_print(3, "Adding thread: 0x%08x\n", ctx_out.thread_id);
 
-    if(!this->already_added(ctx_info.thread_id))
-    {
-        if(strlen(this->prefix) > 0x1)
-        {
-            sprintf(this->ctx_info[this->tid_count].graph_filename, "%s_TID_%08X.mm", this->prefix, ctx_info.thread_id);
-        }
-        else
-        {
-            sprintf(this->ctx_info[this->tid_count].graph_filename, "TID_%08X.mm", ctx_info.thread_id);
-        }
-        d_print(1, "Creating graph file: %s\n", this->ctx_info[this->tid_count].graph_filename);
-        this->ctx_info[this->tid_count].graph_file = fopen(this->ctx_info[this->tid_count].graph_filename, "w");
-        this->ctx_info[this->tid_count].call_level = (this->max_call_levels/3); // starting at level 1/3 of max_call_levels
-        this->ctx_info[this->tid_count].call_level_smallest = this->ctx_info[this->tid_count].call_level;
-        this->ctx_info[this->tid_count].levels = (CALL_LEVEL*)malloc(sizeof(CALL_LEVEL)*this->max_call_levels);
-        if(this->ctx_info[this->tid_count].levels == 0x0)
-        {
-            d_print(1, "Unable to allocate\n");
-            exit(-1);
-        }
-        memset(this->ctx_info[this->tid_count].levels, 0x0, sizeof(CALL_LEVEL)*this->max_call_levels);
-        this->ctx_info[this->tid_count].waiting = 0x0;
-//        this->ctx_info[this->tid_count].list = (DWORD*)malloc(sizeof(DWORD) * MAX_LIST_JXX);
-//        this->ctx_info[this->tid_count].list_len = 0x0;
+    this->update_watchpoints(ctx_out.thread_id);
 
-        /* clear loop structures */
-        unsigned call_level;
-        call_level = this->ctx_info[this->tid_count].call_level;
-//        this->ctx_info[this->tid_count].loop_start[call_level] = NO_LOOP;
-
-        /* for graphs */
-        unsigned level;
-        CALL_LEVEL* cur_level;
-    
-        level = this->ctx_info[this->tid_count].call_level;
-        cur_level = &this->ctx_info[this->tid_count].levels[level];
-    
-        cur_level->entry = 0xffffffff;
-        this->check_fence(cur_level);
-
-        /* output marker */
-        char out_line[MAX_NAME];
-
-        strcpy(out_line, "");
-        for(i = this->call_level_start-this->call_level_offset; i< call_level; i++)
-            strcat(out_line, " ");
-        fwrite(out_line, strlen(out_line), 0x1, this->ctx_info[this->tid_count].graph_file);
-
-        sprintf(out_line, "<node TEXT=\"[ENTRY]\"></node>\n");
-        fwrite(out_line, strlen(out_line), 0x1, this->ctx_info[this->tid_count].graph_file);
-
-        /* fnalize */
-        this->ctx_info[this->tid_count].tid = ctx_info.thread_id;
-        //update lookup table
-        this->tids[ctx_info.thread_id] = this->tid_count;
-        this->tid_count++;
-    }
-
-    this->update_watchpoints(ctx_info.thread_id);
-
-    this->reg_store_32(EAX, ctx_info.ctx.Eax, ctx_info.thread_id);
-    this->reg_store_32(ECX, ctx_info.ctx.Ecx, ctx_info.thread_id);
-    this->reg_store_32(EDX, ctx_info.ctx.Edx, ctx_info.thread_id);
-    this->reg_store_32(EBX, ctx_info.ctx.Ebx, ctx_info.thread_id);
-    this->reg_store_32(ESI, ctx_info.ctx.Esi, ctx_info.thread_id);
-    this->reg_store_32(EDI, ctx_info.ctx.Edi, ctx_info.thread_id);
-    this->reg_store_32(ESP, ctx_info.ctx.Esp, ctx_info.thread_id);
-    this->reg_store_32(EBP, ctx_info.ctx.Ebp, ctx_info.thread_id);
-    this->reg_store_32(EFLAGS, ctx_info.ctx.EFlags, ctx_info.thread_id);
+    this->reg_store_32(EAX, ctx_out.ctx.Eax, ctx_out.thread_id);
+    this->reg_store_32(ECX, ctx_out.ctx.Ecx, ctx_out.thread_id);
+    this->reg_store_32(EDX, ctx_out.ctx.Edx, ctx_out.thread_id);
+    this->reg_store_32(EBX, ctx_out.ctx.Ebx, ctx_out.thread_id);
+    this->reg_store_32(ESI, ctx_out.ctx.Esi, ctx_out.thread_id);
+    this->reg_store_32(EDI, ctx_out.ctx.Edi, ctx_out.thread_id);
+    this->reg_store_32(ESP, ctx_out.ctx.Esp, ctx_out.thread_id);
+    this->reg_store_32(EBP, ctx_out.ctx.Ebp, ctx_out.thread_id);
+    this->reg_store_32(EFLAGS, ctx_out.ctx.EFlags, ctx_out.thread_id);
 
     OFFSET addr;
     CONTEXT_INFO* info;
 
-    info = this->get_tid(ctx_info.thread_id);
+    info = this->get_tid(ctx_out.thread_id);
 
     for(i=0x0; i<0x6; i++)
     {
-        addr = this->a_calculate_base(ctx_info.ldt[i]);
+        addr = this->a_calculate_base(ctx_out.ldt[i]);
         d_print(3, "Segment 0x%02x base: 0x%08x\n", i, addr);
         info->seg_map[i] = addr;
     }
    
-    //info->call_level_largest = 0x3; 
-
-    //this->print_context(this->cur_tid);
-
     this->cur_tid = 0;
     
-    d_print(1, "ER_9 TID: 0x%08x lock_level: 0x%08x\n", ctx_info.thread_id, this->ctx_info[this->tid_count-1].lock_level);
     return 0x0;
 }
-
-int taint_x86::del_lib(OFFSET off)
-{
-    int i;
-
-    for(i=0x0; i<libs_count; i++)
-    {
-        if(this->libs[i].offset == off)
-            this->libs[i].loaded = 0x0;
-    }
-    return 0x0;
-}
-
-int taint_x86::set_lib_dir_path(char* path)
-{
-    strcpy(this->lib_dir_path, path);
-    return 0x0;
-}
-
 
 int taint_x86::apply_security(DWORD offset, DWORD size)
 {
@@ -2859,155 +1081,6 @@ int taint_x86::apply_memory(DWORD offset, DWORD size)
 
 }
 
-int taint_x86::apply_lib_exports(LIB_INFO* lib)
-{
-    return 0x0;
-}
-
-int taint_x86::apply_lib_layout(LIB_INFO* lib)
-{
-    d_print(2, "Applying lib\n");
-
-    unsigned i;
-    std::ifstream pe_file;
-
-    pe_file.open(lib->path, std::ios::in | std::ios::binary);
-    pe_bliss::pe_base image(pe_bliss::pe_factory::create_pe(pe_file));
-
-    d_print(2, "Applying sections:\n");
-    pe_bliss::section_list sections(image.get_image_sections());
-
-    for(pe_bliss::section_list::const_iterator it = sections.begin(); it != sections.end(); ++it)
-	{
-		const pe_bliss::section& s = *it; //Секция
-        d_print(2, "Applying section [ %s ]: ", s.get_name().c_str());
-/*
-        d_print(2, "Characteristics: 0x%08x ", s.get_characteristics());
-        d_print(2, "Section %s ", s.get_name());
-        d_print(2, "Section %s ", s.get_name());
-        d_print(2, "Section %s ", s.get_name());
-*/
-/*
-		std::cout << "Section [" << s.get_name() << "]" << std::endl //Имя секции
-			<< "Characteristics: " << s.get_characteristics() << std::endl //Характеристики
-			<< "Size of raw data: " << s.get_size_of_raw_data() << std::endl //Размер данных в файле
-			<< "Virtual address: " << s.get_virtual_address() << std::endl //Виртуальный адрес
-			<< "Virtual size: " << s.get_virtual_size() << std::endl //Виртуальный размер
-			<< std::endl;
-*/
-        OFFSET off = lib->offset + s.get_virtual_address();
-        OFFSET off_raw = s.get_pointer_to_raw_data();
-
-        d_print(2, "0x%08x - 0x%08x\n", off, off+s.get_size_of_raw_data());
-
-
-        for(i=0x0; i<s.get_size_of_raw_data(); i++)
-        {
-            this->memory[off + i].set_BYTE(lib->content[off_raw + i]);
-            this->memory[off + i].set_BYTE_t(0x0);
-        }
-
-	}
-    
-    return 0x0;
-}
-
-int taint_x86::add_symbols(LIB_INFO* info)
-{
-    SYMBOL* s;
-    SYMBOL* s1;
-    SYMBOL* old;
-    SYMBOL* temp;
-
-    s = this->symbols;
-    if(s == 0x0) 
-    {
-        info->symbols = 0x0;
-        return 0x0;
-    }
-    old = 0x0;
-
-    do
-    {
-        if(s == 0x0) break;
-        if(s->lib_name == 0x0) break;
-
-        if(!strcmpi(info->name, s->lib_name))
-        {
-            s->addr += info->offset;
-            //d_print(1, "Resolved symbol: %s!%s @ 0x%08x\n", s->lib_name, s->func_name, s->addr);
-            s->resolved = 0x1;
-    
-            //move
-            if(old) old->next = s->next;
-            else this->symbols = this->symbols->next;
-
-            s->next = info->symbols;
-            info->symbols = s;
-
-            if(old) s = old->next;
-            else s = this->symbols;
-        }
-        else
-        {
-            old = s;
-            s = s->next;
-        }
-    }
-    while(s);
-    
-    return 0x0;
-}
-
-int taint_x86::add_lib(OFFSET off, char* name)
-{
-    LIB_INFO new_lib;
-    FILE* f;
-
-    unsigned i;
-    for(i=0x0; i<strlen(name); i++)
-    {
-        if(name[i] == '\r') name[i]='\x00';
-        if(name[i] == '\\') name[i]='/';
-    }
-
-    strcpy(new_lib.path, this->lib_dir_path);
-    strcat(new_lib.path, basename(name));
-
-    d_print(1, "Loading lib: %s\n", new_lib.path);
-
-    strcpy(new_lib.name, basename(name));
-
-    d_print(1, "Loading symbols for %s @ 0x%08x\n", new_lib.name, off);
-    new_lib.offset = off;
-    this->add_symbols(&new_lib);
-
-    new_lib.loaded = 1;
-
-    this->check_lib_blacklist(&new_lib);
-    this->libs[libs_count] = new_lib;
-    this-> libs_count ++; 
-
-    d_print(2, "Loaded lib: %s at 0x%08x to 0x%08x\n", new_lib.path, new_lib.offset, new_lib.offset+new_lib.length);
-    return 0x0;
-}
-
-int taint_x86::handle_exception(EXCEPTION_INFO info)
-{
-    //[TODO: WARNING, REMOVE!!!]
-    return 0x0;
-    if(!(this->started))
-    {
-        return 0x0;
-    }
-
-    char out_line[MAX_NAME];
-
-    sprintf(out_line, "[x] Exception %08x in TID %08x, instr. no: %d, eip: 0x%08x", info.er.ExceptionCode, info.tid, this->current_instr_count, info.er.ExceptionAddress);
-    print_empty_call(&this->ctx_info[this->tids[this->cur_tid]], out_line, colors[CODE_RED]);
-    return 0x0;
-}
-
 int taint_x86::add_exception(EXCEPTION_INFO info)
 {
     
@@ -3046,12 +1119,9 @@ int taint_x86::del_thread_srsly(DWORD tid)
 {
     if(this->plugin) this->plugin->del_thread_srsly_callback(tid);
 
-    char out_line[MAX_NAME];
     unsigned int i, diff;
 
     d_print(1, "Removing  thread: 0x%08x\n", tid);
-
-    fclose(this->ctx_info[this->tids[tid]].graph_file);
 
     return 0x0;
 }
@@ -11781,7 +9851,7 @@ int taint_x86::r_jmp_rel_8(BYTE_t* instr_ptr)
     if(this->started && !this->finished)
     {
         cur_ctx->target = target_2.get_DWORD();
-        this->handle_jmp(cur_ctx);
+        //this->handle_jmp(cur_ctx); //move to graph
     }
 
     return 0x0;
@@ -11809,7 +9879,7 @@ int taint_x86::r_jmp_rel_16_32(BYTE_t* instr_ptr)
     if(this->started && !this->finished)
     {
         cur_ctx->target = target.get_DWORD();
-        this->handle_jmp(cur_ctx);
+        //this->handle_jmp(cur_ctx); // move to graph
     }
 
     return 0x0;
@@ -11875,7 +9945,7 @@ int taint_x86::r_jmp_rm_16_32(BYTE_t* instr_ptr)
     if(this->started && !this->finished)
     {
         cur_ctx->target = target.get_DWORD();
-        this->handle_jmp(cur_ctx);
+        //this->handle_jmp(cur_ctx); //move to graph
     }
 
     this->cur_info->before_jmp_code = JMP_CODE_RM;

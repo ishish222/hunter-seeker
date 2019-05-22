@@ -276,12 +276,6 @@ int main(int argc, char** argv)
             if(line[0] == 'D' && line[1] == 'T')
                 deregister_thread(line, &taint_eng);
             
-            if(line[0] == 'R' && line[1] == 'L')
-                register_lib(line, &taint_eng);
-            
-            if(line[0] == 'D' && line[1] == 'L')
-                deregister_lib(line, &taint_eng);
-            
             if(line[0] == 'E' && line[1] == 'X')
                 register_exception(line, &taint_eng);
             
@@ -294,50 +288,11 @@ int main(int argc, char** argv)
             if(line[0] == 'S' && line[1] == 'E')
                 register_security(line, &taint_eng);
             
-            if(line[0] == 'S' && line[1] == 'P')
-                set_prefix(line, &taint_eng);
-
-            if(line[0] == 'S' && line[1] == 'Y')
-                register_symbol(line, &taint_eng);
-
-            if(line[0] == 'B' && line[1] == 'L')
-                register_blacklist(line, &taint_eng);
-
             if(line[0] == 'I' && line[1] == 'R')
                 instr_report_interval = get_instr_interval(line);
 
-            if(line[0] == 'B' && line[1] == 'A')
-                register_blacklist_addr(line, &taint_eng);
-
-            if(line[0] == 'S' && line[1] == 'A')
-                register_silenced_addr(line, &taint_eng);
-
-            if(line[0] == 'I' && line[1] == 'N')
-                register_included(line, &taint_eng);
-
-            if(line[0] == 'F' && line[1] == 'W')
-                register_wanted(line, &taint_eng);
-
-            if(line[0] == 'I' && line[1] == 'W')
-                register_wanted_i(line, &taint_eng);
-
-            if(line[0] == 'E' && line[1] == 'W')
-                register_wanted_e(line, &taint_eng);
-
             if(line[0] == 'C' && line[1] == 'T')
                 check_consistency(line, &taint_eng);
-
-            if(line[0] == 'F' && line[1] == 'E')
-                register_fence(line, &taint_eng);
-
-            if(line[0] == 'J' && line[1] == 'E')
-                taint_eng.jxx_set(0x1);
-
-            if(line[0] == 'J' && line[1] == 'D')
-                taint_eng.jxx_set(0x0);
-
-            if(line[0] == 'J' && line[1] == 'C')
-                taint_eng.jxx_clear();
 
             if(line[0] == 'P' && line[1] == 'A')
                 _pause();
@@ -361,11 +316,74 @@ int main(int argc, char** argv)
             if(line[0] == 'F' && line[1] == 'I')
                 taint_eng.finished = 0x1;
 
-            if(line[0] == 'O' && line[1] == 'U')
-                comment_out(line, &taint_eng);
-
             if(line[0] == 'O' && line[1] == 'P')
                 parse_option(line, &taint_eng);
+
+            /* pass to plugin */
+            if(line[0] == 'S' && line[1] == 'Y')
+                taint_eng.plugin->parse_option(line);
+                //register_symbol(line, &taint_eng);
+
+            if(line[0] == 'R' && line[1] == 'L')
+                taint_eng.plugin->parse_option(line);
+                //register_lib(line, &taint_eng);
+            
+            if(line[0] == 'D' && line[1] == 'L')
+                taint_eng.plugin->parse_option(line);
+                //deregister_lib(line, &taint_eng);
+            
+            if(line[0] == 'F' && line[1] == 'E')
+                taint_eng.plugin->parse_option(line);
+                //register_fence(line, &taint_eng);
+
+            if(line[0] == 'S' && line[1] == 'P')
+                taint_eng.plugin->parse_option(line);
+                //set_prefix(line, &taint_eng);
+
+            if(line[0] == 'B' && line[1] == 'L')
+                taint_eng.plugin->parse_option(line);
+                //register_blacklist(line, &taint_eng);
+
+            if(line[0] == 'B' && line[1] == 'A')
+                taint_eng.plugin->parse_option(line);
+                //register_blacklist_addr(line, &taint_eng);
+
+            if(line[0] == 'S' && line[1] == 'A')
+                taint_eng.plugin->parse_option(line);
+                //register_silenced_addr(line, &taint_eng);
+
+            if(line[0] == 'I' && line[1] == 'N')
+                taint_eng.plugin->parse_option(line);
+                //register_included(line, &taint_eng);
+
+            if(line[0] == 'F' && line[1] == 'W')
+                taint_eng.plugin->parse_option(line);
+                //register_wanted(line, &taint_eng);
+
+            if(line[0] == 'I' && line[1] == 'W')
+                taint_eng.plugin->parse_option(line);
+                //register_wanted_i(line, &taint_eng);
+
+            if(line[0] == 'E' && line[1] == 'W')
+                taint_eng.plugin->parse_option(line);
+                //register_wanted_e(line, &taint_eng);
+
+            if(line[0] == 'J' && line[1] == 'E')
+                taint_eng.plugin->parse_option(line);
+                //taint_eng.jxx_set(0x1);
+
+            if(line[0] == 'J' && line[1] == 'D')
+                taint_eng.plugin->parse_option(line);
+                //taint_eng.jxx_set(0x0);
+
+            if(line[0] == 'J' && line[1] == 'C')
+                taint_eng.plugin->parse_option(line);
+                //taint_eng.jxx_clear();
+
+            if(line[0] == 'O' && line[1] == 'U')
+                taint_eng.plugin->parse_option(line);
+                //comment_out(line, &taint_eng);
+
 
             if(line[0] == '#'); //comment
             

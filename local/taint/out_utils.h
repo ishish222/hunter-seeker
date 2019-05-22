@@ -10,7 +10,7 @@
 #include <taint_emul_x86.h>
 #include <stdio.h>
 
-void deserialize_context(CONTEXT_info* ctx_info, char* buffer);
+void deserialize_context(CONTEXT_OUT* ctx_out, char* buffer);
 int register_taint(char* line, taint_x86* taint_eng);
 int register_symbol(char* line, taint_x86* taint_eng);
 int register_blacklist(char* line, taint_x86* taint_eng);
