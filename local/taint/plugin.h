@@ -72,10 +72,6 @@ class Plugin
     
     ~Plugin() 
     {
-        free(this->instructions_32_start);
-        free(this->instructions_32_end);
-        free(this->instructions_32_extended_start);
-        free(this->instructions_32_extended_end);
     }
 };
 

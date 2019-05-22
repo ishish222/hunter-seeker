@@ -12,14 +12,14 @@
 #include <signal.h>
 #include <utils.h>
 #include <breakpoint.h>
-#include <graph_engine.h>
+#include <graph_plugin.h>
 
 #define STRUCTURED_BUFFER_LENGTH 0x10000
 #define MAX_LINE 0x1000
 #define INSTR_REPORT_INTERVAL 1000000
 
 taint_x86 taint_eng;
-graph_engine graph_eng;
+graph_plugin graph_eng;
 
 
 int decode_instruction(DWORD* tid, OFFSET* addr, long long unsigned* instr_count, char* line)
@@ -244,14 +244,14 @@ int main(int argc, char** argv)
     taint_eng.bp_hit = 0x0;
 
     /* registering plugin */
-    graph_engine graph_eng;
+    graph_plugin graph_eng;
     taint_eng.plugin = (Plugin*)&graph_eng;
             fprintf(stderr, "taint_eng->ctx_info: 0x%08x\n", taint_eng.ctx_info);
     taint_eng.plugin->taint_eng = &taint_eng;
 
-//    graph_engine* graph_eng;
+//    graph_plugin* graph_eng;
             fprintf(stderr, "taint_eng->ctx_info: 0x%08x\n", taint_eng.ctx_info);
-//    graph_eng = (graph_engine*) &taint_eng.plugin;
+//    graph_eng = (graph_plugin*) &taint_eng.plugin;
 
     /* configuring plugin */
     if(max_levels == 0x0) max_levels = MAX_CALL_LEVELS;
@@ -427,11 +427,16 @@ int main(int argc, char** argv)
         taint_eng.del_thread_srsly(taint_eng.ctx_info[i].tid);
     }
    
+    fprintf(stderr, "Main1\n");
     fclose(taint_eng.instr_file);
+
+    fprintf(stderr, "Main2\n");
     if(line)
         free(line); 
 
+    fprintf(stderr, "Main3\n");
     taint_eng.close_files();
 
+    fprintf(stderr, "Main4\n");
     return 0x0;
 }

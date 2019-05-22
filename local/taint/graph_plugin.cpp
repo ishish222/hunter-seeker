@@ -1,4 +1,4 @@
-#include <graph_engine.h>
+#include <graph_plugin.h>
 #include <taint_emul_x86.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -38,7 +38,7 @@ int detox(char* s)
 
 int detox(char* s);
 
-int graph_engine::check_fence(CALL_LEVEL* cur_level)
+int graph_plugin::check_fence(CALL_LEVEL* cur_level)
 {
     /* check fences for activation */
     unsigned i;
@@ -62,7 +62,7 @@ int graph_engine::check_fence(CALL_LEVEL* cur_level)
     return 0x0;
 }
 
-int graph_engine::add_fence(OFFSET entry, OFFSET start, OFFSET struct_size, OFFSET struct_count)
+int graph_plugin::add_fence(OFFSET entry, OFFSET start, OFFSET struct_size, OFFSET struct_count)
 {
     if(this->loop_fences_count >= MAX_LOOP_FENCES)
     {
@@ -81,7 +81,7 @@ int graph_engine::add_fence(OFFSET entry, OFFSET start, OFFSET struct_size, OFFS
     return 0x0;
 }
 
-int graph_engine::enter_loop_demo(CONTEXT_GRAPH* info)
+int graph_plugin::enter_loop_demo(GRAPH_CONTEXT* info)
 {
     if(!this->taint_eng->options & OPTION_ANALYZE_LOOPS)
         return 0x0;
@@ -90,7 +90,7 @@ int graph_engine::enter_loop_demo(CONTEXT_GRAPH* info)
     FILE* f = info->graph_file;
 
     unsigned cur_call_level;
-    cur_call_level = this->cur_info->call_level;
+    cur_call_level = this->cur_graph_context->call_level;
 
     {
         d_print(1, "Entering loop demo\n");
@@ -104,7 +104,7 @@ int graph_engine::enter_loop_demo(CONTEXT_GRAPH* info)
 
 }
 
-int graph_engine::exit_loop_demo(CONTEXT_GRAPH* info)
+int graph_plugin::exit_loop_demo(GRAPH_CONTEXT* info)
 {
     if(!this->taint_eng->options & OPTION_ANALYZE_LOOPS)
         return 0x0;
@@ -114,7 +114,7 @@ int graph_engine::exit_loop_demo(CONTEXT_GRAPH* info)
     FILE* f = info->graph_file;
     CALL_LEVEL* cur_level;
 
-    level = this->cur_info->call_level;
+    level = this->cur_graph_context->call_level;
 
     d_print(1, "Exiting loop demo\n");
     cur_level->cur_fence = 0x0;
@@ -124,7 +124,7 @@ int graph_engine::exit_loop_demo(CONTEXT_GRAPH* info)
     print_ret(info);
 }
 
-int graph_engine::enter_loop(CONTEXT_GRAPH* info)
+int graph_plugin::enter_loop(GRAPH_CONTEXT* info)
 {
     if(!this->taint_eng->options & OPTION_ANALYZE_LOOPS)
         return 0x0;
@@ -133,7 +133,7 @@ int graph_engine::enter_loop(CONTEXT_GRAPH* info)
     FILE* f = info->graph_file;
 
     unsigned cur_call_level;
-    cur_call_level = this->cur_info->call_level;
+    cur_call_level = this->cur_graph_context->call_level;
 
     {
         d_print(1, "Entering loop\n");
@@ -147,7 +147,7 @@ int graph_engine::enter_loop(CONTEXT_GRAPH* info)
 
 }
 
-int graph_engine::exit_loop(CONTEXT_GRAPH* info)
+int graph_plugin::exit_loop(GRAPH_CONTEXT* info)
 {
     if(!this->taint_eng->options & OPTION_ANALYZE_LOOPS)
         return 0x0;
@@ -157,7 +157,7 @@ int graph_engine::exit_loop(CONTEXT_GRAPH* info)
     FILE* f = info->graph_file;
     CALL_LEVEL* cur_level;
 
-    level = this->cur_info->call_level;
+    level = this->cur_graph_context->call_level;
 
     d_print(1, "Exiting loop\n");
     cur_level->cur_fence = 0x0;
@@ -167,7 +167,7 @@ int graph_engine::exit_loop(CONTEXT_GRAPH* info)
 //    print_ret(info);
 }
 
-int graph_engine::check_collecting(CONTEXT_GRAPH* info)
+int graph_plugin::check_collecting(GRAPH_CONTEXT* info)
 {
     unsigned i;
 
@@ -184,7 +184,7 @@ int graph_engine::check_collecting(CONTEXT_GRAPH* info)
 }
 
 
-int graph_engine::comment_out(char* comment, DWORD tid)
+int graph_plugin::comment_out(char* comment, DWORD tid)
 {
     if(!(this->taint_eng->started))
     {
@@ -192,12 +192,12 @@ int graph_engine::comment_out(char* comment, DWORD tid)
     }
 
     /* we need to find proper ctx_info */
-    CONTEXT_GRAPH* info;
+    GRAPH_CONTEXT* info;
     DWORD tid_no;
 
     tid_no = this->taint_eng->tids[tid];
 
-    info = &this->ctx_info[tid_no];
+    info = &this->graph_contexts[tid_no];
 
     detox(comment);
 
@@ -206,7 +206,7 @@ int graph_engine::comment_out(char* comment, DWORD tid)
     return 0x0;
 }
 
-int graph_engine::register_comment(char* line)
+int graph_plugin::register_comment(char* line)
 {
     char* cmd;
     char* comment;
@@ -222,7 +222,7 @@ int graph_engine::register_comment(char* line)
     return 0x0;
 }
 /* returns 1 if in loop, 0 otherwise */
-int graph_engine::check_loop_2(CONTEXT_GRAPH* info)
+int graph_plugin::check_loop_2(GRAPH_CONTEXT* info)
 {
     if(!this->taint_eng->options & OPTION_ANALYZE_LOOPS)
         return 0x0;
@@ -255,8 +255,8 @@ int graph_engine::check_loop_2(CONTEXT_GRAPH* info)
         if(cur_level->loop_status == FENCE_ACTIVE)
         {
 /*            d_print(1, "Check for starting: %p - %p\n", cur_fence->start, offset);*/
-            d_print(1, "Check for starting: %p - %p\n", cur_fence->start, cur_info->source);
-            if(cur_fence->start == cur_info->source)
+            d_print(1, "Check for starting: %p - %p\n", cur_fence->start, this->cur_graph_context->source);
+            if(cur_fence->start == this->cur_graph_context->source)
             {
                 d_print(1, "Starting collecting\n");
                 cur_level->loop_status = FENCE_COLLECTING;
@@ -324,7 +324,7 @@ int graph_engine::check_loop_2(CONTEXT_GRAPH* info)
 }
 
 
-void graph_engine::print_call_open(CONTEXT_GRAPH* cur_ctx, char* line, const char* color)
+void graph_plugin::print_call_open(GRAPH_CONTEXT* cur_ctx, char* line, const char* color)
 {
     char out_line[MAX_NAME];
     char working_line[MAX_NAME];
@@ -347,7 +347,7 @@ void graph_engine::print_call_open(CONTEXT_GRAPH* cur_ctx, char* line, const cha
 }
 
 
-void graph_engine::print_call(CONTEXT_GRAPH* cur_ctx, char* line, const char* color)
+void graph_plugin::print_call(GRAPH_CONTEXT* cur_ctx, char* line, const char* color)
 {
     char out_line[MAX_NAME];
     char working_line[MAX_NAME];
@@ -369,7 +369,7 @@ void graph_engine::print_call(CONTEXT_GRAPH* cur_ctx, char* line, const char* co
     fwrite(out_line, strlen(out_line), 0x1, f);
 }
 
-void graph_engine::print_empty_call(CONTEXT_GRAPH* cur_ctx, char* line, const char* color)
+void graph_plugin::print_empty_call(GRAPH_CONTEXT* cur_ctx, char* line, const char* color)
 {
     unsigned i;
     FILE* f = cur_ctx->graph_file;
@@ -389,7 +389,7 @@ void graph_engine::print_empty_call(CONTEXT_GRAPH* cur_ctx, char* line, const ch
     fwrite(out_line, strlen(out_line), 0x1, f);
 }
 
-void graph_engine::print_ret(CONTEXT_GRAPH* cur_ctx)
+void graph_plugin::print_ret(GRAPH_CONTEXT* cur_ctx)
 {
     FILE* f = cur_ctx->graph_file;
     char out_line[MAX_NAME];
@@ -408,13 +408,13 @@ void graph_engine::print_ret(CONTEXT_GRAPH* cur_ctx)
     fwrite(out_line, strlen(out_line), 0x1, f);
 }
 
-int graph_engine::set_prefix(char* prefix)
+int graph_plugin::set_prefix(char* prefix)
 {
     strcpy(this->prefix, prefix);
     return 0x0;
 }
 
-int graph_engine::register_prefix(char* line)
+int graph_plugin::register_prefix(char* line)
 {
     char* cmd;
     char* prefix;
@@ -430,7 +430,7 @@ int graph_engine::register_prefix(char* line)
 }
 
 
-int graph_engine::d_print(int level, const char* format, ...)
+int graph_plugin::d_print(int level, const char* format, ...)
 {
     va_list argptr;
 
@@ -446,7 +446,7 @@ int graph_engine::d_print(int level, const char* format, ...)
     return 0x0;
 }
 
-int graph_engine::add_blacklist(char* str)
+int graph_plugin::add_blacklist(char* str)
 {
     if(this->blacklist_count >= MAX_BLACKLIST)
     {
@@ -459,7 +459,7 @@ int graph_engine::add_blacklist(char* str)
     return 0x0;
 }
 
-int graph_engine::add_silenced_addr(DWORD addr)
+int graph_plugin::add_silenced_addr(DWORD addr)
 {
     if(this->addr_silenced_count >= MAX_BLACKLIST)
     {
@@ -472,7 +472,7 @@ int graph_engine::add_silenced_addr(DWORD addr)
     return 0x0;
 }
 
-int graph_engine::add_blacklist_addr(DWORD addr)
+int graph_plugin::add_blacklist_addr(DWORD addr)
 {
     if(this->addr_blacklist_count >= MAX_BLACKLIST)
     {
@@ -485,7 +485,7 @@ int graph_engine::add_blacklist_addr(DWORD addr)
     return 0x0;
 }
 
-int graph_engine::add_wanted_i(unsigned instr)
+int graph_plugin::add_wanted_i(unsigned instr)
 {
     if(this->wanted_count_i >= MAX_WANTED)
     {
@@ -497,7 +497,7 @@ int graph_engine::add_wanted_i(unsigned instr)
     return 0x0;
 }
 
-int graph_engine::add_wanted_e(DWORD addr)
+int graph_plugin::add_wanted_e(DWORD addr)
 {
     if(this->wanted_count_e >= MAX_WANTED)
     {
@@ -509,7 +509,7 @@ int graph_engine::add_wanted_e(DWORD addr)
     return 0x0;
 }
 
-int graph_engine::add_wanted(char* str)
+int graph_plugin::add_wanted(char* str)
 {
     if(this->wanted_count >= MAX_WANTED)
     {
@@ -524,7 +524,7 @@ int graph_engine::add_wanted(char* str)
     return 0x0;
 }
 
-int graph_engine::check_func_wanted(char* name)
+int graph_plugin::check_func_wanted(char* name)
 {
     unsigned i = 0x0;
 
@@ -543,7 +543,7 @@ int graph_engine::check_func_wanted(char* name)
     return 0x0;
 }
 
-int graph_engine::check_func_included(char* name)
+int graph_plugin::check_func_included(char* name)
 {
     unsigned i = 0x0;
 
@@ -562,7 +562,7 @@ int graph_engine::check_func_included(char* name)
     return 0x0;
 }
 
-int graph_engine::add_included(char* str)
+int graph_plugin::add_included(char* str)
 {
     if(this->included_count >= MAX_WANTED)
     {
@@ -577,7 +577,7 @@ int graph_engine::add_included(char* str)
     return 0x0;
 }
 
-int graph_engine::check_lib_blacklist(LIBRARY* lib)
+int graph_plugin::check_lib_blacklist(LIBRARY* lib)
 {
     unsigned i;
 
@@ -599,7 +599,7 @@ int graph_engine::check_lib_blacklist(LIBRARY* lib)
     return 0x0;
 }
 
-int graph_engine::check_addr_silenced(OFFSET offset)
+int graph_plugin::check_addr_silenced(OFFSET offset)
 {
     LIBRARY* lib;
 
@@ -614,7 +614,7 @@ int graph_engine::check_addr_silenced(OFFSET offset)
     return 0x0;
 }
 
-int graph_engine::check_addr_blacklist(OFFSET offset)
+int graph_plugin::check_addr_blacklist(OFFSET offset)
 {
     LIBRARY* lib;
 
@@ -641,18 +641,19 @@ int graph_engine::check_addr_blacklist(OFFSET offset)
     return 0x0;
 }
 
-CONTEXT_GRAPH* graph_engine::get_context_graph(DWORD tno)
+GRAPH_CONTEXT* graph_plugin::get_graph_context(DWORD tid)
 {
-    CONTEXT_GRAPH* ret = 0x0;
-    ret = &this->ctx_info[this->taint_eng->tids[tno]];
+    GRAPH_CONTEXT* ret = 0x0;
+    DWORD context_pos = this->taint_eng->tids[tid];
+    ret = &this->graph_contexts[context_pos];
     return ret;
 }
 
 /* callbacks */
 
-int graph_engine::pre_execute_instruction_callback(DWORD eip)
+int graph_plugin::pre_execute_instruction_callback(DWORD eip)
 {
-    fprintf(stderr, "graph_engine::pre_execute_instruction_callback\n");
+    fprintf(stderr, "graph_plugin::pre_execute_instruction_callback\n");
     /* graph start */
     if((this->taint_eng->start_addr == eip) || (this->taint_eng->current_instr_count == this->taint_eng->start_instr))
     {
@@ -660,120 +661,129 @@ int graph_engine::pre_execute_instruction_callback(DWORD eip)
         this->taint_eng->started = 0x1;
     }
 
-    this->cur_info = this->get_context_graph(this->taint_eng->cur_tid);
+    this->cur_graph_context = this->get_graph_context(this->taint_eng->cur_tid);
 
-    if(cur_info->returning)
+    if(this->cur_graph_context->returning)
     {
-        cur_info->before_returning = 1;
-        cur_info->returning = 0;
+        this->cur_graph_context->before_returning = 1;
+        this->cur_graph_context->returning = 0;
     }
 
-    if(cur_info->calling)
+    if(this->cur_graph_context->calling)
     {
-        cur_info->before_calling = 1;
-        cur_info->calling = 0;
+        this->cur_graph_context->before_calling = 1;
+        this->cur_graph_context->calling = 0;
     }
 
-    if(cur_info->jumping)
+    if(this->cur_graph_context->jumping)
     {
-        cur_info->before_jumping = 1;
-        cur_info->before_jmp_code = cur_info->jmp_code;
-        cur_info->jumping = 0;
+        this->cur_graph_context->before_jumping = 1;
+        this->cur_graph_context->before_jmp_code = this->cur_graph_context->jmp_code;
+        this->cur_graph_context->jumping = 0;
     }
 
-    if(abs(int(cur_info->waiting) - int(eip) )<0x5) 
+    if(abs(int(this->cur_graph_context->waiting) - int(eip) )<0x5) 
     {
         /* stop waiting */
-        d_print(1, "[0x%08x] Waiting: 0x%08x, eip: 0x%08x\n", this->taint_eng->cur_tid, cur_info->waiting, eip);
-        cur_info->waiting = 0x0;
-        cur_info->before_waiting = 0x1;
-        if((cur_info->last_emit_decision == DECISION_EMIT) || (cur_info->last_emit_decision == DECISION_EMIT_NESTED))
+        d_print(1, "[0x%08x] Waiting: 0x%08x, eip: 0x%08x\n", this->taint_eng->cur_tid, this->cur_graph_context->waiting, eip);
+        this->cur_graph_context->waiting = 0x0;
+        this->cur_graph_context->before_waiting = 0x1;
+        if((this->cur_graph_context->last_emit_decision == DECISION_EMIT) || (this->cur_graph_context->last_emit_decision == DECISION_EMIT_NESTED))
         {
-            print_ret(cur_info);
-            cur_info->last_emit_decision = 0x0; 
+            print_ret(this->cur_graph_context);
+            this->cur_graph_context->last_emit_decision = 0x0; 
         }
     }
 
     return 0x0;
 }
 
-int graph_engine::post_execute_instruction_callback(DWORD eip)
+int graph_plugin::post_execute_instruction_callback(DWORD eip)
 {
     unsigned i;
 
-    fprintf(stderr, "graph_engine::post_execute_instruction_callback\n");
-    /* graph */
+    fprintf(stderr, "graph_plugin::post_execute_instruction_callback\n");
 
-    CONTEXT_GRAPH* cur_ctx;
-    cur_ctx = &this->ctx_info[this->taint_eng->tids[this->taint_eng->cur_tid]];
-
+    /*
+    GRAPH_CONTEXT* cur_graph_context;
+    unsigned context_pos = this->get_graph_context(this->taint_eng->cur_tid);
+    cur_graph_context = &this->graph_contexts[context_pos];
+    */
     /* handle waiting rets */
 
-//    if(cur_ctx->returning > 0x0) cur_ctx->returning--;
+//    if(cur_graph_context->returning > 0x0) cur_graph_context->returning--;
+    cur_graph_context = this->cur_graph_context;
 
-    if((cur_ctx->before_returning == 1))
+    d_print(1, "post01\n");
+    if((cur_graph_context->before_returning == 1))
     {
-        this->handle_ret(cur_ctx, eip);
-        cur_ctx->before_returning = 0;
+        this->handle_ret(cur_graph_context, eip);
+        cur_graph_context->before_returning = 0;
     }
+    d_print(1, "post02\n");
 
-    if(cur_ctx->before_calling)
+    if(cur_graph_context->before_calling)
     {
-        cur_ctx->target = eip;
+        cur_graph_context->target = eip;
         d_print(1, "Next call target = 0x%08x\n", eip);
-        handle_call(cur_ctx);
-        cur_ctx->before_calling = 0;
+        handle_call(cur_graph_context);
+        cur_graph_context->before_calling = 0;
     }
 
-    if(cur_ctx->before_jumping)
+    d_print(1, "post03\n");
+    if(cur_graph_context->before_jumping)
     {
-        cur_ctx->target = eip;
-        handle_jxx(cur_ctx);
-        cur_ctx->before_jumping = 0;
+        cur_graph_context->target = eip;
+        handle_jxx(cur_graph_context);
+        cur_graph_context->before_jumping = 0;
     }
 
+    d_print(1, "post04\n");
     /* handle surface rets */
 
     char out_line[MAX_NAME];
 
+    d_print(1, "post05\n");
     /* wanted */
     for(i=0x0; i<this->wanted_count_i; i++)
         if(this->instr_wanted[i] == this->taint_eng->current_instr_count)
         {
             sprintf(out_line, "[x] (%d)0x%08x", this->taint_eng->current_instr_count ,this->taint_eng->current_eip);
-            print_call(cur_ctx, out_line, node_color[CODE_RED]);
-            print_ret(cur_ctx);
+            print_call(cur_graph_context, out_line, node_color[CODE_RED]);
+            print_ret(cur_graph_context);
  
         }
 
+    d_print(1, "post06\n");
     for(i=0x0; i<this->wanted_count_e; i++)
         if(this->addr_wanted[i] == this->taint_eng->current_eip)
         {
             if(this->enumerate) sprintf(out_line, "[x] (%d)0x%08x", this->taint_eng->current_instr_count ,this->taint_eng->current_eip);
             else sprintf(out_line, "[x] 0x%08x", this->taint_eng->current_eip);
-            print_call(cur_ctx, out_line, node_color[CODE_RED]);
-            print_ret(cur_ctx);
+            print_call(cur_graph_context, out_line, node_color[CODE_RED]);
+            print_ret(cur_graph_context);
         }
 
+    d_print(1, "post07\n");
     return 0x0;
 }
 
-int graph_engine::start_callback()
+int graph_plugin::start_callback()
 {
     char out_line[MAX_NAME];
 
     sprintf(out_line, "[ST]");
-    print_empty_call(&this->ctx_info[this->taint_eng->tids[this->taint_eng->cur_tid]], out_line, node_color[CODE_RED]);
+    print_empty_call(this->cur_graph_context, out_line, node_color[CODE_RED]);
 
     return 0x0;
 }
 
-int graph_engine::finish_callback()
+int graph_plugin::finish_callback()
 {
-    fprintf(stderr, "graph_engine::finish_callback\n");
+    fprintf(stderr, "graph_plugin::finish_callback\n");
 
     unsigned i, j, k;
-    CONTEXT_GRAPH* cur_tid;
+    GRAPH_CONTEXT* cur_tid;
     char out_line[MAX_NAME];
     int diff_last, diff_first;
     unsigned open;
@@ -781,7 +791,7 @@ int graph_engine::finish_callback()
     d_print(1, "Closing %d tids\n", this->tid_count);
     for(i=0x0; i<this->tid_count; i++)
     {
-        cur_tid = &this->ctx_info[i];
+        cur_tid = &this->graph_contexts[i];
         d_print(1, "Closing 0x%08x\n", cur_tid->tid);
 
         if(cur_tid->waiting != 0x0)
@@ -850,7 +860,7 @@ int graph_engine::finish_callback()
     return 0x0;    
 }
 
-int graph_engine::add_thread_callback(CONTEXT_OUT ctx_out)
+int graph_plugin::add_thread_callback(CONTEXT_OUT ctx_out)
 {
     unsigned i;
     DWORD new_tid = ctx_out.thread_id;
@@ -861,38 +871,38 @@ int graph_engine::add_thread_callback(CONTEXT_OUT ctx_out)
     {
         if(strlen(this->prefix) > 0x1)
         {
-            sprintf(this->ctx_info[tid_count].graph_filename, "%s_TID_%08X_2.mm", this->prefix, new_tid);
+            sprintf(this->graph_contexts[tid_count].graph_filename, "%s_TID_%08X_2.mm", this->prefix, new_tid);
         }
         else
         {
-            sprintf(this->ctx_info[tid_count].graph_filename, "TID_%08X_2.mm", new_tid);
+            sprintf(this->graph_contexts[tid_count].graph_filename, "TID_%08X_2.mm", new_tid);
         }
-        d_print(1, "Creating graph file: %s\n", this->ctx_info[tid_count].graph_filename);
-        this->ctx_info[tid_count].graph_file = fopen(this->ctx_info[tid_count].graph_filename, "w");
-        this->ctx_info[tid_count].call_level = (this->max_call_levels/3); // starting at level 1/3 of max_call_levels
-        this->ctx_info[tid_count].call_level_smallest = this->ctx_info[tid_count].call_level;
-        this->ctx_info[tid_count].levels = (CALL_LEVEL*)malloc(sizeof(CALL_LEVEL)*this->max_call_levels);
-        if(this->ctx_info[tid_count].levels == 0x0)
+        d_print(1, "Creating graph file: %s\n", this->graph_contexts[tid_count].graph_filename);
+        this->graph_contexts[tid_count].graph_file = fopen(this->graph_contexts[tid_count].graph_filename, "w");
+        this->graph_contexts[tid_count].call_level = (this->max_call_levels/3); // starting at level 1/3 of max_call_levels
+        this->graph_contexts[tid_count].call_level_smallest = this->graph_contexts[tid_count].call_level;
+        this->graph_contexts[tid_count].levels = (CALL_LEVEL*)malloc(sizeof(CALL_LEVEL)*this->max_call_levels);
+        if(this->graph_contexts[tid_count].levels == 0x0)
         {
             d_print(1, "Unable to allocate\n");
             exit(-1);
         }
-        memset(this->ctx_info[tid_count].levels, 0x0, sizeof(CALL_LEVEL)*this->max_call_levels);
-        this->ctx_info[tid_count].waiting = 0x0;
-//        this->ctx_info[tid_count].list = (DWORD*)malloc(sizeof(DWORD) * MAX_LIST_JXX);
-//        this->ctx_info[tid_count].list_len = 0x0;
+        memset(this->graph_contexts[tid_count].levels, 0x0, sizeof(CALL_LEVEL)*this->max_call_levels);
+        this->graph_contexts[tid_count].waiting = 0x0;
+//        this->graph_contexts[tid_count].list = (DWORD*)malloc(sizeof(DWORD) * MAX_LIST_JXX);
+//        this->graph_contexts[tid_count].list_len = 0x0;
 
         /* clear loop structures */
         unsigned call_level;
-        call_level = this->ctx_info[tid_count].call_level;
-//        this->ctx_info[tid_count].loop_start[call_level] = NO_LOOP;
+        call_level = this->graph_contexts[tid_count].call_level;
+//        this->graph_contexts[tid_count].loop_start[call_level] = NO_LOOP;
 
         /* for graphs */
         unsigned level;
         CALL_LEVEL* cur_level;
     
-        level = this->ctx_info[tid_count].call_level;
-        cur_level = &this->ctx_info[tid_count].levels[level];
+        level = this->graph_contexts[tid_count].call_level;
+        cur_level = &this->graph_contexts[tid_count].levels[level];
     
         cur_level->entry = 0xffffffff;
         this->check_fence(cur_level);
@@ -903,36 +913,36 @@ int graph_engine::add_thread_callback(CONTEXT_OUT ctx_out)
         strcpy(out_line, "");
         for(i = this->call_level_start-this->call_level_offset; i< call_level; i++)
             strcat(out_line, " ");
-        fwrite(out_line, strlen(out_line), 0x1, this->ctx_info[tid_count].graph_file);
+        fwrite(out_line, strlen(out_line), 0x1, this->graph_contexts[tid_count].graph_file);
 
         sprintf(out_line, "<node TEXT=\"[ENTRY]\"></node>\n");
-        fwrite(out_line, strlen(out_line), 0x1, this->ctx_info[tid_count].graph_file);
+        fwrite(out_line, strlen(out_line), 0x1, this->graph_contexts[tid_count].graph_file);
 
         /* fnalize */
-        this->ctx_info[tid_count].tid = ctx_out.thread_id;
+        this->graph_contexts[tid_count].tid = ctx_out.thread_id;
     }
-    d_print(1, "ER_9 TID: 0x%08x lock_level: 0x%08x\n", ctx_out.thread_id, this->ctx_info[this->tid_count].lock_level);
+    d_print(1, "ER_9 TID: 0x%08x lock_level: 0x%08x\n", ctx_out.thread_id, this->graph_contexts[this->tid_count].lock_level);
 
     return 0x0;
 }
 
-int graph_engine::del_thread_callback(DWORD tid)
+int graph_plugin::del_thread_callback(DWORD tid)
 {
     return 0x0;
 }
 
-int graph_engine::del_thread_srsly_callback(DWORD tid)
+int graph_plugin::del_thread_srsly_callback(DWORD tid)
 {
     d_print(1, "Plugin: Removing  thread: 0x%08x\n", tid);
     unsigned info_pos;
     info_pos = this->taint_eng->tids[tid];
 
-    fclose(this->ctx_info[info_pos].graph_file);
+    fclose(this->graph_contexts[info_pos].graph_file);
 
     return 0x0;
 }
 
-int graph_engine::add_lib(OFFSET off, char* name)
+int graph_plugin::add_lib(OFFSET off, char* name)
 {
     LIBRARY new_lib;
     FILE* f;
@@ -965,7 +975,7 @@ int graph_engine::add_lib(OFFSET off, char* name)
     return 0x0;
 }
 
-int graph_engine::add_symbols(LIBRARY* info)
+int graph_plugin::add_symbols(LIBRARY* info)
 {
     SYMBOL* s;
     SYMBOL* s1;
@@ -1012,7 +1022,7 @@ int graph_engine::add_symbols(LIBRARY* info)
     return 0x0;
 }
 
-int graph_engine::copy_symbol(SYMBOL** dst, SYMBOL* src)
+int graph_plugin::copy_symbol(SYMBOL** dst, SYMBOL* src)
 {
     SYMBOL* sp;
     SYMBOL* old;
@@ -1032,7 +1042,7 @@ int graph_engine::copy_symbol(SYMBOL** dst, SYMBOL* src)
     return 0x0;
 }
 
-int graph_engine::add_symbol(SYMBOL** s, OFFSET addr, char* lib_name, char* func_name)
+int graph_plugin::add_symbol(SYMBOL** s, OFFSET addr, char* lib_name, char* func_name)
 {
     SYMBOL* sp;
     SYMBOL* old;
@@ -1062,7 +1072,7 @@ int graph_engine::add_symbol(SYMBOL** s, OFFSET addr, char* lib_name, char* func
     return 0x0;
 }
 
-int graph_engine::del_symbol(SYMBOL* sp)
+int graph_plugin::del_symbol(SYMBOL* sp)
 {
     if(sp->lib_name) free(sp->lib_name);
     if(sp->func_name) free(sp->func_name);
@@ -1070,7 +1080,7 @@ int graph_engine::del_symbol(SYMBOL* sp)
     return 0x0;
 }
 
-LIBRARY* graph_engine::get_lib(OFFSET offset)
+LIBRARY* graph_plugin::get_lib(OFFSET offset)
 {
     unsigned i=0x0;
     unsigned highest = -1;
@@ -1101,7 +1111,7 @@ LIBRARY* graph_engine::get_lib(OFFSET offset)
 
 
 /* [TODO] need to optimize. Somehow. */
-SYMBOL* graph_engine::get_symbol(OFFSET addr)
+SYMBOL* graph_plugin::get_symbol(OFFSET addr)
 {
     SYMBOL* s;
     LIBRARY* lib;
@@ -1125,7 +1135,7 @@ SYMBOL* graph_engine::get_symbol(OFFSET addr)
 }
 
 
-int graph_engine::del_lib(OFFSET off)
+int graph_plugin::del_lib(OFFSET off)
 {
     int i;
 
@@ -1137,14 +1147,14 @@ int graph_engine::del_lib(OFFSET off)
     return 0x0;
 }
 
-int graph_engine::set_lib_dir_path(char* path)
+int graph_plugin::set_lib_dir_path(char* path)
 {
     strcpy(this->lib_dir_path, path);
     return 0x0;
 }
 
 
-int graph_engine::register_silenced_addr(char* line)
+int graph_plugin::register_silenced_addr(char* line)
 {
     char* cmd;
     OFFSET addr;
@@ -1156,7 +1166,7 @@ int graph_engine::register_silenced_addr(char* line)
     return 0x0;
 }
 
-int graph_engine::register_wanted_i(char* line)
+int graph_plugin::register_wanted_i(char* line)
 {
     char* cmd;
     unsigned instr;
@@ -1168,7 +1178,7 @@ int graph_engine::register_wanted_i(char* line)
     return 0x0;
 }
 
-int graph_engine::register_wanted_e(char* line)
+int graph_plugin::register_wanted_e(char* line)
 {
     char* cmd;
     OFFSET addr;
@@ -1180,7 +1190,7 @@ int graph_engine::register_wanted_e(char* line)
     return 0x0;
 }
 
-int graph_engine::register_fence(char* line)
+int graph_plugin::register_fence(char* line)
 {
     char* cmd;
     OFFSET entry;
@@ -1198,7 +1208,7 @@ int graph_engine::register_fence(char* line)
     return 0x0;
 }
 
-int graph_engine::handle_exception_callback(EXCEPTION_INFO info)
+int graph_plugin::handle_exception_callback(EXCEPTION_INFO info)
 {
     if(!(this->taint_eng->started))
     {
@@ -1208,38 +1218,38 @@ int graph_engine::handle_exception_callback(EXCEPTION_INFO info)
     char out_line[MAX_NAME];
 
     sprintf(out_line, "[x] Exception %08x in TID %08x, instr. no: %d, eip: 0x%08x", info.er.ExceptionCode, info.tid, this->taint_eng->current_instr_count, info.er.ExceptionAddress);
-    print_empty_call(&this->ctx_info[this->taint_eng->tids[this->taint_eng->cur_tid]], out_line, node_color[CODE_RED]);
+    print_empty_call(this->cur_graph_context, out_line, node_color[CODE_RED]);
     return 0x0;
 }
 
-int graph_engine::jxx_set(unsigned state)
+int graph_plugin::jxx_set(unsigned state)
 {
     char out_line[MAX_NAME]; 
 
-    this->cur_info->levels[this->cur_info->call_level].jxx_handling = state;
+    this->cur_graph_context->levels[this->cur_graph_context->call_level].jxx_handling = state;
 
     sprintf(out_line, "[x] JXX_STATUS: 0x%02x", state);
-    print_empty_call(&this->ctx_info[this->taint_eng->tids[this->taint_eng->cur_tid]], out_line, node_color[CODE_RED]);
+    print_empty_call(this->cur_graph_context, out_line, node_color[CODE_RED]);
 
     return 0x0;
 }
 
-int graph_engine::jxx_clear()
+int graph_plugin::jxx_clear()
 {
-    unsigned level = this->cur_info->call_level;
+    unsigned level = this->cur_graph_context->call_level;
 
     jxx_clear_level(level);
     return 0x0;
 }
 
-int graph_engine::jxx_clear_level(unsigned level)
+int graph_plugin::jxx_clear_level(unsigned level)
 {
-    this->cur_info->list_len[level] = 0x0;
+    this->cur_graph_context->list_len[level] = 0x0;
     d_print(1, "Clearing JXX on level: %d\n", level);
     return 0x0;
 }
 
-int is_on_list(CONTEXT_GRAPH* info, DWORD eip)
+int is_on_list(GRAPH_CONTEXT* info, DWORD eip)
 {
     unsigned i;
 
@@ -1257,7 +1267,7 @@ int is_on_list(CONTEXT_GRAPH* info, DWORD eip)
     return 0x0;
 }
 
-int add_to_list(CONTEXT_GRAPH* info, DWORD eip)
+int add_to_list(GRAPH_CONTEXT* info, DWORD eip)
 {
     unsigned level = info->call_level;
 
@@ -1269,7 +1279,7 @@ int add_to_list(CONTEXT_GRAPH* info, DWORD eip)
     return 0x0;
 }
 
-int graph_engine::handle_jxx(CONTEXT_GRAPH* info)
+int graph_plugin::handle_jxx(GRAPH_CONTEXT* info)
 {
     if(info->waiting != 0x0)
     {
@@ -1360,7 +1370,7 @@ int graph_engine::handle_jxx(CONTEXT_GRAPH* info)
     return 0x0;
 }
 
-int graph_engine::handle_this_jxx(CONTEXT_GRAPH* info, char* str)
+int graph_plugin::handle_this_jxx(GRAPH_CONTEXT* info, char* str)
 {
     char out_line[MAX_NAME];
 
@@ -1374,7 +1384,7 @@ int graph_engine::handle_this_jxx(CONTEXT_GRAPH* info, char* str)
 }
 
 /* precise jmp analysis */
-int graph_engine::handle_jmp(CONTEXT_GRAPH* info)
+int graph_plugin::handle_jmp(GRAPH_CONTEXT* info)
 {
     if(!this->taint_eng->options & OPTION_ANALYZE_JUMPS)
         return 0x0;
@@ -1454,33 +1464,21 @@ int detox(char* s)
 
 /* handling call, diving, surfacing, outputting graph content */
 
-int graph_engine::handle_call(CONTEXT_GRAPH* info)
+int graph_plugin::handle_call(GRAPH_CONTEXT* graph_context)
 {
     d_print(1, "[handle call]\n");
-    d_print(1, "LL: 0x%08x\n", info->lock_level);
+    d_print(1, "LL: 0x%08x\n", graph_context->lock_level);
     SYMBOL* s;
     char out_line[MAX_NAME];
     char* func_name;
     DWORD_t current;
     DWORD_t waiting;
-    OFFSET source = info->source;
-    OFFSET target = info->target;
-    OFFSET next = info->next;
+    OFFSET source = graph_context->source;
+    OFFSET target = graph_context->target;
+    OFFSET next = graph_context->next;
     CALL_LEVEL* cur_level;
 
     d_print(1, "source: 0x%08x, target: 0x%08x\n", source, target);
-    #define DECISION_NO_EMIT        0x0
-    #define DECISION_EMIT           0x1
-    #define DECISION_EMIT_NESTED    0x2
-
-    #define DECISION_NO_DIVE        0x0
-    #define DECISION_DIVE           0x1
-
-    #define DECISION_LAYOUT_REGULAR 0x0
-    #define DECISION_LAYOUT_SYMBOL  0x1
-    #define DECISION_LAYOUT_SYMBOL_WANTED  0x2
-    #define DECISION_LAYOUT_4       0x3
-    #define DECISION_LAYOUT_5       0x4
 
     char decision_emit;
     char decision_dive;
@@ -1496,15 +1494,15 @@ int graph_engine::handle_call(CONTEXT_GRAPH* info)
         return 0x0;
     }
 
-    if(info->waiting != 0x0)
+    if(graph_context->waiting != 0x0)
     {
         /* increase lock level */
-        info->lock_level++;
+        graph_context->lock_level++;
     }
 
     d_print(1, "Call\n");
 //    d_print(2, "Call: 0x%08x\n", this->taint_eng->reg_restore_32(EIP).get_DWORD());
-    d_print(2, "Call: 0x%08x\n", info->source);
+    d_print(2, "Call: 0x%08x\n", graph_context->source);
 
     /* decision about emission */
 
@@ -1513,7 +1511,7 @@ int graph_engine::handle_call(CONTEXT_GRAPH* info)
     {
         decision_emit = DECISION_NO_EMIT;
     }
-    else if(info->waiting != 0x0)
+    else if(graph_context->waiting != 0x0)
     {
         /* we are waiting for return */ 
         d_print(2, "We are waiting for return \n");
@@ -1539,11 +1537,11 @@ int graph_engine::handle_call(CONTEXT_GRAPH* info)
         d_print(2, "We are not waiting\n");
 
 //        current = this->taint_eng->reg_restore_32(EIP);
-        current = info->source;
+        current = graph_context->source;
 
         /* check for loop bypasses */
-        this->check_loop_2(info);
-        cur_level = &info->levels[info->call_level];
+        this->check_loop_2(graph_context);
+        cur_level = &graph_context->levels[graph_context->call_level];
 
         if(cur_level->loop_status == FENCE_NOT_COLLECTING)
         {
@@ -1561,7 +1559,7 @@ int graph_engine::handle_call(CONTEXT_GRAPH* info)
             
     /* decision about diving */
     d_print(2, "Decision about diving\n");
-    if(info->waiting != 0x0)
+    if(graph_context->waiting != 0x0)
     {
         d_print(2, "We are waiting, not diving\n");
         decision_dive = DECISION_NO_DIVE;
@@ -1589,8 +1587,8 @@ int graph_engine::handle_call(CONTEXT_GRAPH* info)
             d_print(2, "We do not have symbol\n");
 
             /* check if we do not exceed maximum depth */
-            d_print(2, "Current depth: 0%08x, analysis depth: 0x%08x\n", info->call_level, this->depth);
-            if(info->call_level+1 > this->depth)
+            d_print(2, "Current depth: 0%08x, analysis depth: 0x%08x\n", graph_context->call_level, this->depth);
+            if(graph_context->call_level+1 > this->depth)
             {
                 d_print(2, "Analysis depth reached, not diving\n");
                 decision_dive = DECISION_NO_DIVE;
@@ -1655,7 +1653,7 @@ int graph_engine::handle_call(CONTEXT_GRAPH* info)
 //                else sprintf(out_line, "[x] 0x%08x call %s!%s", this->taint_eng->current_eip, s->lib_name, s->func_name);
                 if(this->enumerate) sprintf(out_line, "[x] (%d)0x%08x call %s!%s", this->taint_eng->current_instr_count-1 ,source, s->lib_name, s->func_name);
                 else sprintf(out_line, "[x] 0x%08x call %s!%s", source, s->lib_name, s->func_name);
-                print_call(info, out_line, node_color[CODE_RED]);
+                print_call(graph_context, out_line, node_color[CODE_RED]);
             }
             else if(decision_template == DECISION_LAYOUT_SYMBOL)
             {
@@ -1664,7 +1662,7 @@ int graph_engine::handle_call(CONTEXT_GRAPH* info)
 //                else sprintf(out_line, "0x%08x call %s!%s", this->taint_eng->current_eip, s->lib_name, s->func_name);
                 if(this->enumerate) sprintf(out_line, "(%d)0x%08x call %s!%s", this->taint_eng->current_instr_count-1 ,source, s->lib_name, s->func_name);
                 else sprintf(out_line, "0x%08x call %s!%s", source, s->lib_name, s->func_name);
-                print_call(info, out_line, node_color[CODE_BLUE]);
+                print_call(graph_context, out_line, node_color[CODE_BLUE]);
             }
             else
             {
@@ -1673,7 +1671,7 @@ int graph_engine::handle_call(CONTEXT_GRAPH* info)
 //                else sprintf(out_line, "0x%08x call 0x%08x", this->taint_eng->current_eip, target);
                 if(this->enumerate) sprintf(out_line, "(%d)0x%08x call 0x%08x", this->taint_eng->current_instr_count-1 ,source, target);
                 else sprintf(out_line, "0x%08x call 0x%08x", source, target);
-                print_call(info, out_line, node_color[CODE_BLACK]);
+                print_call(graph_context, out_line, node_color[CODE_BLACK]);
             }
         }
         else /* DECISION_NO_DIVE */
@@ -1687,7 +1685,7 @@ int graph_engine::handle_call(CONTEXT_GRAPH* info)
 //                else sprintf(out_line, "[x] 0x%08x call %s!%s", this->taint_eng->current_eip, s->lib_name, s->func_name);
                 if(this->enumerate) sprintf(out_line, "[x] (%d)0x%08x call %s!%s", this->taint_eng->current_instr_count-1 ,source, s->lib_name, s->func_name);
                 else sprintf(out_line, "[x] 0x%08x call %s!%s", source, s->lib_name, s->func_name);
-                print_call_open(info, out_line, node_color[CODE_RED]);
+                print_call_open(graph_context, out_line, node_color[CODE_RED]);
             }
             else if(decision_template == DECISION_LAYOUT_SYMBOL)
             {
@@ -1696,7 +1694,7 @@ int graph_engine::handle_call(CONTEXT_GRAPH* info)
 //                else sprintf(out_line, "0x%08x call %s!%s", this->taint_eng->current_eip, s->lib_name, s->func_name);
                 if(this->enumerate) sprintf(out_line, "(%d)0x%08x call %s!%s", this->taint_eng->current_instr_count-1 ,source, s->lib_name, s->func_name);
                 else sprintf(out_line, "0x%08x call %s!%s", source, s->lib_name, s->func_name);
-                print_call_open(info, out_line, node_color[CODE_BLUE]);
+                print_call_open(graph_context, out_line, node_color[CODE_BLUE]);
             }
             else
             {
@@ -1705,30 +1703,30 @@ int graph_engine::handle_call(CONTEXT_GRAPH* info)
 //                else sprintf(out_line, "0x%08x call 0x%08x", this->taint_eng->current_eip, target);
                 if(this->enumerate) sprintf(out_line, "(%d)0x%08x call 0x%08x", this->taint_eng->current_instr_count-1, source, target);
                 else sprintf(out_line, "0x%08x call 0x%08x", source, target);
-                print_call_open(info, out_line, node_color[CODE_BLACK]);
+                print_call_open(graph_context, out_line, node_color[CODE_BLACK]);
             }
         
         }
         
         /* log emission */
-        for(i=this->call_level_start; i< info->call_level; i++)
+        for(i=this->call_level_start; i< graph_context->call_level; i++)
         {
             d_print(1, " ");
         }
     
 /*        d_print(1, "[0x%08x] (%d)0x%08x call 0x%08x, pos: %d, small: %d, ignored: %d: \n", 
                 this->taint_eng->cur_tid, this->taint_eng->current_instr_count, this->taint_eng->current_eip, target, 
-                this->ctx_info[this->taint_eng->tids[this->taint_eng->cur_tid]].call_level, 
-                this->ctx_info[this->taint_eng->tids[this->taint_eng->cur_tid]].call_level_smallest, 
-                this->ctx_info[this->taint_eng->tids[this->taint_eng->cur_tid]].call_level_ignored, 
-                this->ctx_info[this->taint_eng->tids[this->taint_eng->cur_tid]].call_level_largest);*/
+                this->cur_graph_context->call_level, 
+                this->cur_graph_context->call_level_smallest, 
+                this->cur_graph_context->call_level_ignored, 
+                this->cur_graph_context->call_level_largest);*/
     
         d_print(1, "[0x%08x] (%d)0x%08x call 0x%08x, pos: %d, small: %d, ignored: %d: \n", 
                 this->taint_eng->cur_tid, this->taint_eng->current_instr_count-1, source, target, 
-                this->ctx_info[this->taint_eng->tids[this->taint_eng->cur_tid]].call_level, 
-                this->ctx_info[this->taint_eng->tids[this->taint_eng->cur_tid]].call_level_smallest, 
-                this->ctx_info[this->taint_eng->tids[this->taint_eng->cur_tid]].call_level_ignored, 
-                this->ctx_info[this->taint_eng->tids[this->taint_eng->cur_tid]].call_level_largest);
+                this->cur_graph_context->call_level, 
+                this->cur_graph_context->call_level_smallest, 
+                this->cur_graph_context->call_level_ignored, 
+                this->cur_graph_context->call_level_largest);
 
     }
     else if(decision_emit == DECISION_EMIT_NESTED)
@@ -1738,37 +1736,33 @@ int graph_engine::handle_call(CONTEXT_GRAPH* info)
         if(decision_template == DECISION_LAYOUT_SYMBOL_WANTED)
         {
             /* we assume we have symbol */
-//            if(this->enumerate) sprintf(out_line, "[x] (%d)0x%08x call %s!%s", this->taint_eng->current_instr_count ,this->taint_eng->current_eip, s->lib_name, s->func_name);
-//            else sprintf(out_line, "[x] 0x%08x call %s!%s", this->taint_eng->current_eip, s->lib_name, s->func_name);
             if(this->enumerate) sprintf(out_line, "[x] (%d)0x%08x call %s!%s", this->taint_eng->current_instr_count-1 ,source, s->lib_name, s->func_name);
             else sprintf(out_line, "[x] 0x%08x call %s!%s", source, s->lib_name, s->func_name);
-            print_call(info, out_line, node_color[CODE_RED]);
-            print_ret(info);
+            print_call(graph_context, out_line, node_color[CODE_RED]);
+            print_ret(graph_context);
         }
         else
         {
             /* we assume we have symbol */
-//            if(this->enumerate) sprintf(out_line, "(%d)0x%08x call %s!%s", this->taint_eng->current_instr_count ,this->taint_eng->current_eip, s->lib_name, s->func_name);
-//            else sprintf(out_line, "0x%08x call %s!%s", this->taint_eng->current_eip, s->lib_name, s->func_name);
             if(this->enumerate) sprintf(out_line, "(%d)0x%08x call %s!%s", this->taint_eng->current_instr_count-1 ,source, s->lib_name, s->func_name);
             else sprintf(out_line, "0x%08x call %s!%s", source, s->lib_name, s->func_name);
-            print_call(info, out_line, node_color[CODE_BLACK]);
-            print_ret(info);
+            print_call(graph_context, out_line, node_color[CODE_BLACK]);
+            print_ret(graph_context);
         
         }
 
         /* log emission */
-        for(i=this->call_level_start; i< info->call_level; i++)
+        for(i=this->call_level_start; i< graph_context->call_level; i++)
         {
             d_print(1, " ");
         }
     
         d_print(1, "[0x%08x] (%d)0x%08x call 0x%08x, pos: %d, small: %d, ignored: %d: \n", 
                 this->taint_eng->cur_tid, this->taint_eng->current_instr_count-1, source, target, 
-                this->ctx_info[this->taint_eng->tids[this->taint_eng->cur_tid]].call_level, 
-                this->ctx_info[this->taint_eng->tids[this->taint_eng->cur_tid]].call_level_smallest, 
-                this->ctx_info[this->taint_eng->tids[this->taint_eng->cur_tid]].call_level_ignored, 
-                this->ctx_info[this->taint_eng->tids[this->taint_eng->cur_tid]].call_level_largest);
+                this->cur_graph_context->call_level, 
+                this->cur_graph_context->call_level_smallest, 
+                this->cur_graph_context->call_level_ignored, 
+                this->cur_graph_context->call_level_largest);
     }
     else
     {
@@ -1778,15 +1772,15 @@ int graph_engine::handle_call(CONTEXT_GRAPH* info)
     if(decision_dive == DECISION_DIVE)
     {
         d_print(2, "Diving!\n");
-        this->dive(info, target, next);
+        this->dive(graph_context, target, next);
     }
     else
     {
         d_print(2, "Not diving!\n");
-        if(info->waiting == 0x0) 
+        if(graph_context->waiting == 0x0) 
         {
-            info->waiting = next;
-            info->last_emit_decision = decision_emit;
+            graph_context->waiting = next;
+            graph_context->last_emit_decision = decision_emit;
         }
 
     }
@@ -1795,14 +1789,14 @@ int graph_engine::handle_call(CONTEXT_GRAPH* info)
     return 0x0;
 }
 
-int graph_engine::dive(CONTEXT_GRAPH* info, OFFSET target, OFFSET next)
+int graph_plugin::dive(GRAPH_CONTEXT* graph_context, OFFSET target, OFFSET next)
 {
     unsigned i, level;
     CALL_LEVEL* prev_level;
     CALL_LEVEL* cur_level;
 
     /* check if we don't exceed ret table size */
-    level = info->call_level;
+    level = graph_context->call_level;
     if(level == this->max_call_levels-1) 
     {
         d_print(1, "We reached max ret table depth. If you need to register following calls, you need to extend ret table\n");
@@ -1811,14 +1805,14 @@ int graph_engine::dive(CONTEXT_GRAPH* info, OFFSET target, OFFSET next)
     }
 
     /* things to do in previous level */
-    prev_level = &info->levels[level];
+    prev_level = &graph_context->levels[level];
     prev_level->ret = next;
-    info->call_level++;
+    graph_context->call_level++;
 
     /* OK, new level */
-    level = info->call_level;
+    level = graph_context->call_level;
     d_print(1, "Entering level %d\n", level);
-    cur_level = &info->levels[level];
+    cur_level = &graph_context->levels[level];
     memset(cur_level, 0x0, sizeof(CALL_LEVEL));
 
     /* clear jumps for jxx */
@@ -1831,8 +1825,8 @@ int graph_engine::dive(CONTEXT_GRAPH* info, OFFSET target, OFFSET next)
     cur_level->cur_fence = 0x0;
 
     /* prepare loop detection structures OBSOLETE
-    info->call_src_register_idx[level] = 0x0;
-    info->loop_start[level] = NO_LOOP;
+    graph_context->call_src_register_idx[level] = 0x0;
+    graph_context->loop_start[level] = NO_LOOP;
     */
 
     /* if there is collecting going on on previous level, we do not check fences, we just collect */
@@ -1853,35 +1847,35 @@ int graph_engine::dive(CONTEXT_GRAPH* info, OFFSET target, OFFSET next)
     /* other stuff */ 
 
     d_print(1, "[0x%08x] Ret table:\n", this->taint_eng->cur_tid);
-    for(i=info->call_level_smallest; i<info->call_level; i++)
+    for(i=graph_context->call_level_smallest; i<graph_context->call_level; i++)
     {
-        d_print(1, "[0x%08x] 0x%08x\n", this->taint_eng->cur_tid, this->ctx_info[this->taint_eng->tids[this->taint_eng->cur_tid]].levels[i].ret);
+        d_print(1, "[0x%08x] 0x%08x\n", this->taint_eng->cur_tid, this->cur_graph_context->levels[i].ret);
     }
 
     return 0x0;
 }
 
-int graph_engine::surface(CONTEXT_GRAPH* info)
+int graph_plugin::surface(GRAPH_CONTEXT* graph_context)
 {
     CALL_LEVEL* cur_level;
     
-    cur_level = &info->levels[info->call_level];
+    cur_level = &graph_context->levels[graph_context->call_level];
     
-    info->call_level--;
+    graph_context->call_level--;
 
-    if(info->call_level < 0x0) 
+    if(graph_context->call_level < 0x0) 
     {
         d_print(1, "Error, minimum available level reached");
         d_print(1, "Rerun with larger max_level (-M <level>). Current setting is: 0x%08x\n", this->max_call_levels);
         exit(-1);
     }
 
-    if(info->call_level_smallest > info->call_level) info->call_level_smallest = info->call_level;
+    if(graph_context->call_level_smallest > graph_context->call_level) graph_context->call_level_smallest = graph_context->call_level;
 
     return 0x0;
 }
 
-int graph_engine::check_rets(OFFSET ret)
+int graph_plugin::check_rets(OFFSET ret)
 {
     return 0x0;
     /*
@@ -1895,7 +1889,7 @@ int graph_engine::check_rets(OFFSET ret)
     */
 }
 
-int graph_engine::handle_ret(CONTEXT_GRAPH* cur_ctx, OFFSET eip)
+int graph_plugin::handle_ret(GRAPH_CONTEXT* cur_ctx, OFFSET eip)
 {
     if((!this->taint_eng->started) || (this->taint_eng->finished))
         return 0x0;
@@ -2052,7 +2046,7 @@ int graph_engine::handle_ret(CONTEXT_GRAPH* cur_ctx, OFFSET eip)
     return 0x0;
 }
 
-int graph_engine::register_symbol(char* line)
+int graph_plugin::register_symbol(char* line)
 {
     char* cmd;
     char* lib_name;
@@ -2072,7 +2066,7 @@ int graph_engine::register_symbol(char* line)
 }
 
 /* plugin czy nie? */
-int graph_engine::register_lib(char* line)
+int graph_plugin::register_lib(char* line)
 {
     char* cmd;
     OFFSET off, size;
@@ -2091,7 +2085,7 @@ int graph_engine::register_lib(char* line)
 }
 
 /* plugin czy nie? */
-int graph_engine::deregister_lib(char* line)
+int graph_plugin::deregister_lib(char* line)
 {
     char* cmd;
     OFFSET off;
@@ -2106,7 +2100,7 @@ int graph_engine::deregister_lib(char* line)
 
 }
 
-int graph_engine::register_blacklist(char* line)
+int graph_plugin::register_blacklist(char* line)
 {
     char* cmd;
     char* lib_name;
@@ -2118,7 +2112,7 @@ int graph_engine::register_blacklist(char* line)
     return 0x0;
 }
 
-int graph_engine::register_blacklist_addr(char* line)
+int graph_plugin::register_blacklist_addr(char* line)
 {
     char* cmd;
     OFFSET addr;
@@ -2130,7 +2124,7 @@ int graph_engine::register_blacklist_addr(char* line)
     return 0x0;
 }
 
-int graph_engine::register_included(char* line)
+int graph_plugin::register_included(char* line)
 {
     char* cmd;
     char* func_name;
@@ -2142,7 +2136,7 @@ int graph_engine::register_included(char* line)
     return 0x0;
 }
 
-int graph_engine::register_wanted(char* line)
+int graph_plugin::register_wanted(char* line)
 {
     char* cmd;
     char* func_name;
@@ -2157,7 +2151,7 @@ int graph_engine::register_wanted(char* line)
 
 /* parsing out options end */
 
-int graph_engine::parse_option(char* line)
+int graph_plugin::parse_option(char* line)
 {
     if(line[0] == 'F' && line[1] == 'E')
         this->register_fence(line);
@@ -2212,135 +2206,135 @@ int graph_engine::parse_option(char* line)
 
 /* routines overwritten */
 
-int graph_engine::r_jb_jc_jnae(BYTE_t* b)
+int graph_plugin::r_jb_jc_jnae(BYTE_t* b)
 {
-    this->cur_info->before_jmp_code = JMP_CODE_JB_JC_JNAE;
-    this->cur_info->jumping = 0x1;
+    this->cur_graph_context->before_jmp_code = JMP_CODE_JB_JC_JNAE;
+    this->cur_graph_context->jumping = 0x1;
     return 0x0;
 }
 
-int graph_engine::r_jae_jnb_jnc(BYTE_t* b)
+int graph_plugin::r_jae_jnb_jnc(BYTE_t* b)
 {
-    this->cur_info->before_jmp_code = JMP_CODE_JAE_JNB_JNC;
-    this->cur_info->jumping = 0x1;
-
-    return 0x0;
-}
-
-int graph_engine::r_je_jz(BYTE_t* b)
-{
-    this->cur_info->before_jmp_code = JMP_CODE_JE_JZ;
-    this->cur_info->jumping = 0x1;
+    this->cur_graph_context->before_jmp_code = JMP_CODE_JAE_JNB_JNC;
+    this->cur_graph_context->jumping = 0x1;
 
     return 0x0;
 }
 
-int graph_engine::r_jne_jnz(BYTE_t* b)
+int graph_plugin::r_je_jz(BYTE_t* b)
 {
-    this->cur_info->before_jmp_code = JMP_CODE_JNE_JNZ;
-    this->cur_info->jumping = 0x1;
+    this->cur_graph_context->before_jmp_code = JMP_CODE_JE_JZ;
+    this->cur_graph_context->jumping = 0x1;
+
     return 0x0;
 }
 
-int graph_engine::r_jbe_jna(BYTE_t* b)
+int graph_plugin::r_jne_jnz(BYTE_t* b)
 {
-    this->cur_info->before_jmp_code = JMP_CODE_JBE_JNA;
-    this->cur_info->jumping = 0x1;
+    this->cur_graph_context->before_jmp_code = JMP_CODE_JNE_JNZ;
+    this->cur_graph_context->jumping = 0x1;
     return 0x0;
 }
 
-int graph_engine::r_ja_jnbe(BYTE_t* b)
+int graph_plugin::r_jbe_jna(BYTE_t* b)
 {
-    this->cur_info->before_jmp_code = JMP_CODE_JA_JNBE;
-    this->cur_info->jumping = 0x1;
+    this->cur_graph_context->before_jmp_code = JMP_CODE_JBE_JNA;
+    this->cur_graph_context->jumping = 0x1;
     return 0x0;
 }
 
-int graph_engine::r_js(BYTE_t* b)
+int graph_plugin::r_ja_jnbe(BYTE_t* b)
 {
-    this->cur_info->before_jmp_code = JMP_CODE_JS;
-    this->cur_info->jumping = 0x1;
+    this->cur_graph_context->before_jmp_code = JMP_CODE_JA_JNBE;
+    this->cur_graph_context->jumping = 0x1;
     return 0x0;
 }
 
-int graph_engine::r_jns(BYTE_t* b)
+int graph_plugin::r_js(BYTE_t* b)
 {
-    this->cur_info->before_jmp_code = JMP_CODE_JNS;
-    this->cur_info->jumping = 0x1;
+    this->cur_graph_context->before_jmp_code = JMP_CODE_JS;
+    this->cur_graph_context->jumping = 0x1;
     return 0x0;
 }
 
-int graph_engine::r_jp_jpe(BYTE_t* b)
+int graph_plugin::r_jns(BYTE_t* b)
 {
-    this->cur_info->before_jmp_code = JMP_CODE_JP_JPE;
-    this->cur_info->jumping = 0x1;
+    this->cur_graph_context->before_jmp_code = JMP_CODE_JNS;
+    this->cur_graph_context->jumping = 0x1;
     return 0x0;
 }
 
-int graph_engine::r_jnp_jpo(BYTE_t* b)
+int graph_plugin::r_jp_jpe(BYTE_t* b)
 {
-    this->cur_info->before_jmp_code = JMP_CODE_JNP_JPO;
-    this->cur_info->jumping = 0x1;
+    this->cur_graph_context->before_jmp_code = JMP_CODE_JP_JPE;
+    this->cur_graph_context->jumping = 0x1;
     return 0x0;
 }
 
-int graph_engine::r_jl_jnge(BYTE_t* b)
+int graph_plugin::r_jnp_jpo(BYTE_t* b)
 {
-    this->cur_info->before_jmp_code = JMP_CODE_JL_JNGE;
-    this->cur_info->jumping = 0x1;
+    this->cur_graph_context->before_jmp_code = JMP_CODE_JNP_JPO;
+    this->cur_graph_context->jumping = 0x1;
     return 0x0;
 }
 
-int graph_engine::r_jge_jnl(BYTE_t* b)
+int graph_plugin::r_jl_jnge(BYTE_t* b)
 {
-    this->cur_info->before_jmp_code = JMP_CODE_JGE_JNL;
-    this->cur_info->jumping = 0x1;
+    this->cur_graph_context->before_jmp_code = JMP_CODE_JL_JNGE;
+    this->cur_graph_context->jumping = 0x1;
     return 0x0;
 }
 
-int graph_engine::r_jle_jng(BYTE_t* b)
+int graph_plugin::r_jge_jnl(BYTE_t* b)
 {
-    this->cur_info->before_jmp_code = JMP_CODE_JLE_JNG;
-    this->cur_info->jumping = 0x1;
+    this->cur_graph_context->before_jmp_code = JMP_CODE_JGE_JNL;
+    this->cur_graph_context->jumping = 0x1;
     return 0x0;
 }
 
-int graph_engine::r_jg_jnle(BYTE_t* b)
+int graph_plugin::r_jle_jng(BYTE_t* b)
 {
-    this->cur_info->before_jmp_code = JMP_CODE_JG_JNLE;
-    this->cur_info->jumping = 0x1;
+    this->cur_graph_context->before_jmp_code = JMP_CODE_JLE_JNG;
+    this->cur_graph_context->jumping = 0x1;
     return 0x0;
 }
 
-int graph_engine::r_jxx(BYTE_t* b)
+int graph_plugin::r_jg_jnle(BYTE_t* b)
 {
-    this->cur_info->before_jmp_code = JMP_CODE_JXX;
-    this->cur_info->jumping = 0x1;
+    this->cur_graph_context->before_jmp_code = JMP_CODE_JG_JNLE;
+    this->cur_graph_context->jumping = 0x1;
     return 0x0;
 }
 
-int graph_engine::r_retn(BYTE_t*)
+int graph_plugin::r_jxx(BYTE_t* b)
+{
+    this->cur_graph_context->before_jmp_code = JMP_CODE_JXX;
+    this->cur_graph_context->jumping = 0x1;
+    return 0x0;
+}
+
+int graph_plugin::r_retn(BYTE_t*)
 {
     d_print(3, "retn\n");
 
     if(this->taint_eng->started && !this->taint_eng->finished)
-        this->cur_info->returning = 0x3;
+        this->cur_graph_context->returning = 0x3;
 
     return 0x0;
 
 }
 
-int graph_engine::r_ret(BYTE_t*)
+int graph_plugin::r_ret(BYTE_t*)
 {
     d_print(3, "ret\n");
 
     if(this->taint_eng->started && !this->taint_eng->finished)
-        this->cur_info->returning = 0x3;
+        this->cur_graph_context->returning = 0x3;
 
     return 0x0;
 }
 
-int graph_engine::r_call_rel(BYTE_t* instr_ptr)
+int graph_plugin::r_call_rel(BYTE_t* instr_ptr)
 {
     DWORD_t ret_addr;
     DWORD_t target, target_2;
@@ -2360,10 +2354,10 @@ int graph_engine::r_call_rel(BYTE_t* instr_ptr)
     d_print(1, "In call\n");
     if(this->taint_eng->started && !this->taint_eng->finished)
     {
-        this->cur_info->target = target_2.get_DWORD();
-        this->cur_info->next = ret_addr.get_DWORD();
-        this->cur_info->calling = 1;
-        cur_info->source = this->taint_eng->current_eip;
+        this->cur_graph_context->target = target_2.get_DWORD();
+        this->cur_graph_context->next = ret_addr.get_DWORD();
+        this->cur_graph_context->calling = 1;
+        this->cur_graph_context->source = this->taint_eng->current_eip;
         d_print(1, "Next call source = 0x%08x\n", this->taint_eng->current_eip);
     }
 
@@ -2372,7 +2366,7 @@ int graph_engine::r_call_rel(BYTE_t* instr_ptr)
     return 0x0;
 }
 
-int graph_engine::r_call_abs_near(BYTE_t* instr_ptr)
+int graph_plugin::r_call_abs_near(BYTE_t* instr_ptr)
 {
     DWORD_t ret_addr;
     DWORD_t target;
@@ -2396,14 +2390,13 @@ int graph_engine::r_call_abs_near(BYTE_t* instr_ptr)
     ret_addr += this->taint_eng->current_instr_length;
     d_print(3, "Adding 0x%02x to ret\n", this->taint_eng->current_instr_length);
 
-    //this->handle_call(this->cur_info, target.get_DWORD(), ret_addr.get_DWORD());
     d_print(1, "In call\n");
     if(this->taint_eng->started && !this->taint_eng->finished)
     {
-        this->cur_info->target = target.get_DWORD();
-        this->cur_info->next = ret_addr.get_DWORD();
-        this->cur_info->calling = 1;
-        cur_info->source = this->taint_eng->current_eip;
+        this->cur_graph_context->target = target.get_DWORD();
+        this->cur_graph_context->next = ret_addr.get_DWORD();
+        this->cur_graph_context->calling = 1;
+        this->cur_graph_context->source = this->taint_eng->current_eip;
         d_print(1, "Next call source = 0x%08x\n", this->taint_eng->current_eip);
     }
 
@@ -2412,7 +2405,7 @@ int graph_engine::r_call_abs_near(BYTE_t* instr_ptr)
     return 0x0;
 }
 
-int graph_engine::r_call_abs_far(BYTE_t* instr_ptr)
+int graph_plugin::r_call_abs_far(BYTE_t* instr_ptr)
 {
     DWORD_t ret_addr;
     DWORD_t target;
@@ -2422,14 +2415,14 @@ int graph_engine::r_call_abs_far(BYTE_t* instr_ptr)
     ret_addr = this->taint_eng->reg_restore_32(EIP);
     ret_addr += 0x5;
 
-    //this->handle_call(this->cur_info, target.get_DWORD(), ret_addr.get_DWORD());
+    //this->handle_call(this->this->cur_graph_context, target.get_DWORD(), ret_addr.get_DWORD());
     d_print(1, "In call\n");
     if(this->taint_eng->started && !this->taint_eng->finished)
     {
-        this->cur_info->target = target.get_DWORD();
-        this->cur_info->next = ret_addr.get_DWORD();
-        this->cur_info->calling = 1;
-        cur_info->source = this->taint_eng->current_eip;
+        this->cur_graph_context->target = target.get_DWORD();
+        this->cur_graph_context->next = ret_addr.get_DWORD();
+        this->cur_graph_context->calling = 1;
+        this->cur_graph_context->source = this->taint_eng->current_eip;
         d_print(1, "Next call source = 0x%08x\n", this->taint_eng->current_eip);
     }
 
@@ -2437,13 +2430,11 @@ int graph_engine::r_call_abs_far(BYTE_t* instr_ptr)
     return 0x0;
 }
 
-int graph_engine::r_jmp_rel_16_32(BYTE_t* instr_ptr)
+int graph_plugin::r_jmp_rel_16_32(BYTE_t* instr_ptr)
 {
     DWORD_t ret_addr;
     DWORD_t target;
     char out_line[MAX_NAME];
-    CONTEXT_GRAPH* cur_ctx;
-    cur_ctx = &this->ctx_info[this->taint_eng->tids[this->taint_eng->cur_tid]];
 
     target.from_mem(instr_ptr + this->taint_eng->current_instr_length);
     ret_addr = this->taint_eng->reg_restore_32(EIP);
@@ -2454,13 +2445,13 @@ int graph_engine::r_jmp_rel_16_32(BYTE_t* instr_ptr)
 
     if(this->taint_eng->started && !this->taint_eng->finished)
     {
-        cur_ctx->target = target.get_DWORD();
+        this->cur_graph_context->target = target.get_DWORD();
     }
 
     return 0x0;
 }
 
-int graph_engine::r_jmp_rm_16_32(BYTE_t* instr_ptr)
+int graph_plugin::r_jmp_rm_16_32(BYTE_t* instr_ptr)
 {
     modrm_ptr rm, r;
     WORD_t src_16;
@@ -2498,9 +2489,6 @@ int graph_engine::r_jmp_rm_16_32(BYTE_t* instr_ptr)
     DWORD_t target;
     target = 0x0 + src_16.get_WORD() + src_32.get_DWORD();
 
-    CONTEXT_GRAPH* cur_ctx;
-    cur_ctx = &this->ctx_info[this->taint_eng->tids[this->taint_eng->cur_tid]];
-
     ret_addr = this->taint_eng->reg_restore_32(EIP);
     ret_addr += 0x5;
 
@@ -2508,25 +2496,22 @@ int graph_engine::r_jmp_rm_16_32(BYTE_t* instr_ptr)
 
     if(this->taint_eng->started && !this->taint_eng->finished)
     {
-        cur_ctx->target = target.get_DWORD();
+        this->cur_graph_context->target = target.get_DWORD();
     }
 
-    this->cur_info->before_jmp_code = JMP_CODE_RM;
-    this->cur_info->jumping = 0x1;
+    this->cur_graph_context->before_jmp_code = JMP_CODE_RM;
+    this->cur_graph_context->jumping = 0x1;
 
 
     return 0x0;
 }
 
-int graph_engine::r_jmp_rel_8(BYTE_t* instr_ptr)
+int graph_plugin::r_jmp_rel_8(BYTE_t* instr_ptr)
 {
     DWORD_t ret_addr;
     BYTE_t target;
     DWORD_t target_2;
     char disp8_reint, *disp8p;
-
-    CONTEXT_GRAPH* cur_ctx;
-    cur_ctx = &this->ctx_info[this->taint_eng->tids[this->taint_eng->cur_tid]];
 
     ret_addr = this->taint_eng->reg_restore_32(EIP);
     ret_addr += this->taint_eng->current_instr_length;
@@ -2541,17 +2526,17 @@ int graph_engine::r_jmp_rel_8(BYTE_t* instr_ptr)
 
     if(this->taint_eng->started && !this->taint_eng->finished)
     {
-        cur_ctx->target = target_2.get_DWORD();
+        this->cur_graph_context->target = target_2.get_DWORD();
     }
 
     /* [TODO:] wydaje sie ze poinno tu byc? */
-    this->cur_info->before_jmp_code = JMP_CODE_RM;
-    this->cur_info->jumping = 0x1;
+    this->cur_graph_context->before_jmp_code = JMP_CODE_RM;
+    this->cur_graph_context->jumping = 0x1;
 
     return 0x0;
 }
 
-int graph_engine::r_decode_execute_ff(BYTE_t* addr)
+int graph_plugin::r_decode_execute_ff(BYTE_t* addr)
 {
     BYTE_t* modrm_byte_ptr;
     modrm_ptr r, rm;
@@ -2582,6 +2567,4 @@ int graph_engine::r_decode_execute_ff(BYTE_t* addr)
 
     return 0x0;
 }
-
-
 

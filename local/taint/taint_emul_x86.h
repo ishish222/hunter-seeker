@@ -3300,10 +3300,14 @@ class taint_x86
     }
 
     ~taint_x86() {
+        d_print(1, "taint_eng::dtor_1\n");
         free(this->memory);
+        d_print(1, "taint_eng::dtor_2\n");
 //        free(this->propagations);
         free(this->taints);
+        d_print(1, "taint_eng::dtor_3\n");
         free(this->ctx_info);
+        d_print(1, "taint_eng::dtor_4\n");
 
     }
 

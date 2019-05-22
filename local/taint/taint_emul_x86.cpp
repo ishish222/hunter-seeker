@@ -858,10 +858,7 @@ CONTEXT_INFO* taint_x86::get_context_info(DWORD tid)
 {
     unsigned info_pos = this->tids[tid];
     CONTEXT_INFO* ret = 0x0;
-    d_print(3, "info_pos: 0x%08x\n", info_pos);
     ret = &this->ctx_info[info_pos];
-    d_print(3, "this->ctx_info: 0x%08x\n", this->ctx_info);
-    d_print(3, "CONTEXT_INFO: 0x%08x\n", info_pos);
     return ret;
 }
 
@@ -870,27 +867,21 @@ int taint_x86::already_added(DWORD tid)
     unsigned i;
     int ret = 0x0;
 
-    d_print(1, "Cheking thread 0x%08x\n", tid);
-
-    d_print(1, "this addr: 0x%08x\n", this);
-    d_print(1, "tids table addr: 0x%08x\n", &this->tids);
-
     if(this->tids[tid] != -1) 
     {
         ret = 0x1;
-        d_print(1, "Thread 0x%08x already added\n", tid);
+        d_print(3, "Thread 0x%08x already added\n", tid);
     }
     else
     {
         ret = 0x0;
-        d_print(1, "Thread 0x%08x NOT added\n", tid);
+        d_print(3, "Thread 0x%08x NOT added\n", tid);
     }
     return ret;
 }
 
 int taint_x86::check_thread(CONTEXT_OUT ctx_out)
 {
-    DWORD already_added = 0x0;
     DWORD tid;
     unsigned i;
     char graph_filename[MAX_NAME];
@@ -953,8 +944,6 @@ int taint_x86::finish()
 
 int taint_x86::mod_thread(CONTEXT_OUT ctx_out)
 {
-    DWORD already_added = 0x0;
-
     d_print(3, "Updating thread: 0x%08x\n", ctx_out.thread_id);
 
     if(!this->already_added(ctx_out.thread_id))
@@ -1013,27 +1002,23 @@ int taint_x86::mod_thread(CONTEXT_OUT ctx_out)
 
 int taint_x86::add_thread(CONTEXT_OUT ctx_out)
 {
-    DWORD new_tid = ctx_out.thread_id;    
-
-    d_print(3, "2 this->ctx_info: 0x%08x\n", this->ctx_info);
     if(this->plugin) this->plugin->add_thread_callback(ctx_out);
 
-    DWORD already_added = 0x0;
+    DWORD new_tid = ctx_out.thread_id;    
+
     unsigned i;
     char out_line[MAX_NAME];
 
-
     if(!this->already_added(new_tid))
     {
-        d_print(1, "test15\n");
         d_print(3, "Adding thread: 0x%08x\n", new_tid);
-        this->tids[new_tid] = this->tid_count;
+        unsigned new_tid_pos = this->tid_count;
+        this->tids[new_tid] = new_tid_pos;
+        this->ctx_info[new_tid_pos].tid = new_tid;
         this->tid_count++;
-        d_print(1, "test16\n");
     }
 
     this->update_watchpoints(new_tid);
-    d_print(1, "test17\n");
 
     this->reg_store_32(EAX, ctx_out.ctx.Eax, new_tid);
     this->reg_store_32(ECX, ctx_out.ctx.Ecx, new_tid);
@@ -1045,12 +1030,10 @@ int taint_x86::add_thread(CONTEXT_OUT ctx_out)
     this->reg_store_32(EBP, ctx_out.ctx.Ebp, new_tid);
     this->reg_store_32(EFLAGS, ctx_out.ctx.EFlags, new_tid);
 
-    d_print(1, "test18\n");
     OFFSET addr;
     CONTEXT_INFO* info;
 
     info = this->get_context_info(new_tid);
-    d_print(1, "test19\n");
 
     for(i=0x0; i<0x6; i++)
     {
@@ -1058,9 +1041,9 @@ int taint_x86::add_thread(CONTEXT_OUT ctx_out)
         d_print(3, "Segment 0x%02x base: 0x%08x\n", i, addr);
         info->seg_map[i] = addr;
     }
-   
-    d_print(1, "test20\n");
-    this->cur_tid = 0;
+    
+
+    this->cur_tid = 0; /* why? */
     return 0x0;
 }
 

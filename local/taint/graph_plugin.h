@@ -93,7 +93,7 @@ typedef struct _CALL_LEVEL
 
 } CALL_LEVEL;
 
-typedef struct _CONTEXT_GRAPH
+typedef struct _GRAPH_CONTEXT
 {
     DWORD tid;
     BYTE_t registers[REG_SIZE];
@@ -134,11 +134,11 @@ typedef struct _CONTEXT_GRAPH
     unsigned list_len[MAX_CALL_LEVELS];
     unsigned jxx_total[MAX_CALL_LEVELS];
 
-} CONTEXT_GRAPH;
+} GRAPH_CONTEXT;
 
 
 
-class graph_engine : Plugin
+class graph_plugin : Plugin
 {
     public:
 
@@ -176,22 +176,22 @@ class graph_engine : Plugin
     DWORD tids[MAX_THREAD_NUMBER];
     DWORD tid_count;
     DWORD cur_tid;
-    CONTEXT_GRAPH* cur_info;
-    CONTEXT_GRAPH* ctx_info;
-    CONTEXT_GRAPH* get_context_graph(DWORD);
+    GRAPH_CONTEXT* cur_graph_context;
+    GRAPH_CONTEXT* graph_contexts;
+    GRAPH_CONTEXT* get_graph_context(DWORD);
 
     /* graph stuff - loop fences - new approach */
     LOOP_FENCE loop_fences[MAX_LOOP_FENCES]; 
     unsigned loop_fences_count;
     int add_fence(OFFSET, OFFSET, OFFSET, OFFSET);
     int check_fence(CALL_LEVEL*);
-    int enter_loop_demo(CONTEXT_GRAPH*);
-    int exit_loop_demo(CONTEXT_GRAPH*);
-    int enter_loop(CONTEXT_GRAPH*);
-    int exit_loop(CONTEXT_GRAPH*);
-    int check_loop(CONTEXT_GRAPH*);
-    int check_loop_2(CONTEXT_GRAPH*);
-    int check_collecting(CONTEXT_GRAPH*);
+    int enter_loop_demo(GRAPH_CONTEXT*);
+    int exit_loop_demo(GRAPH_CONTEXT*);
+    int enter_loop(GRAPH_CONTEXT*);
+    int exit_loop(GRAPH_CONTEXT*);
+    int check_loop(GRAPH_CONTEXT*);
+    int check_loop_2(GRAPH_CONTEXT*);
+    int check_collecting(GRAPH_CONTEXT*);
     int comment_out(char*, DWORD);
 
     /* parsing options from out file */
@@ -225,11 +225,11 @@ class graph_engine : Plugin
     int check_rets(OFFSET);
 
     /* graph stuff - handlers */
-    int handle_call(CONTEXT_GRAPH*);
-    int handle_ret(CONTEXT_GRAPH*, OFFSET);
-    int handle_jmp(CONTEXT_GRAPH*);
-    int handle_jxx(CONTEXT_GRAPH*);
-    int handle_this_jxx(CONTEXT_GRAPH*, char*);
+    int handle_call(GRAPH_CONTEXT*);
+    int handle_ret(GRAPH_CONTEXT*, OFFSET);
+    int handle_jmp(GRAPH_CONTEXT*);
+    int handle_jxx(GRAPH_CONTEXT*);
+    int handle_this_jxx(GRAPH_CONTEXT*, char*);
 
     /* symbols and libraries */
     LIBRARY* libs;
@@ -251,15 +251,15 @@ class graph_engine : Plugin
 
 
     /* graph stuff - prints */
-    void print_call(CONTEXT_GRAPH*, char*, const char*);
-    void print_call_open(CONTEXT_GRAPH*, char*, const char*);
-    void print_empty_call(CONTEXT_GRAPH*, char*, const char*);
-    void print_a_ret(CONTEXT_GRAPH*);
-    void print_ret(CONTEXT_GRAPH*);
+    void print_call(GRAPH_CONTEXT*, char*, const char*);
+    void print_call_open(GRAPH_CONTEXT*, char*, const char*);
+    void print_empty_call(GRAPH_CONTEXT*, char*, const char*);
+    void print_a_ret(GRAPH_CONTEXT*);
+    void print_ret(GRAPH_CONTEXT*);
 
     /* diving and surfacing */
-    int dive(CONTEXT_GRAPH*, OFFSET, OFFSET);
-    int surface(CONTEXT_GRAPH*);
+    int dive(GRAPH_CONTEXT*, OFFSET, OFFSET);
+    int surface(GRAPH_CONTEXT*);
 
     int jxx_set(unsigned);
     int jxx_clear_level(unsigned);
@@ -307,31 +307,31 @@ class graph_engine : Plugin
     // decoding calls and jumps
     int r_decode_execute_ff(BYTE_t*);
 
-    graph_engine()
+    graph_plugin()
     {
-        printf("Initializing graph_engine\n");
+        printf("Initializing graph_plugin\n");
 
         printf("Registering routine callbacks\n");
 
-        this->instructions_32_start[0x72] = (Plugin::instruction_routine)&graph_engine::r_jb_jc_jnae; 
-        this->instructions_32_start[0x73] = (Plugin::instruction_routine)&graph_engine::r_jae_jnb_jnc;
-        this->instructions_32_start[0x74] = (Plugin::instruction_routine)&graph_engine::r_je_jz;
-        this->instructions_32_start[0x75] = (Plugin::instruction_routine)&graph_engine::r_jne_jnz;
-        this->instructions_32_start[0x76] = (Plugin::instruction_routine)&graph_engine::r_jbe_jna;
-        this->instructions_32_start[0x77] = (Plugin::instruction_routine)&graph_engine::r_ja_jnbe;
-        this->instructions_32_start[0x78] = (Plugin::instruction_routine)&graph_engine::r_js;
-        this->instructions_32_start[0x79] = (Plugin::instruction_routine)&graph_engine::r_jns;
-        this->instructions_32_start[0x7a] = (Plugin::instruction_routine)&graph_engine::r_jp_jpe;
-        this->instructions_32_start[0x7b] = (Plugin::instruction_routine)&graph_engine::r_jnp_jpo;
-        this->instructions_32_start[0x7c] = (Plugin::instruction_routine)&graph_engine::r_jl_jnge;
-        this->instructions_32_start[0x7d] = (Plugin::instruction_routine)&graph_engine::r_jge_jnl;
-        this->instructions_32_start[0x7e] = (Plugin::instruction_routine)&graph_engine::r_jle_jng;
-        this->instructions_32_start[0x7f] = (Plugin::instruction_routine)&graph_engine::r_jg_jnle;
+        this->instructions_32_start[0x72] = (Plugin::instruction_routine)&graph_plugin::r_jb_jc_jnae; 
+        this->instructions_32_start[0x73] = (Plugin::instruction_routine)&graph_plugin::r_jae_jnb_jnc;
+        this->instructions_32_start[0x74] = (Plugin::instruction_routine)&graph_plugin::r_je_jz;
+        this->instructions_32_start[0x75] = (Plugin::instruction_routine)&graph_plugin::r_jne_jnz;
+        this->instructions_32_start[0x76] = (Plugin::instruction_routine)&graph_plugin::r_jbe_jna;
+        this->instructions_32_start[0x77] = (Plugin::instruction_routine)&graph_plugin::r_ja_jnbe;
+        this->instructions_32_start[0x78] = (Plugin::instruction_routine)&graph_plugin::r_js;
+        this->instructions_32_start[0x79] = (Plugin::instruction_routine)&graph_plugin::r_jns;
+        this->instructions_32_start[0x7a] = (Plugin::instruction_routine)&graph_plugin::r_jp_jpe;
+        this->instructions_32_start[0x7b] = (Plugin::instruction_routine)&graph_plugin::r_jnp_jpo;
+        this->instructions_32_start[0x7c] = (Plugin::instruction_routine)&graph_plugin::r_jl_jnge;
+        this->instructions_32_start[0x7d] = (Plugin::instruction_routine)&graph_plugin::r_jge_jnl;
+        this->instructions_32_start[0x7e] = (Plugin::instruction_routine)&graph_plugin::r_jle_jng;
+        this->instructions_32_start[0x7f] = (Plugin::instruction_routine)&graph_plugin::r_jg_jnle;
 
-        this->instructions_32_start[0xc2] = (Plugin::instruction_routine)&graph_engine::r_retn;                       // cf
-        this->instructions_32_start[0xc3] = (Plugin::instruction_routine)&graph_engine::r_ret;                        // cf
+        this->instructions_32_start[0xc2] = (Plugin::instruction_routine)&graph_plugin::r_retn;                       // cf
+        this->instructions_32_start[0xc3] = (Plugin::instruction_routine)&graph_plugin::r_ret;                        // cf
 
-        this->instructions_32_start[0xff] = (Plugin::instruction_routine)&graph_engine::r_decode_execute_ff;          // 
+        this->instructions_32_start[0xff] = (Plugin::instruction_routine)&graph_plugin::r_decode_execute_ff;          // 
 
 
         unsigned i;
@@ -363,9 +363,9 @@ class graph_engine : Plugin
             }
         }
 
-        this->ctx_info = (CONTEXT_GRAPH*)malloc(sizeof(CONTEXT_GRAPH)*MAX_THREADS);
+        this->graph_contexts = (GRAPH_CONTEXT*)malloc(sizeof(GRAPH_CONTEXT)*MAX_THREADS);
 
-        if(this->ctx_info == 0x0)
+        if(this->graph_contexts == 0x0)
         {
             printf("Not enough memory\n");
         }
@@ -386,27 +386,32 @@ class graph_engine : Plugin
 
     }
 
-    ~graph_engine() 
+    ~graph_plugin() 
     {
-        free(this->ctx_info);
+        d_print(1, "graph_plugin::dtor_1\n");
+        free(this->graph_contexts);
         free(this->libs);
+        d_print(1, "graph_plugin::dtor_2\n");
 
         unsigned i;
         for(i = 0x0; i< MAX_BLACKLIST; i++)
         {
             free(this->lib_blacklist[i]);
         }
+        d_print(1, "graph_plugin::dtor_3\n");
 
         for(i = 0x0; i< MAX_WANTED; i++)
         {
             free(this->func_wanted[i]);
         }
+        d_print(1, "graph_plugin::dtor_4\n");
 
         for(i = 0x0; i< MAX_WANTED; i++)
         {
             free(this->func_included[i]);
         }
 
+        d_print(1, "graph_plugin::dtor_5\n");
     }
 
 };
