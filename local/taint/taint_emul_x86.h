@@ -2294,8 +2294,8 @@ class taint_x86
     /* counters */
     BYTE_t* last_instr_byte;
     BYTE_t* current_instr_byte;
-    DWORD current_instr_is_jump;
     OFFSET current_eip;
+    DWORD current_instr_is_jump;
     OFFSET last_eip;
     unsigned long long  last_instr_count;
     unsigned long long  current_instr_count;
@@ -2917,6 +2917,10 @@ class taint_x86
     int post_execute_instruction(DWORD);
     int execute_instruction_at_eip(DWORD);
     int execute_instruction_at_eip(DWORD, DWORD);
+
+    int execute_instruction_32(DWORD eip, DWORD tid);           /* contains plugin callbacks */
+    int execute_instruction_32_extended(DWORD eip, DWORD tid);  /* contains plugin callbacks */
+
     int verify_t_context(int);
     int decode_modrm_byte(BYTE_t*, DWORD_t*, DWORD_t*);
     int decode_modrm_byte(BYTE_t*, OFFSET*, OFFSET*);

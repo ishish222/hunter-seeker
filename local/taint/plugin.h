@@ -38,8 +38,43 @@ class Plugin
 
     int set_taint_eng(taint_x86*);
 
-    Plugin() {}
-    ~Plugin() {}
+    typedef int (Plugin::*instruction_routine)(BYTE_t* args);
+
+    instruction_routine instructions_32_start[0x100];
+    instruction_routine instructions_32_end[0x100];
+
+    instruction_routine instructions_32_extended_start[0x100];
+    instruction_routine instructions_32_extended_end[0x100];
+
+    int r_noop(BYTE_t*);
+
+    Plugin() 
+    {
+        printf("Initializing plugin\n");
+
+        memset(this->instructions_32_start, 0x0, sizeof(this->instructions_32_start));
+        memset(this->instructions_32_end, 0x0, sizeof(this->instructions_32_end));
+        memset(this->instructions_32_extended_start, 0x0, sizeof(this->instructions_32_extended_start));
+        memset(this->instructions_32_extended_end, 0x0, sizeof(this->instructions_32_extended_end));
+
+        // fill the rest with noops
+        for(unsigned int i = 0x0; i < 0x100; i++)
+        {
+            this->instructions_32_start[i] = &Plugin::r_noop;
+            this->instructions_32_end[i] = &Plugin::r_noop;
+            this->instructions_32_extended_start[i] = &Plugin::r_noop;
+            this->instructions_32_extended_end[i] = &Plugin::r_noop;
+        }
+
+    }
+    
+    ~Plugin() 
+    {
+        free(this->instructions_32_start);
+        free(this->instructions_32_end);
+        free(this->instructions_32_extended_start);
+        free(this->instructions_32_extended_end);
+    }
 };
 
 #endif

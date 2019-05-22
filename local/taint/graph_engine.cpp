@@ -2131,7 +2131,395 @@ int graph_engine::parse_option(char* line)
     if(line[0] == 'S' && line[1] == 'Y')
         this->register_symbol(line);
 
+    return 0x0;
+}
+
+/* routines overwritten */
+
+int graph_engine::r_jb_jc_jnae(BYTE_t* b)
+{
+    this->cur_info->before_jmp_code = JMP_CODE_JB_JC_JNAE;
+    this->cur_info->jumping = 0x1;
+    return 0x0;
+}
+
+int graph_engine::r_jae_jnb_jnc(BYTE_t* b)
+{
+    this->cur_info->before_jmp_code = JMP_CODE_JAE_JNB_JNC;
+    this->cur_info->jumping = 0x1;
+
+    return 0x0;
+}
+
+int graph_engine::r_je_jz(BYTE_t* b)
+{
+    this->cur_info->before_jmp_code = JMP_CODE_JE_JZ;
+    this->cur_info->jumping = 0x1;
+
+    return 0x0;
+}
+
+int graph_engine::r_jne_jnz(BYTE_t* b)
+{
+    this->cur_info->before_jmp_code = JMP_CODE_JNE_JNZ;
+    this->cur_info->jumping = 0x1;
+    return 0x0;
+}
+
+int graph_engine::r_jbe_jna(BYTE_t* b)
+{
+    this->cur_info->before_jmp_code = JMP_CODE_JBE_JNA;
+    this->cur_info->jumping = 0x1;
+    return 0x0;
+}
+
+int graph_engine::r_ja_jnbe(BYTE_t* b)
+{
+    this->cur_info->before_jmp_code = JMP_CODE_JA_JNBE;
+    this->cur_info->jumping = 0x1;
+    return 0x0;
+}
+
+int graph_engine::r_js(BYTE_t* b)
+{
+    this->cur_info->before_jmp_code = JMP_CODE_JS;
+    this->cur_info->jumping = 0x1;
+    return 0x0;
+}
+
+int graph_engine::r_jns(BYTE_t* b)
+{
+    this->cur_info->before_jmp_code = JMP_CODE_JNS;
+    this->cur_info->jumping = 0x1;
+    return 0x0;
+}
+
+int graph_engine::r_jp_jpe(BYTE_t* b)
+{
+    this->cur_info->before_jmp_code = JMP_CODE_JP_JPE;
+    this->cur_info->jumping = 0x1;
+    return 0x0;
+}
+
+int graph_engine::r_jnp_jpo(BYTE_t* b)
+{
+    this->cur_info->before_jmp_code = JMP_CODE_JNP_JPO;
+    this->cur_info->jumping = 0x1;
+    return 0x0;
+}
+
+int graph_engine::r_jl_jnge(BYTE_t* b)
+{
+    this->cur_info->before_jmp_code = JMP_CODE_JL_JNGE;
+    this->cur_info->jumping = 0x1;
+    return 0x0;
+}
+
+int graph_engine::r_jge_jnl(BYTE_t* b)
+{
+    this->cur_info->before_jmp_code = JMP_CODE_JGE_JNL;
+    this->cur_info->jumping = 0x1;
+    return 0x0;
+}
+
+int graph_engine::r_jle_jng(BYTE_t* b)
+{
+    this->cur_info->before_jmp_code = JMP_CODE_JLE_JNG;
+    this->cur_info->jumping = 0x1;
+    return 0x0;
+}
+
+int graph_engine::r_jg_jnle(BYTE_t* b)
+{
+    this->cur_info->before_jmp_code = JMP_CODE_JG_JNLE;
+    this->cur_info->jumping = 0x1;
+    return 0x0;
+}
+
+int graph_engine::r_jxx(BYTE_t* b)
+{
+    this->cur_info->before_jmp_code = JMP_CODE_JXX;
+    this->cur_info->jumping = 0x1;
+    return 0x0;
+}
+
+int graph_engine::r_retn(BYTE_t*)
+{
+    d_print(3, "retn\n");
+
+    if(this->taint_eng->started && !this->taint_eng->finished)
+        this->cur_info->returning = 0x3;
+
+    this->current_instr_is_jump = 0x1;
+
+    return 0x0;
+
+}
+
+int graph_engine::r_ret(BYTE_t*)
+{
+    d_print(3, "ret\n");
+
+    if(this->taint_eng->started && !this->taint_eng->finished)
+        this->cur_info->returning = 0x3;
+
+    this->current_instr_is_jump = 0x1;
+
+    return 0x0;
+}
+
+int graph_engine::r_call_rel(BYTE_t* instr_ptr)
+{
+    DWORD_t ret_addr;
+    DWORD_t target, target_2;
+    DWORD disp32_reint, *disp32p;
+
+    ret_addr = this->reg_restore_32(EIP);
+    ret_addr += this->taint_eng->current_instr_length;
+
+    target.from_mem(instr_ptr + this->taint_eng->current_instr_length);
+    ret_addr += 0x4;
+
+    disp32_reint = target.get_DWORD();
+    disp32p = (signed int*)&(disp32_reint);
+
+    target_2 = ret_addr + *disp32p; //signed displacement & operand size
+
+    d_print(1, "In call\n");
+    if(this->taint_eng->started && !this->taint_eng->finished)
+    {
+        this->cur_info->target = target_2.get_DWORD();
+        this->cur_info->next = ret_addr.get_DWORD();
+        this->cur_info->calling = 1;
+        cur_info->source = current_eip;
+        d_print(1, "Next call source = 0x%08x\n", current_eip);
+    }
+
+    d_print(3, "ret_addr: 0x%08x, target: 0x%08x, target2: 0x%08x\n", ret_addr.get_DWORD(), target.get_DWORD(), target_2.get_DWORD());
+
+    this->current_instr_is_jump = 0x1;
+    return 0x0;
+}
+
+int graph_engine::r_call_abs_near(BYTE_t* instr_ptr)
+{
+    DWORD_t ret_addr;
+    DWORD_t target;
+    WORD_t target_16;
+    modrm_ptr rm, r;
+    char out_line[MAX_NAME];
+
+    this->a_decode_modrm(instr_ptr +1, &r, &rm);
+
+    ret_addr = this->reg_restore_32(EIP);
+
+    if(rm.region == MODRM_REG)
+    {
+            target = this->reg_restore_32(rm.offset);
+    }
+    else
+    {
+            this->restore_32(rm.offset, target);
+    }
+
+    ret_addr += this->taint_eng->current_instr_length;
+    d_print(3, "Adding 0x%02x to ret\n", this->taint_eng->current_instr_length);
+
+    //this->handle_call(this->cur_info, target.get_DWORD(), ret_addr.get_DWORD());
+    d_print(1, "In call\n");
+    if(this->taint_eng->started && !this->taint_eng->finished)
+    {
+        this->cur_info->target = target.get_DWORD();
+        this->cur_info->next = ret_addr.get_DWORD();
+        this->cur_info->calling = 1;
+        cur_info->source = current_eip;
+        d_print(1, "Next call source = 0x%08x\n", current_eip);
+    }
+
+    d_print(3, "ret_addr: 0x%08x, target: 0x%08x\n", ret_addr.get_DWORD(), target.get_DWORD());
+    
+    this->current_instr_is_jump = 0x1;
+    return 0x0;
+}
+
+int graph_engine::r_call_abs_far(BYTE_t* instr_ptr)
+{
+    DWORD_t ret_addr;
+    DWORD_t target;
+    char out_line[MAX_NAME];
+
+    target.from_mem(instr_ptr + this->taint_eng->current_instr_length);
+    ret_addr = this->reg_restore_32(EIP);
+    ret_addr += 0x5;
+
+    //this->handle_call(this->cur_info, target.get_DWORD(), ret_addr.get_DWORD());
+    d_print(1, "In call\n");
+    if(this->taint_eng->started && !this->taint_eng->finished)
+    {
+        this->cur_info->target = target.get_DWORD();
+        this->cur_info->next = ret_addr.get_DWORD();
+        this->cur_info->calling = 1;
+        cur_info->source = this->current_eip;
+        d_print(1, "Next call source = 0x%08x\n", current_eip);
+    }
+
+    d_print(3, "ret_addr: 0x%08x, target: 0x%08x\n", ret_addr.get_DWORD(), target.get_DWORD());
+    this->current_instr_is_jump = 0x1;
+    return 0x0;
+}
+
+int graph_engine::r_jmp_rel_16_32(BYTE_t* instr_ptr)
+{
+    DWORD_t ret_addr;
+    DWORD_t target;
+    char out_line[MAX_NAME];
+    CONTEXT_INFO* cur_ctx;
+    cur_ctx = &this->ctx_info[this->tids[this->cur_tid]];
+
+    target.from_mem(instr_ptr + this->taint_eng->current_instr_length);
+    ret_addr = this->reg_restore_32(EIP);
+    ret_addr += 0x5;
+    target += ret_addr;
+
+    d_print(3, "ret_addr: 0x%08x, target: 0x%08x\n", ret_addr.get_DWORD(), target.get_DWORD());
+    this->reg_store_32(EIP, target);
+    this->current_instr_is_jump = 0x1;
+
+    if(this->taint_eng->started && !this->taint_eng->finished)
+    {
+        cur_ctx->target = target.get_DWORD();
+    }
+
+    return 0x0;
+}
+
+int graph_engine::r_jmp_rm_16_32(BYTE_t* instr_ptr)
+{
+    modrm_ptr rm, r;
+    WORD_t src_16;
+    DWORD_t src_32;
+
+    this->a_decode_modrm(instr_ptr +1, &r, &rm);
+
+    switch(rm.region)
+    {
+        case (MODRM_REG):
+            switch(rm.size)
+            {
+                case MODRM_SIZE_16:
+                    src_16 = this->reg_restore_16(rm.offset);
+                    break;
+                case MODRM_SIZE_32:
+                    src_32 = this->reg_restore_32(rm.offset);
+                    break;
+            }
+            break;
+        case (MODRM_MEM):
+            switch(rm.size)
+            {
+                case MODRM_SIZE_16:
+                    this->restore_16(rm.offset, src_16);
+                    break;
+                case MODRM_SIZE_32:
+                    this->restore_32(rm.offset, src_32);
+                    break;
+            }
+            break;
+    }
+
+    DWORD_t ret_addr;
+    DWORD_t target;
+    target = 0x0 + src_16.get_WORD() + src_32.get_DWORD();
+
+    CONTEXT_INFO* cur_ctx;
+    cur_ctx = &this->ctx_info[this->tids[this->cur_tid]];
+
+    ret_addr = this->reg_restore_32(EIP);
+    ret_addr += 0x5;
+
+    a_push_32(ret_addr);
+    
+    d_print(3, "ret_addr: 0x%08x, target: 0x%08x\n", ret_addr.get_DWORD(), target.get_DWORD());
+    this->reg_store_32(EIP, target);
+
+    this->current_instr_is_jump = 0x1;
+
+    if(this->taint_eng->started && !this->taint_eng->finished)
+    {
+        cur_ctx->target = target.get_DWORD();
+    }
+
+    this->cur_info->before_jmp_code = JMP_CODE_RM;
+    this->cur_info->jumping = 0x1;
 
 
     return 0x0;
 }
+
+int graph_engine::r_jmp_rel_8(BYTE_t* instr_ptr)
+{
+    DWORD_t ret_addr;
+    BYTE_t target;
+    DWORD_t target_2;
+    char disp8_reint, *disp8p;
+
+    CONTEXT_INFO* cur_ctx;
+    cur_ctx = &this->ctx_info[this->tids[this->cur_tid]];
+
+    ret_addr = this->reg_restore_32(EIP);
+    ret_addr += this->taint_eng->current_instr_length;
+    ret_addr += 0x1;
+
+    target.from_mem(instr_ptr + this->taint_eng->current_instr_length);
+    disp8_reint = target.get_BYTE();
+    disp8p = (char*)&(disp8_reint);
+    target_2 = ret_addr + *disp8p; //signed displacement & operand size
+
+    d_print(3, "ret_addr: 0x%08x, target: 0x%08x, target2: 0x%08x\n", ret_addr.get_DWORD(), target.get_BYTE(), target_2.get_DWORD());
+
+    if(this->taint_eng->started && !this->taint_eng->finished)
+    {
+        cur_ctx->target = target_2.get_DWORD();
+    }
+
+    /* [TODO:] wydaje sie ze poinno tu byc? */
+    this->cur_info->before_jmp_code = JMP_CODE_RM;
+    this->cur_info->jumping = 0x1;
+
+    return 0x0;
+}
+
+int graph_engine::r_decode_execute_ff(BYTE_t* addr)
+{
+    BYTE_t* modrm_byte_ptr;
+    modrm_ptr r, rm;
+
+    modrm_byte_ptr = addr +1;
+    a_decode_modrm(modrm_byte_ptr, &r, &rm, MODE_32, MODE_32);
+
+    switch(r.offset)
+    {
+        case EAX: //0x0 
+            break;
+        case ECX: //0x1 
+            break;
+        case EDX: //0x2 
+            return this->r_call_abs_near(addr);
+            break;
+        case EBX: //0x3 
+            return this->r_call_abs_far(addr);
+            break;
+        case ESP: //0x4
+            return this->r_jmp_rm_16_32(addr);
+            break;
+        case ESI: //0x6 
+            break;
+    }
+
+    d_print(3, "Missing routine for decoding opcode: 0x%x, extension: 0x%x\n", addr->get_BYTE(), r.offset);
+
+    return 0x0;
+}
+
+
+
