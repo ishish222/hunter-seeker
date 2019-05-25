@@ -406,30 +406,25 @@ class graph_plugin : Plugin
 
     ~graph_plugin() 
     {
-        d_print(1, "graph_plugin::dtor_1\n");
         free(this->graph_contexts);
         free(this->libs);
-        d_print(1, "graph_plugin::dtor_2\n");
 
         unsigned i;
         for(i = 0x0; i< MAX_BLACKLIST; i++)
         {
             free(this->lib_blacklist[i]);
         }
-        d_print(1, "graph_plugin::dtor_3\n");
 
         for(i = 0x0; i< MAX_WANTED; i++)
         {
             free(this->func_wanted[i]);
         }
-        d_print(1, "graph_plugin::dtor_4\n");
 
         for(i = 0x0; i< MAX_WANTED; i++)
         {
             free(this->func_included[i]);
         }
 
-        d_print(1, "graph_plugin::dtor_5\n");
     }
 
 };

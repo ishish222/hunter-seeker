@@ -1,14 +1,14 @@
 CC =g++
 CFLAGS = -rdynamic -I. -ggdb -w -std=c++11 -D_GLIBCXX_USE_CXX11_ABI=0 -DHANDLE_BREAKPOINTS -fpermissive
-NAMES = taint show_taint caller_taint symbol_export ltrace strace cextract call_analyze
+NAMES = taint show_taint old_taint_emul symbol_export ltrace strace cextract call_analyze
 
 OBJS = debug.o taint_x86.o main.c
 REVOBJS = debug.o rev_taint_x86.o rev_main.c
-CALL_OBJS = debug.o caller_taint_x86.o caller_main.c 
+OLD_CALL_ANALYZE_OBJS = debug.o old_taint_emul_x86.o old_call_analyze.c 
 CEXTRACT_OBJS = debug.o cextract_taint_x86.o cextract_main.c 
 SYMB_OBJS = symbol_export.o
 LTRACE_OBJS = debug.o ltrace_taint_x86.o ltrace_main.c
-STRACE_OBJS = debug.o caller_taint_x86.o strace_main.c 
+STRACE_OBJS = debug.o old_taint_emul_x86.o strace_main.c 
 CALL_ANALYZE_OBJS = debug.o taint_emul_x86.o out_utils.o utils.o breakpoint.o graph_plugin.o call_analyze.c plugin.o
 
 INILIBS = -l iniparser
@@ -32,8 +32,8 @@ taint: $(OBJS)
 cextract: $(CEXTRACT_OBJS)
 	$(CC) -I. $(CEXTRACT_OBJS) -o $@ $(BLISS_LIB) $(CFLAGS)
 
-caller_taint: $(CALL_OBJS)
-	$(CC) -I. $(CALL_OBJS) -o $@ $(BLISS_LIB) $(CFLAGS)
+old_call_analyze: $(OLD_CALL_ANALYZE_OBJS)
+	$(CC) -I. $(OLD_CALL_ANALYZE_OBJS) -o $@ $(BLISS_LIB) $(CFLAGS)
 
 call_analyze: $(CALL_ANALYZE_OBJS)
 	$(CC) -I. $(CALL_ANALYZE_OBJS) -o $@ $(BLISS_LIB) $(CFLAGS)

@@ -1,4 +1,3 @@
-c:taint/caller_taint
 c:taint/ltrace
 c:taint/strace
 c:taint/taint
@@ -7,4 +6,5 @@ c:taint/extract_tid
 c:taint/compare_traces
 c:taint/cextract
 c:taint/compare_cextract
+c:taint/old_call_analyze
 c:taint/call_analyze
