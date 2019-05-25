@@ -16,6 +16,8 @@ BREAKPOINT parse_breakpoint(char* string)
         exit(1);
     }
     bp.offset = strtoul(current, 0x0, 10);
+    fprintf(stderr, "Current: %s\n", current);
+    fprintf(stderr, "Offset: 0x%08x\n", bp.offset);
 
     current = strtok(0x0, ",");
     if(!current)

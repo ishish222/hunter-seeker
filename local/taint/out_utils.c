@@ -133,7 +133,7 @@ int parse_option(char* line, taint_x86* taint_eng)
     cmd = strtok(line, ",");
     option = strtok(0x0, ",");
     
-    option[strlen(option)-1] = 0x0;
+//    option[strlen(option)-1] = 0x0;
 
     printf("Enabling analysis option: %s\n", option);
 

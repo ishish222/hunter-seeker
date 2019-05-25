@@ -90,6 +90,14 @@ int taint_x86::add_breakpoint(BREAKPOINT bp)
 {
     if(this->bpt_count >= MAX_BREAKPOINTS) return -1;
 
+    char mode[0x50];
+
+    if(bp.mode & BP_MODE_READ) strcat(mode, "READ|");
+    if(bp.mode & BP_MODE_WRITE) strcat(mode, "WRITE|");
+    if(bp.mode & BP_MODE_EXECUTE) strcat(mode, "EXECUTE|");
+    
+    d_print(1, "Adding a breakpoint: offset: 0x%08x, mem offset: 0x%08x, mode: %s\n", bp.offset, bp.mem_offset, mode);
+
     this->bps[this->bpt_count].offset = bp.offset;
     this->bps[this->bpt_count].mem_offset = bp.mem_offset;
     this->bps[this->bpt_count].mode = bp.mode;

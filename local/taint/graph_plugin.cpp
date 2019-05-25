@@ -215,7 +215,7 @@ int graph_plugin::register_comment(char* line)
     cmd = strtok(line, ",");
     tid = strtol(strtok(0x0, ","), 0x0, 0x10);
     comment = strtok(0x0, ",");
-    comment[strlen(comment)-1] = 0x0;
+//    comment[strlen(comment)-1] = 0x0;
 
     this->comment_out(comment, tid);
 
@@ -861,11 +861,11 @@ int graph_plugin::add_thread_callback(CONTEXT_OUT ctx_out)
     {
         if(strlen(this->prefix) > 0x1)
         {
-            sprintf(this->graph_contexts[tid_count].graph_filename, "%s_TID_%08X_2.mm", this->prefix, new_tid);
+            sprintf(this->graph_contexts[tid_count].graph_filename, "%s_TID_%08X.mm", this->prefix, new_tid);
         }
         else
         {
-            sprintf(this->graph_contexts[tid_count].graph_filename, "TID_%08X_2.mm", new_tid);
+            sprintf(this->graph_contexts[tid_count].graph_filename, "TID_%08X.mm", new_tid);
         }
         d_print(1, "Creating graph file: %s\n", this->graph_contexts[tid_count].graph_filename);
         this->graph_contexts[tid_count].graph_file = fopen(this->graph_contexts[tid_count].graph_filename, "w");
@@ -2066,7 +2066,7 @@ int graph_plugin::register_lib(char* line)
     cmd = strtok(line, ",");
     off = strtoul(strtok(0x0, ","), 0x0, 0x10);
     name = strtok(0x0, ",");
-    name[strlen(name)] = 0x0;
+    //name[strlen(name)] = 0x0;
 //    size = strtoul(strtok(0x0, ","), 0x0, 0x10);
 
 //    printf("Registering lib: %s at 0x%08x\n", name, off);
