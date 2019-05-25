@@ -2415,7 +2415,7 @@ int taint_x86::execute_instruction(DWORD eip, DWORD tid)
       */      
 
     this->current_instr_byte = &this->memory[eip];
-    d_print(1, "current_instr_byte: 0x%02x\n", this->current_instr_byte->get_BYTE());
+    d_print(3, "current_instr_byte: 0x%02x\n", this->current_instr_byte->get_BYTE());
 /*
     if((this->started) && (this->counter <0x10))
         d_print(1, "[0x%08x] 0x%08x: 0x%02x, count: %d\n", this->cur_tid, eip, *(this->current_instr_byte), this->current_instr_count);

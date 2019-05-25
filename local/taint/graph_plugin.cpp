@@ -672,7 +672,7 @@ int graph_plugin::pre_execute_instruction_callback(DWORD eip)
         this->cur_graph_context->calling = 0;
     }
 
-    d_print(1, "jumping: 0x%02x\n", this->cur_graph_context->jumping);
+    d_print(3, "jumping: 0x%02x\n", this->cur_graph_context->jumping);
     if(this->cur_graph_context->jumping)
     {
         this->cur_graph_context->been_jumping = 1;
@@ -725,7 +725,7 @@ int graph_plugin::post_execute_instruction_callback(DWORD eip)
         cur_graph_context->been_calling = 0;
     }
 
-    d_print(1, "been_jumping: 0x%02x\n", cur_graph_context->been_jumping);
+    d_print(3, "been_jumping: 0x%02x\n", cur_graph_context->been_jumping);
     if(cur_graph_context->been_jumping)
     {
         cur_graph_context->target = eip;
@@ -1365,7 +1365,7 @@ int graph_plugin::handle_this_jxx(GRAPH_CONTEXT* info, char* str)
 {
     char out_line[MAX_NAME];
 
-    if(this->enumerate) sprintf(out_line, "(%d)0x%08x %s 0x%08x", this->taint_eng->current_instr_count-1, info->last_eip, str, this->taint_eng->current_eip);
+    if(this->enumerate) sprintf(out_line, "(%d)0x%08x %s 0x%08x", this->taint_eng->current_instr_count-1, this->taint_eng->last_eip, str, this->taint_eng->current_eip);
     else sprintf(out_line, "0x%08x %s 0x%08x", this->taint_eng->last_eip, str, this->taint_eng->current_eip);
     print_empty_call(info, out_line, node_color[CODE_GREEN]);
 
@@ -2199,14 +2199,14 @@ int graph_plugin::parse_option(char* line)
 
 int graph_plugin::r_jb_jc_jnae(BYTE_t* b)
 {
-    this->cur_graph_context->been_jmp_code = JMP_CODE_JB_JC_JNAE;
+    this->cur_graph_context->jmp_code = JMP_CODE_JB_JC_JNAE;
     this->cur_graph_context->jumping = 0x1;
     return 0x0;
 }
 
 int graph_plugin::r_jae_jnb_jnc(BYTE_t* b)
 {
-    this->cur_graph_context->been_jmp_code = JMP_CODE_JAE_JNB_JNC;
+    this->cur_graph_context->jmp_code = JMP_CODE_JAE_JNB_JNC;
     this->cur_graph_context->jumping = 0x1;
 
     return 0x0;
@@ -2214,7 +2214,7 @@ int graph_plugin::r_jae_jnb_jnc(BYTE_t* b)
 
 int graph_plugin::r_je_jz(BYTE_t* b)
 {
-    this->cur_graph_context->been_jmp_code = JMP_CODE_JE_JZ;
+    this->cur_graph_context->jmp_code = JMP_CODE_JE_JZ;
     this->cur_graph_context->jumping = 0x1;
 
     return 0x0;
@@ -2222,84 +2222,84 @@ int graph_plugin::r_je_jz(BYTE_t* b)
 
 int graph_plugin::r_jne_jnz(BYTE_t* b)
 {
-    this->cur_graph_context->been_jmp_code = JMP_CODE_JNE_JNZ;
+    this->cur_graph_context->jmp_code = JMP_CODE_JNE_JNZ;
     this->cur_graph_context->jumping = 0x1;
     return 0x0;
 }
 
 int graph_plugin::r_jbe_jna(BYTE_t* b)
 {
-    this->cur_graph_context->been_jmp_code = JMP_CODE_JBE_JNA;
+    this->cur_graph_context->jmp_code = JMP_CODE_JBE_JNA;
     this->cur_graph_context->jumping = 0x1;
     return 0x0;
 }
 
 int graph_plugin::r_ja_jnbe(BYTE_t* b)
 {
-    this->cur_graph_context->been_jmp_code = JMP_CODE_JA_JNBE;
+    this->cur_graph_context->jmp_code = JMP_CODE_JA_JNBE;
     this->cur_graph_context->jumping = 0x1;
     return 0x0;
 }
 
 int graph_plugin::r_js(BYTE_t* b)
 {
-    this->cur_graph_context->been_jmp_code = JMP_CODE_JS;
+    this->cur_graph_context->jmp_code = JMP_CODE_JS;
     this->cur_graph_context->jumping = 0x1;
     return 0x0;
 }
 
 int graph_plugin::r_jns(BYTE_t* b)
 {
-    this->cur_graph_context->been_jmp_code = JMP_CODE_JNS;
+    this->cur_graph_context->jmp_code = JMP_CODE_JNS;
     this->cur_graph_context->jumping = 0x1;
     return 0x0;
 }
 
 int graph_plugin::r_jp_jpe(BYTE_t* b)
 {
-    this->cur_graph_context->been_jmp_code = JMP_CODE_JP_JPE;
+    this->cur_graph_context->jmp_code = JMP_CODE_JP_JPE;
     this->cur_graph_context->jumping = 0x1;
     return 0x0;
 }
 
 int graph_plugin::r_jnp_jpo(BYTE_t* b)
 {
-    this->cur_graph_context->been_jmp_code = JMP_CODE_JNP_JPO;
+    this->cur_graph_context->jmp_code = JMP_CODE_JNP_JPO;
     this->cur_graph_context->jumping = 0x1;
     return 0x0;
 }
 
 int graph_plugin::r_jl_jnge(BYTE_t* b)
 {
-    this->cur_graph_context->been_jmp_code = JMP_CODE_JL_JNGE;
+    this->cur_graph_context->jmp_code = JMP_CODE_JL_JNGE;
     this->cur_graph_context->jumping = 0x1;
     return 0x0;
 }
 
 int graph_plugin::r_jge_jnl(BYTE_t* b)
 {
-    this->cur_graph_context->been_jmp_code = JMP_CODE_JGE_JNL;
+    this->cur_graph_context->jmp_code = JMP_CODE_JGE_JNL;
     this->cur_graph_context->jumping = 0x1;
     return 0x0;
 }
 
 int graph_plugin::r_jle_jng(BYTE_t* b)
 {
-    this->cur_graph_context->been_jmp_code = JMP_CODE_JLE_JNG;
+    this->cur_graph_context->jmp_code = JMP_CODE_JLE_JNG;
     this->cur_graph_context->jumping = 0x1;
     return 0x0;
 }
 
 int graph_plugin::r_jg_jnle(BYTE_t* b)
 {
-    this->cur_graph_context->been_jmp_code = JMP_CODE_JG_JNLE;
+    this->cur_graph_context->jmp_code = JMP_CODE_JG_JNLE;
     this->cur_graph_context->jumping = 0x1;
     return 0x0;
 }
 
 int graph_plugin::r_jxx(BYTE_t* b)
 {
-    this->cur_graph_context->been_jmp_code = JMP_CODE_JXX;
+    this->cur_graph_context->jmp_code = JMP_CODE_JXX;
     this->cur_graph_context->jumping = 0x1;
     return 0x0;
 }
@@ -2490,7 +2490,7 @@ int graph_plugin::r_jmp_rm_16_32(BYTE_t* instr_ptr)
         this->cur_graph_context->target = target.get_DWORD();
     }
 
-    this->cur_graph_context->been_jmp_code = JMP_CODE_RM;
+    this->cur_graph_context->jmp_code = JMP_CODE_RM;
     this->cur_graph_context->jumping = 0x1;
 
 
@@ -2521,7 +2521,7 @@ int graph_plugin::r_jmp_rel_8(BYTE_t* instr_ptr)
     }
 
     /* [TODO:] wydaje sie ze poinno tu byc? */
-    this->cur_graph_context->been_jmp_code = JMP_CODE_RM;
+    this->cur_graph_context->jmp_code = JMP_CODE_RM;
     this->cur_graph_context->jumping = 0x1;
 
     return 0x0;
