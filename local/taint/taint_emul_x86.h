@@ -2333,6 +2333,7 @@ class taint_x86
     int add_breakpoint(BREAKPOINT);
     int add_taint_breakpoint(BREAKPOINT);
     int add_trace_watchpoint(TRACE_WATCHPOINT);
+    int check_execution_bps();
     int update_watchpoints(DWORD);
 
     /* securing memory areas */

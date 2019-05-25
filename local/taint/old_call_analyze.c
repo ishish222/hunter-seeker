@@ -4,7 +4,7 @@
 *   tomasz.salacinski@korrino.com
 */
 
-#include <caller_taint_x86.h>
+#include <old_taint_emul_x86.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>

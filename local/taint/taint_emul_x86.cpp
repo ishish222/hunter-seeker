@@ -235,7 +235,7 @@ void taint_x86::store_32(OFFSET off, DWORD_t v)
     for(int i = 0x0; i< this->bpt_count; i++)
         if(((off - this->bps[i].mem_offset) <= 0x4) && (this->bps[i].mode & BP_MODE_WRITE))
         {
-            d_err_print("Mem dump in stderr @ 0x%08x\n", off);
+            err_print("Mem dump in stderr @ 0x%08x\n", off);
             d_print(1, "Breakpoint RW: WRITE to 0x%x @ %lld, 0x%08x\n", off, this->current_instr_count, this->current_eip);
             print_mem(1, off, 0x10);
             v.to_mem(&this->memory[off], 1);
@@ -260,7 +260,7 @@ void taint_x86::restore_32(OFFSET off, DWORD_t& ret)
     for(int i = 0x0; i< this->bpt_count; i++)
         if((this->bps[i].mem_offset == off) && (this->bps[i].mode & BP_MODE_READ))
         {
-            d_err_print("Mem dump in stderr @ 0x%08x\n", off);
+            err_print("Mem dump in stderr @ 0x%08x\n", off);
             d_print(1, "Breakpoint RW: READ from 0x%x @ %lld, 0x%08x\n", off, this->current_instr_count, this->current_eip);
             print_mem(1, off, 0x10);
         }
@@ -369,7 +369,7 @@ void taint_x86::store_16(OFFSET off, WORD_t v)
     for(int i = 0x0; i<  this->bpt_count; i++)
         if(((off - this->bps[i].mem_offset) <= 0x2) && (this->bps[i].mode & BP_MODE_WRITE))
         {
-            d_err_print("Mem dump in stderr @ 0x%08x\n", off);
+            err_print("Mem dump in stderr @ 0x%08x\n", off);
             d_print(1, "Breakpoint RW: WRITE to 0x%x @ %lld, 0x%08x\n", off, this->current_instr_count, this->current_eip);
             print_mem(1, off, 0x10);
             v.to_mem(&this->memory[off], 1);
@@ -394,7 +394,7 @@ void taint_x86::restore_16(OFFSET off, WORD_t& ret)
     for(int i = 0x0; i<  this->bpt_count; i++)
         if((this->bps[i].mem_offset == off) && (this->bps[i].mode & BP_MODE_READ))
         {
-            d_err_print("Mem dump in stderr @ 0x%08x\n", off);
+            err_print("Mem dump in stderr @ 0x%08x\n", off);
             d_print(1, "Breakpoint RW: READ from 0x%x @ %lld, 0x%08x\n", off, this->current_instr_count, this->current_eip);
             print_mem(1, off, 0x10);
         }
@@ -499,7 +499,7 @@ if(this->options & OPTION_VERIFY_SEG_SEC)
     for(int i = 0x0; i< this->bpt_count; i++)
         if((this->bps[i].mem_offset == off) && (this->bps[i].mode & BP_MODE_WRITE))
         {
-            d_err_print("Mem dump in stderr @ 0x%08x\n", off);
+            err_print("Mem dump in stderr @ 0x%08x\n", off);
             d_print(1, "Breakpoint RW: WRITE to 0x%x @ %lld, 0x%08x\n", off, this->current_instr_count, this->current_eip);
             print_mem(1, off, 0x10);
             v.to_mem(&this->memory[off]);
@@ -524,7 +524,7 @@ void taint_x86::restore_8(OFFSET off, BYTE_t& ret)
     for(int i = 0x0; i< this->bpt_count; i++)
         if((this->bps[i].mem_offset == off) && (this->bps[i].mode & BP_MODE_READ))
         {
-            d_err_print("Mem dump in stderr @ 0x%08x\n", off);
+            err_print("Mem dump in stderr @ 0x%08x\n", off);
             d_print(1, "Breakpoint RW: READ from 0x%x @ %lld, 0x%08x\n", off, this->current_instr_count, this->current_eip);
             print_mem(1, off, 0x10);
         }
@@ -630,6 +630,7 @@ int taint_x86::pre_execute_instruction(DWORD eip)
     return 0x0;
 }
 
+
 int taint_x86::post_execute_instruction(DWORD eip)
 {
     if(this->plugin) this->plugin->post_execute_instruction_callback(eip);
@@ -637,8 +638,6 @@ int taint_x86::post_execute_instruction(DWORD eip)
     CONTEXT_INFO* cur_ctx;
     unsigned info_pos = this->tids[this->cur_tid];
     cur_ctx = &this->ctx_info[info_pos];
-
-    unsigned i, j, diff;
 
     this->extended = 0x0;
 
@@ -656,68 +655,9 @@ int taint_x86::post_execute_instruction(DWORD eip)
     unsigned esp;
     esp = (UDWORD)this->reg_restore_32(ESP).get_DWORD();
 
-    /* regular breakpoints */
-
-//    if(this->options & HANDLE_BREAKPOINTS)
-    for(i=0x0; i<this->bpt_count; i++)
-        if((this->bps[i].offset == this->current_instr_count) && (this->bps[i].offset) && (this->bps[i].mode & BP_MODE_EXECUTE))
-        {
-            d_err_print("Breakpoint @ %lld, 0x%08x, hit, dumping contexts & stacks\n", this->bps[i].offset, this->current_eip);
-            this->print_err_all_contexts();
-            this->print_err_all_stacks();
-            d_err_print("---\n");
-        }
-        else if((this->bps[i].mem_offset == this->current_eip) && (this->bps[i].mem_offset) && (this->bps[i].mode & BP_MODE_EXECUTE))
-        {
-            d_err_print("Breakpoint @ %lld, 0x%08x, hit, dumping contexts & stacks\n", this->bps[i].offset, this->current_eip);
-            this->print_err_all_contexts();
-            this->print_err_all_stacks();
-            d_err_print("---\n");
-        }
-
-    /* taint breakpoints */
-
-    for(i=0x0; i<this->bpt_t_count; i++)
-        if((this->bps_t[i].offset == this->current_instr_count) && (this->bps_t[i].offset))
-        {
-            d_err_print("Breakpoint taint @ %lld, 0x%08x, hit, dumping contexts & stacks\n", this->bps[i].offset, this->current_eip);
-            this->print_err_all_t_contexts();
-            this->print_err_all_t_stacks();
-            d_err_print("---\n");
-        }
-        else if((this->bps_t[i].mem_offset == this->current_eip) && (this->bps_t[i].mem_offset))
-        {
-            d_err_print("Breakpoint taint @ %lld, 0x%08x, hit, dumping contexts & stacks\n", this->bps[i].offset, this->current_eip);
-            this->print_err_all_t_contexts();
-            this->print_err_all_t_stacks();
-            d_err_print("---\n");
-        }
-
-    /* trace watchpoints */
-
-    for(i=0x0; i<this->wpt_count; i++)
-        if((this->wps[i].offset == this->current_instr_count) && (this->wps[i].offset))
-        {
-            d_err_print("Watchpoint @ %lld hit, dumping taint transfer history for %s for tid 0x%08x\n", this->wps[i].offset, this->wps[i].name, this->wps[i].tid);
-            this->print_taint_history(this->wps[i].watched);
-//            d_err_print("ptr: 0x%08x\n", &this->ctx_info[this->tids[this->wps[i].tid]].registers[EBP]);
-//            this->print_taint_history(&this->ctx_info[this->tids[this->wps[i].tid]].registers[EBP]);
-            d_err_print("---\n");
-            if(this->wps[i].interactive)
-            {
-                this->prompt_taint();
-            }
-        }
-        else if((this->wps[i].mem_offset == this->current_eip) && (this->wps[i].mem_offset))
-        {
-            d_err_print("Watchpoint @ %lld hit, dumping taint transfer history for %s\n", this->wps[i].mem_offset, this->wps[i].name);
-            this->print_taint_history(this->wps[i].watched);
-            d_err_print("---\n");
-            if(this->wps[i].interactive)
-            {
-                this->prompt_taint();
-            }
-        }
+    /* check if execution breakpoint has been hit */
+    if(this->options & HANDLE_BREAKPOINTS)
+        this->check_execution_bps();
 
     if((this->end_addr) || (this->instr_limit))
     {
@@ -869,6 +809,72 @@ int taint_x86::execute_instruction_at_eip(DWORD eip)
     return this->execute_instruction_at_eip(eip, this->cur_tid);
 }
 
+int taint_x86::check_execution_bps()
+{
+    unsigned i;
+
+    for(i=0x0; i<this->bpt_count; i++)
+        if((this->bps[i].offset == this->current_instr_count) && (this->bps[i].offset) && (this->bps[i].mode & BP_MODE_EXECUTE))
+        {
+            err_print("Breakpoint @ %lld, 0x%08x, hit, dumping contexts & stacks\n", this->bps[i].offset, this->current_eip);
+            this->print_err_all_contexts();
+            this->print_err_all_stacks();
+            err_print("---\n");
+        }
+        else if((this->bps[i].mem_offset == this->current_eip) && (this->bps[i].mem_offset) && (this->bps[i].mode & BP_MODE_EXECUTE))
+        {
+            err_print("Breakpoint @ %lld, 0x%08x, hit, dumping contexts & stacks\n", this->bps[i].offset, this->current_eip);
+            this->print_err_all_contexts();
+            this->print_err_all_stacks();
+            err_print("---\n");
+        }
+
+    /* taint breakpoints */
+
+    for(i=0x0; i<this->bpt_t_count; i++)
+        if((this->bps_t[i].offset == this->current_instr_count) && (this->bps_t[i].offset))
+        {
+            err_print("Breakpoint taint @ %lld, 0x%08x, hit, dumping contexts & stacks\n", this->bps[i].offset, this->current_eip);
+            this->print_err_all_t_contexts();
+            this->print_err_all_t_stacks();
+            err_print("---\n");
+        }
+        else if((this->bps_t[i].mem_offset == this->current_eip) && (this->bps_t[i].mem_offset))
+        {
+            err_print("Breakpoint taint @ %lld, 0x%08x, hit, dumping contexts & stacks\n", this->bps[i].offset, this->current_eip);
+            this->print_err_all_t_contexts();
+            this->print_err_all_t_stacks();
+            err_print("---\n");
+        }
+
+    /* trace watchpoints */
+
+    for(i=0x0; i<this->wpt_count; i++)
+        if((this->wps[i].offset == this->current_instr_count) && (this->wps[i].offset))
+        {
+            err_print("Watchpoint @ %lld hit, dumping taint transfer history for %s for tid 0x%08x\n", this->wps[i].offset, this->wps[i].name, this->wps[i].tid);
+            this->print_taint_history(this->wps[i].watched);
+//            err_print("ptr: 0x%08x\n", &this->ctx_info[this->tids[this->wps[i].tid]].registers[EBP]);
+//            this->print_taint_history(&this->ctx_info[this->tids[this->wps[i].tid]].registers[EBP]);
+            err_print("---\n");
+            if(this->wps[i].interactive)
+            {
+                this->prompt_taint();
+            }
+        }
+        else if((this->wps[i].mem_offset == this->current_eip) && (this->wps[i].mem_offset))
+        {
+            err_print("Watchpoint @ %lld hit, dumping taint transfer history for %s\n", this->wps[i].mem_offset, this->wps[i].name);
+            this->print_taint_history(this->wps[i].watched);
+            err_print("---\n");
+            if(this->wps[i].interactive)
+            {
+                this->prompt_taint();
+            }
+        }
+
+    return 0x0;
+}
 CONTEXT_INFO* taint_x86::get_context_info(DWORD tid)
 {
     unsigned info_pos = this->tids[tid];
@@ -1915,7 +1921,7 @@ int taint_x86::print_taint_history(unsigned id)
         } 
     }
     d_print(1, "Taint id: %d, EIP: 0x%08x, instr byte: 0x%02x, instr no: %d\n", id, this->propagations[id].instruction, this->memory[this->propagations[id].instruction].get_BYTE(), this->propagations[id].instr_count);
-    d_err_print("Taint id: %d, EIP: 0x%08x, instr byte: 0x%02x, instr no: %d\n", id, this->propagations[id].instruction, this->memory[this->propagations[id].instruction].get_BYTE(), this->propagations[id].instr_count);
+    err_print("Taint id: %d, EIP: 0x%08x, instr byte: 0x%02x, instr no: %d\n", id, this->propagations[id].instruction, this->memory[this->propagations[id].instruction].get_BYTE(), this->propagations[id].instr_count);
 
     return 0x0;
 }
@@ -1946,7 +1952,7 @@ int taint_x86::print_taint_history(BYTE_t* target, OFFSET instr_count)
     for(i = this->current_propagation_count; i>0x0; i--)
     {
         cur_propagation = &this->propagations[i];
-    //    d_err_print("Veryfing propagation: %lld\n", i);
+    //    err_print("Veryfing propagation: %lld\n", i);
         for(j=0x0; j<0x4; j++)
         {
             if(cur_propagation->result[j] == 0x0)
@@ -15948,18 +15954,18 @@ int taint_x86::print_err_mem(OFFSET start, DWORD len)
 {
     for(OFFSET i=start; i<start+len; i++)
     {
-        d_err_print("0x%x: 0x%x\n", i, this->memory[i].get_BYTE());
+        err_print("0x%x: 0x%x\n", i, this->memory[i].get_BYTE());
     }
-    d_err_print("\n");
+    err_print("\n");
 }
 
 int taint_x86::print_err_t_mem(OFFSET start, DWORD len)
 {
     for(OFFSET i=start; i<start+len; i++)
     {
-        d_err_print("0x%x: 0x%x\n", i, this->memory[i].get_BYTE_t());
+        err_print("0x%x: 0x%x\n", i, this->memory[i].get_BYTE_t());
     }
-    d_err_print("\n");
+    err_print("\n");
 }
 
 
@@ -15972,13 +15978,13 @@ int taint_x86::print_err_stack(DWORD tid, DWORD len)
 
     start = this->reg_restore_32(ESP, tid).get_DWORD();
 
-    d_err_print("Context 0x%08x:\n", tid);
+    err_print("Context 0x%08x:\n", tid);
     for(OFFSET i=start; i<start+len; i+=0x4)
     {
         temp.from_mem(&this->memory[i]);
-        d_err_print("0x%08x: 0x%08x\n", i, temp.get_DWORD());
+        err_print("0x%08x: 0x%08x\n", i, temp.get_DWORD());
     }
-    d_err_print("\n");
+    err_print("\n");
 }
 
 int taint_x86::print_err_t_stack(DWORD tid, DWORD len)
@@ -15990,13 +15996,13 @@ int taint_x86::print_err_t_stack(DWORD tid, DWORD len)
 
     start = this->reg_restore_32(ESP, tid).get_DWORD();
 
-    d_err_print("Context 0x%08x:\n", tid);
+    err_print("Context 0x%08x:\n", tid);
     for(OFFSET i=start; i<start+len; i+=0x4)
     {
         temp.from_mem(&this->memory[i]);
-        d_err_print("0x%08x: 0x%08x\n", i, temp.get_DWORD_t());
+        err_print("0x%08x: 0x%08x\n", i, temp.get_DWORD_t());
     }
-    d_err_print("\n");
+    err_print("\n");
 }
 
 int taint_x86::print_stack(DWORD tid, int level, DWORD len)
@@ -16059,67 +16065,67 @@ int taint_x86::print_err_context(int tid)
 {
     if(!this->already_added(tid)) 
     {
-        d_err_print("No such context: 0x%08x\n", tid);
+        err_print("No such context: 0x%08x\n", tid);
         return 0x0;
     }
-    d_err_print("\nWARNING!!! EIP is one instruction late!\n");
-    d_err_print("Context 0x%08x:\n", tid);
-    d_err_print("EAX: 0x%08x\n", this->reg_restore_32(EAX, tid).get_DWORD());
-    d_err_print("EBX: 0x%08x\n", this->reg_restore_32(EBX, tid).get_DWORD());
-    d_err_print("ECX: 0x%08x\n", this->reg_restore_32(ECX, tid).get_DWORD());
-    d_err_print("EDX: 0x%08x\n", this->reg_restore_32(EDX, tid).get_DWORD());
-    d_err_print("ESI: 0x%08x\n", this->reg_restore_32(ESI, tid).get_DWORD());
-    d_err_print("EDI: 0x%08x\n", this->reg_restore_32(EDI, tid).get_DWORD());
-    d_err_print("EBP: 0x%08x\n", this->reg_restore_32(EBP, tid).get_DWORD());
-    d_err_print("ESP: 0x%08x\n", this->reg_restore_32(ESP, tid).get_DWORD());
-    d_err_print("EIP: 0x%08x\n", this->reg_restore_32(EIP, tid).get_DWORD());
-    d_err_print("EFL: 0x%08x\n", this->reg_restore_32(EFLAGS, tid).get_DWORD());
-    d_err_print("\n");
+    err_print("\nWARNING!!! EIP is one instruction late!\n");
+    err_print("Context 0x%08x:\n", tid);
+    err_print("EAX: 0x%08x\n", this->reg_restore_32(EAX, tid).get_DWORD());
+    err_print("EBX: 0x%08x\n", this->reg_restore_32(EBX, tid).get_DWORD());
+    err_print("ECX: 0x%08x\n", this->reg_restore_32(ECX, tid).get_DWORD());
+    err_print("EDX: 0x%08x\n", this->reg_restore_32(EDX, tid).get_DWORD());
+    err_print("ESI: 0x%08x\n", this->reg_restore_32(ESI, tid).get_DWORD());
+    err_print("EDI: 0x%08x\n", this->reg_restore_32(EDI, tid).get_DWORD());
+    err_print("EBP: 0x%08x\n", this->reg_restore_32(EBP, tid).get_DWORD());
+    err_print("ESP: 0x%08x\n", this->reg_restore_32(ESP, tid).get_DWORD());
+    err_print("EIP: 0x%08x\n", this->reg_restore_32(EIP, tid).get_DWORD());
+    err_print("EFL: 0x%08x\n", this->reg_restore_32(EFLAGS, tid).get_DWORD());
+    err_print("\n");
 
     DWORD eflags;
     eflags = this->reg_restore_32(EFLAGS).get_DWORD();
-    if(eflags & EFLAGS_CF) d_err_print("CF\n");
-    if(eflags & EFLAGS_PF) d_err_print("PF\n");
-    if(eflags & EFLAGS_AF) d_err_print("AF\n");
-    if(eflags & EFLAGS_ZF) d_err_print("ZF\n");
-    if(eflags & EFLAGS_SF) d_err_print("SF\n");
-    if(eflags & EFLAGS_IF) d_err_print("IF\n");
-    if(eflags & EFLAGS_DF) d_err_print("DF\n");
-    if(eflags & EFLAGS_OF) d_err_print("OF\n");
-    d_err_print("\n");
+    if(eflags & EFLAGS_CF) err_print("CF\n");
+    if(eflags & EFLAGS_PF) err_print("PF\n");
+    if(eflags & EFLAGS_AF) err_print("AF\n");
+    if(eflags & EFLAGS_ZF) err_print("ZF\n");
+    if(eflags & EFLAGS_SF) err_print("SF\n");
+    if(eflags & EFLAGS_IF) err_print("IF\n");
+    if(eflags & EFLAGS_DF) err_print("DF\n");
+    if(eflags & EFLAGS_OF) err_print("OF\n");
+    err_print("\n");
 }
 
 int taint_x86::print_err_t_context(int tid)
 {
     if(!this->already_added(tid)) 
     {
-        d_err_print("No such context: 0x%08x\n", tid);
+        err_print("No such context: 0x%08x\n", tid);
         return 0x0;
     }
-    d_err_print("Taint context 0x%08x:\n", tid);
-    d_err_print("EAX: 0x%08x\n", this->reg_restore_32(EAX, tid).get_DWORD_t());
-    d_err_print("EBX: 0x%08x\n", this->reg_restore_32(EBX, tid).get_DWORD_t());
-    d_err_print("ECX: 0x%08x\n", this->reg_restore_32(ECX, tid).get_DWORD_t());
-    d_err_print("EDX: 0x%08x\n", this->reg_restore_32(EDX, tid).get_DWORD_t());
-    d_err_print("ESI: 0x%08x\n", this->reg_restore_32(ESI, tid).get_DWORD_t());
-    d_err_print("EDI: 0x%08x\n", this->reg_restore_32(EDI, tid).get_DWORD_t());
-    d_err_print("EBP: 0x%08x\n", this->reg_restore_32(EBP, tid).get_DWORD_t());
-    d_err_print("ESP: 0x%08x\n", this->reg_restore_32(ESP, tid).get_DWORD_t());
-    d_err_print("EIP: 0x%08x\n", this->reg_restore_32(EIP, tid).get_DWORD_t());
-    d_err_print("EFL: 0x%08x\n", this->reg_restore_32(EFLAGS, tid).get_DWORD_t());
-    d_err_print("\n");
+    err_print("Taint context 0x%08x:\n", tid);
+    err_print("EAX: 0x%08x\n", this->reg_restore_32(EAX, tid).get_DWORD_t());
+    err_print("EBX: 0x%08x\n", this->reg_restore_32(EBX, tid).get_DWORD_t());
+    err_print("ECX: 0x%08x\n", this->reg_restore_32(ECX, tid).get_DWORD_t());
+    err_print("EDX: 0x%08x\n", this->reg_restore_32(EDX, tid).get_DWORD_t());
+    err_print("ESI: 0x%08x\n", this->reg_restore_32(ESI, tid).get_DWORD_t());
+    err_print("EDI: 0x%08x\n", this->reg_restore_32(EDI, tid).get_DWORD_t());
+    err_print("EBP: 0x%08x\n", this->reg_restore_32(EBP, tid).get_DWORD_t());
+    err_print("ESP: 0x%08x\n", this->reg_restore_32(ESP, tid).get_DWORD_t());
+    err_print("EIP: 0x%08x\n", this->reg_restore_32(EIP, tid).get_DWORD_t());
+    err_print("EFL: 0x%08x\n", this->reg_restore_32(EFLAGS, tid).get_DWORD_t());
+    err_print("\n");
 
     DWORD eflags;
     eflags = this->reg_restore_32(EFLAGS).get_DWORD_t();
-    if(eflags & EFLAGS_CF) d_err_print("CF\n");
-    if(eflags & EFLAGS_PF) d_err_print("PF\n");
-    if(eflags & EFLAGS_AF) d_err_print("AF\n");
-    if(eflags & EFLAGS_ZF) d_err_print("ZF\n");
-    if(eflags & EFLAGS_SF) d_err_print("SF\n");
-    if(eflags & EFLAGS_IF) d_err_print("IF\n");
-    if(eflags & EFLAGS_DF) d_err_print("DF\n");
-    if(eflags & EFLAGS_OF) d_err_print("OF\n");
-    d_err_print("\n");
+    if(eflags & EFLAGS_CF) err_print("CF\n");
+    if(eflags & EFLAGS_PF) err_print("PF\n");
+    if(eflags & EFLAGS_AF) err_print("AF\n");
+    if(eflags & EFLAGS_ZF) err_print("ZF\n");
+    if(eflags & EFLAGS_SF) err_print("SF\n");
+    if(eflags & EFLAGS_IF) err_print("IF\n");
+    if(eflags & EFLAGS_DF) err_print("DF\n");
+    if(eflags & EFLAGS_OF) err_print("OF\n");
+    err_print("\n");
 }
 
 int taint_x86::print_context(int tid)
@@ -16367,19 +16373,19 @@ int taint_x86::dump_cmd(char* string)
     }
     if(string[0] == 'd' && string[1] == 'e')
     {
-        d_err_print("There have been %d exceptions: \n", this->exceptions_count);
+        err_print("There have been %d exceptions: \n", this->exceptions_count);
         for(i = 0x0; i< this->exceptions_count; i++)
         {
             info = this->exceptions[i];
-            d_err_print("Exception %08x in TID %08x, instr. no: %d, eip: 0x%08x\n", info.er.ExceptionCode, info.tid, this->current_instr_count, info.er.ExceptionAddress);
+            err_print("Exception %08x in TID %08x, instr. no: %d, eip: 0x%08x\n", info.er.ExceptionCode, info.tid, this->current_instr_count, info.er.ExceptionAddress);
         }
     }
     if(string[0] == 'd' && string[1] == 'h')
     {
-        d_err_print("There are %d threads: \n", this->tid_count);
+        err_print("There are %d threads: \n", this->tid_count);
         for(i = 0x0; i< this->tid_count; i++)
         {
-            d_err_print("0x%08x\n", this->ctx_info[i].tid);
+            err_print("0x%08x\n", this->ctx_info[i].tid);
         }
     
     }
@@ -16390,7 +16396,7 @@ int taint_x86::dump_cmd(char* string)
         if(strlen(cur_str) == 0x0) off = 0x0;
         else off = strtol(cur_str, 0x0, 0x10);
 
-        d_err_print("Memory taint dump @ 0x%08x:\n", off);
+        err_print("Memory taint dump @ 0x%08x:\n", off);
 
         this->print_err_t_mem(off, 0x10);
     }
@@ -16401,22 +16407,22 @@ int taint_x86::dump_cmd(char* string)
         if(strlen(cur_str) == 0x0) off = 0x0;
         else off = strtol(cur_str, 0x0, 0x10);
 
-        d_err_print("Memory dump @ 0x%08x:\n", off);
+        err_print("Memory dump @ 0x%08x:\n", off);
 
         this->print_err_mem(off, 0x10);
     }
     if(string[0] == 'd' && string[1] == 'r')
     {
-        d_err_print("Current status:\n");
-        d_err_print("Current EIP: \t\t0x%08x\n", this->current_eip);
-        d_err_print("Current instr. no: \t%d\n", this->current_instr_count);
+        err_print("Current status:\n");
+        err_print("Current EIP: \t\t0x%08x\n", this->current_eip);
+        err_print("Current instr. no: \t%d\n", this->current_instr_count);
     }
     if(string[0] == 'd' && string[1] == 't')
     {
-        d_err_print("There have been %d taints:\n", this->taint_count);
+        err_print("There have been %d taints:\n", this->taint_count);
         for(i = 0x0; i< this->taint_count; i++)
         {
-            d_err_print("Taint no %d: 0x%08x, 0x%08x\n", i, this->taints[i].off, this->taints[i].size);
+            err_print("Taint no %d: 0x%08x, 0x%08x\n", i, this->taints[i].off, this->taints[i].size);
         }
     }
 
@@ -16430,8 +16436,8 @@ int taint_x86::prompt_taint()
 
     while(1)
     {
-        d_err_print("\n---\n");
-        d_err_print("Enter taint query and press [ENTER]\n> ");
+        err_print("\n---\n");
+        err_print("Enter taint query and press [ENTER]\n> ");
         scanf("%s", command);
         if(strcmp(command, "q") == 0x0) break;
         if(command[0] == 'd')
@@ -16534,13 +16540,13 @@ TRACE_WATCHPOINT taint_x86::parse_trace_string(char* string)
         twp.watched = &(this->memory[strtol(twp.name, 0x0, 0x10)]);
     }
 
-    d_err_print("0x%08x\n", twp.watched);
+    err_print("0x%08x\n", twp.watched);
 
     return twp;
 }
 
 int taint_x86::query_history(TRACE_WATCHPOINT twp)
 {
-    d_err_print("Printing history for instruction count: %lld\n", twp.offset);
+    err_print("Printing history for instruction count: %lld\n", twp.offset);
     return this->print_taint_history(twp.watched, twp.offset);
 }

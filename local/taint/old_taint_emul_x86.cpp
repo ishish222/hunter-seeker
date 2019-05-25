@@ -4,7 +4,7 @@
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <caller_taint_x86.h>
+#include <old_taint_emul_x86.h>
 #include "debug.h"
 #include <iniparser.h>
 #include "inc/pe_bliss.h"
