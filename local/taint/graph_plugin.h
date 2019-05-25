@@ -401,7 +401,6 @@ class graph_plugin : Plugin
 
         this->max_call_levels = MAX_CALL_LEVELS;
         this->call_level_start = this->max_call_levels/3;
-
     }
 
     ~graph_plugin() 

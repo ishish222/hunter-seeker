@@ -136,43 +136,27 @@ int parse_option(char* line, taint_x86* taint_eng)
 
     printf("Enabling analysis option: %s\n", option);
 
-    if(!strcmp(option, "ANALYZE_JUMPS"))
-    {
-        taint_eng->options |= OPTION_ANALYZE_JUMPS;
-    }
-    else if(!strcmp(option, "ANALYZE_LOOPS"))
-    {
-        taint_eng->options |= OPTION_ANALYZE_LOOPS;
-    }
-    else if(!strcmp(option, "UNMATCHED_RET_INVALIDATES_STACK"))
-    {
-        taint_eng->options |= OPTION_UNMATCHED_RET_INVALIDATES_STACK;
-    }
-    else if(!strcmp(option, "UNMATCHED_RET_CREATES_CALL"))
-    {
-        taint_eng->options |= OPTION_UNMATCHED_RET_CREATES_CALL;
-    }
-    else if(!strcmp(option, "NOT_EMITTING_BLACKLISTED"))
-    {
-        taint_eng->options |= OPTION_NOT_EMITTING_BLACKLISTED;
-    }
-    else if(!strcmp(option, "VERIFY_ROP_RETS"))
-    {
-        taint_eng->options |= OPTION_VERIFY_ROP_RETS;
-    }
-    else if(!strcmp(option, "VERIFY_SEG_SEC"))
-    {
-        taint_eng->options |= OPTION_VERIFY_SEG_SEC;
-    }
-    else if(!strcmp(option, "ANALYZE_WANTED_IN_SYMBOLS"))
-    {
-        taint_eng->options |= OPTION_ANALYZE_WANTED_IN_SYMBOLS;
-    }
+    /* positive */
+    if(!strcmp(option, "ANALYZE_JUMPS"))                        taint_eng->options |= OPTION_ANALYZE_JUMPS;
+    else if(!strcmp(option, "ANALYZE_LOOPS"))                   taint_eng->options |= OPTION_ANALYZE_LOOPS;
+    else if(!strcmp(option, "UNMATCHED_RET_INVALIDATES_STACK")) taint_eng->options |= OPTION_UNMATCHED_RET_INVALIDATES_STACK;
+    else if(!strcmp(option, "UNMATCHED_RET_CREATES_CALL"))      taint_eng->options |= OPTION_UNMATCHED_RET_CREATES_CALL;
+    else if(!strcmp(option, "NOT_EMITTING_BLACKLISTED"))        taint_eng->options |= OPTION_NOT_EMITTING_BLACKLISTED;
+    else if(!strcmp(option, "VERIFY_ROP_RETS"))                 taint_eng->options |= OPTION_VERIFY_ROP_RETS;
+    else if(!strcmp(option, "VERIFY_SEG_SEC"))                  taint_eng->options |= OPTION_VERIFY_SEG_SEC;
+    else if(!strcmp(option, "ANALYZE_WANTED_IN_SYMBOLS"))       taint_eng->options |= OPTION_ANALYZE_WANTED_IN_SYMBOLS;
+    else if(!strcmp(option, "COUNT_INSTRUCTIONS"))              taint_eng->options |= OPTION_COUNT_INSTRUCTIONS;
 
-    else if(!strcmp(option, "COUNT_INSTRUCTIONS"))
-    {
-        taint_eng->options |= OPTION_COUNT_INSTRUCTIONS;
-    }
+    /* negative */
+    else if(!strcmp(option, "DONT_ANALYZE_JUMPS"))                   taint_eng->options &= OPTION_DONT_ANALYZE_JUMPS;
+    else if(!strcmp(option, "DONT_ANALYZE_LOOPS"))                   taint_eng->options &= OPTION_DONT_ANALYZE_LOOPS;
+    else if(!strcmp(option, "DONT_UNMATCHED_RET_INVALIDATES_STACK")) taint_eng->options &= OPTION_DONT_UNMATCHED_RET_INVALIDATES_STACK;
+    else if(!strcmp(option, "DONT_UNMATCHED_RET_CREATES_CALL"))      taint_eng->options &= OPTION_DONT_UNMATCHED_RET_CREATES_CALL;
+    else if(!strcmp(option, "DONT_NOT_EMITTING_BLACKLISTED"))        taint_eng->options &= OPTION_DONT_NOT_EMITTING_BLACKLISTED;
+    else if(!strcmp(option, "DONT_VERIFY_ROP_RETS"))                 taint_eng->options &= OPTION_DONT_VERIFY_ROP_RETS;
+    else if(!strcmp(option, "DONT_VERIFY_SEG_SEC"))                  taint_eng->options &= OPTION_DONT_VERIFY_SEG_SEC;
+    else if(!strcmp(option, "DONT_ANALYZE_WANTED_IN_SYMBOLS"))       taint_eng->options &= OPTION_DONT_ANALYZE_WANTED_IN_SYMBOLS;
+    else if(!strcmp(option, "DONT_COUNT_INSTRUCTIONS"))              taint_eng->options &= OPTION_DONT_COUNT_INSTRUCTIONS;
 
     return 0x0;
 }

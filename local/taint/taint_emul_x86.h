@@ -40,6 +40,7 @@ Change of endiannes takes place when reading and writing to memory (to_mem, from
 //#define UNMATCHED_RET_INVALIDATES_STACK
 //#define UNMATCHED_RET_CREATES_CALL
 #define NOT_EMITTING_BLACKLISTED
+
 #define NO_LOOP 0xffffffff
 
 #define MAX_NAME                0x200
@@ -249,6 +250,21 @@ Change of endiannes takes place when reading and writing to memory (to_mem, from
 #define OPTION_VERIFY_SEG_SEC                   0x40
 #define OPTION_ANALYZE_WANTED_IN_SYMBOLS        0x80
 #define OPTION_COUNT_INSTRUCTIONS               0x100
+#define OPTION_HANDLE_BREAKPOINTS               0x200
+#define OPTION_VERIFY_OOB                       0x400
+
+/* dont options */
+#define OPTION_DONT_ANALYZE_JUMPS                    0xFFFFFFFE
+#define OPTION_DONT_ANALYZE_LOOPS                    0xFFFFFFFD
+#define OPTION_DONT_UNMATCHED_RET_INVALIDATES_STACK  0xFFFFFFFB
+#define OPTION_DONT_UNMATCHED_RET_CREATES_CALL       0xFFFFFFF7
+#define OPTION_DONT_NOT_EMITTING_BLACKLISTED         0xFFFFFFEF
+#define OPTION_DONT_VERIFY_ROP_RETS                  0xFFFFFFDF
+#define OPTION_DONT_VERIFY_SEG_SEC                   0xFFFFFFBF
+#define OPTION_DONT_ANALYZE_WANTED_IN_SYMBOLS        0xFFFFFF7F
+#define OPTION_DONT_COUNT_INSTRUCTIONS               0xFFFFFEFF
+#define OPTION_DONT_HANDLE_BREAKPOINTS               0xFFFFFDFF
+#define OPTION_DONT_VERIFY_OOB                       0xFFFFFBFF
 
 /* jumping codes */
 
@@ -3296,18 +3312,35 @@ class taint_x86
         {
             printf("Not enough memory\n");
         }
-        fprintf(stderr, "this->ctx_info: 0x%08x\n", this->ctx_info);
+
+        
+        /* Default options */
+        fprintf(stdout, "Setting default option: OPTION_VERIFY_SEG_SEC\n");
+        this->options |= OPTION_VERIFY_SEG_SEC;
+        fprintf(stdout, "Setting default option: OPTION_HANDLE_BREAKPOINTS\n");
+        this->options |= OPTION_HANDLE_BREAKPOINTS;
+        fprintf(stdout, "Setting default option: OPTION_VERIFY_OOB\n");
+        this->options |= OPTION_VERIFY_OOB;
+
+        /* for graph_plugin */
+        fprintf(stdout, "Setting default option: OPTION_ANALYZE_JUMPS\n");
+        this->options |= OPTION_ANALYZE_JUMPS;
+        fprintf(stdout, "Setting default option: OPTION_NOT_EMITTING_BLACKLISTED\n");
+        this->options |= OPTION_NOT_EMITTING_BLACKLISTED;
+        fprintf(stdout, "Setting default option: OPTION_VERIFY_SEG_SEC\n");
+        this->options |= OPTION_VERIFY_SEG_SEC;
+        fprintf(stdout, "Setting default option: OPTION_ANALYZE_WANTED_IN_SYMBOLS\n");
+        this->options |= OPTION_ANALYZE_WANTED_IN_SYMBOLS;
+        fprintf(stdout, "Setting default option: OPTION_UNMATCHED_RET_INVALIDATES_STACK\n");
+        this->options |= OPTION_UNMATCHED_RET_INVALIDATES_STACK;
+
     }
 
     ~taint_x86() {
-        d_print(1, "taint_eng::dtor_1\n");
         free(this->memory);
-        d_print(1, "taint_eng::dtor_2\n");
 //        free(this->propagations);
         free(this->taints);
-        d_print(1, "taint_eng::dtor_3\n");
         free(this->ctx_info);
-        d_print(1, "taint_eng::dtor_4\n");
 
     }
 

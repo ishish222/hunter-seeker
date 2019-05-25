@@ -43,31 +43,37 @@ OP - set option
 
     current options names:
     ANALYZE_JUMPS:
-        graph_plugin will output jump instructions (very helpful, recommended). 
+        graph_plugin will output jump instructions (enabled by default). 
         
     ANALYZE_LOOPS:
         graph_plugin will avoid printing looped calls (based on registered fences, see FE below). 
 
     UNMATCHED_RET_INVALIDATES_STACK:
-        graph_plugin will handle unmatched rets in the following way: All ret addresses on the stack are being invalidated and it is treated as return from several functions.
+        graph_plugin will handle unmatched rets in the following way: All ret addresses on the stack are being invalidated and it is treated as return from several functions (enabled by default)
 
     UNMATCHED_RET_CREATES_CALL:
         graph_plugin will handle unmatched rets in the following way: NOT IMPLEMENTED!!!.
 
     NOT_EMITTING_BLACKLISTED:
-        graph_plugin will not emit blacklisted addresses and libraries (configured with BA, BL, see below) (very helpful, recommended).
+        graph_plugin will not emit blacklisted addresses and libraries (configured with BA, BL, see below) (enabled by default)
 
     VERIFY_ROP_RETS:
         graph_plugin will check if ret addess points to symbol, which would suggest executing ROP payload.
 
     VERIFY_SEG_SEC:
-        Analyzer will verify segment security layers. You can set security layers manually in *.out files (see: SE - secure area, below)
+        Analyzer will verify segment security layers. You can set security layers manually in *.out files (see: SE - secure area, below) (enabled by default)
 
     ANALYZE_WANTED_IN_SYMBOLS:
-        graph_plugin will mark wanted instructions and functions (configured with FW, EW, IW, see below) with [x] (very helpful, recommended). 
+        graph_plugin will mark wanted instructions and functions (configured with FW, EW, IW, see below) with [x] (enabled by default). 
 
     COUNT_INSTRUCTIONS:
         For taint analysis. Marks executed instructions as tainted (in addition to marking operands).
+    
+    OPTION_HANDLE_BREAKPOINTS:
+        [todo]
+    
+    OPTION_VERIFY_OOB:
+        [todo]
     
 BA - blacklist address
     syntax: BA,<address>

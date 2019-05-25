@@ -243,12 +243,8 @@ int main(int argc, char** argv)
     taint_eng.bp_hit = 0x0;
 
     /* registering plugin */
-    graph_plugin graph_eng;
     taint_eng.plugin = (Plugin*)&graph_eng;
     taint_eng.plugin->taint_eng = &taint_eng;
-
-//    graph_plugin* graph_eng;
-//    graph_eng = (graph_plugin*) &taint_eng.plugin;
 
     /* configuring plugin */
     if(max_levels == 0x0) max_levels = MAX_CALL_LEVELS;
