@@ -4,18 +4,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <breakpoint.h>
 #include <taint_emul_x86.h>
-
-/*
-typedef int (*test)(DWORD);
-typedef int (*PRE_EXECUTE_INSTRUCTION_CALLBACK)(DWORD);
-typedef int (*POST_EXECUTE_INSTRUCTION_CALLBACK)(DWORD);
-typedef int (*START_CALLBACK)();
-typedef int (*FINISH_CALLBACK)();
-typedef int (*ADD_THREAD_CALLBACK)(CONTEXT_OUT);
-typedef int (*DEL_THREAD_CALLBACK)(DWORD);
-typedef int (*DEL_THREAD_SRSLY_CALLBACK)(DWORD);
-*/
 
 class taint_x86;
 
@@ -29,6 +19,8 @@ class Plugin
 
     virtual int start_callback() = 0;
     virtual int finish_callback() = 0;
+
+    virtual int breakpoint_callback(BREAKPOINT*) = 0;
 
     virtual int add_thread_callback(CONTEXT_OUT) = 0;
     virtual int del_thread_callback(DWORD) = 0;

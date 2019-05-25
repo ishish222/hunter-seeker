@@ -759,6 +759,14 @@ int graph_plugin::post_execute_instruction_callback(DWORD eip)
     return 0x0;
 }
 
+int graph_plugin::breakpoint_callback(BREAKPOINT* bp)
+{
+    d_print(1, "graph_plugin::breakpoint_callback\n");
+    d_print(1, "graph Breakpoint %s @%lld, 0x%08x, hit\n", bp->name, this->taint_eng->current_instr_count, this->taint_eng->current_eip);
+
+    return 0x0;
+}
+
 int graph_plugin::start_callback()
 {
     char out_line[MAX_NAME];

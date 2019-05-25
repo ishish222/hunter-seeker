@@ -55,6 +55,8 @@ void handle_sigsegv(int signum)
 
 int main(int argc, char** argv)
 {
+    unsigned i;
+
     char structured_buffer[STRUCTURED_BUFFER_LENGTH];
     unsigned instr_report_interval = INSTR_REPORT_INTERVAL;
 
@@ -201,34 +203,6 @@ int main(int argc, char** argv)
     
     signal(SIGSEGV, handle_sigsegv);
     signal(SIGINT, handle_sigint);
-
-    taint_eng.bp_hit = 0x1;
- 
-    parse_mem_breakpoints(breakpoint_optarg, &taint_eng);
-    parse_taint_breakpoints(breakpoint_t_optarg, &taint_eng);
-    parse_trace_watchpoints(watchpoint_optarg, &taint_eng);
-
-    unsigned i;
-    for(i=0x0; i< taint_eng.bpt_count; i++)
-        if((taint_eng.bps[i].offset != 0x0) || (taint_eng.bps[i].mem_offset != 0x0))
-        {
-            fprintf(stderr, "Bp: %lld, 0x%08x, %d\n", taint_eng.bps[i].offset, taint_eng.bps[i].mem_offset, taint_eng.bps[i].mode);
-        }
-
-    for(i=0x0; i< taint_eng.bpt_t_count; i++)
-        if((taint_eng.bps_t[i].offset != 0x0) || (taint_eng.bps_t[i].mem_offset != 0x0))
-        {
-            fprintf(stderr, "Bp_t: %lld, 0x%08x, %d\n", taint_eng.bps_t[i].offset, taint_eng.bps_t[i].mem_offset, taint_eng.bps_t[i].mode);
-        }
-
-    for(i=0x0; i< taint_eng.wpt_count; i++)
-        if((taint_eng.wps[i].offset != 0x0) || (taint_eng.wps[i].mem_offset != 0x0))
-        {
-            fprintf(stderr, "Wp: %lld, 0x%08x\n", taint_eng.wps[i].offset, taint_eng.wps[i].mem_offset);
-        }
-
-    /* load data to engine */
-    //taint_eng.print_all_contexts();
 
     taint_eng.load_instr_from_file(instr_file_path);
 

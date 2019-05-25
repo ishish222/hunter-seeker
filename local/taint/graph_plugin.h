@@ -270,6 +270,7 @@ class graph_plugin : Plugin
     virtual int post_execute_instruction_callback(DWORD);
     virtual int start_callback();
     virtual int finish_callback();
+    virtual int breakpoint_callback(BREAKPOINT*);
     virtual int add_thread_callback(CONTEXT_OUT);
     virtual int del_thread_callback(DWORD);
     virtual int del_thread_srsly_callback(DWORD);

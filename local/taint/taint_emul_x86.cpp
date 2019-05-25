@@ -10,6 +10,7 @@
 #include "inc/pe_bliss.h"
 #include <fstream>
 #include <plugin.h>
+#include <breakpoint.h>
 
 #define MEM_ALLOC_DECLARED_SIZE
 #define VERIFY_OOB
@@ -91,99 +92,21 @@ int taint_x86::add_breakpoint(BREAKPOINT bp)
     if(this->bpt_count >= MAX_BREAKPOINTS) return -1;
 
     char mode[0x50];
+    strcpy(mode, "");
 
     if(bp.mode & BP_MODE_READ) strcat(mode, "READ|");
     if(bp.mode & BP_MODE_WRITE) strcat(mode, "WRITE|");
     if(bp.mode & BP_MODE_EXECUTE) strcat(mode, "EXECUTE|");
     
-    d_print(1, "Adding a breakpoint: offset: 0x%08x, mem offset: 0x%08x, mode: %s\n", bp.offset, bp.mem_offset, mode);
+    d_print(1, "Adding breakpoint %s: tid: 0x%08x, instruction_no: %d, offset: 0x%08x, mode: %s\n", bp.name, bp.tid, bp.instruction_no, bp.offset, mode);
 
+    this->bps[this->bpt_count].instruction_no = bp.instruction_no;
     this->bps[this->bpt_count].offset = bp.offset;
-    this->bps[this->bpt_count].mem_offset = bp.mem_offset;
     this->bps[this->bpt_count].mode = bp.mode;
+    strcpy(this->bps[this->bpt_count].name, bp.name);
+    this->bps[this->bpt_count].tid= bp.tid;
 
     this->bpt_count++;
-
-    return 0x0;
-}
-
-int taint_x86::add_taint_breakpoint(BREAKPOINT bp)
-{
-    if(this->bpt_t_count >= MAX_BREAKPOINTS) return -1;
-
-    this->bps_t[this->bpt_t_count].offset = bp.offset;
-    this->bps_t[this->bpt_t_count].mem_offset = bp.mem_offset;
-    this->bps_t[this->bpt_t_count].mode = bp.mode;
-
-    this->bpt_t_count++;
-
-    return 0x0;
-}
-
-int taint_x86::update_watchpoints(DWORD tid)
-{
-    unsigned i;
-    for(i=0x0; i< this->wpt_count; i++)
-        if(this->wps[i].tid == tid)
-        {
-            if(strstr(this->wps[i].name, "EAX") != 0x0)
-            {
-                this->wps[i].watched = &this->ctx_info[this->tids[this->wps[i].tid]].registers[EAX];
-            }
-            else if(strstr(this->wps[i].name, "EBX") != 0x0)
-            {
-                this->wps[i].watched = &this->ctx_info[this->tids[this->wps[i].tid]].registers[EBX];
-            }
-            else if(strstr(this->wps[i].name, "ECX") != 0x0)
-            {
-                this->wps[i].watched = &this->ctx_info[this->tids[this->wps[i].tid]].registers[ECX];
-            }
-            else if(strstr(this->wps[i].name, "EDX") != 0x0)
-            {
-                this->wps[i].watched = &this->ctx_info[this->tids[this->wps[i].tid]].registers[EDX];
-            }
-            else if(strstr(this->wps[i].name, "ESI") != 0x0)
-            {
-                this->wps[i].watched = &this->ctx_info[this->tids[this->wps[i].tid]].registers[ESI];
-            }
-            else if(strstr(this->wps[i].name, "EDI") != 0x0)
-            {
-                this->wps[i].watched = &this->ctx_info[this->tids[this->wps[i].tid]].registers[EDI];
-            }
-            else if(strstr(this->wps[i].name, "EBP") != 0x0)
-            {
-                this->wps[i].watched = &(this->ctx_info[this->tids[this->wps[i].tid]].registers[EBP]);
-            }
-            else if(strstr(this->wps[i].name, "ESP") != 0x0)
-            {
-                this->wps[i].watched = &this->ctx_info[this->tids[this->wps[i].tid]].registers[ESP];
-            }
-            else if(strstr(this->wps[i].name, "EIP") != 0x0)
-            {
-                this->wps[i].watched = &this->ctx_info[this->tids[this->wps[i].tid]].registers[EIP];
-            }
-            else if(strtol(this->wps[i].name, 0x0, 0x10) != 0x0)
-            {
-                this->wps[i].watched = &this->memory[strtol(this->wps[i].name, 0x0, 0x10)];
-            }
-        
-        }
-
-    return 0x0;
-}
-
-int taint_x86::add_trace_watchpoint(TRACE_WATCHPOINT wp)
-{
-    if(this->wpt_count >= MAX_BREAKPOINTS) return -1;
-
-    this->wps[this->wpt_count].offset = wp.offset;
-    this->wps[this->wpt_count].mem_offset = wp.mem_offset;
-    this->wps[this->wpt_count].watched = wp.watched;
-    this->wps[this->wpt_count].interactive = wp.interactive;
-    this->wps[this->wpt_count].tid = wp.tid;
-    strcpy(this->wps[this->wpt_count].name, wp.name);
-
-    this->wpt_count++;
 
     return 0x0;
 }
@@ -233,7 +156,7 @@ void taint_x86::store_32(OFFSET off, DWORD_t v)
 
     if(this->options & HANDLE_BREAKPOINTS)
     for(int i = 0x0; i< this->bpt_count; i++)
-        if(((off - this->bps[i].mem_offset) <= 0x4) && (this->bps[i].mode & BP_MODE_WRITE))
+        if(((off - this->bps[i].offset) <= 0x4) && (this->bps[i].mode & BP_MODE_WRITE))
         {
             err_print("Mem dump in stderr @ 0x%08x\n", off);
             d_print(1, "Breakpoint RW: WRITE to 0x%x @ %lld, 0x%08x\n", off, this->current_instr_count, this->current_eip);
@@ -241,6 +164,10 @@ void taint_x86::store_32(OFFSET off, DWORD_t v)
             v.to_mem(&this->memory[off], 1);
             print_mem(1, off, 0x10);
             print_security_layers(1, off);
+
+            if(this->plugin)
+                this->plugin->breakpoint_callback(&this->bps[i]);
+
             return;
         }
 
@@ -258,11 +185,14 @@ void taint_x86::restore_32(OFFSET off, DWORD_t& ret)
 
     if(this->options & HANDLE_BREAKPOINTS)
     for(int i = 0x0; i< this->bpt_count; i++)
-        if((this->bps[i].mem_offset == off) && (this->bps[i].mode & BP_MODE_READ))
+        if((this->bps[i].offset == off) && (this->bps[i].mode & BP_MODE_READ))
         {
             err_print("Mem dump in stderr @ 0x%08x\n", off);
             d_print(1, "Breakpoint RW: READ from 0x%x @ %lld, 0x%08x\n", off, this->current_instr_count, this->current_eip);
             print_mem(1, off, 0x10);
+
+            if(this->plugin)
+                this->plugin->breakpoint_callback(&this->bps[i]);
         }
 
     ret.from_mem(&this->memory[off], 1);
@@ -367,7 +297,7 @@ void taint_x86::store_16(OFFSET off, WORD_t v)
 
     if(this->options & HANDLE_BREAKPOINTS)
     for(int i = 0x0; i<  this->bpt_count; i++)
-        if(((off - this->bps[i].mem_offset) <= 0x2) && (this->bps[i].mode & BP_MODE_WRITE))
+        if(((off - this->bps[i].offset) <= 0x2) && (this->bps[i].mode & BP_MODE_WRITE))
         {
             err_print("Mem dump in stderr @ 0x%08x\n", off);
             d_print(1, "Breakpoint RW: WRITE to 0x%x @ %lld, 0x%08x\n", off, this->current_instr_count, this->current_eip);
@@ -375,6 +305,10 @@ void taint_x86::store_16(OFFSET off, WORD_t v)
             v.to_mem(&this->memory[off], 1);
             print_mem(1, off, 0x10);
             print_security_layers(1, off);
+
+            if(this->plugin)
+                this->plugin->breakpoint_callback(&this->bps[i]);
+
             return;
         }
 
@@ -392,11 +326,15 @@ void taint_x86::restore_16(OFFSET off, WORD_t& ret)
 
     if(this->options & HANDLE_BREAKPOINTS)
     for(int i = 0x0; i<  this->bpt_count; i++)
-        if((this->bps[i].mem_offset == off) && (this->bps[i].mode & BP_MODE_READ))
+        if((this->bps[i].offset == off) && (this->bps[i].mode & BP_MODE_READ))
         {
             err_print("Mem dump in stderr @ 0x%08x\n", off);
             d_print(1, "Breakpoint RW: READ from 0x%x @ %lld, 0x%08x\n", off, this->current_instr_count, this->current_eip);
             print_mem(1, off, 0x10);
+
+            if(this->plugin)
+                this->plugin->breakpoint_callback(&this->bps[i]);
+
         }
 
     ret.from_mem(&this->memory[off], 1);
@@ -497,7 +435,7 @@ if(this->options & OPTION_VERIFY_SEG_SEC)
 
     if(this->options & HANDLE_BREAKPOINTS)
     for(int i = 0x0; i< this->bpt_count; i++)
-        if((this->bps[i].mem_offset == off) && (this->bps[i].mode & BP_MODE_WRITE))
+        if((this->bps[i].offset == off) && (this->bps[i].mode & BP_MODE_WRITE))
         {
             err_print("Mem dump in stderr @ 0x%08x\n", off);
             d_print(1, "Breakpoint RW: WRITE to 0x%x @ %lld, 0x%08x\n", off, this->current_instr_count, this->current_eip);
@@ -505,6 +443,10 @@ if(this->options & OPTION_VERIFY_SEG_SEC)
             v.to_mem(&this->memory[off]);
             print_mem(1, off, 0x10);
             print_security_layers(1, off);
+
+            if(this->plugin)
+                this->plugin->breakpoint_callback(&this->bps[i]);
+
             return;
         }
 
@@ -522,11 +464,15 @@ void taint_x86::restore_8(OFFSET off, BYTE_t& ret)
 
     if(this->options & HANDLE_BREAKPOINTS)
     for(int i = 0x0; i< this->bpt_count; i++)
-        if((this->bps[i].mem_offset == off) && (this->bps[i].mode & BP_MODE_READ))
+        if((this->bps[i].offset == off) && (this->bps[i].mode & BP_MODE_READ))
         {
             err_print("Mem dump in stderr @ 0x%08x\n", off);
             d_print(1, "Breakpoint RW: READ from 0x%x @ %lld, 0x%08x\n", off, this->current_instr_count, this->current_eip);
             print_mem(1, off, 0x10);
+
+            if(this->plugin)
+                this->plugin->breakpoint_callback(&this->bps[i]);
+
         }
 
     ret.from_mem(&this->memory[off]);
@@ -814,64 +760,24 @@ int taint_x86::check_execution_bps()
     unsigned i;
 
     for(i=0x0; i<this->bpt_count; i++)
-        if((this->bps[i].offset == this->current_instr_count) && (this->bps[i].offset) && (this->bps[i].mode & BP_MODE_EXECUTE))
+    {
+        if((this->bps[i].instruction_no == this->current_instr_count) && (this->bps[i].instruction_no) && (this->bps[i].mode & BP_MODE_EXECUTE))
         {
-            err_print("Breakpoint @ %lld, 0x%08x, hit, dumping contexts & stacks\n", this->bps[i].offset, this->current_eip);
-            this->print_err_all_contexts();
-            this->print_err_all_stacks();
-            err_print("---\n");
-        }
-        else if((this->bps[i].mem_offset == this->current_eip) && (this->bps[i].mem_offset) && (this->bps[i].mode & BP_MODE_EXECUTE))
-        {
-            err_print("Breakpoint @ %lld, 0x%08x, hit, dumping contexts & stacks\n", this->bps[i].offset, this->current_eip);
-            this->print_err_all_contexts();
-            this->print_err_all_stacks();
-            err_print("---\n");
-        }
+            err_print("Breakpoint %s @%lld, 0x%08x, hit\n", this->bps[i].name, this->current_instr_count, this->current_eip);
+            if(this->plugin)
+                this->plugin->breakpoint_callback(&this->bps[i]);
 
-    /* taint breakpoints */
+            err_print("---\n");
+        }
+        else if((this->bps[i].offset == this->current_eip) && (this->bps[i].offset) && (this->bps[i].mode & BP_MODE_EXECUTE))
+        {
+            err_print("Breakpoint %s @%lld, 0x%08x, hit\n", this->bps[i].name, this->current_instr_count, this->current_eip);
+            if(this->plugin)
+                this->plugin->breakpoint_callback(&this->bps[i]);
 
-    for(i=0x0; i<this->bpt_t_count; i++)
-        if((this->bps_t[i].offset == this->current_instr_count) && (this->bps_t[i].offset))
-        {
-            err_print("Breakpoint taint @ %lld, 0x%08x, hit, dumping contexts & stacks\n", this->bps[i].offset, this->current_eip);
-            this->print_err_all_t_contexts();
-            this->print_err_all_t_stacks();
             err_print("---\n");
         }
-        else if((this->bps_t[i].mem_offset == this->current_eip) && (this->bps_t[i].mem_offset))
-        {
-            err_print("Breakpoint taint @ %lld, 0x%08x, hit, dumping contexts & stacks\n", this->bps[i].offset, this->current_eip);
-            this->print_err_all_t_contexts();
-            this->print_err_all_t_stacks();
-            err_print("---\n");
-        }
-
-    /* trace watchpoints */
-
-    for(i=0x0; i<this->wpt_count; i++)
-        if((this->wps[i].offset == this->current_instr_count) && (this->wps[i].offset))
-        {
-            err_print("Watchpoint @ %lld hit, dumping taint transfer history for %s for tid 0x%08x\n", this->wps[i].offset, this->wps[i].name, this->wps[i].tid);
-            this->print_taint_history(this->wps[i].watched);
-//            err_print("ptr: 0x%08x\n", &this->ctx_info[this->tids[this->wps[i].tid]].registers[EBP]);
-//            this->print_taint_history(&this->ctx_info[this->tids[this->wps[i].tid]].registers[EBP]);
-            err_print("---\n");
-            if(this->wps[i].interactive)
-            {
-                this->prompt_taint();
-            }
-        }
-        else if((this->wps[i].mem_offset == this->current_eip) && (this->wps[i].mem_offset))
-        {
-            err_print("Watchpoint @ %lld hit, dumping taint transfer history for %s\n", this->wps[i].mem_offset, this->wps[i].name);
-            this->print_taint_history(this->wps[i].watched);
-            err_print("---\n");
-            if(this->wps[i].interactive)
-            {
-                this->prompt_taint();
-            }
-        }
+    }
 
     return 0x0;
 }
@@ -1021,6 +927,58 @@ int taint_x86::mod_thread(CONTEXT_OUT ctx_out)
     return 0x0;
 }
 
+int taint_x86::update_watchpoints(DWORD tid)
+{
+    unsigned i;
+    for(i=0x0; i< this->wpt_count; i++)
+        if(this->wps[i].tid == tid)
+        {
+            if(strstr(this->wps[i].name, "EAX") != 0x0)
+            {
+                this->wps[i].watched = &this->ctx_info[this->tids[this->wps[i].tid]].registers[EAX];
+            }
+            else if(strstr(this->wps[i].name, "EBX") != 0x0)
+            {
+                this->wps[i].watched = &this->ctx_info[this->tids[this->wps[i].tid]].registers[EBX];
+            }
+            else if(strstr(this->wps[i].name, "ECX") != 0x0)
+            {
+                this->wps[i].watched = &this->ctx_info[this->tids[this->wps[i].tid]].registers[ECX];
+            }
+            else if(strstr(this->wps[i].name, "EDX") != 0x0)
+            {
+                this->wps[i].watched = &this->ctx_info[this->tids[this->wps[i].tid]].registers[EDX];
+            }
+            else if(strstr(this->wps[i].name, "ESI") != 0x0)
+            {
+                this->wps[i].watched = &this->ctx_info[this->tids[this->wps[i].tid]].registers[ESI];
+            }
+            else if(strstr(this->wps[i].name, "EDI") != 0x0)
+            {
+                this->wps[i].watched = &this->ctx_info[this->tids[this->wps[i].tid]].registers[EDI];
+            }
+            else if(strstr(this->wps[i].name, "EBP") != 0x0)
+            {
+                this->wps[i].watched = &(this->ctx_info[this->tids[this->wps[i].tid]].registers[EBP]);
+            }
+            else if(strstr(this->wps[i].name, "ESP") != 0x0)
+            {
+                this->wps[i].watched = &this->ctx_info[this->tids[this->wps[i].tid]].registers[ESP];
+            }
+            else if(strstr(this->wps[i].name, "EIP") != 0x0)
+            {
+                this->wps[i].watched = &this->ctx_info[this->tids[this->wps[i].tid]].registers[EIP];
+            }
+            else if(strtol(this->wps[i].name, 0x0, 0x10) != 0x0)
+            {
+                this->wps[i].watched = &this->memory[strtol(this->wps[i].name, 0x0, 0x10)];
+            }
+        
+        }
+
+    return 0x0;
+}
+
 int taint_x86::add_thread(CONTEXT_OUT ctx_out)
 {
     if(this->plugin) this->plugin->add_thread_callback(ctx_out);
@@ -1117,13 +1075,17 @@ int taint_x86::apply_memory(DWORD offset, DWORD size)
         unsigned j;
 
         for(j = 0x0; j< 0x10; j++)
-            if((this->bps[j].mem_offset == offset+i) && (this->bps[j].mode & BP_MODE_WRITE))
+            if((this->bps[j].offset == offset+i) && (this->bps[j].mode & BP_MODE_WRITE))
                 found = 1;
 
         if(found)
         {
             d_print(3, "Breakpoint RW: WRITE at 0x%x\n", offset);
             print_mem(3, offset + i, 0x3);
+
+            if(this->plugin)
+                this->plugin->breakpoint_callback(&this->bps[i]);
+
         }
 
             //this->propagations[this->current_propagation_count].instruction = this->last_eip;
