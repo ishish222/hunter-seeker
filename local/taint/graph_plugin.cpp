@@ -301,9 +301,7 @@ int graph_plugin::check_loop_2(GRAPH_CONTEXT* info)
 
         if(cur_level->loop_status == FENCE_COLLECTING)
         {
-            d_print(1, "1");
             cur_level->loop_addr[cur_loop_addr_idx] = offset;
-            d_print(1, "2");
             cur_loop_addr_idx ++;
             cur_level->loop_addr_idx = cur_loop_addr_idx;
 
@@ -653,7 +651,6 @@ GRAPH_CONTEXT* graph_plugin::get_graph_context(DWORD tid)
 
 int graph_plugin::pre_execute_instruction_callback(DWORD eip)
 {
-    fprintf(stderr, "graph_plugin::pre_execute_instruction_callback\n");
     /* graph start */
     if((this->taint_eng->start_addr == eip) || (this->taint_eng->current_instr_count == this->taint_eng->start_instr))
     {
@@ -665,20 +662,21 @@ int graph_plugin::pre_execute_instruction_callback(DWORD eip)
 
     if(this->cur_graph_context->returning)
     {
-        this->cur_graph_context->before_returning = 1;
+        this->cur_graph_context->been_returning = 1;
         this->cur_graph_context->returning = 0;
     }
 
     if(this->cur_graph_context->calling)
     {
-        this->cur_graph_context->before_calling = 1;
+        this->cur_graph_context->been_calling = 1;
         this->cur_graph_context->calling = 0;
     }
 
+    d_print(1, "jumping: 0x%02x\n", this->cur_graph_context->jumping);
     if(this->cur_graph_context->jumping)
     {
-        this->cur_graph_context->before_jumping = 1;
-        this->cur_graph_context->before_jmp_code = this->cur_graph_context->jmp_code;
+        this->cur_graph_context->been_jumping = 1;
+        this->cur_graph_context->been_jmp_code = this->cur_graph_context->jmp_code;
         this->cur_graph_context->jumping = 0;
     }
 
@@ -687,7 +685,7 @@ int graph_plugin::pre_execute_instruction_callback(DWORD eip)
         /* stop waiting */
         d_print(1, "[0x%08x] Waiting: 0x%08x, eip: 0x%08x\n", this->taint_eng->cur_tid, this->cur_graph_context->waiting, eip);
         this->cur_graph_context->waiting = 0x0;
-        this->cur_graph_context->before_waiting = 0x1;
+        this->cur_graph_context->been_waiting = 0x1;
         if((this->cur_graph_context->last_emit_decision == DECISION_EMIT) || (this->cur_graph_context->last_emit_decision == DECISION_EMIT_NESTED))
         {
             print_ret(this->cur_graph_context);
@@ -702,7 +700,6 @@ int graph_plugin::post_execute_instruction_callback(DWORD eip)
 {
     unsigned i;
 
-    fprintf(stderr, "graph_plugin::post_execute_instruction_callback\n");
 
     /*
     GRAPH_CONTEXT* cur_graph_context;
@@ -714,36 +711,32 @@ int graph_plugin::post_execute_instruction_callback(DWORD eip)
 //    if(cur_graph_context->returning > 0x0) cur_graph_context->returning--;
     cur_graph_context = this->cur_graph_context;
 
-    d_print(1, "post01\n");
-    if((cur_graph_context->before_returning == 1))
+    if((cur_graph_context->been_returning == 1))
     {
         this->handle_ret(cur_graph_context, eip);
-        cur_graph_context->before_returning = 0;
+        cur_graph_context->been_returning = 0;
     }
-    d_print(1, "post02\n");
 
-    if(cur_graph_context->before_calling)
+    if(cur_graph_context->been_calling)
     {
         cur_graph_context->target = eip;
         d_print(1, "Next call target = 0x%08x\n", eip);
         handle_call(cur_graph_context);
-        cur_graph_context->before_calling = 0;
+        cur_graph_context->been_calling = 0;
     }
 
-    d_print(1, "post03\n");
-    if(cur_graph_context->before_jumping)
+    d_print(1, "been_jumping: 0x%02x\n", cur_graph_context->been_jumping);
+    if(cur_graph_context->been_jumping)
     {
         cur_graph_context->target = eip;
         handle_jxx(cur_graph_context);
-        cur_graph_context->before_jumping = 0;
+        cur_graph_context->been_jumping = 0;
     }
 
-    d_print(1, "post04\n");
     /* handle surface rets */
 
     char out_line[MAX_NAME];
 
-    d_print(1, "post05\n");
     /* wanted */
     for(i=0x0; i<this->wanted_count_i; i++)
         if(this->instr_wanted[i] == this->taint_eng->current_instr_count)
@@ -754,7 +747,6 @@ int graph_plugin::post_execute_instruction_callback(DWORD eip)
  
         }
 
-    d_print(1, "post06\n");
     for(i=0x0; i<this->wanted_count_e; i++)
         if(this->addr_wanted[i] == this->taint_eng->current_eip)
         {
@@ -764,7 +756,6 @@ int graph_plugin::post_execute_instruction_callback(DWORD eip)
             print_ret(cur_graph_context);
         }
 
-    d_print(1, "post07\n");
     return 0x0;
 }
 
@@ -780,7 +771,6 @@ int graph_plugin::start_callback()
 
 int graph_plugin::finish_callback()
 {
-    fprintf(stderr, "graph_plugin::finish_callback\n");
 
     unsigned i, j, k;
     GRAPH_CONTEXT* cur_tid;
@@ -805,7 +795,7 @@ int graph_plugin::finish_callback()
 
         open = cur_tid->call_level - cur_tid->call_level_smallest;
         d_print(1, "[0x%08x] Left with %d nodes open\n", cur_tid->tid, open);
-        d_print(1, "[0x%08x] First: %d - %d = %d\n", cur_tid->tid, cur_tid->call_level_smallest, abs(int(this->call_level_start) - int(cur_tid->call_level_smallest)));
+        d_print(1, "[0x%08x] First: %d - %d = %d\n", cur_tid->tid, this->call_level_start - cur_tid->call_level_smallest, abs(int(this->call_level_start) - int(cur_tid->call_level_smallest)));
 
         diff_first = abs(int(this->call_level_start) - int(cur_tid->call_level_smallest));
         diff_last = open;
@@ -1281,6 +1271,7 @@ int add_to_list(GRAPH_CONTEXT* info, DWORD eip)
 
 int graph_plugin::handle_jxx(GRAPH_CONTEXT* info)
 {
+    d_print(1, "[handle_jxx]\n");
     if(info->waiting != 0x0)
     {
         return 0x0;
@@ -1303,7 +1294,7 @@ int graph_plugin::handle_jxx(GRAPH_CONTEXT* info)
         return 0x0;
     }
 
-    switch(info->before_jmp_code)
+    switch(info->been_jmp_code)
     {
         case JMP_CODE_JB_JC_JNAE:
             handle_this_jxx(info, "jb_jc_jnae");
@@ -1975,9 +1966,9 @@ int graph_plugin::handle_ret(GRAPH_CONTEXT* cur_ctx, OFFSET eip)
         d_print(2, "We are waiting\n");
         return 0x0;
     }
-    else if(cur_ctx->before_waiting)
+    else if(cur_ctx->been_waiting)
     {
-        cur_ctx->before_waiting = 0x0;
+        cur_ctx->been_waiting = 0x0;
         d_print(2, "We just matched waiting\n");
         d_print(1, "[handle ret finishes]\n");
         return 0x0;
@@ -2208,14 +2199,14 @@ int graph_plugin::parse_option(char* line)
 
 int graph_plugin::r_jb_jc_jnae(BYTE_t* b)
 {
-    this->cur_graph_context->before_jmp_code = JMP_CODE_JB_JC_JNAE;
+    this->cur_graph_context->been_jmp_code = JMP_CODE_JB_JC_JNAE;
     this->cur_graph_context->jumping = 0x1;
     return 0x0;
 }
 
 int graph_plugin::r_jae_jnb_jnc(BYTE_t* b)
 {
-    this->cur_graph_context->before_jmp_code = JMP_CODE_JAE_JNB_JNC;
+    this->cur_graph_context->been_jmp_code = JMP_CODE_JAE_JNB_JNC;
     this->cur_graph_context->jumping = 0x1;
 
     return 0x0;
@@ -2223,7 +2214,7 @@ int graph_plugin::r_jae_jnb_jnc(BYTE_t* b)
 
 int graph_plugin::r_je_jz(BYTE_t* b)
 {
-    this->cur_graph_context->before_jmp_code = JMP_CODE_JE_JZ;
+    this->cur_graph_context->been_jmp_code = JMP_CODE_JE_JZ;
     this->cur_graph_context->jumping = 0x1;
 
     return 0x0;
@@ -2231,84 +2222,84 @@ int graph_plugin::r_je_jz(BYTE_t* b)
 
 int graph_plugin::r_jne_jnz(BYTE_t* b)
 {
-    this->cur_graph_context->before_jmp_code = JMP_CODE_JNE_JNZ;
+    this->cur_graph_context->been_jmp_code = JMP_CODE_JNE_JNZ;
     this->cur_graph_context->jumping = 0x1;
     return 0x0;
 }
 
 int graph_plugin::r_jbe_jna(BYTE_t* b)
 {
-    this->cur_graph_context->before_jmp_code = JMP_CODE_JBE_JNA;
+    this->cur_graph_context->been_jmp_code = JMP_CODE_JBE_JNA;
     this->cur_graph_context->jumping = 0x1;
     return 0x0;
 }
 
 int graph_plugin::r_ja_jnbe(BYTE_t* b)
 {
-    this->cur_graph_context->before_jmp_code = JMP_CODE_JA_JNBE;
+    this->cur_graph_context->been_jmp_code = JMP_CODE_JA_JNBE;
     this->cur_graph_context->jumping = 0x1;
     return 0x0;
 }
 
 int graph_plugin::r_js(BYTE_t* b)
 {
-    this->cur_graph_context->before_jmp_code = JMP_CODE_JS;
+    this->cur_graph_context->been_jmp_code = JMP_CODE_JS;
     this->cur_graph_context->jumping = 0x1;
     return 0x0;
 }
 
 int graph_plugin::r_jns(BYTE_t* b)
 {
-    this->cur_graph_context->before_jmp_code = JMP_CODE_JNS;
+    this->cur_graph_context->been_jmp_code = JMP_CODE_JNS;
     this->cur_graph_context->jumping = 0x1;
     return 0x0;
 }
 
 int graph_plugin::r_jp_jpe(BYTE_t* b)
 {
-    this->cur_graph_context->before_jmp_code = JMP_CODE_JP_JPE;
+    this->cur_graph_context->been_jmp_code = JMP_CODE_JP_JPE;
     this->cur_graph_context->jumping = 0x1;
     return 0x0;
 }
 
 int graph_plugin::r_jnp_jpo(BYTE_t* b)
 {
-    this->cur_graph_context->before_jmp_code = JMP_CODE_JNP_JPO;
+    this->cur_graph_context->been_jmp_code = JMP_CODE_JNP_JPO;
     this->cur_graph_context->jumping = 0x1;
     return 0x0;
 }
 
 int graph_plugin::r_jl_jnge(BYTE_t* b)
 {
-    this->cur_graph_context->before_jmp_code = JMP_CODE_JL_JNGE;
+    this->cur_graph_context->been_jmp_code = JMP_CODE_JL_JNGE;
     this->cur_graph_context->jumping = 0x1;
     return 0x0;
 }
 
 int graph_plugin::r_jge_jnl(BYTE_t* b)
 {
-    this->cur_graph_context->before_jmp_code = JMP_CODE_JGE_JNL;
+    this->cur_graph_context->been_jmp_code = JMP_CODE_JGE_JNL;
     this->cur_graph_context->jumping = 0x1;
     return 0x0;
 }
 
 int graph_plugin::r_jle_jng(BYTE_t* b)
 {
-    this->cur_graph_context->before_jmp_code = JMP_CODE_JLE_JNG;
+    this->cur_graph_context->been_jmp_code = JMP_CODE_JLE_JNG;
     this->cur_graph_context->jumping = 0x1;
     return 0x0;
 }
 
 int graph_plugin::r_jg_jnle(BYTE_t* b)
 {
-    this->cur_graph_context->before_jmp_code = JMP_CODE_JG_JNLE;
+    this->cur_graph_context->been_jmp_code = JMP_CODE_JG_JNLE;
     this->cur_graph_context->jumping = 0x1;
     return 0x0;
 }
 
 int graph_plugin::r_jxx(BYTE_t* b)
 {
-    this->cur_graph_context->before_jmp_code = JMP_CODE_JXX;
+    this->cur_graph_context->been_jmp_code = JMP_CODE_JXX;
     this->cur_graph_context->jumping = 0x1;
     return 0x0;
 }
@@ -2499,7 +2490,7 @@ int graph_plugin::r_jmp_rm_16_32(BYTE_t* instr_ptr)
         this->cur_graph_context->target = target.get_DWORD();
     }
 
-    this->cur_graph_context->before_jmp_code = JMP_CODE_RM;
+    this->cur_graph_context->been_jmp_code = JMP_CODE_RM;
     this->cur_graph_context->jumping = 0x1;
 
 
@@ -2530,7 +2521,7 @@ int graph_plugin::r_jmp_rel_8(BYTE_t* instr_ptr)
     }
 
     /* [TODO:] wydaje sie ze poinno tu byc? */
-    this->cur_graph_context->before_jmp_code = JMP_CODE_RM;
+    this->cur_graph_context->been_jmp_code = JMP_CODE_RM;
     this->cur_graph_context->jumping = 0x1;
 
     return 0x0;

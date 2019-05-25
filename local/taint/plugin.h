@@ -59,6 +59,7 @@ class Plugin
         memset(this->instructions_32_extended_start, 0x0, sizeof(this->instructions_32_extended_start));
         memset(this->instructions_32_extended_end, 0x0, sizeof(this->instructions_32_extended_end));
 
+        /* too slow
         // fill the rest with noops
         for(unsigned int i = 0x0; i < 0x100; i++)
         {
@@ -66,6 +67,15 @@ class Plugin
             this->instructions_32_end[i] = &Plugin::r_noop;
             this->instructions_32_extended_start[i] = &Plugin::r_noop;
             this->instructions_32_extended_end[i] = &Plugin::r_noop;
+        }
+        */
+        // fill the rest with zeroes
+        for(unsigned int i = 0x0; i < 0x100; i++)
+        {
+            this->instructions_32_start[i] = 0x0;
+            this->instructions_32_end[i] = 0x0;
+            this->instructions_32_extended_start[i] = 0x0;
+            this->instructions_32_extended_end[i] = 0x0;
         }
 
     }

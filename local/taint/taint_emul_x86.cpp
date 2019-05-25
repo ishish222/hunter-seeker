@@ -742,32 +742,39 @@ int taint_x86::post_execute_instruction(DWORD eip)
     return 0x0;
 }
 
-int taint_x86::execute_instruction_32(DWORD eip, DWORD tid)
+inline int taint_x86::execute_instruction_32(DWORD eip, DWORD tid)
 {
     int ret;
     DWORD byte;
 
     byte = current_instr_byte->get_BYTE();
 
-    /* plugin preexecution */
+    d_print(3, "Current instr byte: 0x%02x\n", byte);
+    /* plugin instruction-specific preexecution */
     if(this->plugin)
     {
-        ret = (this->plugin->*(this->plugin->instructions_32_start[byte]))(this->current_instr_byte);
+        if(this->plugin->instructions_32_start[byte])
+        {
+            ret = (this->plugin->*(this->plugin->instructions_32_start[byte]))(this->current_instr_byte);
+        }
     }
 
     /* instruction preexecution */
     ret = (this->*(instructions_32[byte]))(this->current_instr_byte);
 
-    /* plugin postexecution */
+    /* plugin instruction-specific postexecution */
     if(this->plugin)
     {
-        ret = (this->plugin->*(this->plugin->instructions_32_end[byte]))(this->current_instr_byte);
+        if(this->plugin->instructions_32_end[byte])
+        {
+            ret = (this->plugin->*(this->plugin->instructions_32_end[byte]))(this->current_instr_byte);
+        }
     }
 
     return ret;
 }
 
-int taint_x86::execute_instruction_32_extended(DWORD eip, DWORD tid)
+inline int taint_x86::execute_instruction_32_extended(DWORD eip, DWORD tid)
 {
     int ret;
     DWORD byte;
@@ -777,7 +784,10 @@ int taint_x86::execute_instruction_32_extended(DWORD eip, DWORD tid)
     /* plugin preexecution */
     if(this->plugin)
     {
-        ret = (this->plugin->*(this->plugin->instructions_32_extended_start[byte]))(this->current_instr_byte);
+        if(this->plugin->instructions_32_extended_start[byte])
+        {
+            ret = (this->plugin->*(this->plugin->instructions_32_extended_start[byte]))(this->current_instr_byte);
+        }
     }
 
     /* instruction preexecution */
@@ -786,7 +796,10 @@ int taint_x86::execute_instruction_32_extended(DWORD eip, DWORD tid)
     /* plugin postexecution */
     if(this->plugin)
     {
-        ret = (this->plugin->*(this->plugin->instructions_32_extended_end[byte]))(this->current_instr_byte);
+        if(this->plugin->instructions_32_extended_end[byte])
+        {
+            ret = (this->plugin->*(this->plugin->instructions_32_extended_end[byte]))(this->current_instr_byte);    
+        }
     }
 
     return ret;
@@ -795,12 +808,12 @@ int taint_x86::execute_instruction_32_extended(DWORD eip, DWORD tid)
 
 int taint_x86::execute_instruction(DWORD eip, DWORD tid)
 {
-    d_print(3, "[0x%08x] Inst: 0x%08x, count: %d\n", this->cur_tid, eip, this->current_instr_count);
     int ret = 0x0;
 
     this->cur_tid = tid;
 
     this->current_instr_byte = &this->memory[eip];
+    d_print(1, "current_instr_byte: 0x%02x\n", this->current_instr_byte->get_BYTE());
 
     if(this->options & OPTION_COUNT_INSTRUCTIONS)
     {
@@ -838,6 +851,7 @@ int taint_x86::execute_instruction(DWORD eip, DWORD tid)
 int taint_x86::execute_instruction_at_eip(DWORD eip, DWORD tid)
 {
 
+    d_print(1, "[0x%08x] Inst: 0x%08x, count: %d\n", tid, eip, this->current_instr_count);
     //this->propagations[this->current_propagation_count].instruction = eip;
     //this->propagations[this->current_propagation_count].instr_count = this->current_instr_count;
     this->cur_tid = tid;

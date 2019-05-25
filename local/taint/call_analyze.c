@@ -238,7 +238,6 @@ int main(int argc, char** argv)
 
     taint_eng.end_addr = end_addr;
     taint_eng.instr_limit = instr_limit;
-    fprintf(stderr, "taint_eng.ctx_info: 0x%08x\n", &taint_eng.ctx_info[0]);
 
 
     taint_eng.bp_hit = 0x0;
@@ -246,11 +245,9 @@ int main(int argc, char** argv)
     /* registering plugin */
     graph_plugin graph_eng;
     taint_eng.plugin = (Plugin*)&graph_eng;
-            fprintf(stderr, "taint_eng->ctx_info: 0x%08x\n", taint_eng.ctx_info);
     taint_eng.plugin->taint_eng = &taint_eng;
 
 //    graph_plugin* graph_eng;
-            fprintf(stderr, "taint_eng->ctx_info: 0x%08x\n", taint_eng.ctx_info);
 //    graph_eng = (graph_plugin*) &taint_eng.plugin;
 
     /* configuring plugin */
@@ -263,7 +260,6 @@ int main(int argc, char** argv)
     graph_eng.depth = depth;
     graph_eng.depth += graph_eng.call_level_start; /* because we do not start at 0x0 */
  
-    fprintf(stderr, "taint_eng.ctx_info: 0x%08x\n", &taint_eng.ctx_info[0]);
     /* executing instructions */
     char* line;
     size_t len = 0;
@@ -421,9 +417,6 @@ int main(int argc, char** argv)
  
     for(i = 0x0; i<taint_eng.tid_count; i++)
     {
-        fprintf(stderr, "taint_eng.ctx_info: 0x%08x\n", &taint_eng.ctx_info[0]);
-        fprintf(stderr, "Thread entry no 0x%02x: TID: 0x%08x\n", i, taint_eng.ctx_info[i].tid);
-        fprintf(stderr, "Removing thread: 0x%08x\n", taint_eng.ctx_info[i].tid);
         taint_eng.del_thread_srsly(taint_eng.ctx_info[i].tid);
     }
    

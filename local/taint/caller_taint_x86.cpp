@@ -687,6 +687,7 @@ int add_to_list(CONTEXT_INFO* info, DWORD eip)
 
 int taint_x86::handle_jxx(CONTEXT_INFO* info)
 {
+    d_print(1, "[handle_jxx]\n");
     if(info->waiting != 0x0)
     {
         return 0x0;
@@ -709,7 +710,7 @@ int taint_x86::handle_jxx(CONTEXT_INFO* info)
         return 0x0;
     }
 
-    switch(info->before_jmp_code)
+    switch(info->been_jmp_code)
     {
         case JMP_CODE_JB_JC_JNAE:
             handle_this_jxx(info, "jb_jc_jnae");
@@ -1655,9 +1656,9 @@ int taint_x86::handle_ret(CONTEXT_INFO* cur_ctx, OFFSET eip)
         d_print(2, "We are waiting\n");
         return 0x0;
     }
-    else if(cur_ctx->before_waiting)
+    else if(cur_ctx->been_waiting)
     {
-        cur_ctx->before_waiting = 0x0;
+        cur_ctx->been_waiting = 0x0;
         d_print(2, "We just matched waiting\n");
         d_print(1, "[handle ret finishes]\n");
         return 0x0;
@@ -2195,20 +2196,20 @@ int taint_x86::pre_execute_instruction(DWORD eip)
 
     if(cur_info->returning)
     {
-        cur_info->before_returning = 1;
+        cur_info->been_returning = 1;
         cur_info->returning = 0;
     }
 
     if(cur_info->calling)
     {
-        cur_info->before_calling = 1;
+        cur_info->been_calling = 1;
         cur_info->calling = 0;
     }
 
     if(cur_info->jumping)
     {
-        cur_info->before_jumping = 1;
-        cur_info->before_jmp_code = cur_info->jmp_code;
+        cur_info->been_jumping = 1;
+        cur_info->been_jmp_code = cur_info->jmp_code;
         cur_info->jumping = 0;
     }
 
@@ -2217,7 +2218,7 @@ int taint_x86::pre_execute_instruction(DWORD eip)
         /* stop waiting */
         d_print(1, "[0x%08x] Waiting: 0x%08x, eip: 0x%08x\n", this->cur_tid, cur_info->waiting, eip);
         cur_info->waiting = 0x0;
-        cur_info->before_waiting = 0x1;
+        cur_info->been_waiting = 0x1;
         if((cur_info->last_emit_decision == DECISION_EMIT) || (cur_info->last_emit_decision == DECISION_EMIT_NESTED))
         {
             print_ret(cur_info);
@@ -2253,25 +2254,25 @@ int taint_x86::post_execute_instruction(DWORD eip)
 
 //    if(cur_ctx->returning > 0x0) cur_ctx->returning--;
 
-    if((cur_ctx->before_returning == 1))
+    if((cur_ctx->been_returning == 1))
     {
         handle_ret(cur_ctx, eip);
-        cur_ctx->before_returning = 0;
+        cur_ctx->been_returning = 0;
     }
 
-    if(cur_ctx->before_calling)
+    if(cur_ctx->been_calling)
     {
         cur_ctx->target = eip;
         d_print(1, "Next call target = 0x%08x\n", eip);
         handle_call(cur_ctx);
-        cur_ctx->before_calling = 0;
+        cur_ctx->been_calling = 0;
     }
 
-    if(cur_ctx->before_jumping)
+    if(cur_ctx->been_jumping)
     {
         cur_ctx->target = eip;
         handle_jxx(cur_ctx);
-        cur_ctx->before_jumping = 0;
+        cur_ctx->been_jumping = 0;
     }
 
     /* handle surface rets */
@@ -2398,7 +2399,6 @@ int taint_x86::post_execute_instruction(DWORD eip)
 
 int taint_x86::execute_instruction(DWORD eip, DWORD tid)
 {
-    d_print(3, "[0x%08x] Inst: 0x%08x, count: %d\n", this->cur_tid, eip, this->current_instr_count);
     int ret = 0x0;
 
     this->cur_tid = tid;
@@ -2415,6 +2415,7 @@ int taint_x86::execute_instruction(DWORD eip, DWORD tid)
       */      
 
     this->current_instr_byte = &this->memory[eip];
+    d_print(1, "current_instr_byte: 0x%02x\n", this->current_instr_byte->get_BYTE());
 /*
     if((this->started) && (this->counter <0x10))
         d_print(1, "[0x%08x] 0x%08x: 0x%02x, count: %d\n", this->cur_tid, eip, *(this->current_instr_byte), this->current_instr_count);
@@ -2454,6 +2455,7 @@ int taint_x86::execute_instruction(DWORD eip, DWORD tid)
 
 int taint_x86::execute_instruction_at_eip(DWORD eip, DWORD tid)
 {
+    d_print(1, "[0x%08x] Inst: 0x%08x, count: %d\n", tid, eip, this->current_instr_count);
 
     //this->propagations[this->current_propagation_count].instruction = eip;
     //this->propagations[this->current_propagation_count].instr_count = this->current_instr_count;
@@ -4676,14 +4678,14 @@ int taint_x86::r_noop(BYTE_t* b)
 
 int taint_x86::r_jb_jc_jnae(BYTE_t* b)
 {
-    this->cur_info->before_jmp_code = JMP_CODE_JB_JC_JNAE;
+    this->cur_info->been_jmp_code = JMP_CODE_JB_JC_JNAE;
     this->cur_info->jumping = 0x1;
     return 0x0;
 }
 
 int taint_x86::r_jae_jnb_jnc(BYTE_t* b)
 {
-    this->cur_info->before_jmp_code = JMP_CODE_JAE_JNB_JNC;
+    this->cur_info->been_jmp_code = JMP_CODE_JAE_JNB_JNC;
     this->cur_info->jumping = 0x1;
 
     return 0x0;
@@ -4691,7 +4693,7 @@ int taint_x86::r_jae_jnb_jnc(BYTE_t* b)
 
 int taint_x86::r_je_jz(BYTE_t* b)
 {
-    this->cur_info->before_jmp_code = JMP_CODE_JE_JZ;
+    this->cur_info->been_jmp_code = JMP_CODE_JE_JZ;
     this->cur_info->jumping = 0x1;
 
     return 0x0;
@@ -4699,84 +4701,84 @@ int taint_x86::r_je_jz(BYTE_t* b)
 
 int taint_x86::r_jne_jnz(BYTE_t* b)
 {
-    this->cur_info->before_jmp_code = JMP_CODE_JNE_JNZ;
+    this->cur_info->been_jmp_code = JMP_CODE_JNE_JNZ;
     this->cur_info->jumping = 0x1;
     return 0x0;
 }
 
 int taint_x86::r_jbe_jna(BYTE_t* b)
 {
-    this->cur_info->before_jmp_code = JMP_CODE_JBE_JNA;
+    this->cur_info->been_jmp_code = JMP_CODE_JBE_JNA;
     this->cur_info->jumping = 0x1;
     return 0x0;
 }
 
 int taint_x86::r_ja_jnbe(BYTE_t* b)
 {
-    this->cur_info->before_jmp_code = JMP_CODE_JA_JNBE;
+    this->cur_info->been_jmp_code = JMP_CODE_JA_JNBE;
     this->cur_info->jumping = 0x1;
     return 0x0;
 }
 
 int taint_x86::r_js(BYTE_t* b)
 {
-    this->cur_info->before_jmp_code = JMP_CODE_JS;
+    this->cur_info->been_jmp_code = JMP_CODE_JS;
     this->cur_info->jumping = 0x1;
     return 0x0;
 }
 
 int taint_x86::r_jns(BYTE_t* b)
 {
-    this->cur_info->before_jmp_code = JMP_CODE_JNS;
+    this->cur_info->been_jmp_code = JMP_CODE_JNS;
     this->cur_info->jumping = 0x1;
     return 0x0;
 }
 
 int taint_x86::r_jp_jpe(BYTE_t* b)
 {
-    this->cur_info->before_jmp_code = JMP_CODE_JP_JPE;
+    this->cur_info->been_jmp_code = JMP_CODE_JP_JPE;
     this->cur_info->jumping = 0x1;
     return 0x0;
 }
 
 int taint_x86::r_jnp_jpo(BYTE_t* b)
 {
-    this->cur_info->before_jmp_code = JMP_CODE_JNP_JPO;
+    this->cur_info->been_jmp_code = JMP_CODE_JNP_JPO;
     this->cur_info->jumping = 0x1;
     return 0x0;
 }
 
 int taint_x86::r_jl_jnge(BYTE_t* b)
 {
-    this->cur_info->before_jmp_code = JMP_CODE_JL_JNGE;
+    this->cur_info->been_jmp_code = JMP_CODE_JL_JNGE;
     this->cur_info->jumping = 0x1;
     return 0x0;
 }
 
 int taint_x86::r_jge_jnl(BYTE_t* b)
 {
-    this->cur_info->before_jmp_code = JMP_CODE_JGE_JNL;
+    this->cur_info->been_jmp_code = JMP_CODE_JGE_JNL;
     this->cur_info->jumping = 0x1;
     return 0x0;
 }
 
 int taint_x86::r_jle_jng(BYTE_t* b)
 {
-    this->cur_info->before_jmp_code = JMP_CODE_JLE_JNG;
+    this->cur_info->been_jmp_code = JMP_CODE_JLE_JNG;
     this->cur_info->jumping = 0x1;
     return 0x0;
 }
 
 int taint_x86::r_jg_jnle(BYTE_t* b)
 {
-    this->cur_info->before_jmp_code = JMP_CODE_JG_JNLE;
+    this->cur_info->been_jmp_code = JMP_CODE_JG_JNLE;
     this->cur_info->jumping = 0x1;
     return 0x0;
 }
 
 int taint_x86::r_jxx(BYTE_t* b)
 {
-    this->cur_info->before_jmp_code = JMP_CODE_JXX;
+    this->cur_info->been_jmp_code = JMP_CODE_JXX;
     this->cur_info->jumping = 0x1;
     return 0x0;
 }
@@ -12003,7 +12005,7 @@ int taint_x86::r_jmp_rm_16_32(BYTE_t* instr_ptr)
         this->handle_jmp(cur_ctx);
     }
 
-    this->cur_info->before_jmp_code = JMP_CODE_RM;
+    this->cur_info->been_jmp_code = JMP_CODE_RM;
     this->cur_info->jumping = 0x1;
 
 

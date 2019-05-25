@@ -2340,16 +2340,16 @@ typedef struct _CONTEXT_INFO
     unsigned ret_idx;
     char calling;
     char returning;
-    char before_calling;
-    char before_returning;
-    char before_waiting;
+    char been_calling;
+    char been_returning;
+    char been_waiting;
     char last_emit_decision;
 
     /* jmp analysis processing */
     char jumping;
-    char before_jumping;
+    char been_jumping;
     char jmp_code;
-    char before_jmp_code;
+    char been_jmp_code;
 
     OFFSET source;
     OFFSET target;

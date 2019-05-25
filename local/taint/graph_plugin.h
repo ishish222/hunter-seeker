@@ -115,16 +115,16 @@ typedef struct _GRAPH_CONTEXT
     unsigned ret_idx;
     char calling;
     char returning;
-    char before_calling;
-    char before_returning;
-    char before_waiting;
+    char been_calling;
+    char been_returning;
+    char been_waiting;
     char last_emit_decision;
 
     /* jmp analysis processing */
     char jumping;
-    char before_jumping;
+    char been_jumping;
     char jmp_code;
-    char before_jmp_code;
+    char been_jmp_code;
 
     OFFSET source;
     OFFSET target;
@@ -328,11 +328,29 @@ class graph_plugin : Plugin
         this->instructions_32_start[0x7e] = (Plugin::instruction_routine)&graph_plugin::r_jle_jng;
         this->instructions_32_start[0x7f] = (Plugin::instruction_routine)&graph_plugin::r_jg_jnle;
 
-        this->instructions_32_start[0xc2] = (Plugin::instruction_routine)&graph_plugin::r_retn;                       // cf
-        this->instructions_32_start[0xc3] = (Plugin::instruction_routine)&graph_plugin::r_ret;                        // cf
+        this->instructions_32_start[0xc2] = (Plugin::instruction_routine)&graph_plugin::r_retn;
+        this->instructions_32_start[0xc3] = (Plugin::instruction_routine)&graph_plugin::r_ret;
 
-        this->instructions_32_start[0xff] = (Plugin::instruction_routine)&graph_plugin::r_decode_execute_ff;          // 
+        this->instructions_32_start[0xe8] = (Plugin::instruction_routine)&graph_plugin::r_call_rel;
+        this->instructions_32_start[0xe9] = (Plugin::instruction_routine)&graph_plugin::r_jmp_rel_16_32;
+        this->instructions_32_start[0xeb] = (Plugin::instruction_routine)&graph_plugin::r_jmp_rel_8;
 
+        this->instructions_32_start[0xff] = (Plugin::instruction_routine)&graph_plugin::r_decode_execute_ff;
+
+        this->instructions_32_extended_start[0x82] = (Plugin::instruction_routine)&graph_plugin::r_jb_jc_jnae;
+        this->instructions_32_extended_start[0x83] = (Plugin::instruction_routine)&graph_plugin::r_jae_jnb_jnc; 
+        this->instructions_32_extended_start[0x84] = (Plugin::instruction_routine)&graph_plugin::r_je_jz;
+        this->instructions_32_extended_start[0x85] = (Plugin::instruction_routine)&graph_plugin::r_jne_jnz;
+        this->instructions_32_extended_start[0x86] = (Plugin::instruction_routine)&graph_plugin::r_jbe_jna;
+        this->instructions_32_extended_start[0x87] = (Plugin::instruction_routine)&graph_plugin::r_ja_jnbe;
+        this->instructions_32_extended_start[0x88] = (Plugin::instruction_routine)&graph_plugin::r_js;
+        this->instructions_32_extended_start[0x89] = (Plugin::instruction_routine)&graph_plugin::r_jns;
+        this->instructions_32_extended_start[0x8a] = (Plugin::instruction_routine)&graph_plugin::r_jp_jpe;
+        this->instructions_32_extended_start[0x8b] = (Plugin::instruction_routine)&graph_plugin::r_jnp_jpo;
+        this->instructions_32_extended_start[0x8c] = (Plugin::instruction_routine)&graph_plugin::r_jl_jnge;
+        this->instructions_32_extended_start[0x8d] = (Plugin::instruction_routine)&graph_plugin::r_jge_jnl;
+        this->instructions_32_extended_start[0x8e] = (Plugin::instruction_routine)&graph_plugin::r_jle_jng;
+        this->instructions_32_extended_start[0x8f] = (Plugin::instruction_routine)&graph_plugin::r_jg_jnle; 
 
         unsigned i;
 
