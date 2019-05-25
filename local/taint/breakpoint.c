@@ -15,25 +15,24 @@ BREAKPOINT parse_breakpoint(char* string)
         fprintf(stderr, "Error parsing breakpoint: %s\n", string);
         exit(1);
     }
-
     bp.offset = strtoul(current, 0x0, 10);
+
     current = strtok(0x0, ",");
     if(!current)
     {
         fprintf(stderr, "Error parsing breakpoint: %s\n", string);
         exit(1);
     }
-
     bp.mem_offset = strtoul(current, 0x0, 0x10);
+
     current = strtok(0x0, "+");
     if(!current)
     {
         fprintf(stderr, "Error parsing breakpoint: %s\n", string);
         exit(1);
     }
-    
     bp.mode = 0x0;
-//    fprintf(stderr, "%s\n", current);
+
     if(strstr(current, "READ") != 0x0)
         bp.mode |= BP_MODE_READ;
     if(strstr(current, "WRITE") != 0x0)
@@ -65,7 +64,6 @@ TRACE_WATCHPOINT parse_trace_watchpoint(char* string, taint_x86* taint_eng)
         current ++;
     }
     else twp.interactive = 0x0;
-
     twp.offset = strtoul(current, 0x0, 10);
     fprintf(stderr, "Instr count: %lld\n", twp.offset);
 

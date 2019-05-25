@@ -36,5 +36,8 @@ int register_security(char* line, taint_x86* taint_eng);
 int register_lib(char* line, taint_x86* taint_eng);
 int deregister_lib(char* line, taint_x86* taint_eng);
 int deregister_thread(char* line, taint_x86* taint_eng);
+int register_memory_breakpoints(char* line, taint_x86* taint_eng);
+int register_taint_breakpoints(char* line, taint_x86* taint_eng);
+int register_trace_watchpoints(char* line, taint_x86* taint_eng);
 
 #endif

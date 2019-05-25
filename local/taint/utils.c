@@ -53,6 +53,11 @@ int filter_str(char* str)
         if(str[i] == '\r')
             str[i] = 0x0;
     }
+    for(i = 0x0; i<len; i++)
+    {
+        if(str[i] == '\n')
+            str[i] = 0x0;
+    }
     return 0x0;
 }
 

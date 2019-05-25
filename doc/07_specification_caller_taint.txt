@@ -74,7 +74,28 @@ OP - set option
     
     OPTION_VERIFY_OOB:
         [todo]
-    
+
+BR - register memory breakpoint
+    The syntax is this:
+        Entries for individual breakpoints are separated with '+'
+        Each entry takes the form: <offset>,<mem_offset>,<mode>
+
+        mode can be: READ,WRITE,EXECUTE
+
+BT - register taint breakpoint
+    The syntax is this:
+        Entries for individual breakpoints are separated with '+'
+        Each entry takes the form: <offset>,<mem_offset>,<mode>
+
+        mode can be: READ,WRITE,EXECUTE
+
+BW - register trace watchpoint
+    The syntax is this:
+        Entries for individual breakpoints are separated with '+'
+        Each entry takes the form: <offset>,<mem_offset>,<tid>,<name>
+
+        if offset is prefixed with "i", the watchpoint is an interactive watchpoint
+
 BA - blacklist address
     syntax: BA,<address>
 

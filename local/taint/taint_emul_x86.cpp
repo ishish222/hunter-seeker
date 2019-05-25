@@ -223,7 +223,7 @@ void taint_x86::store_32(OFFSET off, DWORD_t v)
         if(verify_seg_sec(off))
             return;
 
-#ifdef HANDLE_BREAKPOINTS
+    if(this->options & HANDLE_BREAKPOINTS)
     for(int i = 0x0; i< this->bpt_count; i++)
         if(((off - this->bps[i].mem_offset) <= 0x4) && (this->bps[i].mode & BP_MODE_WRITE))
         {
@@ -235,7 +235,7 @@ void taint_x86::store_32(OFFSET off, DWORD_t v)
             print_security_layers(1, off);
             return;
         }
-#endif
+
     v.to_mem(&this->memory[off], 1);
 }
 
@@ -248,7 +248,7 @@ void taint_x86::restore_32(OFFSET off, DWORD_t& ret)
             return;
         }
 
-#ifdef HANDLE_BREAKPOINTS
+    if(this->options & HANDLE_BREAKPOINTS)
     for(int i = 0x0; i< this->bpt_count; i++)
         if((this->bps[i].mem_offset == off) && (this->bps[i].mode & BP_MODE_READ))
         {
@@ -256,7 +256,7 @@ void taint_x86::restore_32(OFFSET off, DWORD_t& ret)
             d_print(1, "Breakpoint RW: READ from 0x%x @ %lld, 0x%08x\n", off, this->current_instr_count, this->current_eip);
             print_mem(1, off, 0x10);
         }
-#endif
+
     ret.from_mem(&this->memory[off], 1);
 }
 
@@ -357,7 +357,7 @@ void taint_x86::store_16(OFFSET off, WORD_t v)
         if(verify_seg_sec(off))
             return;
 
-#ifdef HANDLE_BREAKPOINTS
+    if(this->options & HANDLE_BREAKPOINTS)
     for(int i = 0x0; i<  this->bpt_count; i++)
         if(((off - this->bps[i].mem_offset) <= 0x2) && (this->bps[i].mode & BP_MODE_WRITE))
         {
@@ -369,7 +369,7 @@ void taint_x86::store_16(OFFSET off, WORD_t v)
             print_security_layers(1, off);
             return;
         }
-#endif
+
     v.to_mem(&this->memory[off], 1);
 }
 
@@ -382,7 +382,7 @@ void taint_x86::restore_16(OFFSET off, WORD_t& ret)
             return;
         }
 
-#ifdef HANDLE_BREAKPOINTS
+    if(this->options & HANDLE_BREAKPOINTS)
     for(int i = 0x0; i<  this->bpt_count; i++)
         if((this->bps[i].mem_offset == off) && (this->bps[i].mode & BP_MODE_READ))
         {
@@ -390,7 +390,7 @@ void taint_x86::restore_16(OFFSET off, WORD_t& ret)
             d_print(1, "Breakpoint RW: READ from 0x%x @ %lld, 0x%08x\n", off, this->current_instr_count, this->current_eip);
             print_mem(1, off, 0x10);
         }
-#endif
+
     ret.from_mem(&this->memory[off], 1);
 }
 
@@ -487,7 +487,7 @@ if(this->options & OPTION_VERIFY_SEG_SEC)
     if(verify_seg_sec(off))
         return;
 
-#ifdef HANDLE_BREAKPOINTS
+    if(this->options & HANDLE_BREAKPOINTS)
     for(int i = 0x0; i< this->bpt_count; i++)
         if((this->bps[i].mem_offset == off) && (this->bps[i].mode & BP_MODE_WRITE))
         {
@@ -499,7 +499,7 @@ if(this->options & OPTION_VERIFY_SEG_SEC)
             print_security_layers(1, off);
             return;
         }
-#endif
+
     v.to_mem(&this->memory[off]);
 }
 
@@ -512,7 +512,7 @@ void taint_x86::restore_8(OFFSET off, BYTE_t& ret)
             return;
         }
 
-#ifdef HANDLE_BREAKPOINTS
+    if(this->options & HANDLE_BREAKPOINTS)
     for(int i = 0x0; i< this->bpt_count; i++)
         if((this->bps[i].mem_offset == off) && (this->bps[i].mode & BP_MODE_READ))
         {
@@ -520,7 +520,7 @@ void taint_x86::restore_8(OFFSET off, BYTE_t& ret)
             d_print(1, "Breakpoint RW: READ from 0x%x @ %lld, 0x%08x\n", off, this->current_instr_count, this->current_eip);
             print_mem(1, off, 0x10);
         }
-#endif
+
     ret.from_mem(&this->memory[off]);
 }
 
@@ -650,7 +650,7 @@ int taint_x86::post_execute_instruction(DWORD eip)
 
     /* regular breakpoints */
 
-#ifdef HANDLE_BREAKPOINTS
+//    if(this->options & HANDLE_BREAKPOINTS)
     for(i=0x0; i<this->bpt_count; i++)
         if((this->bps[i].offset == this->current_instr_count) && (this->bps[i].offset) && (this->bps[i].mode & BP_MODE_EXECUTE))
         {
@@ -710,7 +710,6 @@ int taint_x86::post_execute_instruction(DWORD eip)
                 this->prompt_taint();
             }
         }
-#endif
 
     if((this->end_addr) || (this->instr_limit))
     {

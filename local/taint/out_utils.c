@@ -2,6 +2,7 @@
 #include <utils.h>
 #include <taint_emul_x86.h>
 #include <stdio.h>
+#include <breakpoint.h>
 
 void deserialize_context(CONTEXT_OUT* ctx_out, char* buffer)
 {
@@ -77,7 +78,7 @@ int load_mod(char* line, taint_x86* taint_eng)
 
     cmd = strtok(line, ",");
     file_name = strtok(0x0, ",");
-    file_name[strlen(file_name)-1] = 0x0;
+    //file_name[strlen(file_name)-1] = 0x0;
     
     printf("Opening mod file: %s\n", file_name);
 
@@ -95,7 +96,7 @@ int load_mem(char* line, taint_x86* taint_eng)
 
     cmd = strtok(line, ",");
     file_name = strtok(0x0, ",");
-    file_name[strlen(file_name)-1] = 0x0;
+    //file_name[strlen(file_name)-1] = 0x0;
     
     printf("Loading memory from: %s\n", file_name);
 
@@ -115,7 +116,7 @@ int load_file(char* line, taint_x86* taint_eng)
 
     cmd = strtok(line, ",");
     file_name = strtok(0x0, ",");
-    file_name[strlen(file_name)-1] = 0x0;
+    //file_name[strlen(file_name)-1] = 0x0;
     
     printf("Switching instr file to %s\n", file_name);
 
@@ -264,4 +265,43 @@ int deregister_thread(char* line, taint_x86* taint_eng)
     return 0x0;
 }
 
+
+int register_memory_breakpoints(char* line, taint_x86* taint_eng)
+{
+    char* cmd;
+    char* entry;
+
+    cmd = strtok(line, ",");
+    entry = strtok(0x0, "");
+
+    parse_mem_breakpoints(entry, taint_eng);
+
+    return 0x0;
+}
+
+int register_taint_breakpoints(char* line, taint_x86* taint_eng)
+{
+    char* cmd;
+    char* entry;
+
+    cmd = strtok(line, ",");
+    entry = strtok(0x0, "");
+
+    parse_taint_breakpoints(entry, taint_eng);
+
+    return 0x0;
+}
+
+int register_trace_watchpoints(char* line, taint_x86* taint_eng)
+{
+    char* cmd;
+    char* entry;
+
+    cmd = strtok(line, ",");
+    entry = strtok(0x0, "");
+
+    parse_trace_watchpoints(entry, taint_eng);
+
+    return 0x0;
+}
 
