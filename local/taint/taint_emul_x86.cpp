@@ -215,13 +215,13 @@ inline int taint_x86::verify_oob_offset(OFFSET off, OFFSET size)
 
 void taint_x86::store_32(OFFSET off, DWORD_t v)
 {
-#ifdef VERIFY_OOB
-    if(this->verify_oob_offset(off, this->mem_length) != 0x0) return;
-#endif
+    if(this->options & OPTION_VERIFY_OOB)
+        if(this->verify_oob_offset(off, this->mem_length) != 0x0) 
+            return;
 
-if(this->options & OPTION_VERIFY_SEG_SEC) 
-    if(verify_seg_sec(off))
-        return;
+    if(this->options & OPTION_VERIFY_SEG_SEC) 
+        if(verify_seg_sec(off))
+            return;
 
 #ifdef HANDLE_BREAKPOINTS
     for(int i = 0x0; i< this->bpt_count; i++)
@@ -241,13 +241,12 @@ if(this->options & OPTION_VERIFY_SEG_SEC)
 
 void taint_x86::restore_32(OFFSET off, DWORD_t& ret)
 {
-#ifdef VERIFY_OOB
-    if(this->verify_oob_offset(off, this->mem_length) != 0x0) 
-    {
-        ret = this->invalid_dword;
-        return;
-    }
-#endif
+    if(this->options & OPTION_VERIFY_OOB)
+        if(this->verify_oob_offset(off, this->mem_length) != 0x0) 
+        {
+            ret = this->invalid_dword;
+            return;
+        }
 
 #ifdef HANDLE_BREAKPOINTS
     for(int i = 0x0; i< this->bpt_count; i++)
@@ -276,9 +275,9 @@ void taint_x86::restore_32(DWORD_t off, DWORD_t& ret)
 
 void taint_x86::reg_store_32(OFFSET off, DWORD_t v, int tid)
 {
-#ifdef VERIFY_OOB
-    if(this->verify_oob_offset(off, REG_SIZE) != 0x0) return;
-#endif
+    if(this->options & OPTION_VERIFY_OOB)
+        if(this->verify_oob_offset(off, REG_SIZE) != 0x0) 
+            return;
 
     CONTEXT_INFO* info;
     info = this->get_context_info(tid);
@@ -293,12 +292,11 @@ void taint_x86::reg_store_32(OFFSET off, DWORD_t v, int tid)
 
 DWORD_t taint_x86::reg_restore_32(OFFSET off, int tid)
 {
-#ifdef VERIFY_OOB
-    if(this->verify_oob_offset(off, REG_SIZE) != 0x0) 
-    {
-        return this->invalid_dword;
-    }
-#endif
+    if(this->options & OPTION_VERIFY_OOB)
+        if(this->verify_oob_offset(off, REG_SIZE) != 0x0) 
+        {
+            return this->invalid_dword;
+        }
 
     CONTEXT_INFO* info;
     info = this->get_context_info(tid);
@@ -351,13 +349,13 @@ DWORD_t taint_x86::reg_restore_32(DWORD_t off)
 
 void taint_x86::store_16(OFFSET off, WORD_t v)
 {
-#ifdef VERIFY_OOB
-    if(this->verify_oob_offset(off, this->mem_length) != 0x0) return;
-#endif
+    if(this->options & OPTION_VERIFY_OOB)
+        if(this->verify_oob_offset(off, this->mem_length) != 0x0) 
+            return;
 
-if(this->options & OPTION_VERIFY_SEG_SEC) 
-    if(verify_seg_sec(off))
-        return;
+    if(this->options & OPTION_VERIFY_SEG_SEC) 
+        if(verify_seg_sec(off))
+            return;
 
 #ifdef HANDLE_BREAKPOINTS
     for(int i = 0x0; i<  this->bpt_count; i++)
@@ -377,13 +375,12 @@ if(this->options & OPTION_VERIFY_SEG_SEC)
 
 void taint_x86::restore_16(OFFSET off, WORD_t& ret)
 {
-#ifdef VERIFY_OOB
-    if(this->verify_oob_offset(off, this->mem_length) != 0x0) 
-    {
-        ret = this->invalid_word;
-        return;
-    }
-#endif
+    if(this->options & OPTION_VERIFY_OOB)
+        if(this->verify_oob_offset(off, this->mem_length) != 0x0) 
+        {
+            ret = this->invalid_word;
+            return;
+        }
 
 #ifdef HANDLE_BREAKPOINTS
     for(int i = 0x0; i<  this->bpt_count; i++)
@@ -412,9 +409,9 @@ void taint_x86::restore_16(DWORD_t off, WORD_t& ret)
 
 void taint_x86::reg_store_16(OFFSET off, WORD_t v, int tid)
 {
-#ifdef VERIFY_OOB
-    if(this->verify_oob_offset(off, REG_SIZE) != 0x0) return;
-#endif
+    if(this->options & OPTION_VERIFY_OOB)
+        if(this->verify_oob_offset(off, REG_SIZE) != 0x0) 
+            return;
 
     CONTEXT_INFO* info;
     info = this->get_context_info(tid);
@@ -427,12 +424,11 @@ void taint_x86::reg_store_16(OFFSET off, WORD_t v, int tid)
 
 WORD_t taint_x86::reg_restore_16(OFFSET off, int tid)
 {
-#ifdef VERIFY_OOB
-    if(this->verify_oob_offset(off, REG_SIZE) != 0x0) 
-    {
-        return this->invalid_word;
-    }
-#endif
+    if(this->options & OPTION_VERIFY_OOB)
+        if(this->verify_oob_offset(off, REG_SIZE) != 0x0) 
+        {
+            return this->invalid_word;
+        }
 
     CONTEXT_INFO* info;
     info = this->get_context_info(tid);
@@ -483,9 +479,9 @@ WORD_t taint_x86::reg_restore_16(DWORD_t off)
 
 void taint_x86::store_8(OFFSET off, BYTE_t v)
 {
-#ifdef VERIFY_OOB
-    if(this->verify_oob_offset(off, REG_SIZE) != 0x0) return;
-#endif
+    if(this->options & OPTION_VERIFY_OOB)
+        if(this->verify_oob_offset(off, REG_SIZE) != 0x0) 
+            return;
 
 if(this->options & OPTION_VERIFY_SEG_SEC) 
     if(verify_seg_sec(off))
@@ -509,13 +505,12 @@ if(this->options & OPTION_VERIFY_SEG_SEC)
 
 void taint_x86::restore_8(OFFSET off, BYTE_t& ret)
 {
-#ifdef VERIFY_OOB
-    if(this->verify_oob_offset(off, REG_SIZE) != 0x0) 
-    {
-        ret = this->invalid_byte;
-        return;
-    }
-#endif
+    if(this->options & OPTION_VERIFY_OOB)
+        if(this->verify_oob_offset(off, REG_SIZE) != 0x0) 
+        {
+            ret = this->invalid_byte;
+            return;
+        }
 
 #ifdef HANDLE_BREAKPOINTS
     for(int i = 0x0; i< this->bpt_count; i++)
@@ -544,9 +539,9 @@ void taint_x86::restore_8(DWORD_t off, BYTE_t& ret)
 
 void taint_x86::reg_store_8(OFFSET off, BYTE_t v, int tid)
 {
-#ifdef VERIFY_OOB
-    if(this->verify_oob_offset(off, REG_SIZE) != 0x0) return;
-#endif
+    if(this->options & OPTION_VERIFY_OOB)
+        if(this->verify_oob_offset(off, REG_SIZE) != 0x0) 
+            return;
 
     CONTEXT_INFO* info;
     info = this->get_context_info(tid);
@@ -558,12 +553,11 @@ void taint_x86::reg_store_8(OFFSET off, BYTE_t v, int tid)
 
 BYTE_t taint_x86::reg_restore_8(OFFSET off, int tid)
 {
-#ifdef VERIFY_OOB
-    if(this->verify_oob_offset(off, REG_SIZE) != 0x0) 
-    {   
-        return this->invalid_byte;
-    }
-#endif
+    if(this->options & OPTION_VERIFY_OOB)
+        if(this->verify_oob_offset(off, REG_SIZE) != 0x0) 
+        {   
+            return this->invalid_byte;
+        }
 
     CONTEXT_INFO* info;
     info = this->get_context_info(tid);
@@ -1097,9 +1091,9 @@ int taint_x86::apply_memory(DWORD offset, DWORD size)
 
     d_print(1, "Trying to apply 0x%08x bytes @ 0x%08x, pos after: 0x%08x\n", size, offset, ftell(this->mod_file));
 
-#ifdef VERIFY_OOB
-    if(this->verify_oob_offset(offset, this->mem_length) != 0x0) return 0x0;
-#endif
+    if(this->options & OPTION_VERIFY_OOB)
+        if(this->verify_oob_offset(offset, this->mem_length) != 0x0) 
+            return 0x0;
 
     d_print(2, "Before:\n");
     this->print_mem(2, offset, 0x10);
