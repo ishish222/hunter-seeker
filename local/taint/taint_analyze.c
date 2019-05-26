@@ -12,14 +12,14 @@
 #include <signal.h>
 #include <utils.h>
 #include <breakpoint.h>
-#include <graph_plugin.h>
+#include <taint_plugin.h>
 
 #define STRUCTURED_BUFFER_LENGTH 0x10000
 #define MAX_LINE 0x1000
 #define INSTR_REPORT_INTERVAL 1000000
 
 taint_x86 taint_eng;
-graph_plugin graph_eng;
+taint_plugin plugin;
 
 
 int decode_instruction(DWORD* tid, OFFSET* addr, long long unsigned* instr_count, char* line)
@@ -217,18 +217,11 @@ int main(int argc, char** argv)
     taint_eng.bp_hit = 0x0;
 
     /* registering plugin */
-    taint_eng.plugin = (Plugin*)&graph_eng;
+    taint_eng.plugin = (Plugin*)&plugin;
     taint_eng.plugin->taint_eng = &taint_eng;
 
     /* configuring plugin */
-    if(max_levels == 0x0) max_levels = MAX_CALL_LEVELS;
-    graph_eng.enumerate = enumerate;
-    graph_eng.max_call_levels = max_levels;
-    graph_eng.call_level_start = max_levels/3;
-    graph_eng.call_level_offset = max_levels/30;
-    printf("Setting max levels to: 0x%08x, start: 0x%08x, offset: 0x%08x\n", max_levels, graph_eng.call_level_start, graph_eng.call_level_offset);
-    graph_eng.depth = depth;
-    graph_eng.depth += graph_eng.call_level_start; /* because we do not start at 0x0 */
+    /* TODO */
  
     /* executing instructions */
     char* line;
