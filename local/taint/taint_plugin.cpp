@@ -80,13 +80,56 @@ int taint_plugin::handle_exception_callback(EXCEPTION_INFO info)
     return 0x0;
 }
 
+
+
+int taint_plugin::add_taint(OFFSET start, UDWORD length)
+{
+    UDWORD i;
+
+    if(this->taint_count == MAX_TAINTS_OBSERVED)
+    {
+        d_print(1, "MAX_TAINTS_OBSERVED reached, unable to register taint\n");
+        return 0x0;
+    }
+
+    // tainting
+    for(i = 0x0; i< length; i++)
+    {
+        this->taint_eng->memory[start+i].set_BYTE_t(0xff);
+    }
+
+    this->taints[this->taint_count].off = start;
+    this->taints[this->taint_count].size = length;
+    this->taint_count++;
+
+    return 0x0;
+}
+
+
+int taint_plugin::register_taint(char* line)
+{
+    char* cmd;
+    DWORD len;
+    OFFSET off;
+
+    cmd = strtok(line, ",");
+    off = (OFFSET)strtol(strtok(0x0, ","), 0x0, 0x10);
+    len = (DWORD)strtol(strtok(0x0, ","), 0x0, 0x10);
+
+    printf("Registering taint @ 0x%08x, with length: 0x%08x\n", off, len);
+    this->add_taint(off, len);
+
+    return 0x0;
+}
+
+
+
 /* parsing out options end */
 
 int taint_plugin::parse_option(char* line)
 {
-    if(line[0] == 'F' && line[1] == 'E')
-        return 0x0;
-//        this->register_fence(line);
+    if(line[0] == 'R' && line[1] == 'N')
+        this->register_taint(line);
 
     if(line[0] == 'S' && line[1] == 'P')
         return 0x0;

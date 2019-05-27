@@ -31,10 +31,37 @@
 #define FENCE_NOT_COLLECTING    0x3
 #define FENCE_FINISHED          0x4
 
+typedef struct TAINTED_
+{
+    BYTE_t* tainted;
+    struct TAINTED_* next;
+} TAINTED;
+
+typedef struct PROPAGATION_ELEM_
+{
+    unsigned cause_id;
+    struct PROPAGATION_ELEM_* next;
+} PROPAGATION_ELEM;
+
+typedef struct PROPAGATION_
+{
+    OFFSET instruction;
+    unsigned instr_count;
+    TAINTED* first_op;
+    unsigned elem_count;
+    PROPAGATION_ELEM* causes;
+    BYTE_t* result[0x4];
+} PROPAGATION;
+
 class taint_plugin : Plugin
 {
     public:
 
+    REGION* taints;
+    unsigned taint_count;
+
+    PROPAGATION* propagations;
+    unsigned current_propagation_count;
 
     /* new implementation */
     virtual int pre_execute_instruction_callback(DWORD);
@@ -47,6 +74,9 @@ class taint_plugin : Plugin
     virtual int del_thread_srsly_callback(DWORD);
     virtual int parse_option(char*);
     virtual int handle_exception_callback(EXCEPTION_INFO);
+
+    int register_taint(char*);
+    int add_taint(OFFSET, UDWORD);
 
     taint_plugin()
     {
