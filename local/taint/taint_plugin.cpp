@@ -41,6 +41,7 @@ int taint_plugin::breakpoint_callback(BREAKPOINT* bp)
 {
     d_print(1, "taint_plugin::breakpoint_callback\n");
     d_print(1, "taint Breakpoint %s @%lld, 0x%08x, hit\n", bp->name, this->taint_eng->current_instr_count, this->taint_eng->current_eip);
+    this->prompt_taint();
 
     return 0x0;
 }
@@ -396,7 +397,7 @@ int taint_plugin::dump_cmd(char* string)
 
     if(string[0] == 'd' && string[1] == 'c' && string[2] == 't')
     {
-        cur_str = string + 3;
+        cur_str = string + 4;
 
         if(strlen(cur_str) == 0x0) tid = this->taint_eng->ctx_info[0x0].tid;
         else tid = strtol(cur_str, 0x0, 0x10);
@@ -405,7 +406,7 @@ int taint_plugin::dump_cmd(char* string)
     }
     else if(string[0] == 'd' && string[1] == 'c')
     {
-        cur_str = string + 2;
+        cur_str = string + 3;
 
         if(strlen(cur_str) == 0x0) tid = this->taint_eng->ctx_info[0x0].tid;
         else tid = strtol(cur_str, 0x0, 0x10);
@@ -414,7 +415,7 @@ int taint_plugin::dump_cmd(char* string)
     }
     if(string[0] == 'd' && string[1] == 's' && string[2] == 't')
     {
-        cur_str = string + 3;
+        cur_str = string + 4;
         if(strlen(cur_str) == 0x0) tid = this->taint_eng->ctx_info[0x0].tid;
         else tid = strtol(strtok(cur_str, ","), 0x0, 0x10);
 
@@ -428,7 +429,7 @@ int taint_plugin::dump_cmd(char* string)
     }
     else if(string[0] == 'd' && string[1] == 's')
     {
-        cur_str = string + 2;
+        cur_str = string + 3;
         if(strlen(cur_str) == 0x0) tid = this->taint_eng->ctx_info[0x0].tid;
         else tid = strtol(strtok(cur_str, ","), 0x0, 0x10);
 
@@ -460,7 +461,7 @@ int taint_plugin::dump_cmd(char* string)
     }
     if(string[0] == 'd' && string[1] == 'm' && string[2] == 't')
     {
-        cur_str = string + 3;
+        cur_str = string + 4;
 
         if(strlen(cur_str) == 0x0) off = 0x0;
         else off = strtol(cur_str, 0x0, 0x10);
@@ -471,7 +472,7 @@ int taint_plugin::dump_cmd(char* string)
     }
     else if(string[0] == 'd' && string[1] == 'm')
     {
-        cur_str = string + 2;
+        cur_str = string + 3;
 
         if(strlen(cur_str) == 0x0) off = 0x0;
         else off = strtol(cur_str, 0x0, 0x10);
@@ -499,7 +500,7 @@ int taint_plugin::dump_cmd(char* string)
     {
         unsigned count, current;
 
-        cur_str = string + 3;
+        cur_str = string + 4;
 
         if(strlen(cur_str) == 0x0) count = 0x5;
         else count = strtol(cur_str, 0x0, 0x10);
