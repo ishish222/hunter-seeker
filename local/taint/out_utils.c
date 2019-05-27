@@ -1,6 +1,6 @@
 #include <out_utils.h>
 #include <utils.h>
-#include <taint_emul_x86.h>
+#include <emul_x86.h>
 #include <stdio.h>
 #include <breakpoint.h>
 

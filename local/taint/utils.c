@@ -1,6 +1,6 @@
 #include <iostream>
 #include <string.h>
-#include <taint_emul_x86.h>
+#include <emul_x86.h>
 
 void print_location(modrm_ptr a)
 {

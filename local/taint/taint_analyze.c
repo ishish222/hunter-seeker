@@ -4,7 +4,7 @@
 *   tomasz.salacinski@korrino.com
 */
 
-#include <taint_emul_x86.h>
+#include <emul_x86.h>
 #include <out_utils.h>
 #include <stdio.h>
 #include <string.h>

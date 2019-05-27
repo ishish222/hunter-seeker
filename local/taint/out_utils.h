@@ -7,7 +7,7 @@
 #ifndef OUT_UTILS_H
 #define OUT_UTILS_H
 
-#include <taint_emul_x86.h>
+#include <emul_x86.h>
 #include <stdio.h>
 
 void deserialize_context(CONTEXT_OUT* ctx_out, char* buffer);

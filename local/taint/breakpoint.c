@@ -1,5 +1,5 @@
 #include <breakpoint.h>
-#include <taint_emul_x86.h>
+#include <emul_x86.h>
 #include <string.h>
 
 BREAKPOINT parse_breakpoint(char* string)

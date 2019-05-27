@@ -1,7 +1,7 @@
 #ifndef GRAPH_ENGINE_H
 #define GRAPH_ENGINE_H
 
-#include <taint_emul_x86.h>
+#include <emul_x86.h>
 
 #define MAX_CALL_LEVELS         0x200
 #define GRAPH_START             100

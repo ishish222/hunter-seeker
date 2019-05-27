@@ -1,5 +1,5 @@
 #include <graph_plugin.h>
-#include <taint_emul_x86.h>
+#include <emul_x86.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>

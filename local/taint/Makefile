@@ -1,11 +1,12 @@
 CC =g++
 CFLAGS = -rdynamic -I. -ggdb -w -std=c++11 -D_GLIBCXX_USE_CXX11_ABI=0 -DHANDLE_BREAKPOINTS -fpermissive
-NAMES = symbol_export cextract call_analyze taint_analyze
+#NAMES = symbol_export cextract call_analyze taint_analyze
+NAMES = symbol_export call_analyze taint_analyze
 
 CEXTRACT_OBJS = debug.o cextract_taint_x86.o cextract_main.c 
 SYMB_OBJS = symbol_export.o
-TAINT_ANALYZE_OBJS = debug.o taint_emul_x86.o out_utils.o utils.o breakpoint.o taint_plugin.o taint_analyze.c plugin.o
-CALL_ANALYZE_OBJS = debug.o taint_emul_x86.o out_utils.o utils.o breakpoint.o graph_plugin.o call_analyze.c plugin.o
+TAINT_ANALYZE_OBJS = debug.o emul_x86.o out_utils.o utils.o breakpoint.o taint_plugin.o taint_analyze.c plugin.o
+CALL_ANALYZE_OBJS = debug.o emul_x86.o out_utils.o utils.o breakpoint.o graph_plugin.o call_analyze.c plugin.o
 
 INILIBS = -l iniparser
 BLISS_LIB = -lpebliss -Llib 

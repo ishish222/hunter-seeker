@@ -2,7 +2,7 @@
 #define UTILS_H
 
 #include <string.h>
-#include <taint_emul_x86.h>
+#include <emul_x86.h>
 
 void print_location(modrm_ptr a);
 int write_region(FILE* f, BYTE_t* src, unsigned int len);

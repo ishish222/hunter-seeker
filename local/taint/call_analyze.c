@@ -4,7 +4,7 @@
 *   tomasz.salacinski@korrino.com
 */
 
-#include <taint_emul_x86.h>
+#include <emul_x86.h>
 #include <out_utils.h>
 #include <stdio.h>
 #include <string.h>
@@ -255,9 +255,6 @@ int main(int argc, char** argv)
             if(line[0] == 'E' && line[1] == 'X')
                 register_exception(line, &taint_eng);
             
-            if(line[0] == 'R' && line[1] == 'N')
-                register_taint(line, &taint_eng);
-
             if(line[0] == 'U' && line[1] == 'P')
                 register_update(line, &taint_eng);
             

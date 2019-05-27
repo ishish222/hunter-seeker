@@ -8,7 +8,7 @@
 #define MAX_ 0x10
 #define MAX_OUT_TAB 0x5
 
-#include <taint_emul_x86.h>
+#include <emul_x86.h>
 
 class taint_plugin : Plugin
 {
