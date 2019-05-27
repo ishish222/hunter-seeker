@@ -328,6 +328,7 @@ class taint_x86
     FILE* dump_file;
     FILE* instr_file;
     FILE* mod_file;
+    FILE* prompt_file;
 
     DWORD start_addr;
     DWORD end_addr;
@@ -893,6 +894,7 @@ class taint_x86
     int load_mem_from_file(char*);
     int load_instr_from_file(char*);
     int open_mod_file(char*);
+    int open_prompt_file(char*);
     int close_files();
 
     // other
@@ -1033,18 +1035,12 @@ class taint_x86
     CONTEXT_INFO* ctx_info;
 
     /* taint stuff */
-    REGION* taints;
-    unsigned taint_count;
     unsigned current_propagation_count;
     PROPAGATION* propagations;
 
-    /* taint stuff - dumping taint transfer history */
-    int add_taint(OFFSET start, UDWORD length);
-    int write_history(FILE*);
-    int dump_cmd(char*);
-    int prompt_taint();
-    TRACE_WATCHPOINT parse_trace_string(char* string);
-    int query_history(TRACE_WATCHPOINT twp);
+    DWORD last_instructions[MAX_LAST_INSTRUCTIONS];
+    unsigned current_last = 0x0;
+
 
     taint_x86()
     {
@@ -1349,13 +1345,6 @@ class taint_x86
         }
 */
 
-        /* taint stuff */
-        this->taints = (REGION*)malloc(sizeof(REGION)*MAX_TAINTS_OBSERVED);
-        if(this->taints == 0x0)
-        {
-            printf("Not enough memory\n");
-        }
-
         this->ctx_info = (CONTEXT_INFO*)malloc(sizeof(CONTEXT_INFO)*MAX_THREADS);
         if(this->ctx_info == 0x0)
         {
@@ -1388,7 +1377,6 @@ class taint_x86
     ~taint_x86() {
         free(this->memory);
 //        free(this->propagations);
-        free(this->taints);
         free(this->ctx_info);
 
     }

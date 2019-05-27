@@ -248,8 +248,6 @@ int main(int argc, char** argv)
             if(line[0] == 'E' && line[1] == 'X')
                 register_exception(line, &taint_eng);
             
-            if(line[0] == 'R' && line[1] == 'N')
-                register_taint(line, &taint_eng);
 
             if(line[0] == 'U' && line[1] == 'P')
                 register_update(line, &taint_eng);
@@ -297,52 +295,7 @@ int main(int argc, char** argv)
 
 
             /* pass to plugin */
-            if(line[0] == 'S' && line[1] == 'Y')
-                taint_eng.plugin->parse_option(line);
-
-            if(line[0] == 'R' && line[1] == 'L')
-                taint_eng.plugin->parse_option(line);
-            
-            if(line[0] == 'D' && line[1] == 'L')
-                taint_eng.plugin->parse_option(line);
-            
-            if(line[0] == 'F' && line[1] == 'E')
-                taint_eng.plugin->parse_option(line);
-
-            if(line[0] == 'S' && line[1] == 'P')
-                taint_eng.plugin->parse_option(line);
-
-            if(line[0] == 'B' && line[1] == 'L')
-                taint_eng.plugin->parse_option(line);
-
-            if(line[0] == 'B' && line[1] == 'A')
-                taint_eng.plugin->parse_option(line);
-
-            if(line[0] == 'S' && line[1] == 'A')
-                taint_eng.plugin->parse_option(line);
-
-            if(line[0] == 'I' && line[1] == 'N')
-                taint_eng.plugin->parse_option(line);
-
-            if(line[0] == 'F' && line[1] == 'W')
-                taint_eng.plugin->parse_option(line);
-
-            if(line[0] == 'I' && line[1] == 'W')
-                taint_eng.plugin->parse_option(line);
-
-            if(line[0] == 'E' && line[1] == 'W')
-                taint_eng.plugin->parse_option(line);
-
-            if(line[0] == 'J' && line[1] == 'E')
-                taint_eng.plugin->parse_option(line);
-
-            if(line[0] == 'J' && line[1] == 'D')
-                taint_eng.plugin->parse_option(line);
-
-            if(line[0] == 'J' && line[1] == 'C')
-                taint_eng.plugin->parse_option(line);
-
-            if(line[0] == 'O' && line[1] == 'U')
+            if(line[0] == 'R' && line[1] == 'N')
                 taint_eng.plugin->parse_option(line);
 
             if(line[0] == '#'); //comment

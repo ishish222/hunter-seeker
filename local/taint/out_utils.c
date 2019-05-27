@@ -43,23 +43,6 @@ void deserialize_context(CONTEXT_OUT* ctx_out, char* buffer)
     return;
 }
 
-int register_taint(char* line, taint_x86* taint_eng)
-{
-    char* cmd;
-    DWORD len;
-    OFFSET off;
-
-    cmd = strtok(line, ",");
-    off = (OFFSET)strtol(strtok(0x0, ","), 0x0, 0x10);
-    len = (DWORD)strtol(strtok(0x0, ","), 0x0, 0x10);
-
-    printf("Registering taint @ 0x%08x, with length: 0x%08x\n", off, len);
-    taint_eng->add_taint(off, len);
-    taint_eng->print_t_mem(1, off - 0x5, 0x10);
-
-    return 0x0;
-}
-
 unsigned get_instr_interval(char* line)
 {
     char* cmd;

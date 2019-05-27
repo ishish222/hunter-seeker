@@ -1,57 +1,14 @@
-#ifndef GRAPH_ENGINE_H
-#define GRAPH_ENGINE_H
+#ifndef TAINT_PLUGIN_H
+#define TAINT_PLUGIN_H
+
+#define MAX_PRPAGATIONS_OBSERVED 0x4000000
+#define MAX_TAINTS_OBSERVED 0x400
+#define MAX_EXCEPTIONS_COUNT 0x10000
+#define MAX_BREAKPOINTS 0x10
+#define MAX_ 0x10
+#define MAX_OUT_TAB 0x5
 
 #include <taint_emul_x86.h>
-
-#define MAX_CALL_LEVELS         0x200
-#define GRAPH_START             100
-#define MAX_LOOP_ADDRS          0x10
-#define MAX_LOOP_FENCES         0x10
-#define MAX_BLACKLIST           0x50
-#define MAX_WANTED              0x100
-#define MAX_LOOP_ADDR           0x50
-#define MAX_LIST_JXX            0x1000
-
-#define DECISION_NO_EMIT        0x0
-#define DECISION_EMIT           0x1
-#define DECISION_EMIT_NESTED    0x2
-
-#define DECISION_NO_DIVE        0x0
-#define DECISION_DIVE           0x1
-
-#define DECISION_LAYOUT_REGULAR 0x0
-#define DECISION_LAYOUT_SYMBOL  0x1
-#define DECISION_LAYOUT_SYMBOL_WANTED  0x2
-#define DECISION_LAYOUT_4       0x3
-#define DECISION_LAYOUT_5       0x4
-
-#define FENCE_INACTIVE          0x0
-#define FENCE_ACTIVE            0x1
-#define FENCE_COLLECTING        0x2
-#define FENCE_NOT_COLLECTING    0x3
-#define FENCE_FINISHED          0x4
-
-typedef struct TAINTED_
-{
-    BYTE_t* tainted;
-    struct TAINTED_* next;
-} TAINTED;
-
-typedef struct PROPAGATION_ELEM_
-{
-    unsigned cause_id;
-    struct PROPAGATION_ELEM_* next;
-} PROPAGATION_ELEM;
-
-typedef struct PROPAGATION_
-{
-    OFFSET instruction;
-    unsigned instr_count;
-    TAINTED* first_op;
-    unsigned elem_count;
-    PROPAGATION_ELEM* causes;
-    BYTE_t* result[0x4];
-} PROPAGATION;
 
 class taint_plugin : Plugin
 {
@@ -62,6 +19,8 @@ class taint_plugin : Plugin
 
     PROPAGATION* propagations;
     unsigned current_propagation_count;
+
+    unsigned out_tab;
 
     /* new implementation */
     virtual int pre_execute_instruction_callback(DWORD);
@@ -77,6 +36,18 @@ class taint_plugin : Plugin
 
     int register_taint(char*);
     int add_taint(OFFSET, UDWORD);
+    int print_taint_history(BYTE_t*, unsigned);
+    int print_taint_history(BYTE_t*);
+    int print_taint_history(unsigned, unsigned);
+    int print_taint_history(BYTE_t*, OFFSET, unsigned);
+    int trace_watchpoint_connect(TRACE_WATCHPOINT*);
+    int query_history(TRACE_WATCHPOINT);
+    int parse_trace_string(char*, TRACE_WATCHPOINT*);
+    int prompt_taint();
+    int dump_cmd(char*);
+    int d_print_prompt(int, const char*, ...);
+    int write_history(FILE* f);
+    int print_taint_ops(unsigned);
 
     taint_plugin()
     {
