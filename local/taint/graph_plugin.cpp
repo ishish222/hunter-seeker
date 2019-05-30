@@ -568,9 +568,9 @@ int graph_plugin::add_included(char* str)
         exit(-1);
     }
     strcpy(this->func_included[this->included_count], str);
-    this->func_included[this->included_count][strlen(this->func_included[this->included_count])] = 0x0;
-    this->func_included[this->included_count][strlen(this->func_included[this->included_count])-1] = 0x0;
-    d_print(1, "%s\n", this->func_included[this->included_count]);
+//    this->func_included[this->included_count][strlen(this->func_included[this->included_count])] = 0x0;
+//    this->func_included[this->included_count][strlen(this->func_included[this->included_count])-1] = 0x0;
+    d_print(1, "Included: %s\n", this->func_included[this->included_count]);
     this->included_count++;
     return 0x0;
 }
@@ -2128,6 +2128,7 @@ int graph_plugin::register_included(char* line)
     char* cmd;
     char* func_name;
 
+//    d_print(1, "Parsing line: %s\n", line);
     cmd = strtok(line, ",");
     func_name = strtok(0x0, ",");
     this->add_included(func_name);

@@ -371,6 +371,7 @@ int main(int argc, char** argv)
     }
 
     taint_eng.finish();
+    fprintf(stdout, "Finished after %lld instructions\n", instr_count);
  
     for(i = 0x0; i<taint_eng.tid_count; i++)
     {

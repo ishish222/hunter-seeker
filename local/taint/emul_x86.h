@@ -280,20 +280,28 @@ typedef struct TAINTED_
     struct TAINTED_* next;
 } TAINTED;
 
-typedef struct PROPAGATION_ELEM_
+typedef struct RESULT_
+{
+    BYTE_t* affected;
+    struct RESULT_* next;
+} RESULT;
+
+typedef struct CAUSE_
 {
     unsigned cause_id;
-    struct PROPAGATION_ELEM_* next;
-} PROPAGATION_ELEM;
+    struct CAUSE_* next;
+} CAUSE;
 
 typedef struct PROPAGATION_
 {
     OFFSET instruction;
     unsigned instr_count;
-    TAINTED* first_op;    
-    unsigned elem_count;
-    PROPAGATION_ELEM* causes;
-    BYTE_t* result[0x4];
+    //TAINTED* first_op;    
+    CAUSE* causes;
+    unsigned cause_count;
+//    BYTE_t* result[0x4];
+    RESULT* results;
+    unsigned result_count;
 } PROPAGATION;
 
 #define BP_MODE_READ    0x1
@@ -915,13 +923,14 @@ class taint_x86
     int print_taint_history(unsigned);
     int print_taint_history(BYTE_t*);
     int print_taint_history(BYTE_t*, OFFSET);
-    int reg_propagation_op(BYTE_t*);
-    int reg_propagation_op_r_8(OFFSET);
-    int reg_propagation_op_r_16(OFFSET);
-    int reg_propagation_op_r_32(OFFSET);
-    int reg_propagation_op_m_8(OFFSET);
-    int reg_propagation_op_m_16(OFFSET);
-    int reg_propagation_op_m_32(OFFSET);
+    int reg_propagation_cause(BYTE_t*);
+    int reg_propagation_cause_r_8(OFFSET);
+    int reg_propagation_cause_r_16(OFFSET);
+    int reg_propagation_cause_r_32(OFFSET);
+    int reg_propagation_cause_m_8(OFFSET);
+    int reg_propagation_cause_m_16(OFFSET);
+    int reg_propagation_cause_m_32(OFFSET);
+    int attach_current_propagation(BYTE_t*);
     int attach_current_propagation_r_8(OFFSET);
     int attach_current_propagation_r_16(OFFSET);
     int attach_current_propagation_r_32(OFFSET);

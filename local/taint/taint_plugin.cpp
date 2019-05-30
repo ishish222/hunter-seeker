@@ -121,7 +121,7 @@ int taint_plugin::print_taint_history(unsigned id, unsigned branches)
     unsigned i,j;
     unsigned count;
 
-    PROPAGATION_ELEM* cur_elem;
+    CAUSE* cur_elem;
     
     /* identation */
     if(this->out_tab > MAX_OUT_TAB)
@@ -137,9 +137,9 @@ int taint_plugin::print_taint_history(unsigned id, unsigned branches)
     cur_elem = this->taint_eng->propagations[id].causes;
     if(cur_elem)
     {
-        d_print(4, "Propagations elem count: %d\n", this->taint_eng->propagations[id].elem_count);
+        d_print(4, "Propagations elem count: %d\n", this->taint_eng->propagations[id].cause_count);
        
-        if(branches == 0x0) count = this->taint_eng->propagations[id].elem_count;
+        if(branches == 0x0) count = this->taint_eng->propagations[id].cause_count;
         else count = branches;
 
         unsigned last_instr = 0x0;
@@ -187,6 +187,7 @@ int taint_plugin::print_taint_history(unsigned id, unsigned branches)
     return 0x0;
 }
 
+/*
 int taint_plugin::print_taint_ops(unsigned id)
 {
     TAINTED* cur_op;
@@ -203,6 +204,7 @@ int taint_plugin::print_taint_ops(unsigned id)
 
     return 0x0;
 }
+*/
 
 int taint_plugin::print_taint_history(BYTE_t* target, OFFSET instr_count, unsigned branches)
 {
@@ -222,6 +224,7 @@ int taint_plugin::print_taint_history(BYTE_t* target, OFFSET instr_count, unsign
     {
         cur_propagation = &this->taint_eng->propagations[i];
     //    d_err_print("Veryfing propagation: %lld\n", i);
+/*
         for(j=0x0; j<0x4; j++)
         {
             if(cur_propagation->result[j] == 0x0)
@@ -232,6 +235,28 @@ int taint_plugin::print_taint_history(BYTE_t* target, OFFSET instr_count, unsign
                 break;
             }
         }
+*/
+        RESULT* cur_result;
+        cur_result = cur_propagation->results;
+
+        if(cur_result == 0x0) break;
+        if(cur_result->affected == target)
+        {
+            found = 1;
+            break;
+        }
+
+        while(cur_result->next)
+        {
+            cur_result = cur_result->next;
+            if(cur_result->affected == target)
+            {
+                found = 1;
+                break;
+            }
+        }
+        
+
         if(found) break;
     }
     taint_id = i;
