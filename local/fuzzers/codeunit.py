@@ -1,4 +1,4 @@
-import usualparts.binner_parts as binner_parts
+import usualparts.internal_parts as internal_parts
 import usualparts.tracing_parts as tracing_parts
 import usualparts.tracer_parts as tracer_parts
 import usualparts.taint_parts as taint_parts
@@ -10,6 +10,7 @@ import usualparts.qemu_parts as qemu_parts
 import usualparts.disk_fs_parts as disk_fs_parts
 import usualparts.responder_parts as responder_parts
 import usualparts.mutator_parts as mutator_parts
+import usualparts.binner_parts as binner_parts
 import usualparts.ml_parts as ml_parts
 
 global prototypes
@@ -46,7 +47,7 @@ prototypes['QemuConnectDevSocket']  = qemu_parts.qemu_connect_dev_socket_infinit
 prototypes['IsSocketConnected']     = qemu_parts.is_socket_connected
 prototypes['Wait10']                = other_parts.wait_10_seconds
 prototypes['Wait']                  = other_parts.wait
-prototypes['KillExplorer']          = binner_parts.binner_kill_explorer
+prototypes['KillExplorer']          = internal_parts.internal_kill_explorer
 prototypes['HostResetTracers']          = tracing_parts.reset_tracer_controller_status
 prototypes['SpawnTracerController'] = tracing_parts.spawn_tracer_controller
 prototypes['SpawnTracerScrLog']     = tracing_parts.start_tracer
@@ -86,6 +87,7 @@ prototypes['TracerRegisterBuiltin'] = tracer_parts.tracer_register_builtin
 prototypes['RegisterBuiltin'] = tracer_parts.tracer_register_builtin
 prototypes['TracerGetExceptionCode'] = tracer_parts.tracer_get_exception_code
 prototypes['TracerGetExceptionAddress'] = tracer_parts.tracer_get_exception_address
+prototypes['TracerGetExceptionAddressStr'] = tracer_parts.tracer_get_exception_address_str
 prototypes['GetExceptionCode'] = tracer_parts.tracer_get_exception_code
 prototypes['GetExceptionAddress'] = tracer_parts.tracer_get_exception_address
 prototypes['TracerDisableAllReactions']      = tracer_parts.tracer_disable_all_reactions
@@ -243,6 +245,7 @@ prototypes['SetPriorityHigh']          = tracer_parts.tracer_set_priority_high
 prototypes['CreateFolderGlob']      = disk_fs_parts.create_shared_folder_glob
 prototypes['HostDeployInputGlob']   = tracing_parts.host_deploy_input_glob
 prototypes['GetCaller']   = tracer_parts.tracer_get_caller
+#Mutator
 prototypes['MutatorInit']               = mutator_parts.init_mutator
 prototypes['MutatorSelectChanger']      = mutator_parts.select_changer
 prototypes['MutatorMutationCount']       = mutator_parts.mutation_count
@@ -261,6 +264,19 @@ prototypes['MutatorSaveCrashData']      = mutator_parts.save_crash_data
 prototypes['MutatorExtension']         = mutator_parts.extension
 prototypes['MutatorReport']         = mutator_parts.report
 prototypes['MutatorReportTimeout']         = mutator_parts.report_timeout
+#Mutator
+prototypes['BinnerInit']                = binner_parts.init_binner
+prototypes['BinnerLoadSamples']         = binner_parts.load_samples
+prototypes['BinnerBatchExhausted']      = binner_parts.batch_exhausted
+prototypes['BinnerGetNextSample']       = binner_parts.get_next_sample
+prototypes['BinnerGetCurrentSample']    = binner_parts.get_current_sample
+prototypes['BinnerCurrentSampleName']   = binner_parts.current_sample_name
+prototypes['BinnerCurrentSamplePath']   = binner_parts.current_sample_path
+prototypes['BinnerCurrentSampleDrop']   = binner_parts.current_sample_drop
+prototypes['BinnerConfirmSample']       = binner_parts.confirm_sample
+prototypes['BinnerUnconfirmSample']     = binner_parts.unconfirm_sample
+prototypes['BinnerReport']              = binner_parts.report
+prototypes['BinnerReportTimeout']       = binner_parts.report_timeout
 #ML
 prototypes['MLInit']                    = ml_parts.init_ml
 prototypes['MLLoadModel']               = ml_parts.load_ml

@@ -1,163 +1,213 @@
-import time
-import sys
-sys.path += ["../../common"]
-sys.path += ["../client"]
-import common
-from script import rs, runscriptq
+import statemachine
 import globs
+import os
+import queue 
+from datetime import datetime, timedelta
+import common
 
+report = common.report
 write_socket = common.write_socket
 read_socket = common.read_socket
-report = common.report
 
-#def binner_kill_explorer(options, state):
-def binner_kill_host(args=None):
+
+options = globs.state.options
+
+class Binner(object):
+    def __init__(self):
+        self.left_in_batch = 0
+        self.current_sample_name = None
+        self.current_sample_base = None
+        self.current_sample_path = None
+        self.addresses = set()
+        self.samples_confirmed = 0
+        self.samples_binned = 0
+        self.timeout_count = 0
+        self.start_time = datetime.now()
+        
+
+def init_binner(args = None):
     options = globs.state.options
+    state = globs.state
+    status = globs.state.status
 
-    write_socket(options.s, "killHost")
-    read_socket(options.s)
+    globs.state.binner = Binner()
 
-def binner_kill_explorer(args=None):
+    return
+
+def load_samples(args = None):
+    print('Deprecated')
+    return
+
+def report(args = None):
     options = globs.state.options
+    state = globs.state
+    status = globs.state.status
 
-    write_socket(options.s, "killExplorer")
-    read_socket(options.s)
+    if(len(globs.state.binner.addresses) > 0):
+        print('===')
+        print('Crash addresses:')
+        for address in globs.state.binner.addresses:
+            print('\t%s' % address)
+        print('===')
+    print('Binning started: %s' % globs.state.binner.start_time)
+    print('Now its: %s' % datetime.now())
+    print('Binned %s samples' % globs.state.binner.samples_binned)
+    print('Confirmed %s samples' % globs.state.binner.samples_confirmed)
+    print('Timout encountered %s times' % globs.state.binner.timeout_count)
+    print('Confirm factor is %s ' % (globs.state.binner.samples_confirmed / globs.state.binner.samples_binned))
+    print('Timout factor is %s ' % (globs.state.binner.timeout_count / globs.state.binner.samples_confirmed))
+    print('Current sample: %s' % globs.state.binner.current_sample_name)
+    time_elapsed = datetime.now() - globs.state.binner.start_time
+    print('Time elapsed: %s' % time_elapsed)
+    print('Binning speed in this session: %s/sample' % (time_elapsed / globs.state.binner.samples_binned))
 
-#def binner_spawn_python_server(options, state):
-def binner_spawn_python_server(args=None):
+    return
+
+def batch_exhausted(args = None):
     options = globs.state.options
-
-    rs("lclick", options.m)
-    rs("python_server_spawn_args", options.m)
-
-def binner_spawn(args=None):
-    options = globs.state.options
-
-    write_socket(options.s, "startBinner")
-    read_socket(options.s)
-
-'''
-def binner_attach_app(args = None):
-    options = globs.state.options
-
-    if(args == None):
-        args = globs.state.ret
-
-    write_socket(options.s, "attach 0x%08x" % args)
-    read_socket(options.s)
-'''
-
-def binner_spawn_app(args=None):
-    options = globs.state.options
-
-    write_socket(options.s, "spawn " + options.settings.app_path)
-    read_socket(options.s)
-
-#    print("Will sleep for %d" % options.settings.start_sleep)
-#    time.sleep(options.settings.start_sleep)
-#    print "Finished sleeping"
-#    read_socket(options.s)
-
-def binner_configure(args=None):
-    options = globs.state.options
-
-    write_socket(options.s, "binTest")
-    read_socket(options.s)
-
-    write_socket(options.s, "attachBinner " + options.settings.app_module)
-    read_socket(options.s)
-
-    time.sleep(1)
-
-    write_socket(options.s, "setupMarkers")
-    read_socket(options.s)
-
-    time.sleep(1)
-
-    write_socket(options.s, "installHandlers")
-    read_socket(options.s)
-
-    #TODO: we want to eliminate this with tests
-    if(options.wait_sleep != options.settings.wait_sleep):
-        write_socket(options.s, "setupWaitSleep {0}".format(options.wait_sleep))
-        read_socket(options.s)
-
-    #TODO: we want to eliminate this with tests
-    if(options.slowdown != options.settings.slowdown):
-        write_socket(options.s, "setupSlowdown {0}".format(options.slowdown))
-        read_socket(options.s)
-
-    time.sleep(1)
-
-def binner_start_logs(args=None):
-    options = globs.state.options
-
-    write_socket(options.s, "logStart e:\\logs\\log-%s-%s.txt" % (options.fuzzbox_name, common.timestamp2()))
-    read_socket(options.s)
-
-def binner_start_profiling(args=None):
-    options = globs.state.options
-
-    write_socket(options.s, "start_profiling")
-
-def binner_check_ready(args=None):
-    options = globs.state.options
-
-    write_socket(options.s, "checkReady")
-
-    #TODO: should this be here?
-    state.status = ""
-
-def binner_key_wait(args=None):
-    options = globs.state.options
-
-    if(options.wait_key):
-        print("Press enter")
-        sys.stdin.read(1)
-
-def binner_save(args=None):
-    options = globs.state.options
-
-#    write_socket(options.s, "getSynopsis")
-#    dossier, _, _ = read_socket(options.s)
-#    options.log.write("[%s], registered, binned\n" % state.status)
-#    options.log.flush()
-#    print("CR in: %s" % options.tmp_disk_img)
-#    report("CR")
-#    print("Got crash, restarting")
-#    report("Got crash, restarting")
-#    time.sleep(30)
-#    read_socket(options.s) #waiting for "saved"
+    state = globs.state
+    status = globs.state.status
     
-    print("Saved automatically")
+    print('Still {} samples left'.format(len(state.samples_list)))
+    if(len(state.samples_list) > 0):
+        return "N"
+    else:
+        return "Y"
 
-def binner_close_sample(args=None):
+def get_current_sample(args = None):
     options = globs.state.options
+    state = globs.state
+    status = globs.state.status
 
-    runscriptq(options.settings.closing_plugin_name, options.m)
-    write_socket(options.s, "")
+    state.ret = state.binner.current_sample_name
+    print('ret: %s' % state.ret)
 
-def cooldown(args=None):
+    return
+
+def get_next_sample(args = None):
     options = globs.state.options
+    state = globs.state
+    status = globs.state.status
 
-    write_socket(options.s, "cooldown")
-    read_socket(options.s)
+    from os.path import basename, dirname
 
-def cooldown2(args=None):
+    state.binner.current_sample_path = state.samples_list.pop()    
+    state.binner.current_sample_name = basename(state.binner.current_sample_path)
+    state.binner.current_sample_base = dirname(state.binner.current_sample_path)
+    state.binner.left_in_batch = state.binner.left_in_batch -1
+    state.binner.samples_binned = state.binner.samples_binned +1
+    print('Loaded sample: %s' % state.binner.current_sample_name)
+    print('Samples left: 0x%08x' % state.binner.left_in_batch)
+
+    state.ret = state.binner.current_sample_name
+    print('ret: %s' % state.ret)
+
+    return
+
+def current_sample_name(args = None):
     options = globs.state.options
+    state = globs.state
+    status = globs.state.status
 
-    write_socket(options.s, "cooldown2 10 30")
-    read_socket(options.s)
+    state.ret = state.binner.current_sample_name
+    print('ret: %s' % state.ret)
 
-def cooldown3(args=None):
+    return
+
+def current_sample_path(args = None):
     options = globs.state.options
+    state = globs.state
+    status = globs.state.status
 
-    write_socket(options.s, "cooldown3 5 10")
-    read_socket(options.s)
+    state.ret = state.binner.current_sample_path
+    print('ret: %s' % state.ret)
 
-def cooldown4(args=None):
+    return
+
+def current_sample_drop(args = None):
     options = globs.state.options
+    state = globs.state
+    status = globs.state.status
 
-    write_socket(options.s, "cooldown3 3 101")
-    read_socket(options.s)
+    import os
+
+    if(state.binner.current_sample_path != None):
+        os.remove(state.binner.current_sample_path)
+        print('Sample %s removed' % state.binner.current_sample_path)
+
+    state.binner.current_sample_path = None
+    state.binner.current_sample_base = None
+    state.binner.current_sample_name = None
+
+    return
+
+def report_timeout(args = None):
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+
+    state.binner.timeout_count = state.binner.timeout_count +1
+
+    return
+
+def unconfirm_sample(args = None):
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+
+    from shutil import copyfile
+
+    input_dir = options.internal_paths_input
+    input_ = input_dir+'\\'+state.binner.current_sample_name
+
+    output_dir = options.internal_paths_output+'\\unconfirmed'
+
+    host_output_dir = options.external_paths_tmp_output+'/'+args
+    try:
+        os.makedirs(host_output_dir)
+    except Exception as e:
+        print(e)
+
+    output = output_dir+state.binner.current_sample_name
+
+    print('Moving from {} to {}'.format(input_, output))
+    cmd = 'copy {} {}'.format(input_, output)
+    write_socket(options.s, "run_cmd %s" % cmd)
+    response, _, _ = read_socket(options.s)
+
+    return
+
+def confirm_sample(args = None):
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+
+    from shutil import copyfile
+
+    input_dir = options.internal_paths_input
+    input_ = input_dir+'\\'+state.binner.current_sample_name
+
+    if(args is None):
+        args = state.ret
+    output_dir = options.internal_paths_output+'\\'+args
+
+    host_output_dir = options.external_paths_tmp_output+'/'+args
+    try:
+        os.makedirs(host_output_dir)
+    except Exception as e:
+        print(e)
+
+    output = output_dir+'\\'+state.binner.current_sample_name
+
+    print('Moving from {} to {}'.format(input_, output))
+    cmd = 'copy {} {}'.format(input_, output)
+    write_socket(options.s, "run_cmd %s" % cmd)
+    response, _, _ = read_socket(options.s)
+
+    globs.state.ret = response
+
+    state.binner.addresses.add(args)
+    state.binner.samples_confirmed = state.binner.samples_confirmed +1
+
+    return
 

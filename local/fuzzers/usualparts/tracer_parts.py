@@ -1124,6 +1124,19 @@ def tracer_get_exception_code(args=None):
 
     return
 
+def tracer_get_exception_address_str(args=None):
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+    
+    write_socket(options.s, "tracer_get_exception_address");
+    response, _, _ = read_socket(options.s)
+
+    globs.state.ret = response
+    globs.state.ret = globs.state.ret[3:].split('\n')[0]
+
+    return
+
 def tracer_get_exception_address(args=None):
     options = globs.state.options
     state = globs.state

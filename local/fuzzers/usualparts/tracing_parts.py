@@ -150,13 +150,16 @@ def host_create_research_dir(args=None):
     internal_output = options.external_paths_tmp_input_output + '/' + options.internal_paths_output.split('\\')[-1]
     internal_log = options.external_paths_tmp_input_output + '/' + options.internal_paths_log.split('\\')[-1]
 
-    check_dir(internal_input)
-    check_dir(internal_output)
-    check_dir(internal_log)
-
     options.external_paths_tmp_input = internal_input
     options.external_paths_tmp_output = internal_output
     options.external_paths_tmp_log = internal_log
+
+    print('options.external_paths_tmp_input:')
+    check_dir(internal_input)
+    print('options.external_paths_tmp_output')
+    check_dir(internal_output)
+    print('options.external_paths_tmp_output')
+    check_dir(internal_log)
 
     if(options.external_paths_link_tmp_output_final_output):
         print(" ".join(["/usr/bin/sudo", "sudo", "mount", "-o", "bind", options.external_paths_final_output, options.external_paths_tmp_output]))
@@ -631,7 +634,7 @@ def set_out_dir(args = None):
 
 def check_dir(directory):
     import os
-    print('Checking for: %s' % directory)
+    print('Checking for: %s\n' % directory)
     try:
         os.stat(directory)
     except:
@@ -641,12 +644,19 @@ def check_host_dir(args = None):
     options = globs.state.options
 
     # here check for existence of all necessary dirs. If absent, create them
+    print('options.external_paths_machines:')
     check_dir(options.external_paths_machines)
+    print('options.external_paths_src:')
     check_dir(options.external_paths_src)
+    print('options.external_paths_final_all_output:')
     check_dir(options.external_paths_final_all_output)
+    print('options.external_paths_final_output:')
     check_dir(options.external_paths_final_output)
+    print('options.external_paths_tmp_all_input_output:')
     check_dir(options.external_paths_tmp_all_input_output)
+    print('options.external_paths_log:')
     check_dir(options.external_paths_log)
+    print('options.external_paths_images:')
     check_dir(options.external_paths_images)
 
     host_create_research_dir(args)
