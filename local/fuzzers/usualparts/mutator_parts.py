@@ -3,6 +3,12 @@ import globs
 import os
 import queue 
 from datetime import datetime, timedelta
+import common
+
+report = common.report
+write_socket = common.write_socket
+read_socket = common.read_socket
+
 
 options = globs.state.options
 
@@ -24,8 +30,9 @@ class Mutator(object):
         self.current_sample_path = None
         self.extension = None
         self.samples_list = []
+        self.addresses = set()
         self.interesting_list = []
-        self.samples_interesting = 0
+        self.samples_confirmed = 0
         self.samples_tested = 0
         self.timeout_count = 0
         self.start_time = datetime.now()
@@ -98,28 +105,30 @@ def report(args = None):
     state = globs.state
     status = globs.state.status
 
-    if(globs.state.mutator.samples_interesting > 0):
+    if(len(globs.state.mutator.addresses) > 0):
         print('===')
-        print('Interesting samples:')
-        for interesting_sample in globs.state.mutator.interesting_list:
-            print('\t%s' % interesting_sample)
+        print('Crash addresses:')
+        for address in globs.state.mutator.addresses:
+            print('\t%s' % address)
         print('===')
-    print('Fuzz started: %s' % globs.state.mutator.start_time)
-    print('Now its: %s' % datetime.now())
-    print('Selected chager: %s' % globs.state.mutator.mutator_name)
-    print('Original path: %s' % globs.state.mutator.original_path)
-    print('Dirname path: %s' % globs.state.mutator.original_dirname)
-    print('Basename path: %s' % globs.state.mutator.original_basename)
-    print('Original extension: %s' % globs.state.mutator.original_extension)
-    print('Tested %s samples' % globs.state.mutator.samples_tested)
-    print('Found %s interesting samples' % globs.state.mutator.samples_interesting)
-    print('Timout encountered %s times' % globs.state.mutator.timeout_count)
-    print('Crash factor is %s ' % (globs.state.mutator.samples_interesting / globs.state.mutator.samples_tested))
-    print('Timout factor is %s ' % (globs.state.mutator.timeout_count / globs.state.mutator.samples_tested))
-    print('Current sample: %s' % globs.state.mutator.current_sample_name)
+    print('Fuzz started: \t\t\t%s' % globs.state.mutator.start_time)
+    print('Now its: \t\t\t%s' % datetime.now())
+    print('Selected chager: \t\t%s' % globs.state.mutator.mutator_name)
+    print('Mutation count: \t\t%s' % globs.state.mutator.mutator_name)
+    print('Original path: \t\t\t%s' % globs.state.mutator.original_path)
+    print('Dirname path: \t\t\t%s' % globs.state.mutator.original_dirname)
+    print('Basename path: \t\t\t%s' % globs.state.mutator.original_basename)
+    print('Original extension: \t\t%s' % globs.state.mutator.original_extension)
+    print('Tested sample: \t\t\t%s' % globs.state.mutator.samples_tested)
+    print('Found interesting samples: \t%s' % globs.state.mutator.samples_confirmed)
+    print('Timout encountered times: \t%s' % globs.state.mutator.timeout_count)
+    print('Crash factor is \t\t%s' % (globs.state.mutator.samples_confirmed / globs.state.mutator.samples_tested))
+    print('Address factor is \t\t%s' % (len(globs.state.mutator.addresses) / globs.state.mutator.samples_tested))
+    print('Timout factor is \t\t%s' % (globs.state.mutator.timeout_count / globs.state.mutator.samples_tested))
+    print('Current sample: \t\t%s' % globs.state.mutator.current_sample_name)
     time_elapsed = datetime.now() - globs.state.mutator.start_time
-    print('Time elapsed: %s' % time_elapsed)
-    print('Fuzzing speed in this session: %s/sample' % (time_elapsed / globs.state.mutator.samples_tested))
+    print('Time elapsed: \t\t\t%s' % time_elapsed)
+    print('Fuzzing speed in this session: \t%s/sample' % (time_elapsed / globs.state.mutator.samples_tested))
 
     return
 
@@ -275,38 +284,38 @@ def report_timeout(args = None):
 
     return
 
-def save_sample(args = None):
+def confirm_sample(args = None):
     options = globs.state.options
     state = globs.state
     status = globs.state.status
 
     from shutil import copyfile
 
-    copyfile(state.mutator.current_sample_path, state.mutator.current_sample_base+'/../output/'+state.mutator.current_sample_name)
+    input_dir = options.internal_paths_input
+    input_ = input_dir+'\\'+state.mutator.current_sample_name
+    #input_ = state.mutator.current_sample_path
 
-    state.mutator.interesting_list.append(state.mutator.current_sample_name)
-    state.mutator.samples_interesting = state.mutator.samples_interesting +1
+    if(args is None):
+        args = state.ret
+    output_dir = options.internal_paths_output+'\\'+args
+
+    host_output_dir = options.external_paths_tmp_output+'/'+args
+    try:
+        os.makedirs(host_output_dir)
+    except Exception as e:
+        print(e)
+
+    output = output_dir+'\\'+state.mutator.current_sample_name
+
+    print('Moving from {} to {}'.format(input_, output))
+    cmd = 'copy {} {}'.format(input_, output)
+    write_socket(options.s, "run_cmd %s" % cmd)
+    response, _, _ = read_socket(options.s)
+
+    globs.state.ret = response
+
+    state.mutator.addresses.add(args)
+    state.mutator.samples_confirmed = state.mutator.samples_confirmed +1
 
     return
-
-def save_crash_data(args = None):
-    options = globs.state.options
-    state = globs.state
-    status = globs.state.status
-
-    crash_data_path = state.mutator.current_sample_base+'/../output/'+state.mutator.current_sample_name+'.crash.txt'
-    f = open(crash_data_path, 'w+')
-
-    count = globs.state.stack.pop()
-    count = int(count, 0x10)
-
-    for i in range(0, count):
-        f.write(globs.state.stack.pop())
-        f.write('\n')
-
-    f.close()
-    return
-
-
-
 

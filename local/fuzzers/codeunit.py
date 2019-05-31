@@ -259,8 +259,10 @@ prototypes['MutatorGenerateBatch']      = mutator_parts.generate_batch
 prototypes['MutatorCurrentSampleName']  = mutator_parts.current_sample_name
 prototypes['MutatorCurrentSamplePath']  = mutator_parts.current_sample_path
 prototypes['MutatorCurrentSampleDrop']  = mutator_parts.current_sample_drop
-prototypes['MutatorSaveSample']         = mutator_parts.save_sample
-prototypes['MutatorSaveCrashData']      = mutator_parts.save_crash_data
+#deprecated
+#prototypes['MutatorSaveSample']         = mutator_parts.save_sample
+#prototypes['MutatorSaveCrashData']      = mutator_parts.save_crash_data
+prototypes['MutatorConfirmSample']      = mutator_parts.confirm_sample
 prototypes['MutatorExtension']         = mutator_parts.extension
 prototypes['MutatorReport']         = mutator_parts.report
 prototypes['MutatorReportTimeout']         = mutator_parts.report_timeout
