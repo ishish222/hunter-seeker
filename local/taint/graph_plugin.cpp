@@ -2058,7 +2058,7 @@ int graph_plugin::register_symbol(char* line)
     func_name = strtok(0x0, ",");
     off = (OFFSET)strtoul(strtok(0x0, ","), 0x0, 0x10);
 
-    //printf("%s@%s @ 0x%08x\n", lib_name, func_name, off);
+    d_print(2, "%s@%s @ 0x%08x\n", lib_name, func_name, off);
     this->add_symbol(&this->symbols, off, lib_name, func_name);
 
     return 0x0;

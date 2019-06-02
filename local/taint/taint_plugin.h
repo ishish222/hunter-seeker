@@ -9,6 +9,9 @@
 #define MAX_OUT_TAB 0x5
 
 #include <emul_x86.h>
+#include <readline/readline.h>
+#include <readline/history.h>
+
 
 class taint_plugin : Plugin
 {
@@ -21,6 +24,8 @@ class taint_plugin : Plugin
     unsigned current_propagation_count;
 
     unsigned out_tab;
+    DWORD query_tid;
+    unsigned query_id;
 
     /* new implementation */
     virtual int pre_execute_instruction_callback(DWORD);
@@ -44,22 +49,42 @@ class taint_plugin : Plugin
     int query_history(TRACE_WATCHPOINT);
     int parse_trace_string(char*, TRACE_WATCHPOINT*);
     int prompt_taint();
-    int dump_cmd(char*);
     int d_print_prompt(int, const char*, ...);
     int write_history(FILE* f);
     int print_taint_ops(unsigned);
 
+    /* queries */
+    int parse_cmd(char*);
+    int set_query_tid(DWORD);
+    int get_query_tid();
+
     taint_plugin()
     {
         printf("Initializing taint_plugin\n");
+        query_tid = 0x0;
+        query_id = 0x0;
 
         printf("Registering routine callbacks\n");
 
         unsigned i;
+
+        using_history();
     }
 
     ~taint_plugin() 
     {
+        unsigned i;
+    
+        HISTORY_STATE* myhist = history_get_history_state();
+        HIST_ENTRY** mylist = history_list();
+
+        for(i =  0x0; i<myhist->length; i++)
+        {
+            free_history_entry(mylist[i]);
+        }
+
+        if(mylist) free(mylist);
+        if(myhist) free(myhist);
 
     }
 

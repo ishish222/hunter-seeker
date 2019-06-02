@@ -15857,6 +15857,7 @@ int taint_x86::print_t_mem(int level, OFFSET start, DWORD len)
 
 int taint_x86::print_err_mem(OFFSET start, DWORD len)
 {
+    err_print("Memory @ 0x%08x:\n", start);
     for(OFFSET i=start; i<start+len; i++)
     {
         err_print("0x%x: 0x%x\n", i, this->memory[i].get_BYTE());
@@ -15866,6 +15867,7 @@ int taint_x86::print_err_mem(OFFSET start, DWORD len)
 
 int taint_x86::print_err_t_mem(OFFSET start, DWORD len)
 {
+    err_print("Memory TAINT @ 0x%08x:\n", start);
     for(OFFSET i=start; i<start+len; i++)
     {
         err_print("0x%x: 0x%x\n", i, this->memory[i].get_BYTE_t());
@@ -15883,7 +15885,7 @@ int taint_x86::print_err_stack(DWORD tid, DWORD len)
 
     start = this->reg_restore_32(ESP, tid).get_DWORD();
 
-    err_print("Context 0x%08x:\n", tid);
+    err_print("Stack in TID 0x%08x:\n", tid);
     for(OFFSET i=start; i<start+len; i+=0x4)
     {
         temp.from_mem(&this->memory[i]);
@@ -15901,7 +15903,7 @@ int taint_x86::print_err_t_stack(DWORD tid, DWORD len)
 
     start = this->reg_restore_32(ESP, tid).get_DWORD();
 
-    err_print("Context 0x%08x:\n", tid);
+    err_print("Stack TAINT in TID 0x%08x:\n", tid);
     for(OFFSET i=start; i<start+len; i+=0x4)
     {
         temp.from_mem(&this->memory[i]);
@@ -15919,7 +15921,7 @@ int taint_x86::print_stack(DWORD tid, int level, DWORD len)
 
     start = this->reg_restore_32(ESP, tid).get_DWORD();
 
-    d_print(level, "Context 0x%08x:\n", tid);
+    d_print(level, "Stack in TID 0x%08x:\n", tid);
     for(OFFSET i=start; i<start+len; i+=0x4)
     {
         temp.from_mem(&this->memory[i]);
@@ -15974,7 +15976,7 @@ int taint_x86::print_err_context(int tid)
         return 0x0;
     }
     err_print("\nWARNING!!! EIP is one instruction late!\n");
-    err_print("Context 0x%08x:\n", tid);
+    err_print("Context for TID: 0x%08x:\n", tid);
     err_print("EAX: 0x%08x\n", this->reg_restore_32(EAX, tid).get_DWORD());
     err_print("EBX: 0x%08x\n", this->reg_restore_32(EBX, tid).get_DWORD());
     err_print("ECX: 0x%08x\n", this->reg_restore_32(ECX, tid).get_DWORD());
@@ -16007,7 +16009,7 @@ int taint_x86::print_err_t_context(int tid)
         err_print("No such context: 0x%08x\n", tid);
         return 0x0;
     }
-    err_print("Taint context 0x%08x:\n", tid);
+    err_print("Context TAINT for TID: 0x%08x:\n", tid);
     err_print("EAX: 0x%08x\n", this->reg_restore_32(EAX, tid).get_DWORD_t());
     err_print("EBX: 0x%08x\n", this->reg_restore_32(EBX, tid).get_DWORD_t());
     err_print("ECX: 0x%08x\n", this->reg_restore_32(ECX, tid).get_DWORD_t());
@@ -16041,7 +16043,7 @@ int taint_x86::print_context(int tid)
         return 0x0;
     }
     d_print(1, "\nWARNING!!! EIP is one instruction late!\n");
-    d_print(1, "Context 0x%08x:\n", tid);
+    d_print(1, "Context for TID: 0x%08x:\n", tid);
     d_print(1, "EAX: 0x%08x\n", this->reg_restore_32(EAX, tid).get_DWORD());
     d_print(1, "EBX: 0x%08x\n", this->reg_restore_32(EBX, tid).get_DWORD());
     d_print(1, "ECX: 0x%08x\n", this->reg_restore_32(ECX, tid).get_DWORD());

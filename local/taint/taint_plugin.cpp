@@ -7,6 +7,8 @@
 #include <debug.h>
 #include <plugin.h>
 #include <utils.h>
+#include <readline/readline.h>
+#include <readline/history.h>
 
 #include <limits.h>
 
@@ -340,27 +342,42 @@ int taint_plugin::query_history(TRACE_WATCHPOINT twp)
     d_print_prompt(1, "Printing history for instruction count: %lld\n", twp.offset);
     return this->print_taint_history(twp.watched, twp.offset, twp.branches);
 }
+
 int taint_plugin::prompt_taint()
 {
     TRACE_WATCHPOINT twp;
-    char command[MAX_NAME];
+//    char command[MAX_NAME];
+    char* command;
 
     while(1)
     {
         d_print_prompt(1, "\n---\n");
-        d_print_prompt(1, "Enter taint query and press [ENTER]\n> ");
-        scanf("%s", command);
-        if(strcmp(command, "q") == 0x0) break;
-        if(this->taint_eng->prompt_file) fprintf(this->taint_eng->prompt_file, "%s\n", command);
-        if(command[0] == 'd')
-        {
-            this->dump_cmd(command);
-            continue;
-        }
+        //d_print_prompt(1, "Enter taint query and press [ENTER]\n> ");
 
+        /* tutaj jakies chodzenie po historii */
+        //gets((char*)command);
+        command = readline("Enter taint query and press [ENTER]\n> ");
+        filter_str(command);
+        err_print("Received: %s\n", command);
+
+        if(this->taint_eng->prompt_file) fprintf(this->taint_eng->prompt_file, "%s\n", command);
+
+        if(strcmp(command, "q") == 0x0)
+        {
+            this->taint_eng->aborted = 0x1;
+            break;
+        }
+        else if(strcmp(command, "c") == 0x0) break;
+        //else if(strstr(command, "que"))
+
+        this->parse_cmd(command);
+        add_history(command);
+        free(command);
+        /*
         if(this->parse_trace_string(command, &twp) != 0x0) continue;
         this->trace_watchpoint_connect(&twp);
         this->query_history(twp);
+        */
     }
     return 0x0;
 }
@@ -412,135 +429,242 @@ int taint_plugin::trace_watchpoint_connect(TRACE_WATCHPOINT* twp)
     return 0x0;
 }
 
-int taint_plugin::dump_cmd(char* string)
+int taint_plugin::set_query_tid(DWORD tid)
+{
+    this->query_tid = tid;
+    return 0x0;
+}
+
+int taint_plugin::get_query_tid()
+{
+    DWORD tid;
+
+    tid = this->query_tid;
+
+    d_print_prompt(0, "Viewing thread: 0x%08x\n", tid);
+    return 0x0;
+}
+
+int taint_plugin::parse_cmd(char* string)
 {
     char* cur_str;
     DWORD tid;
     unsigned i, len;
     EXCEPTION_INFO info;
-    unsigned off;
+    OFFSET addr;
+    unsigned size;
 
-    if(string[0] == 'd' && string[1] == 'c' && string[2] == 't')
+    err_print("Parsing: %s\n", string);
+
+    if(this->query_tid == 0x0)
     {
-        cur_str = string + 4;
-
-        if(strlen(cur_str) == 0x0) tid = this->taint_eng->ctx_info[0x0].tid;
-        else tid = strtol(cur_str, 0x0, 0x10);
-
-        this->taint_eng->print_err_t_context(tid);
+        this->query_tid = this->taint_eng->cur_tid;
     }
-    else if(string[0] == 'd' && string[1] == 'c')
+
+    cur_str = strtok(string, " \n\r"); if(cur_str == 0x0) return 0x0;
+    if(!strncmp(cur_str, "reg", 3))
     {
-        cur_str = string + 3;
+        cur_str = strtok(0x0, " \n\r"); 
+        if(cur_str == 0x0)
+        {
+            tid = this->query_tid;                
+            this->taint_eng->print_err_context(tid);
+            return 0x0;
+        }
+        else
+        {
+            if(!strncmp(cur_str, "ta", 2))
+            {
+                cur_str = strtok(0x0, " \n\r"); 
+                if(cur_str == 0x0)
+                {
+                    tid = this->query_tid;                
+                    this->taint_eng->print_err_t_context(tid);
+                    return 0x0;
+                }
+                else
+                {
+                    tid = strtol(cur_str, 0x0, 0x10); 
+                    this->taint_eng->print_err_t_context(tid);
+                    return 0x0;
+                }
 
-        if(strlen(cur_str) == 0x0) tid = this->taint_eng->ctx_info[0x0].tid;
-        else tid = strtol(cur_str, 0x0, 0x10);
+            }
+            else
+            {                
+                tid = strtol(cur_str, 0x0, 0x10); 
+                this->taint_eng->print_err_context(tid);
+                return 0x0;
+            }
+        }
 
-        this->taint_eng->print_err_context(tid);
     }
-    if(string[0] == 'd' && string[1] == 's' && string[2] == 't')
+    else if(!strncmp(cur_str, "mem", 3))
     {
-        cur_str = string + 4;
-        if(strlen(cur_str) == 0x0) tid = this->taint_eng->ctx_info[0x0].tid;
-        else tid = strtol(strtok(cur_str, ","), 0x0, 0x10);
+        cur_str = strtok(0x0, " \n\r"); if(cur_str == 0x0) return 0x0;
+        if(!strncmp(cur_str, "ta", 2))
+        {
+            cur_str = strtok(0x0, " \n\r"); if(cur_str == 0x0) return 0x0;
+            addr = strtol(cur_str, 0x0, 0x10); 
 
-        /*
-        len = strtol(strtok(0x0, ","), 0x0, 0x10);
-        if(len == 0x0) 
-        */
-        len = 0x10;
+            cur_str = strtok(0x0, " \n\r"); 
 
-        this->taint_eng->print_err_t_stack(tid, len);
+            if(cur_str == 0x0)
+            {
+                size = 0x10;
+            }
+            else
+            {
+                size = strtol(cur_str, 0x0, 0x10);
+            }
+      
+            this->taint_eng->print_err_t_mem(addr, size);
+            return 0x0;
+        
+        }
+        else 
+        {
+            addr = strtol(cur_str, 0x0, 0x10); 
+            cur_str = strtok(0x0, " \n\r"); 
+
+            if(cur_str == 0x0)
+            {
+                size = 0x10;
+            }
+            else
+            {
+                size = strtol(cur_str, 0x0, 0x10);
+            }
+        
+            this->taint_eng->print_err_mem(addr, size);
+            return 0x0;
+        }
     }
-    else if(string[0] == 'd' && string[1] == 's')
+    else if(!strncmp(cur_str, "sta", 3))
     {
-        cur_str = string + 3;
-        if(strlen(cur_str) == 0x0) tid = this->taint_eng->ctx_info[0x0].tid;
-        else tid = strtol(strtok(cur_str, ","), 0x0, 0x10);
-
-        /*
-        len = strtol(strtok(0x0, ","), 0x0, 0x10);
-        if(len == 0x0) 
-        */
-        len = 0x10;
-
-        this->taint_eng->print_err_stack(tid, len);
+        cur_str = strtok(0x0, " \n\r"); 
+        if(cur_str != 0x0 && !strncmp(cur_str, "ta", 2))
+        {
+            cur_str = strtok(0x0, " \n\r"); 
+            if(cur_str == 0x0)
+            {
+                size = 0x10;
+            }
+            else
+            {
+                size = strtol(cur_str, 0x0, 0x10);
+            }
+        
+            this->taint_eng->print_err_t_stack(this->query_tid, size);
+            return 0x0;
+        }
+        else if(cur_str == 0x0)
+        {
+            size = 0x10;
+        }
+        else
+        {
+            size = strtol(cur_str, 0x0, 0x10);
+        }
+        
+        this->taint_eng->print_err_stack(this->query_tid, size);
+        return 0x0;
     }
-    if(string[0] == 'd' && string[1] == 'e')
+    else if(!strncmp(cur_str, "exc", 3))
     {
-        d_print_prompt(1, "There have been %d exceptions: \n", this->taint_eng->exceptions_count);
+        d_print_prompt(0, "There have been %d exceptions: \n", this->taint_eng->exceptions_count);
+
         for(i = 0x0; i< this->taint_eng->exceptions_count; i++)
         {
             info = this->taint_eng->exceptions[i];
-            d_print_prompt(1, "Exception %08x in TID %08x, instr. no: %d, eip: 0x%08x\n", info.er.ExceptionCode, info.tid, this->taint_eng->current_instr_count, info.er.ExceptionAddress);
+            d_print_prompt(0x0, "Exception %08x in TID %08x, instr. no: %d, eip: 0x%08x\n", info.er.ExceptionCode, info.tid, this->taint_eng->current_instr_count, info.er.ExceptionAddress);
         }
+
+        return 0x0;
     }
-    if(string[0] == 'd' && string[1] == 'h')
+    else if(!strncmp(cur_str, "thr", 3) || !strncmp(cur_str, "tid", 3))
     {
-        d_print_prompt(1, "There are %d threads: \n", this->taint_eng->tid_count);
-        for(i = 0x0; i< this->taint_eng->tid_count; i++)
+        cur_str = strtok(0x0, " \n\r");
+        if(cur_str == 0x0)
         {
-            d_print_prompt(1, "0x%08x\n", this->taint_eng->ctx_info[i].tid);
-        }
+            d_print_prompt(0, "There are %d threads: \n", this->taint_eng->tid_count);
+            for(i = 0x0; i< this->taint_eng->tid_count; i++)
+            {
+                d_print_prompt(0, "0x%08x\n", this->taint_eng->ctx_info[i].tid);
+            }
     
+        }
+        else if(!strcmp(cur_str, "set"))
+        {
+            cur_str = strtok(0x0, " \n\r"); if(cur_str == 0x0) return 0x0;
+
+            tid = strtol(cur_str, 0x0, 0x10); 
+
+            this->set_query_tid(tid);
+            return 0x0;
+        }
+        else if(!strcmp(cur_str, "get"))
+        {
+            this->get_query_tid();
+            return 0x0;
+        }
     }
-    if(string[0] == 'd' && string[1] == 'm' && string[2] == 't')
+    else if(!strncmp(cur_str, "tai", 3))
     {
-        cur_str = string + 4;
-
-        if(strlen(cur_str) == 0x0) off = 0x0;
-        else off = strtol(cur_str, 0x0, 0x10);
-
-        d_print_prompt(1, "Memory taint dump @ 0x%08x:\n", off);
-
-        this->taint_eng->print_err_t_mem(off, 0x10);
-    }
-    else if(string[0] == 'd' && string[1] == 'm')
-    {
-        cur_str = string + 3;
-
-        if(strlen(cur_str) == 0x0) off = 0x0;
-        else off = strtol(cur_str, 0x0, 0x10);
-
-        d_print_prompt(1, "Memory dump @ 0x%08x:\n", off);
-
-        this->taint_eng->print_err_mem(off, 0x10);
-    }
-    if(string[0] == 'd' && string[1] == 'r')
-    {
-        d_print_prompt(1, "Current status:\n");
-        d_print_prompt(1, "Current EIP: \t\t0x%08x\n", this->taint_eng->current_eip);
-        d_print_prompt(1, "Current instr. no: \t%d\n", this->taint_eng->current_instr_count);
-    }
-    if(string[0] == 'd' && string[1] == 't')
-    {
-        d_print_prompt(1, "There have been %d taints:\n", this->taint_count);
+        d_print_prompt(0, "There have been %d taints:\n", this->taint_count);
         for(i = 0x0; i< this->taint_count; i++)
         {
             d_err_print("Taint no %d: 0x%08x, 0x%08x\n", i, this->taints[i].off, this->taints[i].size);
-            d_print(1, "Taint no %d: 0x%08x, 0x%08x\n", i, this->taints[i].off, this->taints[i].size);
         }
+
     }
-    if(string[0] == 'd' && string[1] == 'l' && string[2] == 'i')
+    else if(!strncmp(cur_str, "ins", 3))
     {
         unsigned count, current;
 
         cur_str = string + 4;
 
-        if(strlen(cur_str) == 0x0) count = 0x5;
+        cur_str = strtok(0x0, " \n\r"); 
+        if(cur_str == 0x0) count = 0x5;
         else count = strtol(cur_str, 0x0, 0x10);
+
+        if(count >= MAX_LAST_INSTRUCTIONS)
+        {
+            d_err_print(0x0, "MAX_LAST_INSTRUCTIONS in limits.h is: 0x%08x\n", MAX_LAST_INSTRUCTIONS);
+            return 0x0;
+        }
         
         d_err_print("Last %d instructions:\n", count);
 
         current = this->taint_eng->current_last;
         for(i = 0x0; i< count; i++)
         {
-            d_print_prompt(1, "0x%08x\n", this->taint_eng->last_instructions[current]);
+            d_print_prompt(0x0, "0x%08x\n", this->taint_eng->last_instructions[current]);
             current --;
             if((current < 0x0) || (current > MAX_LAST_INSTRUCTIONS)) current = MAX_LAST_INSTRUCTIONS-1;
         }
-    }
 
+    }
+    else if(!strncmp(cur_str, "his", 3))
+    {
+        unsigned count;
+
+        cur_str = strtok(0x0, " \n\r"); 
+        if(cur_str == 0x0) count = 0x5;
+        else count = strtol(cur_str, 0x0, 0x10);
+
+        HISTORY_STATE* myhist = history_get_history_state();
+        HIST_ENTRY** mylist = history_list();
+
+        if(count >= myhist->length) count = myhist->length;
+
+        err_print("Printing %d commands in history\n", count);
+        for(i =  0x0; i<count; i++)
+        {
+            err_print("%s\n", mylist[i]->line);
+        }
+    
+    }
     return 0x0;
 }
 

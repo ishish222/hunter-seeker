@@ -21,6 +21,7 @@
 #define MAX_LOOP_FENCES         0x10
 #define MAX_LOOP_ADDR           0x50
 #define MAX_LIST_JXX            0x1000
-#define MAX_LAST_INSTRUCTIONS 0x50
+#define MAX_LAST_INSTRUCTIONS   0x50
+#define MAX_COMMANDS            0x50
 
 #endif

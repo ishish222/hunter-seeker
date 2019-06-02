@@ -114,7 +114,7 @@ def report(args = None):
     print('Fuzz started: \t\t\t%s' % globs.state.mutator.start_time)
     print('Now its: \t\t\t%s' % datetime.now())
     print('Selected chager: \t\t%s' % globs.state.mutator.mutator_name)
-    print('Mutation count: \t\t%s' % globs.state.mutator.mutator_name)
+    print('Mutation count: \t\t%s' % globs.state.mutator.mutation_count)
     print('Original path: \t\t\t%s' % globs.state.mutator.original_path)
     print('Dirname path: \t\t\t%s' % globs.state.mutator.original_dirname)
     print('Basename path: \t\t\t%s' % globs.state.mutator.original_basename)
