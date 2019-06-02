@@ -354,8 +354,6 @@ int taint_plugin::prompt_taint()
         d_print_prompt(1, "\n---\n");
         //d_print_prompt(1, "Enter taint query and press [ENTER]\n> ");
 
-        /* tutaj jakies chodzenie po historii */
-        //gets((char*)command);
         command = readline("Enter taint query and press [ENTER]\n> ");
         filter_str(command);
         err_print("Received: %s\n", command);

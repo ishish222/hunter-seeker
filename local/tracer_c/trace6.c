@@ -27,9 +27,9 @@ FILE* file;
 char buffer[buf_size];
 int index = 0;
 int myPID = 0x0;
-LOCATION_DESCRIPTOR last_arg = {0x0, 0x0, LOCATION_END, LOCATION_END, 0x0};
+OLD_LOCATION_DESCRIPTOR last_arg = {0x0, 0x0, LOCATION_END, LOCATION_END, 0x0};
 LOCATION last_location = {0x0, 0x0};
-LOCATION_DESCRIPTOR syscall_out_args[MAX_SYSCALL_ENTRIES][MAX_SYSCALL_OUT_ARGS];
+OLD_LOCATION_DESCRIPTOR syscall_out_args[MAX_SYSCALL_ENTRIES][MAX_SYSCALL_OUT_ARGS];
 LOCATION syscall_out_args_dump_list[MAX_SYSCALL_OUT_ARGS];
 
 char line2[MAX_LINE];
@@ -44,7 +44,7 @@ void e_reaction_handler(void* data);
 void i_reaction_handler(void* data);
 void print_context(CONTEXT*);
 int del_breakpoint(DWORD);
-int resolve_region(LOCATION_DESCRIPTOR*, LOCATION*);
+int resolve_region(OLD_LOCATION_DESCRIPTOR*, LOCATION*);
 int add_to_buffer(char*);
 int read_context(DWORD, CONTEXT*);
 int write_context(DWORD, CONTEXT*);
@@ -57,7 +57,7 @@ int raise_reaction(char*);
 int lower_reaction(char*);
 int unwrite_breakpoint(BREAKPOINT* bp);
 int update_breakpoint(BREAKPOINT* bp);
-OFFSET resolve_loc_desc(LOCATION_DESCRIPTOR_NEW* d);
+OFFSET resolve_loc_desc(LOCATION_DESCRIPTOR* d);
 REACTION* find_reaction(char*);
 int read_dword(DWORD addr);
 char read_byte(DWORD addr);
@@ -3971,7 +3971,7 @@ int unwrite_breakpoint(BREAKPOINT* bp)
 
 }
 
-int print_loc_desc(LOCATION_DESCRIPTOR_NEW* e)
+int print_loc_desc(LOCATION_DESCRIPTOR* e)
 {
     d_print("[print_loc_desc]\n");
     if(e == 0x0)
@@ -3984,7 +3984,7 @@ int print_loc_desc(LOCATION_DESCRIPTOR_NEW* e)
     return 0x0;
 }
 
-int print_loc_desc_rev(LOCATION_DESCRIPTOR_NEW* e)
+int print_loc_desc_rev(LOCATION_DESCRIPTOR* e)
 {
     d_print("[print_loc_desc_rev]\n");
 //    d_print("In reccurence\n");
@@ -4077,7 +4077,7 @@ int unpaint(char* area, unsigned len)
     return 0x0;
 }
 
-OFFSET resolve_loc_desc(LOCATION_DESCRIPTOR_NEW* d)
+OFFSET resolve_loc_desc(LOCATION_DESCRIPTOR* d)
 {
     d_print("[resolve_loc_desc]\n");
     OFFSET a1_r, a2_r;
@@ -4221,14 +4221,14 @@ OFFSET resolve_loc_desc(LOCATION_DESCRIPTOR_NEW* d)
     return ret;
 }
 
-LOCATION_DESCRIPTOR_NEW* parse_location_desc(char* str)
+LOCATION_DESCRIPTOR* parse_location_desc(char* str)
 {
 //    d_print("[parse_location_desc]\n");
     char* op;
-    LOCATION_DESCRIPTOR_NEW* neww;
+    LOCATION_DESCRIPTOR* neww;
 
-    neww = (LOCATION_DESCRIPTOR_NEW*)malloc(sizeof(LOCATION_DESCRIPTOR_NEW));
-    memset(neww, 0x0, sizeof(LOCATION_DESCRIPTOR_NEW));
+    neww = (LOCATION_DESCRIPTOR*)malloc(sizeof(LOCATION_DESCRIPTOR));
+    memset(neww, 0x0, sizeof(LOCATION_DESCRIPTOR));
     neww->a1 = 0x0;
     neww->a2 = 0x0;
 
@@ -6023,7 +6023,7 @@ int continue_routine(DWORD time, unsigned stat)
     return last_report;
 }
 
-int resolve_region(LOCATION_DESCRIPTOR* selector, LOCATION* location)
+int resolve_region(OLD_LOCATION_DESCRIPTOR* selector, LOCATION* location)
 {
     d_print("Resolving region\n");
     d_print("Locating buffer\n");
@@ -6434,8 +6434,8 @@ int resolve_location(char* location)
 {
     OFFSET addr;
     char line[MAX_LINE];
-    LOCATION_DESCRIPTOR_NEW desc;
-    LOCATION_DESCRIPTOR_NEW* desc_;
+    LOCATION_DESCRIPTOR desc;
+    LOCATION_DESCRIPTOR* desc_;
 
     desc_ = parse_location_desc(location);
     addr = resolve_loc_desc(desc_);

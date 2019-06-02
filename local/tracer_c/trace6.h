@@ -217,19 +217,19 @@ typedef struct FUNCTION_
 typedef void (*handler_routine)(void*);
 typedef void (*reaction_routine)(void*);
 
-typedef struct LOCATION_DESCRIPTOR_NEW_
+typedef struct LOCATION_DESCRIPTOR_
 {
-    struct LOCATION_DESCRIPTOR_NEW_* a1;
-    struct LOCATION_DESCRIPTOR_NEW_* a2;
+    struct LOCATION_DESCRIPTOR_* a1;
+    struct LOCATION_DESCRIPTOR_* a2;
     char op[MAX_NAME];
 
-} LOCATION_DESCRIPTOR_NEW;
+} LOCATION_DESCRIPTOR;
 
 typedef struct REACTION_ REACTION;
 
 typedef struct BREAKPOINT_
 {
-    LOCATION_DESCRIPTOR_NEW* location;
+    LOCATION_DESCRIPTOR* location;
     char location_str[MAX_NAME];
     OFFSET resolved_location;
     char loaded;
@@ -295,14 +295,14 @@ typedef struct _LIB_ENTRY
 } LIB_ENTRY;
 
 /* handling syscalls */
-typedef struct LOCATION_DESCRIPTOR_
+typedef struct OLD_LOCATION_DESCRIPTOR_
 {
     DWORD off;
     DWORD size;
     char off_location;
     char size_location;
     DWORD eax_val_success;
-} LOCATION_DESCRIPTOR;
+} OLD_LOCATION_DESCRIPTOR;
 
 typedef struct LOCATION_
 {
@@ -312,8 +312,8 @@ typedef struct LOCATION_
 
 typedef struct REGION_
 {
-    LOCATION_DESCRIPTOR_NEW* off;
-    LOCATION_DESCRIPTOR_NEW* size;
+    LOCATION_DESCRIPTOR* off;
+    LOCATION_DESCRIPTOR* size;
 }
 REGION;
 
@@ -440,7 +440,7 @@ typedef struct TRACE_CONFIG_
     reaction_routine routines[MAX_FUNCTIONS];
 
     /* regions */
-    LOCATION_DESCRIPTOR region_sel[MAX_REGIONS];
+    OLD_LOCATION_DESCRIPTOR region_sel[MAX_REGIONS];
     unsigned region_sel_count;
 
     /* regions new */
@@ -452,9 +452,9 @@ typedef struct TRACE_CONFIG_
     DWORD sysenter_no;
 
     /* handling syscalls */
-    LOCATION_DESCRIPTOR last_arg = {0x0, 0x0, LOCATION_END, LOCATION_END, 0x0};
+    OLD_LOCATION_DESCRIPTOR last_arg = {0x0, 0x0, LOCATION_END, LOCATION_END, 0x0};
     LOCATION last_location = {0x0, 0x0};
-    LOCATION_DESCRIPTOR syscall_out_args[MAX_SYSCALL_ENTRIES][MAX_SYSCALL_OUT_ARGS];
+    OLD_LOCATION_DESCRIPTOR syscall_out_args[MAX_SYSCALL_ENTRIES][MAX_SYSCALL_OUT_ARGS];
     LOCATION syscall_out_args_dump_list[MAX_SYSCALL_OUT_ARGS];
 
     void (*callback_routine)(void*);
