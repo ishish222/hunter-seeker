@@ -469,5 +469,4 @@ int resolve_location(char* location)
     strcpy(my_trace->report_buffer, line);
     return 0x0;
 }
-
 */

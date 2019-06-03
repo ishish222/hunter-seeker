@@ -94,6 +94,7 @@ int taint_plugin::print_taint_history(BYTE_t* target, unsigned branches)
 {
     unsigned taint_id;
     taint_id = target->get_BYTE_t_id();
+    d_print(2, "taint_id: 0x%08x\n", taint_id);
 
     if(taint_id == 0x0) return 0x0;
     else return this->print_taint_history(taint_id, branches);
@@ -139,7 +140,7 @@ int taint_plugin::print_taint_history(unsigned id, unsigned branches)
     cur_elem = this->taint_eng->propagations[id].causes;
     if(cur_elem)
     {
-        d_print(4, "Propagations elem count: %d\n", this->taint_eng->propagations[id].cause_count);
+        d_print(2, "Propagations elem count: %d\n", this->taint_eng->propagations[id].cause_count);
        
         if(branches == 0x0) count = this->taint_eng->propagations[id].cause_count;
         else count = branches;
@@ -150,13 +151,13 @@ int taint_plugin::print_taint_history(unsigned id, unsigned branches)
         {
             if(this->taint_eng->propagations[cur_elem->cause_id].instr_count != last_instr)
             {
-                d_print(4, "%d -> %d\n", id, cur_elem->cause_id);
+                d_print(2, "%d -> %d\n", id, cur_elem->cause_id);
                 this->print_taint_history(cur_elem->cause_id, branches);
                 last_instr = this->taint_eng->propagations[cur_elem->cause_id].instr_count;
             }
             if(cur_elem->next)
             {
-                d_print(4, "Traversing: 0x%08x -> 0x%08x\n");
+                d_print(2, "Traversing: 0x%08x -> 0x%08x\n");
                 cur_elem = cur_elem->next;
             }
             else break;
@@ -661,6 +662,71 @@ int taint_plugin::parse_cmd(char* string)
         {
             err_print("%s\n", mylist[i]->line);
         }
+    
+    }
+    else if(!strncmp(cur_str, "tra", 3))
+    {
+        unsigned i;
+
+        cur_str = strtok(0x0, " \n\r"); if(cur_str == 0x0) return 0x0;
+
+        if(!strncmp(cur_str, "eax", 3))
+        {
+            DWORD_t reg;
+
+            reg = this->taint_eng->reg_restore_32(EAX, this->query_tid);
+
+            for(i = 0x0; i < 0x4; i++)
+            {
+                err_print("Tracking eax[%d]:\n", i);
+
+                print_taint_history(&reg[i], 0x0);
+                err_print("\n");
+            }
+        }
+        else if(!strncmp(cur_str, "ebx", 3))
+        {
+            DWORD_t reg;
+
+            reg = this->taint_eng->reg_restore_32(EBX, this->query_tid);
+
+            for(i = 0x0; i < 0x4; i++)
+            {
+                err_print("Tracking ebx[%d]:\n", i);
+
+                print_taint_history(&reg[i], 0x0);
+                err_print("\n");
+            }
+        }
+        else if(!strncmp(cur_str, "ecx", 3))
+        {
+            DWORD_t reg;
+
+            reg = this->taint_eng->reg_restore_32(ECX, this->query_tid);
+
+            for(i = 0x0; i < 0x4; i++)
+            {
+                err_print("Tracking ecx[%d]:\n", i);
+
+                print_taint_history(&reg[i], 0x0);
+                err_print("\n");
+            }
+        }
+        else if(!strncmp(cur_str, "edx", 3))
+        {
+            DWORD_t reg;
+
+            reg = this->taint_eng->reg_restore_32(EDX, this->query_tid);
+
+            for(i = 0x0; i < 0x4; i++)
+            {
+                err_print("Tracking edx[%d]:\n", i);
+
+                print_taint_history(&reg[i], 0x0);
+                err_print("\n");
+            }
+        }
+
     
     }
     return 0x0;
