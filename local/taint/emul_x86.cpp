@@ -1706,8 +1706,8 @@ int taint_x86::attach_current_propagation(BYTE_t* byte)
 
 int taint_x86::seal_current_propagation()
 {
-    this->propagations[this->current_propagation_count].instruction = this->last_eip;
-    this->propagations[this->current_propagation_count].instr_count = this->last_instr_count;
+    this->propagations[this->current_propagation_count].instruction = this->current_eip;
+    this->propagations[this->current_propagation_count].instr_count = this->current_instr_count;
     this->current_propagation_count++;
     return 0x0;
 }

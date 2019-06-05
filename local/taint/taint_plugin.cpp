@@ -222,11 +222,11 @@ int taint_plugin::print_propagation(unsigned id, unsigned branches)
     
     res = distorm_decode(current_propagation->instruction, (const unsigned char*)buf, 0x20, Decode32Bits, decodedInstructions, 0x1, &decoded);
 
-    d_print_prompt(1, "%d: (%d)0x%08x: %s%s%s, ", id, current_propagation->instr_count, current_propagation->instruction, (char*)decodedInstructions[0].mnemonic.p, decodedInstructions[0].operands.length != 0 ? " " : "", (char*)decodedInstructions[0].operands.p);
+    d_print_prompt(1, "%d: (%d)0x%08x: \t%s%s%s, ", id, current_propagation->instr_count, current_propagation->instruction, (char*)decodedInstructions[0].mnemonic.p, decodedInstructions[0].operands.length != 0 ? " " : "", (char*)decodedInstructions[0].operands.p);
 #else
     d_print_prompt(1, "%d, EIP: 0x%08x, instr byte: 0x%02x, instr no: %d, ", id, current_propagation->instruction, this->taint_eng->memory[current_propagation->instruction].get_BYTE(), current_propagation->instr_count);
 #endif
-    d_print_prompt(1, "causes: ");
+    d_print_prompt(1, "\tcauses: ");
 
     CAUSE* cur_cause;
     for(i=0x0,cur_cause=current_propagation->causes; i<current_propagation->cause_count; i++,cur_cause=cur_cause->next)
@@ -234,12 +234,12 @@ int taint_plugin::print_propagation(unsigned id, unsigned branches)
         d_print_prompt(1, "%d, ", cur_cause->cause_id);
     }
 
-    d_print_prompt(1, "results: ");
+    d_print_prompt(1, "\tresults: ");
 
     RESULT* cur_result;
     for(i=0x0,cur_result=current_propagation->results; i<current_propagation->result_count; i++,cur_result=cur_result->next)
     {
-        d_print_prompt(3, "0x%08x, ", cur_result->affected);
+        d_print(3, "0x%08x, ", cur_result->affected);
         char region;
         OFFSET offset;
         if(resolve_affected(cur_result->affected, &region, &offset) != 0x0)
@@ -248,7 +248,7 @@ int taint_plugin::print_propagation(unsigned id, unsigned branches)
         }
         else
         {
-            d_print_prompt(3, "Region = 0x%02x, Offset = 0x%08x\n", region, offset);
+            d_print(3, "Region = 0x%02x, Offset = 0x%08x\n", region, offset);
             if(region == MODRM_REG)
             {
                 if((EAX <= offset) &&  (offset < EBX)) d_print_prompt(1, "EAX, ");
