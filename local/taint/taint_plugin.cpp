@@ -516,7 +516,6 @@ int taint_plugin::prompt_taint()
 
         command = readline("Enter taint query and press [ENTER]\n> ");
         filter_str(command);
-        err_print("Received: %s\n", command);
 
         if(this->taint_eng->prompt_file) fprintf(this->taint_eng->prompt_file, "%s\n", command);
 
@@ -611,8 +610,6 @@ int taint_plugin::parse_cmd(char* string)
     EXCEPTION_INFO info;
     OFFSET addr;
     unsigned size;
-
-    err_print("Parsing: %s\n", string);
 
     if(this->query_tid == 0x0)
     {
@@ -891,24 +888,34 @@ int taint_plugin::parse_cmd(char* string)
     }
     else if(!strncmp(cur_str, "pro", 3))
     {
-        unsigned count;
+        unsigned offset, count;
 
         cur_str = strtok(0x0, " \n\r"); 
-        if(cur_str == 0x0) count = this->current_propagation_count;
+        if(cur_str == 0x0) offset = 0;
+        else offset = strtol(cur_str, 0x0, 10);
+
+        cur_str = strtok(0x0, " \n\r"); 
+        if(cur_str == 0x0) count = 15;
         else count = strtol(cur_str, 0x0, 10);
 
-        print_propagations(count);
+        print_propagations(offset, count);
     }
     return 0x0;
 }
 
-int taint_plugin::print_propagations(unsigned count)
+int taint_plugin::print_propagations(unsigned offset, unsigned count)
 {
     PROPAGATION* cur_propagation;
     unsigned taint_id;
     unsigned i;
 
-    for(i = 0x0; i<count; i++)
+    if(offset > this->taint_eng->current_propagation_count)
+    {
+        d_print_prompt(1, "Current propagation count is: %d\n", this->taint_eng->current_propagation_count);
+        return 0x0;
+    }
+
+    for(i = offset; i<offset+count; i++)
     {
         print_propagation(i, 0x0);
     }

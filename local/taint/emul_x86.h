@@ -924,6 +924,7 @@ class taint_x86
     int print_taint_history(BYTE_t*);
     int print_taint_history(BYTE_t*, OFFSET);
     int find_propagation_cause(PROPAGATION*, unsigned);
+    int find_propagation_result(PROPAGATION*, BYTE_t*);
     int reg_propagation_cause(BYTE_t*);
     int reg_propagation_cause_r_8(OFFSET);
     int reg_propagation_cause_r_16(OFFSET);

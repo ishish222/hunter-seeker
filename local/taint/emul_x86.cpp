@@ -1670,8 +1670,13 @@ int taint_x86::attach_current_propagation(BYTE_t* byte)
     info = this->get_context_info(this->cur_tid);
 
     PROPAGATION* current_propagation;
-
     current_propagation = &this->propagations[this->current_propagation_count];
+
+    if(this->find_propagation_result(current_propagation, byte))
+    {
+        d_print(3, "Result already registered\n");
+        return 0x0;
+    }
 
     RESULT* cur_result;
     RESULT* new_result;
@@ -1856,6 +1861,27 @@ int taint_x86::attach_current_propagation_m_32(OFFSET off)
     this->seal_scheduled = 0x1;
 
     return 0x0;
+}
+
+int taint_x86::find_propagation_result(PROPAGATION* current_propagation, BYTE_t* affected)
+{
+    if(current_propagation == 0x0) return 0x0;
+    if(current_propagation->results == 0x0) return 0x0;
+
+    unsigned i;
+    RESULT* cur_result;
+    int found = 0x0;
+
+    for(i=0x0,cur_result=current_propagation->results; i<current_propagation->result_count; i++)
+    {
+        if(cur_result->affected == affected)
+        {
+            found = 1;
+            break;
+        }
+        if(cur_result->next) cur_result=cur_result->next;
+    }
+    return found;
 }
 
 int taint_x86::find_propagation_cause(PROPAGATION* current_propagation, unsigned searched_id)
