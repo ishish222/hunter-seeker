@@ -78,7 +78,7 @@ OP - set option
 BR - register memory breakpoint
     The syntax is this:
         Entries for individual breakpoints are separated with '+'
-        Each entry takes the form: <name>:<tid>,<instruction_no>,<mode>
+        Each entry takes the form: <name>:<tid>,<instruction_no>,<address>,<mode>
 
         mode can be: READ,WRITE,EXECUTE
 

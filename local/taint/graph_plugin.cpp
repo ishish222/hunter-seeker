@@ -788,8 +788,8 @@ int graph_plugin::finish_callback()
     int diff_last, diff_first;
     unsigned open;
 
-    d_print(1, "Closing %d tids\n", this->tid_count);
-    for(i=0x0; i<this->tid_count; i++)
+    d_print(1, "Closing %d tids\n", this->taint_eng->tid_count);
+    for(i=0x0; i<this->taint_eng->tid_count; i++)
     {
         cur_tid = &this->graph_contexts[i];
         d_print(1, "Closing 0x%08x\n", cur_tid->tid);
@@ -921,7 +921,7 @@ int graph_plugin::add_thread_callback(CONTEXT_OUT ctx_out)
         /* fnalize */
         this->graph_contexts[tid_count].tid = ctx_out.thread_id;
     }
-    d_print(1, "ER_9 TID: 0x%08x lock_level: 0x%08x\n", ctx_out.thread_id, this->graph_contexts[this->tid_count].lock_level);
+    d_print(1, "ER_9 TID: 0x%08x lock_level: 0x%08x\n", ctx_out.thread_id, this->graph_contexts[this->taint_eng->tid_count].lock_level);
 
     return 0x0;
 }

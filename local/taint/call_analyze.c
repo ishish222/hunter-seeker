@@ -384,7 +384,7 @@ int main(int argc, char** argv)
         free(line); 
 
     /* causes errors, why? */
-    //taint_eng.close_files();
+    taint_eng.close_files();
 
     return 0x0;
 }
