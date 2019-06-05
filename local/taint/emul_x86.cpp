@@ -615,13 +615,12 @@ int taint_x86::post_execute_instruction(DWORD eip)
         }
     }
 
-#ifdef DEBUG_PRINT_CONTEXT
-    this->print_context();
-#endif
-
-#ifdef DEBUG_PRINT_STACK
-    this->print_stack(1, 5);
-#endif
+    /* if propagation occured, seal it */
+    if(this->seal_scheduled)
+    {
+        this->seal_current_propagation();
+        this->seal_scheduled = 0x0;
+    }
 
     this->last_eip = this->current_eip;
     cur_ctx->last_eip = this->last_eip;
@@ -880,45 +879,15 @@ int taint_x86::mod_thread(CONTEXT_OUT ctx_out)
 
     DWORD_t reg;
 
-    reg = this->reg_restore_32(EAX);
-    reg.set_DWORD(ctx_out.ctx.Eax);
-    this->reg_store_32(EAX, reg, ctx_out.thread_id);
-
-    reg = this->reg_restore_32(ECX);
-    reg.set_DWORD(ctx_out.ctx.Ecx);
-    this->reg_store_32(ECX, reg, ctx_out.thread_id);
-
-    reg = this->reg_restore_32(EDX);
-    reg.set_DWORD(ctx_out.ctx.Edx);
-    this->reg_store_32(EDX, reg, ctx_out.thread_id);
-
-    reg = this->reg_restore_32(EBX);
-    reg.set_DWORD(ctx_out.ctx.Ebx);
-    this->reg_store_32(EBX, reg, ctx_out.thread_id);
-
-    reg = this->reg_restore_32(ESI);
-    reg.set_DWORD(ctx_out.ctx.Esi);
-    this->reg_store_32(ESI, reg, ctx_out.thread_id);
-
-    reg = this->reg_restore_32(EDI);
-    reg.set_DWORD(ctx_out.ctx.Edi);
-    this->reg_store_32(EDI, reg, ctx_out.thread_id);
-
-    reg = this->reg_restore_32(ESP);
-    reg.set_DWORD(ctx_out.ctx.Esp);
-    this->reg_store_32(ESP, reg, ctx_out.thread_id);
-
-    reg = this->reg_restore_32(EBP);
-    reg.set_DWORD(ctx_out.ctx.Ebp);
-    this->reg_store_32(EBP, reg, ctx_out.thread_id);
-
-    reg = this->reg_restore_32(EIP);
-    reg.set_DWORD(ctx_out.ctx.Eip);
-    this->reg_store_32(EIP, reg, ctx_out.thread_id);
-
-    reg = this->reg_restore_32(EFLAGS);
-    reg.set_DWORD(ctx_out.ctx.EFlags);
-    this->reg_store_32(EFLAGS, reg, ctx_out.thread_id);
+    this->reg_store_32(EAX, ctx_out.ctx.Eax, ctx_out.thread_id);
+    this->reg_store_32(ECX, ctx_out.ctx.Ecx, ctx_out.thread_id);
+    this->reg_store_32(EDX, ctx_out.ctx.Edx, ctx_out.thread_id);
+    this->reg_store_32(EBX, ctx_out.ctx.Ebx, ctx_out.thread_id);
+    this->reg_store_32(ESI, ctx_out.ctx.Esi, ctx_out.thread_id);
+    this->reg_store_32(EDI, ctx_out.ctx.Edi, ctx_out.thread_id);
+    this->reg_store_32(ESP, ctx_out.ctx.Esp, ctx_out.thread_id);
+    this->reg_store_32(EBP, ctx_out.ctx.Ebp, ctx_out.thread_id);
+    this->reg_store_32(EFLAGS, ctx_out.ctx.EFlags, ctx_out.thread_id);
 
     //this->print_context(this->cur_tid);
 
@@ -1696,50 +1665,50 @@ OFFSET taint_x86::a_decode_sib_mod(BYTE_t* sib_ptr, BYTE mod)
 
 int taint_x86::attach_current_propagation(BYTE_t* byte)
 {
-    d_print(2, "attach_current_propagation_1\n");
+    d_print(3, "Attaching current propagation\n");
     CONTEXT_INFO* info;
     info = this->get_context_info(this->cur_tid);
-    d_print(2, "attach_current_propagation_2\n");
 
     PROPAGATION* current_propagation;
 
-    d_print(2, "attach_current_propagation_3\n");
     current_propagation = &this->propagations[this->current_propagation_count];
 
-    d_print(2, "attach_current_propagation_4\n");
     RESULT* cur_result;
     RESULT* new_result;
 
-    d_print(2, "attach_current_propagation_5\n");
     new_result = (RESULT*)malloc(sizeof(RESULT));
     new_result->affected = byte;
     new_result->next = 0x0;
 
-    d_print(2, "attach_current_propagation_6\n");
+    d_print(3, "New result: 0x%08x, affected byte: 0%08x\n", new_result, new_result->affected);
+
     if(current_propagation->results == 0x0)
     {
         current_propagation->results = new_result;
     }
     else
     {
-        d_print(2, "attach_current_propagation_6.1\n");
         cur_result = current_propagation->results;
-        d_print(2, "attach_current_propagation_6.2\n");
         while(cur_result->next)
         {
-            d_print(2, "cur_result->next: 0x%08x\n", cur_result->next);
             cur_result = cur_result->next;
-            d_print(2, "attach_current_propagation_6.3\n");
         }
-        d_print(2, "attach_current_propagation_6.4\n");
         cur_result->next = new_result;
     }
-    d_print(2, "attach_current_propagation_7\n");
+    d_print(3, "Registered result\n");
 
     byte->id = this->current_propagation_count;
     
     current_propagation->result_count++;
 
+    return 0x0;
+}
+
+int taint_x86::seal_current_propagation()
+{
+    this->propagations[this->current_propagation_count].instruction = this->last_eip;
+    this->propagations[this->current_propagation_count].instr_count = this->last_instr_count;
+    this->current_propagation_count++;
     return 0x0;
 }
 
@@ -1757,8 +1726,9 @@ int taint_x86::attach_current_propagation_r_8(OFFSET off)
     info->registers[off+0].set_BYTE_t_id(this->current_propagation_count);
 //    this->propagations[this->current_propagation_count].result[0x0] = &info->registers[off+0];
     this->attach_current_propagation(&info->registers[off+0]);
-    d_print(2, "Attach propagation no: %d to BYTE_t: 0x%08x\n", this->current_propagation_count, &info->registers[off+0]);
-    this->current_propagation_count++;
+    d_print(3, "Attach propagation no: %d to BYTE_t: 0x%08x\n", this->current_propagation_count, &info->registers[off+0]);
+//    this->current_propagation_count++;
+    this->seal_scheduled = 0x1;
 
     return 0x0;
 }
@@ -1780,9 +1750,10 @@ int taint_x86::attach_current_propagation_r_16(OFFSET off)
     this->attach_current_propagation(&info->registers[off+1]);
     //this->propagations[this->current_propagation_count].result[0x0] = &info->registers[off+0];
     //this->propagations[this->current_propagation_count].result[0x1] = &info->registers[off+1];
-    d_print(2, "Attach propagation no: %d to BYTE_t: 0x%08x\n", this->current_propagation_count, &info->registers[off+0]);
-    d_print(2, "Attach propagation no: %d to BYTE_t: 0x%08x\n", this->current_propagation_count, &info->registers[off+1]);
-    this->current_propagation_count++;
+    d_print(3, "Attach propagation no: %d to BYTE_t: 0x%08x\n", this->current_propagation_count, &info->registers[off+0]);
+    d_print(3, "Attach propagation no: %d to BYTE_t: 0x%08x\n", this->current_propagation_count, &info->registers[off+1]);
+//    this->current_propagation_count++;
+    this->seal_scheduled = 0x1;
 
     return 0x0;
 }
@@ -1810,11 +1781,12 @@ int taint_x86::attach_current_propagation_r_32(OFFSET off)
     this->attach_current_propagation(&info->registers[off+1]);
     this->attach_current_propagation(&info->registers[off+2]);
     this->attach_current_propagation(&info->registers[off+3]);
-    d_print(2, "Attach propagation no: %d to BYTE_t: 0x%08x\n", this->current_propagation_count, &info->registers[off+0]);
-    d_print(2, "Attach propagation no: %d to BYTE_t: 0x%08x\n", this->current_propagation_count, &info->registers[off+1]);
-    d_print(2, "Attach propagation no: %d to BYTE_t: 0x%08x\n", this->current_propagation_count, &info->registers[off+2]);
-    d_print(2, "Attach propagation no: %d to BYTE_t: 0x%08x\n", this->current_propagation_count, &info->registers[off+3]);
-    this->current_propagation_count++;
+    d_print(3, "Attach propagation no: %d to BYTE_t: 0x%08x\n", this->current_propagation_count, &info->registers[off+0]);
+    d_print(3, "Attach propagation no: %d to BYTE_t: 0x%08x\n", this->current_propagation_count, &info->registers[off+1]);
+    d_print(3, "Attach propagation no: %d to BYTE_t: 0x%08x\n", this->current_propagation_count, &info->registers[off+2]);
+    d_print(3, "Attach propagation no: %d to BYTE_t: 0x%08x\n", this->current_propagation_count, &info->registers[off+3]);
+//    this->current_propagation_count++;
+    this->seal_scheduled = 0x1;
 
     return 0x0;
 }
@@ -1829,8 +1801,9 @@ int taint_x86::attach_current_propagation_m_8(OFFSET off)
     this->memory[off+0].set_BYTE_t_id(this->current_propagation_count);
     //this->propagations[this->current_propagation_count].result[0x0] = &this->memory[off+0];
     this->attach_current_propagation(&this->memory[off+0]);
-    d_print(2, "Attach propagation no: %d to BYTE_t: 0x%08x\n", this->current_propagation_count, &this->memory[off+0]);
-    this->current_propagation_count++;
+    d_print(3, "Attach propagation no: %d to BYTE_t: 0x%08x\n", this->current_propagation_count, &this->memory[off+0]);
+//    this->current_propagation_count++;
+    this->seal_scheduled = 0x1;
 
     return 0x0;
 }
@@ -1848,9 +1821,10 @@ int taint_x86::attach_current_propagation_m_16(OFFSET off)
     //this->propagations[this->current_propagation_count].result[0x1] = &this->memory[off+1];
     this->attach_current_propagation(&this->memory[off+0]);
     this->attach_current_propagation(&this->memory[off+1]);
-    d_print(2, "Attach propagation no: %d to BYTE_t: 0x%08x\n", this->current_propagation_count, &this->memory[off+0]);
-    d_print(2, "Attach propagation no: %d to BYTE_t: 0x%08x\n", this->current_propagation_count, &this->memory[off+1]);
-    this->current_propagation_count++;
+    d_print(3, "Attach propagation no: %d to BYTE_t: 0x%08x\n", this->current_propagation_count, &this->memory[off+0]);
+    d_print(3, "Attach propagation no: %d to BYTE_t: 0x%08x\n", this->current_propagation_count, &this->memory[off+1]);
+//    this->current_propagation_count++;
+    this->seal_scheduled = 0x1;
 
     return 0x0;
 }
@@ -1874,21 +1848,53 @@ int taint_x86::attach_current_propagation_m_32(OFFSET off)
     this->attach_current_propagation(&this->memory[off+1]);
     this->attach_current_propagation(&this->memory[off+2]);
     this->attach_current_propagation(&this->memory[off+3]);
-    d_print(2, "Attach propagation no: %d to BYTE_t: 0x%08x\n", this->current_propagation_count, &this->memory[off+0]);
-    d_print(2, "Attach propagation no: %d to BYTE_t: 0x%08x\n", this->current_propagation_count, &this->memory[off+1]);
-    d_print(2, "Attach propagation no: %d to BYTE_t: 0x%08x\n", this->current_propagation_count, &this->memory[off+2]);
-    d_print(2, "Attach propagation no: %d to BYTE_t: 0x%08x\n", this->current_propagation_count, &this->memory[off+3]);
-    this->current_propagation_count++;
+    d_print(3, "Attach propagation no: %d to BYTE_t: 0x%08x\n", this->current_propagation_count, &this->memory[off+0]);
+    d_print(3, "Attach propagation no: %d to BYTE_t: 0x%08x\n", this->current_propagation_count, &this->memory[off+1]);
+    d_print(3, "Attach propagation no: %d to BYTE_t: 0x%08x\n", this->current_propagation_count, &this->memory[off+2]);
+    d_print(3, "Attach propagation no: %d to BYTE_t: 0x%08x\n", this->current_propagation_count, &this->memory[off+3]);
+//    this->current_propagation_count++;
+    this->seal_scheduled = 0x1;
 
     return 0x0;
 }
 
+int taint_x86::find_propagation_cause(PROPAGATION* current_propagation, unsigned searched_id)
+{
+    if(current_propagation == 0x0) return 0x0;
+    if(current_propagation->causes == 0x0) return 0x0;
+
+    unsigned i;
+    CAUSE* cur_cause;
+    int found = 0x0;
+
+    for(i=0x0,cur_cause=current_propagation->causes; i<current_propagation->cause_count; i++)
+    {
+        if(cur_cause->cause_id == searched_id)
+        {
+            found = 1;
+            break;
+        }
+        if(cur_cause->next) cur_cause=cur_cause->next;
+    }
+    return found;
+}
+
 int taint_x86::reg_propagation_cause(BYTE_t* op)
 {
-    d_print(2, "Registering BYTE_t*: 0x%08x\n", op);
+    PROPAGATION* current_propagation;
+    current_propagation = &this->propagations[this->current_propagation_count];
+
+    unsigned byte_cause_id = op->get_BYTE_t_id();
+    d_print(3, "Registering BYTE_t*: 0x%08x\n", op);
 //    if(!op->get_BYTE_t()) return 0x0;
     //TAINTED** cur_op;
     //TAINTED* new_op;
+
+    if(this->find_propagation_cause(current_propagation, byte_cause_id))
+    {
+        d_print(3, "Cause already registered\n");
+        return 0x0;
+    }
 
     CAUSE* cur_elem;
     CAUSE* new_elem;
@@ -1904,21 +1910,21 @@ int taint_x86::reg_propagation_cause(BYTE_t* op)
         exit(1);
     }
 //    fprintf(stderr, "new_elem = 08%08x\n", new_elem);
-    new_elem->cause_id = op->get_BYTE_t_id();
-    d_print(2, "Test2");
+    new_elem->cause_id = byte_cause_id;
+    d_print(3, "Test2");
     if(new_elem->cause_id > this->current_propagation_count)
     {
         d_print(2, "Error, registering cause_id larger than propagation count.\n");
         exit(1);
     }
-    d_print(2, "Test3");
+    d_print(3, "Test3");
 
     new_elem->next = 0x0;
 
-    if(op->get_BYTE_t_id()) d_print(2, "Registering non-void cause\n");
+    if(op->get_BYTE_t_id()) d_print(3, "Registering non-void cause\n");
 
 /*
-    cur_op = &this->propagations[this->current_propagation_count].first_op;
+    cur_op = &current_propagation->first_op;
 
     if(*cur_op == 0x0)
     {
@@ -1933,21 +1939,21 @@ int taint_x86::reg_propagation_cause(BYTE_t* op)
     }
 */
 //    fprintf(stderr, "Instrocution count: %d\n", this->current_propagation_count);
-    //cur_elem = this->propagations[this->current_propagation_count].causes;
+    //cur_elem = current_propagation->causes;
 
 
     //if(cur_elem == 0x0)
-    d_print(2, "Test4");
-    if(this->propagations[this->current_propagation_count].causes == 0x0)
+    d_print(3, "Test4");
+    if(current_propagation->causes == 0x0)
     {
-        d_print(2, "Test4.5");
-        this->propagations[this->current_propagation_count].causes = new_elem;
+        d_print(3, "Test4.5");
+        current_propagation->causes = new_elem;
         //*cur_elem = new_elem;
-        d_print(2, "Registered cause with id: %d\n", new_elem->cause_id);
+        d_print(3, "Registered cause with id: %d\n", new_elem->cause_id);
     }
     else
     {
-        cur_elem = this->propagations[this->current_propagation_count].causes;
+        cur_elem = current_propagation->causes;
 
         while(cur_elem->next != 0x0)
             cur_elem = cur_elem->next;
@@ -1955,12 +1961,12 @@ int taint_x86::reg_propagation_cause(BYTE_t* op)
 //        fprintf(stderr, "*cur_elem = 08%08x\n", *cur_elem);
         cur_elem->next = new_elem;
 
-        d_print(2, "Registered cause with id: %d\n", new_elem->cause_id);
+        d_print(3, "Registered cause with id: %d\n", new_elem->cause_id);
     }
 
-    d_print(2, "Test5");
-    this->propagations[this->current_propagation_count].cause_count++;
-    d_print(2, "Test6");
+    d_print(3, "Test5");
+    current_propagation->cause_count++;
+    d_print(3, "Test6");
 
     return 0x0;
 }

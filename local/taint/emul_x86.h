@@ -918,11 +918,12 @@ class taint_x86
     int d_print(int, const char*, ...);
 
     /* propagation */
-
+    int seal_scheduled;
     int print_taint_ops(unsigned);
     int print_taint_history(unsigned);
     int print_taint_history(BYTE_t*);
     int print_taint_history(BYTE_t*, OFFSET);
+    int find_propagation_cause(PROPAGATION*, unsigned);
     int reg_propagation_cause(BYTE_t*);
     int reg_propagation_cause_r_8(OFFSET);
     int reg_propagation_cause_r_16(OFFSET);
@@ -937,6 +938,7 @@ class taint_x86
     int attach_current_propagation_m_8(OFFSET);
     int attach_current_propagation_m_16(OFFSET);
     int attach_current_propagation_m_32(OFFSET);
+    int seal_current_propagation();
 
     /* 32 bit store / restore */
     void store_32(OFFSET, DWORD_t);

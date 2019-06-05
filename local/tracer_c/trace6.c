@@ -5529,6 +5529,10 @@ DWORD read_register(DWORD tid_id, char* reg)
     {
         return ctx.Edi;
     }
+    if(!strcmp(reg, "ESI"))
+    {
+        return ctx.Esi;
+    }
     if(!strcmp(reg, "EBP"))
     {
         return ctx.Ebp;
@@ -5608,6 +5612,17 @@ struct ImageSectionInfo
        }
 };
 
+int secure_section(unsigned start, unsigned size)
+{
+    char line[MAX_NAME];
+
+    d_print("SE,0x%08x,0x%08x\n", start, size);
+    sprintf(line, "SE,0x%08x,0x%08x\n", start, size);
+    add_to_buffer(line);
+
+    return 0x0;
+}
+
 int secure_sections(HANDLE hModule)
 {
     char line[MAX_NAME];
@@ -5642,10 +5657,8 @@ int secure_sections(HANDLE hModule)
         addr = (OFFSET)dllImageBase + pSectionHdr->VirtualAddress;
         size = (OFFSET)pSectionHdr->Misc.VirtualSize;
     
-        d_print("SE,0x%08x,0x%08x\n", addr, size);
-        sprintf(line, "SE,0x%08x,0x%08x\n", addr, size);
-        add_to_buffer(line);
-         pSectionHdr++;
+        secure_section(addr, size);
+        pSectionHdr++;
         if(!(pSectionHdr)) return 0x0;
     }
 
@@ -7411,6 +7424,22 @@ int handle_cmd(char* cmd)
         str = strtok(0x0, " ");
         sprintf(line2, "OU,0x%x,%s\n", my_trace->last_tid, str);
         add_to_buffer(line2);
+        send_report();
+        
+    }
+    else if(!strncmp(cmd, CMD_SECURE_SECTION, 2))
+    {
+        char* str;
+        char line2[MAX_NAME];
+        unsigned start, size;
+
+        strtok(cmd, " ");
+        start = strtoul(strtok(0x0, " "), 0x0, 0x10);
+        size = strtoul(strtok(0x0, " "), 0x0, 0x10);
+
+        d_print("= Securing manually: 0x%08x, size: 0x%08x\n", start, size);
+        secure_section(start, size);
+        
         send_report();
         
     }

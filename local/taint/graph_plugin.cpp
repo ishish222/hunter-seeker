@@ -690,6 +690,8 @@ int graph_plugin::pre_execute_instruction_callback(DWORD eip)
         {
             print_ret(this->cur_graph_context);
             this->cur_graph_context->last_emit_decision = 0x0; 
+            // test!
+            //this->cur_graph_context->been_returning = 0x0;
         }
     }
 
@@ -1465,7 +1467,7 @@ int detox(char* s)
 
 int graph_plugin::handle_call(GRAPH_CONTEXT* graph_context)
 {
-    d_print(1, "[handle call]\n");
+    d_print(1, "[handle call (%d): 0x%08x]\n", this->taint_eng->current_instr_count-1, graph_context->source);
     d_print(1, "LL: 0x%08x\n", graph_context->lock_level);
     SYMBOL* s;
     char out_line[MAX_NAME];
@@ -1893,8 +1895,7 @@ int graph_plugin::handle_ret(GRAPH_CONTEXT* cur_ctx, OFFSET eip)
     if((!this->taint_eng->started) || (this->taint_eng->finished))
         return 0x0;
 
-    d_print(1, "[handle ret]\n");
-    d_print(1, "Eip: 0x%08x\n", eip);
+    d_print(1, "[handle ret (%d): 0x%08x]\n", this->taint_eng->current_instr_count, eip);
     d_print(1, "LL: 0x%08x\n", cur_ctx->lock_level);
     /* verify if ret points to a symbol */
     
@@ -2315,7 +2316,7 @@ int graph_plugin::r_jxx(BYTE_t* b)
 
 int graph_plugin::r_retn(BYTE_t*)
 {
-    d_print(3, "retn\n");
+    d_print(2, "retn\n");
 
     if(this->taint_eng->started && !this->taint_eng->finished)
         this->cur_graph_context->returning = 0x3;
@@ -2326,7 +2327,7 @@ int graph_plugin::r_retn(BYTE_t*)
 
 int graph_plugin::r_ret(BYTE_t*)
 {
-    d_print(3, "ret\n");
+    d_print(2, "ret\n");
 
     if(this->taint_eng->started && !this->taint_eng->finished)
         this->cur_graph_context->returning = 0x3;

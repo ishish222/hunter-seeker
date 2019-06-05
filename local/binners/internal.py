@@ -815,6 +815,12 @@ def execute(cmds, ext_pipe):
             writePipe(ext_pipe, "tracer_run_routine "+bcolors.OK_STR)
             ok(ext_pipe)
 
+        elif(cmd == "tracer_secure_section"):
+            trace_controller.secure_section(args)
+            writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
+            writePipe(ext_pipe, "tracer_secure_section "+bcolors.OK_STR)
+            ok(ext_pipe)
+
         elif(cmd == "tracer_secure_all_sections"):
             trace_controller.secure_all_sections()
             writePipe(ext_pipe, "%s" % trace_controller.last_answer)

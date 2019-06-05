@@ -266,6 +266,18 @@ def secure_all_sections(args=None):
     response, _, _ = read_socket(options.s)
     return
 
+def secure_section(args=None):
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+
+    start = args[0]
+    size = args[0]
+
+    write_socket(options.s, "tracer_secure_section %s %s" % (args[0], args[1]));
+    response, _, _ = read_socket(options.s)
+    return
+
 def spawn_tracer_controller(args=None):
     options = globs.state.options
     state = globs.state

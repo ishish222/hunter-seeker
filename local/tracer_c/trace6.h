@@ -186,6 +186,7 @@
 #define CMD_READ_ARG            "ra"
 #define CMD_READ_ARG_ANSI       "rs"
 #define CMD_READ_ARG_UNICODE    "ru"
+#define CMD_SECURE_SECTION      "sS"
 #define CMD_SECURE_ALL_SECTIONS "ss"
 #define CMD_PRINT               "PR"
 #define CMD_AUTOREPEAT_REACTION "AR"

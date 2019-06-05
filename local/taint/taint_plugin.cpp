@@ -12,6 +12,10 @@
 
 #include <limits.h>
 
+#ifdef USE_DISTORM
+#include <distorm.h>
+#endif
+
 /* przerobic tak by pokazywalo ze z pluginu
 int taint_plugin::d_print(int level, const char* format, ...)
 {
@@ -117,6 +121,161 @@ int taint_plugin::d_print_prompt(int level, const char* format, ...)
     return 0x0;
 }
 
+int taint_plugin::resolve_affected(BYTE_t* affected, char* region, OFFSET* offset)
+{
+    long start, end;
+
+    start = this->taint_eng->memory;
+    end = start+(sizeof(BYTE_t)*MEM_SIZE);
+
+    if((start <= affected) && (affected < end))
+    {
+        *region = MODRM_MEM;
+        *offset = ((long)affected-start)/sizeof(BYTE_t);
+        return 0x0;
+    }
+
+    CONTEXT_INFO* cur_context;
+    unsigned i;
+
+    for(i=0x0; i<this->taint_eng->tid_count; i++)
+    {
+        cur_context = &this->taint_eng->ctx_info[i];
+
+        start = cur_context->registers;
+        end = start+REG_SIZE;
+
+        if((start <= affected) && (affected < end))
+        {
+            *region = MODRM_REG;
+            *offset = ((long)affected-start)/sizeof(BYTE_t);
+            return 0x0;
+        }
+    }
+
+    return 0x1;
+}
+
+int taint_plugin::print_propagation(unsigned id, unsigned branches)
+{
+    unsigned i,j;
+    unsigned count;
+
+    CAUSE* cur_elem;
+    
+    /* identation */
+    if(this->out_tab > MAX_OUT_TAB)
+    {
+        //d_print(1, "...\n");
+        //d_err_print("...\n");
+        return 0x0;
+    }
+
+    this->out_tab++;
+
+//    d_print(3, "1\n");
+    cur_elem = this->taint_eng->propagations[id].causes;
+    if(cur_elem)
+    {
+        d_print(2, "Propagations elem count: %d\n", this->taint_eng->propagations[id].cause_count);
+       
+        if(branches == 0x0) count = this->taint_eng->propagations[id].cause_count;
+        else count = branches;
+
+        unsigned last_instr = 0x0;
+ 
+        for(i=0x0; i<count;i++)
+        {
+            if(this->taint_eng->propagations[cur_elem->cause_id].instr_count != last_instr)
+            {
+                d_print(2, "%d -> %d\n", id, cur_elem->cause_id);
+                last_instr = this->taint_eng->propagations[cur_elem->cause_id].instr_count;
+            }
+            if(cur_elem->next)
+            {
+                d_print(2, "Traversing: 0x%08x -> 0x%08x\n");
+                cur_elem = cur_elem->next;
+            }
+            else break;
+        } 
+    }
+
+    for(j=0x0; j<this->out_tab; j++)
+    {
+        d_print_prompt(1, " ");
+    }
+
+    PROPAGATION* current_propagation;
+    current_propagation = &this->taint_eng->propagations[id];
+
+#ifdef USE_DISTORM
+    char buf[0x20];
+    int k;
+    for(k=0x0; k<0x20; k++)
+        buf[k] = this->taint_eng->memory[current_propagation->instruction +k].get_BYTE();
+
+    /* decoding */
+
+    unsigned decoded;
+    _DecodeResult res;
+ _DecodedInst decodedInstructions[0x1];
+    
+    res = distorm_decode(current_propagation->instruction, (const unsigned char*)buf, 0x20, Decode32Bits, decodedInstructions, 0x1, &decoded);
+
+    d_print_prompt(1, "%d: (%d)0x%08x: %s%s%s, ", id, current_propagation->instr_count, current_propagation->instruction, (char*)decodedInstructions[0].mnemonic.p, decodedInstructions[0].operands.length != 0 ? " " : "", (char*)decodedInstructions[0].operands.p);
+#else
+    d_print_prompt(1, "%d, EIP: 0x%08x, instr byte: 0x%02x, instr no: %d, ", id, current_propagation->instruction, this->taint_eng->memory[current_propagation->instruction].get_BYTE(), current_propagation->instr_count);
+#endif
+    d_print_prompt(1, "causes: ");
+
+    CAUSE* cur_cause;
+    for(i=0x0,cur_cause=current_propagation->causes; i<current_propagation->cause_count; i++,cur_cause=cur_cause->next)
+    {
+        d_print_prompt(1, "%d, ", cur_cause->cause_id);
+    }
+
+    d_print_prompt(1, "results: ");
+
+    RESULT* cur_result;
+    for(i=0x0,cur_result=current_propagation->results; i<current_propagation->result_count; i++,cur_result=cur_result->next)
+    {
+        d_print_prompt(3, "0x%08x, ", cur_result->affected);
+        char region;
+        OFFSET offset;
+        if(resolve_affected(cur_result->affected, &region, &offset) != 0x0)
+        {
+            d_print_prompt(1, "Error resolving affected, ");
+        }
+        else
+        {
+            d_print_prompt(3, "Region = 0x%02x, Offset = 0x%08x\n", region, offset);
+            if(region == MODRM_REG)
+            {
+                if((EAX <= offset) &&  (offset < EBX)) d_print_prompt(1, "EAX, ");
+                if((EBX <= offset) &&  (offset < ECX)) d_print_prompt(1, "EBX, ");
+                if((ECX <= offset) &&  (offset < EDX)) d_print_prompt(1, "ECX, ");
+                if((EDX <= offset) &&  (offset < ESI)) d_print_prompt(1, "EDX, ");
+                if((ESI <= offset) &&  (offset < EDI)) d_print_prompt(1, "ESI, ");
+                if((EDI <= offset) &&  (offset < EBP)) d_print_prompt(1, "EDI, ");
+                if((EBP <= offset) &&  (offset < ESP)) d_print_prompt(1, "EBP, ");
+                if((ESP <= offset) &&  (offset < EFLAGS)) d_print_prompt(1, "ESP, ");
+                if((EFLAGS <= offset) && (offset < EIP)) d_print_prompt(1, "EFLAGS, ");
+                if((EIP <= offset)) d_print_prompt(1, "EIP, ");
+            }
+            else if(region == MODRM_MEM)
+            {
+                d_print_prompt(1, "MEM:0x%08x, ", offset);
+            }
+            else
+                d_print_prompt(1, "unknown, ", offset);
+        }
+    }
+    d_print_prompt(1, "\n");
+
+    this->out_tab--;
+    return 0x0;
+}
+
 int taint_plugin::print_taint_history(unsigned id, unsigned branches)
 {
     if(id == 0x0) return 0x0;
@@ -184,7 +343,7 @@ int taint_plugin::print_taint_history(unsigned id, unsigned branches)
 
     d_print_prompt(1, "%d: (%d)0x%08x: %s%s%s\n", id, this->taint_eng->propagations[id].instr_count, this->taint_eng->propagations[id].instruction, (char*)decodedInstructions[0].mnemonic.p, decodedInstructions[0].operands.length != 0 ? " " : "", (char*)decodedInstructions[0].operands.p);
 #else
-    d_print_prompt(1, "Taint id: %d, EIP: 0x%08x, instr byte: 0x%02x, instr no: %d\n", id, this->taint_eng->propagations[id].instruction, this->taint_eng->memory[this->taint_eng->propagations[id].instruction].get_BYTE(), this->taint_eng->propagations[id].instr_count);
+    d_print_prompt(1, "%d, EIP: 0x%08x, instr byte: 0x%02x, instr no: %d\n", id, this->taint_eng->propagations[id].instruction, this->taint_eng->memory[this->taint_eng->propagations[id].instruction].get_BYTE(), this->taint_eng->propagations[id].instr_count);
 #endif
     this->out_tab--;
     return 0x0;
@@ -369,8 +528,8 @@ int taint_plugin::prompt_taint()
         else if(strcmp(command, "c") == 0x0) break;
         //else if(strstr(command, "que"))
 
-        this->parse_cmd(command);
         add_history(command);
+        this->parse_cmd(command);
         free(command);
         /*
         if(this->parse_trace_string(command, &twp) != 0x0) continue;
@@ -726,9 +885,34 @@ int taint_plugin::parse_cmd(char* string)
                 err_print("\n");
             }
         }
+        /* itd. */
 
     
     }
+    else if(!strncmp(cur_str, "pro", 3))
+    {
+        unsigned count;
+
+        cur_str = strtok(0x0, " \n\r"); 
+        if(cur_str == 0x0) count = this->current_propagation_count;
+        else count = strtol(cur_str, 0x0, 10);
+
+        print_propagations(count);
+    }
+    return 0x0;
+}
+
+int taint_plugin::print_propagations(unsigned count)
+{
+    PROPAGATION* cur_propagation;
+    unsigned taint_id;
+    unsigned i;
+
+    for(i = 0x0; i<count; i++)
+    {
+        print_propagation(i, 0x0);
+    }
+
     return 0x0;
 }
 

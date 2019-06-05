@@ -843,6 +843,11 @@ class TraceController(object):
         self.last_report, self.last_answer = self.recv_report_active()
         return 
 
+    def secure_section(self, args):
+        self.send_command_active("sS %s" % args)
+        self.last_report, self.last_answer = self.recv_report_active()
+        return 
+
     def secure_all_sections(self):
         self.send_command_active("ss")
         self.last_report, self.last_answer = self.recv_report_active()

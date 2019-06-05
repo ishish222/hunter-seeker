@@ -383,7 +383,8 @@ int main(int argc, char** argv)
     if(line)
         free(line); 
 
-    taint_eng.close_files();
+    /* causes errors, why? */
+    //taint_eng.close_files();
 
     return 0x0;
 }

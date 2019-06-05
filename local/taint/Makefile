@@ -1,5 +1,5 @@
 CC =g++
-CFLAGS = -rdynamic -I. -ggdb -w -std=c++11 -D_GLIBCXX_USE_CXX11_ABI=0 -DHANDLE_BREAKPOINTS -fpermissive
+CFLAGS = -rdynamic -I. -ggdb -w -std=c++11 -D_GLIBCXX_USE_CXX11_ABI=0 -DHANDLE_BREAKPOINTS -DUSE_DISTORM -fpermissive $(DISTORM_LIB) 
 #NAMES = symbol_export cextract call_analyze taint_analyze
 NAMES = symbol_export call_analyze taint_analyze
 
@@ -16,10 +16,10 @@ SDL_INCLUDE = -I/usr/local/include
 
 READLINE_LIB = -L/usr/lib -lhistory -lreadline
 
-DISTORM_FLAGS = -Llib -l distorm3 -Iinc
+DISTORM_LIB= -L/usr/lib -l distorm3 -Idistorm_inc
 
 #CXXFLAGS = -Wall -c -std=c++11 -fpermissive $(SDL_INCLUDE)
-CXXFLAGS = -Wall -c -std=c++11 -fpermissive
+CXXFLAGS = -Wall -c -std=c++11 -fpermissive -DUSE_DISTORM $(DISTORM_LIB)
 #LDFLAGS = $(SDL_LIB)
 CXX = g++
 
@@ -33,7 +33,7 @@ call_analyze: $(CALL_ANALYZE_OBJS)
 	$(CC) -I. $(CALL_ANALYZE_OBJS) -o $@ $(BLISS_LIB) $(CFLAGS)
 
 taint_analyze: $(TAINT_ANALYZE_OBJS)
-	$(CC) -I. $(TAINT_ANALYZE_OBJS) -o $@ $(BLISS_LIB) $(READLINE_LIB) $(CFLAGS)
+	$(CC) -I. $(TAINT_ANALYZE_OBJS) -o $@ $(BLISS_LIB) $(READLINE_LIB) $(DISTORM_LIB) $(DISTORM_INC) $(CFLAGS)
 
 symbol_export: $(SYMB_OBJS)
 	$(CC) -I. $(SYMB_OBJS) -o $@ $(BLISS_LIB) $(CFLAGS)

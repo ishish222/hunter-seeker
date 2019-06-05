@@ -53,6 +53,11 @@ class taint_plugin : Plugin
     int write_history(FILE* f);
     int print_taint_ops(unsigned);
 
+    /* print propagations */
+    int print_propagations(unsigned);
+    int print_propagation(unsigned, unsigned);
+    int resolve_affected(BYTE_t*, char*, OFFSET*);
+
     /* queries */
     int parse_cmd(char*);
     int set_query_tid(DWORD);
