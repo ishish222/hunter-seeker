@@ -171,12 +171,22 @@ def push2(args = None):
         val = args
     globs.state.stack2.append(val)
 
+def print_queue2(args = None):
+    print("Current queue content:")
+    for item in globs.state.queue2:
+        print(item)
+
+def print_queue(args = None):
+    print("Current queue content:")
+    for item in globs.state.queue:
+        print(item)
+
 def enqueue(args = None):
     if(args == None):
         val = globs.state.ret
     else:
         val = args
-    globs.state.queue2.insert(0, val)
+    globs.state.queue.insert(0, val)
 
 def enqueue2(args = None):
     if(args == None):
@@ -194,7 +204,7 @@ def pop2(args = None):
     print("Popped: %s" % globs.state.ret)
 
 def dequeue(args = None):
-    globs.state.ret = globs.state.queue2.pop()
+    globs.state.ret = globs.state.queue.pop()
     print("Dequeued: %s" % globs.state.ret)
 
 def dequeue2(args = None):
@@ -397,6 +407,26 @@ def choosing_saved_disk_procedure(args=None):
         return "AM"
     else:
         return "GM"
+
+def check_strstr_w_queue(args=None):
+    options = globs.state.options
+
+    for item in globs.state.queue:
+        print("Checking strstr %s in %s" % (args, item))
+        if(args in item):
+            return "Y"
+
+    return "N"
+
+def check_strstr_w_queue2(args=None):
+    options = globs.state.options
+
+    for item in globs.state.queue2:
+        print("Checking strstr %s in %s" % (args, item))
+        if(args in item):
+            return "Y"
+
+    return "N"
 
 def check_strstr(args=None):
     options = globs.state.options
