@@ -666,7 +666,7 @@ int taint_plugin::parse_cmd(char* string)
 
             if(cur_str == 0x0)
             {
-                size = 0x10;
+                size = 0x40;
             }
             else
             {
@@ -684,7 +684,7 @@ int taint_plugin::parse_cmd(char* string)
 
             if(cur_str == 0x0)
             {
-                size = 0x10;
+                size = 0x40;
             }
             else
             {
@@ -987,7 +987,7 @@ int taint_plugin::parse_cmd(char* string)
     {
         /* we assume this is locator */
         unsigned add, size;
-        size = 0x20;
+        size = 0x60;
 
         addr = resolve_location(cur_str);
         this->taint_eng->print_err_mem(addr, size);

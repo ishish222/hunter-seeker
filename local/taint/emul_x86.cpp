@@ -15895,11 +15895,36 @@ int taint_x86::print_t_mem(int level, OFFSET start, DWORD len)
 
 int taint_x86::print_err_mem(OFFSET start, DWORD len)
 {
+    char line_temp[MAX_NAME];
+    char line1[MAX_NAME];
+    char line2[MAX_NAME];
+    char cur_byte;
+
+    line_temp[0]=0x0;
+    line1[0]=0x0;
+    line2[0]=0x0;
+
     err_print("Memory @ 0x%08x:\n", start);
-    for(OFFSET i=start; i<start+len; i++)
+    for(OFFSET i=0x0; i<len; i++)
     {
-        err_print("0x%x: 0x%x\n", i, this->memory[i].get_BYTE());
+        if(((i) % 0x10) == 0x0)
+        {
+            err_print("%s\t%s\n", line1, line2);
+            line1[0]=0x0;
+            line2[0]=0x0;
+            sprintf(line_temp, "0x%08x: ", start+i);
+            strcat(line1, line_temp);
+        }
+        cur_byte = this->memory[start+i].get_BYTE();        
+        sprintf(line_temp, "%02x ", cur_byte & 0xff);
+        strcat(line1, line_temp);
+        if(cur_byte <0x20) cur_byte = 0x2e;
+        if(cur_byte >0x80) cur_byte = 0x2e;
+
+        sprintf(line_temp, "%c", cur_byte);
+        strcat(line2, line_temp);
     }
+    err_print("%s\t%s\n", line1, line2);
     err_print("\n");
 }
 
