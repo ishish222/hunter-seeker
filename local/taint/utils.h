@@ -12,5 +12,8 @@ int filter_str_2(char* str, char unwanted);
 void print_usage();
 void _pause();
 int strcmpi(char const*, char const*);
+char* findany(char*, char*);
+int paint(char*, unsigned);
+int unpaint(char*, unsigned);
 
 #endif

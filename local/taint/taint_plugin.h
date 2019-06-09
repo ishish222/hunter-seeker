@@ -12,6 +12,25 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 
+typedef struct LOCATION_DESCRIPTOR_
+{
+    struct LOCATION_DESCRIPTOR_* a1;
+    struct LOCATION_DESCRIPTOR_* a2;
+    char op[MAX_NAME];
+
+} LOCATION_DESCRIPTOR;
+
+typedef struct _LIBRARY
+{
+    OFFSET offset;
+    char name[MAX_NAME];
+    char path[MAX_NAME];
+    DWORD length;
+    DWORD loaded;
+    char* content;
+
+    char blacklisted;
+} LIBRARY;
 
 class taint_plugin : Plugin
 {
@@ -63,6 +82,21 @@ class taint_plugin : Plugin
     int set_query_tid(DWORD);
     int get_query_tid();
 
+    /* libs for localizators */
+    LIBRARY* libs;
+    unsigned libs_count;
+    int add_lib(OFFSET, char*);
+    int del_lib(OFFSET);
+    LIBRARY* get_lib(OFFSET);
+    OFFSET find_lib(char*);
+    int register_lib(char* line);
+    int deregister_lib(char* line);
+
+    /* locators */
+    OFFSET resolve_loc_desc(LOCATION_DESCRIPTOR*);
+    OFFSET resolve_location(char*);
+    LOCATION_DESCRIPTOR* parse_location_desc(char*);
+
     taint_plugin()
     {
         printf("Initializing taint_plugin\n");
@@ -74,6 +108,8 @@ class taint_plugin : Plugin
         unsigned i;
 
         using_history();
+
+        libs = (LIBRARY*)malloc(sizeof(LIBRARY)*MAX_LIB_COUNT);
     }
 
     ~taint_plugin() 
@@ -90,6 +126,8 @@ class taint_plugin : Plugin
 
         if(mylist) free(mylist);
         if(myhist) free(myhist);
+
+        free(libs);
 
     }
 

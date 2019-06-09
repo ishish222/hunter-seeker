@@ -295,6 +295,12 @@ int main(int argc, char** argv)
 
 
             /* pass to plugin */
+            if(line[0] == 'R' && line[1] == 'L')
+                taint_eng.plugin->parse_option(line);
+
+            if(line[0] == 'D' && line[1] == 'L')
+                taint_eng.plugin->parse_option(line);
+
             if(line[0] == 'R' && line[1] == 'N')
                 taint_eng.plugin->parse_option(line);
 

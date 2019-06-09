@@ -104,4 +104,80 @@ int strcmpi(char const *a, char const *b)
     }
 }
 
+char* findany(char* s, char* keys)
+{
+    char* tmp;
+    tmp = s + strcspn(s,keys);
+    return *tmp == '\0' ? 0x0 : tmp;
+}
+
+int paint(char* area, unsigned len)
+{
+    unsigned i;
+    unsigned count = 0;
+    char active = 0x0;
+
+    for(i=0; i<len; i++)
+    {
+        if(area[i] == '[')
+        {
+            count++;
+            if(count >= 1)  active = 0x1;
+            else            active = 0x0;
+
+            if(active)      area[i]+=3;
+        }
+        else if(area[i] == ']')
+        {
+            if(active)      area[i]+=3;
+
+            count--;
+            if(count >= 1)  active = 0x1;
+            else            active = 0x0;
+        }
+        else
+        {
+            if(active)      area[i]+=3;
+        }
+
+//        printf("%c", area[i]);
+    }
+//    printf("\n");
+
+    return 0x0;
+}
+
+int unpaint(char* area, unsigned len)
+{
+    unsigned i;
+    unsigned count = 0;
+    char active = 0x0;
+
+    for(i=0; i<len; i++)
+    {
+        if(area[i]-3 == '[')
+        {
+            count++;
+            if(count >= 1)  active = 0x1;
+            else            active = 0x0;
+            if(active)      area[i]-=3;
+        }
+        else if(area[i]-3 == ']')
+        {
+            if(active)      area[i]-=3;
+            count--;
+            if(count >= 1)  active = 0x1;
+            else            active = 0x0;
+        }
+        else
+        {
+            if(active)      area[i]-=3;
+        }
+
+//        printf("%c", area[i]);
+//
+    }
+//    printf("\n");
+    return 0x0;
+}
 

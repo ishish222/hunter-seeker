@@ -6,14 +6,6 @@
 
 class taint_x86;
 
-typedef struct LOCATION_DESCRIPTOR_
-{
-    struct LOCATION_DESCRIPTOR_* a1;
-    struct LOCATION_DESCRIPTOR_* a2;
-    char op[MAX_NAME];
-
-} LOCATION_DESCRIPTOR;
-
 typedef struct BREAKPOINT_
 {
     OFFSET instruction_no;

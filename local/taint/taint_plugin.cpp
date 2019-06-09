@@ -617,7 +617,7 @@ int taint_plugin::parse_cmd(char* string)
     }
 
     cur_str = strtok(string, " \n\r"); if(cur_str == 0x0) return 0x0;
-    if(!strncmp(cur_str, "reg", 3))
+    if(!strncasecmp(cur_str, "reg", 3))
     {
         cur_str = strtok(0x0, " \n\r"); 
         if(cur_str == 0x0)
@@ -628,7 +628,7 @@ int taint_plugin::parse_cmd(char* string)
         }
         else
         {
-            if(!strncmp(cur_str, "ta", 2))
+            if(!strncasecmp(cur_str, "ta", 2))
             {
                 cur_str = strtok(0x0, " \n\r"); 
                 if(cur_str == 0x0)
@@ -654,10 +654,10 @@ int taint_plugin::parse_cmd(char* string)
         }
 
     }
-    else if(!strncmp(cur_str, "mem", 3))
+    else if(!strncasecmp(cur_str, "mem", 3))
     {
         cur_str = strtok(0x0, " \n\r"); if(cur_str == 0x0) return 0x0;
-        if(!strncmp(cur_str, "ta", 2))
+        if(!strncasecmp(cur_str, "ta", 2))
         {
             cur_str = strtok(0x0, " \n\r"); if(cur_str == 0x0) return 0x0;
             addr = strtol(cur_str, 0x0, 0x10); 
@@ -695,10 +695,10 @@ int taint_plugin::parse_cmd(char* string)
             return 0x0;
         }
     }
-    else if(!strncmp(cur_str, "sta", 3))
+    else if(!strncasecmp(cur_str, "sta", 3))
     {
         cur_str = strtok(0x0, " \n\r"); 
-        if(cur_str != 0x0 && !strncmp(cur_str, "ta", 2))
+        if(cur_str != 0x0 && !strncasecmp(cur_str, "ta", 2))
         {
             cur_str = strtok(0x0, " \n\r"); 
             if(cur_str == 0x0)
@@ -725,7 +725,7 @@ int taint_plugin::parse_cmd(char* string)
         this->taint_eng->print_err_stack(this->query_tid, size);
         return 0x0;
     }
-    else if(!strncmp(cur_str, "exc", 3))
+    else if(!strncasecmp(cur_str, "exc", 3))
     {
         d_print_prompt(0, "There have been %d exceptions: \n", this->taint_eng->exceptions_count);
 
@@ -737,7 +737,7 @@ int taint_plugin::parse_cmd(char* string)
 
         return 0x0;
     }
-    else if(!strncmp(cur_str, "thr", 3) || !strncmp(cur_str, "tid", 3))
+    else if(!strncasecmp(cur_str, "thr", 3) || !strncasecmp(cur_str, "tid", 3))
     {
         cur_str = strtok(0x0, " \n\r");
         if(cur_str == 0x0)
@@ -764,7 +764,7 @@ int taint_plugin::parse_cmd(char* string)
             return 0x0;
         }
     }
-    else if(!strncmp(cur_str, "tai", 3))
+    else if(!strncasecmp(cur_str, "tai", 3))
     {
         d_print_prompt(0, "There have been %d taints:\n", this->taint_count);
         for(i = 0x0; i< this->taint_count; i++)
@@ -773,7 +773,7 @@ int taint_plugin::parse_cmd(char* string)
         }
 
     }
-    else if(!strncmp(cur_str, "ins", 3))
+    else if(!strncasecmp(cur_str, "ins", 3))
     {
         unsigned count, current;
 
@@ -800,7 +800,7 @@ int taint_plugin::parse_cmd(char* string)
         }
 
     }
-    else if(!strncmp(cur_str, "his", 3))
+    else if(!strncasecmp(cur_str, "his", 3))
     {
         unsigned count;
 
@@ -820,13 +820,13 @@ int taint_plugin::parse_cmd(char* string)
         }
     
     }
-    else if(!strncmp(cur_str, "tra", 3))
+    else if(!strncasecmp(cur_str, "tra", 3))
     {
         unsigned i;
 
         cur_str = strtok(0x0, " \n\r"); if(cur_str == 0x0) return 0x0;
 
-        if(!strncmp(cur_str, "eax", 3))
+        if(!strncasecmp(cur_str, "eax", 3))
         {
             DWORD_t reg;
 
@@ -840,7 +840,7 @@ int taint_plugin::parse_cmd(char* string)
                 err_print("\n");
             }
         }
-        else if(!strncmp(cur_str, "ebx", 3))
+        else if(!strncasecmp(cur_str, "ebx", 3))
         {
             DWORD_t reg;
 
@@ -854,7 +854,7 @@ int taint_plugin::parse_cmd(char* string)
                 err_print("\n");
             }
         }
-        else if(!strncmp(cur_str, "ecx", 3))
+        else if(!strncasecmp(cur_str, "ecx", 3))
         {
             DWORD_t reg;
 
@@ -868,7 +868,7 @@ int taint_plugin::parse_cmd(char* string)
                 err_print("\n");
             }
         }
-        else if(!strncmp(cur_str, "edx", 3))
+        else if(!strncasecmp(cur_str, "edx", 3))
         {
             DWORD_t reg;
 
@@ -882,11 +882,94 @@ int taint_plugin::parse_cmd(char* string)
                 err_print("\n");
             }
         }
-        /* itd. */
+        else if(!strncasecmp(cur_str, "esi", 3))
+        {
+            DWORD_t reg;
+
+            reg = this->taint_eng->reg_restore_32(ESI, this->query_tid);
+
+            for(i = 0x0; i < 0x4; i++)
+            {
+                err_print("Tracking esi[%d]:\n", i);
+
+                print_taint_history(&reg[i], 0x0);
+                err_print("\n");
+            }
+        }
+        else if(!strncasecmp(cur_str, "edi", 3))
+        {
+            DWORD_t reg;
+
+            reg = this->taint_eng->reg_restore_32(EDI, this->query_tid);
+
+            for(i = 0x0; i < 0x4; i++)
+            {
+                err_print("Tracking edi[%d]:\n", i);
+
+                print_taint_history(&reg[i], 0x0);
+                err_print("\n");
+            }
+        }
+        else if(!strncasecmp(cur_str, "ebp", 3))
+        {
+            DWORD_t reg;
+
+            reg = this->taint_eng->reg_restore_32(EBP, this->query_tid);
+
+            for(i = 0x0; i < 0x4; i++)
+            {
+                err_print("Tracking ebp[%d]:\n", i);
+
+                print_taint_history(&reg[i], 0x0);
+                err_print("\n");
+            }
+        }
+        else if(!strncasecmp(cur_str, "esp", 3))
+        {
+            DWORD_t reg;
+
+            reg = this->taint_eng->reg_restore_32(ESP, this->query_tid);
+
+            for(i = 0x0; i < 0x4; i++)
+            {
+                err_print("Tracking esp[%d]:\n", i);
+
+                print_taint_history(&reg[i], 0x0);
+                err_print("\n");
+            }
+        }
+        else if(!strncasecmp(cur_str, "eflags", 3))
+        {
+            DWORD_t reg;
+
+            reg = this->taint_eng->reg_restore_32(EFLAGS, this->query_tid);
+
+            for(i = 0x0; i < 0x4; i++)
+            {
+                err_print("Tracking eflags[%d]:\n", i);
+
+                print_taint_history(&reg[i], 0x0);
+                err_print("\n");
+            }
+        }
+        else if(!strncasecmp(cur_str, "eip", 3))
+        {
+            DWORD_t reg;
+
+            reg = this->taint_eng->reg_restore_32(EIP, this->query_tid);
+
+            for(i = 0x0; i < 0x4; i++)
+            {
+                err_print("Tracking eip[%d]:\n", i);
+
+                print_taint_history(&reg[i], 0x0);
+                err_print("\n");
+            }
+        }
 
     
     }
-    else if(!strncmp(cur_str, "pro", 3))
+    else if(!strncasecmp(cur_str, "pro", 3))
     {
         unsigned offset, count;
 
@@ -899,6 +982,16 @@ int taint_plugin::parse_cmd(char* string)
         else count = strtol(cur_str, 0x0, 10);
 
         print_propagations(offset, count);
+    }
+    else
+    {
+        /* we assume this is locator */
+        unsigned add, size;
+        size = 0x20;
+
+        addr = resolve_location(cur_str);
+        this->taint_eng->print_err_mem(addr, size);
+        
     }
     return 0x0;
 }
@@ -956,12 +1049,334 @@ int taint_plugin::register_taint(char* line)
     off = (OFFSET)strtol(strtok(0x0, ","), 0x0, 0x10);
     len = (DWORD)strtol(strtok(0x0, ","), 0x0, 0x10);
 
-    printf("Registering taint @ 0x%08x, with length: 0x%08x\n", off, len);
+    d_print(1, "Registering taint @ 0x%08x, with length: 0x%08x\n", off, len);
     this->add_taint(off, len);
 
     return 0x0;
 }
 
+int taint_plugin::add_lib(OFFSET off, char* name)
+{
+    LIBRARY new_lib;
+    FILE* f;
+
+    unsigned i, libs_count;
+    libs_count = this->libs_count;
+
+    for(i=0x0; i<strlen(name); i++)
+    {
+        if(name[i] == '\r') name[i]='\x00';
+        if(name[i] == '\\') name[i]='/';
+    }
+
+    //strcpy(new_lib.path, this->lib_dir_path);
+    strcat(new_lib.path, basename(name));
+
+    d_print(1, "Loading lib: %s\n", new_lib.path);
+
+    strcpy(new_lib.name, basename(name));
+
+    d_print(1, "Loading symbols for %s @ 0x%08x\n", new_lib.name, off);
+    new_lib.offset = off;
+
+    new_lib.loaded = 1;
+
+    this->libs[libs_count] = new_lib;
+    this->libs_count++;
+
+    d_print(2, "Loaded lib: %s at 0x%08x to 0x%08x\n", new_lib.path, new_lib.offset, new_lib.offset+new_lib.length);
+    return 0x0;
+}
+
+LIBRARY* taint_plugin::get_lib(OFFSET offset)
+{
+    unsigned i=0x0;
+    unsigned highest = -1;
+
+    for(i = 0x0; i < this->libs_count; i++)
+    {
+        if(this->libs[i].offset < offset)
+        {
+            if(highest != -1)
+            {
+                if(this->libs[i].offset > this->libs[highest].offset) 
+                {
+                    highest = i;
+                }
+            }
+            else 
+            {
+                highest = i;
+            }
+        }
+    }
+    if(highest != -1) 
+    {
+        return &this->libs[highest];
+    }
+    else return 0x0;
+}
+
+OFFSET taint_plugin::resolve_loc_desc(LOCATION_DESCRIPTOR* d)
+{
+    d_print(1, "[resolve_loc_desc]\n");
+    OFFSET a1_r, a2_r;
+    OFFSET ret;
+    CONTEXT_INFO* ctx;
+
+    ctx = this->taint_eng->get_context_info(this->query_tid);
+
+    if(d == 0x0)
+        return -1;
+
+    d_print(1, "Processing: %s\n", d->op);
+
+    if(findany(d->op, "[+-"))
+    {
+       // not leaf, this is operation, we do recurrence 
+
+        if(!strcmp(d->op, "["))
+        {
+            DWORD_t read;
+            a1_r = resolve_loc_desc(d->a1);
+            if(a1_r == -1) return -1;
+            // read_memory and calculate ret 
+            
+            this->taint_eng->restore_32(a1_r, read);
+            return read.get_DWORD();
+        }
+        else if(!strcmp(d->op, "-"))
+        {
+            a1_r = resolve_loc_desc(d->a1);
+            a2_r = resolve_loc_desc(d->a2);
+            if(a1_r == -1) return -1;
+            if(a2_r == -1) return -1;
+            ret = a1_r - a2_r;
+        }
+        else if(!strcmp(d->op, "+"))
+        {
+            a1_r = resolve_loc_desc(d->a1);
+            a2_r = resolve_loc_desc(d->a2);
+            if(a1_r == -1) return -1;
+            if(a2_r == -1) return -1;
+            ret = a1_r + a2_r;
+        }
+    }
+    else
+    {
+        // this is leaf 
+
+        if((d->op[0] == '0') && (d->op[1] == 'x'))
+        {
+            // return immediate
+            ret = strtoul(d->op, 0x0, 0x10);
+        }
+        else
+        {
+            // registers
+            if(!strncasecmp(d->op, "ESP", 3))
+            {
+                ret = this->taint_eng->reg_restore_32(ESP, this->query_tid).get_DWORD();
+                d_print(1, "Reading register ESP: 0x%08x\n", ret);
+            }
+            else if(!strncasecmp(d->op, "EAX", 3))
+            {
+                ret = this->taint_eng->reg_restore_32(EAX, this->query_tid).get_DWORD();
+                d_print(1, "Reading register EAX: 0x%08x\n", ret);
+            }
+            else if(!strncasecmp(d->op, "EBX", 3))
+            {
+                ret = this->taint_eng->reg_restore_32(EBX, this->query_tid).get_DWORD();
+                d_print(1, "Reading register EBX: 0x%08x\n", ret);
+            }
+            else if(!strncasecmp(d->op, "ECX", 3))
+            {
+                ret = this->taint_eng->reg_restore_32(ECX, this->query_tid).get_DWORD();
+                d_print(1, "Reading register ECX: 0x%08x\n", ret);
+            }
+            else if(!strncasecmp(d->op, "EDX", 3))
+            {
+                ret = this->taint_eng->reg_restore_32(EDX, this->query_tid).get_DWORD();
+                d_print(1, "Reading register EDX: 0x%08x\n", ret);
+            }
+            else if(!strncasecmp(d->op, "ESI", 3))
+            {
+                ret = this->taint_eng->reg_restore_32(ESI, this->query_tid).get_DWORD();
+                d_print(1, "Reading register ESI: 0x%08x\n", ret);
+            }
+            else if(!strncasecmp(d->op, "EDI", 3))
+            {
+                ret = this->taint_eng->reg_restore_32(EDI, this->query_tid).get_DWORD();
+                d_print(1, "Reading register EDI: 0x%08x\n", ret);
+            }
+            else if(!strncasecmp(d->op, "EBP", 3))
+            {
+                ret = this->taint_eng->reg_restore_32(EBP, this->query_tid).get_DWORD();
+                d_print(1, "Reading register EBP: 0x%08x\n", ret);
+            }
+            else if(!strncasecmp(d->op, "EIP", 3))
+            {
+                ret = this->taint_eng->reg_restore_32(EIP, this->query_tid).get_DWORD();
+                d_print(1, "Reading register EIP: 0x%08x\n", ret);
+            }
+            else
+            {
+                // we assume it's library 
+                d_print(1, "Looking for lib: %s\n", d->op);
+                ret = find_lib(d->op);
+                if(ret != 0x0)
+                {
+                    d_print(1, "Found at: 0x%08x\n", ret);
+                }
+                else if(ret == 0x0) 
+                {
+                    d_print(1, "Not found\n");
+                    ret = -1;
+                }
+            }
+        }
+    }
+    d_print(1, "[resolve_loc_desc end]\n");
+    return ret;
+}
+
+LOCATION_DESCRIPTOR* taint_plugin::parse_location_desc(char* str)
+{
+//    d_print("[parse_location_desc]\n");
+    char* op;
+    LOCATION_DESCRIPTOR* neww;
+
+    neww = (LOCATION_DESCRIPTOR*)malloc(sizeof(LOCATION_DESCRIPTOR));
+    memset(neww, 0x0, sizeof(LOCATION_DESCRIPTOR));
+    neww->a1 = 0x0;
+    neww->a2 = 0x0;
+
+    if(!neww)
+    {
+        d_print(1, "Out of memory\n");
+    }
+
+//    d_print("Creating new descriptor node\n");
+
+    paint(str, strlen(str));
+    op = findany(str, "+-");
+
+    if(op == 0x0) 
+    {
+        unpaint(str, strlen(str));
+        if((op = findany(str, "[")) != 0x0)
+        {
+            strcpy(neww->op, "[");
+            op[0] = 0x0;
+            neww->a1 = parse_location_desc(op+1);
+            neww->a2 = 0x0;
+        }
+        else
+        {
+//            d_print("No operators found, assuming leaf: %s\n", str);
+            strcpy(neww->op, str);
+        }
+    }
+    else
+    {
+        unpaint(str, strlen(str));
+//        d_print("Found operator: %s\n", op);
+        
+        if(op[0] == '+')
+        {
+            strcpy(neww->op, "+");
+            op[0] = 0x0;
+            neww->a1 = parse_location_desc(str);
+            neww->a2 = parse_location_desc(op+1);
+        }
+        else if(op[0] == '-')
+        {
+            strcpy(neww->op, "-");
+            op[0] = 0x0;
+            neww->a1 = parse_location_desc(str);
+            neww->a2 = parse_location_desc(op+1);
+        }
+    }
+
+//    d_print("[parse_location_desc ends]\n");
+    return neww;
+}
+
+OFFSET taint_plugin::resolve_location(char* location)
+{
+    OFFSET addr;
+    char line[MAX_NAME];
+    LOCATION_DESCRIPTOR desc;
+    LOCATION_DESCRIPTOR* desc_;
+
+    desc_ = parse_location_desc(location);
+    addr = resolve_loc_desc(desc_);
+
+    return addr;
+}
+
+OFFSET taint_plugin::find_lib(char* name)
+{
+    unsigned i=0x0;
+    unsigned highest = -1;
+
+    for(i = 0x0; i < this->libs_count; i++)
+    {
+        if(!strncasecmp(this->libs[i].name, name, strlen(name)))
+        {
+            return this->libs[i].offset;
+        }
+    }
+    return 0x0;
+}
+
+int taint_plugin::del_lib(OFFSET off)
+{
+    int i;
+
+    for(i=0x0; i<libs_count; i++)
+    {
+        if(this->libs[i].offset == off)
+            this->libs[i].loaded = 0x0;
+    }
+    return 0x0;
+}
+
+
+/* plugin czy nie? */
+int taint_plugin::register_lib(char* line)
+{
+    char* cmd;
+    OFFSET off, size;
+    char* name;
+
+    cmd = strtok(line, ",");
+    off = strtoul(strtok(0x0, ","), 0x0, 0x10);
+    name = strtok(0x0, ",");
+    //name[strlen(name)] = 0x0;
+//    size = strtoul(strtok(0x0, ","), 0x0, 0x10);
+
+//    printf("Registering lib: %s at 0x%08x\n", name, off);
+    this->add_lib(off, name);
+
+    return 0x0;
+}
+
+/* plugin czy nie? */
+int taint_plugin::deregister_lib(char* line)
+{
+    char* cmd;
+    OFFSET off;
+
+    cmd = strtok(line, ",");
+    off = strtoul(strtok(0x0, ","), 0x0, 0x10);
+
+    //printf("Deregistering lib at 0x%08x\n", off);
+    this->del_lib(off);
+
+    return 0x0;
+
+}
 
 
 /* parsing out options end */
@@ -1020,12 +1435,10 @@ int taint_plugin::parse_option(char* line)
 //        this->register_comment(line);
 
     if(line[0] == 'R' && line[1] == 'L')
-        return 0x0;
-//        this->register_lib(line);
+        this->register_lib(line);
     
     if(line[0] == 'D' && line[1] == 'L')
-        return 0x0;
-//        this->deregister_lib(line);
+        this->deregister_lib(line);
             
     if(line[0] == 'S' && line[1] == 'Y')
         return 0x0;
