@@ -109,7 +109,9 @@ class taint_plugin : Plugin
 
         using_history();
 
-        libs = (LIBRARY*)malloc(sizeof(LIBRARY)*MAX_LIB_COUNT);
+        this->libs = (LIBRARY*)malloc(sizeof(LIBRARY)*MAX_LIB_COUNT);
+        this->taints = (REGION*)malloc(sizeof(REGION)*MAX_TAINTS_OBSERVED);
+
     }
 
     ~taint_plugin() 
@@ -127,7 +129,8 @@ class taint_plugin : Plugin
         if(mylist) free(mylist);
         if(myhist) free(myhist);
 
-        free(libs);
+        free(this->libs);
+        free(this->taints);
 
     }
 

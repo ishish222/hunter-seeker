@@ -778,6 +778,14 @@ int taint_x86::check_execution_bps()
         }
     }
 
+    if(this->step_mode)
+    {
+        this->step_mode = 0x0;
+        err_print("Step mode, @%lld, 0x%08x\n", this->current_instr_count, this->current_eip);
+        if(this->plugin)
+            this->plugin->breakpoint_callback(&this->bps[i]);
+    }
+
     return 0x0;
 }
 CONTEXT_INFO* taint_x86::get_context_info(DWORD tid)

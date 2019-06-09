@@ -379,6 +379,7 @@ class taint_x86
     int check_thread(CONTEXT_OUT);
 
     /* breakpoints & watchpoints */
+    char step_mode;
     DWORD bp_hit;
     DWORD rw_bp;
     BREAKPOINT bps[MAX_BREAKPOINTS];

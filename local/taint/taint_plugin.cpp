@@ -525,6 +525,11 @@ int taint_plugin::prompt_taint()
             break;
         }
         else if(strcmp(command, "c") == 0x0) break;
+        else if(strcmp(command, "s") == 0x0) 
+        {
+            this->taint_eng->step_mode = 0x1;
+            break;
+        }
         //else if(strstr(command, "que"))
 
         add_history(command);
@@ -1026,7 +1031,7 @@ int taint_plugin::add_taint(OFFSET start, UDWORD length)
         return 0x0;
     }
 
-    // tainting
+    d_print(1, "Tainting: 0x%08x - 0x%08x\n", start, start+length);
     for(i = 0x0; i< length; i++)
     {
         this->taint_eng->memory[start+i].set_BYTE_t(0xff);
