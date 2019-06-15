@@ -39,8 +39,8 @@ class taint_plugin : Plugin
     REGION* taints;
     unsigned taint_count;
 
-    PROPAGATION* propagations;
-    unsigned current_propagation_count;
+//    PROPAGATION* propagations;
+//    unsigned current_propagation_count;
 
     unsigned out_tab;
     DWORD query_tid;
@@ -73,6 +73,7 @@ class taint_plugin : Plugin
     int print_taint_ops(unsigned);
 
     /* print propagations */
+    int clear_propagations();
     int print_propagations(unsigned, unsigned);
     int print_propagation(unsigned, unsigned);
     int resolve_affected(BYTE_t*, char*, OFFSET*);

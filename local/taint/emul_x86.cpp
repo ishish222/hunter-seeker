@@ -636,7 +636,7 @@ inline int taint_x86::execute_instruction_32(DWORD eip, DWORD tid)
 
     byte = current_instr_byte->get_BYTE();
 
-    d_print(3, "Current instr byte: 0x%02x\n", byte);
+    d_print(1, "Current instr byte: 0x%02x\n", byte);
     /* plugin instruction-specific preexecution */
     if(this->plugin)
     {
@@ -1920,6 +1920,10 @@ int taint_x86::reg_propagation_cause(BYTE_t* op)
     current_propagation = &this->propagations[this->current_propagation_count];
 
     unsigned byte_cause_id = op->get_BYTE_t_id();
+
+    /* after propagation count reset */
+    if(byte_cause_id > this->current_propagation_count) byte_cause_id = this->current_propagation_count;
+
     d_print(3, "Registering BYTE_t*: 0x%08x\n", op);
 //    if(!op->get_BYTE_t()) return 0x0;
     //TAINTED** cur_op;
