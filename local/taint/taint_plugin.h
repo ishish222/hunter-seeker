@@ -73,6 +73,7 @@ class taint_plugin : Plugin
     int print_taint_ops(unsigned);
 
     /* print propagations */
+    int clear_propagation(unsigned);
     int clear_propagations();
     int print_propagations(unsigned, unsigned);
     int print_propagation(unsigned, unsigned);

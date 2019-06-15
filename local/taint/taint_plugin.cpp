@@ -157,8 +157,55 @@ int taint_plugin::resolve_affected(BYTE_t* affected, char* region, OFFSET* offse
     return 0x1;
 }
 
+int taint_plugin::clear_propagation(unsigned id)
+{
+    unsigned i, count;
+    CAUSE* cur_cause;
+    CAUSE* next_cause;
+    RESULT* cur_result; 
+    RESULT* next_result;
+
+    PROPAGATION* current_propagation;
+
+    current_propagation = &this->taint_eng->propagations[id];
+
+    count = current_propagation->cause_count;
+    for(i=0x0; i<count; i++)
+    {
+        if(cur_cause == 0x0) break;
+        next_cause = cur_cause->next;
+        free(cur_cause);
+        cur_cause = next_cause;
+    }
+
+    count = current_propagation->result_count;
+
+    for(i=0x0; i<count; i++)
+    {
+        if(cur_result == 0x0) break;
+        next_result = cur_result->next;
+        free(cur_result);
+        cur_result = next_result;
+    }
+
+    current_propagation->causes = 0x0;
+    current_propagation->cause_count = 0x0;
+    current_propagation->results = 0x0;
+    current_propagation->result_count = 0x0;
+    
+    return 0x0;
+}
+
 int taint_plugin::clear_propagations()
 {
+    unsigned i;
+
+    for(i=0x0; i<this->taint_eng->current_propagation_count; i++)
+    {
+        d_print(1, "Clearing propagation: %d\n", i);
+        clear_propagation(i);
+    }
+
     err_print("Setting current propagation count to 0x0\n");
     this->taint_eng->current_propagation_count = 0x0;
     return 0x0;
@@ -166,6 +213,8 @@ int taint_plugin::clear_propagations()
 
 int taint_plugin::print_propagation(unsigned id, unsigned branches)
 {
+    if(id == CAUSE_ID_NONE) return 0x0;
+
     unsigned i,j;
     unsigned count;
 
@@ -286,7 +335,7 @@ int taint_plugin::print_propagation(unsigned id, unsigned branches)
 
 int taint_plugin::print_taint_history(unsigned id, unsigned branches)
 {
-    if(id == 0x0) return 0x0;
+    if(id == CAUSE_ID_NONE) return 0x0;
 
     unsigned i,j;
     unsigned count;
@@ -443,7 +492,7 @@ int taint_plugin::print_taint_history(BYTE_t* target, OFFSET instr_count, unsign
     unsigned i, j;
     DWORD found;
 
-    if(taint_id == 0x0) return 0x0;
+    if(taint_id == CAUSE_ID_NONE) return 0x0;
 
     found = 0x0;
 
@@ -602,18 +651,18 @@ int taint_plugin::prompt_taint()
 
         if(strcmp(command, "q") == 0x0)
         {
-            d_print(1, "Quitting...");
+            d_print(1, "Quitting...\n");
             this->taint_eng->aborted = 0x1;
             break;
         }
         else if(strcmp(command, "c") == 0x0)
         {
-            d_print(1, "Continuing...");
+            d_print(1, "Continuing...\n");
             break;
         }
         else if(strcmp(command, "s") == 0x0) 
         {
-            d_print(1, "Stepping...");
+            d_print(1, "Stepping...\n");
             this->taint_eng->step_mode = 0x1;
             break;
         }

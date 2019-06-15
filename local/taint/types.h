@@ -12,6 +12,8 @@
 #define QWORD long long int
 #define UQWORD unsigned long long int
 
+#define CAUSE_ID_NONE 0xffffffff
+
 /*
 
 EXCEPTION_RECORD definitions
@@ -251,13 +253,13 @@ class BYTE_t
     BYTE_t()
     {
         this->val = 0x0;
-        this->id = 0x0;
+        this->id = CAUSE_ID_NONE;
     }
 
     BYTE_t(BYTE a)
     {
         this->val = 0x0;
-        this->id = 0x0;
+        this->id = CAUSE_ID_NONE;
         this->set_BYTE(a);
     }
     
