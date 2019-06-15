@@ -248,7 +248,6 @@ int deregister_thread(char* line, taint_x86* taint_eng)
     return 0x0;
 }
 
-
 int register_memory_breakpoints(char* line, taint_x86* taint_eng)
 {
     char* cmd;
@@ -256,6 +255,18 @@ int register_memory_breakpoints(char* line, taint_x86* taint_eng)
 
     cmd = strtok(line, ",");
     entry = strtok(0x0, "");
+
+    parse_mem_breakpoints(entry, taint_eng);
+
+    return 0x0;
+}
+
+int register_memory_breakpoints_2(char* line, taint_x86* taint_eng)
+{
+    char* cmd;
+    char* entry;
+
+    entry = strtok(line, "");
 
     parse_mem_breakpoints(entry, taint_eng);
 

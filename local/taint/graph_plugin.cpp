@@ -2503,7 +2503,6 @@ int graph_plugin::r_jmp_rm_16_32(BYTE_t* instr_ptr)
     this->cur_graph_context->jmp_code = JMP_CODE_RM;
     this->cur_graph_context->jumping = 0x1;
 
-
     return 0x0;
 }
 

@@ -97,6 +97,11 @@ class taint_plugin : Plugin
     OFFSET resolve_location(char*);
     LOCATION_DESCRIPTOR* parse_location_desc(char*);
 
+    /* disassembling */
+    int disas_instruction(OFFSET);
+    int disas_instructions(OFFSET, unsigned);
+
+
     taint_plugin()
     {
         printf("Initializing taint_plugin\n");

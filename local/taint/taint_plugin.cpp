@@ -7,6 +7,7 @@
 #include <debug.h>
 #include <plugin.h>
 #include <utils.h>
+#include <out_utils.h>
 #include <readline/readline.h>
 #include <readline/history.h>
 
@@ -339,13 +340,71 @@ int taint_plugin::print_taint_history(unsigned id, unsigned branches)
     _DecodeResult res;
  _DecodedInst decodedInstructions[0x1];
     
-    res = distorm_decode(this->taint_eng->propagations[id].instruction, (const unsigned char*)buf, 0x20, Decode32Bits, decodedInstructions, 0x1, &decoded);
+    res = distorm_decode(this, (const unsigned char*)buf, 0x20, Decode32Bits, decodedInstructions, 0x1, &decoded);
 
     d_print_prompt(1, "%d: (%d)0x%08x: %s%s%s\n", id, this->taint_eng->propagations[id].instr_count, this->taint_eng->propagations[id].instruction, (char*)decodedInstructions[0].mnemonic.p, decodedInstructions[0].operands.length != 0 ? " " : "", (char*)decodedInstructions[0].operands.p);
 #else
     d_print_prompt(1, "%d, EIP: 0x%08x, instr byte: 0x%02x, instr no: %d\n", id, this->taint_eng->propagations[id].instruction, this->taint_eng->memory[this->taint_eng->propagations[id].instruction].get_BYTE(), this->taint_eng->propagations[id].instr_count);
 #endif
     this->out_tab--;
+    return 0x0;
+}
+
+int taint_plugin::disas_instructions(OFFSET offset, unsigned count)
+{
+#ifdef USE_DISTORM
+    char* buf;
+    unsigned size = 0x20*count;
+    buf = (char*)malloc(size);
+
+    unsigned k;
+    for(k=0x0; k<size; k++)
+        buf[k] = this->taint_eng->memory[offset+k].get_BYTE();
+
+    /* decoding */
+
+    unsigned decoded;
+
+    _DecodeResult res;
+    _DecodedInst* decodedInstructions;
+
+    decodedInstructions = (_DecodedInst*)malloc(sizeof(_DecodedInst)*count);
+    
+    res = distorm_decode(offset, (const unsigned char*)buf, size, Decode32Bits, decodedInstructions, count, &decoded);
+
+    OFFSET cur_addr = offset;
+
+    for(k=0x0; k<count; k++)
+    {
+        d_print_prompt(1, "0x%08x: %s%s%s\n", cur_addr, (char*)decodedInstructions[k].mnemonic.p, decodedInstructions[k].operands.length != 0 ? " " : "", (char*)decodedInstructions[k].operands.p);
+        cur_addr += decodedInstructions[k].size;
+    }
+
+    free(decodedInstructions);
+    free(buf);
+#endif
+    return 0x0;
+}
+
+int taint_plugin::disas_instruction(OFFSET offset)
+{
+#ifdef USE_DISTORM
+    char buf[0x20];
+    unsigned k;
+    for(k=0x0; k<0x20; k++)
+        buf[k] = this->taint_eng->memory[offset+k].get_BYTE();
+
+    /* decoding */
+
+    unsigned decoded;
+
+    _DecodeResult res;
+    _DecodedInst decodedInstructions[0x1];
+    
+    res = distorm_decode(offset, (const unsigned char*)buf, 0x20, Decode32Bits, decodedInstructions, 0x1, &decoded);
+
+    d_print_prompt(1, "0x%08x: %s%s%s\n", offset, (char*)decodedInstructions[0].mnemonic.p, decodedInstructions[0].operands.length != 0 ? " " : "", (char*)decodedInstructions[0].operands.p);
+#endif
     return 0x0;
 }
 
@@ -769,6 +828,14 @@ int taint_plugin::parse_cmd(char* string)
             return 0x0;
         }
     }
+    else if(!strncasecmp(cur_str, "bre", 3))
+    {
+        cur_str = strtok(0x0, " \n\r"); if(cur_str == 0x0) return 0x0;
+        d_print_prompt(0, "Setting breakpoint\n");
+
+        register_memory_breakpoints_2(cur_str, this->taint_eng);
+
+    }
     else if(!strncasecmp(cur_str, "tai", 3))
     {
         d_print_prompt(0, "There have been %d taints:\n", this->taint_count);
@@ -971,7 +1038,18 @@ int taint_plugin::parse_cmd(char* string)
                 err_print("\n");
             }
         }
+        else
+        {
+            OFFSET offset;
+            DWORD_t dword;
+    
+            offset = strtol(cur_str, 0x0, 0x10);
+            err_print("Tracking mem: 0x%08x\n", offset);
 
+            this->taint_eng->restore_32(offset, dword);
+            print_taint_history(&dword[i], 0x0);
+            err_print("\n");
+        }
     
     }
     else if(!strncasecmp(cur_str, "pro", 3))
@@ -987,6 +1065,22 @@ int taint_plugin::parse_cmd(char* string)
         else count = strtol(cur_str, 0x0, 10);
 
         print_propagations(offset, count);
+    }
+    else if(!strncasecmp(cur_str, "dis", 3))
+    {
+        OFFSET addr;
+        const char* loc_eip = "eip";
+        char* location;
+
+        cur_str = strtok(0x0, " \n\r"); 
+        if(cur_str == 0x0) 
+            location = loc_eip;
+        else
+            location = cur_str;
+
+        addr = resolve_location(location);
+        this->disas_instructions(addr, 0x10);
+
     }
     else
     {

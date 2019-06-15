@@ -573,6 +573,11 @@ int taint_x86::pre_execute_instruction(DWORD eip)
     this->reg_store_32(EIP, eip);
     this->current_instr_length = 0x0;
     this->current_instr_is_jump = 0x0;
+
+    /* check if execution breakpoint has been hit */
+    if(this->options & HANDLE_BREAKPOINTS)
+        this->check_execution_bps();
+
     return 0x0;
 }
 
@@ -600,10 +605,6 @@ int taint_x86::post_execute_instruction(DWORD eip)
 
     unsigned esp;
     esp = (UDWORD)this->reg_restore_32(ESP).get_DWORD();
-
-    /* check if execution breakpoint has been hit */
-    if(this->options & HANDLE_BREAKPOINTS)
-        this->check_execution_bps();
 
     if((this->end_addr) || (this->instr_limit))
     {
@@ -9878,12 +9879,12 @@ int taint_x86::r_jmp_rm_16_32(BYTE_t* instr_ptr)
     CONTEXT_INFO* cur_ctx;
     cur_ctx = &this->ctx_info[this->tids[this->cur_tid]];
 
-    ret_addr = this->reg_restore_32(EIP);
-    ret_addr += 0x5;
+//    ret_addr = this->reg_restore_32(EIP);
+//    ret_addr += 0x5;
 
-    a_push_32(ret_addr);
+//    a_push_32(ret_addr);
     
-    d_print(3, "ret_addr: 0x%08x, target: 0x%08x\n", ret_addr.get_DWORD(), target.get_DWORD());
+//    d_print(3, "ret_addr: 0x%08x, target: 0x%08x\n", ret_addr.get_DWORD(), target.get_DWORD());
     this->reg_store_32(EIP, target);
 
     this->attach_current_propagation_r_32(EIP);
@@ -10056,6 +10057,7 @@ int taint_x86::r_decode_execute_ff(BYTE_t* addr)
     modrm_byte_ptr = addr +1;
     a_decode_modrm(modrm_byte_ptr, &r, &rm, MODE_32, MODE_32);
 
+    d_print(1, "r_decode_execute_ff decoded offset: 0x%08x\n", r.offset);
     switch(r.offset)
     {
         case EAX: //0x0 
