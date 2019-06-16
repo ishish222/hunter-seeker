@@ -225,6 +225,7 @@ Change of endiannes takes place when reading and writing to memory (to_mem, from
 #define OPTION_COUNT_INSTRUCTIONS               0x100
 #define OPTION_HANDLE_BREAKPOINTS               0x200
 #define OPTION_VERIFY_OOB                       0x400
+#define OPTION_INDEXES_PROPAGATE                    0x800
 
 /* dont options */
 #define OPTION_DONT_ANALYZE_JUMPS                    0xFFFFFFFE
@@ -238,6 +239,7 @@ Change of endiannes takes place when reading and writing to memory (to_mem, from
 #define OPTION_DONT_COUNT_INSTRUCTIONS               0xFFFFFEFF
 #define OPTION_DONT_HANDLE_BREAKPOINTS               0xFFFFFDFF
 #define OPTION_DONT_VERIFY_OOB                       0xFFFFFBFF
+#define OPTION_DONT_INDEXES_PROPAGATE                    0xFFFFF7FF
 
 /* jumping codes */
 
@@ -1383,6 +1385,9 @@ class taint_x86
         fprintf(stdout, "Setting default option: OPTION_UNMATCHED_RET_INVALIDATES_STACK\n");
         this->options |= OPTION_UNMATCHED_RET_INVALIDATES_STACK;
 
+        /* for taint_plugin */
+        fprintf(stdout, "Setting default option: OPTION_INDEXES_PROPAGATE\n");
+        this->options |= OPTION_INDEXES_PROPAGATE;
     }
 
     ~taint_x86() {

@@ -130,6 +130,7 @@ int parse_option(char* line, taint_x86* taint_eng)
     else if(!strcmp(option, "VERIFY_SEG_SEC"))                  taint_eng->options |= OPTION_VERIFY_SEG_SEC;
     else if(!strcmp(option, "ANALYZE_WANTED_IN_SYMBOLS"))       taint_eng->options |= OPTION_ANALYZE_WANTED_IN_SYMBOLS;
     else if(!strcmp(option, "COUNT_INSTRUCTIONS"))              taint_eng->options |= OPTION_COUNT_INSTRUCTIONS;
+    else if(!strcmp(option, "INDEXES_PROPAGATE"))               taint_eng->options |= OPTION_INDEXES_PROPAGATE;
 
     /* negative */
     else if(!strcmp(option, "DONT_ANALYZE_JUMPS"))                   taint_eng->options &= OPTION_DONT_ANALYZE_JUMPS;
@@ -141,6 +142,7 @@ int parse_option(char* line, taint_x86* taint_eng)
     else if(!strcmp(option, "DONT_VERIFY_SEG_SEC"))                  taint_eng->options &= OPTION_DONT_VERIFY_SEG_SEC;
     else if(!strcmp(option, "DONT_ANALYZE_WANTED_IN_SYMBOLS"))       taint_eng->options &= OPTION_DONT_ANALYZE_WANTED_IN_SYMBOLS;
     else if(!strcmp(option, "DONT_COUNT_INSTRUCTIONS"))              taint_eng->options &= OPTION_DONT_COUNT_INSTRUCTIONS;
+    else if(!strcmp(option, "DONT_INDEXES_PROPAGATE"))               taint_eng->options &= OPTION_DONT_INDEXES_PROPAGATE;
 
     return 0x0;
 }

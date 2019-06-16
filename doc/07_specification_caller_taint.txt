@@ -75,6 +75,9 @@ OP - set option
     OPTION_VERIFY_OOB:
         [todo]
 
+    OPTION_INDEXES_PROPAGATE:
+        taint_plugin will mark byte as propagation source if it is used as index in transfer
+
 BR - register memory breakpoint
     The syntax is this:
         Entries for individual breakpoints are separated with '+'
