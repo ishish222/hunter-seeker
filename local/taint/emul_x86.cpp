@@ -625,6 +625,7 @@ int taint_x86::post_execute_instruction(DWORD eip)
 
     if(this->seal_scheduled)
     {
+        d_print(1, "Sealing propagation\n");
         this->seal_current_propagation();
         this->seal_scheduled = 0x0;
     }
@@ -633,7 +634,7 @@ int taint_x86::post_execute_instruction(DWORD eip)
         /* debugging purposes, you can comment it out to speed up */
         if(this->got_cause)
         {
-            d_print(1, "Propagation imperfection, got cause without result for byte: 0x%02x\n", this->current_instr_byte);
+            d_print(1, "Propagation imperfection, got cause without result for byte: 0x%02x\n", this->current_instr_byte->get_BYTE());
         }
     }
 
@@ -1459,7 +1460,11 @@ int taint_x86::a_push_32(DWORD_t val)
     // store value at stack
     d_print(3, "esp write: 0x%x val: 0x%x\n", esp.get_DWORD(), val.get_DWORD());
     store_32(esp, val);
+
+    this->attach_current_propagation_m_32(esp.get_DWORD());
+
     reg_store_32(ESP, esp);
+
 
     return 0x0;
 }
@@ -9824,12 +9829,14 @@ int taint_x86::r_call_rel(BYTE_t* instr_ptr)
 {
     DWORD_t ret_addr;
     DWORD_t target, target_2;
+    OFFSET target_offset;
     DWORD disp32_reint, *disp32p;
 
     ret_addr = this->reg_restore_32(EIP);
     ret_addr += this->current_instr_length;
     
     target.from_mem(instr_ptr + this->current_instr_length);
+
     ret_addr += 0x4;
 
     disp32_reint = target.get_DWORD();
@@ -9837,10 +9844,14 @@ int taint_x86::r_call_rel(BYTE_t* instr_ptr)
 
 
     target_2 = ret_addr + *disp32p; //signed displacement & operand size
-//    this->handle_call(this->cur_info, target_2.get_DWORD(), ret_addr.get_DWORD());
     a_push_32(ret_addr);
     
+    this->reg_propagation_cause_m_32(target_2.get_DWORD());
+
     this->reg_store_32(EIP, target_2);
+
+    this->attach_current_propagation_r_32(EIP);
+
     this->current_instr_is_jump = 0x1;
     return 0x0;
 }
@@ -10870,16 +10881,30 @@ int taint_x86::r_xadd_rm_r_8(BYTE_t* instr_ptr)
     switch(rm.region)
     {
         case MODRM_REG:
+            this->reg_propagation_cause_r_8(r.offset);
+            this->reg_propagation_cause_r_8(rm.offset);
+
             dst_8 = this->reg_restore_8(r.offset);
             dst_8_2 = this->reg_restore_8(rm.offset);
             this->reg_store_8(rm.offset, dst_8+dst_8_2);
             this->reg_store_8(r.offset, dst_8_2);
+
+            this->attach_current_propagation_r_8(r.offset);
+            this->attach_current_propagation_r_8(rm.offset);
+
             break;
         case MODRM_MEM:
+            this->reg_propagation_cause_r_8(r.offset);
+            this->reg_propagation_cause_m_8(rm.offset);
+
             dst_8 = this->reg_restore_8(r.offset);
             this->restore_8(rm.offset, dst_8_2);
             this->reg_store_8(r.offset, dst_8_2);
             this->store_8(rm.offset, dst_8+dst_8_2);
+
+            this->attach_current_propagation_r_8(r.offset);
+            this->attach_current_propagation_m_8(rm.offset);
+
             break;
     }
     return 0x0;
@@ -10900,16 +10925,28 @@ int taint_x86::r_xadd_rm_r_16_32(BYTE_t* instr_ptr)
             switch(rm.size)
             {
                 case MODRM_SIZE_16:
+                    this->reg_propagation_cause_r_16(r.offset);
+                    this->reg_propagation_cause_r_16(rm.offset);
+
                     dst_16 = this->reg_restore_16(r.offset);
                     dst_16_2 = this->reg_restore_16(rm.offset);
                     this->reg_store_16(rm.offset, dst_16 + dst_16_2);
                     this->reg_store_16(r.offset, dst_16_2);
+
+                    this->attach_current_propagation_r_16(rm.offset);
+                    this->attach_current_propagation_r_16(r.offset);
                     break;
                 case MODRM_SIZE_32:
+                    this->reg_propagation_cause_r_32(r.offset);
+                    this->reg_propagation_cause_r_32(rm.offset);
+
                     dst_32 = this->reg_restore_32(r.offset);
                     dst_32_2 = this->reg_restore_32(rm.offset);
                     this->reg_store_32(rm.offset, dst_32 + dst_32_2);
                     this->reg_store_32(r.offset, dst_32_2);
+
+                    this->attach_current_propagation_r_32(rm.offset);
+                    this->attach_current_propagation_r_32(r.offset);
                     break;
             }
             break;
@@ -10917,16 +10954,28 @@ int taint_x86::r_xadd_rm_r_16_32(BYTE_t* instr_ptr)
             switch(rm.size)
             {
                 case MODRM_SIZE_16:
+                    this->reg_propagation_cause_r_16(r.offset);
+                    this->reg_propagation_cause_m_16(rm.offset);
+
                     dst_16 = this->reg_restore_16(r.offset);
                     this->restore_16(rm.offset, dst_16_2);
                     this->reg_store_16(r.offset, dst_16_2);
                     this->store_16(rm.offset, dst_16+dst_16_2);
+
+                    this->attach_current_propagation_r_16(r.offset);
+                    this->attach_current_propagation_m_16(rm.offset);
                     break;
                 case MODRM_SIZE_32:
+                    this->reg_propagation_cause_r_32(r.offset);
+                    this->reg_propagation_cause_m_32(rm.offset);
+
                     dst_32 = this->reg_restore_32(r.offset);
                     this->restore_32(rm.offset, dst_32_2);
                     this->reg_store_32(r.offset, dst_32_2);
                     this->store_32(rm.offset, dst_32 + dst_32_2);
+
+                    this->attach_current_propagation_r_32(r.offset);
+                    this->attach_current_propagation_m_32(rm.offset);
                     break;
             }
             break;
@@ -15418,6 +15467,9 @@ int taint_x86::r_call_abs_near(BYTE_t* instr_ptr)
     a_push_32(ret_addr);
     
     this->reg_store_32(EIP, target);
+
+    this->attach_current_propagation_r_32(EIP);
+
     this->current_instr_is_jump = 0x1;
 
     return 0x0;
@@ -15436,7 +15488,13 @@ int taint_x86::r_call_abs_far(BYTE_t* instr_ptr)
     a_push_32(ret_addr);
     
     d_print(3, "ret_addr: 0x%08x, target: 0x%08x\n", ret_addr.get_DWORD(), target.get_DWORD());
+
+    this->reg_propagation_cause_m_32(target.get_DWORD());
+
     this->reg_store_32(EIP, target);
+
+    this->attach_current_propagation_r_32(EIP);
+
     this->current_instr_is_jump = 0x1;
 
     return 0x0;
