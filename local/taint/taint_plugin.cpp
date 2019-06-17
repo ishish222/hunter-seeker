@@ -1529,12 +1529,19 @@ int taint_plugin::parse_cmd(char* string)
         }
         else
         {
-            if(cur_str == 0x0) offset = 0;
-            else offset = strtol(cur_str, 0x0, 10);
+            if(cur_str == 0x0) 
+            {
+                offset = 0;
+                count = 0;
+            }
+            else 
+            {
+                offset = strtol(cur_str, 0x0, 10);
 
-            cur_str = strtok(0x0, " \n\r"); 
-            if(cur_str == 0x0) count = 15;
-            else count = strtol(cur_str, 0x0, 10);
+                cur_str = strtok(0x0, " \n\r"); 
+                if(cur_str == 0x0) count = 0;
+                else count = strtol(cur_str, 0x0, 10);
+            }
 
             print_propagations(offset, count);
         }
@@ -1578,11 +1585,15 @@ int taint_plugin::print_propagations(unsigned offset, unsigned count)
     current_propagation_count = this->taint_eng->current_propagation_count;
 
     d_print_prompt(1, "Current propagation count is: %d\n", current_propagation_count);
+    d_print_prompt(1, "Printing %d propagations from: %d\n", count, offset);
 
     if(offset > current_propagation_count)
+    {
+        d_print_prompt(1, "Propagations exceeded\n");
         return 0x0;
+    }
 
-    for(i = offset; i<offset+count,offset+i<current_propagation_count; i++)
+    for(i = offset; i<offset+count,i<current_propagation_count; i++)
     {
         print_propagation(i, 0x0);
     }

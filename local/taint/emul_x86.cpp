@@ -1840,8 +1840,8 @@ int taint_x86::attach_current_propagation_m_32(OFFSET off)
     }
     this->attach_current_propagation(&this->memory[off+0]);
     this->attach_current_propagation(&this->memory[off+1]);
+    this->attach_current_propagation(&this->memory[off+2]);
     this->attach_current_propagation(&this->memory[off+3]);
-    this->attach_current_propagation(&this->memory[off+4]);
     d_print(3, "Attach propagation no: %d to BYTE_t: 0x%08x\n", this->current_propagation_count, &this->memory[off+0]);
     d_print(3, "Attach propagation no: %d to BYTE_t: 0x%08x\n", this->current_propagation_count, &this->memory[off+1]);
     d_print(3, "Attach propagation no: %d to BYTE_t: 0x%08x\n", this->current_propagation_count, &this->memory[off+2]);
