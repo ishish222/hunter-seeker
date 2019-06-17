@@ -169,28 +169,7 @@ int taint_plugin::clear_propagation(unsigned id)
 
     current_propagation = &this->taint_eng->propagations[id];
 
-    count = current_propagation->cause_count;
-    for(i=0x0; i<count; i++)
-    {
-        if(cur_cause == 0x0) break;
-        next_cause = cur_cause->next;
-        free(cur_cause);
-        cur_cause = next_cause;
-    }
-
-    count = current_propagation->result_count;
-
-    for(i=0x0; i<count; i++)
-    {
-        if(cur_result == 0x0) break;
-        next_result = cur_result->next;
-        free(cur_result);
-        cur_result = next_result;
-    }
-
-    current_propagation->causes = 0x0;
     current_propagation->cause_count = 0x0;
-    current_propagation->results = 0x0;
     current_propagation->result_count = 0x0;
     
     return 0x0;
@@ -216,54 +195,31 @@ int taint_plugin::print_propagation(unsigned id, unsigned branches)
     if(id == CAUSE_ID_NONE) return 0x0;
 
     unsigned i,j;
-    unsigned count;
+    unsigned cause_count, result_count;
 
+    PROPAGATION* current_propagation;
     CAUSE* cur_elem;
     
+    current_propagation = &this->taint_eng->propagations[id];
+    cause_count = current_propagation->cause_count;
+    result_count = current_propagation->result_count;
+    d_print(2, "Propagations elem count: %d\n", cause_count);
+
     /* identation */
     if(this->out_tab > MAX_OUT_TAB)
     {
-        //d_print(1, "...\n");
-        //d_err_print("...\n");
         return 0x0;
     }
 
     this->out_tab++;
 
-//    d_print(3, "1\n");
-    cur_elem = this->taint_eng->propagations[id].causes;
-    if(cur_elem)
-    {
-        d_print(2, "Propagations elem count: %d\n", this->taint_eng->propagations[id].cause_count);
-       
-        if(branches == 0x0) count = this->taint_eng->propagations[id].cause_count;
-        else count = branches;
-
-        unsigned last_instr = 0x0;
- 
-        for(i=0x0; i<count;i++)
-        {
-            if(this->taint_eng->propagations[cur_elem->cause_id].instr_count != last_instr)
-            {
-                d_print(2, "%d -> %d\n", id, cur_elem->cause_id);
-                last_instr = this->taint_eng->propagations[cur_elem->cause_id].instr_count;
-            }
-            if(cur_elem->next)
-            {
-                d_print(2, "Traversing: 0x%08x -> 0x%08x\n");
-                cur_elem = cur_elem->next;
-            }
-            else break;
-        } 
-    }
+    //if(branches == 0x0) count = this->taint_eng->propagations[id].cause_count;
+    //else count = branches;
 
     for(j=0x0; j<this->out_tab; j++)
     {
         d_print_prompt(1, " ");
     }
-
-    PROPAGATION* current_propagation;
-    current_propagation = &this->taint_eng->propagations[id];
 
 #ifdef USE_DISTORM
     char buf[0x20];
@@ -286,18 +242,23 @@ int taint_plugin::print_propagation(unsigned id, unsigned branches)
     d_print_prompt(1, "\tcauses: ");
 
     CAUSE* cur_cause;
-    for(i=0x0,cur_cause=current_propagation->causes; i<current_propagation->cause_count; i++,cur_cause=cur_cause->next)
+
+    for(i=0x0; i < cause_count; i++)
     {
+        cur_cause = &current_propagation->causes[i];
         d_print_prompt(1, "%d, ", cur_cause->cause_id);
     }
 
     d_print_prompt(1, "\tresults: ");
 
     RESULT* cur_result;
-    for(i=0x0,cur_result=current_propagation->results; i<current_propagation->result_count; i++,cur_result=cur_result->next)
+
+    for(i=0x0; i<result_count; i++)
     {
+        cur_result = &current_propagation->results[i];
         d_print(3, "0x%08x, ", cur_result->affected);
         char region;
+
         OFFSET offset;
         if(resolve_affected(cur_result->affected, &region, &offset) != 0x0)
         {
@@ -352,33 +313,21 @@ int taint_plugin::print_taint_history(unsigned id, unsigned branches)
 
     this->out_tab++;
 
-//    d_print(3, "1\n");
-    cur_elem = this->taint_eng->propagations[id].causes;
-    if(cur_elem)
-    {
-        d_print(2, "Propagations elem count: %d\n", this->taint_eng->propagations[id].cause_count);
-       
-        if(branches == 0x0) count = this->taint_eng->propagations[id].cause_count;
-        else count = branches;
+    PROPAGATION* current_propagation;
+    current_propagation = &this->taint_eng->propagations[id];
 
-        unsigned last_instr = 0x0;
- 
-        for(i=0x0; i<count;i++)
-        {
-            if(this->taint_eng->propagations[cur_elem->cause_id].instr_count != last_instr)
-            {
-                d_print(2, "%d -> %d\n", id, cur_elem->cause_id);
-                this->print_taint_history(cur_elem->cause_id, branches);
-                last_instr = this->taint_eng->propagations[cur_elem->cause_id].instr_count;
-            }
-            if(cur_elem->next)
-            {
-                d_print(2, "Traversing: 0x%08x -> 0x%08x\n");
-                cur_elem = cur_elem->next;
-            }
-            else break;
-        } 
-    }
+    unsigned cause_count;
+    cause_count = current_propagation->cause_count;
+    d_print(2, "Propagations elem count: %d\n", cause_count);
+
+    CAUSE* cur_cause;
+
+    for(i=0x0; i<cause_count; i++)
+    {
+        cur_cause = &current_propagation->causes[i];
+        this->print_taint_history(cur_cause->cause_id, branches);
+    } 
+    
 
     for(j=0x0; j<this->out_tab; j++)
     {

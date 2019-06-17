@@ -298,11 +298,11 @@ typedef struct PROPAGATION_
 {
     OFFSET instruction;
     unsigned instr_count;
-    //TAINTED* first_op;    
-    CAUSE* causes;
+
+    CAUSE causes[MAX_CAUSES];
     unsigned cause_count;
-//    BYTE_t* result[0x4];
-    RESULT* results;
+
+    RESULT results[MAX_RESULTS];
     unsigned result_count;
 } PROPAGATION;
 

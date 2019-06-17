@@ -11,7 +11,7 @@
 #define GRAPH_START             100
 #define MAX_LOOP_ADDRS          0x10
 //#define MAX_THREADS 0x1000000
-#define MAX_PRPAGATIONS_OBSERVED 0x4000000
+#define MAX_PRPAGATIONS_OBSERVED 0x40000000
 #define MAX_TAINTS_OBSERVED     0x400
 #define MAX_EXCEPTIONS_COUNT    0x100
 #define MAX_BREAKPOINTS         0x10
@@ -23,5 +23,7 @@
 #define MAX_LIST_JXX            0x1000
 #define MAX_LAST_INSTRUCTIONS   0x50
 #define MAX_COMMANDS            0x50
+#define MAX_CAUSES              0x10
+#define MAX_RESULTS             0x8
 
 #endif

@@ -602,14 +602,11 @@ int taint_x86::post_execute_instruction(DWORD eip)
 
     // probable eip //is this graph stff or not?
     if(!this->current_instr_is_jump)
+    {
         reg_store_32(EIP, this->reg_restore_32(EIP) + this->current_instr_length);
+    }
 
     fflush(stdout);
-
-    /* search propagation watchpoints */
-
-    unsigned esp;
-    esp = (UDWORD)this->reg_restore_32(ESP).get_DWORD();
 
     if((this->end_addr) || (this->instr_limit))
     {
@@ -1717,29 +1714,13 @@ int taint_x86::attach_current_propagation(BYTE_t* byte)
         return 0x0;
     }
 
-    RESULT* cur_result;
     RESULT* new_result;
 
-    new_result = (RESULT*)malloc(sizeof(RESULT));
+    new_result = &current_propagation->results[current_propagation->result_count];
     new_result->affected = byte;
     new_result->next = 0x0;
 
     d_print(3, "New result: 0x%08x, affected byte: 0%08x\n", new_result, new_result->affected);
-
-    if(current_propagation->results == 0x0)
-    {
-        current_propagation->results = new_result;
-    }
-    else
-    {
-        cur_result = current_propagation->results;
-        while(cur_result->next)
-        {
-            cur_result = cur_result->next;
-        }
-        cur_result->next = new_result;
-    }
-    d_print(3, "Registered result\n");
 
     byte->id = this->current_propagation_count;
     
@@ -1866,20 +1847,20 @@ int taint_x86::attach_current_propagation_m_32(OFFSET off)
 int taint_x86::find_propagation_result(PROPAGATION* current_propagation, BYTE_t* affected)
 {
     if(current_propagation == 0x0) return 0x0;
-    if(current_propagation->results == 0x0) return 0x0;
+    if(current_propagation->result_count == 0x0) return 0x0;
 
     unsigned i;
     RESULT* cur_result;
     int found = 0x0;
 
-    for(i=0x0,cur_result=current_propagation->results; i<current_propagation->result_count; i++)
+    for(i=0x0; i<current_propagation->result_count; i++)
     {
+        cur_result = &current_propagation->results[i];
         if(cur_result->affected == affected)
         {
             found = 1;
             break;
         }
-        if(cur_result->next) cur_result=cur_result->next;
     }
     return found;
 }
@@ -1887,20 +1868,20 @@ int taint_x86::find_propagation_result(PROPAGATION* current_propagation, BYTE_t*
 int taint_x86::find_propagation_cause(PROPAGATION* current_propagation, unsigned searched_id)
 {
     if(current_propagation == 0x0) return 0x0;
-    if(current_propagation->causes == 0x0) return 0x0;
+    if(current_propagation->cause_count == 0x0) return 0x0;
 
     unsigned i;
     CAUSE* cur_cause;
     int found = 0x0;
 
-    for(i=0x0,cur_cause=current_propagation->causes; i<current_propagation->cause_count; i++)
+    for(i=0x0; i<current_propagation->cause_count; i++)
     {
+        cur_cause = &current_propagation->causes[i];
         if(cur_cause->cause_id == searched_id)
         {
             found = 1;
             break;
         }
-        if(cur_cause->next) cur_cause=cur_cause->next;
     }
     return found;
 }
@@ -1935,42 +1916,12 @@ int taint_x86::reg_propagation_cause(BYTE_t* op)
         return 0x0;
     }
 
-    CAUSE* cur_elem;
     CAUSE* new_elem;
 
-    new_elem = (CAUSE*)malloc(sizeof(CAUSE));
-    if(new_elem == 0x0)
-    {
-        fprintf(stderr, "Error allocations memory");
-        exit(1);
-    }
+    new_elem = &current_propagation->causes[current_propagation->cause_count];
     new_elem->cause_id = byte_cause_id;
-    new_elem->next = 0x0;
 
-    if(op->get_BYTE_t_id()) d_print(4, "Registering non-void cause\n");
-
-    d_print(4, "Test4");
-    if(current_propagation->causes == 0x0)
-    {
-        d_print(4, "Test4.5");
-        current_propagation->causes = new_elem;
-        d_print(3, "Registered cause with id: %d\n", new_elem->cause_id);
-    }
-    else
-    {
-        cur_elem = current_propagation->causes;
-
-        while(cur_elem->next != 0x0)
-            cur_elem = cur_elem->next;
-
-        cur_elem->next = new_elem;
-
-        d_print(3, "Registered cause with id: %d\n", new_elem->cause_id);
-    }
-
-    d_print(4, "Test5");
     current_propagation->cause_count++;
-    d_print(4, "Test6");
 
     this->got_cause = 0x1; /* debugging purposes */
 
