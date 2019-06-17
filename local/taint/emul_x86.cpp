@@ -574,6 +574,8 @@ int taint_x86::pre_execute_instruction(DWORD eip)
     this->reg_store_32(EIP, eip);
     this->current_instr_length = 0x0;
     this->current_instr_is_jump = 0x0;
+    this->got_cause = 0x0;
+    this->seal_scheduled = 0x0;
 
     /* check if execution breakpoint has been hit */
     if(this->options & HANDLE_BREAKPOINTS)
@@ -620,10 +622,19 @@ int taint_x86::post_execute_instruction(DWORD eip)
     }
 
     /* if propagation occured, seal it */
+
     if(this->seal_scheduled)
     {
         this->seal_current_propagation();
         this->seal_scheduled = 0x0;
+    }
+    else
+    {
+        /* debugging purposes, you can comment it out to speed up */
+        if(this->got_cause)
+        {
+            d_print(1, "Propagation imperfection, got cause without result for byte: 0x%02x\n", this->current_instr_byte);
+        }
     }
 
     this->last_eip = this->current_eip;
@@ -1687,6 +1698,8 @@ OFFSET taint_x86::a_decode_sib_mod(BYTE_t* sib_ptr, BYTE mod)
 int taint_x86::attach_current_propagation(BYTE_t* byte)
 {
     d_print(3, "Attaching current propagation\n");
+    this->seal_scheduled = 0x1;
+
     CONTEXT_INFO* info;
     info = this->get_context_info(this->cur_tid);
 
@@ -1752,7 +1765,6 @@ int taint_x86::attach_current_propagation_r_8(OFFSET off)
 
     this->attach_current_propagation(&info->registers[off+0]);
     d_print(3, "Attach propagation no: %d to BYTE_t: 0x%08x\n", this->current_propagation_count, &info->registers[off+0]);
-    this->seal_scheduled = 0x1;
 
     return 0x0;
 }
@@ -1772,7 +1784,6 @@ int taint_x86::attach_current_propagation_r_16(OFFSET off)
     this->attach_current_propagation(&info->registers[off+1]);
     d_print(3, "Attach propagation no: %d to BYTE_t: 0x%08x\n", this->current_propagation_count, &info->registers[off+0]);
     d_print(3, "Attach propagation no: %d to BYTE_t: 0x%08x\n", this->current_propagation_count, &info->registers[off+1]);
-    this->seal_scheduled = 0x1;
 
     return 0x0;
 }
@@ -1796,7 +1807,6 @@ int taint_x86::attach_current_propagation_r_32(OFFSET off)
     d_print(3, "Attach propagation no: %d to BYTE_t: 0x%08x\n", this->current_propagation_count, &info->registers[off+1]);
     d_print(3, "Attach propagation no: %d to BYTE_t: 0x%08x\n", this->current_propagation_count, &info->registers[off+2]);
     d_print(3, "Attach propagation no: %d to BYTE_t: 0x%08x\n", this->current_propagation_count, &info->registers[off+3]);
-    this->seal_scheduled = 0x1;
 
     return 0x0;
 }
@@ -1810,7 +1820,6 @@ int taint_x86::attach_current_propagation_m_8(OFFSET off)
     }
     this->attach_current_propagation(&this->memory[off+0]);
     d_print(3, "Attach propagation no: %d to BYTE_t: 0x%08x\n", this->current_propagation_count, &this->memory[off+0]);
-    this->seal_scheduled = 0x1;
 
     return 0x0;
 }
@@ -1826,7 +1835,6 @@ int taint_x86::attach_current_propagation_m_16(OFFSET off)
     this->attach_current_propagation(&this->memory[off+1]);
     d_print(3, "Attach propagation no: %d to BYTE_t: 0x%08x\n", this->current_propagation_count, &this->memory[off+0]);
     d_print(3, "Attach propagation no: %d to BYTE_t: 0x%08x\n", this->current_propagation_count, &this->memory[off+1]);
-    this->seal_scheduled = 0x1;
 
     return 0x0;
 }
@@ -1846,7 +1854,6 @@ int taint_x86::attach_current_propagation_m_32(OFFSET off)
     d_print(3, "Attach propagation no: %d to BYTE_t: 0x%08x\n", this->current_propagation_count, &this->memory[off+1]);
     d_print(3, "Attach propagation no: %d to BYTE_t: 0x%08x\n", this->current_propagation_count, &this->memory[off+2]);
     d_print(3, "Attach propagation no: %d to BYTE_t: 0x%08x\n", this->current_propagation_count, &this->memory[off+3]);
-    this->seal_scheduled = 0x1;
 
     return 0x0;
 }
@@ -1959,6 +1966,8 @@ int taint_x86::reg_propagation_cause(BYTE_t* op)
     d_print(4, "Test5");
     current_propagation->cause_count++;
     d_print(4, "Test6");
+
+    this->got_cause = 0x1; /* debugging purposes */
 
     return 0x0;
 }
@@ -9559,7 +9568,6 @@ int taint_x86::r_ret(BYTE_t*)
 
     this->current_instr_is_jump = 0x1;
 
-
     return 0x0;
 }
 
@@ -9646,6 +9654,7 @@ int taint_x86::r_leave(BYTE_t* addr)
     d_print(3, "ESP: 0x%08x\n", this->reg_restore_32(ESP).get_DWORD());
 
     this->reg_store_32(EBP, ebp);
+    attach_current_propagation_r_32(EIP);
 
     return 0x0;
 }

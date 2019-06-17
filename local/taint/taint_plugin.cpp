@@ -1585,17 +1585,28 @@ int taint_plugin::print_propagations(unsigned offset, unsigned count)
     current_propagation_count = this->taint_eng->current_propagation_count;
 
     d_print_prompt(1, "Current propagation count is: %d\n", current_propagation_count);
-    d_print_prompt(1, "Printing %d propagations from: %d\n", count, offset);
-
     if(offset > current_propagation_count)
     {
         d_print_prompt(1, "Propagations exceeded\n");
         return 0x0;
     }
 
-    for(i = offset; i<offset+count,i<current_propagation_count; i++)
+    if(count == 0x0)
     {
-        print_propagation(i, 0x0);
+        d_print_prompt(1, "Printing all propagations from: %d\n", offset);
+        for(i = offset; i<current_propagation_count; i++)
+        {
+            print_propagation(i, 0x0);
+        }
+    }
+    else
+    {
+        d_print_prompt(1, "Printing %d propagations from: %d\n", count, offset);
+        for(i = offset; i<offset+count; i++)
+        {
+            print_propagation(i, 0x0);
+            if(i >= current_propagation_count) break;
+        }
     }
 
     return 0x0;

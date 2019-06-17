@@ -921,6 +921,7 @@ class taint_x86
     int d_print(int, const char*, ...);
 
     /* propagation */
+    int got_cause;
     int seal_scheduled;
     int print_taint_ops(unsigned);
     int print_taint_history(unsigned);
