@@ -336,6 +336,7 @@ int taint_plugin::print_propagation(unsigned id, unsigned branches)
 int taint_plugin::print_taint_history(unsigned id, unsigned branches)
 {
     if(id == CAUSE_ID_NONE) return 0x0;
+    /* teoretycznie ponizsze nie powinno stanowic problemu, ale stanowi */
     if(id == 0x0) return 0x0;
 
     unsigned i,j;
@@ -346,8 +347,6 @@ int taint_plugin::print_taint_history(unsigned id, unsigned branches)
     /* identation */
     if(this->out_tab > MAX_OUT_TAB)
     {
-        //d_print(1, "...\n");
-        //d_err_print("...\n");
         return 0x0;
     }
 
@@ -383,7 +382,7 @@ int taint_plugin::print_taint_history(unsigned id, unsigned branches)
 
     for(j=0x0; j<this->out_tab; j++)
     {
-        d_print_prompt(1, " ");
+        d_print_prompt(1, "\t");
     }
 #ifdef USE_DISTORM
     char buf[0x20];
@@ -1144,6 +1143,366 @@ int taint_plugin::parse_cmd(char* string)
                 print_taint_history(reg[i], 0x0);
                 err_print("\n");
             }
+        }
+        else if(!strncasecmp(cur_str, "ax", 2)) /* AX, AH, AL */
+        {
+            BYTE_t* reg[0x2];
+
+            reg[0x0] = &this->taint_eng->cur_info->registers[EAX+0x3];
+            reg[0x1] = &this->taint_eng->cur_info->registers[EAX+0x2];
+
+            err_print("Tracking eax[0x3]\n---------------------------------------------\n");
+            print_taint_history(reg[0x0], 0x0);
+            err_print("\n");
+            err_print("Tracking eax[0x2]\n---------------------------------------------\n");
+            print_taint_history(reg[0x1], 0x0);
+            err_print("\n");
+        }
+        else if(!strncasecmp(cur_str, "al", 2))
+        {
+            BYTE_t* reg;
+
+            reg = &this->taint_eng->cur_info->registers[EAX+0x3];
+
+            err_print("Tracking eax[0x3]\n---------------------------------------------\n");
+
+            print_taint_history(reg, 0x0);
+            err_print("\n");
+        }
+        else if(!strncasecmp(cur_str, "ah", 2))
+        {
+            BYTE_t* reg;
+
+            reg = &this->taint_eng->cur_info->registers[EAX+0x2];
+
+            err_print("Tracking eax[0x2]\n---------------------------------------------\n");
+
+            print_taint_history(reg, 0x0);
+            err_print("\n");
+        }
+        else if(!strncasecmp(cur_str, "bx", 2)) /* BX, BH, BL */
+        {
+            BYTE_t* reg[0x2];
+
+            reg[0x0] = &this->taint_eng->cur_info->registers[EBX+0x3];
+            reg[0x1] = &this->taint_eng->cur_info->registers[EBX+0x2];
+
+            err_print("Tracking ebx[0x3]\n---------------------------------------------\n");
+            print_taint_history(reg[0x0], 0x0);
+            err_print("\n");
+            err_print("Tracking ebx[0x2]\n---------------------------------------------\n");
+            print_taint_history(reg[0x1], 0x0);
+            err_print("\n");
+        }
+        else if(!strncasecmp(cur_str, "bl", 2))
+        {
+            BYTE_t* reg;
+
+            reg = &this->taint_eng->cur_info->registers[EBX+0x3];
+
+            err_print("Tracking eax[0x3]\n---------------------------------------------\n");
+
+            print_taint_history(reg, 0x0);
+            err_print("\n");
+        }
+        else if(!strncasecmp(cur_str, "bh", 2))
+        {
+            BYTE_t* reg;
+
+            reg = &this->taint_eng->cur_info->registers[EBX+0x2];
+
+            err_print("Tracking ebx[0x2]\n---------------------------------------------\n");
+
+            print_taint_history(reg, 0x0);
+            err_print("\n");
+        }
+        else if(!strncasecmp(cur_str, "cx", 2)) /* CX, CH, CL */
+        {
+            BYTE_t* reg[0x2];
+
+            reg[0x0] = &this->taint_eng->cur_info->registers[ECX+0x3];
+            reg[0x1] = &this->taint_eng->cur_info->registers[ECX+0x2];
+
+            err_print("Tracking ecx[0x3]\n---------------------------------------------\n");
+            print_taint_history(reg[0x0], 0x0);
+            err_print("\n");
+            err_print("Tracking ecx[0x2]\n---------------------------------------------\n");
+            print_taint_history(reg[0x1], 0x0);
+            err_print("\n");
+        }
+        else if(!strncasecmp(cur_str, "cl", 2))
+        {
+            BYTE_t* reg;
+
+            reg = &this->taint_eng->cur_info->registers[ECX+0x3];
+
+            err_print("Tracking ecx[0x3]\n---------------------------------------------\n");
+
+            print_taint_history(reg, 0x0);
+            err_print("\n");
+        }
+        else if(!strncasecmp(cur_str, "ch", 2))
+        {
+            BYTE_t* reg;
+
+            reg = &this->taint_eng->cur_info->registers[ECX+0x2];
+
+            err_print("Tracking ecx[0x2]\n---------------------------------------------\n");
+
+            print_taint_history(reg, 0x0);
+            err_print("\n");
+        }
+        else if(!strncasecmp(cur_str, "dx", 2)) /* DX, DH, DL */
+        {
+            BYTE_t* reg[0x2];
+
+            reg[0x0] = &this->taint_eng->cur_info->registers[EDX+0x3];
+            reg[0x1] = &this->taint_eng->cur_info->registers[EDX+0x2];
+
+            err_print("Tracking edx[0x3]\n---------------------------------------------\n");
+            print_taint_history(reg[0x0], 0x0);
+            err_print("\n");
+            err_print("Tracking edx[0x2]\n---------------------------------------------\n");
+            print_taint_history(reg[0x1], 0x0);
+            err_print("\n");
+        }
+        else if(!strncasecmp(cur_str, "dl", 2))
+        {
+            BYTE_t* reg;
+
+            reg = &this->taint_eng->cur_info->registers[EDX+0x3];
+
+            err_print("Tracking edx[0x3]\n---------------------------------------------\n");
+
+            print_taint_history(reg, 0x0);
+            err_print("\n");
+        }
+        else if(!strncasecmp(cur_str, "dh", 2))
+        {
+            BYTE_t* reg;
+
+            reg = &this->taint_eng->cur_info->registers[EDX+0x2];
+
+            err_print("Tracking edx[0x2]\n---------------------------------------------\n");
+
+            print_taint_history(reg, 0x0);
+            err_print("\n");
+        }
+        else if(!strncasecmp(cur_str, "sil", 3))
+        {
+            BYTE_t* reg;
+
+            reg = &this->taint_eng->cur_info->registers[ESI+0x3];
+
+            err_print("Tracking esi[0x3]\n---------------------------------------------\n");
+
+            print_taint_history(reg, 0x0);
+            err_print("\n");
+        }
+        else if(!strncasecmp(cur_str, "sih", 3))
+        {
+            BYTE_t* reg;
+
+            reg = &this->taint_eng->cur_info->registers[ESI+0x2];
+
+            err_print("Tracking esi[0x2]\n---------------------------------------------\n");
+
+            print_taint_history(reg, 0x0);
+            err_print("\n");
+        }
+        else if(!strncasecmp(cur_str, "si", 2)) /* SI, SIH, SIL */
+        {
+            BYTE_t* reg[0x2];
+
+            reg[0x0] = &this->taint_eng->cur_info->registers[ESI+0x3];
+            reg[0x1] = &this->taint_eng->cur_info->registers[ESI+0x2];
+
+            err_print("Tracking esi[0x3]\n---------------------------------------------\n");
+            print_taint_history(reg[0x0], 0x0);
+            err_print("\n");
+            err_print("Tracking esi[0x2]\n---------------------------------------------\n");
+            print_taint_history(reg[0x1], 0x0);
+            err_print("\n");
+        }
+        else if(!strncasecmp(cur_str, "dil", 3))
+        {
+            BYTE_t* reg;
+
+            reg = &this->taint_eng->cur_info->registers[EDI+0x3];
+
+            err_print("Tracking edi[0x3]\n---------------------------------------------\n");
+
+            print_taint_history(reg, 0x0);
+            err_print("\n");
+        }
+        else if(!strncasecmp(cur_str, "dih", 3))
+        {
+            BYTE_t* reg;
+
+            reg = &this->taint_eng->cur_info->registers[EDI+0x2];
+
+            err_print("Tracking edi[0x2]\n---------------------------------------------\n");
+
+            print_taint_history(reg, 0x0);
+            err_print("\n");
+        }
+        else if(!strncasecmp(cur_str, "di", 2)) /* DI, DIH, DIL */
+        {
+            BYTE_t* reg[0x2];
+
+            reg[0x0] = &this->taint_eng->cur_info->registers[EDI+0x3];
+            reg[0x1] = &this->taint_eng->cur_info->registers[EDI+0x2];
+
+            err_print("Tracking edi[0x3]\n---------------------------------------------\n");
+            print_taint_history(reg[0x0], 0x0);
+            err_print("\n");
+            err_print("Tracking edi[0x2]\n---------------------------------------------\n");
+            print_taint_history(reg[0x1], 0x0);
+            err_print("\n");
+        }
+        else if(!strncasecmp(cur_str, "bpl", 3))
+        {
+            BYTE_t* reg;
+
+            reg = &this->taint_eng->cur_info->registers[EBP+0x3];
+
+            err_print("Tracking ebp[0x3]\n---------------------------------------------\n");
+
+            print_taint_history(reg, 0x0);
+            err_print("\n");
+        }
+        else if(!strncasecmp(cur_str, "bph", 3))
+        {
+            BYTE_t* reg;
+
+            reg = &this->taint_eng->cur_info->registers[EBP+0x2];
+
+            err_print("Tracking ebp[0x2]\n---------------------------------------------\n");
+
+            print_taint_history(reg, 0x0);
+            err_print("\n");
+        }
+        else if(!strncasecmp(cur_str, "bp", 2)) /* BP, BPH, BPL */
+        {
+            BYTE_t* reg[0x2];
+
+            reg[0x0] = &this->taint_eng->cur_info->registers[EBP+0x3];
+            reg[0x1] = &this->taint_eng->cur_info->registers[EBP+0x2];
+
+            err_print("Tracking ebp[0x3]\n---------------------------------------------\n");
+            print_taint_history(reg[0x0], 0x0);
+            err_print("\n");
+            err_print("Tracking ebp[0x2]\n---------------------------------------------\n");
+            print_taint_history(reg[0x1], 0x0);
+            err_print("\n");
+        }
+        else if(!strncasecmp(cur_str, "spl", 3))
+        {
+            BYTE_t* reg;
+
+            reg = &this->taint_eng->cur_info->registers[ESP+0x3];
+
+            err_print("Tracking esp[0x3]\n---------------------------------------------\n");
+
+            print_taint_history(reg, 0x0);
+            err_print("\n");
+        }
+        else if(!strncasecmp(cur_str, "sph", 3))
+        {
+            BYTE_t* reg;
+
+            reg = &this->taint_eng->cur_info->registers[ESP+0x2];
+
+            err_print("Tracking esp[0x2]\n---------------------------------------------\n");
+
+            print_taint_history(reg, 0x0);
+            err_print("\n");
+        }
+        else if(!strncasecmp(cur_str, "sp", 2)) /* SP, SPH, SPL */
+        {
+            BYTE_t* reg[0x2];
+
+            reg[0x0] = &this->taint_eng->cur_info->registers[ESP+0x3];
+            reg[0x1] = &this->taint_eng->cur_info->registers[ESP+0x2];
+
+            err_print("Tracking esp[0x3]\n---------------------------------------------\n");
+            print_taint_history(reg[0x0], 0x0);
+            err_print("\n");
+            err_print("Tracking esp[0x2]\n---------------------------------------------\n");
+            print_taint_history(reg[0x1], 0x0);
+            err_print("\n");
+        }
+        else if(!strncasecmp(cur_str, "flagsl", 6))
+        {
+            BYTE_t* reg;
+
+            reg = &this->taint_eng->cur_info->registers[EFLAGS+0x3];
+
+            err_print("Tracking eflags[0x3]\n---------------------------------------------\n");
+
+            print_taint_history(reg, 0x0);
+            err_print("\n");
+        }
+        else if(!strncasecmp(cur_str, "flagsh", 6))
+        {
+            BYTE_t* reg;
+
+            reg = &this->taint_eng->cur_info->registers[EFLAGS+0x2];
+
+            err_print("Tracking eflags[0x2]\n---------------------------------------------\n");
+
+            print_taint_history(reg, 0x0);
+            err_print("\n");
+        }
+        else if(!strncasecmp(cur_str, "flags", 5)) /* FLAGS, FLAGSH, FLAGSL */
+        {
+            BYTE_t* reg[0x2];
+
+            reg[0x0] = &this->taint_eng->cur_info->registers[EFLAGS+0x3];
+            reg[0x1] = &this->taint_eng->cur_info->registers[EFLAGS+0x2];
+
+            err_print("Tracking eflags[0x3]\n---------------------------------------------\n");
+            print_taint_history(reg[0x0], 0x0);
+            err_print("\n");
+            err_print("Tracking eflags[0x2]\n---------------------------------------------\n");
+            print_taint_history(reg[0x1], 0x0);
+            err_print("\n");
+        }
+        else if(!strncasecmp(cur_str, "ipl", 3))
+        {
+            BYTE_t* reg;
+
+            reg = &this->taint_eng->cur_info->registers[EIP+0x3];
+
+            err_print("Tracking eip[0x3]\n---------------------------------------------\n");
+
+            print_taint_history(reg, 0x0);
+            err_print("\n");
+        }
+        else if(!strncasecmp(cur_str, "iph", 3))
+        {
+            BYTE_t* reg;
+
+            reg = &this->taint_eng->cur_info->registers[EIP+0x2];
+
+            err_print("Tracking eip[0x2]\n---------------------------------------------\n");
+
+            print_taint_history(reg, 0x0);
+            err_print("\n");
+        }
+        else if(!strncasecmp(cur_str, "ip", 2)) /* IP, IPH, IPL */
+        {
+            BYTE_t* reg[0x2];
+
+            reg[0x0] = &this->taint_eng->cur_info->registers[EIP+0x3];
+            reg[0x1] = &this->taint_eng->cur_info->registers[EIP+0x2];
+
+            err_print("Tracking eip[0x3]\n---------------------------------------------\n");
+            print_taint_history(reg[0x0], 0x0);
+            err_print("\n");
+            err_print("Tracking eip[0x2]\n---------------------------------------------\n");
+            print_taint_history(reg[0x1], 0x0);
+            err_print("\n");
         }
         else
         {
