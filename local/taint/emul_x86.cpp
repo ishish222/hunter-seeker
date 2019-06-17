@@ -1321,6 +1321,7 @@ DWORD_t taint_x86::a_pop_32()
 
     // store value at stack
     esp = reg_restore_32(ESP);    
+    reg_propagation_cause_m_32(esp.get_DWORD());
     //val = restore_32(esp);
     restore_32(esp, val);
     d_print(3, "esp read: 0x%x val: 0x%x\n", esp.get_DWORD(), val.get_DWORD());
@@ -9539,6 +9540,8 @@ int taint_x86::r_retn(BYTE_t*)
     d_print(3, "Will return to: 0x%08x\n", ret.get_DWORD());
 
     this->reg_store_32(EIP, ret);
+    attach_current_propagation_r_32(EIP);
+
     this->current_instr_is_jump = 0x1;
 
     return 0x0;
@@ -9552,6 +9555,8 @@ int taint_x86::r_ret(BYTE_t*)
     d_print(3, "Will return to: 0x%08x\n", ret.get_DWORD());
 
     this->reg_store_32(EIP, ret);
+    attach_current_propagation_r_32(EIP);
+
     this->current_instr_is_jump = 0x1;
 
 

@@ -336,6 +336,7 @@ int taint_plugin::print_propagation(unsigned id, unsigned branches)
 int taint_plugin::print_taint_history(unsigned id, unsigned branches)
 {
     if(id == CAUSE_ID_NONE) return 0x0;
+    if(id == 0x0) return 0x0;
 
     unsigned i,j;
     unsigned count;
@@ -976,154 +977,184 @@ int taint_plugin::parse_cmd(char* string)
 
         if(!strncasecmp(cur_str, "eax", 3))
         {
-            DWORD_t reg;
+            BYTE_t* reg[0x4];
 
-            reg = this->taint_eng->reg_restore_32(EAX, this->query_tid);
+            reg[0] = &this->taint_eng->cur_info->registers[EAX+0x0];
+            reg[1] = &this->taint_eng->cur_info->registers[EAX+0x1];
+            reg[2] = &this->taint_eng->cur_info->registers[EAX+0x2];
+            reg[3] = &this->taint_eng->cur_info->registers[EAX+0x3];
 
             for(i = 0x0; i < 0x4; i++)
             {
                 err_print("Tracking eax[%d]:\n", i);
 
-                print_taint_history(&reg[i], 0x0);
+                print_taint_history(reg[i], 0x0);
                 err_print("\n");
             }
         }
         else if(!strncasecmp(cur_str, "ebx", 3))
         {
-            DWORD_t reg;
+            BYTE_t* reg[0x4];
 
-            reg = this->taint_eng->reg_restore_32(EBX, this->query_tid);
+            reg[0] = &this->taint_eng->cur_info->registers[EBX+0x0];
+            reg[1] = &this->taint_eng->cur_info->registers[EBX+0x1];
+            reg[2] = &this->taint_eng->cur_info->registers[EBX+0x2];
+            reg[3] = &this->taint_eng->cur_info->registers[EBX+0x3];
 
             for(i = 0x0; i < 0x4; i++)
             {
                 err_print("Tracking ebx[%d]:\n", i);
 
-                print_taint_history(&reg[i], 0x0);
+                print_taint_history(reg[i], 0x0);
                 err_print("\n");
             }
         }
         else if(!strncasecmp(cur_str, "ecx", 3))
         {
-            DWORD_t reg;
+            BYTE_t* reg[0x4];
 
-            reg = this->taint_eng->reg_restore_32(ECX, this->query_tid);
+            reg[0] = &this->taint_eng->cur_info->registers[ECX+0x0];
+            reg[1] = &this->taint_eng->cur_info->registers[ECX+0x1];
+            reg[2] = &this->taint_eng->cur_info->registers[ECX+0x2];
+            reg[3] = &this->taint_eng->cur_info->registers[ECX+0x3];
 
             for(i = 0x0; i < 0x4; i++)
             {
                 err_print("Tracking ecx[%d]:\n", i);
 
-                print_taint_history(&reg[i], 0x0);
+                print_taint_history(reg[i], 0x0);
                 err_print("\n");
             }
         }
         else if(!strncasecmp(cur_str, "edx", 3))
         {
-            DWORD_t reg;
+            BYTE_t* reg[0x4];
 
-            reg = this->taint_eng->reg_restore_32(EDX, this->query_tid);
+            reg[0] = &this->taint_eng->cur_info->registers[EDX+0x0];
+            reg[1] = &this->taint_eng->cur_info->registers[EDX+0x1];
+            reg[2] = &this->taint_eng->cur_info->registers[EDX+0x2];
+            reg[3] = &this->taint_eng->cur_info->registers[EDX+0x3];
 
             for(i = 0x0; i < 0x4; i++)
             {
                 err_print("Tracking edx[%d]:\n", i);
 
-                print_taint_history(&reg[i], 0x0);
+                print_taint_history(reg[i], 0x0);
                 err_print("\n");
             }
         }
         else if(!strncasecmp(cur_str, "esi", 3))
         {
-            DWORD_t reg;
+            BYTE_t* reg[0x4];
 
-            reg = this->taint_eng->reg_restore_32(ESI, this->query_tid);
+            reg[0] = &this->taint_eng->cur_info->registers[ESI+0x0];
+            reg[1] = &this->taint_eng->cur_info->registers[ESI+0x1];
+            reg[2] = &this->taint_eng->cur_info->registers[ESI+0x2];
+            reg[3] = &this->taint_eng->cur_info->registers[ESI+0x3];
 
             for(i = 0x0; i < 0x4; i++)
             {
                 err_print("Tracking esi[%d]:\n", i);
 
-                print_taint_history(&reg[i], 0x0);
+                print_taint_history(reg[i], 0x0);
                 err_print("\n");
             }
         }
         else if(!strncasecmp(cur_str, "edi", 3))
         {
-            DWORD_t reg;
+            BYTE_t* reg[0x4];
 
-            reg = this->taint_eng->reg_restore_32(EDI, this->query_tid);
+            reg[0] = &this->taint_eng->cur_info->registers[EDI+0x0];
+            reg[1] = &this->taint_eng->cur_info->registers[EDI+0x1];
+            reg[2] = &this->taint_eng->cur_info->registers[EDI+0x2];
+            reg[3] = &this->taint_eng->cur_info->registers[EDI+0x3];
 
             for(i = 0x0; i < 0x4; i++)
             {
                 err_print("Tracking edi[%d]:\n", i);
 
-                print_taint_history(&reg[i], 0x0);
+                print_taint_history(reg[i], 0x0);
                 err_print("\n");
             }
         }
         else if(!strncasecmp(cur_str, "ebp", 3))
         {
-            DWORD_t reg;
+            BYTE_t* reg[0x4];
 
-            reg = this->taint_eng->reg_restore_32(EBP, this->query_tid);
+            reg[0] = &this->taint_eng->cur_info->registers[EBP+0x0];
+            reg[1] = &this->taint_eng->cur_info->registers[EBP+0x1];
+            reg[2] = &this->taint_eng->cur_info->registers[EBP+0x2];
+            reg[3] = &this->taint_eng->cur_info->registers[EBP+0x3];
 
             for(i = 0x0; i < 0x4; i++)
             {
                 err_print("Tracking ebp[%d]:\n", i);
 
-                print_taint_history(&reg[i], 0x0);
+                print_taint_history(reg[i], 0x0);
                 err_print("\n");
             }
         }
         else if(!strncasecmp(cur_str, "esp", 3))
         {
-            DWORD_t reg;
+            BYTE_t* reg[0x4];
 
-            reg = this->taint_eng->reg_restore_32(ESP, this->query_tid);
+            reg[0] = &this->taint_eng->cur_info->registers[ESP+0x0];
+            reg[1] = &this->taint_eng->cur_info->registers[ESP+0x1];
+            reg[2] = &this->taint_eng->cur_info->registers[ESP+0x2];
+            reg[3] = &this->taint_eng->cur_info->registers[ESP+0x3];
 
             for(i = 0x0; i < 0x4; i++)
             {
                 err_print("Tracking esp[%d]:\n", i);
 
-                print_taint_history(&reg[i], 0x0);
+                print_taint_history(reg[i], 0x0);
                 err_print("\n");
             }
         }
         else if(!strncasecmp(cur_str, "eflags", 3))
         {
-            DWORD_t reg;
+            BYTE_t* reg[0x4];
 
-            reg = this->taint_eng->reg_restore_32(EFLAGS, this->query_tid);
+            reg[0] = &this->taint_eng->cur_info->registers[EFLAGS+0x0];
+            reg[1] = &this->taint_eng->cur_info->registers[EFLAGS+0x1];
+            reg[2] = &this->taint_eng->cur_info->registers[EFLAGS+0x2];
+            reg[3] = &this->taint_eng->cur_info->registers[EFLAGS+0x3];
 
             for(i = 0x0; i < 0x4; i++)
             {
                 err_print("Tracking eflags[%d]:\n", i);
 
-                print_taint_history(&reg[i], 0x0);
+                print_taint_history(reg[i], 0x0);
                 err_print("\n");
             }
         }
         else if(!strncasecmp(cur_str, "eip", 3))
         {
-            DWORD_t reg;
+            BYTE_t* reg[0x4];
 
-            reg = this->taint_eng->reg_restore_32(EIP, this->query_tid);
+            reg[0] = &this->taint_eng->cur_info->registers[EIP+0x0];
+            reg[1] = &this->taint_eng->cur_info->registers[EIP+0x1];
+            reg[2] = &this->taint_eng->cur_info->registers[EIP+0x2];
+            reg[3] = &this->taint_eng->cur_info->registers[EIP+0x3];
 
             for(i = 0x0; i < 0x4; i++)
             {
                 err_print("Tracking eip[%d]:\n", i);
 
-                print_taint_history(&reg[i], 0x0);
+                print_taint_history(reg[i], 0x0);
                 err_print("\n");
             }
         }
         else
         {
             OFFSET offset;
-            DWORD_t dword;
+            BYTE_t* byte;
     
             offset = strtol(cur_str, 0x0, 0x10);
             err_print("Tracking mem: 0x%08x\n", offset);
 
-            this->taint_eng->restore_32(offset, dword);
-            print_taint_history(&dword[i], 0x0);
+            byte = &this->taint_eng->memory[offset];
+            print_taint_history(byte, 0x0);
             err_print("\n");
         }
     
