@@ -571,7 +571,14 @@ int taint_x86::pre_execute_instruction(DWORD eip)
     this->current_prefixes = 0x0;
     this->current_prefix_length = 0x0;
     this->current_eip = eip;
-    this->reg_store_32(EIP, eip);
+//    this->reg_store_32(EIP, eip);
+    /* we want to do it this way in order to preserve taint */
+    
+    DWORD_t eip_t;
+    eip_t = this->reg_restore_32(EIP);
+    eip_t.set_DWORD(eip);
+    this->reg_store_32(EIP, eip_t);
+
     this->current_instr_length = 0x0;
     this->current_instr_is_jump = 0x0;
     this->got_cause = 0x0;
@@ -1699,6 +1706,7 @@ OFFSET taint_x86::a_decode_sib_mod(BYTE_t* sib_ptr, BYTE mod)
 
 int taint_x86::attach_current_propagation(BYTE_t* byte)
 {
+    if(!(this->options & OPTION_TRACE_PROPAGATION)) return 0x0;
     d_print(3, "Attaching current propagation\n");
     this->seal_scheduled = 0x1;
 
@@ -1888,6 +1896,8 @@ int taint_x86::find_propagation_cause(PROPAGATION* current_propagation, unsigned
 
 int taint_x86::reg_propagation_cause(BYTE_t* op)
 {
+    if(!(this->options & OPTION_TRACE_PROPAGATION)) return 0x0;
+
     PROPAGATION* current_propagation;
     current_propagation = &this->propagations[this->current_propagation_count];
 

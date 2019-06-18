@@ -225,7 +225,8 @@ Change of endiannes takes place when reading and writing to memory (to_mem, from
 #define OPTION_COUNT_INSTRUCTIONS               0x100
 #define OPTION_HANDLE_BREAKPOINTS               0x200
 #define OPTION_VERIFY_OOB                       0x400
-#define OPTION_INDEXES_PROPAGATE                    0x800
+#define OPTION_INDEXES_PROPAGATE                0x800
+#define OPTION_TRACE_PROPAGATION                0x1000
 
 /* dont options */
 #define OPTION_DONT_ANALYZE_JUMPS                    0xFFFFFFFE
@@ -239,7 +240,8 @@ Change of endiannes takes place when reading and writing to memory (to_mem, from
 #define OPTION_DONT_COUNT_INSTRUCTIONS               0xFFFFFEFF
 #define OPTION_DONT_HANDLE_BREAKPOINTS               0xFFFFFDFF
 #define OPTION_DONT_VERIFY_OOB                       0xFFFFFBFF
-#define OPTION_DONT_INDEXES_PROPAGATE                    0xFFFFF7FF
+#define OPTION_DONT_INDEXES_PROPAGATE                0xFFFFF7FF
+#define OPTION_DONT_TRACE_PROPAGATION                0xFFFFEFFF
 
 /* jumping codes */
 
@@ -1346,7 +1348,7 @@ class taint_x86
             this->tids[i] = -1;
 
         /* taint stuff */
-        this->current_propagation_count = 0x1;
+        this->current_propagation_count = 0x0;
 
         this->started = 0x0;
         this->finished = 0x0;
@@ -1356,13 +1358,14 @@ class taint_x86
         this->propagations = (PROPAGATION*)malloc(sizeof(PROPAGATION)*MAX_PRPAGATIONS_OBSERVED);
         if(this->propagations == 0x0)
         {
-            printf("Not enough memory\n");
+            printf("Not enough memory: propagations\n");
         }
+        //memset(this->propagations, 0x0, (sizeof(PROPAGATION)*MAX_PRPAGATIONS_OBSERVED));
 
         this->ctx_info = (CONTEXT_INFO*)malloc(sizeof(CONTEXT_INFO)*MAX_THREADS);
         if(this->ctx_info == 0x0)
         {
-            printf("Not enough memory\n");
+            printf("Not enough memory: ctx_info\n");
         }
 
         

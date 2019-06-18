@@ -219,6 +219,7 @@ int main(int argc, char** argv)
     /* registering plugin */
     taint_eng.plugin = (Plugin*)&plugin;
     taint_eng.plugin->taint_eng = &taint_eng;
+    taint_eng.options |= OPTION_TRACE_PROPAGATION; /* we need to turn on this option on program level */
 
     /* configuring plugin */
     /* TODO */
