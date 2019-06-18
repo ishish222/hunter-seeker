@@ -1615,7 +1615,7 @@ int taint_plugin::add_lib(OFFSET off, char* name)
     }
 
     //strcpy(new_lib.path, this->lib_dir_path);
-    strcat(new_lib.path, basename(name));
+    strcpy(new_lib.path, basename(name));
 
     d_print(1, "Loading lib: %s\n", new_lib.path);
 
@@ -1901,7 +1901,7 @@ int taint_plugin::register_lib(char* line)
     //name[strlen(name)] = 0x0;
 //    size = strtoul(strtok(0x0, ","), 0x0, 0x10);
 
-//    printf("Registering lib: %s at 0x%08x\n", name, off);
+    //printf("Registering lib: %s at 0x%08x\n", name, off);
     this->add_lib(off, name);
 
     return 0x0;
