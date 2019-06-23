@@ -1,4 +1,4 @@
-#define DEBUG_LEVEL 0
+#define DEBUG_LEVEL 1
 //#define DEBUG_PRINT_CONTEXT
 //#define DEBUG_PRINT_STACK
 

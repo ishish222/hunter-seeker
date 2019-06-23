@@ -219,6 +219,18 @@ int main(int argc, char** argv)
     /* registering plugin */
     taint_eng.plugin = (Plugin*)&plugin;
     taint_eng.plugin->taint_eng = &taint_eng;
+
+    /* Default options */
+    //fprintf(stdout, "Setting default option: OPTION_VERIFY_SEG_SEC\n");
+    //taint_eng.options |= OPTION_VERIFY_SEG_SEC;
+    fprintf(stdout, "Setting default option: OPTION_HANDLE_BREAKPOINTS\n");
+    taint_eng.options |= OPTION_HANDLE_BREAKPOINTS;
+    fprintf(stdout, "Setting default option: OPTION_VERIFY_OOB\n");
+    taint_eng.options |= OPTION_VERIFY_OOB;
+    /* for taint_plugin */
+    fprintf(stdout, "Setting default option: OPTION_INDEXES_PROPAGATE\n");
+    taint_eng.options |= OPTION_INDEXES_PROPAGATE;
+    fprintf(stdout, "Setting default option: OPTION_TRACE_PROPAGATION\n");
     taint_eng.options |= OPTION_TRACE_PROPAGATION; /* we need to turn on this option on program level */
 
     /* configuring plugin */

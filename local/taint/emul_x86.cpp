@@ -154,7 +154,7 @@ void taint_x86::store_32(OFFSET off, DWORD_t v)
         if(verify_seg_sec(off))
             return;
 
-    if(this->options & HANDLE_BREAKPOINTS)
+    if(this->options & OPTION_HANDLE_BREAKPOINTS)
     for(int i = 0x0; i< this->bpt_count; i++)
         if(((off - this->bps[i].offset) <= 0x4) && (this->bps[i].mode & BP_MODE_WRITE))
         {
@@ -183,7 +183,7 @@ void taint_x86::restore_32(OFFSET off, DWORD_t& ret)
             return;
         }
 
-    if(this->options & HANDLE_BREAKPOINTS)
+    if(this->options & OPTION_HANDLE_BREAKPOINTS)
     for(int i = 0x0; i< this->bpt_count; i++)
         if((this->bps[i].offset == off) && (this->bps[i].mode & BP_MODE_READ))
         {
@@ -295,7 +295,7 @@ void taint_x86::store_16(OFFSET off, WORD_t v)
         if(verify_seg_sec(off))
             return;
 
-    if(this->options & HANDLE_BREAKPOINTS)
+    if(this->options & OPTION_HANDLE_BREAKPOINTS)
     for(int i = 0x0; i<  this->bpt_count; i++)
         if(((off - this->bps[i].offset) <= 0x2) && (this->bps[i].mode & BP_MODE_WRITE))
         {
@@ -324,7 +324,7 @@ void taint_x86::restore_16(OFFSET off, WORD_t& ret)
             return;
         }
 
-    if(this->options & HANDLE_BREAKPOINTS)
+    if(this->options & OPTION_HANDLE_BREAKPOINTS)
     for(int i = 0x0; i<  this->bpt_count; i++)
         if((this->bps[i].offset == off) && (this->bps[i].mode & BP_MODE_READ))
         {
@@ -426,14 +426,14 @@ WORD_t taint_x86::reg_restore_16(DWORD_t off)
 void taint_x86::store_8(OFFSET off, BYTE_t v)
 {
     if(this->options & OPTION_VERIFY_OOB)
-        if(this->verify_oob_offset(off, REG_SIZE) != 0x0) 
+        if(this->verify_oob_offset(off, this->mem_length) != 0x0) 
             return;
 
-if(this->options & OPTION_VERIFY_SEG_SEC) 
-    if(verify_seg_sec(off))
-        return;
+    if(this->options & OPTION_VERIFY_SEG_SEC) 
+        if(verify_seg_sec(off))
+            return;
 
-    if(this->options & HANDLE_BREAKPOINTS)
+    if(this->options & OPTION_HANDLE_BREAKPOINTS)
     for(int i = 0x0; i< this->bpt_count; i++)
         if((this->bps[i].offset == off) && (this->bps[i].mode & BP_MODE_WRITE))
         {
@@ -456,13 +456,13 @@ if(this->options & OPTION_VERIFY_SEG_SEC)
 void taint_x86::restore_8(OFFSET off, BYTE_t& ret)
 {
     if(this->options & OPTION_VERIFY_OOB)
-        if(this->verify_oob_offset(off, REG_SIZE) != 0x0) 
+        if(this->verify_oob_offset(off, this->mem_length) != 0x0) 
         {
             ret = this->invalid_byte;
             return;
         }
 
-    if(this->options & HANDLE_BREAKPOINTS)
+    if(this->options & OPTION_HANDLE_BREAKPOINTS)
     for(int i = 0x0; i< this->bpt_count; i++)
         if((this->bps[i].offset == off) && (this->bps[i].mode & BP_MODE_READ))
         {
@@ -585,7 +585,7 @@ int taint_x86::pre_execute_instruction(DWORD eip)
     this->seal_scheduled = 0x0;
 
     /* check if execution breakpoint has been hit */
-    if(this->options & HANDLE_BREAKPOINTS)
+    if(this->options & OPTION_HANDLE_BREAKPOINTS)
         this->check_execution_bps();
 
     d_print(1, "[pre_execute_instruction ends]\n");
@@ -644,6 +644,16 @@ int taint_x86::post_execute_instruction(DWORD eip)
 
     this->last_eip = this->current_eip;
     cur_ctx->last_eip = this->last_eip;
+
+    /* increasing EIP. It will be overwritten with value from trace, but for now we try to predict */
+    /* this causes a lot of trouble :( */
+    DWORD calculated_eip;
+    DWORD_t eip_t;
+    eip_t = this->reg_restore_32(EIP);
+    calculated_eip = eip_t.get_DWORD();
+    calculated_eip += this->current_instr_length;
+    eip_t.set_DWORD(calculated_eip);
+    this->reg_store_32(EIP, eip_t);
 
     d_print(1, "[post_execute_instruction ends]\n");
     return 0x0;
@@ -859,29 +869,33 @@ int taint_x86::check_thread(CONTEXT_OUT ctx_out)
     if(this->reg_restore_32(EDI, tid).get_DWORD() != ctx_out.ctx.Edi) goto error;
     if(this->reg_restore_32(EBP, tid).get_DWORD() != ctx_out.ctx.Ebp) goto error;
     if(this->reg_restore_32(ESP, tid).get_DWORD() != ctx_out.ctx.Esp) goto error;
-    if(this->reg_restore_32(EIP, tid).get_DWORD() != ctx_out.ctx.Eip) goto error;
+    /*if(this->reg_restore_32(EIP, tid).get_DWORD() != ctx_out.ctx.Eip) goto error;*/
+    /* eip removed from check for now */
 
     goto noerror;
 
     error:
         if(last_inconsistent == 0x0)
-            d_print(4, "WARNING: New inconsistency detected @ %d, eip: 0x%08x\n", this->current_instr_count, this->current_eip);
+            d_print(1, "WARNING: New inconsistency detected @ %d, eip: 0x%08x\n", this->current_instr_count, this->current_eip);
         else
-            d_print(4, "WARNING: inconsistency detected\n");
+            d_print(1, "WARNING: inconsistency detected\n");
 
-        d_print(4, "Is:\n");
-        //this->print_context();
+        if(this->current_instr_byte)
+            d_print(1, "Instruction byte: 0x%02x\n", this->current_instr_byte->get_BYTE());
 
-        d_print(4, "\nShould be:\n");
-        d_print(4, "EAX: 0x%08x\n", ctx_out.ctx.Eax);
-        d_print(4, "EBX: 0x%08x\n", ctx_out.ctx.Ebx);
-        d_print(4, "ECX: 0x%08x\n", ctx_out.ctx.Ecx);
-        d_print(4, "EDX: 0x%08x\n", ctx_out.ctx.Edx);
-        d_print(4, "ESI: 0x%08x\n", ctx_out.ctx.Esi);
-        d_print(4, "EDI: 0x%08x\n", ctx_out.ctx.Edi);
-        d_print(4, "EBP: 0x%08x\n", ctx_out.ctx.Ebp);
-        d_print(4, "ESP: 0x%08x\n", ctx_out.ctx.Esp);
-        d_print(4, "EIP: 0x%08x\n", ctx_out.ctx.Eip);
+        d_print(1, "Is:\n");
+        this->print_context();
+
+        d_print(1, "\nShould be:\n");
+        d_print(1, "EAX: 0x%08x\n", ctx_out.ctx.Eax);
+        d_print(1, "EBX: 0x%08x\n", ctx_out.ctx.Ebx);
+        d_print(1, "ECX: 0x%08x\n", ctx_out.ctx.Ecx);
+        d_print(1, "EDX: 0x%08x\n", ctx_out.ctx.Edx);
+        d_print(1, "ESI: 0x%08x\n", ctx_out.ctx.Esi);
+        d_print(1, "EDI: 0x%08x\n", ctx_out.ctx.Edi);
+        d_print(1, "EBP: 0x%08x\n", ctx_out.ctx.Ebp);
+        d_print(1, "ESP: 0x%08x\n", ctx_out.ctx.Esp);
+        d_print(1, "EIP: 0x%08x\n", ctx_out.ctx.Eip);
 
         this->last_inconsistent = 0x1;
 
@@ -7469,6 +7483,7 @@ int taint_x86::r_push_imm_8(BYTE_t* args)
 
     // any other way to get offset in emulated memory?
     src_8 = reg_restore_32(EIP).get_DWORD() +1;
+    d_print(3, "Restrievieng value from address: 0x%08x\n", src_8);
 
     this->reg_propagation_cause_m_8(src_8);
     this->restore_8(src_8, val_8);
@@ -9854,7 +9869,7 @@ int taint_x86::r_jmp_rel_16_32(BYTE_t* instr_ptr)
     ret_addr += 0x5;
     target += ret_addr;
 
-    a_push_32(ret_addr);
+    //a_push_32(ret_addr); /* skad to qwa? */
     
     d_print(3, "ret_addr: 0x%08x, target: 0x%08x\n", ret_addr.get_DWORD(), target.get_DWORD());
     this->reg_store_32(EIP, target);
@@ -13278,10 +13293,12 @@ int taint_x86::r_mov_rm_imm_8(BYTE_t* instr_ptr)
     switch(rm.region)
     {
         case (MODRM_REG):
+            d_print(1, "Moving immediate byte to reg\n");
             this->reg_store_8(rm.offset, dst_8);
             this->attach_current_propagation_r_8(rm.offset);
             break;
         case (MODRM_MEM):
+            d_print(1, "Moving immediate byte to mem: 0x%08x -> [0x%08x]\n", dst_8.get_BYTE(), rm.offset);
             this->store_8(rm.offset, dst_8);
             this->attach_current_propagation_m_8(rm.offset);
             break;

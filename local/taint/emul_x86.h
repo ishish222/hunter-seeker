@@ -1368,30 +1368,6 @@ class taint_x86
             printf("Not enough memory: ctx_info\n");
         }
 
-        
-        /* Default options */
-        fprintf(stdout, "Setting default option: OPTION_VERIFY_SEG_SEC\n");
-        this->options |= OPTION_VERIFY_SEG_SEC;
-        fprintf(stdout, "Setting default option: OPTION_HANDLE_BREAKPOINTS\n");
-        this->options |= OPTION_HANDLE_BREAKPOINTS;
-        fprintf(stdout, "Setting default option: OPTION_VERIFY_OOB\n");
-        this->options |= OPTION_VERIFY_OOB;
-
-        /* for graph_plugin */
-        fprintf(stdout, "Setting default option: OPTION_ANALYZE_JUMPS\n");
-        this->options |= OPTION_ANALYZE_JUMPS;
-        fprintf(stdout, "Setting default option: OPTION_NOT_EMITTING_BLACKLISTED\n");
-        this->options |= OPTION_NOT_EMITTING_BLACKLISTED;
-        fprintf(stdout, "Setting default option: OPTION_VERIFY_SEG_SEC\n");
-        this->options |= OPTION_VERIFY_SEG_SEC;
-        fprintf(stdout, "Setting default option: OPTION_ANALYZE_WANTED_IN_SYMBOLS\n");
-        this->options |= OPTION_ANALYZE_WANTED_IN_SYMBOLS;
-        fprintf(stdout, "Setting default option: OPTION_UNMATCHED_RET_INVALIDATES_STACK\n");
-        this->options |= OPTION_UNMATCHED_RET_INVALIDATES_STACK;
-
-        /* for taint_plugin */
-        fprintf(stdout, "Setting default option: OPTION_INDEXES_PROPAGATE\n");
-        this->options |= OPTION_INDEXES_PROPAGATE;
     }
 
     ~taint_x86() {

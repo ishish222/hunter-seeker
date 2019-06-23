@@ -220,6 +220,25 @@ int main(int argc, char** argv)
     taint_eng.plugin = (Plugin*)&graph_eng;
     taint_eng.plugin->taint_eng = &taint_eng;
 
+    /* Default options */
+    fprintf(stdout, "Setting default option: OPTION_VERIFY_SEG_SEC\n");
+    taint_eng.options |= OPTION_VERIFY_SEG_SEC;
+    fprintf(stdout, "Setting default option: OPTION_HANDLE_BREAKPOINTS\n");
+    taint_eng.options |= OPTION_HANDLE_BREAKPOINTS;
+    fprintf(stdout, "Setting default option: OPTION_VERIFY_OOB\n");
+    taint_eng.options |= OPTION_VERIFY_OOB;
+    /* for graph_plugin */
+    fprintf(stdout, "Setting default option: OPTION_ANALYZE_JUMPS\n");
+    taint_eng.options |= OPTION_ANALYZE_JUMPS;
+    fprintf(stdout, "Setting default option: OPTION_NOT_EMITTING_BLACKLISTED\n");
+    taint_eng.options |= OPTION_NOT_EMITTING_BLACKLISTED;
+    fprintf(stdout, "Setting default option: OPTION_VERIFY_SEG_SEC\n");
+    taint_eng.options |= OPTION_VERIFY_SEG_SEC;
+    fprintf(stdout, "Setting default option: OPTION_ANALYZE_WANTED_IN_SYMBOLS\n");
+    taint_eng.options |= OPTION_ANALYZE_WANTED_IN_SYMBOLS;
+    fprintf(stdout, "Setting default option: OPTION_UNMATCHED_RET_INVALIDATES_STACK\n");
+    taint_eng.options |= OPTION_UNMATCHED_RET_INVALIDATES_STACK;
+
     /* configuring plugin */
     if(max_levels == 0x0) max_levels = MAX_CALL_LEVELS;
     graph_eng.enumerate = enumerate;
