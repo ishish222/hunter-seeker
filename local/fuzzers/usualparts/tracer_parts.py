@@ -655,12 +655,26 @@ def tracer_register_builtin(args=None):
 
     return
 
+def tracer_taint_regions(args=None):
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+    
+    write_socket(options.s, "tracer_taint_regions");
+    response, _, _ = read_socket(options.s)
+
+    globs.state.ret = response
+
+    return
 def tracer_register_regions(args=None):
     options = globs.state.options
     state = globs.state
     status = globs.state.status
     
-#    args = ','.join(args)
+    if(args == None):
+        size = globs.state.stack.pop()
+        addr = globs.state.stack.pop()
+        args = '%s:%s' % (addr, size)
 #    if(options.sample_options.regions == "0"): return
     write_socket(options.s, "tracer_register_regions %s" % args);
     response, _, _ = read_socket(options.s)
@@ -820,7 +834,7 @@ def tracer_lower_anchors(args=None):
     state = globs.state
     status = globs.state.status
     
-    if(hasattr(options, "builtin_reactions_anchors")):
+    if(hasattr(options, "internal_sys_reactions_anchors")):
         args = options.internal_sys_reactions_anchors
 
 
@@ -852,7 +866,7 @@ def tracer_exclusive_anchors(args=None):
     state = globs.state
     status = globs.state.status
     
-    if(hasattr(options, "builtin_reactions_anchors")):
+    if(hasattr(options, "internal_sys_reactions_anchors")):
         args = options.internal_sys_reactions_anchors
 
 
@@ -879,12 +893,46 @@ def tracer_exclusive_anchors(args=None):
 
     return
 
+def tracer_disable_anchors(args=None):
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+    
+    if(hasattr(options, "internal_sys_reactions_anchors")):
+        args = options.internal_sys_reactions_anchors
+
+
+        if(args[-1:] == ':'):
+            args = args[:-1]
+
+        parts = args.split(':');
+        cmd = '';
+
+        for part in parts:
+            if(len(cmd) + len(part) < 0x100):
+                cmd += ':'
+                cmd += part
+            else:
+                write_socket(options.s, "tracer_disable_reaction %s" % cmd[1:]);
+                response, _, _ = read_socket(options.s)
+                cmd = ''
+                cmd += ':'
+                cmd += part
+
+        if(len(cmd) > 0x1):
+            write_socket(options.s, "tracer_disable_reaction %s" % cmd[1:]);
+            response, _, _ = read_socket(options.s)
+
+        globs.state.ret = response
+
+    return
+
 def tracer_enable_anchors(args=None):
     options = globs.state.options
     state = globs.state
     status = globs.state.status
     
-    if(hasattr(options, "builtin_reactions_anchors")):
+    if(hasattr(options, "internal_sys_reactions_anchors")):
         args = options.internal_sys_reactions_anchors
 
 
@@ -1365,7 +1413,7 @@ def tracer_read_dword(args = 0x0):
     write_socket(options.s, "tracer_read_dword 0x%08x" % args);
     response, _, _ = read_socket(options.s)
 
-    globs.state.stack.append(int(response[3:11], 0x10))
+    #globs.state.stack.append(int(response[3:11], 0x10))
     globs.state.ret = int(response[3:11], 0x10)
 
     return

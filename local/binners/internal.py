@@ -580,6 +580,12 @@ def execute(cmds, ext_pipe):
             writePipe(ext_pipe, "tracer_configure_markers "+bcolors.OK_STR)
             ok(ext_pipe)
 
+        elif(cmd == "tracer_taint_regions"):
+            trace_controller.taint_regions(args)
+            writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
+            writePipe(ext_pipe, "tracer_taint_regions "+bcolors.OK_STR)
+            ok(ext_pipe)
+
         elif(cmd == "tracer_register_regions"):
             trace_controller.register_regions(args)
             writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))

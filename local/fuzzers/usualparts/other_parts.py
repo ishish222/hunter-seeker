@@ -162,7 +162,18 @@ def push(args = None):
         val = globs.state.ret
     else:
         val = args
+
     globs.state.stack.append(val)
+
+def print_stack(args = None):
+    print('Current values on external stack:')
+    for val in globs.state.stack:
+        print('%s' % val)
+
+def print_stack_2(args = None):
+    print('Current values on external stack2:')
+    for val in globs.state.stack2:
+        print('%s' % val)
 
 def push2(args = None):
     if(args == None):
@@ -227,6 +238,8 @@ def str_cat_queue(args = None):
     print('Result string: %s' % globs.state.ret)
 
 def strr(args):
+    if(args == None):
+        args = globs.state.ret
     globs.state.ret = '%s' % (args)
     print('Result string: %s' % globs.state.ret)
 
@@ -411,6 +424,9 @@ def choosing_saved_disk_procedure(args=None):
 def check_strstr_w_queue(args=None):
     options = globs.state.options
 
+    if(args == ""):
+        args = globs.state.stack.pop()
+
     for item in globs.state.queue:
         print("Checking strstr %s in %s" % (args, item))
         if(args in item):
@@ -420,6 +436,9 @@ def check_strstr_w_queue(args=None):
 
 def check_strstr_w_queue2(args=None):
     options = globs.state.options
+
+    if(args == ""):
+        args = globs.state.stack.pop()
 
     for item in globs.state.queue2:
         print("Checking strstr %s in %s" % (args, item))

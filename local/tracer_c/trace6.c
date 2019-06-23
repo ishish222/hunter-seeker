@@ -1733,6 +1733,91 @@ int disable_reaction(char* reaction_id)
     unsigned i;
     DWORD found = 0x0;
 
+    char another[MAX_LINE]; 
+    char* another_r;
+
+    /* take care of chained disabling */
+    strcpy(another, reaction_id);
+    d_print("React string: %s\n", another);
+    if(strstr(another, ":"))
+    {
+        another_r = strtok(another, ":");
+        while(another_r)
+        {
+            d_print("Found another reaction: %s\n", another_r);
+            disable_reaction(another_r);    
+            another_r = strtok(0x0, ":");
+        }
+        return 0x0;
+    }
+
+    for(i = 0x0; i< my_trace->reaction_count; i++)
+    {
+        /* locate i_reaction */
+        if(!strcmp(reaction_id, my_trace->reactions[i].reaction_id))
+        {
+            d_print("Disabling reaction %s\n", reaction_id);
+            my_trace->reactions[i].enabled = 0x0;
+            my_trace->reactions[i].autorepeat = 0x0;
+
+            if(my_trace->delayed_reaction == &my_trace->reactions[i])
+            {
+                my_trace->delayed_reaction = 0x0;
+                d_print("Zeroing delayed reaction %s\n", reaction_id);
+            }
+            found = 0x1;
+            break;
+
+        }
+    }
+
+    if(!found)
+    {
+        return 0x0;
+    }
+
+    d_print("Verifying if BP is still enabled\n");
+
+    BREAKPOINT* bp;
+    REACTION* cur_reaction;
+    bp = my_trace->reactions[i].bp;
+    d_print("Got BP @ %p\n", bp);
+
+    char some_enabled = 0x0;
+
+    for(i = 0x0; i< bp->reaction_count; i++)
+    {
+//        d_print("Checking BP reaction %d\n", i);
+        cur_reaction = bp->reactions[i];
+        if(!cur_reaction)
+        {
+            d_print("Current reaction is broken!\n");
+        }
+
+        if(cur_reaction->enabled)
+        {
+            some_enabled = 0x1;
+            break;
+        }
+    }
+
+    if(!some_enabled)
+    {
+        bp->enabled = 0x0; 
+    }
+    update_breakpoint(bp);
+
+    d_print("[disable_reaction ends]\n");
+    return 0x0;
+}
+
+/*
+int disable_reaction(char* reaction_id)
+{
+    d_print("[disable_reaction]\n");
+    unsigned i;
+    DWORD found = 0x0;
+
     for(i = 0x0; i< my_trace->reaction_count; i++)
     {
         if(!strcmp(reaction_id, my_trace->reactions[i].reaction_id))
@@ -1791,6 +1876,7 @@ int disable_reaction(char* reaction_id)
     d_print("[disable_reaction ends]\n");
     return 0x0;
 }
+*/
 
 int add_to_buffer(char* line)
 {
@@ -4131,8 +4217,13 @@ OFFSET resolve_loc_desc(LOCATION_DESCRIPTOR* d)
         }
         else if((d->op[0] == '0') && (d->op[1] == 'x'))
         {
-            /* return immediate */
+            /* return immediate, hex */
             ret = strtoul(d->op, 0x0, 0x10);
+        }
+        else if((d->op[0] >= '0') && (d->op[0] <= '9'))
+        {
+            /* return immediate, dec */
+            ret = strtoul(d->op, 0x0, 10);
         }
         else
         {
@@ -4291,12 +4382,13 @@ int update_breakpoint(BREAKPOINT* bp)
     d_print("Trying to resolve BP addr\n");
     addr = resolve_loc_desc(bp->location);
 
-
     if(addr == -1)
     {
         d_print("Unable to resolve BP address, will not be updated at this time\n");
         if(bp->written)
+        {
             unwrite_breakpoint(bp);
+        }
         bp->resolved_location = -1;
         return 0x0;
     }
@@ -4356,12 +4448,12 @@ BREAKPOINT* add_breakpoint(char* location_str, REACTION*  reaction)
     {
         my_bpt_index = my_trace->bpt_count;
         d_print("Creating new bp\n");
-        /* moving stuff to heap */
+
         my_trace->breakpoints[my_bpt_index].reactions = (REACTION**)malloc(sizeof(REACTION*) * MAX_HANDLERS);
 
         if(my_trace->breakpoints[my_bpt_index].reactions == 0x0)
         {
-            d_print("Failed creating new bp- out of memory\n");
+            d_print("Failed creating new bp (reactions) - out of memory\n");
         }
 
         my_trace->breakpoints[my_bpt_index].enabled = 0x1;
@@ -4391,8 +4483,8 @@ BREAKPOINT* add_breakpoint(char* location_str, REACTION*  reaction)
         if(strstr(location_str, "esp")) my_trace->breakpoints[my_bpt_index].reg_based = 0x1;
 
         my_trace->bpt_count ++;
+        d_print("Bp created. Current number of breakpoints: %d\n", my_trace->bpt_count);
     }
-    d_print("Bp created. Current number of breakpoints: %d\n", my_trace->bpt_count);
 
     /* connect to reaction */
     cur_reaction_id = my_trace->breakpoints[my_bpt_index].reaction_count;
@@ -6230,9 +6322,9 @@ int add_couple(char* id, char* couple_id)
     return 0x0;
 }
 
-int add_rid(char* id, unsigned rid)
+int reaction_add_routine(char* id, unsigned rid)
 {
-//    d_print("[add_rid]\n");
+//    d_print("[reaction_add_routine]\n");
     REACTION* target;
 
     target = find_reaction(id);
@@ -6240,7 +6332,7 @@ int add_rid(char* id, unsigned rid)
     target->routines_count++;
     
 //    d_print("Added rid: 0x%02x\n", rid);
-//    d_print("[add_rid ends]\n");
+//    d_print("[reaction_add_routine ends]\n");
  
     return 0x0;
 }
@@ -6252,7 +6344,7 @@ int add_reaction(char* location_str, char* reaction_id)
     unsigned cur_reaction_id = my_trace->reaction_count;
     char* reaction_id_clean;
 
-    reaction_id_clean = strtok(reaction_id, ":");
+    reaction_id_clean = strtok(reaction_id, ":"); /* separate from accompanying reaction */
 
     d_print("Trying to add reaction at: %s with id: %s\n", location_str, reaction_id);
 
@@ -6353,6 +6445,40 @@ int parse_region(char* str)
 }
 */
 
+int taint_region(unsigned i)
+{
+    d_print("[taint_region]\n");
+
+    char line[MAX_LINE];
+    REGION* cur_region;
+    OFFSET addr;
+    OFFSET size;
+    
+    cur_region = &my_trace->regions[i];
+    addr = resolve_loc_desc(cur_region->off);
+    size = resolve_loc_desc(cur_region->size);
+    sprintf(line, "RN,0x%08x,0x%08x\n", addr, size);
+    add_to_buffer(line);
+
+    d_print("[taint_region finishes]\n");
+    return 0x0;
+}
+
+int taint_regions()
+{
+    d_print("[taint_regions]\n");
+
+    unsigned i;
+
+    for(i = 0x0; i<my_trace->regions_count; i++)
+    {
+        taint_region(i);
+    }
+
+    d_print("[taint_regions finishes]\n");
+    return 0x0;
+}
+
 int parse_region(char* str)
 {
     d_print("[parse_region]\n");
@@ -6423,12 +6549,12 @@ int parse_reaction(char* str)
 //    d_print("Processing rids\n");
     rid = strtok(rids_str, ":");
 //    d_print("id_str: %s, rid: %s\n", id_str, rid);
-    add_rid(id_str, strtol(rid, 0x0, 0x10));
+    reaction_add_routine(id_str, strtol(rid, 0x0, 0x10));
 
     while((rid = strtok(0x0, ":")) != 0x0)
     {
 //        d_print("id_str: %s, rid: %s\n", id_str, rid);
-        add_rid(id_str, strtol(rid, 0x0, 0x10));
+        reaction_add_routine(id_str, strtol(rid, 0x0, 0x10));
     }
 
     /* process coupled_str, add couples */
@@ -7036,6 +7162,13 @@ int handle_cmd(char* cmd)
         send_report();   
     
     }
+    else if(!strncmp(cmd, CMD_TAINT_REGIONS, 2))
+    {
+        d_print("Tainting all regions\n");
+
+        taint_regions();
+        send_report();   
+    }
     else if(!strncmp(cmd, CMD_OUT_REGION, 2))
     {
         DWORD addr;
@@ -7352,7 +7485,7 @@ int handle_cmd(char* cmd)
         sprintf(my_str, "0x%08x", addr);
 
         add_reaction(my_str, "ST");
-        add_rid("ST", 0x0);
+        reaction_add_routine("ST", 0x0);
         enable_reaction("ST");
         send_report();
         
@@ -7365,7 +7498,7 @@ int handle_cmd(char* cmd)
         sprintf(my_str, "0x%08x", (OFFSET)(my_trace->cpdi.lpStartAddress));
 
         add_reaction(my_str, "ST");
-        add_rid("ST", 0x0);
+        reaction_add_routine("ST", 0x0);
 
         enable_reaction("ST");
         send_report();
