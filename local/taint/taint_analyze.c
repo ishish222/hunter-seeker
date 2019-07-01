@@ -260,10 +260,12 @@ int main(int argc, char** argv)
             
             if(line[0] == 'E' && line[1] == 'X')
                 register_exception(line, &taint_eng);
-            
 
             if(line[0] == 'U' && line[1] == 'P')
                 register_update(line, &taint_eng);
+            
+            if(line[0] == 'C' && line[1] == 'P')
+                check_location(line, &taint_eng);
             
             if(line[0] == 'S' && line[1] == 'E')
                 register_security(line, &taint_eng);
@@ -305,7 +307,6 @@ int main(int argc, char** argv)
 
             if(line[0] == 'B' && line[1] == 'W')
                 register_trace_watchpoints(line, &taint_eng);
-
 
             /* pass to plugin */
             if(line[0] == 'R' && line[1] == 'L')

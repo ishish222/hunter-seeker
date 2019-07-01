@@ -30,6 +30,7 @@ int register_wanted(char* line, taint_x86* taint_eng);
 int register_thread(char* line, taint_x86* taint_eng);
 int register_exception(char* line, taint_x86* taint_eng);
 int check_consistency(char* line, taint_x86* taint_eng);
+int check_location(char* line, taint_x86* taint_eng);
 int register_update(char* line, taint_x86* taint_eng);
 int set_prefix(char* line, taint_x86* taint_eng);
 int register_security(char* line, taint_x86* taint_eng);

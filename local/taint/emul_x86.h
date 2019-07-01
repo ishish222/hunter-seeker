@@ -914,6 +914,7 @@ class taint_x86
     DWORD le2dword(char*);
 
     int apply_memory(DWORD, DWORD);
+    int check_memory(DWORD, DWORD);
     int apply_security(DWORD, DWORD);
     int register_syscall(DWORD, DWORD);
     void handle_sigsegv(int);

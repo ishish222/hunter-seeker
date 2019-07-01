@@ -263,3 +263,13 @@ SC - syscall
 
     Ignore rest of the line
 
+UP - update memory 
+    syntax: UP,offset,size
+
+    Apply memory update at given offset and size
+
+CP - update and check memory 
+    syntax: CP,offset,size
+
+    Apply memory update at given offset and size. Check if it's different than the actual content. If so, generate alert.
+

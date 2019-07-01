@@ -666,6 +666,40 @@ def tracer_taint_regions(args=None):
     globs.state.ret = response
 
     return
+
+def tracer_add_scanned_location(args=None):
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+    
+    if(args == None):
+        size = globs.state.stack.pop()
+        addr = globs.state.stack.pop()
+        args = '%s:%s' % (addr, size)
+    write_socket(options.s, "tracer_add_scanned_location %s" % args);
+    response, _, _ = read_socket(options.s)
+
+    globs.state.ret = response
+
+    return
+
+def tracer_check_region(args=None):
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+    
+    if(args == None):
+        size = globs.state.stack.pop()
+        addr = globs.state.stack.pop()
+        args = '%s:%s' % (addr, size)
+#    if(options.sample_options.regions == "0"): return
+    write_socket(options.s, "tracer_check_region %s" % args);
+    response, _, _ = read_socket(options.s)
+
+    globs.state.ret = response
+
+    return
+
 def tracer_register_regions(args=None):
     options = globs.state.options
     state = globs.state

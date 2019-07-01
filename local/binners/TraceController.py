@@ -953,6 +953,16 @@ class TraceController(object):
         self.last_report, self.last_answer = self.recv_report_active()
         return 
 
+    def add_scanned_location(self, location):
+        self.send_command_active("Cp %s" % location)
+        self.last_report, self.last_answer = self.recv_report_active()
+        return 
+
+    def check_region(self, region):
+        self.send_command_active("CP %s" % region)
+        self.last_report, self.last_answer = self.recv_report_active()
+        return 
+
     def register_regions(self, regions):
         self.send_command_active("cr %s" % regions)
         self.last_report, self.last_answer = self.recv_report_active()

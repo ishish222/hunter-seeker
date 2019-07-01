@@ -140,6 +140,8 @@
 #define CMD_READ_MEMORY         "RM"
 #define CMD_READ_REGION         "Rr"
 #define CMD_OUT_REGION          "or"
+#define CMD_CHECK_REGION        "CP"
+#define CMD_CONFIGURE_SCANNED_LOCATION "Cp"
 #define CMD_TAINT_REGIONS       "RN"
 #define CMD_WRITE_MEMORY        "WM"
 #define CMD_READ_REGISTER       "RR"
@@ -448,6 +450,10 @@ typedef struct TRACE_CONFIG_
     /* regions new */
     REGION regions[MAX_REGIONS];
     unsigned regions_count;
+
+    /* scanned locations */
+    LOCATION scanned_locations[MAX_REGIONS];
+    unsigned scanned_locations_count;
 
     /* syscall data */
     DWORD sysenter_esp;

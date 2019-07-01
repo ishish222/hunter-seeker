@@ -485,6 +485,53 @@ void update_region_old(LOCATION* location)
     return;
 }
 
+void add_scanned_location(LOCATION* location)
+{
+    unsigned current_scanned_location;
+
+    current_scanned_location = my_trace->scanned_locations_count;
+
+    my_trace->scanned_locations[current_scanned_location] = *location;
+    d_print("[New scanned location: %d: 0x%08x:0x%08x]\n", my_trace->scanned_locations_count, location->off, location->size);
+
+    my_trace->scanned_locations_count++;
+
+    return;
+}
+
+void check_region(LOCATION* location)
+{
+    DWORD size_wrote;
+    char line[MAX_LINE];
+
+    sprintf(line, "# Current mod position: 0x%08x\n", ftell(my_trace->mods));
+    add_to_buffer(line);
+
+    size_wrote = dump_mem(my_trace->mods, (void*)location->off, location->size);
+    if(size_wrote == location->size)
+    {
+        d_print("[Updated location: 0x%08x, size: 0x%08x]\n", location->off, location->size);
+        sprintf(line, "CP,0x%08x,0x%08x\n", location->off, location->size);
+        add_to_buffer(line);
+        sprintf(line, "# Current mod position: 0x%08x\n", ftell(my_trace->mods));
+        add_to_buffer(line);
+    }
+
+    return;
+}
+
+int check_regions()
+{
+    unsigned i;
+
+    for(i=0x0; i<my_trace->scanned_locations_count; i++)
+    {
+        check_region(&my_trace->scanned_locations[i]);
+    }
+
+    return 0x0;
+}
+
 void update_region(unsigned id)
 {
     DWORD size_wrote;
@@ -3431,6 +3478,11 @@ void ss_callback(void* data)
         if(register_thread_debug(tid, my_trace->threads[tid_pos].handle) <= 0x0)
         {
             d_print("Error writing to file: 0x%x\n", GetLastError());
+            exit(1);
+        }
+        if(check_regions() != 0x0)
+        {
+            d_print("Error checking regions: 0x%x\n", GetLastError());
             exit(1);
         }
     }
@@ -6569,6 +6621,19 @@ int parse_reaction(char* str)
 //    d_print("[parse_reaction ends]\n");
 }
 
+int location2offset(char* location)
+{
+    OFFSET addr;
+    char line[MAX_LINE];
+    LOCATION_DESCRIPTOR desc;
+    LOCATION_DESCRIPTOR* desc_;
+
+    desc_ = parse_location_desc(location);
+    addr = resolve_loc_desc(desc_);
+
+    return addr;
+}
+
 int resolve_location(char* location)
 {
     OFFSET addr;
@@ -7169,6 +7234,31 @@ int handle_cmd(char* cmd)
         taint_regions();
         send_report();   
     }
+    else if(!strncmp(cmd, CMD_CHECK_REGION, 2))
+    {
+        char addr_str[MAX_NAME];
+        char size_str[MAX_NAME];
+        DWORD addr;
+        DWORD size;
+        char* cmd_;
+
+        cmd_ = strtok(cmd, " ");
+        strcpy(addr_str, strtok(0x0, ":"));
+        strcpy(size_str, strtok(0x0, " "));
+
+        addr = location2offset(addr_str);
+        size = location2offset(size_str);
+
+        LOCATION region_loc;
+        region_loc.off = addr;
+        region_loc.size = size;
+
+        d_print("Checking region: 0x%08x, 0x%08x @ %d\n", region_loc.off, region_loc.size, my_trace->instr_count);
+
+        check_region(&region_loc);
+
+        send_report();   
+    }
     else if(!strncmp(cmd, CMD_OUT_REGION, 2))
     {
         DWORD addr;
@@ -7535,6 +7625,31 @@ int handle_cmd(char* cmd)
         str = strtok(0x0, " ");
         tid_id = strtoul(strtok(0x0, " "), 0x0, 0x10);
         set_priority_high(tid_id);
+        send_report();
+        
+    }
+    else if(!strncmp(cmd, CMD_CONFIGURE_SCANNED_LOCATION, 2))
+    {
+        char addr_str[MAX_NAME];
+        char size_str[MAX_NAME];
+        DWORD addr;
+        DWORD size;
+        char* cmd_;
+
+        cmd_ = strtok(cmd, " ");
+        strcpy(addr_str, strtok(0x0, ":"));
+        strcpy(size_str, strtok(0x0, " "));
+
+        addr = location2offset(addr_str);
+        size = location2offset(size_str);
+
+        LOCATION region_loc;
+        region_loc.off = addr;
+        region_loc.size = size;
+
+        d_print("Adding scanned location: 0x%08x, 0x%08x @ %d\n", region_loc.off, region_loc.size, my_trace->instr_count);
+
+        add_scanned_location(&region_loc);
         send_report();
         
     }
@@ -7931,9 +8046,10 @@ int configure_syscalls()
     my_trace->syscall_out_args[0x111][4] = last_arg;
 
     // ZwRequestWaitReplyPort
-    my_trace->syscall_out_args[0x12b][0] = {0x1, 0x180, LOCATION_ADDR_STACK, LOCATION_CONST, 0x0};
-    my_trace->syscall_out_args[0x12b][1] = {0x2, 0x180, LOCATION_ADDR_STACK, LOCATION_CONST, 0x0};
-    my_trace->syscall_out_args[0x12b][2] = last_arg;
+    my_trace->syscall_out_args[0x12b][0] = {0x0, 0x4, LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};
+    my_trace->syscall_out_args[0x12b][1] = {0x1, 0x180, LOCATION_ADDR_STACK, LOCATION_CONST, 0x0}; /* are these two correct? */
+    my_trace->syscall_out_args[0x12b][2] = {0x2, 0x180, LOCATION_ADDR_STACK, LOCATION_CONST, 0x0};
+    my_trace->syscall_out_args[0x12b][3] = last_arg;
 
     // ZwSetInformationFile
     my_trace->syscall_out_args[0x149][0] = {0x1, sizeof(IO_STATUS_BLOCK), LOCATION_ADDR_STACK, LOCATION_CONST, STATUS_ANY};

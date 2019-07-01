@@ -1061,6 +1061,57 @@ int taint_x86::register_syscall(DWORD TID, DWORD syscall_no)
     return 0x0;
 }
 
+int taint_x86::check_memory(DWORD offset, DWORD size)
+{
+    if(!this->started)
+    {
+        return 0x0;
+    }
+
+    char* buffer;
+    int i;
+    size_t read;
+
+    buffer = (char*)malloc(size);
+    
+    d_print(2, "Position before: 0x%08x\n", ftell(this->mod_file));
+    read = fread(buffer, 1, size, this->mod_file);
+    d_print(2, "Position after: 0x%08x\n", ftell(this->mod_file));
+    d_print(2, "Read 0x%08x bytes\n", read);
+
+    d_print(1, "Trying to apply 0x%08x bytes @ 0x%08x, pos after: 0x%08x\n", size, offset, ftell(this->mod_file));
+
+    if(this->options & OPTION_VERIFY_OOB)
+        if(this->verify_oob_offset(offset, this->mem_length) != 0x0) 
+            return 0x0;
+
+    d_print(4, "Before:\n");
+    this->print_mem(4, offset, 0x10);
+    
+    for(i=0x0; i<size; i++)
+    {
+        char found = 0x0;
+        unsigned j;
+        BYTE byte;
+
+        byte = this->memory[offset + i].get_BYTE();
+
+        if((byte & 0xff)!= (buffer[i] & 0xff))
+        {
+            d_print(1, "WARNING: New memory inconsistency detected @ %d, eip: 0x%08x\n", this->current_instr_count, this->current_eip);
+            d_print(1, "Address: 0x%08x is: 0x%02x, should be: 0x%02x\n", offset+i, byte & 0xff, buffer[i] & 0xff);
+        }
+
+        this->memory[offset + i].set_BYTE(buffer[i]);
+    }
+    
+    d_print(4, "After:\n");
+    this->print_mem(4, offset, 0x10);
+
+    free(buffer);
+
+}
+
 int taint_x86::apply_memory(DWORD offset, DWORD size)
 {
     if(!this->started)

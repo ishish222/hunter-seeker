@@ -207,6 +207,20 @@ int check_consistency(char* line, taint_x86* taint_eng)
     return 0x0;
 }
 
+int check_location(char* line, taint_x86* taint_eng)
+{
+    char* cmd;
+    OFFSET offset, size;
+
+    cmd = strtok(line, ",");
+    offset = strtoul(strtok(0x0, ","), 0x0, 0x10);
+    size = strtoul(strtok(0x0, ","), 0x0, 0x10);
+
+    taint_eng->check_memory(offset, size);
+
+    return 0x0;
+}
+
 int register_update(char* line, taint_x86* taint_eng)
 {
     char* cmd;
