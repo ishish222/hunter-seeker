@@ -144,6 +144,7 @@ def adjust(args):
     status = globs.state.status
     
     args = int(args, 0x10)
+
     globs.state.ret = globs.state.ret + args
 
     return

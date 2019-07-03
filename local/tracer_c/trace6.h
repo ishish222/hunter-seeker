@@ -462,8 +462,12 @@ typedef struct TRACE_CONFIG_
     /* handling syscalls */
     OLD_LOCATION_DESCRIPTOR last_arg = {0x0, 0x0, LOCATION_END, LOCATION_END, 0x0};
     LOCATION last_location = {0x0, 0x0};
-    OLD_LOCATION_DESCRIPTOR syscall_out_args[MAX_SYSCALL_ENTRIES][MAX_SYSCALL_OUT_ARGS];
-    LOCATION syscall_out_args_dump_list[MAX_SYSCALL_OUT_ARGS];
+    OLD_LOCATION_DESCRIPTOR syscall_out_args_old[MAX_SYSCALL_ENTRIES][MAX_SYSCALL_OUT_ARGS];
+    LOCATION syscall_out_args_old_dump_list[MAX_SYSCALL_OUT_ARGS];
+
+    REGION syscall_out_args[MAX_SYSCALL_ENTRIES][MAX_SYSCALL_OUT_ARGS];
+
+    /* handling syscalls - new way */
 
     void (*callback_routine)(void*);
 
