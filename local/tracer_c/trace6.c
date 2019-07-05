@@ -2610,11 +2610,6 @@ void react_sysret_callback(void* data)
 
     register_thread(tid, my_trace->threads[tid_pos].handle);
 
-    /* nie wiadomo, co sie dzieje z flaga SS po wejsciu do kernela, ale po wyjsciu nie rejestryje jednego adresu
-        ponizsza instrukcja ma za zadanie dopilnowac, by sie nagral, bo czasami w trakcie analizy nagrania sa na nim stawiane breakpointy
-        rejestracja tej instrukcji jest ponizej update'u rejestrow i przed aktualizacja obszarow pamieci
-    */
-    my_trace->callback_routine((void*)&my_trace->last_event);
 
     // prepare dump list
     CONTEXT ctx;
@@ -2689,7 +2684,10 @@ void react_sysret_callback(void* data)
 
     }
 
-//    set_ss(tid);
+    /* nie wiadomo, co sie dzieje z flaga SS po wejsciu do kernela, ale po wyjsciu nie rejestryje jednego adresu
+        ponizsza instrukcja ma za zadanie dopilnowac, by sie nagral, bo czasami w trakcie analizy nagrania sa na nim stawiane breakpointy
+    */
+    my_trace->callback_routine((void*)&my_trace->last_event);
     set_ss(0x0);
 //    d_print("Setting SS for 0x%08x\n", tid);
 }
@@ -3303,6 +3301,7 @@ SIZE_T dump_mem(FILE* f, void* from, SIZE_T len)
         d_print("0x%02x ", mem_buf[j]);
     d_print("\n");
 
+    fflush(f);
     d_print("Position after: 0x%08x\n", ftell(f));
 
     return wrote_total;
