@@ -455,6 +455,10 @@ typedef struct TRACE_CONFIG_
     LOCATION scanned_locations[MAX_REGIONS];
     unsigned scanned_locations_count;
 
+    /* new scanned regions */
+    REGION scanned_regions[MAX_REGIONS];
+    unsigned scanned_regions_count;
+
     /* syscall data */
     DWORD sysenter_esp;
     DWORD sysenter_no;

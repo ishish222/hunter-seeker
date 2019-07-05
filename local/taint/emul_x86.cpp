@@ -1063,10 +1063,14 @@ int taint_x86::register_syscall(DWORD TID, DWORD syscall_no)
 
 int taint_x86::check_memory(DWORD offset, DWORD size)
 {
+    /*
     if(!this->started)
     {
         return 0x0;
     }
+    to samo co w apply_memory
+
+    */
 
     char* buffer;
     int i;
@@ -1114,10 +1118,14 @@ int taint_x86::check_memory(DWORD offset, DWORD size)
 
 int taint_x86::apply_memory(DWORD offset, DWORD size)
 {
+    /*
     if(!this->started)
     {
         return 0x0;
     }
+    */
+
+    /* Nie mozna omijac, bo sie rozsynchronizuje */
 
     char* buffer;
     int i;
