@@ -3387,10 +3387,12 @@ void dump_memory()
 //        if(mbi.State == MEM_COMMIT && (mbi.Type == MEM_MAPPED || mbi.Type == MEM_PRIVATE) && page_accessible(mbi))
         if(mbi.State == MEM_COMMIT && page_accessible(mbi))
         {
+            d_print2("dumping mem for 0x%08x, size: 0x%08x", mbi.BaseAddress, mbi.RegionSize);
             read = dump_mem(my_trace->dump, mbi.BaseAddress, mbi.RegionSize);
         }
         else
         {
+            d_print2("dumping 00s for 0x%08x, size: 0x%08x", mbi.BaseAddress, mbi.RegionSize);
             read = dump_zeros(my_trace->dump, mbi.RegionSize);
         }
 

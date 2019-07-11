@@ -15333,14 +15333,14 @@ int taint_x86::r_not_rm_8(BYTE_t* instr_ptr)
         case (MODRM_REG):
             dst_8 = this->reg_restore_8(rm.offset);
             d_print(3, "Before: 0x%08x\n", dst_8.get_BYTE());
-            dst_8.set_BYTE(~dst_8.get_BYTE());
+            dst_8.set_BYTE(!dst_8.get_BYTE());
             d_print(3, "After: 0x%08x\n", dst_8.get_BYTE());
             this->reg_store_8(rm.offset, dst_8);
             break;
         case (MODRM_MEM):
             this->restore_8(rm.offset, dst_8);
             d_print(3, "Before: 0x%08x\n", dst_8.get_BYTE());
-            dst_8.set_BYTE(~dst_8.get_BYTE());
+            dst_8.set_BYTE(!dst_8.get_BYTE());
             d_print(3, "After: 0x%08x\n", dst_8.get_BYTE());
             this->store_8(rm.offset, dst_8);
             break;
@@ -15361,13 +15361,21 @@ int taint_x86::r_neg_rm_8(BYTE_t* instr_ptr)
     {
         case (MODRM_REG):
             dst_8 = this->reg_restore_8(r.offset);
-            dst_8.set_BYTE(-dst_8.get_BYTE());
+            reg_propagation_cause_r_8(r.offset);
+
+            dst_8.set_BYTE(~dst_8.get_BYTE()+1);
+
             this->reg_store_8(r.offset, dst_8);
+            attach_current_propagation_r_8(r.offset);
             break;
         case (MODRM_MEM):
             this->restore_8(r.offset, dst_8);
-            dst_8.set_BYTE(-dst_8.get_BYTE());
+            reg_propagation_cause_r_8(r.offset);
+
+            dst_8.set_BYTE(~dst_8.get_BYTE()+1);
+
             this->store_8(r.offset, dst_8);
+            attach_current_propagation_r_8(r.offset);
             break;
     }
  
@@ -15481,14 +15489,14 @@ int taint_x86::r_not_rm_16_32(BYTE_t* instr_ptr)
                 case MODRM_SIZE_16:
                     dst_16 = this->reg_restore_16(rm.offset);
                     d_print(3, "Before not: 0x%08x\n", dst_16.get_WORD());
-                    dst_16.set_WORD(~dst_16.get_WORD());
+                    dst_16.set_WORD(!dst_16.get_WORD());
                     d_print(3, "After not: 0x%08x\n", dst_16.get_WORD());
                     this->reg_store_16(rm.offset, dst_16);
                     break;
                 case MODRM_SIZE_32:
                     dst_32 = this->reg_restore_32(rm.offset);
                     d_print(3, "Before not: 0x%08x\n", dst_32.get_DWORD());
-                    dst_32.set_DWORD(~dst_32.get_DWORD());
+                    dst_32.set_DWORD(!dst_32.get_DWORD());
                     d_print(3, "After not: 0x%08x\n", dst_32.get_DWORD());
                     this->reg_store_32(rm.offset, dst_32);
                     break;
@@ -15500,14 +15508,14 @@ int taint_x86::r_not_rm_16_32(BYTE_t* instr_ptr)
                 case MODRM_SIZE_16:
                     this->restore_16(r.offset, dst_16);
                     d_print(3, "Before not: 0x%08x\n", dst_16.get_WORD());
-                    dst_16.set_WORD(~dst_16.get_WORD());
+                    dst_16.set_WORD(!dst_16.get_WORD());
                     d_print(3, "After not: 0x%08x\n", dst_16.get_WORD());
                     this->store_16(r.offset, dst_16);
                     break;
                 case MODRM_SIZE_32:
                     this->restore_32(r.offset, dst_32);
                     d_print(3, "Before not: 0x%08x\n", dst_32.get_DWORD());
-                    dst_32.set_DWORD(~dst_32.get_DWORD());
+                    dst_32.set_DWORD(!dst_32.get_DWORD());
                     d_print(3, "After not: 0x%08x\n", dst_32.get_DWORD());
                     this->store_32(r.offset, dst_32);
                     break;
@@ -15533,13 +15541,21 @@ int taint_x86::r_neg_rm_16_32(BYTE_t* instr_ptr)
             {
                 case MODRM_SIZE_16:
                     dst_16 = this->reg_restore_16(rm.offset);
-                    dst_16.set_WORD(-dst_16.get_WORD());
+                    reg_propagation_cause_r_16(rm.offset);
+
+                    dst_16.set_WORD(~dst_16.get_WORD()+1);
+
                     this->reg_store_16(rm.offset, dst_16);
+                    attach_current_propagation_r_16(rm.offset);
                     break;
                 case MODRM_SIZE_32:
                     dst_32 = this->reg_restore_32(rm.offset);
-                    dst_32.set_DWORD(-dst_32.get_DWORD());
+                    reg_propagation_cause_r_32(rm.offset);
+
+                    dst_32.set_DWORD(~dst_32.get_DWORD()+1);
+
                     this->reg_store_32(rm.offset, dst_32);
+                    attach_current_propagation_r_32(rm.offset);
                     break;
             }
             break;
@@ -15548,13 +15564,21 @@ int taint_x86::r_neg_rm_16_32(BYTE_t* instr_ptr)
             {
                 case MODRM_SIZE_16:
                     this->restore_16(rm.offset, dst_16);
-                    dst_16.set_WORD(-dst_16.get_WORD());
+                    reg_propagation_cause_m_16(rm.offset);
+
+                    dst_16.set_WORD(~dst_16.get_WORD()+1);
+
                     this->store_16(rm.offset, dst_16);
+                    attach_current_propagation_m_16(rm.offset);
                     break;
                 case MODRM_SIZE_32:
                     this->restore_32(rm.offset, dst_32);
-                    dst_32.set_DWORD(-dst_32.get_DWORD());
+                    reg_propagation_cause_m_32(rm.offset);
+
+                    dst_32.set_DWORD(~dst_32.get_DWORD()+1);
+
                     this->store_32(rm.offset, dst_32);
+                    attach_current_propagation_m_32(rm.offset);
                     break;
             }
             break;
