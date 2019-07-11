@@ -1810,15 +1810,75 @@ int taint_x86::attach_current_propagation(BYTE_t* byte)
     return 0x0;
 }
 
-int taint_x86::propagate_taint()
+int taint_x86::propagate_taint(PROPAGATION* current_propagation)
 {
+    unsigned i;
 
+    char prev_taint = current_propagation->taint_propagation;
+
+    if(prev_taint)
+    {
+        for(i=0x0; i<current_propagation->result_count; i++)
+        {
+            current_propagation->results[i].affected->set_BYTE_t(prev_taint);
+        }
+    }
+
+    return 0x0;
 }
+
+/* ponizsze jest niepotrzebne? */
+/*
+int taint_x86::propagate_taint(PROPAGATION* current_propagation)
+{
+    unsigned i, j, k;
+    CAUSE* current_cause;
+    PROPAGATION* prev_propagation;
+    RESULT* prev_result;
+    RESULT* current_result;
+
+    char prev_tainted;
+    prev_tainted = 0x0;
+
+    for(i=0x0; i< current_propagation->cause_count; i++)
+    {
+        current_cause = &current_propagation->causes[i];
+        prev_propagation = &this->propagations[current_cause->cause_id];
+        for(j=0x0; j< prev_propagation->result_count; j++)
+        {
+            prev_result = &prev_propagation->results[i];
+            if(prev_result->affected == 0x0) continue;
+            prev_tainted = prev_result->affected->get_BYTE_t();
+            if(prev_tainted) break;
+        }
+    }
+
+    if(prev_tainted)
+    {
+        d_print(1, "Taint detected in one of cause propagation. Propagating.\n");
+        for(i=0x0; i<current_propagation->result_count; i++)
+        {
+            current_result = &current_propagation->results[i];
+            current_result->affected->set_BYTE_t(prev_tainted);
+        }
+    }
+
+    return 0x0;
+}
+*/
 
 int taint_x86::seal_current_propagation()
 {
-    this->propagations[this->current_propagation_count].instruction = this->current_eip;
-    this->propagations[this->current_propagation_count].instr_count = this->current_instr_count;
+    unsigned i,j;
+
+    PROPAGATION* current_propagation;
+
+    current_propagation = &this->propagations[this->current_propagation_count];
+
+    current_propagation->instruction = this->current_eip;
+    current_propagation->instr_count = this->current_instr_count;
+
+    this->propagate_taint(current_propagation);
 
     this->current_propagation_count++;
 
@@ -2013,6 +2073,16 @@ int taint_x86::reg_propagation_cause(BYTE_t* op)
     current_propagation->cause_count++;
 
     this->got_cause = 0x1; /* debugging purposes */
+
+    /* relying on registering causes for taint propagation */
+
+    char prev_taint;
+    prev_taint = op->get_BYTE_t();
+
+    if(prev_taint)
+    {
+        current_propagation->taint_propagation = prev_taint;
+    }
 
     return 0x0;
 }

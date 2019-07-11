@@ -306,6 +306,8 @@ typedef struct PROPAGATION_
 
     RESULT results[MAX_RESULTS];
     unsigned result_count;
+
+    char taint_propagation;
 } PROPAGATION;
 
 #define BP_MODE_READ    0x1
@@ -949,6 +951,7 @@ class taint_x86
     int attach_current_propagation_m_16(OFFSET);
     int attach_current_propagation_m_32(OFFSET);
     int seal_current_propagation();
+    int propagate_taint(PROPAGATION*);
 
     /* 32 bit store / restore */
     void store_32(OFFSET, DWORD_t);
