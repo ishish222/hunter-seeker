@@ -884,7 +884,7 @@ int taint_x86::check_thread(CONTEXT_OUT ctx_out)
             d_print(1, "Instruction byte: 0x%02x\n", this->current_instr_byte->get_BYTE());
 
         d_print(1, "Is:\n");
-        this->print_context();
+        this->print_context(ctx_out.thread_id);
 
         d_print(1, "\nShould be:\n");
         d_print(1, "EAX: 0x%08x\n", ctx_out.ctx.Eax);
@@ -1810,10 +1810,16 @@ int taint_x86::attach_current_propagation(BYTE_t* byte)
     return 0x0;
 }
 
+int taint_x86::propagate_taint()
+{
+
+}
+
 int taint_x86::seal_current_propagation()
 {
     this->propagations[this->current_propagation_count].instruction = this->current_eip;
     this->propagations[this->current_propagation_count].instr_count = this->current_instr_count;
+
     this->current_propagation_count++;
 
     return 0x0;
@@ -10368,6 +10374,119 @@ int taint_x86::r_cmpxchg_rm_r_16_32(BYTE_t* instr_ptr)
     return 0x0;
 }
 
+int taint_x86::r_bts_rm_r_16_32(BYTE_t* addr)
+{
+    BYTE_t* modrm_byte_ptr;
+    modrm_ptr r, rm;
+
+    WORD_t src_16, dst_16;
+    WORD mask_16;
+    DWORD mask_32;
+    DWORD_t src_32, dst_32;
+    BYTE result = 0x0;
+    BYTE bit = 0x1;
+    WORD_t count_16;
+    DWORD_t count_32;
+
+    modrm_byte_ptr = addr +1;
+    a_decode_modrm(modrm_byte_ptr, &r, &rm);
+
+    mask_16 = 0x1;
+    mask_32 = 0x1;
+
+    switch(rm.region)
+    {
+        case (MODRM_REG):
+            switch(rm.size)
+            {
+                case MODRM_SIZE_16:
+                    src_16 = this->reg_restore_16(rm.offset);
+                    reg_propagation_cause_r_16(rm.offset);
+                    
+                    count_16 = this->reg_restore_16(r.offset);
+                    count_16 %= 0x10;
+                    mask_16 <<= count_16.get_WORD();
+
+                    if(src_16.get_WORD() & mask_16 != 0x0)
+                        this->a_set_cf();
+                    else
+                        this->a_clear_cf();
+                    
+                    //mask_16 = ~mask_16;
+                    dst_16.set_WORD(src_16.get_WORD() | mask_16);
+
+                    this->reg_store_16(rm.offset, dst_16);
+                    this->attach_current_propagation_r_16(rm.offset);
+                    break;
+                case MODRM_SIZE_32:
+                    src_32 = this->reg_restore_32(rm.offset);
+                    reg_propagation_cause_r_32(rm.offset);
+                    
+                    count_32 = this->reg_restore_32(r.offset);
+                    count_32 %= 0x20;
+                    mask_32 <<= count_32.get_DWORD();
+
+                    if(src_32.get_DWORD() & mask_32 != 0x0)
+                        this->a_set_cf();
+                    else
+                        this->a_clear_cf();
+                    
+                    //mask_32 = ~mask_32;
+                    dst_32.set_DWORD(src_32.get_DWORD() | mask_32);
+
+                    this->reg_store_32(rm.offset, dst_32);
+                    this->attach_current_propagation_r_32(rm.offset);
+                    break;
+            }
+            break;
+        case (MODRM_MEM):
+            switch(rm.size)
+            {
+                case MODRM_SIZE_16:
+                    this->restore_16(rm.offset, src_16);
+                    reg_propagation_cause_m_16(rm.offset);
+                    
+                    count_16 = this->reg_restore_16(r.offset);
+                    count_16 %= 0x10;
+                    mask_16 <<= count_16.get_WORD();
+
+                    if(src_16.get_WORD() & mask_16 != 0x0)
+                        this->a_set_cf();
+                    else
+                        this->a_clear_cf();
+                    
+                    //mask_16 = ~mask_16;
+                    dst_16.set_WORD(src_16.get_WORD() | mask_16);
+
+                    this->store_16(rm.offset, dst_16);
+                    this->attach_current_propagation_m_16(rm.offset);
+                    break;
+                case MODRM_SIZE_32:
+                    this->restore_32(rm.offset, src_32);
+                    reg_propagation_cause_m_32(rm.offset);
+                    
+                    count_32 = this->reg_restore_32(r.offset);
+                    count_32 %= 0x20;
+                    mask_32 <<= count_32.get_DWORD();
+
+                    if(src_32.get_DWORD() & mask_32 != 0x0)
+                        this->a_set_cf();
+                    else
+                        this->a_clear_cf();
+                    
+                    //mask_32 = ~mask_32;
+                    dst_32.set_DWORD(src_32.get_DWORD() | mask_32);
+
+                    this->store_32(rm.offset, dst_32);
+                    this->attach_current_propagation_m_32(rm.offset);
+                    break;
+            }
+            break;
+    }
+
+    return 0x0;
+}
+
 int taint_x86::r_btr_rm_r_16_32(BYTE_t* addr)
 {
     BYTE_t* modrm_byte_ptr;
@@ -10395,6 +10514,7 @@ int taint_x86::r_btr_rm_r_16_32(BYTE_t* addr)
             {
                 case MODRM_SIZE_16:
                     src_16 = this->reg_restore_16(rm.offset);
+                    reg_propagation_cause_r_16(rm.offset);
                     
                     count_16 = this->reg_restore_16(r.offset);
                     count_16 %= 0x10;
@@ -10409,9 +10529,11 @@ int taint_x86::r_btr_rm_r_16_32(BYTE_t* addr)
                     dst_16.set_WORD(src_16.get_WORD() & mask_16);
 
                     this->reg_store_16(rm.offset, dst_16);
+                    this->attach_current_propagation_r_16(rm.offset);
                     break;
                 case MODRM_SIZE_32:
                     src_32 = this->reg_restore_32(rm.offset);
+                    reg_propagation_cause_r_32(rm.offset);
                     
                     count_32 = this->reg_restore_32(r.offset);
                     count_32 %= 0x20;
@@ -10426,6 +10548,7 @@ int taint_x86::r_btr_rm_r_16_32(BYTE_t* addr)
                     dst_32.set_DWORD(src_32.get_DWORD() & mask_32);
 
                     this->reg_store_32(rm.offset, dst_32);
+                    this->attach_current_propagation_r_32(rm.offset);
                     break;
             }
             break;
@@ -10434,6 +10557,7 @@ int taint_x86::r_btr_rm_r_16_32(BYTE_t* addr)
             {
                 case MODRM_SIZE_16:
                     this->restore_16(rm.offset, src_16);
+                    reg_propagation_cause_m_16(rm.offset);
                     
                     count_16 = this->reg_restore_16(r.offset);
                     count_16 %= 0x10;
@@ -10448,9 +10572,11 @@ int taint_x86::r_btr_rm_r_16_32(BYTE_t* addr)
                     dst_16.set_WORD(src_16.get_WORD() & mask_16);
 
                     this->store_16(rm.offset, dst_16);
+                    this->attach_current_propagation_m_16(rm.offset);
                     break;
                 case MODRM_SIZE_32:
                     this->restore_32(rm.offset, src_32);
+                    reg_propagation_cause_m_32(rm.offset);
                     
                     count_32 = this->reg_restore_32(r.offset);
                     count_32 %= 0x20;
@@ -10465,6 +10591,7 @@ int taint_x86::r_btr_rm_r_16_32(BYTE_t* addr)
                     dst_32.set_DWORD(src_32.get_DWORD() & mask_32);
 
                     this->store_32(rm.offset, dst_32);
+                    this->attach_current_propagation_m_32(rm.offset);
                     break;
             }
             break;
@@ -10579,12 +10706,135 @@ int taint_x86::r_decode_execute_0fba(BYTE_t* addr)
             break;
         case ESP: //0x4
             break;
+        case EBP: //0x5
+            return this->r_bts_rm_16_32_imm_8(addr);
+            break;
         case ESI: //0x6 
             return this->r_btr_rm_16_32_imm_8(addr);
             break;
     }
 
     d_print(3, "Missing routine for decoding opcode: 0x%x, extension: 0x%x\n", addr->get_BYTE(), r.offset);
+
+    return 0x0;
+}
+
+int taint_x86::r_bts_rm_16_32_imm_8(BYTE_t* addr)
+{
+    BYTE_t* modrm_byte_ptr;
+    modrm_ptr r, rm;
+
+    WORD_t src_16, dst_16;
+    WORD mask_16;
+    DWORD mask_32;
+    DWORD_t src_32, dst_32;
+    BYTE result = 0x0;
+    BYTE bit = 0x1;
+    BYTE_t count;
+
+    modrm_byte_ptr = addr +1;
+    a_decode_modrm(modrm_byte_ptr, &r, &rm);
+
+    count.from_mem(addr + this->current_instr_length);
+    mask_16 = 0x1;
+    mask_32 = 0x1;
+    mask_32 <<= count.get_BYTE();
+
+    switch(rm.region)
+    {
+        case (MODRM_REG):
+            switch(rm.size)
+            {
+                case MODRM_SIZE_16:
+                    src_16 = this->reg_restore_16(rm.offset);
+                    reg_propagation_cause_r_16(rm.offset);
+                    
+                    count.set_BYTE(0x10);
+                    mask_16 <<= count.get_BYTE();
+
+                    if(src_16.get_WORD() & mask_16 != 0x0)
+                        this->a_set_cf();
+                    else
+                        this->a_clear_cf();
+                    
+                    //mask_16 = ~mask_16;
+                    dst_16.set_WORD(src_16.get_WORD() | mask_16);
+
+                    d_print(3, "Writing: 0x%08x\n", dst_16.get_WORD());
+
+                    this->reg_store_16(rm.offset, dst_16);
+                    this->attach_current_propagation_r_16(rm.offset);
+                    break;
+                case MODRM_SIZE_32:
+                    src_32 = this->reg_restore_32(rm.offset);
+                    reg_propagation_cause_r_32(rm.offset);
+                    
+                    count.set_BYTE(0x20);
+                    mask_32 <<= count.get_BYTE();
+
+                    if(src_32.get_DWORD() & mask_32 != 0x0)
+                        this->a_set_cf();
+                    else
+                        this->a_clear_cf();
+                    
+                    //mask_32 = ~mask_32;
+                    dst_32.set_DWORD(src_32.get_DWORD() | mask_32);
+
+                    this->reg_store_32(rm.offset, dst_32);
+                    this->attach_current_propagation_r_32(rm.offset);
+
+                    d_print(3, "Writing: 0x%08x\n", dst_32.get_DWORD());
+
+                    break;
+            }
+            break;
+        case (MODRM_MEM):
+            switch(rm.size)
+            {
+                case MODRM_SIZE_16:
+                    this->restore_16(rm.offset, src_16);
+                    reg_propagation_cause_m_16(rm.offset);
+                    
+                    count.set_BYTE(0x10);
+                    mask_16 <<= count.get_BYTE();
+
+                    if(src_16.get_WORD() & mask_16 != 0x0)
+                        this->a_set_cf();
+                    else
+                        this->a_clear_cf();
+                    
+                    //mask_16 = ~mask_16;
+                    dst_16.set_WORD(src_16.get_WORD() | mask_16);
+
+                    d_print(3, "Writing: 0x%08x\n", dst_16.get_WORD());
+
+                    this->store_16(rm.offset, dst_16);
+                    this->attach_current_propagation_m_16(rm.offset);
+                    break;
+                case MODRM_SIZE_32:
+                    this->restore_32(rm.offset, src_32);
+                    reg_propagation_cause_m_32(rm.offset);
+                    
+                    count.set_BYTE(0x20);
+                    mask_32 <<= count.get_BYTE();
+
+                    if(src_32.get_DWORD() & mask_32 != 0x0)
+                        this->a_set_cf();
+                    else
+                        this->a_clear_cf();
+                    
+                    //mask_32 = ~mask_32;
+                    dst_32.set_DWORD(src_32.get_DWORD() | mask_32);
+
+                    this->store_32(rm.offset, dst_32);
+                    this->attach_current_propagation_m_32(rm.offset);
+                    
+                    d_print(3, "Writing: 0x%08x\n", dst_32.get_DWORD());
+
+                    break;
+            }
+            break;
+    }
 
     return 0x0;
 }
@@ -10617,6 +10867,7 @@ int taint_x86::r_btr_rm_16_32_imm_8(BYTE_t* addr)
             {
                 case MODRM_SIZE_16:
                     src_16 = this->reg_restore_16(rm.offset);
+                    reg_propagation_cause_r_16(rm.offset);
                     
                     count.set_BYTE(0x10);
                     mask_16 <<= count.get_BYTE();
@@ -10632,9 +10883,11 @@ int taint_x86::r_btr_rm_16_32_imm_8(BYTE_t* addr)
                     d_print(3, "Writing: 0x%08x\n", dst_16.get_WORD());
 
                     this->reg_store_16(rm.offset, dst_16);
+                    this->attach_current_propagation_r_16(rm.offset);
                     break;
                 case MODRM_SIZE_32:
                     src_32 = this->reg_restore_32(rm.offset);
+                    reg_propagation_cause_r_32(rm.offset);
                     
                     count.set_BYTE(0x20);
                     mask_32 <<= count.get_BYTE();
@@ -10648,6 +10901,7 @@ int taint_x86::r_btr_rm_16_32_imm_8(BYTE_t* addr)
                     dst_32.set_DWORD(src_32.get_DWORD() & mask_32);
 
                     this->reg_store_32(rm.offset, dst_32);
+                    this->attach_current_propagation_r_32(rm.offset);
 
                     d_print(3, "Writing: 0x%08x\n", dst_32.get_DWORD());
 
@@ -10659,6 +10913,7 @@ int taint_x86::r_btr_rm_16_32_imm_8(BYTE_t* addr)
             {
                 case MODRM_SIZE_16:
                     this->restore_16(rm.offset, src_16);
+                    reg_propagation_cause_m_16(rm.offset);
                     
                     count.set_BYTE(0x10);
                     mask_16 <<= count.get_BYTE();
@@ -10674,9 +10929,11 @@ int taint_x86::r_btr_rm_16_32_imm_8(BYTE_t* addr)
                     d_print(3, "Writing: 0x%08x\n", dst_16.get_WORD());
 
                     this->store_16(rm.offset, dst_16);
+                    this->attach_current_propagation_m_16(rm.offset);
                     break;
                 case MODRM_SIZE_32:
                     this->restore_32(rm.offset, src_32);
+                    reg_propagation_cause_m_32(rm.offset);
                     
                     count.set_BYTE(0x20);
                     mask_32 <<= count.get_BYTE();
@@ -10690,6 +10947,7 @@ int taint_x86::r_btr_rm_16_32_imm_8(BYTE_t* addr)
                     dst_32.set_DWORD(src_32.get_DWORD() & mask_32);
 
                     this->store_32(rm.offset, dst_32);
+                    this->attach_current_propagation_m_32(rm.offset);
                     
                     d_print(3, "Writing: 0x%08x\n", dst_32.get_DWORD());
 
@@ -16282,7 +16540,7 @@ int taint_x86::print_context(int tid)
     d_print(1, "\n");
 
     DWORD eflags;
-    eflags = this->reg_restore_32(EFLAGS).get_DWORD();
+    eflags = this->reg_restore_32(EFLAGS, tid).get_DWORD();
     if(eflags & EFLAGS_CF) d_print(1, "CF\n");
     if(eflags & EFLAGS_PF) d_print(1, "PF\n");
     if(eflags & EFLAGS_AF) d_print(1, "AF\n");

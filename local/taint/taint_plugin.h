@@ -59,6 +59,7 @@ class taint_plugin : Plugin
     virtual int handle_exception_callback(EXCEPTION_INFO);
 
     int register_taint(char*);
+    int register_taint2(char*);
     int add_taint(OFFSET, UDWORD);
     int print_taint_history(BYTE_t*, unsigned);
     int print_taint_history(BYTE_t*);

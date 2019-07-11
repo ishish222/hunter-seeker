@@ -84,6 +84,15 @@ int check_status_for_ss(int status)
     return 0x0;
 }
 
+int check_for_and_enable_ss()
+{
+    if(check_status_for_ss(my_trace->status))
+    {
+        set_ss(0x0);
+    }
+    return 0x0;
+}
+
 int reopen_stdio()
 {
     char buffer2[MAX_LINE];
@@ -105,6 +114,24 @@ int reopen_stdio()
         sprintf(buffer2, "Reopened stdout_destination %s: 0x%08x\n", my_trace->stdout_destination_path, my_trace->stdout_destination);
         strcpy(my_trace->report_buffer, buffer2);
     }
+    return 0x0;
+}
+
+int d_print2(const char* format, ...)
+{
+    va_list argptr;
+    char line[MAX_LINE];
+    char line2[MAX_LINE];
+
+    if(my_trace != 0x0)
+    {
+        va_start(argptr, format);
+        vsprintf(line, format, argptr);
+        va_end(argptr);
+        sprintf(line2, "# %s\n", line);
+        add_to_buffer(line2);
+    }
+
     return 0x0;
 }
 
@@ -167,7 +194,7 @@ void react_flip_ZF(void* data)
     unsigned id, thread_idx;
     HANDLE myHandle = (HANDLE)-0x1;
 
-    id = my_trace->last_event.dwThreadId;
+    id = my_trace->event.dwThreadId;
     thread_idx = my_trace->tid2index[id];
     myHandle = my_trace->threads[thread_idx].handle;
 
@@ -208,7 +235,7 @@ void react_set_CF(void* data)
     unsigned id, thread_idx;
     HANDLE myHandle = (HANDLE)-0x1;
 
-    id = my_trace->last_event.dwThreadId;
+    id = my_trace->event.dwThreadId;
     thread_idx = my_trace->tid2index[id];
     myHandle = my_trace->threads[thread_idx].handle;
 
@@ -238,7 +265,7 @@ void react_set_SF(void* data)
     unsigned id, thread_idx;
     HANDLE myHandle = (HANDLE)-0x1;
 
-    id = my_trace->last_event.dwThreadId;
+    id = my_trace->event.dwThreadId;
     thread_idx = my_trace->tid2index[id];
     myHandle = my_trace->threads[thread_idx].handle;
 
@@ -268,7 +295,7 @@ void react_set_ZF(void* data)
     unsigned id, thread_idx;
     HANDLE myHandle = (HANDLE)-0x1;
 
-    id = my_trace->last_event.dwThreadId;
+    id = my_trace->event.dwThreadId;
     thread_idx = my_trace->tid2index[id];
     myHandle = my_trace->threads[thread_idx].handle;
 
@@ -297,7 +324,7 @@ void react_zero_ZF(void* data)
     int i;
     unsigned id, thread_idx;
 
-    id = my_trace->last_event.dwThreadId;
+    id = my_trace->event.dwThreadId;
 
     CONTEXT ctx;
     read_context(id, &ctx);
@@ -322,7 +349,7 @@ void react_flip_CF(void* data)
     unsigned id, thread_idx;
     HANDLE myHandle = (HANDLE)-0x1;
 
-    id = my_trace->last_event.dwThreadId;
+    id = my_trace->event.dwThreadId;
     thread_idx = my_trace->tid2index[id];
     myHandle = my_trace->threads[thread_idx].handle;
 
@@ -364,7 +391,7 @@ void react_flip_SF(void* data)
     unsigned id, thread_idx;
     HANDLE myHandle = (HANDLE)-0x1;
 
-    id = my_trace->last_event.dwThreadId;
+    id = my_trace->event.dwThreadId;
     thread_idx = my_trace->tid2index[id];
     myHandle = my_trace->threads[thread_idx].handle;
 
@@ -404,7 +431,7 @@ void react_zero_CF(void* data)
     int i;
     unsigned id, thread_idx;
 
-    id = my_trace->last_event.dwThreadId;
+    id = my_trace->event.dwThreadId;
 
     CONTEXT ctx;
     read_context(id, &ctx);
@@ -427,7 +454,7 @@ void react_zero_EAX(void* data)
     int i;
     unsigned id, thread_idx;
 
-    id = my_trace->last_event.dwThreadId;
+    id = my_trace->event.dwThreadId;
 
     CONTEXT ctx;
     read_context(id, &ctx);
@@ -450,7 +477,7 @@ void react_zero_SF(void* data)
     int i;
     unsigned id, thread_idx;
 
-    id = my_trace->last_event.dwThreadId;
+    id = my_trace->event.dwThreadId;
 
     CONTEXT ctx;
     read_context(id, &ctx);
@@ -471,8 +498,7 @@ void update_region_old(LOCATION* location)
     DWORD size_wrote;
     char line[MAX_LINE];
 
-//    sprintf(line, "# Current mod position: 0x%08x\n", ftell(my_trace->mods));
-//    add_to_buffer(line);
+    //d_print2("# Current mod position: 0x%08x", ftell(my_trace->mods));
 
 /*
     DWORD esp;
@@ -481,8 +507,8 @@ void update_region_old(LOCATION* location)
     esp = read_register(0x0, "ESP");
     val = read_dword(esp);
 
-    sprintf(line, "# Attempt to dump: 0x%08x,0x%08x\n", location->off, location->size);
-    add_to_buffer(line);
+    d_print2("# Attempt to dump: 0x%08x,0x%08x", location->off, location->size);
+
 */
     size_wrote = dump_mem(my_trace->mods, (void*)location->off, location->size);
     if(size_wrote == location->size)
@@ -490,8 +516,7 @@ void update_region_old(LOCATION* location)
         d_print("[Updated location: 0x%08x, size: 0x%08x]\n", location->off, location->size);
         sprintf(line, "UP,0x%08x,0x%08x\n", location->off, location->size);
         add_to_buffer(line);
-//        sprintf(line, "# Current mod position: 0x%08x\n", ftell(my_trace->mods));
-//        add_to_buffer(line);
+        //d_print2("# Current mod position: 0x%08x", ftell(my_trace->mods));
     }
 
     return;
@@ -529,8 +554,7 @@ void check_region(REGION* region)
     DWORD size_wrote;
     char line[MAX_LINE];
 
-//    sprintf(line, "# Current mod position: 0x%08x\n", ftell(my_trace->mods));
-//    add_to_buffer(line);
+    //d_print2("# Current mod position: 0x%08x", ftell(my_trace->mods));
 
     LOCATION location;
 
@@ -543,8 +567,7 @@ void check_region(REGION* region)
         d_print("[Updated location: 0x%08x, size: 0x%08x]\n", location.off, location.size);
         sprintf(line, "CP,0x%08x,0x%08x\n", location.off, location.size);
         add_to_buffer(line);
-//        sprintf(line, "# Current mod position: 0x%08x\n", ftell(my_trace->mods));
-//        add_to_buffer(line);
+        //d_print2("# Current mod position: 0x%08x", ftell(my_trace->mods));
     }
 
     return;
@@ -582,9 +605,7 @@ void update_region(unsigned id)
     size = resolve_loc_desc(region->size);
 
     d_print("Updating region: 0x%08x:0x%08x\n", off, size);
-
-    sprintf(line, "# Current mod position: 0x%08x\n", ftell(my_trace->mods));
-    add_to_buffer(line);
+    d_print2("# Current mod position: 0x%08x", ftell(my_trace->mods));
 
     size_wrote = dump_mem(my_trace->mods, (void*)off, size);
     if(size_wrote == size)
@@ -592,8 +613,7 @@ void update_region(unsigned id)
         d_print("[Updated location: 0x%08x, size: 0x%08x]\n", off, size);
         sprintf(line, "UP,0x%08x,0x%08x\n", off, size);
         add_to_buffer(line);
-        sprintf(line, "# Current mod position: 0x%08x\n", ftell(my_trace->mods));
-        add_to_buffer(line);
+        d_print2("# Current mod position: 0x%08x", ftell(my_trace->mods));
     }
 
     return;
@@ -621,7 +641,7 @@ void output_register(char* reg)
 
     val = read_register(-1, reg); 
 
-    sprintf(line, "OU,0x%x,%s: 0x%08x\n", my_trace->last_tid, reg, val);
+    sprintf(line, "OU,0x%x,%s: 0x%08x\n", my_trace->tid, reg, val);
     add_to_buffer(line);
 
     return;
@@ -684,13 +704,12 @@ void output_p_register_string(char* reg)
     if(read > 0x0)
     {
         filter_str(snap, ',');
-        sprintf(line, "OU,0x%x,Reg %s: %s\n", my_trace->last_tid, reg, snap);
+        sprintf(line, "OU,0x%x,Reg %s: %s\n", my_trace->tid, reg, snap);
         add_to_buffer(line);
     }
     else
     {
-        sprintf(line, "# Failed to read ANSI string @ 0x%08x\n", addr);
-        add_to_buffer(line);
+        d_print2("# Failed to read ANSI string @ 0x%08x", addr);
     }
 
     return;
@@ -753,13 +772,12 @@ void output_p_register_unicode(char* reg)
         d_print("Read from memory: %ls\n", snap);
         wcstombs(snap_ascii, (wchar_t*)snap, SNAP_SIZE);
         filter_str(snap_ascii, ',');
-        sprintf(line, "OU,0x%x,Reg %s: %s\n", my_trace->last_tid, reg, snap_ascii);
+        sprintf(line, "OU,0x%x,Reg %s: %s\n", my_trace->tid, reg, snap_ascii);
         add_to_buffer(line);
     }
     else
     {
-        sprintf(line, "# Failed to read unicode string @ 0x%08x\n", addr);
-        add_to_buffer(line);
+        d_print2("# Failed to read unicode string @ 0x%08x", addr);
     }
 
     return;
@@ -832,8 +850,7 @@ void report_arg_unicode_string_x(unsigned x)
     else
     {
         my_trace->report_code = REPORT_INFO;
-        sprintf(line, "# Failed to read UNICODE string @ 0x%08x\n", esp);
-        strcpy(my_trace->report_buffer, line);
+        d_print2("# Failed to read UNICODE string @ 0x%08x", esp);
     }
 
     return;
@@ -859,13 +876,12 @@ void output_arg_unicode_string_x(unsigned x)
     read_memory(my_trace->cpdi.hProcess, (void*)addr, (void*)snap, SNAP_SIZE*2, &read);
     if(read > 0x0)
     {
-        sprintf(line, "OU,0x%x,Arg%d: %ls\n", my_trace->last_tid, x, snap);
+        sprintf(line, "OU,0x%x,Arg%d: %ls\n", my_trace->tid, x, snap);
         add_to_buffer(line);
     }
     else
     {
-        sprintf(line, "# Failed to read UNICODE string @ 0x%08x\n", esp);
-        add_to_buffer(line);
+        d_print2("# Failed to read UNICODE string @ 0x%08x", esp);
     }
 
     return;
@@ -976,13 +992,12 @@ void output_arg_string_x(unsigned x)
     read_memory(my_trace->cpdi.hProcess, (void*)addr, (void*)snap, SNAP_SIZE, &read);
     if(read > 0x0)
     {
-        sprintf(line, "OU,0x%x,Arg%d: %s\n", my_trace->last_tid, x, snap);
+        sprintf(line, "OU,0x%x,Arg%d: %s\n", my_trace->tid, x, snap);
         add_to_buffer(line);
     }
     else
     {
-        sprintf(line, "# Failed to read ANSI string @ 0x%08x\n", esp);
-        add_to_buffer(line);
+        d_print2("# Failed to read ANSI string @ 0x%08x", esp);
     }
 
     return;
@@ -1070,7 +1085,7 @@ void output_arg_x(unsigned x)
 
     val = read_dword(esp);
 
-    sprintf(line, "OU,0x%x,Arg%d: %08x\n", my_trace->last_tid,x, val);
+    sprintf(line, "OU,0x%x,Arg%d: %08x\n", my_trace->tid,x, val);
     add_to_buffer(line);
 
     return;
@@ -1137,7 +1152,7 @@ void output_p_arg_x(unsigned x)
     val = read_dword(esp);
     val = read_dword(val);
 
-    sprintf(line, "OU,0x%x,Arg_p%d: %08x\n", my_trace->last_tid,x, val);
+    sprintf(line, "OU,0x%x,Arg_p%d: %08x\n", my_trace->tid,x, val);
     add_to_buffer(line);
 
     return;
@@ -1260,14 +1275,12 @@ void update_memory_w_zero(OFFSET addr, char* fname)
     if(wrote == size+1)
     {
         d_print("Wrote memory @ 0x%08x\n", addr);
-        sprintf(line, "# Wrote memory @ 0x%08x\n", addr);
-        add_to_buffer(line);
+        d_print2("# Wrote memory @ 0x%08x", addr);
     }
     else
     {
         d_print("Failed to write memory @ 0x%08x\n", addr);
-        sprintf(line, "# Failed to write memory @ 0x%08x\n", addr);
-        add_to_buffer(line);
+        d_print2("# Failed to write memory @ 0x%08x", addr);
     }
 
     free(buffer);
@@ -1325,14 +1338,12 @@ void update_memory(OFFSET addr, char* fname)
     if(wrote == size)
     {
         d_print("Wrote memory @ 0x%08x\n", addr);
-        sprintf(line, "# Wrote memory @ 0x%08x\n", addr);
-        add_to_buffer(line);
+        d_print2("# Wrote memory @ 0x%08x", addr);
     }
     else
     {
         d_print("Failed to write memory @ 0x%08x\n", addr);
-        sprintf(line, "# Failed to write memory @ 0x%08x\n", addr);
-        add_to_buffer(line);
+        d_print2("# Failed to write memory @ 0x%08x", addr);
     }
 
     free(buffer);
@@ -1350,13 +1361,11 @@ void write_string_ascii(OFFSET addr, char* str)
     write_memory(my_trace->cpdi.hProcess, (void*)addr, (void*)str, strlen(str), &wrote);
     if(wrote > 0x0)
     {
-        sprintf(line, "# Wrote ANSI string @ 0x%08x\n", addr);
-        add_to_buffer(line);
+        d_print2("# Wrote ANSI string @ 0x%08x", addr);
     }
     else
     {
-        sprintf(line, "# Failed to write ANSI string @ 0x%08x\n", addr);
-        add_to_buffer(line);
+        d_print2("# Failed to write ANSI string @ 0x%08x", addr);
     }
 
     return;
@@ -1402,8 +1411,7 @@ void read_string_unicode(DWORD addr)
     }
     else
     {
-        sprintf(line, "# Failed to read unicode string @ 0x%08x\n", addr);
-        add_to_buffer(line);
+        d_print2("# Failed to read unicode string @ 0x%08x", addr);
     }
 
     return;
@@ -1424,65 +1432,15 @@ void write_string_unicode(OFFSET addr, char* str)
     write_memory(my_trace->cpdi.hProcess, (void*)addr, (void*)unistring, unistring_len, &wrote);
     if(wrote == unistring_len)
     {
-        sprintf(line, "# Wrote UNICODE string @ 0x%08x\n", addr);
         d_print("Success\n");
-        add_to_buffer(line);
+        d_print2("# Wrote UNICODE string @ 0x%08x", addr);
     }
     else
     {
-        sprintf(line, "# Failed to write UNICODE string @ 0x%08x\n", addr);
-        d_print("Failed\n");
-        add_to_buffer(line);
+        d_print2("# Failed to write UNICODE string @ 0x%08x", addr);
     }
 
     free(unistring);
-    return;
-}
-
-void react_skip_on(void* data)
-{
-    char line[MAX_LINE]; 
-    DEBUG_EVENT* de;
-    de = (DEBUG_EVENT*)data;
-    DWORD tid = de->dwThreadId;
-
-    my_trace->threads[my_trace->tid2index[tid]].skipping += 0x1;
-
-    sprintf(line, "# Increasing skipping in TID: 0x%08x @ %p\n", tid, (DWORD)my_trace->last_exception.ExceptionAddress);
-    add_to_buffer(line);
-
-    if(my_trace->threads[my_trace->tid2index[tid]].skipping == 0x1)
-    {
-        unset_ss(tid);
-        d_print("Skipping in TID: 0x%08x...\n", tid);
-        sprintf(line, "# Started skipping in TID: 0x%08x\n", tid);
-        add_to_buffer(line);
-    }
-
-    return;
-}
-
-void react_skip_off(void* data)
-{
-    char line[MAX_LINE]; 
-    DEBUG_EVENT* de;
-    de = (DEBUG_EVENT*)data;
-    DWORD tid = de->dwThreadId;
-
-    my_trace->threads[my_trace->tid2index[tid]].skipping -= 0x1;
-
-    sprintf(line, "# Decreasing skipping in TID: 0x%08x @ %p\n", tid, (DWORD)my_trace->last_exception.ExceptionAddress);
-    add_to_buffer(line);
-
-    if(my_trace->threads[my_trace->tid2index[tid]].skipping < 0x1)
-    {
-        d_print("Finished skippingin TID: 0x%08x\n", tid);
-        my_trace->threads[my_trace->tid2index[tid]].skipping = 0x0;
-        set_ss(tid);
-        sprintf(line, "# Stopped skipping in TID: 0x%08x\n", tid);
-        add_to_buffer(line);
-    }
-
     return;
 }
 
@@ -1990,11 +1948,11 @@ void print_context(CONTEXT* ctx)
 
 void react_sysret_refresh(void* data)
 {
+    char line[MAX_LINE];
 
     d_print("Refreshing\n");
-    d_print("Unsetting SS for 0x%08x\n", my_trace->last_tid);
-    unset_ss(my_trace->last_tid);
-    set_ss(0x0);
+    d_print("Unsetting SS for 0x%08x\n", my_trace->tid);
+    unset_ss(my_trace->tid);
 }
 
 void read_memory(HANDLE handle, void* from, void* to, SIZE_T size, SIZE_T* read)
@@ -2183,6 +2141,73 @@ void getSelectorEntries(HANDLE handle, CONTEXT ctx, LDT_ENTRY* ldt)
     return;
 }
 
+void register_thread_info(DWORD tid, HANDLE handle)
+{
+    char line2[0x200];
+    char line[MAX_LINE];
+    CONTEXT ctx;
+    LDT_ENTRY ldt[0x6];
+
+    if(handle == 0x0) 
+        handle = OpenThread(THREAD_GET_CONTEXT |THREAD_SET_CONTEXT | THREAD_ALL_ACCESS, 0x0, tid);
+
+    DWORD tid_pos;
+
+    if(my_trace->tid2index[tid] == -1)
+    {
+        tid_pos = my_trace->thread_count;
+        
+        my_trace->threads[tid_pos].alive = 0x1;
+        my_trace->threads[tid_pos].handle = handle;
+        my_trace->threads[tid_pos].open = 0x1;
+        my_trace->threads[tid_pos].created = 0x1;
+        my_trace->threads[tid_pos].tid = tid;
+        my_trace->threads[tid_pos].locking_reaction = 0x0;
+        my_trace->threads[tid_pos].lock_level = 0x0;
+    
+        //if(my_trace->threads[tid_pos].handle == 0x0) 
+        d_print("Registering: TID 0x%08x, handle 0x%08x\n", tid, handle);
+
+        my_trace->tid2index[tid] = tid_pos;
+        my_trace->thread_count ++;
+
+        d_print2("# Thread count: 0x%08x", my_trace->thread_count);
+    }
+    else
+    {
+        tid_pos = my_trace->tid2index[tid];
+
+        // do not create new, update this one
+        d_print("Updating: TID 0x%08x, handle 0x%08x\n", tid, handle);
+        my_trace->threads[tid_pos].alive = 0x1;
+        my_trace->threads[tid_pos].handle = handle;
+    }
+
+    //d_print("Registering TID: 0x%08x with handle: 0x%08x, new thread count: 0x%x\n", tid, my_trace->threads[tid_pos].handle, my_trace->thread_count);
+
+    ctx.ContextFlags = CONTEXT_FULL;
+
+    //write info about thread registration
+    GetThreadContext(my_trace->threads[tid_pos].handle, &ctx);
+
+    getSelectorEntries(handle, ctx, ldt);
+/*
+    d_print("GS: 0x%08x: 0x%08x, 0x%08x, 0x%08x\n", ctx.SegGs, ldt[0].LimitLow, ldt[0].BaseLow, ldt[0].HighWord);
+    d_print("FS: 0x%08x: 0x%08x, 0x%08x, 0x%08x\n", ctx.SegFs, ldt[1].LimitLow, ldt[1].BaseLow, ldt[1].HighWord);
+    d_print("ES: 0x%08x: 0x%08x, 0x%08x, 0x%08x\n", ctx.SegEs, ldt[2].LimitLow, ldt[2].BaseLow, ldt[2].HighWord);
+    d_print("DS: 0x%08x: 0x%08x, 0x%08x, 0x%08x\n", ctx.SegDs, ldt[3].LimitLow, ldt[3].BaseLow, ldt[3].HighWord);
+    d_print("CS: 0x%08x: 0x%08x, 0x%08x, 0x%08x\n", ctx.SegCs, ldt[4].LimitLow, ldt[4].BaseLow, ldt[4].HighWord);
+    d_print("SS: 0x%08x: 0x%08x, 0x%08x, 0x%08x\n", ctx.SegSs, ldt[5].LimitLow, ldt[5].BaseLow, ldt[5].HighWord);
+*/
+    //print_context(&ctx);
+
+    serialize_context(ctx, ldt, line2);
+    d_print2("# RT,0x%08x,%s", tid, line2);
+
+    return;
+}
+
+
 void register_thread(DWORD tid, HANDLE handle)
 {
     char line2[0x200];
@@ -2213,8 +2238,7 @@ void register_thread(DWORD tid, HANDLE handle)
         my_trace->tid2index[tid] = tid_pos;
         my_trace->thread_count ++;
 
-        sprintf(line, "# Thread count: 0x%08x\n", my_trace->thread_count);
-        add_to_buffer(line);
+        d_print2("# Thread count: 0x%08x", my_trace->thread_count);
     }
     else
     {
@@ -2248,11 +2272,6 @@ void register_thread(DWORD tid, HANDLE handle)
     sprintf(line, "RT,0x%08x,%s\n", tid, line2);
     add_to_buffer(line);
 
-    //if((my_trace->status == STATUS_DBG_STARTED) || (my_trace->status == STATUS_DBG_SCANNED) || (my_trace->status == STATUS_DBG_LIGHT)) 
-    if(check_status_for_ss(my_trace->status))
-    {
-        set_ss(tid);
-    }
     return;
 }
 
@@ -2287,9 +2306,44 @@ int register_thread_debug(DWORD tid, HANDLE handle)
     sprintf(line, "CT,0x%08x,%s\n", tid, line2);
     written = add_to_buffer(line);
 
-    set_ss(tid);
     return written;
 }
+
+void register_all_threads_in_trace_info()
+{
+    unsigned i;
+    THREAD_ENTRY* current_thread;
+
+    for(i=0x0; i<my_trace->thread_count; i++)
+    {
+        current_thread = &my_trace->threads[i]; 
+        if(current_thread->alive) 
+        {
+            register_thread_info(current_thread->tid, current_thread->handle);
+        }
+    }
+
+    return;
+}
+
+
+void register_all_threads_in_trace()
+{
+    unsigned i;
+    THREAD_ENTRY* current_thread;
+
+    for(i=0x0; i<my_trace->thread_count; i++)
+    {
+        current_thread = &my_trace->threads[i]; 
+        if(current_thread->alive) 
+        {
+            register_thread(current_thread->tid, current_thread->handle);
+        }
+    }
+
+    return;
+}
+
 
 void deregister_thread(DWORD tid, HANDLE handle)
 {
@@ -2418,8 +2472,8 @@ void register_lib(LOAD_DLL_DEBUG_INFO info)
 
 #ifdef LIB_VER_W7
     //d_print("Trying to resolve\n");
-    GetFinalPathNameByHandleA(my_trace->last_event.u.LoadDll.hFile, my_trace->libs[my_trace->lib_count].lib_path, MAX_LINE, VOLUME_NAME_NONE);
-    //d_print("Resolved 0x%08x to %s\n", my_trace->last_event.u.LoadDll.hFile, my_trace->libs[my_trace->lib_count].lib_path);
+    GetFinalPathNameByHandleA(my_trace->event.u.LoadDll.hFile, my_trace->libs[my_trace->lib_count].lib_path, MAX_LINE, VOLUME_NAME_NONE);
+    //d_print("Resolved 0x%08x to %s\n", my_trace->event.u.LoadDll.hFile, my_trace->libs[my_trace->lib_count].lib_path);
     strcpy(my_trace->libs[my_trace->lib_count].lib_name, find_file(my_trace->libs[my_trace->lib_count].lib_path));
 #endif
 #ifdef LIB_VER_WXP
@@ -2429,8 +2483,7 @@ void register_lib(LOAD_DLL_DEBUG_INFO info)
     /* print commented lib path */
 
     d_print("# %s\n", my_trace->libs[my_trace->lib_count].lib_path);
-    sprintf(line, "# %s\n", my_trace->libs[my_trace->lib_count].lib_path);
-    add_to_buffer(line);
+    d_print2("# %s", my_trace->libs[my_trace->lib_count].lib_path);
 
     my_trace->libs[my_trace->lib_count].lib_offset = (DWORD)info.lpBaseOfDll;
     d_print("RL,0x%08x,%s\n", my_trace->libs[my_trace->lib_count].lib_offset, my_trace->libs[my_trace->lib_count].lib_name);
@@ -2555,16 +2608,13 @@ void react_sysret_callback(void* data);
 
 void react_sysenter_callback(void* data)
 {
-    d_print("sysenter\n");
+    d_print2("sysenter");
     char line[MAX_LINE];
 
     DEBUG_EVENT* de;
     de = (DEBUG_EVENT*)data;
-    DWORD tid = de->dwThreadId;
     unsigned i;
-
-    DWORD tid_pos;
-    tid_pos = my_trace->tid2index[tid];
+    DWORD tid_pos = my_trace->tid_pos;
 
     CONTEXT ctx;
     ctx.ContextFlags = CONTEXT_FULL;
@@ -2582,21 +2632,18 @@ void react_sysenter_callback(void* data)
     esp = read_register(0x0, "ESP");
     val = read_dword(esp+0x4);
 
-    sprintf(line, "SC,0x%08x,0x%08x\n", tid, sysenter_no);
-    add_to_buffer(line);
-    sprintf(line, "# ESP: 0x%08x\n", esp);
+    sprintf(line, "SC,0x%08x,0x%08x\n", my_trace->tid, sysenter_no);
     add_to_buffer(line);
 
-    for(i = 0x0; i<MAX_SYSCALL_OUT_ARGS; i++)
-    {
-    }
-    //deregister_thread(tid, my_trace->threads[tid_pos].handle); /* niepotrzebne, i tak sie updateuje rejestracja z sysreta */
-    set_ss(0x0);
+    d_print2("ESP: 0x%08x", esp);
+
+    my_trace->threads[my_trace->tid_pos].last_was_syscall = 0x1;
+    d_print2("Setting last_was_syscall for: 0x%08x (0x%08x): 0x%08x", my_trace->tid, my_trace->tid_pos, my_trace->threads[tid_pos].last_was_syscall);
 }
 
 void react_sysret_callback(void* data)
 {
-    d_print("sysret\n");
+    d_print2("sysret");
 
     DEBUG_EVENT* de;
     de = (DEBUG_EVENT*)data;
@@ -2608,47 +2655,21 @@ void react_sysret_callback(void* data)
     DWORD tid_pos;
     tid_pos = my_trace->tid2index[tid];
 
-    register_thread(tid, my_trace->threads[tid_pos].handle);
+    /* fix na uciekajace watki */
+    register_all_threads_in_trace();
 
+    /* powtarza sie */
+//    my_trace->callback_routine((void*)&my_trace->event);
 
-    // prepare dump list
-    CONTEXT ctx;
-    ctx.ContextFlags = CONTEXT_FULL;
-    if(GetThreadContext(my_trace->threads[tid_pos].handle, &ctx) == 0x0) 
-    {
-        d_print("Failed to get context, error: 0x%08x\n", GetLastError());
-        return;
-    }
-    d_print("EAX: 0x%08x\n", ctx.Eax);
+    DWORD sysenter_no = my_trace->threads[tid_pos].syscall_no;
 
-    /*
-    for(i = 0x0; i<MAX_SYSCALL_OUT_ARGS; i++)
-            my_trace->syscall_out_args_old_dump_list[i].off = last_location.off;
-    */
-
-    d_print("[[Syscall: 0x%08x @ 0x%08x]]\n", sysenter_no, ctx.Eip);
     for(i = 0x0; i<MAX_SYSCALL_OUT_ARGS; i++)
     {
-//        d_print("Arg no: 0x%02x\n", i);
-        if(my_trace->syscall_out_args_old[sysenter_no][i].off_location == last_arg.off_location) 
-        {
-//            d_print("Last arg, finishing\n");
-            break;
-        }
-        if(my_trace->syscall_out_args_old[sysenter_no][i].eax_val_success != STATUS_ANY)
-        {
-//            d_print("Arg not any\n");
-            if(my_trace->syscall_out_args_old[sysenter_no][i].eax_val_success != ctx.Eax) 
-            {
-//                d_print("Wrong EAX\n");
-                continue;
-            }
-        }
-
 
         /* resolvowanie. 
 
         deskryptory powinny byc resolvowane PO syscallu (sysret), bo czasami kernel zapisuje wskazniki do nowych obszarow pamieci. Musimy je znac, by zresolvowac poprawnie.
+        Ale co z przelaczaniem watkow? Rejestry powinny byc OK po update w task_switch.
 
         */
         if(my_trace->syscall_out_args[sysenter_no][i].off == 0x0)
@@ -2659,13 +2680,12 @@ void react_sysret_callback(void* data)
         }
         current_syscall_location[i].off = resolve_loc_desc(my_trace->syscall_out_args[sysenter_no][i].off);
         current_syscall_location[i].size = resolve_loc_desc(my_trace->syscall_out_args[sysenter_no][i].size);
-        sprintf(line, "# Resolved location: 0x%08x:0x%08x\n", current_syscall_location[i].off, current_syscall_location[i].size);
-        add_to_buffer(line);
+
+        d_print2("# Resolved location: 0x%08x:0x%08x", current_syscall_location[i].off, current_syscall_location[i].size);
 
         /* old update */
 
-        sprintf(line, "# old update below\n");
-        add_to_buffer(line);
+        d_print2("# old update below");
 
         LOCATION location_old;
 
@@ -2674,8 +2694,7 @@ void react_sysret_callback(void* data)
 
         /* new update */
 
-        sprintf(line, "# new update below\n");
-        add_to_buffer(line);
+        d_print2("# new update below");
 
         LOCATION location;
 
@@ -2684,12 +2703,6 @@ void react_sysret_callback(void* data)
 
     }
 
-    /* nie wiadomo, co sie dzieje z flaga SS po wejsciu do kernela, ale po wyjsciu nie rejestryje jednego adresu
-        ponizsza instrukcja ma za zadanie dopilnowac, by sie nagral, bo czasami w trakcie analizy nagrania sa na nim stawiane breakpointy
-    */
-    my_trace->callback_routine((void*)&my_trace->last_event);
-    set_ss(0x0);
-//    d_print("Setting SS for 0x%08x\n", tid);
 }
 
 
@@ -2860,8 +2873,7 @@ int verify_ss(DWORD tid)
 
         if(ctx.EFlags & CLEAR_SS_FLAGS) 
         {
-            sprintf(line, "# Trap is set for 0x%08x\n", tid);
-            add_to_buffer(line);
+            d_print2("# Trap is set for 0x%08x", tid);
         }
 
         SetThreadContext(tHandle, &ctx);
@@ -2902,8 +2914,6 @@ int unset_ss(DWORD tid)
 
         GetThreadContext(tHandle, &ctx);
         ctx.EFlags &= CLEAR_SS_FLAGS;
-//        sprintf(line, "# Disabling trap for 0x%08x\n", tid);
-//        add_to_buffer(line);
         SetThreadContext(tHandle, &ctx);
         CloseHandle(tHandle);
     }
@@ -2917,10 +2927,6 @@ int set_ss(DWORD tid)
     int i, tid_pos;
     DWORD cur_tid;
 
-    /* avoid turning scanning on while skipping, e.g. during syscalls or i_reactions */
-    if(my_trace->threads[my_trace->tid2index[tid]].skipping == 0x1)
-        return 0x0;
-
     if(tid == 0x0)
     {
         for(i = 0x0; i< my_trace->thread_count; i++)
@@ -2932,18 +2938,24 @@ int set_ss(DWORD tid)
     }
     else
     {
+        
         HANDLE tHandle;
         ctx.ContextFlags = CONTEXT_CONTROL;
         tHandle = OpenThread(THREAD_GET_CONTEXT |THREAD_SET_CONTEXT | THREAD_ALL_ACCESS, 0x0, tid);
         if(!tHandle) 
         {
             d_print("Failed to open TID: 0x%08x\n", tid);
+            d_print2("# Failed to open: 0x%08x", tid);
+
             return -1;
         }
 
         GetThreadContext(tHandle, &ctx);
         ctx.EFlags |= SS_FLAGS;
         SetThreadContext(tHandle, &ctx);
+
+        d_print2("SS to 0x%08x from set_ss", tid);
+
         CloseHandle(tHandle);
     }
     return 0x0;
@@ -3033,12 +3045,37 @@ int is_syscall(DWORD eip)
     dword = read_word(eip);    
     
     /* compare to 0x0f 0x34 (sysenter) */
+    //d_print2("checking syscall: 0x%08x and 0x%08x", dword, 0x0000340f);
     if(dword == 0x0000340f)
     {
+        //d_print2("Is syscall");
         return 0x1;
     }
 
     return 0x0;
+}
+
+int last_was_syscall(DWORD tid)
+{
+    DWORD tid_pos;
+    tid_pos = my_trace->tid2index[tid];
+
+    d_print2("# Checking last_was_syscall for: 0x%08x (0x%08x): 0x%08x", tid, tid_pos, my_trace->threads[tid_pos].last_was_syscall);
+
+    if(my_trace->threads[tid_pos].last_was_syscall) 
+    {
+        d_print2("Last WAS syscall");
+        my_trace->threads[tid_pos].last_was_syscall = 0x0;
+        return 0x1;
+    }
+    d_print2("Last was no syscall");
+    return 0x0;
+}
+
+void handle_syscall()
+{
+
+    return;
 }
 
 void syscall_callback(void* data)
@@ -3059,9 +3096,6 @@ void syscall_callback(void* data)
     tid = de->dwThreadId;
     tid_pos = my_trace->tid2index[tid];
 
-    my_trace->last_eip = eip;
-    my_trace->last_tid = tid;
-    my_trace->instr_count++;
 
     if(is_syscall(eip))
     {
@@ -3082,7 +3116,9 @@ void syscall_callback(void* data)
     //add_to_buffer(line);
     //}
 
-    set_ss(0x0);
+    //sprintf(line, "# SS to all from syscall_callback\n");
+    //add_to_buffer(line);
+    //check_for_and_enable_ss();
 
     return;
 }
@@ -3118,23 +3154,8 @@ void ss_callback(void* data)
     }
 
     eip = (DWORD)(de->u.Exception.ExceptionRecord.ExceptionAddress);
-        //d_print("%p\n", eip);
-//    if((my_trace->status != STATUS_DBG_STARTED) && (my_trace->status != STATUS_DBG_SCANNED) && (my_trace->status != STATUS_DBG_LIGHT)) 
-    if(!check_status_for_ss(my_trace->status))
-    {
-        d_print("quick ss_callback\n");
-        unset_ss(0x0);
-        return;
-    }
-
     tid = de->dwThreadId;
     tid_pos = my_trace->tid2index[tid];
-
-//    WaitForSingleObject(my_trace->mutex, INFINITE);
-
-    eip = (DWORD)(de->u.Exception.ExceptionRecord.ExceptionAddress);
-    my_trace->last_eip = eip;
-    my_trace->last_tid = tid;
 
     if(my_trace->status == STATUS_DBG_SCANNED)
     {
@@ -3179,7 +3200,9 @@ void ss_callback(void* data)
     }
 
 //    ReleaseMutex(my_trace->mutex);
-    set_ss(0x0);
+    //sprintf(line, "# SS to all from ss_callback\n");
+    //add_to_buffer(line);
+    //check_for_and_enable_ss();
 
     return;
 }
@@ -3583,6 +3606,8 @@ int handle_reaction(REACTION* cur_reaction, void* data)
         {
             /* report rection_id to external controller */
             d_print("Routine is null, reporting to controller\n");
+            sprintf(line, "# Breakpoint: %s\n", cur_reaction->reaction_id);
+            add_to_buffer(line);
             my_trace->last_reaction = cur_reaction;
             my_trace->report_code = REPORT_BREAKPOINT;
         }
@@ -3596,7 +3621,7 @@ int handle_reaction(REACTION* cur_reaction, void* data)
                 if(cur_reaction->routine_ids[k] > 0x100)
                 {
                     d_print("ER_3 TID: 0x%08x, Executing routine 0x%08x @ %d\n", tid, cur_reaction->routine_ids[k], my_trace->instr_count);
-                    sprintf(line, "OU,0x%x,0x%08x Routine 0x%08x\n", my_trace->last_tid, my_trace->last_eip, cur_reaction->routine_ids[k]);
+                    sprintf(line, "OU,0x%x,0x%08x Routine 0x%08x\n", my_trace->tid, my_trace->eip, cur_reaction->routine_ids[k]);
                     add_to_buffer(line);
                 }
                 my_trace->routines[cur_reaction->routine_ids[k]](data);
@@ -3616,6 +3641,10 @@ int handle_reaction(REACTION* cur_reaction, void* data)
         d_print("Acheduling autorepeat for: %s\n", cur_reaction->reaction_id);
         my_trace->delayed_reaction = cur_reaction;
         /* enable SS for just one breakpoint */
+
+        sprintf(line, "# set_ss to all from handle_reaction\n");
+        add_to_buffer(line);
+        //check_for_and_enable_ss();
         set_ss(0x0);
     }
 
@@ -4547,7 +4576,7 @@ int write_context(DWORD tid, CONTEXT* ctx)
 
     if(tid == 0x0)
     {
-        tid = my_trace->last_event.dwThreadId;
+        tid = my_trace->event.dwThreadId;
     }
 
     map_id = my_trace->tid2index[tid];
@@ -4698,7 +4727,7 @@ int current_thread()
 {
     char buffer2[MAX_LINE];
 
-    sprintf(buffer2, "TID: 0x%08x\n", my_trace->last_tid);
+    sprintf(buffer2, "TID: 0x%08x\n", my_trace->tid);
     strcat(my_trace->report_buffer, buffer2);
 
     return 0x0;
@@ -4855,7 +4884,7 @@ int read_context(DWORD tid, CONTEXT* ctx)
 
     if(tid == 0x0)
     {
-        tid = my_trace->last_event.dwThreadId;
+        tid = my_trace->event.dwThreadId;
     }
 
     tid_id = my_trace->tid2index[tid];
@@ -5120,13 +5149,13 @@ int out_region(DWORD addr, DWORD size)
             strcpy(my_trace->report_buffer, buffer2);
             return 0x0;
         }
-        sprintf(line, "OU,0x%x,%s\n", my_trace->last_tid, data2);
+        sprintf(line, "OU,0x%x,%s\n", my_trace->tid, data2);
         add_to_buffer(line);
     }
     else {
         sprintf(buffer2, "Error: 0x%08x", GetLastError());
         strcpy(my_trace->report_buffer, buffer2);
-        sprintf(line, "# OU,0x%x error\n", my_trace->last_tid, data2);
+        sprintf(line, "# OU,0x%x error\n", my_trace->tid, data2);
         add_to_buffer(line);
     }
 
@@ -5230,7 +5259,7 @@ int write_register(DWORD map_id, char* reg, char* data)
 
     if(map_id == -1)
     {
-        tid = my_trace->last_tid;
+        tid = my_trace->tid;
     }
     else
     {
@@ -5317,7 +5346,7 @@ DWORD read_register(DWORD tid_id, char* reg)
 
     if(tid_id == -1)
     {
-        tid = my_trace->last_tid;
+        tid = my_trace->tid;
     }
     else
     {
@@ -5495,23 +5524,21 @@ int register_self(OFFSET addr)
     return 0x0;
 }
 
-int process_last_event()
+int process_event()
 {
     unsigned status;
+    char line[MAX_LINE];
 
-        //d_print("process_last_event: 0x%08x\n", my_trace->last_event.dwDebugEventCode);
-        my_trace->last_tid = my_trace->last_event.dwThreadId;
-
-        switch(my_trace->last_event.dwDebugEventCode)
+        switch(my_trace->event.dwDebugEventCode)
         {
             case CREATE_PROCESS_DEBUG_EVENT:
                 /* this is not our responsibility, inform TracerController and wait for orders */
                 /* get process info */
-                my_trace->cpdi = my_trace->last_event.u.CreateProcessInfo;
+                my_trace->cpdi = my_trace->event.u.CreateProcessInfo;
                 my_trace->procHandle = my_trace->cpdi.hProcess;
 
                 /* register main thread (does this not belong to other event code? */
-                register_thread(my_trace->last_event.dwThreadId, my_trace->last_event.u.CreateProcessInfo.hThread);
+                register_thread(my_trace->event.dwThreadId, my_trace->event.u.CreateProcessInfo.hThread);
 
                 /* register as self-lib */
                 register_self((OFFSET)my_trace->cpdi.lpBaseOfImage); 
@@ -5530,22 +5557,25 @@ int process_last_event()
                     }
                 }
 
+
+                sprintf(line, "# REPORT_PROCESS_CREATED\n");
+                add_to_buffer(line);
+
                 return REPORT_PROCESS_CREATED;
                 break;
 
             case EXCEPTION_DEBUG_EVENT:
                 status = DBG_EXCEPTION_NOT_HANDLED;
-                my_trace->last_exception = my_trace->last_event.u.Exception.ExceptionRecord;
-                my_trace->last_eip = (DWORD)my_trace->last_exception.ExceptionAddress;
+                my_trace->last_exception = my_trace->event.u.Exception.ExceptionRecord;
 
                 switch(my_trace->last_exception.ExceptionCode)
                 {
                     case EXCEPTION_SINGLE_STEP:
                         /* we are authorized to handle this */
-                        //ss_callback((void*)&my_trace->last_event);
-                        my_trace->callback_routine((void*)&my_trace->last_event);
-                        //set_ss(my_trace->last_event.dwThreadId);
+                        my_trace->callback_routine((void*)&my_trace->event);
                         my_trace->last_win_status = DBG_CONTINUE;
+                        sprintf(line, "# single step, REPORT_CONTINUE\n");
+                        add_to_buffer(line);
                         return REPORT_CONTINUE;
                         break;
                 
@@ -5569,18 +5599,23 @@ int process_last_event()
                             if(my_trace->breakpoints[i].resolved_location == bp_addr)
                             {
                                 d_print("Handling breakpoint @ 0x%08x\n", bp_addr);
-                                handle_breakpoint((DWORD)my_trace->last_exception.ExceptionAddress, &my_trace->last_event);
+                                handle_breakpoint((DWORD)my_trace->last_exception.ExceptionAddress, &my_trace->event);
                                 handled = 0x1;
+
+                                sprintf(line, "# breakpoint, handling our own, possible REPORT_BREAKPOINT\n");
+                                add_to_buffer(line);
                             }
                         }
 
-//                        //ss_callback((void*)&my_trace->last_event); /*skad to sie tutaj wzielo? */
-                        //my_trace->callback_routine((void*)&my_trace->last_event);
+//                        //ss_callback((void*)&my_trace->event); /*skad to sie tutaj wzielo? */
+                        //my_trace->callback_routine((void*)&my_trace->event);
 
                         if(!handled)                        
                         {
                             d_print("This BP is not our, we pass it to the debugee\n");
                             my_trace->report_code = REPORT_EXCEPTION_NH;
+                            sprintf(line, "# breakpoint, not our own, REPORT_EXCEPTION_NH\n");
+                            add_to_buffer(line);
                         }
 
                         d_print("[BP handling ends]\n");
@@ -5590,10 +5625,12 @@ int process_last_event()
                     default:
                         d_print("other\n");
                         /* this is not our responsibility, inform TracerController and wait for orders */
-                        register_exception(my_trace->last_event.dwThreadId, my_trace->last_exception);
-//                        ss_callback((void*)&my_trace->last_event);
-                        my_trace->callback_routine((void*)&my_trace->last_event);
+                        register_exception(my_trace->event.dwThreadId, my_trace->last_exception);
+//                        ss_callback((void*)&my_trace->event);
+                        my_trace->callback_routine((void*)&my_trace->event);
  
+                        sprintf(line, "# exception but not breakpoint, reporting to external\n");
+                        add_to_buffer(line);
                         return REPORT_EXCEPTION;
                         break;
                 }
@@ -5602,15 +5639,17 @@ int process_last_event()
             case CREATE_THREAD_DEBUG_EVENT: 
                 /* we are authorized to handle this */
 
-                register_thread(my_trace->last_event.dwThreadId, my_trace->last_event.u.CreateThread.hThread);
+                register_thread(my_trace->event.dwThreadId, my_trace->event.u.CreateThread.hThread);
                 my_trace->last_win_status = DBG_CONTINUE;
+                sprintf(line, "# CREATE_THREAD_DEBUG_EVENT, DBG_CONTINUE\n");
+                add_to_buffer(line);
                 return REPORT_CONTINUE;
                 break;
 
             case LOAD_DLL_DEBUG_EVENT:
                 /* we are authorized to handle this */
 
-                register_lib(my_trace->last_event.u.LoadDll);
+                register_lib(my_trace->event.u.LoadDll);
 
                 /* Checking brakpoints */
                 d_print("Loaded library, checking breakpoints\n");
@@ -5628,13 +5667,17 @@ int process_last_event()
                 }
 
                 my_trace->last_win_status = DBG_CONTINUE;
+                sprintf(line, "# LOAD_DLL_DEBUG_EVENT, DBG_CONTINUE\n");
+                add_to_buffer(line);
                 return REPORT_CONTINUE;
                 break;
 
             case UNLOAD_DLL_DEBUG_EVENT:
                 /* we are authorized to handle this */
 
-                deregister_lib(my_trace->last_event.u.UnloadDll);
+                deregister_lib(my_trace->event.u.UnloadDll);
+                sprintf(line, "# UNLOAD_DLL_DEBUG_EVENT, DBG_CONTINUE\n");
+                add_to_buffer(line);
                 return REPORT_CONTINUE;
                 break;
 
@@ -5642,15 +5685,17 @@ int process_last_event()
                 /* we are authorized to handle this */
 
                 d_print("Exiting thread\n");
-                deregister_thread(my_trace->last_event.dwThreadId, my_trace->last_event.u.CreateThread.hThread);
-                my_trace->threads[my_trace->last_event.dwThreadId].alive = 0x0;
+                deregister_thread(my_trace->event.dwThreadId, my_trace->event.u.CreateThread.hThread);
+                my_trace->threads[my_trace->event.dwThreadId].alive = 0x0;
 
-                if(my_trace->threads[my_trace->last_event.dwThreadId].handle != 0x0) 
-                    CloseHandle(my_trace->threads[my_trace->last_event.dwThreadId].handle);
+                if(my_trace->threads[my_trace->event.dwThreadId].handle != 0x0) 
+                    CloseHandle(my_trace->threads[my_trace->event.dwThreadId].handle);
 
-                my_trace->threads[my_trace->last_event.dwThreadId].handle = 0x0;
-                my_trace->threads[my_trace->last_event.dwThreadId].open = 0x0;
+                my_trace->threads[my_trace->event.dwThreadId].handle = 0x0;
+                my_trace->threads[my_trace->event.dwThreadId].open = 0x0;
                 my_trace->last_win_status = DBG_CONTINUE;
+                sprintf(line, "# EXIT_THREAD_DEBUG_EVENT, DBG_CONTINUE\n");
+                add_to_buffer(line);
                 return REPORT_CONTINUE;
                 break;
 
@@ -5658,8 +5703,15 @@ int process_last_event()
                 /* this is not our responsibility, inform TracerController and wait for orders */
 
                 d_print("Exiting process\n");
+                sprintf(line, "# EXIT_PROCESS_DEBUG_EVENT, REPORT_PROCESS_EXIT\n");
+                add_to_buffer(line);
                 return REPORT_PROCESS_EXIT;
                 break;
+
+            default:
+                sprintf(line, "# unknown debug event\n");
+                add_to_buffer(line);
+                return REPORT_CONTINUE; // a nie error?
         }
 }
 
@@ -5680,7 +5732,7 @@ int create_report(int last_report)
             
         case REPORT_EXCEPTION:
             EXCEPTION_RECORD er;
-            er = my_trace->last_event.u.Exception.ExceptionRecord;
+            er = my_trace->event.u.Exception.ExceptionRecord;
 
             sprintf(buffer2, "REPORT_EXCEPTION\n");
 
@@ -5688,7 +5740,7 @@ int create_report(int last_report)
             strcat(buffer2, buffer3);
             sprintf(buffer3, "at: 0x%08x\n", er.ExceptionAddress);
             strcat(buffer2, buffer3);
-            sprintf(buffer3, "First chance: 0x%08x\n", my_trace->last_event.u.Exception.dwFirstChance);
+            sprintf(buffer3, "First chance: 0x%08x\n", my_trace->event.u.Exception.dwFirstChance);
             strcat(buffer2, buffer3);
 
             break;
@@ -5703,7 +5755,7 @@ int create_report(int last_report)
 
         default:
             sprintf(buffer2, "REPORT_OTHER\n");
-            sprintf(buffer3, "at: 0x%08x\n", my_trace->last_eip);
+            sprintf(buffer3, "at: 0x%08x\n", my_trace->eip);
             strcat(buffer2, buffer3);
             sprintf(buffer3, "instr: %d\n", my_trace->instr_count);
             strcat(buffer2, buffer3);
@@ -5716,46 +5768,89 @@ int create_report(int last_report)
 
 int handle_continue(DWORD pid, DWORD tid, unsigned status)
 {
+        char line[MAX_LINE];
     /* turn on trap again */
     /* TODO: is this necessary? */
-    /*
-    if((my_trace->status == STATUS_DBG_STARTED) || (my_trace->status == STATUS_DBG_SCANNED))
-    {
-        d_print("Enabling trap\n");
-        set_ss(0x0);
-        set_ss(tid);
-    }
-    */
+    d_print2("# SS to all from handle_continue");
+    check_for_and_enable_ss();
+
     ContinueDebugEvent(pid, tid, status);
     return 0x0;
+}
+
+void task_switch()
+{
+    d_print2("Task switch");
+    register_all_threads_in_trace();
+    return;
+}
+
+void update_status(void* data)
+{
+    DEBUG_EVENT* de;
+    de = (DEBUG_EVENT*)data;
+
+    my_trace->last_event = my_trace->event;
+    my_trace->event = *de;
+
+    my_trace->last_eip = my_trace->eip;
+    my_trace->eip = (DWORD)(de->u.Exception.ExceptionRecord.ExceptionAddress);
+
+    my_trace->last_tid = my_trace->tid;
+    my_trace->tid = de->dwThreadId;
+
+    my_trace->last_tid_pos = my_trace->tid_pos;
+    my_trace->tid_pos = my_trace->tid2index[my_trace->last_tid];
+
+    return;
 }
 
 int get_pending_events()
 {
     int last_report;
     char buffer2[MAX_LINE];
+    char line[MAX_LINE];
     unsigned status;
 
-    d_print("Continuing: PID: 0x%08x, TID: 0x%08x\n", my_trace->last_event.dwProcessId, my_trace->last_event.dwThreadId);
-    if(my_trace->last_event.dwProcessId == 0x0)
+    d_print("Continuing: PID: 0x%08x, TID: 0x%08x\n", my_trace->event.dwProcessId, my_trace->event.dwThreadId);
+    if(my_trace->event.dwProcessId == 0x0)
     {
 //        ContinueDebugEvent(my_trace->pi.dwProcessId, my_trace->pi.dwThreadId, DBG_CONTINUE);
         handle_continue(my_trace->pi.dwProcessId, my_trace->pi.dwThreadId, DBG_CONTINUE);
     }
     else
     {
-//        ContinueDebugEvent(my_trace->last_event.dwProcessId, my_trace->last_event.dwThreadId, DBG_CONTINUE);
-        handle_continue(my_trace->last_event.dwProcessId, my_trace->last_event.dwThreadId, DBG_CONTINUE);
+//        ContinueDebugEvent(my_trace->event.dwProcessId, my_trace->event.dwThreadId, DBG_CONTINUE);
+        handle_continue(my_trace->event.dwProcessId, my_trace->event.dwThreadId, DBG_CONTINUE);
     }
     d_print("Continuing\n");
 
     while(1)
     {
 
-        WaitForDebugEvent(&(my_trace->last_event), 0x0);
-        if(my_trace->last_event.dwDebugEventCode == 0x0) return REPORT_NOTHING;
+        WaitForDebugEvent(&(my_trace->event), 0x0);
 
-        last_report = process_last_event();
+        update_status((void*)&my_trace->event);
+
+        if(my_trace->tid != my_trace->last_tid) 
+        {
+            task_switch();
+        }
+
+        if(last_was_syscall(my_trace->tid)) 
+        {
+            react_sysret_callback((void*)&my_trace->event);
+        }
+
+        if(is_syscall(my_trace->eip))
+        {
+            react_sysenter_callback((void*)&my_trace->event);
+        }
+
+
+        if(my_trace->event.dwDebugEventCode == 0x0) return REPORT_NOTHING;
+
+        last_report = process_event();
         if(last_report == REPORT_CONTINUE)
         {
             status = DBG_CONTINUE;
@@ -5764,13 +5859,18 @@ int get_pending_events()
         {
             status = DBG_EXCEPTION_NOT_HANDLED;
         }
-        else
+        else if((last_report == REPORT_PROCESS_CREATED) || (last_report == REPORT_PROCESS_EXIT) || (last_report == REPORT_BREAKPOINT))
         {
             break;
         }
+        else
+        {
+            sprintf(line, "# Uknown report\n");
+            add_to_buffer(line);
+            break;
+        }
 
-        //ContinueDebugEvent(my_trace->last_event.dwProcessId, my_trace->last_event.dwThreadId, status);
-        handle_continue(my_trace->last_event.dwProcessId, my_trace->last_event.dwThreadId, status);
+        handle_continue(my_trace->event.dwProcessId, my_trace->event.dwThreadId, status);
     }
 
 
@@ -5788,8 +5888,13 @@ int continue_routine(DWORD time, unsigned stat)
     int last_report;
     char buffer2[MAX_LINE];
     unsigned status;
+    char line[MAX_LINE];
 
     status = stat;
+
+    //sprintf(line, "# SS to all from continue_routine\n");
+    //add_to_buffer(line);
+    //check_for_and_enable_ss();
 
     /* if debug timeout is set, it overrides INFINITE */
     if(my_trace->debug_timeout > 0)
@@ -5797,24 +5902,43 @@ int continue_routine(DWORD time, unsigned stat)
         time = my_trace->debug_timeout;
     }
     
-    if(my_trace->last_event.dwProcessId == 0x0)
+    if(my_trace->event.dwProcessId == 0x0)
     {
         //ContinueDebugEvent(my_trace->pi.dwProcessId, my_trace->pi.dwThreadId, status);
         handle_continue(my_trace->pi.dwProcessId, my_trace->pi.dwThreadId, status);
     }
     else
     {
-        //ContinueDebugEvent(my_trace->last_event.dwProcessId, my_trace->last_event.dwThreadId, status);
-        handle_continue(my_trace->last_event.dwProcessId, my_trace->last_event.dwThreadId, status);
+        //ContinueDebugEvent(my_trace->event.dwProcessId, my_trace->event.dwThreadId, status);
+        handle_continue(my_trace->event.dwProcessId, my_trace->event.dwThreadId, status);
     }
     d_print("Continuing\n");
     while(1)
     {
         DWORD ret;
 
-        ret = WaitForDebugEvent(&(my_trace->last_event), time);
+        ret = WaitForDebugEvent(&(my_trace->event), time);
 
-        //d_print("continue_routine: dwDebugEventCode: 0x%08x\n", my_trace->last_event.dwDebugEventCode);
+        d_print2("# Got DEBUG_EVENT");
+        update_status((void*)&my_trace->event);
+
+        if(my_trace->tid != my_trace->last_tid) 
+        {
+            task_switch();
+        }
+
+        if(last_was_syscall(my_trace->tid)) 
+        {
+            react_sysret_callback((void*)&my_trace->event);
+        }
+
+        if(is_syscall(my_trace->eip))
+        {
+            react_sysenter_callback((void*)&my_trace->event);
+        }
+
+
+        //register_all_threads(); /* przeniesiono do task switch */
 
         if(ret == 0x0) //probably timeout
         {
@@ -5824,25 +5948,33 @@ int continue_routine(DWORD time, unsigned stat)
             sprintf(line, "Got timeout");
             strcpy(my_trace->report_buffer, line);
             last_report = REPORT_TIMEOUT;
+            sprintf(line, "# REPORT_TIMEOUT\n");
+            add_to_buffer(line);
             break;
         }
 
-        last_report = process_last_event();
+        last_report = process_event();
         if(last_report == REPORT_CONTINUE)
         {
             status = DBG_CONTINUE;
+            sprintf(line, "# REPORT_CONTINUE\n");
+            add_to_buffer(line);
         }
         else if(last_report == REPORT_EXCEPTION_NH)
         {
             status = DBG_EXCEPTION_NOT_HANDLED;
+            sprintf(line, "# DBG_EXCEPTION_NOT_HANDLED\n");
+            add_to_buffer(line);
         }
         else
         {
+            sprintf(line, "# something else\n");
+            add_to_buffer(line);
             break;
         }
 
-        //ContinueDebugEvent(my_trace->last_event.dwProcessId, my_trace->last_event.dwThreadId, status);
-        handle_continue(my_trace->last_event.dwProcessId, my_trace->last_event.dwThreadId, status);
+        //ContinueDebugEvent(my_trace->event.dwProcessId, my_trace->event.dwThreadId, status);
+        handle_continue(my_trace->event.dwProcessId, my_trace->event.dwThreadId, status);
     }
 
     create_report(last_report);
@@ -5862,7 +5994,7 @@ int resolve_region_old(OLD_LOCATION_DESCRIPTOR* selector, LOCATION* location)
     DWORD read;
     CONTEXT ctx;
 
-    read_context(my_trace->last_event.dwThreadId, &ctx);
+    read_context(my_trace->event.dwThreadId, &ctx);
     cur_esp = ctx.Esp;
 
     arg_val = 0x0;
@@ -6583,79 +6715,96 @@ int handle_cmd(char* cmd)
     else if(!strncmp(cmd, CMD_ENABLE_TRACE, 2))
     {
         char line2[MAX_LINE];
+        char line[MAX_LINE];
 
         my_trace->status = STATUS_DBG_STARTED;
         my_trace->block_delayed_reaction = 1;
- //       ss_callback((void*)&my_trace->last_event);
+ //       ss_callback((void*)&my_trace->event);
         my_trace->callback_routine = &ss_callback;
-        my_trace->callback_routine((void*)&my_trace->last_event);
-         set_ss(0x0);
+        my_trace->callback_routine((void*)&my_trace->event);
+
+        sprintf(line, "# CMD_ENABLE_TRACE\n");
+        add_to_buffer(line);
+
         d_print("Tracing enabled\n");
 
-        d_print("Starting @ 0x%08x\n", my_trace->last_eip);
+        d_print("Starting @ 0x%08x\n", my_trace->eip);
         sprintf(line2, VERSION_STR);
         add_to_buffer(line2);
-        sprintf(line2, "ST,0x%08x\n", my_trace->last_eip);
+        sprintf(line2, "ST,0x%08x\n", my_trace->eip);
         add_to_buffer(line2);
+        register_all_threads_in_trace();
 
         send_report();
     }
     else if(!strncmp(cmd, CMD_ENABLE_TRACE_SYSCALL, 2))
     {
         char line2[MAX_LINE];
+        char line[MAX_LINE];
 
         my_trace->status = STATUS_DBG_SYSCALL;
-//        ss_callback((void*)&my_trace->last_event);
+//        ss_callback((void*)&my_trace->event);
         my_trace->callback_routine = &syscall_callback;
-        my_trace->callback_routine((void*)&my_trace->last_event);
-        set_ss(0x0);
+        my_trace->callback_routine((void*)&my_trace->event);
+
+        sprintf(line, "# CMD_ENABLE_TRACE_SYSCALL\n");
+        add_to_buffer(line);
+
         d_print("Syscall tracing debugged enabled\n");
 
-        d_print("Starting @ 0x%08x\n", my_trace->last_eip);
+        d_print("Starting @ 0x%08x\n", my_trace->eip);
         sprintf(line2, VERSION_STR);
         add_to_buffer(line2);
-        sprintf(line2, "ST,0x%08x\n", my_trace->last_eip);
+        sprintf(line2, "ST,0x%08x\n", my_trace->eip);
         add_to_buffer(line2);
+        register_all_threads_in_trace();
 
         send_report();
     }
     else if(!strncmp(cmd, CMD_ENABLE_DBG_LIGHT, 2))
     {
         char line2[MAX_LINE];
+        char line[MAX_LINE];
 
         my_trace->status = STATUS_DBG_LIGHT;
-//        ss_callback((void*)&my_trace->last_event);
+//        ss_callback((void*)&my_trace->event);
         my_trace->callback_routine = &ss_callback;
-        my_trace->callback_routine((void*)&my_trace->last_event);
+        my_trace->callback_routine((void*)&my_trace->event);
 
-        set_ss(0x0);
+        sprintf(line, "# CMD_ENABLE_DBG_LIGHT\n");
+        add_to_buffer(line);
+
         d_print("Light tracing debugged enabled\n");
 
         sprintf(line2, VERSION_STR);
         add_to_buffer(line2);
-        d_print("Starting @ 0x%08x\n", my_trace->last_eip);
-        sprintf(line2, "ST,0x%08x\n", my_trace->last_eip);
+        d_print("Starting @ 0x%08x\n", my_trace->eip);
+        sprintf(line2, "ST,0x%08x\n", my_trace->eip);
         add_to_buffer(line2);
+        register_all_threads_in_trace();
 
         send_report();
     }
     else if(!strncmp(cmd, CMD_ENABLE_DBG_TRACE, 2))
     {
         char line2[MAX_LINE];
+        char line[MAX_LINE];
 
         my_trace->status = STATUS_DBG_SCANNED;
         my_trace->callback_routine = &ss_callback;
-        my_trace->callback_routine((void*)&my_trace->last_event);
+        my_trace->callback_routine((void*)&my_trace->event);
 
-//        ss_callback((void*)&my_trace->last_event);
-        set_ss(0x0);
+        sprintf(line, "# CMD_ENABLE_DBG_TRACE\n");
+        add_to_buffer(line);
+
         d_print("Tracing debugged enabled\n");
 
         sprintf(line2, VERSION_STR);
         add_to_buffer(line2);
-        d_print("Starting @ 0x%08x\n", my_trace->last_eip);
-        sprintf(line2, "ST,0x%08x\n", my_trace->last_eip);
+        d_print("Starting @ 0x%08x\n", my_trace->eip);
+        sprintf(line2, "ST,0x%08x\n", my_trace->eip);
         add_to_buffer(line2);
+        register_all_threads_in_trace();
 
         send_report();
     }
@@ -6666,8 +6815,8 @@ int handle_cmd(char* cmd)
         my_trace->status = STATUS_DBG_STOPPED;
         d_print("Tracing disabled\n");
 
-        d_print("Ending @ 0x%08x\n", my_trace->last_eip);
-        sprintf(line2, "END,0x%08x\n", my_trace->last_eip);
+        d_print("Ending @ 0x%08x\n", my_trace->eip);
+        sprintf(line2, "END,0x%08x\n", my_trace->eip);
         add_to_buffer(line2);
 
         send_report();
@@ -7350,7 +7499,7 @@ int handle_cmd(char* cmd)
 
         strtok(cmd, " ");
         str = strtok(0x0, " ");
-        sprintf(line2, "OU,0x%x,%s\n", my_trace->last_tid, str);
+        sprintf(line2, "OU,0x%x,%s\n", my_trace->tid, str);
         add_to_buffer(line2);
         send_report();
         
@@ -7421,8 +7570,8 @@ int init_trace(TRACE_CONFIG* trace, char* host, short port)
     my_trace->eventLock = CreateEvent(0x0, 0x0, 0x0, 0x0);
     my_trace->eventUnlock = CreateEvent(0x0, 0x0, 0x0, 0x0);
 
-    my_trace->last_eip = 0x0;
-    my_trace->last_tid = 0x0;
+    my_trace->eip = 0x0;
+    my_trace->tid = 0x0;
 
     my_trace->reactions = (REACTION*)malloc(sizeof(REACTION)*MAX_REACTIONS);
 }
@@ -7442,8 +7591,8 @@ int init_trace(TRACE_CONFIG* trace, char* host, short port, char* stdout_destina
     my_trace->eventLock = CreateEvent(0x0, 0x0, 0x0, 0x0);
     my_trace->eventUnlock = CreateEvent(0x0, 0x0, 0x0, 0x0);
 
-    my_trace->last_eip = 0x0;
-    my_trace->last_tid = 0x0;
+    my_trace->eip = 0x0;
+    my_trace->tid = 0x0;
 
     my_trace->reactions = (REACTION*)malloc(sizeof(REACTION)*MAX_REACTIONS);
 
@@ -7908,8 +8057,6 @@ int configure_reaction_routines()
 
     my_trace->routines[0x201] = &react_update_region_1;
     my_trace->routines[0x202] = &react_cry_antidebug_1;
-    my_trace->routines[0x203] = &react_skip_on;
-    my_trace->routines[0x204] = &react_skip_off;
     my_trace->routines[0x205] = &react_update_region_2;
 
     /* outputting DWORDs */

@@ -863,10 +863,20 @@ int taint_plugin::parse_cmd(char* string)
     }
     else if(!strncasecmp(cur_str, "tai", 3))
     {
-        d_print_prompt(0, "There have been %d taints:\n", this->taint_count);
-        for(i = 0x0; i< this->taint_count; i++)
+        cur_str = strtok(0x0, " \n\r"); 
+
+        if(cur_str == 0x0)
         {
-            d_err_print("Taint no %d: 0x%08x, 0x%08x\n", i, this->taints[i].off, this->taints[i].size);
+            d_print_prompt(0, "There have been %d taints:\n", this->taint_count);
+            for(i = 0x0; i< this->taint_count; i++)
+            {
+                d_err_print("Taint no %d: 0x%08x, 0x%08x\n", i, this->taints[i].off, this->taints[i].size);
+            }
+        }
+        else if(!strncasecmp(cur_str, "set", 3))
+        {
+            d_print_prompt(0, "Setting taint\n");
+            register_taint2(cur_str);
         }
 
     }
@@ -1591,6 +1601,21 @@ int taint_plugin::register_taint(char* line)
     OFFSET off;
 
     cmd = strtok(line, ",");
+    off = (OFFSET)strtol(strtok(0x0, ","), 0x0, 0x10);
+    len = (DWORD)strtol(strtok(0x0, ","), 0x0, 0x10);
+
+    d_print(1, "Registering taint @ 0x%08x, with length: 0x%08x\n", off, len);
+    this->add_taint(off, len);
+
+    return 0x0;
+}
+
+int taint_plugin::register_taint2(char* line)
+{
+    char* cmd;
+    DWORD len;
+    OFFSET off;
+
     off = (OFFSET)strtol(strtok(0x0, ","), 0x0, 0x10);
     len = (DWORD)strtol(strtok(0x0, ","), 0x0, 0x10);
 

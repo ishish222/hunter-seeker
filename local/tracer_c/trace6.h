@@ -287,6 +287,11 @@ typedef struct _THREAD_ENTRY
     REACTION* locking_reaction;
     char lock_level;
     char after_unlocking;
+    
+    /* handling syscalls */
+    char last_was_syscall;
+    DWORD syscall_no;
+
 } THREAD_ENTRY;
 
 /* tracking libraries */
@@ -384,10 +389,15 @@ typedef struct TRACE_CONFIG_
     /* last events */
     READ_RECORD last_read_record;
     DEBUG_EVENT last_event;
+    DEBUG_EVENT event;
     EXCEPTION_RECORD last_exception;
     int last_win_status;
+    OFFSET eip;
     OFFSET last_eip;
+    DWORD tid;
     DWORD last_tid;
+    DWORD tid_pos;
+    DWORD last_tid_pos;
     REACTION* last_reaction;
 
     char verbose; /*full_log*/

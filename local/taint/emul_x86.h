@@ -768,6 +768,8 @@ class taint_x86
     // extended
     int r_cmpxchg_rm_r_8(BYTE_t*);
     int r_cmpxchg_rm_r_16_32(BYTE_t*);
+    int r_bts_rm_r_16_32(BYTE_t*);
+    int r_bts_rm_16_32_imm_8(BYTE_t*);
     int r_btr_rm_r_16_32(BYTE_t*);
     int r_btr_rm_16_32_imm_8(BYTE_t*);
     int r_movzx_r_16_32_rm_8(BYTE_t*);
@@ -1319,6 +1321,7 @@ class taint_x86
         this->instructions_32_extended[0xa5] = &taint_x86::r_shld_r_rm_16_32_cl;    //
         this->instructions_32_extended[0xac] = &taint_x86::r_shrd_r_rm_16_32_imm_8; //
         this->instructions_32_extended[0xad] = &taint_x86::r_shrd_r_rm_16_32_cl;    //
+        this->instructions_32_extended[0xab] = &taint_x86::r_bts_rm_r_16_32;        // 
         this->instructions_32_extended[0xaf] = &taint_x86::r_imul_r_rm_16_32;       // prop
         this->instructions_32_extended[0xb0] = &taint_x86::r_cmpxchg_rm_r_8;        // need, cf
         this->instructions_32_extended[0xb1] = &taint_x86::r_cmpxchg_rm_r_16_32;    // need, cf
