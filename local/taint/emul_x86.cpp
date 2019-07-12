@@ -3333,9 +3333,9 @@ int taint_x86::a_rol_32(DWORD_t& a)
     val <<= 0x1;
 
     if(bit)
-        val | 0x00000001;
+        val |= 0x00000001;
     else
-        val & 0xfffffffe;
+        val &= 0xfffffffe;
     
     a.set_DWORD(val);
 
@@ -3353,9 +3353,9 @@ int taint_x86::a_ror_32(DWORD_t& a)
     val >>= 0x1;
 
     if(bit)
-        val | 0x80000000;
+        val |= 0x80000000;
     else
-        val & 0x7fffffff;
+        val &= 0x7fffffff;
     
     a.set_DWORD(val);
 
@@ -3374,9 +3374,9 @@ int taint_x86::a_rcl_32(DWORD_t& a)
     val <<= 0x1;
 
     if(bit2)
-        val | 0x00000001;
+        val |= 0x00000001;
     else
-        val & 0xfffffffe;
+        val &= 0xfffffffe;
     
     if(bit)
         this->a_set_cf();
@@ -3400,9 +3400,9 @@ int taint_x86::a_rcr_32(DWORD_t& a)
     val >>= 0x1;
 
     if(bit2)
-        val | 0x80000000;
+        val |= 0x80000000;
     else
-        val & 0x7fffffff;
+        val &= 0x7fffffff;
     
     if(bit)
         this->a_set_cf();
@@ -3510,9 +3510,9 @@ int taint_x86::a_rol_16(WORD_t& a)
     val <<= 0x1;
 
     if(bit)
-        val | 0x0001;
+        val |= 0x0001;
     else
-        val & 0xfffe;
+        val &= 0xfffe;
     
     a.set_WORD(val);
 
@@ -3530,9 +3530,9 @@ int taint_x86::a_ror_16(WORD_t& a)
     val >>= 0x1;
 
     if(bit)
-        val | 0x8000;
+        val |= 0x8000;
     else
-        val & 0x7fff;
+        val &= 0x7fff;
     
     a.set_WORD(val);
 
@@ -3551,9 +3551,9 @@ int taint_x86::a_rcl_16(WORD_t& a)
     val <<= 0x1;
 
     if(bit2)
-        val | 0x0001;
+        val |= 0x0001;
     else
-        val & 0xfffe;
+        val &= 0xfffe;
     
     if(bit)
         this->a_set_cf();
@@ -3577,9 +3577,9 @@ int taint_x86::a_rcr_16(WORD_t& a)
     val >>= 0x1;
 
     if(bit2)
-        val | 0x8000;
+        val |= 0x8000;
     else
-        val & 0x7fff;
+        val &= 0x7fff;
     
     if(bit)
         this->a_set_cf();
@@ -3686,9 +3686,9 @@ int taint_x86::a_rol_8(BYTE_t& a)
     val <<= 0x1;
 
     if(bit)
-        val | 0x01;
+        val |= 0x01;
     else
-        val & 0xfe;
+        val &= 0xfe;
     
     a.set_BYTE(val);
 
@@ -3706,9 +3706,9 @@ int taint_x86::a_ror_8(BYTE_t& a)
     val >>= 0x1;
 
     if(bit)
-        val | 0x80;
+        val |= 0x80;
     else
-        val & 0x7f;
+        val &= 0x7f;
     
     a.set_BYTE(val);
     return 0x0;
@@ -3726,9 +3726,9 @@ int taint_x86::a_rcl_8(BYTE_t& a)
     val <<= 0x1;
 
     if(bit2)
-        val | 0x01;
+        val |= 0x01;
     else
-        val & 0xfe;
+        val &= 0xfe;
     
     if(bit)
         this->a_set_cf();
@@ -3752,9 +3752,9 @@ int taint_x86::a_rcr_8(BYTE_t& a)
     val >>= 0x1;
 
     if(bit2)
-        val | 0x80;
+        val |= 0x80;
     else
-        val & 0x7f;
+        val &= 0x7f;
     
     if(bit)
         this->a_set_cf();
