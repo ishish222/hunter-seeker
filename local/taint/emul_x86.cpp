@@ -3325,7 +3325,7 @@ DWORD_t taint_x86::a_imod_32(DWORD_t a, DWORD_t b)
 int taint_x86::a_rol_32(DWORD_t& a)
 {
     DWORD val;
-    char bit;
+    DWORD bit;
 
     val = a.get_DWORD();
     bit = val & 0x80000000;
@@ -3345,7 +3345,7 @@ int taint_x86::a_rol_32(DWORD_t& a)
 int taint_x86::a_ror_32(DWORD_t& a)
 {
     DWORD val;
-    char bit;
+    DWORD bit;
 
     val = a.get_DWORD();
     bit = val & 0x00000001;
@@ -3365,7 +3365,7 @@ int taint_x86::a_ror_32(DWORD_t& a)
 int taint_x86::a_rcl_32(DWORD_t& a)
 {
     DWORD val;
-    char bit, bit2;
+    DWORD bit, bit2;
 
     val = a.get_DWORD();
     bit = val & 0x80000000;
@@ -3391,7 +3391,7 @@ int taint_x86::a_rcl_32(DWORD_t& a)
 int taint_x86::a_rcr_32(DWORD_t& a)
 {
     DWORD val;
-    char bit, bit2;
+    DWORD bit, bit2;
 
     val = a.get_DWORD();
     bit = val & 0x1;
@@ -3502,7 +3502,7 @@ WORD_t taint_x86::a_imod_16(WORD_t a, WORD_t b)
 int taint_x86::a_rol_16(WORD_t& a)
 {
     WORD val;
-    char bit;
+    WORD bit;
 
     val = a.get_WORD();
     bit = val & 0x8000;
@@ -3522,7 +3522,7 @@ int taint_x86::a_rol_16(WORD_t& a)
 int taint_x86::a_ror_16(WORD_t& a)
 {
     WORD val;
-    char bit;
+    WORD bit;
 
     val = a.get_WORD();
     bit = val & 0x0001;
@@ -3542,7 +3542,7 @@ int taint_x86::a_ror_16(WORD_t& a)
 int taint_x86::a_rcl_16(WORD_t& a)
 {
     WORD val;
-    char bit, bit2;
+    WORD bit, bit2;
 
     val = a.get_WORD();
     bit = val & 0x8000;
@@ -3568,7 +3568,7 @@ int taint_x86::a_rcl_16(WORD_t& a)
 int taint_x86::a_rcr_16(WORD_t& a)
 {
     WORD val;
-    char bit, bit2;
+    WORD bit, bit2;
 
     val = a.get_WORD();
     bit = val & 0x1;
@@ -3678,7 +3678,7 @@ BYTE_t taint_x86::a_imod_8(BYTE_t a, BYTE_t b)
 int taint_x86::a_rol_8(BYTE_t& a)
 {
     BYTE val;
-    char bit;
+    BYTE bit;
 
     val = a.get_BYTE();
     bit = val & 0x80;
@@ -3698,7 +3698,7 @@ int taint_x86::a_rol_8(BYTE_t& a)
 int taint_x86::a_ror_8(BYTE_t& a)
 {
     BYTE val;
-    char bit;
+    BYTE bit;
 
     val = a.get_BYTE();
     bit = val & 0x01;
@@ -3717,7 +3717,7 @@ int taint_x86::a_ror_8(BYTE_t& a)
 int taint_x86::a_rcl_8(BYTE_t& a)
 {
     BYTE val;
-    char bit, bit2;
+    BYTE bit, bit2;
 
     val = a.get_BYTE();
     bit = val & 0x80;
@@ -3743,7 +3743,7 @@ int taint_x86::a_rcl_8(BYTE_t& a)
 int taint_x86::a_rcr_8(BYTE_t& a)
 {
     BYTE val;
-    char bit, bit2;
+    BYTE bit, bit2;
 
     val = a.get_BYTE();
     bit = val & 0x1;
@@ -7701,11 +7701,11 @@ int taint_x86::r_imul_r_rm_imm_16_32(BYTE_t* addr)
 int taint_x86::r_imul_r_rm_imm_16_32(BYTE_t* instr_ptr)
 {
     modrm_ptr rm, r;
-    WORD_t src_16, ax, dx;
-    UWORD temp_16_1, temp_16_2;
-    DWORD_t src_32, eax, edx;
-    UDWORD temp_32_1, temp_32_2;
-
+    WORD_t src_16_1, src_16_2;
+    WORD_t temp_16;
+    DWORD_t src_32_1, src_32_2;
+    DWORD_t temp_32;
+    
     DWORD res1;
     QWORD res2;
 
@@ -7717,42 +7717,36 @@ int taint_x86::r_imul_r_rm_imm_16_32(BYTE_t* instr_ptr)
             switch(rm.size)
             {
                 case MODRM_SIZE_16:
-                    this->reg_propagation_cause_r_16(r.offset);
                     this->reg_propagation_cause_r_16(rm.offset);
                     this->reg_propagation_cause_m_16(this->reg_restore_32(EIP).get_DWORD() + this->current_instr_length);
 
-                    ax = this->reg_restore_16(r.offset);
-                    src_16.from_mem(instr_ptr + this->current_instr_length);
+                    src_16_1 = reg_restore_16(rm.offset);
+                    src_16_2.from_mem(instr_ptr + this->current_instr_length);
 
-                    res1 = this->a_f_imul_16(ax, src_16);
+                    temp_16 = src_16_1;
+                    res1 = this->a_f_imul_16(src_16_1, src_16_2);
+                    temp_16.set_WORD((WORD)res1 & 0xffff);
                     
-                    ax.set_WORD(res1 & 0xffff);
-                    res1 >>= 0x10;
-                    dx.set_WORD(res1 & 0xffff);
-
-                    this->reg_store_16(r.offset, ax);
                     // in 3-operand form result is truncated
                     // in 3-operand form result is stored in destination operand
+                    this->reg_store_16(r.offset, temp_16);
 
                     this->attach_current_propagation_r_16(r.offset);
                     break;
                 case MODRM_SIZE_32:
-                    this->reg_propagation_cause_r_32(r.offset);
                     this->reg_propagation_cause_r_32(rm.offset);
                     this->reg_propagation_cause_m_32(this->reg_restore_32(EIP).get_DWORD() + this->current_instr_length);
 
-                    eax = this->reg_restore_32(r.offset);
-                    src_32.from_mem(instr_ptr + this->current_instr_length);
+                    src_32_1 = reg_restore_32(rm.offset);
+                    src_32_2.from_mem(instr_ptr + this->current_instr_length);
 
-                    res2 = this->a_f_imul_32(eax, src_32);
+                    temp_32 = src_32_1;
+                    res2 = this->a_f_imul_32(src_32_1, src_32_2);
+                    temp_32.set_DWORD((DWORD)res2 & 0xffffffff);
                     
-                    eax.set_DWORD(res2 & 0xffffffff);
-                    res2 >>= 0x20;
-                    edx.set_DWORD(res2 & 0xffffffff);
-
                     // in 3-operand form result is truncated
                     // in 3-operand form result is stored in destination operand
-                    this->reg_store_32(r.offset, eax);
+                    this->reg_store_32(r.offset, temp_32);
 
                     this->attach_current_propagation_r_32(r.offset);
                     break;
@@ -7762,46 +7756,36 @@ int taint_x86::r_imul_r_rm_imm_16_32(BYTE_t* instr_ptr)
             switch(rm.size)
             {
                 case MODRM_SIZE_16:
-                    this->reg_propagation_cause_r_16(r.offset);
                     this->reg_propagation_cause_m_16(rm.offset);
                     this->reg_propagation_cause_m_16(this->reg_restore_32(EIP).get_DWORD() + this->current_instr_length);
 
-                    ax = this->reg_restore_16(AX);
-                    src_16.from_mem(instr_ptr + this->current_instr_length);
+                    this->restore_16(rm.offset, src_16_1);
+                    src_16_2.from_mem(instr_ptr + this->current_instr_length);
 
-                    res1 = this->a_f_imul_16(ax, src_16);
+                    temp_16 = src_16_1;
+                    res1 = this->a_f_imul_16(src_16_1, src_16_2);
+                    temp_16.set_WORD((WORD)res1 & 0xffff);
                     
-                    ax.set_WORD(res1 & 0xffff);
-                    res1 >>= 0x10;
-                    dx.set_WORD(res1 & 0xffff);
-
-                    this->reg_store_16(AX, ax);
+                    this->reg_store_16(r.offset, temp_16);
                     // in 3-operand form result is truncated
-                    //this->reg_store_16(DX, dx);
 
-                    this->attach_current_propagation_r_16(AX);
-                    //this->attach_current_propagation_r_16(DX);
+                    this->attach_current_propagation_r_16(r.offset);
                     break;
                 case MODRM_SIZE_32:
-                    this->reg_propagation_cause_r_32(r.offset);
                     this->reg_propagation_cause_m_32(rm.offset);
                     this->reg_propagation_cause_m_32(this->reg_restore_32(EIP).get_DWORD() + this->current_instr_length);
 
-                    eax = this->reg_restore_32(EAX);
-                    src_32.from_mem(instr_ptr + this->current_instr_length);
+                    this->restore_32(rm.offset, src_32_1);
+                    src_32_2.from_mem(instr_ptr + this->current_instr_length);
 
-                    res2 = this->a_f_imul_32(eax, src_32);
+                    temp_32 = src_32_1;
+                    res2 = this->a_f_imul_32(src_32_1, src_32_2);
+                    temp_32.set_DWORD((DWORD)res2 & 0xffffffff);
                     
-                    eax.set_DWORD(res2 & 0xffffffff);
-                    res2 >>= 0x20;
-                    edx.set_DWORD(res2 & 0xffffffff);
-
-                    this->reg_store_32(EAX, eax);
+                    this->reg_store_32(r.offset, temp_32);
                     // in 3-operand form result is truncated
-                    //this->reg_store_32(EDX, edx);
 
                     this->attach_current_propagation_r_32(EAX);
-                    //this->attach_current_propagation_r_32(EDX);
                     break;
             }
             break;
@@ -15097,7 +15081,7 @@ int taint_x86::r_rcl_rm_16_32_imm_8(BYTE_t* instr_ptr)
                     val32 = this->reg_restore_32(rm.offset);
                     
                     for(i = 0x0; i< count; i++)
-                        this->a_rcl_16(val16);
+                        this->a_rcl_32(val32);
 
                     this->reg_store_32(rm.offset, val32);
                     break;
@@ -15118,7 +15102,7 @@ int taint_x86::r_rcl_rm_16_32_imm_8(BYTE_t* instr_ptr)
                     this->restore_32(rm.offset, val32);
                     
                     for(i = 0x0; i< count; i++)
-                        this->a_rcl_16(val16);
+                        this->a_rcl_32(val32);
 
                     this->store_32(rm.offset, val32);
                     break;
@@ -15159,7 +15143,7 @@ int taint_x86::r_rcr_rm_16_32_imm_8(BYTE_t* instr_ptr)
                     val32 = this->reg_restore_32(rm.offset);
                     
                     for(i = 0x0; i< count; i++)
-                        this->a_rcr_16(val16);
+                        this->a_rcr_32(val32);
 
                     this->reg_store_32(rm.offset, val32);
                     break;
@@ -15180,7 +15164,7 @@ int taint_x86::r_rcr_rm_16_32_imm_8(BYTE_t* instr_ptr)
                     this->restore_32(rm.offset, val32);
                     
                     for(i = 0x0; i< count; i++)
-                        this->a_rcr_16(val16);
+                        this->a_rcr_32(val32);
 
                     this->store_32(rm.offset, val32);
                     break;
@@ -15222,7 +15206,7 @@ int taint_x86::r_rol_rm_16_32_imm_8(BYTE_t* instr_ptr)
                     val32 = this->reg_restore_32(rm.offset);
                     
                     for(i = 0x0; i< count; i++)
-                        this->a_rol_16(val16);
+                        this->a_rol_32(val32);
 
                     this->reg_store_32(rm.offset, val32);
                     break;
@@ -15243,7 +15227,7 @@ int taint_x86::r_rol_rm_16_32_imm_8(BYTE_t* instr_ptr)
                     this->restore_32(rm.offset, val32);
                     
                     for(i = 0x0; i< count; i++)
-                        this->a_rol_16(val16);
+                        this->a_rol_32(val32);
 
                     this->store_32(rm.offset, val32);
                     break;
@@ -15284,7 +15268,7 @@ int taint_x86::r_ror_rm_16_32_imm_8(BYTE_t* instr_ptr)
                     val32 = this->reg_restore_32(rm.offset);
                     
                     for(i = 0x0; i< count; i++)
-                        this->a_ror_16(val16);
+                        this->a_ror_32(val32);
 
                     this->reg_store_32(rm.offset, val32);
                     break;
@@ -15305,7 +15289,7 @@ int taint_x86::r_ror_rm_16_32_imm_8(BYTE_t* instr_ptr)
                     this->restore_32(rm.offset, val32);
                     
                     for(i = 0x0; i< count; i++)
-                        this->a_ror_16(val16);
+                        this->a_ror_32(val32);
 
                     this->store_32(rm.offset, val32);
                     break;
@@ -15489,14 +15473,14 @@ int taint_x86::r_not_rm_16_32(BYTE_t* instr_ptr)
                 case MODRM_SIZE_16:
                     dst_16 = this->reg_restore_16(rm.offset);
                     d_print(3, "Before not: 0x%08x\n", dst_16.get_WORD());
-                    dst_16.set_WORD(!dst_16.get_WORD());
+                    dst_16.set_WORD(~dst_16.get_WORD());
                     d_print(3, "After not: 0x%08x\n", dst_16.get_WORD());
                     this->reg_store_16(rm.offset, dst_16);
                     break;
                 case MODRM_SIZE_32:
                     dst_32 = this->reg_restore_32(rm.offset);
                     d_print(3, "Before not: 0x%08x\n", dst_32.get_DWORD());
-                    dst_32.set_DWORD(!dst_32.get_DWORD());
+                    dst_32.set_DWORD(~dst_32.get_DWORD());
                     d_print(3, "After not: 0x%08x\n", dst_32.get_DWORD());
                     this->reg_store_32(rm.offset, dst_32);
                     break;
@@ -15508,14 +15492,14 @@ int taint_x86::r_not_rm_16_32(BYTE_t* instr_ptr)
                 case MODRM_SIZE_16:
                     this->restore_16(r.offset, dst_16);
                     d_print(3, "Before not: 0x%08x\n", dst_16.get_WORD());
-                    dst_16.set_WORD(!dst_16.get_WORD());
+                    dst_16.set_WORD(~dst_16.get_WORD());
                     d_print(3, "After not: 0x%08x\n", dst_16.get_WORD());
                     this->store_16(r.offset, dst_16);
                     break;
                 case MODRM_SIZE_32:
                     this->restore_32(r.offset, dst_32);
                     d_print(3, "Before not: 0x%08x\n", dst_32.get_DWORD());
-                    dst_32.set_DWORD(!dst_32.get_DWORD());
+                    dst_32.set_DWORD(~dst_32.get_DWORD());
                     d_print(3, "After not: 0x%08x\n", dst_32.get_DWORD());
                     this->store_32(r.offset, dst_32);
                     break;
@@ -16163,8 +16147,8 @@ int taint_x86::r_div_rm_16_32(BYTE_t* instr_ptr)
     UWORD temp_16_1, temp_16_2;
     DWORD_t src_32, eax, edx;
     UDWORD temp_32_1, temp_32_2;
-    UDWORD axdx;
-    UQWORD eaxedx;
+    DWORD axdx;
+    QWORD eaxedx;
 
     this->a_decode_modrm(instr_ptr +1, &r, &rm);
 
@@ -16185,7 +16169,7 @@ int taint_x86::r_div_rm_16_32(BYTE_t* instr_ptr)
                     }
                     axdx = dx.get_WORD();
                     axdx <<= 0x10;
-                    axdx += ax.get_WORD();
+                    axdx += (DWORD)(ax.get_WORD() & 0xffff);
 
                     dx = axdx % (UWORD)src_16.get_WORD();
                     ax = axdx / (UWORD)src_16.get_WORD();
@@ -16205,7 +16189,7 @@ int taint_x86::r_div_rm_16_32(BYTE_t* instr_ptr)
 
                     eaxedx = edx.get_DWORD();
                     eaxedx <<=0x20;
-                    eaxedx += eax.get_DWORD();
+                    eaxedx += (QWORD)(eax.get_DWORD() & 0xffffffff);
 
                     edx = (UDWORD)(eaxedx % (UDWORD)src_32.get_DWORD());
                     eax = (UDWORD)(eaxedx / (UDWORD)src_32.get_DWORD());
@@ -16228,7 +16212,7 @@ int taint_x86::r_div_rm_16_32(BYTE_t* instr_ptr)
                     }
                     axdx = dx.get_WORD();
                     axdx <<= 0x10;
-                    axdx += ax.get_WORD();
+                    axdx += (DWORD)(ax.get_WORD() & 0xffff);
 
                     dx = axdx % (UWORD)src_16.get_WORD();
                     ax = axdx / (UWORD)src_16.get_WORD();
@@ -16247,7 +16231,7 @@ int taint_x86::r_div_rm_16_32(BYTE_t* instr_ptr)
 
                     eaxedx = edx.get_DWORD();
                     eaxedx <<=0x20;
-                    eaxedx += eax.get_DWORD();
+                    eaxedx += (QWORD)(eax.get_DWORD() & 0xffffffff);
 
                     edx = (UDWORD)(eaxedx % (UDWORD)src_32.get_DWORD());
                     eax = (UDWORD)(eaxedx / (UDWORD)src_32.get_DWORD());
