@@ -1,11 +1,21 @@
-#!/bin/sh
+#!/bin/bash
 #
-# usage: $0 PACKAGE MACHINE SCRIPT
+# usage: $0 PACKAGE MACHINE SCRIPT FOLDER
 
-LOCAL_ROOT=../
+. settings
+
 PACKAGE=$1
 MACHINE=$2
 SCRIPT=$3
 FOLDER=$4
 
-ssh -t hs1@flareon "cd hs2-current-deploy/script-zero-trace-flareon/client; screen -S $MACHINE sh -c \"cd .; ./fuzzer.py --out-prefix $FOLDER $MACHINE $SCRIPT; bash\""
+if [ $PACKAGE_HOST == "local" ];
+then
+    echo "This is local config, will analyze on localhost"
+    screen -L -S $MACHINE sh -c "cd $CURRENT_DEPLOY_PATH/$PACKAGE/client; ./fuzzer.py $MACHINE $SCRIPT $FOLDER; bash"
+else
+    echo "This is remote config, will analyze on remote"
+    ssh -t $PACKAGE_HOST "cd $CURRENT_DEPLOY_PATH/$PACKAGE/client; screen -L -S $MACHINE sh -c \"cd .; ./fuzzer.py $MACHINE $SCRIPT $FOLDER; bash\""
+fi
+
+

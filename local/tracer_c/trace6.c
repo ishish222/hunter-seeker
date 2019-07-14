@@ -119,6 +119,7 @@ int reopen_stdio()
 
 int d_print2(const char* format, ...)
 {
+    if(my_trace->debug_level == 0x0) return 0x0;
     va_list argptr;
     char line[MAX_LINE];
     char line2[MAX_LINE];
@@ -964,6 +965,7 @@ void report_arg_string_x(unsigned x)
         my_trace->report_code = REPORT_INFO;
         sprintf(line, "# Failed to read ANSI string @ 0x%08x\n", esp);
         strcpy(my_trace->report_buffer, line);
+        d_print2("Failed to read ANSI string @ 0x%08x", esp);
     }
 
     return;
@@ -1389,7 +1391,7 @@ void read_string_ascii(DWORD addr)
         strcat(my_trace->report_buffer, line);
         sprintf(line, "# Failed to read ascii string @ 0x%08x\n", addr);
         strcat(my_trace->report_buffer, line);
-        add_to_buffer(line);
+        d_print2("Failed to read ascii string @ 0x%08x", addr);
     }
 
     return;
@@ -2954,7 +2956,7 @@ int set_ss(DWORD tid)
         ctx.EFlags |= SS_FLAGS;
         SetThreadContext(tHandle, &ctx);
 
-        d_print2("SS to 0x%08x from set_ss", tid);
+        //d_print2("SS to 0x%08x from set_ss", tid);
 
         CloseHandle(tHandle);
     }
@@ -3110,16 +3112,6 @@ void syscall_callback(void* data)
         sprintf(line, "SC,0x%08x,0x%08x,0x%08x\n", syscall_no, tid, eip);
         add_to_buffer(line);
     }
-    //else
-    //{
-    //sprintf(line, "0x%08x,0x%08x\n", tid, eip);
-    //add_to_buffer(line);
-    //}
-
-    //sprintf(line, "# SS to all from syscall_callback\n");
-    //add_to_buffer(line);
-    //check_for_and_enable_ss();
-
     return;
 }
 
@@ -3199,10 +3191,6 @@ void ss_callback(void* data)
         }
     }
 
-//    ReleaseMutex(my_trace->mutex);
-    //sprintf(line, "# SS to all from ss_callback\n");
-    //add_to_buffer(line);
-    //check_for_and_enable_ss();
 
     return;
 }
@@ -3608,8 +3596,7 @@ int handle_reaction(REACTION* cur_reaction, void* data)
         {
             /* report rection_id to external controller */
             d_print("Routine is null, reporting to controller\n");
-            sprintf(line, "# Breakpoint: %s\n", cur_reaction->reaction_id);
-            add_to_buffer(line);
+            d_print2("Breakpoint: %s", cur_reaction->reaction_id);
             my_trace->last_reaction = cur_reaction;
             my_trace->report_code = REPORT_BREAKPOINT;
         }
@@ -3644,8 +3631,7 @@ int handle_reaction(REACTION* cur_reaction, void* data)
         my_trace->delayed_reaction = cur_reaction;
         /* enable SS for just one breakpoint */
 
-        sprintf(line, "# set_ss to all from handle_reaction\n");
-        add_to_buffer(line);
+        d_print2("set_ss to all from handle_reaction");
         //check_for_and_enable_ss();
         set_ss(0x0);
     }
@@ -5119,7 +5105,7 @@ int out_region(DWORD addr, DWORD size)
     data2 = (char*)malloc(size*0x20);
     memset(data2, 0x0, size*0x20);
 
-    sprintf(line, "# out_arg1 @ %d\n", my_trace->instr_count);
+    d_print2("out_arg1 @ %d", my_trace->instr_count);
 
     if(data == 0x0)
     {
@@ -5138,8 +5124,7 @@ int out_region(DWORD addr, DWORD size)
     d_print("Trying to read 0x%08x bytes: @ %p, handle: 0x%08x\n", size, addr, my_trace->cpdi.hProcess);
     read_memory(my_trace->cpdi.hProcess, (void*)addr, (void*)data, size, &read);
     
-    sprintf(line, "# out_arg2 @ %d\n", my_trace->instr_count);
-    add_to_buffer(line);
+    d_print2("out_arg2 @ %d", my_trace->instr_count);
 
     if(read > 0x0)
     {
@@ -5157,8 +5142,7 @@ int out_region(DWORD addr, DWORD size)
     else {
         sprintf(buffer2, "Error: 0x%08x", GetLastError());
         strcpy(my_trace->report_buffer, buffer2);
-        sprintf(line, "# OU,0x%x error\n", my_trace->tid, data2);
-        add_to_buffer(line);
+        d_print2("OU,0x%x error", my_trace->tid, data2);
     }
 
     free(data);
@@ -5560,8 +5544,7 @@ int process_event()
                 }
 
 
-                sprintf(line, "# REPORT_PROCESS_CREATED\n");
-                add_to_buffer(line);
+                d_print2("REPORT_PROCESS_CREATED");
 
                 return REPORT_PROCESS_CREATED;
                 break;
@@ -5576,8 +5559,7 @@ int process_event()
                         /* we are authorized to handle this */
                         my_trace->callback_routine((void*)&my_trace->event);
                         my_trace->last_win_status = DBG_CONTINUE;
-                        sprintf(line, "# single step, REPORT_CONTINUE\n");
-                        add_to_buffer(line);
+                        d_print2("single step, REPORT_CONTINUE");
                         return REPORT_CONTINUE;
                         break;
                 
@@ -5604,8 +5586,8 @@ int process_event()
                                 handle_breakpoint((DWORD)my_trace->last_exception.ExceptionAddress, &my_trace->event);
                                 handled = 0x1;
 
-                                sprintf(line, "# breakpoint, handling our own, possible REPORT_BREAKPOINT\n");
-                                add_to_buffer(line);
+                                d_print2("breakpoint, handling our own, possible REPORT_BREAKPOINT");
+
                             }
                         }
 
@@ -5616,8 +5598,7 @@ int process_event()
                         {
                             d_print("This BP is not our, we pass it to the debugee\n");
                             my_trace->report_code = REPORT_EXCEPTION_NH;
-                            sprintf(line, "# breakpoint, not our own, REPORT_EXCEPTION_NH\n");
-                            add_to_buffer(line);
+                            d_print2("breakpoint, not our own, REPORT_EXCEPTION_NH");
                         }
 
                         d_print("[BP handling ends]\n");
@@ -5631,8 +5612,7 @@ int process_event()
 //                        ss_callback((void*)&my_trace->event);
                         my_trace->callback_routine((void*)&my_trace->event);
  
-                        sprintf(line, "# exception but not breakpoint, reporting to external\n");
-                        add_to_buffer(line);
+                        d_print2("exception but not breakpoint, reporting to external");
                         return REPORT_EXCEPTION;
                         break;
                 }
@@ -5643,8 +5623,7 @@ int process_event()
 
                 register_thread(my_trace->event.dwThreadId, my_trace->event.u.CreateThread.hThread);
                 my_trace->last_win_status = DBG_CONTINUE;
-                sprintf(line, "# CREATE_THREAD_DEBUG_EVENT, DBG_CONTINUE\n");
-                add_to_buffer(line);
+                d_print2("CREATE_THREAD_DEBUG_EVENT, DBG_CONTINUE");
                 return REPORT_CONTINUE;
                 break;
 
@@ -5669,8 +5648,7 @@ int process_event()
                 }
 
                 my_trace->last_win_status = DBG_CONTINUE;
-                sprintf(line, "# LOAD_DLL_DEBUG_EVENT, DBG_CONTINUE\n");
-                add_to_buffer(line);
+                d_print2("LOAD_DLL_DEBUG_EVENT, DBG_CONTINUE");
                 return REPORT_CONTINUE;
                 break;
 
@@ -5678,8 +5656,7 @@ int process_event()
                 /* we are authorized to handle this */
 
                 deregister_lib(my_trace->event.u.UnloadDll);
-                sprintf(line, "# UNLOAD_DLL_DEBUG_EVENT, DBG_CONTINUE\n");
-                add_to_buffer(line);
+                d_print2("UNLOAD_DLL_DEBUG_EVENT, DBG_CONTINUE");
                 return REPORT_CONTINUE;
                 break;
 
@@ -5696,8 +5673,7 @@ int process_event()
                 my_trace->threads[my_trace->event.dwThreadId].handle = 0x0;
                 my_trace->threads[my_trace->event.dwThreadId].open = 0x0;
                 my_trace->last_win_status = DBG_CONTINUE;
-                sprintf(line, "# EXIT_THREAD_DEBUG_EVENT, DBG_CONTINUE\n");
-                add_to_buffer(line);
+                d_print2("EXIT_THREAD_DEBUG_EVENT, DBG_CONTINUE");
                 return REPORT_CONTINUE;
                 break;
 
@@ -5705,14 +5681,12 @@ int process_event()
                 /* this is not our responsibility, inform TracerController and wait for orders */
 
                 d_print("Exiting process\n");
-                sprintf(line, "# EXIT_PROCESS_DEBUG_EVENT, REPORT_PROCESS_EXIT\n");
-                add_to_buffer(line);
+                d_print2("EXIT_PROCESS_DEBUG_EVENT, REPORT_PROCESS_EXIT");
                 return REPORT_PROCESS_EXIT;
                 break;
 
             default:
-                sprintf(line, "# unknown debug event\n");
-                add_to_buffer(line);
+                d_print2("unknown debug event");
                 return REPORT_CONTINUE; // a nie error?
         }
 }
@@ -5867,8 +5841,7 @@ int get_pending_events()
         }
         else
         {
-            sprintf(line, "# Uknown report\n");
-            add_to_buffer(line);
+            d_print2("Uknown report");
             break;
         }
 
@@ -5893,10 +5866,6 @@ int continue_routine(DWORD time, unsigned stat)
     char line[MAX_LINE];
 
     status = stat;
-
-    //sprintf(line, "# SS to all from continue_routine\n");
-    //add_to_buffer(line);
-    //check_for_and_enable_ss();
 
     /* if debug timeout is set, it overrides INFINITE */
     if(my_trace->debug_timeout > 0)
@@ -5950,8 +5919,7 @@ int continue_routine(DWORD time, unsigned stat)
             sprintf(line, "Got timeout");
             strcpy(my_trace->report_buffer, line);
             last_report = REPORT_TIMEOUT;
-            sprintf(line, "# REPORT_TIMEOUT\n");
-            add_to_buffer(line);
+            d_print2("REPORT_TIMEOUT");
             break;
         }
 
@@ -5959,19 +5927,16 @@ int continue_routine(DWORD time, unsigned stat)
         if(last_report == REPORT_CONTINUE)
         {
             status = DBG_CONTINUE;
-            sprintf(line, "# REPORT_CONTINUE\n");
-            add_to_buffer(line);
+            d_print2("REPORT_CONTINUE");
         }
         else if(last_report == REPORT_EXCEPTION_NH)
         {
             status = DBG_EXCEPTION_NOT_HANDLED;
-            sprintf(line, "# DBG_EXCEPTION_NOT_HANDLED\n");
-            add_to_buffer(line);
+            d_print2("DBG_EXCEPTION_NOT_HANDLED");
         }
         else
         {
-            sprintf(line, "# something else\n");
-            add_to_buffer(line);
+            d_print2("something else");
             break;
         }
 
@@ -6725,8 +6690,7 @@ int handle_cmd(char* cmd)
         my_trace->callback_routine = &ss_callback;
         my_trace->callback_routine((void*)&my_trace->event);
 
-        sprintf(line, "# CMD_ENABLE_TRACE\n");
-        add_to_buffer(line);
+        d_print2("CMD_ENABLE_TRACE");
 
         d_print("Tracing enabled\n");
 
@@ -6749,8 +6713,7 @@ int handle_cmd(char* cmd)
         my_trace->callback_routine = &syscall_callback;
         my_trace->callback_routine((void*)&my_trace->event);
 
-        sprintf(line, "# CMD_ENABLE_TRACE_SYSCALL\n");
-        add_to_buffer(line);
+        d_print2("CMD_ENABLE_TRACE_SYSCALL");
 
         d_print("Syscall tracing debugged enabled\n");
 
@@ -6773,9 +6736,7 @@ int handle_cmd(char* cmd)
         my_trace->callback_routine = &ss_callback;
         my_trace->callback_routine((void*)&my_trace->event);
 
-        sprintf(line, "# CMD_ENABLE_DBG_LIGHT\n");
-        add_to_buffer(line);
-
+        d_print2("CMD_ENABLE_DBG_LIGHT");
         d_print("Light tracing debugged enabled\n");
 
         sprintf(line2, VERSION_STR);
@@ -6796,8 +6757,7 @@ int handle_cmd(char* cmd)
         my_trace->callback_routine = &ss_callback;
         my_trace->callback_routine((void*)&my_trace->event);
 
-        sprintf(line, "# CMD_ENABLE_DBG_TRACE\n");
-        add_to_buffer(line);
+        d_print2("CMD_ENABLE_DBG_TRACE");
 
         d_print("Tracing debugged enabled\n");
 
@@ -8247,6 +8207,8 @@ int main(int argc, char** argv)
 
     DWORD recv_size;
     DWORD flags;
+
+    my_trace->debug_level = 0x1;
 
     while(1)
     {

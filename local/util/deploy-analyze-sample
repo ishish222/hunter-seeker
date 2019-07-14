@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# usage: $0 PACKAGE MACHINE SCRIPT
+# usage: $0 PACKAGE MACHINE SCRIPT FOLDER
 
 . settings
 

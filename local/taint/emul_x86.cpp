@@ -3156,11 +3156,11 @@ int taint_x86::a_clear_of()
 QWORD taint_x86::a_f_mul_32(DWORD_t a, DWORD_t b)
 {
     QWORD res;
-    UDWORD a1, b1;
+    QWORD a1, b1;
 
     /* reduce sign */
-    a1 = (UDWORD)a.get_DWORD();
-    b1 = (UDWORD)b.get_DWORD();
+    a1 = (QWORD)(a.get_DWORD() & 0xffffffff);
+    b1 = (QWORD)(b.get_DWORD() & 0xffffffff);
 
     res = a1 * b1;
 
@@ -3170,11 +3170,11 @@ QWORD taint_x86::a_f_mul_32(DWORD_t a, DWORD_t b)
 QWORD taint_x86::a_f_imul_32(DWORD_t a, DWORD_t b)
 {
     QWORD res;
-    DWORD a1, b1;
+    QWORD a1, b1;
 
     /* extend sign */
-    a1 = (DWORD)a.get_DWORD();
-    b1 = (DWORD)b.get_DWORD();
+    a1 = (QWORD)(a.get_DWORD() & 0xffffffff);
+    b1 = (QWORD)(b.get_DWORD() & 0xffffffff);
 
     res = a1 * b1;
 
@@ -5559,8 +5559,7 @@ int taint_x86::r_and_ax_eax_imm_16_32(BYTE_t* instr_ptr)
         this->reg_propagation_cause_r_32(EAX);
         this->reg_propagation_cause_m_32(this->reg_restore_32(EIP).get_DWORD() + this->current_instr_length);
 
-        dst_16 = this->reg_restore_16(AX);
-        dst_32 = dst_16;
+        dst_32 = this->reg_restore_32(EAX);
         src_32.from_mem(instr_ptr + this->current_instr_length);
         d_print(3, "Imm32: 0x%08x\n", src_32.get_DWORD());
         dst_32 &= src_32;
@@ -15964,7 +15963,7 @@ int taint_x86::r_mul_rm_16_32(BYTE_t* instr_ptr)
                     this->attach_current_propagation_r_16(DX);
                     break;
                 case MODRM_SIZE_32:
-                    this->reg_propagation_cause_r_32(AX);
+                    this->reg_propagation_cause_r_32(EAX);
                     this->reg_propagation_cause_r_32(rm.offset);
 
                     eax = this->reg_restore_32(EAX);
@@ -15979,8 +15978,8 @@ int taint_x86::r_mul_rm_16_32(BYTE_t* instr_ptr)
                     this->reg_store_32(EAX, eax);
                     this->reg_store_32(EDX, edx);
 
-                    this->attach_current_propagation_r_32(AX);
-                    this->attach_current_propagation_r_32(DX);
+                    this->attach_current_propagation_r_32(EAX);
+                    this->attach_current_propagation_r_32(EDX);
                     break;
             }
             break;
