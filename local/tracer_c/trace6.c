@@ -2640,6 +2640,7 @@ void react_sysenter_callback(void* data)
     d_print2("ESP: 0x%08x", esp);
 
     my_trace->threads[my_trace->tid_pos].last_was_syscall = 0x1;
+    my_trace->threads[my_trace->tid_pos].syscall_no = sysenter_no;
     d_print2("Setting last_was_syscall for: 0x%08x (0x%08x): 0x%08x", my_trace->tid, my_trace->tid_pos, my_trace->threads[tid_pos].last_was_syscall);
 }
 
@@ -2664,6 +2665,7 @@ void react_sysret_callback(void* data)
 //    my_trace->callback_routine((void*)&my_trace->event);
 
     DWORD sysenter_no = my_trace->threads[tid_pos].syscall_no;
+    d_print2("Updating args for syscall no: 0x%08x", sysenter_no);
 
     for(i = 0x0; i<MAX_SYSCALL_OUT_ARGS; i++)
     {
@@ -2676,18 +2678,20 @@ void react_sysret_callback(void* data)
         */
         if(my_trace->syscall_out_args[sysenter_no][i].off == 0x0)
         {
+            d_print2("No more syscalls");
             current_syscall_location[i].off = 0x0;
             current_syscall_location[i].size = 0x0;
             break;
         }
+        d_print2("Arg no; 0x%02x", i);
         current_syscall_location[i].off = resolve_loc_desc(my_trace->syscall_out_args[sysenter_no][i].off);
         current_syscall_location[i].size = resolve_loc_desc(my_trace->syscall_out_args[sysenter_no][i].size);
 
-        d_print2("# Resolved location: 0x%08x:0x%08x", current_syscall_location[i].off, current_syscall_location[i].size);
+        d_print2("Resolved location: 0x%08x:0x%08x", current_syscall_location[i].off, current_syscall_location[i].size);
 
         /* old update */
 
-        d_print2("# old update below");
+        d_print2("old update below");
 
         LOCATION location_old;
 
@@ -2696,7 +2700,7 @@ void react_sysret_callback(void* data)
 
         /* new update */
 
-        d_print2("# new update below");
+        d_print2("new update below");
 
         LOCATION location;
 
@@ -7909,13 +7913,43 @@ int configure_syscalls()
     sprintf(line, "ESP");               my_trace->syscall_out_args[0x13][0x3].off = parse_location_desc(line);
     sprintf(line, "0x50");              my_trace->syscall_out_args[0x13][0x3].size = parse_location_desc(line);
 
-    /* [[syscall 0x32 - ZwClose]] */
+    /* [[syscall 0x27 - NtAlpcSendWaitReceivePort ]] */
+
+    /* ReceiveMessage */
+    sprintf(line, "[ESP+0x8+0x14]");    my_trace->syscall_out_args[0x27][0x0].off = parse_location_desc(line);
+    sprintf(line, "[ESP+0x8+0x18]");    my_trace->syscall_out_args[0x27][0x0].size= parse_location_desc(line);
+
+    /* Size */
+    sprintf(line, "[ESP+0x8+0x18]");    my_trace->syscall_out_args[0x27][0x1].off = parse_location_desc(line);
+    sprintf(line, "0x8");               my_trace->syscall_out_args[0x27][0x1].size= parse_location_desc(line);
+
+    /* ReceiveMessageAttributes */
+    sprintf(line, "[ESP+0x8+0x20]");    my_trace->syscall_out_args[0x27][0x2].off = parse_location_desc(line);
+    sprintf(line, "0x10");              my_trace->syscall_out_args[0x27][0x2].size = parse_location_desc(line);
+
+    /* Stack update */
+    sprintf(line, "ESP");               my_trace->syscall_out_args[0x27][0x3].off = parse_location_desc(line);
+    sprintf(line, "0x50");              my_trace->syscall_out_args[0x27][0x3].size = parse_location_desc(line);
+
+    /* [[syscall 0x31 - NtClearEvent ]] */
+
+    /* Stack update */
+    sprintf(line, "ESP");               my_trace->syscall_out_args[0x31][0x0].off = parse_location_desc(line);
+    sprintf(line, "0x50");              my_trace->syscall_out_args[0x31][0x0].size = parse_location_desc(line);
+
+    /* [[syscall 0x32 - ZwClose ]] */
 
     /* Stack update */
     sprintf(line, "ESP");               my_trace->syscall_out_args[0x32][0x0].off = parse_location_desc(line);
     sprintf(line, "0x50");              my_trace->syscall_out_args[0x32][0x0].size = parse_location_desc(line);
 
-    /* [[syscall 0x42 - ZwCreateFile]] */
+    /* [[syscall 0x39 - ZwDelayExecution ]] */
+
+    /* Stack update */
+    sprintf(line, "ESP");               my_trace->syscall_out_args[0x39][0x0].off = parse_location_desc(line);
+    sprintf(line, "0x50");              my_trace->syscall_out_args[0x39][0x0].size = parse_location_desc(line);
+
+    /* [[syscall 0x42 - ZwCreateFile ]] */
 
     /* Handle */
     sprintf(line, "[ESP+0x8+0x0]");     my_trace->syscall_out_args[0x42][0x0].off = parse_location_desc(line);
@@ -7933,17 +7967,13 @@ int configure_syscalls()
     sprintf(line, "[ESP+0x8+0x10]");     my_trace->syscall_out_args[0x42][0x3].off = parse_location_desc(line);
     sprintf(line, "0x%08x", sizeof(LARGE_INTEGER)); my_trace->syscall_out_args[0x42][0x3].size = parse_location_desc(line);
 
-    /* allocation size */
-    sprintf(line, "[ESP+0x8+0x14]");     my_trace->syscall_out_args[0x42][0x4].off = parse_location_desc(line);
-    sprintf(line, "0x%08x", sizeof(LARGE_INTEGER)); my_trace->syscall_out_args[0x42][0x4].size = parse_location_desc(line);
-
     /* eabuffer (not sure) */
-    sprintf(line, "[ESP+0x8+0x24]");     my_trace->syscall_out_args[0x42][0x5].off = parse_location_desc(line);
-    sprintf(line, "[ESP+0x8+0x14]");     my_trace->syscall_out_args[0x42][0x5].size= parse_location_desc(line);
+    sprintf(line, "[ESP+0x8+0x24]");     my_trace->syscall_out_args[0x42][0x4].off = parse_location_desc(line);
+    sprintf(line, "[ESP+0x8+0x14]");     my_trace->syscall_out_args[0x42][0x4].size= parse_location_desc(line);
 
     /* Stack update */
-    sprintf(line, "ESP");                my_trace->syscall_out_args[0x42][0x6].off = parse_location_desc(line);
-    sprintf(line, "0x50");               my_trace->syscall_out_args[0x42][0x6].size = parse_location_desc(line);
+    sprintf(line, "ESP");                my_trace->syscall_out_args[0x42][0x5].off = parse_location_desc(line);
+    sprintf(line, "0x50");               my_trace->syscall_out_args[0x42][0x5].size = parse_location_desc(line);
 
     /* [[syscall 0x54 - ZwCreateSection]] */
 
@@ -7977,6 +8007,94 @@ int configure_syscalls()
     sprintf(line, "ESP");                my_trace->syscall_out_args[0x6b][0x2].off = parse_location_desc(line);
     sprintf(line, "0x50");               my_trace->syscall_out_args[0x6b][0x2].size = parse_location_desc(line);
 
+    /* [[syscall 0x83 - ZwFreeVirtualMemory ]] */
+
+    /* BaseAddress */
+    sprintf(line, "[ESP+0x8+0x4]");     my_trace->syscall_out_args[0x83][0x0].off = parse_location_desc(line);
+    sprintf(line, "0x4");               my_trace->syscall_out_args[0x83][0x0].size = parse_location_desc(line);
+
+    /* RegionSize */
+    sprintf(line, "[ESP+0x8+0x8]");     my_trace->syscall_out_args[0x83][0x1].off = parse_location_desc(line);
+    sprintf(line, "0x8");               my_trace->syscall_out_args[0x83][0x1].size = parse_location_desc(line);
+
+    /* Stack update */
+    sprintf(line, "ESP");               my_trace->syscall_out_args[0x83][0x2].off = parse_location_desc(line);
+    sprintf(line, "0x50");              my_trace->syscall_out_args[0x83][0x2].size = parse_location_desc(line);
+
+    /* [[syscall 0xea - NtQueryInformationProcess ]] */
+
+    /* process information */
+    sprintf(line, "[ESP+0x8+0x8]");      my_trace->syscall_out_args[0xea][0x0].off = parse_location_desc(line);
+    sprintf(line, "[[ESP+0x8+0x14]]");   my_trace->syscall_out_args[0xea][0x0].size = parse_location_desc(line);
+
+    /* size */
+    sprintf(line, "[ESP+0x8+0x14]");     my_trace->syscall_out_args[0xea][0x1].off = parse_location_desc(line);
+    sprintf(line, "0x8");                my_trace->syscall_out_args[0xea][0x1].size = parse_location_desc(line);
+
+    /* Stack update */
+    sprintf(line, "ESP");                my_trace->syscall_out_args[0xea][0x2].off = parse_location_desc(line);
+    sprintf(line, "0x50");               my_trace->syscall_out_args[0xea][0x2].size = parse_location_desc(line);
+
+    /* [[syscall 0xec - NtQueryInformationThread ]] */
+
+    /* thread information */
+    sprintf(line, "[ESP+0x8+0x8]");      my_trace->syscall_out_args[0xec][0x0].off = parse_location_desc(line);
+    sprintf(line, "[[ESP+0x8+0x14]]");   my_trace->syscall_out_args[0xec][0x0].size = parse_location_desc(line);
+
+    /* size */
+    sprintf(line, "[ESP+0x8+0x14]");     my_trace->syscall_out_args[0xec][0x1].off = parse_location_desc(line);
+    sprintf(line, "0x8");                my_trace->syscall_out_args[0xec][0x1].size = parse_location_desc(line);
+
+    /* Stack update */
+    sprintf(line, "ESP");                my_trace->syscall_out_args[0xec][0x2].off = parse_location_desc(line);
+    sprintf(line, "0x50");               my_trace->syscall_out_args[0xec][0x2].size = parse_location_desc(line);
+
+    /* [[syscall 0x10c - NtQueryVolumeInformationFile ]] */
+
+    /* IoStatusBlock */
+    sprintf(line, "[ESP+0x8+0x4]");     my_trace->syscall_out_args[0x10c][0x0].off = parse_location_desc(line);
+    sprintf(line, "0x%08x", sizeof(IO_STATUS_BLOCK)); my_trace->syscall_out_args[0x10c][0x0].size = parse_location_desc(line);
+
+    /* FileSystemInformation */
+    sprintf(line, "[ESP+0x8+0x8]");     my_trace->syscall_out_args[0x10c][0x1].off = parse_location_desc(line);
+    sprintf(line, "ESP+0x8+0x10");      my_trace->syscall_out_args[0x10c][0x1].off = parse_location_desc(line);
+
+    /* Stack update */
+    sprintf(line, "ESP");               my_trace->syscall_out_args[0x10c][0x2].off = parse_location_desc(line);
+    sprintf(line, "0x50");              my_trace->syscall_out_args[0x10c][0x2].size = parse_location_desc(line);
+
+    /* [[syscall 0x111 - NtReadFile ]] */
+
+    /* IoStatusBlock */
+    sprintf(line, "[ESP+0x8+0x14]");     my_trace->syscall_out_args[0x111][0x0].off = parse_location_desc(line);
+    sprintf(line, "0x%08x", sizeof(IO_STATUS_BLOCK)); my_trace->syscall_out_args[0x111][0x0].size = parse_location_desc(line);
+
+    /* Buffer */
+    sprintf(line, "[ESP+0x8+0x18]");     my_trace->syscall_out_args[0x111][0x1].off = parse_location_desc(line);
+    sprintf(line, "ESP+0x8+0x20");       my_trace->syscall_out_args[0x111][0x1].size = parse_location_desc(line);
+
+    /* ByteOffset */
+    sprintf(line, "[ESP+0x8+0x24]");     my_trace->syscall_out_args[0x111][0x2].off = parse_location_desc(line);
+    sprintf(line, "0x8");                my_trace->syscall_out_args[0x111][0x2].size = parse_location_desc(line);
+
+    /* Key */
+    sprintf(line, "[ESP+0x8+0x28]");     my_trace->syscall_out_args[0x111][0x3].off = parse_location_desc(line);
+    sprintf(line, "0x8");                my_trace->syscall_out_args[0x111][0x3].size = parse_location_desc(line);
+
+    /* Stack update */
+    sprintf(line, "ESP");                my_trace->syscall_out_args[0x111][0x4].off = parse_location_desc(line);
+    sprintf(line, "0x50");               my_trace->syscall_out_args[0x111][0x4].size = parse_location_desc(line);
+
+    /* [[syscall 0x11c - NtReleaseMutant ]] */
+
+    /* PreviousCount */
+    sprintf(line, "[ESP+0x8+0x4]");     my_trace->syscall_out_args[0x11c][0x0].off = parse_location_desc(line);
+    sprintf(line, "0x8");               my_trace->syscall_out_args[0x11c][0x0].size = parse_location_desc(line);
+
+    /* Stack update */
+    sprintf(line, "ESP");               my_trace->syscall_out_args[0x11c][0x1].off = parse_location_desc(line);
+    sprintf(line, "0x50");              my_trace->syscall_out_args[0x11c][0x1].size = parse_location_desc(line);
+
     /* [[syscall 0x12b - ZwRequestWaitReplyPort ]] */
 
     sprintf(line, "[ESP+0x8+0x8]");     my_trace->syscall_out_args[0x12b][0x0].off = parse_location_desc(line);
@@ -7985,6 +8103,64 @@ int configure_syscalls()
     /* Stack update */
     sprintf(line, "ESP");               my_trace->syscall_out_args[0x12b][0x1].off = parse_location_desc(line);
     sprintf(line, "0x50");              my_trace->syscall_out_args[0x12b][0x1].size = parse_location_desc(line);
+
+    /* [[syscall 0x143 - NtSetEvent ]] */
+
+    /* PreviousState */
+    sprintf(line, "[ESP+0x8+0x4]");     my_trace->syscall_out_args[0x143][0x0].off = parse_location_desc(line);
+    sprintf(line, "0x8");               my_trace->syscall_out_args[0x143][0x0].size = parse_location_desc(line);
+
+    /* Stack update */
+    sprintf(line, "ESP");               my_trace->syscall_out_args[0x143][0x1].off = parse_location_desc(line);
+    sprintf(line, "0x50");              my_trace->syscall_out_args[0x143][0x1].size = parse_location_desc(line);
+
+    /* [[syscall 0x149 - NtSetInformationFile ]] */
+
+    /* IoStatusBlock */
+    sprintf(line, "[ESP+0x8+0x4]");     my_trace->syscall_out_args[0x149][0x0].off = parse_location_desc(line);
+    sprintf(line, "0x%08x", sizeof(IO_STATUS_BLOCK)); my_trace->syscall_out_args[0x149][0x0].size = parse_location_desc(line);
+
+    /* Stack update */
+    sprintf(line, "ESP");               my_trace->syscall_out_args[0x149][0x1].off = parse_location_desc(line);
+    sprintf(line, "0x50");              my_trace->syscall_out_args[0x149][0x1].size = parse_location_desc(line);
+
+    /* [[syscall 0x153 - NtSetInformationWorkerFactory ]] */
+
+    /* Stack update */
+    sprintf(line, "ESP");               my_trace->syscall_out_args[0x153][0x0].off = parse_location_desc(line);
+    sprintf(line, "0x50");              my_trace->syscall_out_args[0x153][0x0].size = parse_location_desc(line);
+
+    /* [[syscall 0x162 - NtSetTimer ]] */
+
+    /* PreviousState */
+    sprintf(line, "[ESP+0x8+0x20]");    my_trace->syscall_out_args[0x162][0x0].off = parse_location_desc(line);
+    sprintf(line, "0x8");               my_trace->syscall_out_args[0x162][0x0].size = parse_location_desc(line);
+
+    /* Stack update */
+    sprintf(line, "ESP");               my_trace->syscall_out_args[0x162][0x1].off = parse_location_desc(line);
+    sprintf(line, "0x50");              my_trace->syscall_out_args[0x162][0x1].size = parse_location_desc(line);
+
+    /* [[syscall 0x173 - NtTerminateThread ]] */
+
+    /* Stack update */
+    sprintf(line, "ESP");               my_trace->syscall_out_args[0x173][0x0].off = parse_location_desc(line);
+    sprintf(line, "0x50");              my_trace->syscall_out_args[0x173][0x0].size = parse_location_desc(line);
+
+    /* [[syscall 0x187 - NtWaitForSingleObject ]] */
+
+    /* Stack update */
+    sprintf(line, "ESP");               my_trace->syscall_out_args[0x187][0x0].off = parse_location_desc(line);
+    sprintf(line, "0x50");              my_trace->syscall_out_args[0x187][0x0].size = parse_location_desc(line);
+
+    /* [[syscall 0x188 - NtWaitForWorkViaWorkerFactory ]] */
+
+    /* PreviousState */
+    sprintf(line, "[ESP+0x8+0x4]");     my_trace->syscall_out_args[0x188][0x0].off = parse_location_desc(line);
+    sprintf(line, "0x%08x", sizeof(IO_STATUS_BLOCK)+0x8); my_trace->syscall_out_args[0x188][0x0].size = parse_location_desc(line);
+
+    /* Stack update */
+    sprintf(line, "ESP");               my_trace->syscall_out_args[0x188][0x1].off = parse_location_desc(line);
+    sprintf(line, "0x50");              my_trace->syscall_out_args[0x188][0x1].size = parse_location_desc(line);
 
 
 #endif
