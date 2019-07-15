@@ -32,7 +32,8 @@ LOCATION last_location = {0x0, 0x0};
 OLD_LOCATION_DESCRIPTOR syscall_out_args_old[MAX_SYSCALL_ENTRIES][MAX_SYSCALL_OUT_ARGS];
 LOCATION syscall_out_args_old_dump_list[MAX_SYSCALL_OUT_ARGS];
 
-LOCATION current_syscall_location[MAX_SYSCALL_OUT_ARGS];
+//LOCATION current_syscall_location[MAX_SYSCALL_OUT_ARGS];
+LOCATION* current_syscall_location;
 
 char line2[MAX_LINE];
 
@@ -2639,6 +2640,30 @@ void react_sysenter_callback(void* data)
 
     d_print2("ESP: 0x%08x", esp);
 
+    current_syscall_location = &my_trace->threads[my_trace->tid_pos].syscall_location[0];
+
+    for(i = 0x0; i<MAX_SYSCALL_OUT_ARGS; i++)
+    {
+
+        /* resolvowanie. 
+
+        Ale co z przelaczaniem watkow? Rejestry powinny byc OK po update w task_switch.
+
+        */
+        if(my_trace->syscall_out_args[sysenter_no][i].off == 0x0)
+        {
+            d_print2("No more syscalls");
+            current_syscall_location[i].off = 0x0;
+            current_syscall_location[i].size = 0x0;
+            break;
+        }
+        d_print2("Arg no; 0x%02x", i);
+        current_syscall_location[i].off = resolve_loc_desc(my_trace->syscall_out_args[sysenter_no][i].off);
+        current_syscall_location[i].size = resolve_loc_desc(my_trace->syscall_out_args[sysenter_no][i].size);
+
+        d_print2("Resolved location: 0x%08x:0x%08x", current_syscall_location[i].off, current_syscall_location[i].size);
+    }
+
     my_trace->threads[my_trace->tid_pos].last_was_syscall = 0x1;
     my_trace->threads[my_trace->tid_pos].syscall_no = sysenter_no;
     d_print2("Setting last_was_syscall for: 0x%08x (0x%08x): 0x%08x", my_trace->tid, my_trace->tid_pos, my_trace->threads[tid_pos].last_was_syscall);
@@ -2665,29 +2690,12 @@ void react_sysret_callback(void* data)
 //    my_trace->callback_routine((void*)&my_trace->event);
 
     DWORD sysenter_no = my_trace->threads[tid_pos].syscall_no;
+    current_syscall_location = &my_trace->threads[tid_pos].syscall_location[0];
+
     d_print2("Updating args for syscall no: 0x%08x", sysenter_no);
 
     for(i = 0x0; i<MAX_SYSCALL_OUT_ARGS; i++)
     {
-
-        /* resolvowanie. 
-
-        deskryptory powinny byc resolvowane PO syscallu (sysret), bo czasami kernel zapisuje wskazniki do nowych obszarow pamieci. Musimy je znac, by zresolvowac poprawnie.
-        Ale co z przelaczaniem watkow? Rejestry powinny byc OK po update w task_switch.
-
-        */
-        if(my_trace->syscall_out_args[sysenter_no][i].off == 0x0)
-        {
-            d_print2("No more syscalls");
-            current_syscall_location[i].off = 0x0;
-            current_syscall_location[i].size = 0x0;
-            break;
-        }
-        d_print2("Arg no; 0x%02x", i);
-        current_syscall_location[i].off = resolve_loc_desc(my_trace->syscall_out_args[sysenter_no][i].off);
-        current_syscall_location[i].size = resolve_loc_desc(my_trace->syscall_out_args[sysenter_no][i].size);
-
-        d_print2("Resolved location: 0x%08x:0x%08x", current_syscall_location[i].off, current_syscall_location[i].size);
 
         /* old update */
 
@@ -2705,6 +2713,11 @@ void react_sysret_callback(void* data)
         LOCATION location;
 
         if(current_syscall_location[i].off == 0x0 && current_syscall_location[i].size == 0x0) break;
+        if(current_syscall_location[i].size > 0x1000000)
+        {
+            d_print2("Size 0x%08x is probably wrong, skipping", current_syscall_location[i].size);
+            continue;
+        }
         update_region_old(&current_syscall_location[i]);
 
     }
@@ -7917,7 +7930,7 @@ int configure_syscalls()
 
     /* ReceiveMessage */
     sprintf(line, "[ESP+0x8+0x14]");    my_trace->syscall_out_args[0x27][0x0].off = parse_location_desc(line);
-    sprintf(line, "[ESP+0x8+0x18]");    my_trace->syscall_out_args[0x27][0x0].size= parse_location_desc(line);
+    sprintf(line, "[[ESP+0x8+0x18]]");    my_trace->syscall_out_args[0x27][0x0].size= parse_location_desc(line);
 
     /* Size */
     sprintf(line, "[ESP+0x8+0x18]");    my_trace->syscall_out_args[0x27][0x1].off = parse_location_desc(line);
@@ -7955,25 +7968,13 @@ int configure_syscalls()
     sprintf(line, "[ESP+0x8+0x0]");     my_trace->syscall_out_args[0x42][0x0].off = parse_location_desc(line);
     sprintf(line, "0x4");               my_trace->syscall_out_args[0x42][0x0].size = parse_location_desc(line);
 
-    /* object attributes */
-    sprintf(line, "[ESP+0x8+0x8]");     my_trace->syscall_out_args[0x42][0x1].off = parse_location_desc(line);
-    sprintf(line, "0x%08x", sizeof(OBJECT_ATTRIBUTES)); my_trace->syscall_out_args[0x42][0x1].size = parse_location_desc(line);
-
     /* io status block */
-    sprintf(line, "[ESP+0x8+0xc]");     my_trace->syscall_out_args[0x42][0x2].off = parse_location_desc(line);
-    sprintf(line, "0x%08x", sizeof(IO_STATUS_BLOCK)); my_trace->syscall_out_args[0x42][0x2].size = parse_location_desc(line);
-
-    /* allocation size */
-    sprintf(line, "[ESP+0x8+0x10]");     my_trace->syscall_out_args[0x42][0x3].off = parse_location_desc(line);
-    sprintf(line, "0x%08x", sizeof(LARGE_INTEGER)); my_trace->syscall_out_args[0x42][0x3].size = parse_location_desc(line);
-
-    /* eabuffer (not sure) */
-    sprintf(line, "[ESP+0x8+0x24]");     my_trace->syscall_out_args[0x42][0x4].off = parse_location_desc(line);
-    sprintf(line, "[ESP+0x8+0x14]");     my_trace->syscall_out_args[0x42][0x4].size= parse_location_desc(line);
+    sprintf(line, "[ESP+0x8+0x10]");                    my_trace->syscall_out_args[0x42][0x1].off = parse_location_desc(line);
+    sprintf(line, "0x%08x", sizeof(IO_STATUS_BLOCK));   my_trace->syscall_out_args[0x42][0x1].size = parse_location_desc(line);
 
     /* Stack update */
-    sprintf(line, "ESP");                my_trace->syscall_out_args[0x42][0x5].off = parse_location_desc(line);
-    sprintf(line, "0x50");               my_trace->syscall_out_args[0x42][0x5].size = parse_location_desc(line);
+    sprintf(line, "ESP");                my_trace->syscall_out_args[0x42][0x2].off = parse_location_desc(line);
+    sprintf(line, "0x50");               my_trace->syscall_out_args[0x42][0x2].size = parse_location_desc(line);
 
     /* [[syscall 0x54 - ZwCreateSection]] */
 
@@ -8039,7 +8040,7 @@ int configure_syscalls()
 
     /* thread information */
     sprintf(line, "[ESP+0x8+0x8]");      my_trace->syscall_out_args[0xec][0x0].off = parse_location_desc(line);
-    sprintf(line, "[[ESP+0x8+0x14]]");   my_trace->syscall_out_args[0xec][0x0].size = parse_location_desc(line);
+    sprintf(line, "[ESP+0x8+0x10]");     my_trace->syscall_out_args[0xec][0x0].size = parse_location_desc(line);
 
     /* size */
     sprintf(line, "[ESP+0x8+0x14]");     my_trace->syscall_out_args[0xec][0x1].off = parse_location_desc(line);
@@ -8057,7 +8058,7 @@ int configure_syscalls()
 
     /* FileSystemInformation */
     sprintf(line, "[ESP+0x8+0x8]");     my_trace->syscall_out_args[0x10c][0x1].off = parse_location_desc(line);
-    sprintf(line, "ESP+0x8+0x10");      my_trace->syscall_out_args[0x10c][0x1].off = parse_location_desc(line);
+    sprintf(line, "[ESP+0x8+0x10]+[ESP+0x8+0x14]");      my_trace->syscall_out_args[0x10c][0x1].off = parse_location_desc(line);
 
     /* Stack update */
     sprintf(line, "ESP");               my_trace->syscall_out_args[0x10c][0x2].off = parse_location_desc(line);
@@ -8071,19 +8072,11 @@ int configure_syscalls()
 
     /* Buffer */
     sprintf(line, "[ESP+0x8+0x18]");     my_trace->syscall_out_args[0x111][0x1].off = parse_location_desc(line);
-    sprintf(line, "ESP+0x8+0x20");       my_trace->syscall_out_args[0x111][0x1].size = parse_location_desc(line);
-
-    /* ByteOffset */
-    sprintf(line, "[ESP+0x8+0x24]");     my_trace->syscall_out_args[0x111][0x2].off = parse_location_desc(line);
-    sprintf(line, "0x8");                my_trace->syscall_out_args[0x111][0x2].size = parse_location_desc(line);
-
-    /* Key */
-    sprintf(line, "[ESP+0x8+0x28]");     my_trace->syscall_out_args[0x111][0x3].off = parse_location_desc(line);
-    sprintf(line, "0x8");                my_trace->syscall_out_args[0x111][0x3].size = parse_location_desc(line);
+    sprintf(line, "[ESP+0x8+0x20]+[ESP+0x8+0x24]");     my_trace->syscall_out_args[0x111][0x1].size = parse_location_desc(line);
 
     /* Stack update */
-    sprintf(line, "ESP");                my_trace->syscall_out_args[0x111][0x4].off = parse_location_desc(line);
-    sprintf(line, "0x50");               my_trace->syscall_out_args[0x111][0x4].size = parse_location_desc(line);
+    sprintf(line, "ESP");                my_trace->syscall_out_args[0x111][0x2].off = parse_location_desc(line);
+    sprintf(line, "0x50");               my_trace->syscall_out_args[0x111][0x2].size = parse_location_desc(line);
 
     /* [[syscall 0x11c - NtReleaseMutant ]] */
 

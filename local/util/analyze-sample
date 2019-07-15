@@ -9,6 +9,8 @@ MACHINE=$2
 SCRIPT=$3
 FOLDER=$4
 
+./update-scripts $PACKAGE
+
 if [ $PACKAGE_HOST == "local" ];
 then
     echo "This is local config, will analyze on localhost"

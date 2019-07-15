@@ -276,6 +276,12 @@ typedef struct _READ_RECORD
     SIZE_T* read;
 } READ_RECORD;
 
+typedef struct LOCATION_
+{
+    DWORD off;
+    DWORD size;
+} LOCATION;
+
 typedef struct _THREAD_ENTRY
 {
     DWORD tid;
@@ -291,6 +297,7 @@ typedef struct _THREAD_ENTRY
     /* handling syscalls */
     char last_was_syscall;
     DWORD syscall_no;
+    LOCATION syscall_location[MAX_SYSCALL_OUT_ARGS];
 
 } THREAD_ENTRY;
 
@@ -312,12 +319,6 @@ typedef struct OLD_LOCATION_DESCRIPTOR_
     char size_location;
     DWORD eax_val_success;
 } OLD_LOCATION_DESCRIPTOR;
-
-typedef struct LOCATION_
-{
-    DWORD off;
-    DWORD size;
-} LOCATION;
 
 typedef struct REGION_
 {
