@@ -572,7 +572,8 @@ int taint_plugin::prompt_taint()
     TRACE_WATCHPOINT twp;
 //    char command[MAX_NAME];
     char* command;
-
+    
+    this->query_tid = 0x0;
     while(1)
     {
         d_print_prompt(1, "\n---\n");
