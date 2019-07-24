@@ -1,0 +1,18 @@
+#!/bin/bash
+
+. settings
+
+PACKAGE=$1
+PACKAGE_DIR=$PACKAGES_DIR/$PACKAGE
+
+rm -f /tmp/tmp.tgz
+PPWD=$PWD
+cd $LOCAL_SCRIPTS_PATH
+tar zcf /tmp/tmp.tgz *
+cd $PPWD
+echo "Pushing tmp.tgz"
+scp /tmp/tmp.tgz $PACKAGE_HOST:/tmp/tmp.tgz
+ssh $PACKAGE_HOST mkdir -p $CURRENT_DEPLOY_PATH/$PACKAGE/client/scripts
+echo "Extracting tmp.tgz"
+ssh $PACKAGE_HOST tar zxf /tmp/tmp.tgz -C $CURRENT_DEPLOY_PATH/$PACKAGE/client/scripts
+echo "Finished"

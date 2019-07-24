@@ -80,6 +80,8 @@ int taint_plugin::del_thread_srsly_callback(DWORD tid)
 
 int taint_plugin::handle_exception_callback(EXCEPTION_INFO info)
 {
+    this->prompt_taint();
+
     return 0x0;
 }
 
@@ -1491,7 +1493,7 @@ int taint_plugin::parse_cmd(char* string)
         {
             if(cur_str == 0x0) 
             {
-                offset = 0;
+                offset = this->taint_eng->current_propagation_count-100;
                 count = 0;
             }
             else 

@@ -336,7 +336,6 @@ typedef struct TRACE_CONFIG_
     CREATE_PROCESS_DEBUG_INFO cpdi;
     unsigned PID;
     char args[MAX_NAME];
-    char debug_level;
 
     /* separate stdout (for synchronising after save/load) */
     char stdout_destination_path[MAX_NAME];

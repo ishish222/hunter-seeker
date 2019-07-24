@@ -1,0 +1,17 @@
+#!/bin/bash
+
+. settings
+
+PACKAGE=$1
+PACKAGE_DIR=$PACKAGES_DIR/$PACKAGE
+
+if [ $PACKAGE_HOST != "local" ];
+then
+    echo "Updating scripts on remote host: $PACKAGE_HOST"
+    ./update-scripts-remote $PACKAGE
+else
+    echo "Local script update started"
+    rm -rf $CURRENT_DEPLOY_PATH/$PACKAGE/client/scripts
+    cp -r $LOCAL_SCRIPTS_PATH $CURRENT_DEPLOY_PATH/$PACKAGE/ATE/client/scripts
+    echo "Local script update finished"
+fi
