@@ -13,6 +13,8 @@
 
 #define buf_size 0x100000
 #define BUFF_SIZE 0x100000
+#define DEFAULT_OUT_BUFFER_SIZE 0x10000
+#define DEFAULT_MOD_BUFFER_SIZE 0x1000
 #define SS_FLAGS 0x100
 #define CLEAR_SS_FLAGS 0xfffffeff
 #define CLEAR_SF_FLAGS 0xffffff7f
@@ -201,6 +203,9 @@
 #define CMD_GET_EXCEPTION_CODE  "EC"
 #define CMD_GET_EXCEPTION_ADDR  "EA"
 #define CMD_REOPEN_IO           "RO"
+#define CMD_FLUSH               "FL"
+#define CMD_RESIZE_OUT_BUFF     "rO"
+#define CMD_RESIZE_MOD_BUFF     "rM"
 
 #define CMD_ROUTINE_1           "R1"
 #define CMD_ROUTINE_2           "R2"
@@ -501,6 +506,7 @@ int add_breakpoint(DWORD addr, handler_routine handler);
 DWORD find_lib(char* name);
 BOOL WINAPI HandlerRoutine(_In_ DWORD dwCtrlType);
 SIZE_T dump_mem(FILE*, void*, SIZE_T);
+SIZE_T dump_mem2(void*, SIZE_T);
 
 typedef struct _HOOK
 {

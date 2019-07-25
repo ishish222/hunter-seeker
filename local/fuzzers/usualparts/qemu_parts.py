@@ -425,6 +425,7 @@ def quit(args=None):
     options = globs.state.options
     
     write_socket(options.s, "logStop")
+
     rs("quit", options.m)
     import os
 

@@ -43,6 +43,13 @@ def tracer_dump_memory(args=None):
     globs.state.ret = response
     return
 
+def flush_files(args=None):
+    options = globs.state.options
+
+    write_socket(options.s, "tracer_flush_files")
+    response, _, _ = read_socket(options.s)
+    return
+
 def tracer_start_strace(args=None):
     options = globs.state.options
     state = globs.state
@@ -215,6 +222,36 @@ def tracer_current_tid(args = None):
     response, _, _ = read_socket(options.s)
 
     globs.state.ret = int(response[8:18], 0x10)
+    return
+
+def tracer_resize_out_buffer(args = None):
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+    
+    if(args == None):
+        args = globs.state.stack.pop()
+
+    write_socket(options.s, "tracer_resize_out_buffer %s" % args);
+    response, _, _ = read_socket(options.s)
+
+    globs.state.ret = response
+
+    return
+
+def tracer_resize_mod_buffer(args = None):
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+    
+    if(args == None):
+        args = globs.state.stack.pop()
+
+    write_socket(options.s, "tracer_resize_mod_buffer %s" % args);
+    response, _, _ = read_socket(options.s)
+
+    globs.state.ret = response
+
     return
 
 def tracer_set_priority_high(args = None):

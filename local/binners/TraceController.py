@@ -843,6 +843,12 @@ class TraceController(object):
         self.last_report, self.last_answer = self.recv_report_active()
         return 
 
+    def flush_files(self):
+        for tracer in self.tracers:
+            tracer.send_command("FL")
+            self.last_report, self.last_answer = tracer.recv_report()
+        return 
+
     def secure_section(self, args):
         self.send_command_active("sS %s" % args)
         self.last_report, self.last_answer = self.recv_report_active()
@@ -850,6 +856,16 @@ class TraceController(object):
 
     def secure_all_sections(self):
         self.send_command_active("ss")
+        self.last_report, self.last_answer = self.recv_report_active()
+        return 
+
+    def resize_out_buffer(self, args):
+        self.send_command_active("rO %s" % args)
+        self.last_report, self.last_answer = self.recv_report_active()
+        return 
+
+    def resize_mod_buffer(self, args):
+        self.send_command_active("rM %s" % args)
         self.last_report, self.last_answer = self.recv_report_active()
         return 
 

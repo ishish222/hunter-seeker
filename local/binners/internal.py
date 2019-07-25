@@ -988,6 +988,27 @@ def execute(cmds, ext_pipe):
             writePipe(ext_pipe, "tracer_write_dword "+bcolors.OK_STR);
             ok(ext_pipe)
 
+        elif(cmd == "tracer_resize_out_buffer"):
+            trace_controller.resize_out_buffer(args)
+            writePipe(ext_pipe, "%s\n" % trace_controller.last_answer)
+            writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
+            writePipe(ext_pipe, "tracer_resize_out_buffer"+bcolors.OK_STR);
+            ok(ext_pipe)
+
+        elif(cmd == "tracer_resize_mod_buffer"):
+            trace_controller.resize_mod_buffer(args)
+            writePipe(ext_pipe, "%s\n" % trace_controller.last_answer)
+            writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
+            writePipe(ext_pipe, "tracer_resize_mod_buffer"+bcolors.OK_STR);
+            ok(ext_pipe)
+
+        elif(cmd == "tracer_flush_files"):
+            trace_controller.flush_files()
+            writePipe(ext_pipe, "%s\n" % trace_controller.last_answer)
+            writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
+            writePipe(ext_pipe, "tracer_flush_files"+bcolors.OK_STR);
+            ok(ext_pipe)
+
         elif(cmd == "tracer_read_register"):
             trace_controller.read_register(args)
             writePipe(ext_pipe, "%s\n" % trace_controller.last_answer)

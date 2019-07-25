@@ -41,6 +41,7 @@ char line2[MAX_LINE];
 DWORD find_lib(char* name);
 BOOL WINAPI HandlerRoutine(_In_ DWORD dwCtrlType);
 SIZE_T dump_mem(FILE*, void*, SIZE_T);
+SIZE_T dump_mem2(void*, SIZE_T);
 BREAKPOINT* add_breakpoint(char*, REACTION*);
 int reload_out_file();
 void read_memory(HANDLE, void*, void*, SIZE_T, SIZE_T*);
@@ -72,6 +73,14 @@ int write_breakpoint(BREAKPOINT*);
 int unwrite_breakpoint(BREAKPOINT*);
 int read_word(DWORD addr);
 int read_dword(DWORD addr);
+
+char* out_buffer;
+unsigned out_buffer_size;
+unsigned out_buffer_bytes;
+
+char* mod_buffer;
+unsigned mod_buffer_size;
+unsigned mod_buffer_bytes;
 
 /*
 * various
@@ -514,7 +523,7 @@ void update_region_old(LOCATION* location)
     d_print2("# Attempt to dump: 0x%08x,0x%08x", location->off, location->size);
 
 */
-    size_wrote = dump_mem(my_trace->mods, (void*)location->off, location->size);
+    size_wrote = dump_mem2((void*)location->off, location->size);
     if(size_wrote == location->size)
     {
         d_print("[Updated location: 0x%08x, size: 0x%08x]\n", location->off, location->size);
@@ -565,7 +574,7 @@ void check_region(REGION* region)
     location.off = resolve_loc_desc(region->off);
     location.size = resolve_loc_desc(region->size);
 
-    size_wrote = dump_mem(my_trace->mods, (void*)location.off, location.size);
+    size_wrote = dump_mem2((void*)location.off, location.size);
     if(size_wrote == location.size)
     {
         d_print("[Updated location: 0x%08x, size: 0x%08x]\n", location.off, location.size);
@@ -611,7 +620,7 @@ void update_region(unsigned id)
     d_print("Updating region: 0x%08x:0x%08x\n", off, size);
     d_print2("# Current mod position: 0x%08x", ftell(my_trace->mods));
 
-    size_wrote = dump_mem(my_trace->mods, (void*)off, size);
+    size_wrote = dump_mem2((void*)off, size);
     if(size_wrote == size)
     {
         d_print("[Updated location: 0x%08x, size: 0x%08x]\n", off, size);
@@ -1925,15 +1934,60 @@ int disable_reaction(char* reaction_id)
 }
 */
 
+int add_to_mod_buffer(char* data, unsigned size)
+{
+    d_print2("add_to_mod_buffer: 0x%08x bytes", size);
+    DWORD written;
+    written = 0x0;
+    unsigned to_write;
+
+    to_write = size;    
+
+    if(to_write >= DEFAULT_MOD_BUFFER_SIZE)
+    {
+            written = fwrite(mod_buffer, mod_buffer_bytes, 1, my_trace->mods);
+            written = fwrite(data, size, 1, my_trace->mods);
+            d_print2("writing out: 0x%08x bytes", size+mod_buffer_bytes);
+            fflush(my_trace->mods);
+            mod_buffer_bytes = 0x0;
+    }
+    else
+    {
+        if(mod_buffer_bytes + to_write >= DEFAULT_MOD_BUFFER_SIZE)
+        {
+            written = fwrite(mod_buffer, mod_buffer_bytes, 1, my_trace->mods);
+            d_print2("writing out: 0x%08x bytes", mod_buffer_bytes);
+            fflush(my_trace->mods);
+            mod_buffer_bytes = 0x0;
+        }
+        memcpy(mod_buffer+mod_buffer_bytes, data, to_write);
+        mod_buffer_bytes += to_write;
+    }
+    return to_write;
+}
 int add_to_buffer(char* line)
 {
     DWORD written;
     written = 0x0;
-//    sprintf(line2, "%s\n", line);
-    //written = fwrite(line2, strlen(line2), 1, file);
-    written = fwrite(line, strlen(line), 1, my_trace->trace);
-    fflush(my_trace->trace);
-    return written;
+    unsigned to_write;
+
+    to_write = strlen(line);    
+
+    if(out_buffer_bytes + to_write >= DEFAULT_OUT_BUFFER_SIZE)
+    {
+        written = fwrite(out_buffer, out_buffer_bytes, 1, my_trace->trace);
+        fflush(my_trace->trace);
+        //memset(out_buffer, 0x0, DEFAULT_OUT_BUFFER_SIZE);
+        out_buffer[0] = '\0';
+        out_buffer_bytes = 0x0;
+    }
+    //strcat(out_buffer, line);
+    memcpy(out_buffer+out_buffer_bytes, line, to_write);
+    out_buffer_bytes += to_write;
+
+//    written = fwrite(line, strlen(line), 1, my_trace->trace);
+//    fflush(my_trace->trace);
+    return to_write;
 }
 
 void print_context(CONTEXT* ctx)
@@ -3224,6 +3278,105 @@ int page_accessible(MEMORY_BASIC_INFORMATION mbi)
 		if ((mbi.Protect & PAGE_NOACCESS) == PAGE_NOACCESS) return false;
 		
 		return true;
+}
+
+SIZE_T dump_mem2(void* from, SIZE_T len)
+{
+    d_print2("dump_mem2: 0x%08x bytes", len);
+    SIZE_T read, i;
+    char mem_buf[buf_size];
+    DWORD oldProt;
+    SIZE_T wrote_total = 0x0;
+
+    SIZE_T whole;
+    SIZE_T part;
+
+    part = len % buf_size;
+    whole = len - part;
+
+    unsigned j;
+
+    for(i=0x0; i<whole; i+= buf_size)
+    {
+        ReadProcessMemory(my_trace->procHandle, (void*)(from+i), (void*)mem_buf, buf_size, &read);
+        d_print("Read: 0x%08x\n", read);
+        if(read == 0x0)
+        {
+            d_print("Failed to read from %p to %p\nError: 0x%08x\n", from,(from+part), GetLastError());
+            break;
+        }
+        else
+        {
+
+            /* for each breakpoint */
+            unsigned k;
+            OFFSET cur_bp_addr;    
+    
+            for(k=0x0; k<my_trace->bpt_count; k++)
+            {
+                cur_bp_addr = my_trace->breakpoints[k].resolved_location;
+                if(cur_bp_addr == -0x1)
+                {
+                    continue;
+                }
+                d_print("Checking bp no: 0x%02x resolved to: 0x%08x\n", k, cur_bp_addr);
+                /* check if breakpoint in dumped region */
+                d_print("Checking 0x%08x <= 0x%08x < 0x%08x\n", (OFFSET)from+i, cur_bp_addr, (OFFSET)from+i+buf_size);
+                if(((OFFSET)from+i <= cur_bp_addr) && (cur_bp_addr < (OFFSET)from+i+buf_size))
+                {
+                    /* restore old byte */
+                    OFFSET part_off = cur_bp_addr-(OFFSET)from-i;
+                    d_print("Restoring before: 0x%02x after: 0x%02x\n", mem_buf[part_off], my_trace->breakpoints[k].saved_byte);
+                    mem_buf[part_off] = my_trace->breakpoints[k].saved_byte;
+                }
+            }
+
+            add_to_mod_buffer(mem_buf, read);
+            wrote_total += read;
+        }
+    }
+
+
+    if(part > 0x0)
+    {
+        ReadProcessMemory(my_trace->procHandle, (void*)(from+i), (void*)mem_buf, part, &read);
+        d_print("Read: 0x%08x\n", read);
+        if(read == 0x0)
+        {
+            d_print("Failed to read from %p to %p\nError: 0x%08x\n", from,(from+part), GetLastError());
+        }
+        else
+        {
+
+            /* for each breakpoint */
+            unsigned k;
+            OFFSET cur_bp_addr;    
+    
+            for(k=0x0; k<my_trace->bpt_count; k++)
+            {
+                cur_bp_addr = my_trace->breakpoints[k].resolved_location;
+                if(cur_bp_addr == -0x1)
+                {
+                    continue;
+                }
+                d_print("Checking bp no: 0x%02x resolved to: 0x%08x\n", k, cur_bp_addr);
+                /* check if breakpoint in dumped region */
+                d_print("Checking 0x%08x <= 0x%08x < 0x%08x\n", (OFFSET)from+i, cur_bp_addr, (OFFSET)from+i+part);
+                if(((OFFSET)from+i <= cur_bp_addr) && (cur_bp_addr < (OFFSET)from+i+buf_size))
+                {
+                    /* restore old byte */
+                    OFFSET part_off = cur_bp_addr-(OFFSET)from-i;
+                    d_print("Restoring before: 0x%02x after: 0x%02x\n", mem_buf[part_off], my_trace->breakpoints[k].saved_byte);
+                    mem_buf[part_off] = my_trace->breakpoints[k].saved_byte;
+                }
+            }
+
+            add_to_mod_buffer(mem_buf, read);
+            wrote_total += read;
+        }
+    }
+
+    return wrote_total;
 }
 
 SIZE_T dump_mem(FILE* f, void* from, SIZE_T len)
@@ -6471,6 +6624,10 @@ int reload_out_file()
     char buffer2[MAX_LINE];
     char line2[MAX_LINE];
 
+    fwrite(out_buffer, out_buffer_bytes, 1, my_trace->trace);
+    fflush(my_trace->trace);
+    out_buffer[0] = '\0';
+    out_buffer_bytes = 0x0;
 
     my_trace->out_postfix++;
 
@@ -7508,6 +7665,78 @@ int handle_cmd(char* cmd)
         send_report();
         
     }
+    else if(!strncmp(cmd, CMD_RESIZE_OUT_BUFF, 2))
+    {
+        char line[MAX_LINE];
+        char* temp;
+        unsigned new_size;
+
+        strtok(cmd, " ");
+        new_size = strtoul(strtok(0x0, " "), 0x0, 0x10);
+        out_buffer_size = new_size;
+
+        temp = (char*)malloc(out_buffer_size);
+        if(out_buffer == 0x0)
+        {
+            return -1;
+        }
+
+        if(out_buffer_size < out_buffer_bytes)
+        {
+            out_buffer_bytes = out_buffer_size;
+        }
+
+        memcpy(temp, out_buffer, out_buffer_bytes);
+        free(out_buffer);
+        out_buffer = temp;
+
+        sprintf(line, "New out_buffer_size is: 0x%08x\n", out_buffer_size);
+        strcpy(my_trace->report_buffer, line);
+        send_report();
+    }
+    else if(!strncmp(cmd, CMD_RESIZE_MOD_BUFF, 2))
+    {
+        char line[MAX_LINE];
+        char* temp;
+        unsigned new_size;
+
+        strtok(cmd, " ");
+        new_size = strtoul(strtok(0x0, " "), 0x0, 0x10);
+        mod_buffer_size = new_size;
+
+        temp = (char*)malloc(mod_buffer_size);
+        if(mod_buffer == 0x0)
+        {
+            return -1;
+        }
+
+        if(mod_buffer_size < mod_buffer_bytes)
+        {
+            mod_buffer_bytes = mod_buffer_size;
+        }
+
+        memcpy(temp, mod_buffer, mod_buffer_bytes);
+        free(mod_buffer);
+        mod_buffer = temp;
+
+        sprintf(line, "New mod_buffer_size is: 0x%08x\n", mod_buffer_size);
+        strcpy(my_trace->report_buffer, line);
+        send_report();
+    }
+    else if(!strncmp(cmd, CMD_FLUSH, 2))
+    {
+        if(my_trace->trace != 0x0)
+        {
+            fwrite(out_buffer, out_buffer_bytes, 1, my_trace->trace);
+            fflush(my_trace->trace);
+        }
+        if(my_trace->mods)
+        {
+            fwrite(mod_buffer, mod_buffer_bytes, 1, my_trace->mods);
+            fflush(my_trace->trace);
+        }
+        send_report();
+    }
     else if(!strncmp(cmd, CMD_REOPEN_IO, 2))
     {
         reopen_stdio();
@@ -8321,6 +8550,22 @@ int main(int argc, char** argv)
     if(strlen(argv[1]) > MAX_LINE) return -1;
     if(strlen(argv[2]) > MAX_LINE) return -1;
 
+    mod_buffer_size = DEFAULT_MOD_BUFFER_SIZE;
+    mod_buffer = (char*)malloc(mod_buffer_size);
+    if(mod_buffer == 0x0)
+    {
+        return -1;
+    }
+    mod_buffer_bytes = 0x0;
+
+    out_buffer_size = DEFAULT_OUT_BUFFER_SIZE;
+    out_buffer = (char*)malloc(out_buffer_size);
+    if(out_buffer == 0x0)
+    {
+        return -1;
+    }
+    out_buffer_bytes = 0x0;
+
     my_trace = (TRACE_CONFIG*)malloc(sizeof(TRACE_CONFIG));
     if(my_trace == 0x0)
     {
@@ -8434,6 +8679,10 @@ int main(int argc, char** argv)
         //d_print("Handled\n");
 
     }
+    fwrite(out_buffer, out_buffer_bytes, 1, my_trace->trace);
+    fflush(my_trace->trace);
+    fwrite(mod_buffer, mod_buffer_bytes, 1, my_trace->mods);
+    fflush(my_trace->trace);
     return 0x0;
 }
 
