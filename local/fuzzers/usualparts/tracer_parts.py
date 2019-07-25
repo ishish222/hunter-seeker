@@ -254,6 +254,21 @@ def tracer_resize_mod_buffer(args = None):
 
     return
 
+def tracer_change_interval(args = None):
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+    
+    if(args == None):
+        args = globs.state.stack.pop()
+
+    write_socket(options.s, "tracer_change_interval %s" % args);
+    response, _, _ = read_socket(options.s)
+
+    globs.state.ret = response
+
+    return
+
 def tracer_set_priority_high(args = None):
     options = globs.state.options
     state = globs.state

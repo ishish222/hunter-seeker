@@ -74,6 +74,8 @@ int unwrite_breakpoint(BREAKPOINT*);
 int read_word(DWORD addr);
 int read_dword(DWORD addr);
 
+unsigned current_interval;
+
 char* out_buffer;
 unsigned out_buffer_size;
 unsigned out_buffer_bytes;
@@ -1943,7 +1945,7 @@ int add_to_mod_buffer(char* data, unsigned size)
 
     to_write = size;    
 
-    if(to_write >= DEFAULT_MOD_BUFFER_SIZE)
+    if(to_write >= mod_buffer_size)
     {
             written = fwrite(mod_buffer, mod_buffer_bytes, 1, my_trace->mods);
             written = fwrite(data, size, 1, my_trace->mods);
@@ -1953,7 +1955,7 @@ int add_to_mod_buffer(char* data, unsigned size)
     }
     else
     {
-        if(mod_buffer_bytes + to_write >= DEFAULT_MOD_BUFFER_SIZE)
+        if(mod_buffer_bytes + to_write >= mod_buffer_size)
         {
             written = fwrite(mod_buffer, mod_buffer_bytes, 1, my_trace->mods);
             d_print2("writing out: 0x%08x bytes", mod_buffer_bytes);
@@ -1973,20 +1975,16 @@ int add_to_buffer(char* line)
 
     to_write = strlen(line);    
 
-    if(out_buffer_bytes + to_write >= DEFAULT_OUT_BUFFER_SIZE)
+    if(out_buffer_bytes + to_write >= out_buffer_size)
     {
         written = fwrite(out_buffer, out_buffer_bytes, 1, my_trace->trace);
         fflush(my_trace->trace);
-        //memset(out_buffer, 0x0, DEFAULT_OUT_BUFFER_SIZE);
         out_buffer[0] = '\0';
         out_buffer_bytes = 0x0;
     }
-    //strcat(out_buffer, line);
     memcpy(out_buffer+out_buffer_bytes, line, to_write);
     out_buffer_bytes += to_write;
 
-//    written = fwrite(line, strlen(line), 1, my_trace->trace);
-//    fflush(my_trace->trace);
     return to_write;
 }
 
@@ -3246,7 +3244,7 @@ void ss_callback(void* data)
         }
     }
 
-    if(!(my_trace->instr_count % INSTRUCTION_INTERVAL) && my_trace->instr_count>0x0)
+    if(!(my_trace->instr_count % current_interval) && my_trace->instr_count>0x0)
     {
         reload_out_file();
     }
@@ -7676,8 +7674,11 @@ int handle_cmd(char* cmd)
         out_buffer_size = new_size;
 
         temp = (char*)malloc(out_buffer_size);
-        if(out_buffer == 0x0)
+        if(temp == 0x0)
         {
+            sprintf(line, "Failed to allocate\n");
+            strcpy(my_trace->report_buffer, line);
+            send_report();
             return -1;
         }
 
@@ -7705,8 +7706,11 @@ int handle_cmd(char* cmd)
         mod_buffer_size = new_size;
 
         temp = (char*)malloc(mod_buffer_size);
-        if(mod_buffer == 0x0)
+        if(temp == 0x0)
         {
+            sprintf(line, "Failed to allocate\n");
+            strcpy(my_trace->report_buffer, line);
+            send_report();
             return -1;
         }
 
@@ -7720,6 +7724,20 @@ int handle_cmd(char* cmd)
         mod_buffer = temp;
 
         sprintf(line, "New mod_buffer_size is: 0x%08x\n", mod_buffer_size);
+        strcpy(my_trace->report_buffer, line);
+        send_report();
+    }
+    else if(!strncmp(cmd, CMD_CHANGE_INTERVAL, 2))
+    {
+        char line[MAX_LINE];
+        unsigned new_interval;
+
+        strtok(cmd, " ");
+        new_interval = strtoul(strtok(0x0, " "), 0x0, 10);
+
+        current_interval = new_interval;
+
+        sprintf(line, "New interval is: 0x%08x\n", mod_buffer_size);
         strcpy(my_trace->report_buffer, line);
         send_report();
     }
@@ -8558,6 +8576,8 @@ int main(int argc, char** argv)
     }
     mod_buffer_bytes = 0x0;
 
+    current_interval = DEFAULT_INSTRUCTION_INTERVAL;
+    
     out_buffer_size = DEFAULT_OUT_BUFFER_SIZE;
     out_buffer = (char*)malloc(out_buffer_size);
     if(out_buffer == 0x0)

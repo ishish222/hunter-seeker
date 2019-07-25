@@ -988,6 +988,13 @@ def execute(cmds, ext_pipe):
             writePipe(ext_pipe, "tracer_write_dword "+bcolors.OK_STR);
             ok(ext_pipe)
 
+        elif(cmd == "tracer_change_interval"):
+            trace_controller.change_interval(args)
+            writePipe(ext_pipe, "%s\n" % trace_controller.last_answer)
+            writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
+            writePipe(ext_pipe, "tracer_change_interval"+bcolors.OK_STR);
+            ok(ext_pipe)
+
         elif(cmd == "tracer_resize_out_buffer"):
             trace_controller.resize_out_buffer(args)
             writePipe(ext_pipe, "%s\n" % trace_controller.last_answer)

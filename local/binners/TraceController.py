@@ -859,6 +859,11 @@ class TraceController(object):
         self.last_report, self.last_answer = self.recv_report_active()
         return 
 
+    def change_interval(self, args):
+        self.send_command_active("CI %s" % args)
+        self.last_report, self.last_answer = self.recv_report_active()
+        return 
+
     def resize_out_buffer(self, args):
         self.send_command_active("rO %s" % args)
         self.last_report, self.last_answer = self.recv_report_active()

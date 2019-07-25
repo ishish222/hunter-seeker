@@ -77,7 +77,7 @@
 
 #define REG_DEBUG 1
 #define REG_DEBUG_INTERVAL 4999
-#define INSTRUCTION_INTERVAL 1000000
+#define DEFAULT_INSTRUCTION_INTERVAL 1000000
 #define INSTRUCTION_SMALL_INTERVAL 10000
 
 #define OFFSET unsigned int
@@ -206,6 +206,7 @@
 #define CMD_FLUSH               "FL"
 #define CMD_RESIZE_OUT_BUFF     "rO"
 #define CMD_RESIZE_MOD_BUFF     "rM"
+#define CMD_CHANGE_INTERVAL     "CI"
 
 #define CMD_ROUTINE_1           "R1"
 #define CMD_ROUTINE_2           "R2"
