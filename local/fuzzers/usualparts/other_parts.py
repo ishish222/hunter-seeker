@@ -8,6 +8,25 @@ import queue
 
 options = globs.state.options
 
+def reset_time(args=None):
+    import time
+    state = globs.state
+    options = globs.state.options
+
+    state.time = time.time()
+
+    return
+
+def read_time(args=None):
+    import time
+    state = globs.state
+    options = globs.state.options
+
+    elapsed = time.time() - state.time
+    print('Elapsed: {}'.format(elapsed))
+
+    return
+
 def host_print_result(args=None):
     options = globs.state.options
 

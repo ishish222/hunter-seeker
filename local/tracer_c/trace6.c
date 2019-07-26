@@ -528,7 +528,7 @@ void update_region_old(LOCATION* location)
     size_wrote = dump_mem2((void*)location->off, location->size);
     if(size_wrote == location->size)
     {
-        d_print("[Updated location: 0x%08x, size: 0x%08x]\n", location->off, location->size);
+//        d_print("[Updated location: 0x%08x, size: 0x%08x]\n", location->off, location->size);
         sprintf(line, "UP,0x%08x,0x%08x\n", location->off, location->size);
         add_to_buffer(line);
         //d_print2("# Current mod position: 0x%08x", ftell(my_trace->mods));
@@ -2663,9 +2663,8 @@ void react_sysret_callback(void* data);
 
 /* other callbacks */
 
-void react_sysenter_callback(void* data)
+inline void react_sysenter_callback(void* data)
 {
-    d_print2("sysenter");
     char line[MAX_LINE];
 
     DEBUG_EVENT* de;
@@ -2711,27 +2710,25 @@ void react_sysenter_callback(void* data)
         */
         if(my_trace->syscall_out_args[sysenter_no][i].off == 0x0)
         {
-            d_print2("No more syscalls");
+//            d_print2("No more syscalls");
             current_syscall_location[i].off = 0x0;
             current_syscall_location[i].size = 0x0;
             break;
         }
-        d_print2("Arg no; 0x%02x", i);
+//        d_print2("Arg no; 0x%02x", i);
         current_syscall_location[i].off = resolve_loc_desc(my_trace->syscall_out_args[sysenter_no][i].off);
         current_syscall_location[i].size = resolve_loc_desc(my_trace->syscall_out_args[sysenter_no][i].size);
 
-        d_print2("Resolved location: 0x%08x:0x%08x", current_syscall_location[i].off, current_syscall_location[i].size);
+//        d_print2("Resolved location: 0x%08x:0x%08x", current_syscall_location[i].off, current_syscall_location[i].size);
     }
 
     my_trace->threads[my_trace->tid_pos].last_was_syscall = 0x1;
     my_trace->threads[my_trace->tid_pos].syscall_no = sysenter_no;
-    d_print2("Setting last_was_syscall for: 0x%08x (0x%08x): 0x%08x", my_trace->tid, my_trace->tid_pos, my_trace->threads[tid_pos].last_was_syscall);
+//    d_print2("Setting last_was_syscall for: 0x%08x (0x%08x): 0x%08x", my_trace->tid, my_trace->tid_pos, my_trace->threads[tid_pos].last_was_syscall);
 }
 
-void react_sysret_callback(void* data)
+inline void react_sysret_callback(void* data)
 {
-    d_print2("sysret");
-
     DEBUG_EVENT* de;
     de = (DEBUG_EVENT*)data;
     DWORD tid = de->dwThreadId;
@@ -2751,25 +2748,25 @@ void react_sysret_callback(void* data)
     DWORD sysenter_no = my_trace->threads[tid_pos].syscall_no;
     current_syscall_location = &my_trace->threads[tid_pos].syscall_location[0];
 
-    d_print2("Updating args for syscall no: 0x%08x", sysenter_no);
+    //d_print2("Updating args for syscall no: 0x%08x", sysenter_no);
 
     for(i = 0x0; i<MAX_SYSCALL_OUT_ARGS; i++)
     {
 
         /* new update */
-        d_print2("new update below");
+        //d_print2("new update below");
 
         LOCATION location;
 
         if(current_syscall_location[i].off == 0x0 && current_syscall_location[i].size == 0x0) break;
         if(current_syscall_location[i].off >= 0x80000000)
         {
-            d_print2("Offset 0x%08x is probably wrong, skipping", current_syscall_location[i].off);
+            //d_print2("Offset 0x%08x is probably wrong, skipping", current_syscall_location[i].off);
             continue;
         }
         if(current_syscall_location[i].size > 0x1000000)
         {
-            d_print2("Size 0x%08x is probably wrong, skipping", current_syscall_location[i].size);
+            //d_print2("Size 0x%08x is probably wrong, skipping", current_syscall_location[i].size);
             continue;
         }
         update_region_old(&current_syscall_location[i]);
@@ -3073,7 +3070,7 @@ void check_debug(DWORD eip, long long unsigned i_count, DWORD id)
     return;
 }
 
-int is_call(OFFSET eip)
+inline int is_call(OFFSET eip)
 {
     char val;
     char line[MAX_LINE];
@@ -3110,7 +3107,7 @@ void noop_callback(void* data)
     return;
 }
 
-int is_syscall(DWORD eip)
+inline int is_syscall(DWORD eip)
 {
     DWORD dword;
 
@@ -3128,20 +3125,16 @@ int is_syscall(DWORD eip)
     return 0x0;
 }
 
-int last_was_syscall(DWORD tid)
+inline int last_was_syscall(DWORD tid)
 {
     DWORD tid_pos;
     tid_pos = my_trace->tid2index[tid];
 
-    d_print2("# Checking last_was_syscall for: 0x%08x (0x%08x): 0x%08x", tid, tid_pos, my_trace->threads[tid_pos].last_was_syscall);
-
     if(my_trace->threads[tid_pos].last_was_syscall) 
     {
-        d_print2("Last WAS syscall");
         my_trace->threads[tid_pos].last_was_syscall = 0x0;
         return 0x1;
     }
-    d_print2("Last was no syscall");
     return 0x0;
 }
 
@@ -5718,7 +5711,6 @@ int process_event()
                         /* we are authorized to handle this */
                         my_trace->callback_routine((void*)&my_trace->event);
                         my_trace->last_win_status = DBG_CONTINUE;
-                        d_print2("single step, REPORT_CONTINUE");
                         return REPORT_CONTINUE;
                         break;
                 
@@ -5915,7 +5907,6 @@ int handle_continue(DWORD pid, DWORD tid, unsigned status)
 
 void task_switch()
 {
-    d_print2("Task switch");
     register_all_threads_in_trace();
     return;
 }
