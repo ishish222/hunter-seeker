@@ -275,6 +275,32 @@ def int16(args = None):
     else:
         globs.state.ret = int(args, 0x10)
 
+def increase_counter(args = None):
+    if(args == None):
+        args = 0x1
+
+    globs.state.counter = globs.state.counter +args
+    print("0x%08x" % globs.state.counter)
+
+def decrease_counter(args = None):
+    if(args == None):
+        args = 0x1
+
+    globs.state.counter = globs.state.counter -args
+    print("0x%08x" % globs.state.counter)
+
+def compare_counter(args = None):
+    if(type(args) != int):
+        args = int(args, 0x10)
+
+    if(not hasattr(globs.state, 'counter')):
+        globs.state.counter = 0
+
+    if(globs.state.counter == args):
+        return "Y"
+    else:
+        return "N"
+
 def set_counter(args = None):
     if(args == None):
         args = globs.state.stack.pop()
@@ -288,15 +314,15 @@ def set_counter(args = None):
 def get_counter(args = None):
     print("0x%08x" % globs.state.counter)
     globs.state.ret = globs.state.counter
-    globs.state.counter = globs.state.counter-1
+    #globs.state.counter = globs.state.counter-1
 
 def check_counter(args = None):
     print("0x%08x" % globs.state.counter)
     if(globs.state.counter == 0x0):
-        globs.state.counter = globs.state.counter-1
+        #globs.state.counter = globs.state.counter-1
         return "Y"
     else:
-        globs.state.counter = globs.state.counter-1
+        #globs.state.counter = globs.state.counter-1
         return "N"
 
 def get_qemu_cmdline(args=None):

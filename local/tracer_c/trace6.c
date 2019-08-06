@@ -92,7 +92,7 @@ int check_status_for_ss(int status)
 {
     if(status == STATUS_DBG_STARTED) return 0x1;
     if(status == STATUS_DBG_SCANNED) return 0x1;
-    if(status == STATUS_DBG_LIGHT) return 0x1;
+    if(status == STATUS_DBG_LIGHT)   return 0x1;
     if(status == STATUS_DBG_SYSCALL) return 0x1;
     return 0x0;
 }
@@ -6613,11 +6613,6 @@ int reload_out_file()
     char buffer2[MAX_LINE];
     char line2[MAX_LINE];
 
-    fwrite(out_buffer, out_buffer_bytes, 1, my_trace->trace);
-    fflush(my_trace->trace);
-    out_buffer[0] = '\0';
-    out_buffer_bytes = 0x0;
-
     my_trace->out_postfix++;
 
     strcpy(buffer2, "");
@@ -6626,6 +6621,10 @@ int reload_out_file()
 
     sprintf(line2, "LF,%s_%d.out\n", my_trace->out_prefix, my_trace->out_postfix);
     add_to_buffer(line2);
+    fwrite(out_buffer, out_buffer_bytes, 1, my_trace->trace);
+    fflush(my_trace->trace);
+    out_buffer[0] = '\0';
+    out_buffer_bytes = 0x0;
 
     fclose(my_trace->trace);
     my_trace->trace = fopen(my_trace->out_trace, "w+");
