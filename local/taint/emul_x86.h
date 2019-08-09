@@ -1362,10 +1362,11 @@ class taint_x86
         this->aborted = 0x0;
 
         /* taint stuff */
-        this->propagations = (PROPAGATION*)malloc(sizeof(PROPAGATION)*MAX_PRPAGATIONS_OBSERVED);
+        this->propagations = (PROPAGATION*)malloc(sizeof(PROPAGATION)*MAX_PROPAGATIONS_OBSERVED);
         if(this->propagations == 0x0)
         {
             printf("Not enough memory: propagations\n");
+            exit(1);
         }
         //memset(this->propagations, 0x0, (sizeof(PROPAGATION)*MAX_PRPAGATIONS_OBSERVED));
 
@@ -1373,6 +1374,7 @@ class taint_x86
         if(this->ctx_info == 0x0)
         {
             printf("Not enough memory: ctx_info\n");
+            exit(1);
         }
 
     }
