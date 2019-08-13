@@ -639,6 +639,7 @@ int taint_x86::post_execute_instruction(DWORD eip)
         if(this->got_cause)
         {
             d_print(1, "Propagation imperfection, got cause without result for byte: 0x%02x\n", this->current_instr_byte->get_BYTE());
+            this->clear_current_propagation_causes();
         }
     }
 
