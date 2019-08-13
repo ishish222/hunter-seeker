@@ -951,6 +951,7 @@ class taint_x86
     int attach_current_propagation_m_16(OFFSET);
     int attach_current_propagation_m_32(OFFSET);
     int seal_current_propagation();
+    int clear_current_propagation_causes();
     int propagate_taint(PROPAGATION*);
 
     /* 32 bit store / restore */

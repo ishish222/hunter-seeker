@@ -17,7 +17,7 @@
 #define MAX_PROPAGATIONS_OBSERVED 0xc000000 //200 milions
 #define MAX_TAINTS_OBSERVED     0x400
 #define MAX_EXCEPTIONS_COUNT    0x100
-#define MAX_BREAKPOINTS         0x10
+#define MAX_BREAKPOINTS         0x50 //temporarily?
 #define MAX_SECURITY_LAYERS     0x1000
 #define MAX_BLACKLIST           0x50
 #define MAX_WANTED              0x100

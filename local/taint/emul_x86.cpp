@@ -1867,6 +1867,15 @@ int taint_x86::propagate_taint(PROPAGATION* current_propagation)
 }
 */
 
+int taint_x86::clear_current_propagation_causes()
+{
+    PROPAGATION* current_propagation;
+    current_propagation = &this->propagations[this->current_propagation_count];
+    current_propagation->cause_count = 0x0;
+
+    return 0x0;
+}
+
 int taint_x86::seal_current_propagation()
 {
     unsigned i,j;
@@ -7843,6 +7852,8 @@ int taint_x86::r_decode_execute_80(BYTE_t* addr)
     modrm_byte_ptr = addr +1;
     a_decode_modrm(modrm_byte_ptr, &r, &rm, MODE_32, MODE_32);
 
+    clear_current_propagation_causes();
+
     switch(r.offset)
     {
         case EAX: //0x0
@@ -7884,6 +7895,8 @@ int taint_x86::r_decode_execute_81(BYTE_t* addr)
     modrm_byte_ptr = addr +1;
     a_decode_modrm(modrm_byte_ptr, &r, &rm, MODE_32, MODE_32);
 
+    clear_current_propagation_causes();
+
     switch(r.offset)
     {
         case EAX: //0x0
@@ -7924,6 +7937,8 @@ int taint_x86::r_decode_execute_83(BYTE_t* addr)
 
     modrm_byte_ptr = addr +1;
     a_decode_modrm(modrm_byte_ptr, &r, &rm, MODE_32, MODE_32);
+
+    clear_current_propagation_causes();
 
     switch(r.offset)
     {
@@ -9572,6 +9587,8 @@ int taint_x86::r_decode_execute_c0(BYTE_t* addr)
     modrm_byte_ptr = addr +1;
     a_decode_modrm(modrm_byte_ptr, &r, &rm, MODE_32, MODE_32);
 
+    clear_current_propagation_causes();
+
     switch(r.offset)
     {
         case EAX: //0x0
@@ -9611,6 +9628,8 @@ int taint_x86::r_decode_execute_c1(BYTE_t* addr)
 
     modrm_byte_ptr = addr +1;
     a_decode_modrm(modrm_byte_ptr, &r, &rm, MODE_32, MODE_32);
+
+    clear_current_propagation_causes();
 
     switch(r.offset)
     {
@@ -9703,6 +9722,8 @@ int taint_x86::r_decode_execute_c6(BYTE_t* addr)
     modrm_byte_ptr = addr +1;
     a_decode_modrm(modrm_byte_ptr, &r, &rm, MODE_32, MODE_32);
 
+    clear_current_propagation_causes();
+
     switch(r.offset)
     {
         case EAX: //0x0
@@ -9739,6 +9760,8 @@ int taint_x86::r_decode_execute_c7(BYTE_t* addr)
 
     modrm_byte_ptr = addr +1;
     a_decode_modrm(modrm_byte_ptr, &r, &rm, MODE_32, MODE_32);
+
+    clear_current_propagation_causes();
 
     switch(r.offset)
     {
@@ -9791,6 +9814,8 @@ int taint_x86::r_decode_execute_d0(BYTE_t* addr)
     modrm_byte_ptr = addr +1;
     a_decode_modrm(modrm_byte_ptr, &r, &rm, MODE_32, MODE_32);
 
+    clear_current_propagation_causes();
+
     switch(r.offset)
     {
         case EAX: //0x0
@@ -9830,6 +9855,8 @@ int taint_x86::r_decode_execute_d1(BYTE_t* addr)
 
     modrm_byte_ptr = addr +1;
     a_decode_modrm(modrm_byte_ptr, &r, &rm, MODE_32, MODE_32);
+
+    clear_current_propagation_causes();
 
     switch(r.offset)
     {
@@ -9871,6 +9898,8 @@ int taint_x86::r_decode_execute_d2(BYTE_t* addr)
     modrm_byte_ptr = addr +1;
     a_decode_modrm(modrm_byte_ptr, &r, &rm, MODE_32, MODE_32);
 
+    clear_current_propagation_causes();
+
     switch(r.offset)
     {
         case EAX: //0x0
@@ -9910,6 +9939,8 @@ int taint_x86::r_decode_execute_d3(BYTE_t* addr)
 
     modrm_byte_ptr = addr +1;
     a_decode_modrm(modrm_byte_ptr, &r, &rm, MODE_32, MODE_32);
+
+    clear_current_propagation_causes();
 
     switch(r.offset)
     {
@@ -10106,6 +10137,8 @@ int taint_x86::r_decode_execute_f6(BYTE_t* addr)
     modrm_byte_ptr = addr +1;
     a_decode_modrm(modrm_byte_ptr, &r, &rm, MODE_32, MODE_32);
 
+    clear_current_propagation_causes();
+
     switch(r.offset)
     {
         case EAX: //0x0
@@ -10144,6 +10177,8 @@ int taint_x86::r_decode_execute_f7(BYTE_t* addr)
 
     modrm_byte_ptr = addr +1;
     a_decode_modrm(modrm_byte_ptr, &r, &rm, MODE_32, MODE_32);
+
+    clear_current_propagation_causes();
 
     switch(r.offset)
     {
@@ -10214,6 +10249,8 @@ int taint_x86::r_decode_execute_fe(BYTE_t* addr)
     modrm_byte_ptr = addr +1;
     a_decode_modrm(modrm_byte_ptr, &r, &rm, MODE_32, MODE_32);
 
+    clear_current_propagation_causes();
+
     switch(r.offset)
     {
         case EAX: //0x0 
@@ -10244,7 +10281,8 @@ int taint_x86::r_decode_execute_ff(BYTE_t* addr)
     modrm_byte_ptr = addr +1;
     a_decode_modrm(modrm_byte_ptr, &r, &rm, MODE_32, MODE_32);
 
-    d_print(1, "r_decode_execute_ff decoded offset: 0x%08x\n", r.offset);
+    clear_current_propagation_causes();
+
     switch(r.offset)
     {
         case EAX: //0x0 
@@ -10372,6 +10410,8 @@ int taint_x86::r_cmpxchg_rm_r_16_32(BYTE_t* instr_ptr)
                     d_print(3, "Read 16: 0x%08x\n", dst_16.get_WORD());
                     old_dst_16 = dst_16;
                     src_16 = this->reg_restore_16(r.offset);
+                    reg_propagation_cause_r_16(r.offset);
+
                     if(ax.get_WORD() == dst_16.get_WORD())
                     {
                         d_print(3, "equal\n");
@@ -10399,6 +10439,8 @@ int taint_x86::r_cmpxchg_rm_r_16_32(BYTE_t* instr_ptr)
                     d_print(3, "Read 32: 0x%08x\n", dst_32.get_DWORD());
                     old_dst_32 = dst_32;
                     src_32 = this->reg_restore_32(r.offset);
+                    reg_propagation_cause_r_32(r.offset);
+
                     if(eax.get_DWORD() == dst_32.get_DWORD())
                     {
                         d_print(3, "equal\n");
@@ -10419,41 +10461,62 @@ int taint_x86::r_cmpxchg_rm_r_16_32(BYTE_t* instr_ptr)
         case (MODRM_MEM):
             if(this->current_prefixes & PREFIX_OPER_SIZE_OVERRIDE)
             {
-                    this->restore_16(AX, ax);
+                    ax = this->reg_restore_16(AX);
+                    reg_propagation_cause_r_16(AX);
+
                     this->restore_16(rm.offset, dst_16);
+                    reg_propagation_cause_m_16(rm.offset);
+
                     d_print(3, "Read 16: 0x%08x\n", dst_16.get_WORD());
                     old_dst_16 = dst_16;
                     src_16 = this->reg_restore_16(r.offset);
+                    reg_propagation_cause_r_16(r.offset);
+
                     if(ax.get_WORD() == dst_16.get_WORD())
                     {
                         d_print(3, "equal\n");
                         this->store_16(rm.offset, src_16);
+                        this->attach_current_propagation_m_16(rm.offset);
                     }
                     else
                     {
                         d_print(3, "not equal\n");
                         this->reg_store_16(AX, dst_16);
+                        this->attach_current_propagation_r_16(AX);
+
                         this->store_16(rm.offset, src_16);
+                        this->attach_current_propagation_m_16(rm.offset);
                     }
             }
             else
             {
-                    this->restore_32(EAX, eax);
+                    eax = this->reg_restore_32(EAX);
+                    reg_propagation_cause_r_32(EAX);
+
                     this->restore_32(rm.offset, dst_32);
+                    reg_propagation_cause_m_32(rm.offset);
+
                     d_print(3, "Read 32: 0x%08x\n", dst_32.get_DWORD());
                     old_dst_32 = dst_32;
                     src_32 = this->reg_restore_32(r.offset);
+                    reg_propagation_cause_r_32(r.offset);
+
                     d_print(3, "Src: 0x%08x\n", src_32.get_DWORD());
                     if(eax.get_DWORD() == dst_32.get_DWORD())
                     {
                         d_print(3, "equal\n");
                         this->store_32(rm.offset, src_32);
+                        this->attach_current_propagation_m_32(rm.offset);
                     }
                     else
                     {
                         d_print(3, "not equal\n");
                         this->reg_store_32(EAX, dst_32);
+                        this->attach_current_propagation_r_32(EAX);
+
                         this->store_32(rm.offset, src_32);
+                        this->attach_current_propagation_m_32(rm.offset);
+
                     }
             }
             break;
@@ -10803,6 +10866,8 @@ int taint_x86::r_decode_execute_0fba(BYTE_t* addr)
 
     modrm_byte_ptr = addr +1;
     a_decode_modrm(modrm_byte_ptr, &r, &rm, MODE_32, MODE_32);
+
+    clear_current_propagation_causes();
 
     switch(r.offset)
     {
