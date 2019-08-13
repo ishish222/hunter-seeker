@@ -2267,27 +2267,43 @@ int taint_x86::a_decode_modrm(BYTE_t* modrm_byte_ptr, modrm_ptr* r, modrm_ptr* r
     {
         case REG_EAX_BASED:
             r->offset = EAX;
+            if(this->options & OPTION_INDEXES_PROPAGATE)
+                reg_propagation_cause_r_32(EAX);
             break;
         case REG_ECX_BASED:
             r->offset = ECX;
+            if(this->options & OPTION_INDEXES_PROPAGATE)
+                reg_propagation_cause_r_32(ECX);
             break;
         case REG_EDX_BASED:
             r->offset = EDX;
+            if(this->options & OPTION_INDEXES_PROPAGATE)
+                reg_propagation_cause_r_32(EDX);
             break;
         case REG_EBX_BASED:
             r->offset = EBX;
+            if(this->options & OPTION_INDEXES_PROPAGATE)
+                reg_propagation_cause_r_32(EBX);
             break;
         case REG_ESP_BASED:
             r->offset = ESP;
+            if(this->options & OPTION_INDEXES_PROPAGATE)
+                reg_propagation_cause_r_32(ESP);
             break;
         case REG_EBP_BASED:
             r->offset = EBP;
+            if(this->options & OPTION_INDEXES_PROPAGATE)
+                reg_propagation_cause_r_32(EBP);
             break;
         case REG_ESI_BASED:
             r->offset = ESI;
+            if(this->options & OPTION_INDEXES_PROPAGATE)
+                reg_propagation_cause_r_32(ESI);
             break;
         case REG_EDI_BASED:
             r->offset = EDI;
+            if(this->options & OPTION_INDEXES_PROPAGATE)
+                reg_propagation_cause_r_32(EDI);
             break;
     }
     r->region = MODRM_REG;
@@ -13548,6 +13564,8 @@ int taint_x86::r_cmp_rm_16_32_imm_8(BYTE_t* instr_ptr)
 
     this->a_decode_modrm(instr_ptr +1, &r, &rm);
 
+    clear_current_propagation_causes();
+
     switch(rm.region)
     {
         case (MODRM_REG):
@@ -13641,6 +13659,8 @@ int taint_x86::r_sal_shl_rm_imm_8(BYTE_t* instr_ptr)
 
     this->a_decode_modrm(instr_ptr +1, &r, &rm, MODE_8, MODE_8);
 
+    clear_current_propagation_causes();
+
     switch(rm.region)
     {
         case (MODRM_REG):
@@ -13677,6 +13697,8 @@ int taint_x86::r_shr_rm_imm_8(BYTE_t* instr_ptr)
 
     this->a_decode_modrm(instr_ptr +1, &r, &rm, MODE_8, MODE_8);
 
+    clear_current_propagation_causes();
+
     switch(rm.region)
     {
         case (MODRM_REG):
@@ -13710,6 +13732,8 @@ int taint_x86::r_sar_rm_imm_8(BYTE_t* instr_ptr)
     BYTE i;
 
     this->a_decode_modrm(instr_ptr +1, &r, &rm, MODE_8, MODE_8);
+
+    clear_current_propagation_causes();
 
     switch(rm.region)
     {
@@ -13746,9 +13770,9 @@ int taint_x86::r_sal_shl_rm_16_32_imm_8(BYTE_t* instr_ptr)
     BYTE_t src_8;
     BYTE i;
 
-    d_print(3, "r_sal_shl_rm_16_32_src_8\n");
-
     this->a_decode_modrm(instr_ptr +1, &r, &rm);
+
+    clear_current_propagation_causes();
 
     switch(rm.region)
     {
@@ -13823,6 +13847,9 @@ int taint_x86::r_shr_rm_32_imm_8(BYTE_t* instr_ptr)
     BYTE i;
 
     this->a_decode_modrm(instr_ptr +1, &r, &rm);
+
+    clear_current_propagation_causes();
+
     src_8.from_mem(instr_ptr + this->current_instr_length);
 
     switch(rm.region)
@@ -13857,6 +13884,8 @@ int taint_x86::r_sar_rm_16_32_imm_8(BYTE_t* instr_ptr)
     BYTE_t src_8;
 
     this->a_decode_modrm(instr_ptr +1, &r, &rm);
+
+    clear_current_propagation_causes();
 
     switch(rm.region)
     {
@@ -13909,6 +13938,8 @@ int taint_x86::r_mov_rm_imm_8(BYTE_t* instr_ptr)
 
     this->a_decode_modrm(instr_ptr +1, &r, &rm, MODE_8, MODE_8);
 
+    clear_current_propagation_causes();
+
     this->reg_propagation_cause_m_8(this->reg_restore_32(EIP).get_DWORD() + this->current_instr_length);
     src_8.from_mem(instr_ptr + this->current_instr_length);
     dst_8 += src_8;
@@ -13939,6 +13970,8 @@ int taint_x86::r_mov_rm_imm_16_32(BYTE_t* instr_ptr)
     WORD_t dst_16, src_16;
 
     this->a_decode_modrm(instr_ptr +1, &r, &rm);
+
+    clear_current_propagation_causes();
 
     d_print(3, "Target: 0x%08x\n", rm.offset);
 
@@ -13992,6 +14025,8 @@ int taint_x86::r_sal_shl_rm_8_1(BYTE_t* instr_ptr)
 
     this->a_decode_modrm(instr_ptr +1, &r, &rm, MODE_8, MODE_8);
 
+    clear_current_propagation_causes();
+
     switch(rm.region)
     {
         case (MODRM_REG):
@@ -14018,6 +14053,8 @@ int taint_x86::r_shr_rm_8_1(BYTE_t* instr_ptr)
 
     this->a_decode_modrm(instr_ptr +1, &r, &rm, MODE_8, MODE_8);
 
+    clear_current_propagation_causes();
+
     switch(rm.region)
     {
         case (MODRM_REG):
@@ -14043,6 +14080,8 @@ int taint_x86::r_sar_rm_8_1(BYTE_t* instr_ptr)
     BYTE_t dst_8;
 
     this->a_decode_modrm(instr_ptr +1, &r, &rm, MODE_8, MODE_8);
+
+    clear_current_propagation_causes();
 
     switch(rm.region)
     {
@@ -14073,6 +14112,8 @@ int taint_x86::r_sal_shl_rm_16_32_1(BYTE_t* instr_ptr)
     DWORD_t dst_32;
 
     this->a_decode_modrm(instr_ptr +1, &r, &rm);
+
+    clear_current_propagation_causes();
 
     switch(rm.region)
     {
@@ -14131,6 +14172,8 @@ int taint_x86::r_shr_rm_16_32_1(BYTE_t* instr_ptr)
 
     this->a_decode_modrm(instr_ptr +1, &r, &rm);
 
+    clear_current_propagation_causes();
+
     switch(rm.region)
     {
         case (MODRM_REG):
@@ -14178,6 +14221,8 @@ int taint_x86::r_sar_rm_16_32_1(BYTE_t* instr_ptr)
     DWORD_t dst_32;
 
     this->a_decode_modrm(instr_ptr +1, &r, &rm);
+
+    clear_current_propagation_causes();
 
     switch(rm.region)
     {
@@ -14230,6 +14275,8 @@ int taint_x86::r_sal_shl_rm_8_cl(BYTE_t* instr_ptr)
 
     this->a_decode_modrm(instr_ptr +1, &r, &rm, MODE_8, MODE_8);
 
+    clear_current_propagation_causes();
+
     switch(rm.region)
     {
         case (MODRM_REG):
@@ -14266,6 +14313,8 @@ int taint_x86::r_shr_rm_8_cl(BYTE_t* instr_ptr)
 
     this->a_decode_modrm(instr_ptr +1, &r, &rm, MODE_8, MODE_8);
 
+    clear_current_propagation_causes();
+
     switch(rm.region)
     {
         case (MODRM_REG):
@@ -14299,6 +14348,8 @@ int taint_x86::r_sar_rm_8_cl(BYTE_t* instr_ptr)
     BYTE i;
 
     this->a_decode_modrm(instr_ptr +1, &r, &rm, MODE_8, MODE_8);
+
+    clear_current_propagation_causes();
 
     switch(rm.region)
     {
@@ -14336,6 +14387,8 @@ int taint_x86::r_sal_shl_rm_16_32_cl(BYTE_t* instr_ptr)
     BYTE i;
 
     this->a_decode_modrm(instr_ptr +1, &r, &rm);
+
+    clear_current_propagation_causes();
 
     switch(rm.region)
     {
@@ -14403,6 +14456,8 @@ int taint_x86::r_shr_rm_16_32_cl(BYTE_t* instr_ptr)
 
     this->a_decode_modrm(instr_ptr +1, &r, &rm);
 
+    clear_current_propagation_causes();
+
     switch(rm.region)
     {
         case (MODRM_REG):
@@ -14465,6 +14520,8 @@ int taint_x86::r_sar_rm_16_32_cl(BYTE_t* instr_ptr)
 
     this->a_decode_modrm(instr_ptr +1, &r, &rm);
 
+    clear_current_propagation_causes();
+
     switch(rm.region)
     {
         case (MODRM_REG):
@@ -14523,6 +14580,8 @@ int taint_x86::r_rcl_rm_8_1(BYTE_t* instr_ptr)
     this->a_decode_modrm(instr_ptr +1, &r, &rm);
     BYTE_t val;
 
+    clear_current_propagation_causes();
+
     switch(rm.region)
     {
         case (MODRM_REG):
@@ -14545,6 +14604,8 @@ int taint_x86::r_rcr_rm_8_1(BYTE_t* instr_ptr)
     modrm_ptr rm, r;
     this->a_decode_modrm(instr_ptr +1, &r, &rm);
     BYTE_t val;
+
+    clear_current_propagation_causes();
 
     switch(rm.region)
     {
@@ -14569,6 +14630,8 @@ int taint_x86::r_rol_rm_8_1(BYTE_t* instr_ptr)
     this->a_decode_modrm(instr_ptr +1, &r, &rm);
     BYTE_t val;
 
+    clear_current_propagation_causes();
+
     switch(rm.region)
     {
         case (MODRM_REG):
@@ -14591,6 +14654,8 @@ int taint_x86::r_ror_rm_8_1(BYTE_t* instr_ptr)
     modrm_ptr rm, r;
     this->a_decode_modrm(instr_ptr +1, &r, &rm);
     BYTE_t val;
+
+    clear_current_propagation_causes();
 
     switch(rm.region)
     {
@@ -14615,6 +14680,8 @@ int taint_x86::r_rcl_rm_16_32_1(BYTE_t* instr_ptr)
     this->a_decode_modrm(instr_ptr +1, &r, &rm);
     WORD_t val16;
     DWORD_t val32;
+
+    clear_current_propagation_causes();
 
     switch(rm.region)
     {
@@ -14659,6 +14726,8 @@ int taint_x86::r_rcr_rm_16_32_1(BYTE_t* instr_ptr)
     this->a_decode_modrm(instr_ptr +1, &r, &rm);
     WORD_t val16;
     DWORD_t val32;
+
+    clear_current_propagation_causes();
 
     switch(rm.region)
     {
@@ -14705,6 +14774,8 @@ int taint_x86::r_rol_rm_16_32_1(BYTE_t* instr_ptr)
     WORD_t val16;
     DWORD_t val32;
 
+    clear_current_propagation_causes();
+
     switch(rm.region)
     {
         case (MODRM_REG):
@@ -14749,6 +14820,8 @@ int taint_x86::r_ror_rm_16_32_1(BYTE_t* instr_ptr)
     this->a_decode_modrm(instr_ptr +1, &r, &rm);
     WORD_t val16;
     DWORD_t val32;
+
+    clear_current_propagation_causes();
 
     switch(rm.region)
     {
@@ -14796,6 +14869,8 @@ int taint_x86::r_rol_rm_8_cl(BYTE_t* instr_ptr)
     BYTE count;
     unsigned i;
 
+    clear_current_propagation_causes();
+
     count = this->reg_restore_8(CL).get_BYTE();
 
     switch(rm.region)
@@ -14828,6 +14903,8 @@ int taint_x86::r_ror_rm_8_cl(BYTE_t* instr_ptr)
     BYTE_t val;
     BYTE count;
     unsigned i;
+
+    clear_current_propagation_causes();
 
     count = this->reg_restore_8(CL).get_BYTE();
 
@@ -14862,6 +14939,8 @@ int taint_x86::r_rcl_rm_8_cl(BYTE_t* instr_ptr)
     BYTE count;
     unsigned i;
 
+    clear_current_propagation_causes();
+
     count = this->reg_restore_8(CL).get_BYTE();
 
     switch(rm.region)
@@ -14894,6 +14973,8 @@ int taint_x86::r_rcr_rm_8_cl(BYTE_t* instr_ptr)
     BYTE_t val;
     BYTE count;
     unsigned i;
+
+    clear_current_propagation_causes();
 
     count = this->reg_restore_8(CL).get_BYTE();
 
@@ -14928,6 +15009,8 @@ int taint_x86::r_rcl_rm_16_32_cl(BYTE_t* instr_ptr)
     DWORD_t val32;
     BYTE count;
     unsigned i;
+
+    clear_current_propagation_causes();
 
     count = this->reg_restore_8(CL).get_BYTE();
 
@@ -14989,6 +15072,8 @@ int taint_x86::r_rcr_rm_16_32_cl(BYTE_t* instr_ptr)
     BYTE count;
     unsigned i;
 
+    clear_current_propagation_causes();
+
     count = this->reg_restore_8(CL).get_BYTE();
 
     switch(rm.region)
@@ -15048,6 +15133,8 @@ int taint_x86::r_rol_rm_16_32_cl(BYTE_t* instr_ptr)
     DWORD_t val32;
     BYTE count;
     unsigned i;
+
+    clear_current_propagation_causes();
 
     count = this->reg_restore_8(CL).get_BYTE();
 
@@ -15109,6 +15196,8 @@ int taint_x86::r_ror_rm_16_32_cl(BYTE_t* instr_ptr)
     BYTE count;
     unsigned i;
 
+    clear_current_propagation_causes();
+
     count = this->reg_restore_8(CL).get_BYTE();
 
     switch(rm.region)
@@ -15169,6 +15258,8 @@ int taint_x86::r_rcl_rm_imm_8(BYTE_t* instr_ptr)
     BYTE count;
     unsigned i;
 
+    clear_current_propagation_causes();
+
     imm_8.from_mem(instr_ptr + this->current_instr_length);
     count = imm_8.get_BYTE();
 
@@ -15204,6 +15295,8 @@ int taint_x86::r_rcr_rm_imm_8(BYTE_t* instr_ptr)
     BYTE_t imm_8;
     BYTE count;
     unsigned i;
+
+    clear_current_propagation_causes();
 
     imm_8.from_mem(instr_ptr + this->current_instr_length);
     count = imm_8.get_BYTE();
@@ -15241,6 +15334,8 @@ int taint_x86::r_rol_rm_imm_8(BYTE_t* instr_ptr)
     BYTE count;
     unsigned i;
 
+    clear_current_propagation_causes();
+
     imm_8.from_mem(instr_ptr + this->current_instr_length);
     count = imm_8.get_BYTE();
 
@@ -15277,6 +15372,8 @@ int taint_x86::r_ror_rm_imm_8(BYTE_t* instr_ptr)
     BYTE count;
     unsigned i;
 
+    clear_current_propagation_causes();
+
     imm_8.from_mem(instr_ptr + this->current_instr_length);
     count = imm_8.get_BYTE();
 
@@ -15312,6 +15409,8 @@ int taint_x86::r_rcl_rm_16_32_imm_8(BYTE_t* instr_ptr)
     BYTE_t imm_8;
     BYTE count;
     unsigned i;
+
+    clear_current_propagation_causes();
 
     imm_8.from_mem(instr_ptr + this->current_instr_length);
     count = imm_8.get_BYTE();
@@ -15374,6 +15473,8 @@ int taint_x86::r_rcr_rm_16_32_imm_8(BYTE_t* instr_ptr)
     BYTE_t imm_8;
     BYTE count;
     unsigned i;
+
+    clear_current_propagation_causes();
 
     imm_8.from_mem(instr_ptr + this->current_instr_length);
     count = imm_8.get_BYTE();
@@ -15438,6 +15539,8 @@ int taint_x86::r_rol_rm_16_32_imm_8(BYTE_t* instr_ptr)
     BYTE count;
     unsigned i;
 
+    clear_current_propagation_causes();
+
     imm_8.from_mem(instr_ptr + this->current_instr_length);
     count = imm_8.get_BYTE();
 
@@ -15499,6 +15602,8 @@ int taint_x86::r_ror_rm_16_32_imm_8(BYTE_t* instr_ptr)
     BYTE_t imm_8;
     BYTE count;
     unsigned i;
+
+    clear_current_propagation_causes();
 
     imm_8.from_mem(instr_ptr + this->current_instr_length);
     count = imm_8.get_BYTE();
@@ -15564,6 +15669,8 @@ int taint_x86::r_not_rm_8(BYTE_t* instr_ptr)
 
     this->a_decode_modrm(instr_ptr +1, &r, &rm, MODE_32, MODE_8);
 
+    clear_current_propagation_causes();
+
     switch(rm.region)
     {
         case (MODRM_REG):
@@ -15593,25 +15700,27 @@ int taint_x86::r_neg_rm_8(BYTE_t* instr_ptr)
 
     this->a_decode_modrm(instr_ptr +1, &r, &rm, MODE_32, MODE_8);
 
+    clear_current_propagation_causes();
+
     switch(rm.region)
     {
         case (MODRM_REG):
-            dst_8 = this->reg_restore_8(r.offset);
-            reg_propagation_cause_r_8(r.offset);
+            dst_8 = this->reg_restore_8(rm.offset);
+            reg_propagation_cause_r_8(rm.offset);
 
             dst_8.set_BYTE(~dst_8.get_BYTE()+1);
 
-            this->reg_store_8(r.offset, dst_8);
-            attach_current_propagation_r_8(r.offset);
+            this->reg_store_8(rm.offset, dst_8);
+            attach_current_propagation_r_8(rm.offset);
             break;
         case (MODRM_MEM):
-            this->restore_8(r.offset, dst_8);
-            reg_propagation_cause_r_8(r.offset);
+            this->restore_8(rm.offset, dst_8);
+            reg_propagation_cause_r_8(rm.offset);
 
             dst_8.set_BYTE(~dst_8.get_BYTE()+1);
 
-            this->store_8(r.offset, dst_8);
-            attach_current_propagation_r_8(r.offset);
+            this->store_8(rm.offset, dst_8);
+            attach_current_propagation_r_8(rm.offset);
             break;
     }
  
@@ -15627,6 +15736,8 @@ int taint_x86::r_mul_rm_8(BYTE_t* instr_ptr)
     WORD res;
 
     this->a_decode_modrm(instr_ptr +1, &r, &rm, MODE_8, MODE_8);
+
+    clear_current_propagation_causes();
 
     switch(rm.region)
     {
@@ -15672,6 +15783,8 @@ int taint_x86::r_imul_rm_8(BYTE_t* instr_ptr)
 
     this->a_decode_modrm(instr_ptr +1, &r, &rm, MODE_8, MODE_8);
 
+    clear_current_propagation_causes();
+
     switch(rm.region)
     {
         case (MODRM_REG):
@@ -15716,6 +15829,8 @@ int taint_x86::r_not_rm_16_32(BYTE_t* instr_ptr)
     DWORD_t dst_32;
 
     this->a_decode_modrm(instr_ptr +1, &r, &rm);
+
+    clear_current_propagation_causes();
 
     switch(rm.region)
     {
@@ -15769,6 +15884,8 @@ int taint_x86::r_neg_rm_16_32(BYTE_t* instr_ptr)
     DWORD_t dst_32;
 
     this->a_decode_modrm(instr_ptr +1, &r, &rm);
+
+    clear_current_propagation_causes();
 
     switch(rm.region)
     {
@@ -15831,6 +15948,8 @@ int taint_x86::r_div_rm_8(BYTE_t* instr_ptr)
 
     this->a_decode_modrm(instr_ptr +1, &r, &rm, MODE_8, MODE_8);
 
+    clear_current_propagation_causes();
+
     switch(rm.region)
     {
         case (MODRM_REG):
@@ -15888,6 +16007,8 @@ int taint_x86::r_idiv_rm_8(BYTE_t* instr_ptr)
     WORD ax;
 
     this->a_decode_modrm(instr_ptr +1, &r, &rm, MODE_8, MODE_8);
+
+    clear_current_propagation_causes();
 
     switch(rm.region)
     {
@@ -15948,17 +16069,19 @@ int taint_x86::r_inc_rm_8(BYTE_t* instr_ptr)
 
     this->a_decode_modrm(instr_ptr +1, &r, &rm, MODE_8, MODE_8);
 
+    clear_current_propagation_causes();
+
     switch(rm.region)
     {
         case (MODRM_REG):
-            dst_8 = this->reg_restore_8(r.offset);
+            dst_8 = this->reg_restore_8(rm.offset);
             dst_8 += 1;
-            this->reg_store_8(r.offset, dst_8);
+            this->reg_store_8(rm.offset, dst_8);
             break;
         case (MODRM_MEM):
-            this->restore_8(r.offset, dst_8);
+            this->restore_8(rm.offset, dst_8);
             dst_8 += 1;
-            this->store_8(r.offset, dst_8);
+            this->store_8(rm.offset, dst_8);
             break;
     }
 
@@ -15975,17 +16098,19 @@ int taint_x86::r_dec_rm_8(BYTE_t* instr_ptr)
 
     this->a_decode_modrm(instr_ptr +1, &r, &rm, MODE_8, MODE_8);
 
+    clear_current_propagation_causes();
+
     switch(rm.region)
     {
         case (MODRM_REG):
-            dst_8 = this->reg_restore_8(r.offset);
+            dst_8 = this->reg_restore_8(rm.offset);
             dst_8 -= 1;
-            this->reg_store_8(r.offset, dst_8);
+            this->reg_store_8(rm.offset, dst_8);
             break;
         case (MODRM_MEM):
-            this->restore_8(r.offset, dst_8);
+            this->restore_8(rm.offset, dst_8);
             dst_8 -= 1;
-            this->store_8(r.offset, dst_8);
+            this->store_8(rm.offset, dst_8);
             break;
     }
 
@@ -16005,20 +16130,22 @@ int taint_x86::r_inc_rm_16_32(BYTE_t* instr_ptr)
 
     this->a_decode_modrm(instr_ptr +1, &r, &rm);
 
+    clear_current_propagation_causes();
+
     switch(rm.region)
     {
         case (MODRM_REG):
             switch(rm.size)
             {
                 case MODRM_SIZE_16:
-                    dst_16 = this->reg_restore_16(r.offset);
+                    dst_16 = this->reg_restore_16(rm.offset);
                     dst_16 += 1;
-                    this->reg_store_16(r.offset, dst_16);
+                    this->reg_store_16(rm.offset, dst_16);
                     break;
                 case MODRM_SIZE_32:
-                    dst_32 = this->reg_restore_32(r.offset);
+                    dst_32 = this->reg_restore_32(rm.offset);
                     dst_32 += 1;
-                    this->reg_store_32(r.offset, dst_32);
+                    this->reg_store_32(rm.offset, dst_32);
                     break;
             }
             break;
@@ -16053,20 +16180,22 @@ int taint_x86::r_dec_rm_16_32(BYTE_t* instr_ptr)
 
     this->a_decode_modrm(instr_ptr +1, &r, &rm);
 
+    clear_current_propagation_causes();
+
     switch(rm.region)
     {
         case (MODRM_REG):
             switch(rm.size)
             {
                 case MODRM_SIZE_16:
-                    dst_16 = this->reg_restore_16(r.offset);
+                    dst_16 = this->reg_restore_16(rm.offset);
                     dst_16 -= 1;
-                    this->reg_store_16(r.offset, dst_16);
+                    this->reg_store_16(rm.offset, dst_16);
                     break;
                 case MODRM_SIZE_32:
-                    dst_32 = this->reg_restore_32(r.offset);
+                    dst_32 = this->reg_restore_32(rm.offset);
                     dst_32 -= 1;
-                    this->reg_store_32(r.offset, dst_32);
+                    this->reg_store_32(rm.offset, dst_32);
                     break;
             }
             break;
@@ -16102,6 +16231,8 @@ int taint_x86::r_call_abs_near(BYTE_t* instr_ptr)
     char out_line[MAX_NAME];
 
     this->a_decode_modrm(instr_ptr +1, &r, &rm);
+
+    clear_current_propagation_causes();
 
     ret_addr = this->reg_restore_32(EIP);
 
@@ -16163,6 +16294,8 @@ int taint_x86::r_push_rm_16_32(BYTE_t* instr_ptr)
 
     this->a_decode_modrm(instr_ptr +1, &r, &rm);
 
+    clear_current_propagation_causes();
+
     // TODO: sometimes still zero :<
 
     d_print(3, "From: 0x%08x\n", rm.offset);
@@ -16222,6 +16355,8 @@ int taint_x86::r_mul_rm_16_32(BYTE_t* instr_ptr)
     QWORD res2;
 
     this->a_decode_modrm(instr_ptr +1, &r, &rm);
+
+    clear_current_propagation_causes();
 
     switch(rm.region)
     {
@@ -16330,6 +16465,8 @@ int taint_x86::r_imul_rm_16_32(BYTE_t* instr_ptr)
 
     this->a_decode_modrm(instr_ptr +1, &r, &rm);
 
+    clear_current_propagation_causes();
+
     switch(rm.region)
     {
         case (MODRM_REG):
@@ -16435,6 +16572,8 @@ int taint_x86::r_div_rm_16_32(BYTE_t* instr_ptr)
     QWORD eaxedx;
 
     this->a_decode_modrm(instr_ptr +1, &r, &rm);
+
+    clear_current_propagation_causes();
 
     switch(rm.region)
     {
@@ -16572,6 +16711,8 @@ int taint_x86::r_idiv_rm_16_32(BYTE_t* instr_ptr)
     DWORD_t src_32, eax, edx;
 
     this->a_decode_modrm(instr_ptr +1, &r, &rm);
+
+    clear_current_propagation_causes();
 
     switch(rm.region)
     {
