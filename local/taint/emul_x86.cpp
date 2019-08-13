@@ -1640,23 +1640,38 @@ OFFSET taint_x86::a_decode_sib_mod(BYTE_t* sib_ptr, BYTE mod)
     {
         case SIB_BASE_EAX: 
             base = this->reg_restore_32(EAX);
+            if(this->options & OPTION_INDEXES_PROPAGATE)
+                reg_propagation_cause_r_32(EAX);
+
             d_print(3, "EAX, ");
             break;
         case SIB_BASE_ECX: 
             d_print(3, "ECX, ");
             base = this->reg_restore_32(ECX);
+            if(this->options & OPTION_INDEXES_PROPAGATE)
+                reg_propagation_cause_r_32(ECX);
+
             break;
         case SIB_BASE_EDX: 
             d_print(3, "EDX, ");
             base = this->reg_restore_32(EDX);
+            if(this->options & OPTION_INDEXES_PROPAGATE)
+                reg_propagation_cause_r_32(EDX);
+
             break;
         case SIB_BASE_EBX: 
             d_print(3, "EBX, ");
             base = this->reg_restore_32(EBX);
+            if(this->options & OPTION_INDEXES_PROPAGATE)
+                reg_propagation_cause_r_32(EBX);
+
             break;
         case SIB_BASE_ESP: 
             d_print(3, "ESP, ");
             base = this->reg_restore_32(ESP);
+            if(this->options & OPTION_INDEXES_PROPAGATE)
+                reg_propagation_cause_r_32(ESP);
+
             break;
         case SIB_BASE_UNKN: 
             switch(mod)
@@ -1673,6 +1688,9 @@ OFFSET taint_x86::a_decode_sib_mod(BYTE_t* sib_ptr, BYTE mod)
 //                    this->current_instr_length = 0x3;
                     d_print(3, "EBP ");
                     base = this->reg_restore_32(EBP);
+                    if(this->options & OPTION_INDEXES_PROPAGATE)
+                        reg_propagation_cause_r_32(EBP);
+
                     disp8.from_mem(sib_ptr +1);
                     disp32 = 0x0;
                     d_print(3, "override, disp8: 0x%x ", disp8.get_BYTE());
@@ -1681,6 +1699,9 @@ OFFSET taint_x86::a_decode_sib_mod(BYTE_t* sib_ptr, BYTE mod)
 //                    this->current_instr_length = 0x6;
                     d_print(3, "EBP ");
                     base = this->reg_restore_32(EBP);
+                    if(this->options & OPTION_INDEXES_PROPAGATE)
+                        reg_propagation_cause_r_32(EBP);
+
                     disp32.from_mem(sib_ptr +1);
                     disp8 = 0x0;
                     d_print(3, "override, disp32: 0x%x ", disp32.get_DWORD());
@@ -1690,10 +1711,16 @@ OFFSET taint_x86::a_decode_sib_mod(BYTE_t* sib_ptr, BYTE mod)
         case SIB_BASE_ESI: 
             d_print(3, "ESI, ");
             base = this->reg_restore_32(ESI);
+            if(this->options & OPTION_INDEXES_PROPAGATE)
+                reg_propagation_cause_r_32(ESI);
+
             break;
         case SIB_BASE_EDI: 
             d_print(3, "EDI, ");
             base = this->reg_restore_32(EDI);
+            if(this->options & OPTION_INDEXES_PROPAGATE)
+                reg_propagation_cause_r_32(EDI);
+
             break;
     }
 
@@ -1723,18 +1750,30 @@ OFFSET taint_x86::a_decode_sib_mod(BYTE_t* sib_ptr, BYTE mod)
     {
         case SIB_INDEX_EAX_BASED:
             index = this->reg_restore_32(EAX);
+            if(this->options & OPTION_INDEXES_PROPAGATE)
+                reg_propagation_cause_r_32(EAX);
+
             d_print(3, "EAX\n");
             break;
         case SIB_INDEX_ECX_BASED:
             index = this->reg_restore_32(ECX);
+            if(this->options & OPTION_INDEXES_PROPAGATE)
+                reg_propagation_cause_r_32(ECX);
+
             d_print(3, "ECX\n");
             break;
         case SIB_INDEX_EDX_BASED:
             index = this->reg_restore_32(EDX);
+            if(this->options & OPTION_INDEXES_PROPAGATE)
+                reg_propagation_cause_r_32(EDX);
+
             d_print(3, "EDX\n");
             break;
         case SIB_INDEX_EBX_BASED:
             index = this->reg_restore_32(EBX);
+            if(this->options & OPTION_INDEXES_PROPAGATE)
+                reg_propagation_cause_r_32(EBX);
+
             d_print(3, "EBX\n");
             break;
         case SIB_INDEX_UNKN:
@@ -1743,14 +1782,23 @@ OFFSET taint_x86::a_decode_sib_mod(BYTE_t* sib_ptr, BYTE mod)
             break;
         case SIB_INDEX_EBP_BASED:
             index = this->reg_restore_32(EBP);
+            if(this->options & OPTION_INDEXES_PROPAGATE)
+                reg_propagation_cause_r_32(EBP);
+
             d_print(3, "EBP\n");
             break;
         case SIB_INDEX_ESI_BASED:
             index = this->reg_restore_32(ESI);
+            if(this->options & OPTION_INDEXES_PROPAGATE)
+                reg_propagation_cause_r_32(ESI);
+
             d_print(3, "ESI\n");
             break;
         case SIB_INDEX_EDI_BASED:
             index = this->reg_restore_32(EDI);
+            if(this->options & OPTION_INDEXES_PROPAGATE)
+                reg_propagation_cause_r_32(EDI);
+
             d_print(3, "EDI\n");
             break;
     }
@@ -12314,7 +12362,7 @@ int taint_x86::r_or_rm_imm_16_32(BYTE_t* instr_ptr)
                     dst_16 |= src_16;
                     this->store_16(rm.offset, dst_16);
                     
-                    this->attach_current_propagation_r_16(rm.offset);
+                    this->attach_current_propagation_m_16(rm.offset);
 
                     break;
                 case MODRM_SIZE_32:
@@ -12326,7 +12374,7 @@ int taint_x86::r_or_rm_imm_16_32(BYTE_t* instr_ptr)
                     dst_32 |= src_32;
                     this->store_32(rm.offset, dst_32);
 
-                    this->attach_current_propagation_r_32(rm.offset);
+                    this->attach_current_propagation_m_32(rm.offset);
 
                     break;
             }
