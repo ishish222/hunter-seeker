@@ -930,6 +930,7 @@ class taint_x86
     /* propagation */
     int got_cause;
     int seal_scheduled;
+    int r_propagation_lock; //for decode_execute_xx
     int print_taint_ops(unsigned);
     int print_taint_history(unsigned);
     int print_taint_history(BYTE_t*);
