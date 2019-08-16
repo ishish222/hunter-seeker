@@ -8831,6 +8831,12 @@ int taint_x86::r_movs_moffset_8(BYTE_t* instr_ptr)
     BYTE_t val_8;
     DWORD_t ecx;
 
+    /* indexes as causes */
+    if(this->options & OPTION_INDEXES_PROPAGATE)
+        reg_propagation_cause_r_32(ESI);
+    if(this->options & OPTION_INDEXES_PROPAGATE)
+        reg_propagation_cause_r_32(EDI);
+
     /* rep & repne causes ecx decrease */
     if((this->current_prefixes & PREFIX_REP) || (this->current_prefixes & PREFIX_REPNE))
     {
@@ -8869,6 +8875,12 @@ int taint_x86::r_movs_moffset_16_32(BYTE_t* instr_ptr)
     DWORD_t val_32;
     WORD_t val_16;
     DWORD_t ecx;
+
+    /* indexes as causes */
+    if(this->options & OPTION_INDEXES_PROPAGATE)
+        reg_propagation_cause_r_32(ESI);
+    if(this->options & OPTION_INDEXES_PROPAGATE)
+        reg_propagation_cause_r_32(EDI);
 
     /* rep & repne causes ecx decrease */
     if((this->current_prefixes & PREFIX_REP) || (this->current_prefixes & PREFIX_REPNE))
@@ -9031,6 +9043,10 @@ int taint_x86::r_stosd_8(BYTE_t*)
 
     BYTE_t al;
 
+    /* indexes as causes */
+    if(this->options & OPTION_INDEXES_PROPAGATE)
+        reg_propagation_cause_r_32(EDI);
+
     /* rep & repne causes ecx decrease */
     if((this->current_prefixes & PREFIX_REP) || (this->current_prefixes & PREFIX_REPNE))
     {
@@ -9065,6 +9081,10 @@ int taint_x86::r_stosd_16_32(BYTE_t*)
 
     DWORD_t eax;
     WORD_t ax;
+
+    /* indexes as causes */
+    if(this->options & OPTION_INDEXES_PROPAGATE)
+        reg_propagation_cause_r_32(EDI);
 
     /* rep & repne causes ecx decrease */
     if((this->current_prefixes & PREFIX_REP) || (this->current_prefixes & PREFIX_REPNE))
@@ -11637,8 +11657,6 @@ int taint_x86::r_imul_r_rm_16_32(BYTE_t* instr_ptr)
     }
 
     return 0x0;
-
-    return 0x0;
 }
 
 
@@ -11670,50 +11688,109 @@ int taint_x86::r_shld_r_rm_16_32_imm_8(BYTE_t* instr_ptr)
     switch(rm.region)
     {
         case (MODRM_REG):
-            dst_16 = this->reg_restore_16(rm.offset);
-            reg_propagation_cause_r_16(rm.offset);
+            switch(rm.size)
+            {
+                case MODRM_SIZE_16:
+                    dst_16 = this->reg_restore_16(rm.offset);
+                    reg_propagation_cause_r_16(rm.offset);
 
-            src_16 = this->reg_restore_16(r.offset);
-            reg_propagation_cause_r_16(r.offset);
+                    src_16 = this->reg_restore_16(r.offset);
+                    reg_propagation_cause_r_16(r.offset);
 
-            mask_16 = 0xffff;
-            mask_16 << 0x10 - count.get_BYTE();
+                    mask_16 = 0xffff;
+                    mask_16 << 0x10 - count.get_BYTE();
 
-            temp_16_1 = src_16.get_WORD();
-            temp_16_1 &= mask_16;
-            temp_16_1 >> 0x10 - count.get_BYTE();
+                    temp_16_1 = src_16.get_WORD();
+                    temp_16_1 &= mask_16;
+                    temp_16_1 >> 0x10 - count.get_BYTE();
 
-            temp_16_2 = dst_16.get_WORD();
-            temp_16_2 << count.get_BYTE();
-            temp_16_2 |= temp_16_1;
+                    temp_16_2 = dst_16.get_WORD();
+                    temp_16_2 << count.get_BYTE();
+                    temp_16_2 |= temp_16_1;
 
-            dst_16.set_WORD(temp_16_2);
+                    dst_16.set_WORD(temp_16_2);
 
-            this->reg_store_16(rm.offset, dst_16);
-            this->attach_current_propagation_r_16(rm.offset);
+                    this->reg_store_16(rm.offset, dst_16);
+                    this->attach_current_propagation_r_16(rm.offset);
+                break;
+
+                case MODRM_SIZE_32:
+                    dst_32 = this->reg_restore_32(rm.offset);
+                    reg_propagation_cause_r_32(rm.offset);
+
+                    src_32 = this->reg_restore_32(r.offset);
+                    reg_propagation_cause_r_32(r.offset);
+
+                    mask_32 = 0xffff;
+                    mask_32 << 0x10 - count.get_BYTE();
+
+                    temp_32_1 = src_32.get_DWORD();
+                    temp_32_1 &= mask_32;
+                    temp_32_1 >> 0x10 - count.get_BYTE();
+
+                    temp_32_2 = dst_32.get_DWORD();
+                    temp_32_2 << count.get_BYTE();
+                    temp_32_2 |= temp_32_1;
+
+                    dst_32.set_DWORD(temp_32_2);
+
+                    this->reg_store_32(rm.offset, dst_32);
+                    this->attach_current_propagation_r_32(rm.offset);
+                break;
+            }
             break;
+
         case (MODRM_MEM):
-            this->restore_32(rm.offset, dst_32);
-            reg_propagation_cause_m_32(rm.offset);
+            switch(rm.size)
+            {
+                case MODRM_SIZE_16:
+                    this->restore_16(rm.offset, dst_16);
+                    reg_propagation_cause_m_16(rm.offset);
 
-            src_32 = this->reg_restore_32(r.offset);
-            reg_propagation_cause_r_32(r.offset);
+                    src_16 = this->reg_restore_16(r.offset);
+                    reg_propagation_cause_r_16(r.offset);
 
-            mask_32 = 0xffffffff;
-            mask_32 << 0x20 - count.get_BYTE();
+                    mask_16 = 0xffffffff;
+                    mask_16 << 0x20 - count.get_BYTE();
 
-            temp_32_1 = src_32.get_DWORD();
-            temp_32_1 &= mask_32;
-            temp_32_1 >> 0x20 - count.get_BYTE();
+                    temp_16_1 = src_16.get_WORD();
+                    temp_16_1 &= mask_16;
+                    temp_16_1 >> 0x20 - count.get_BYTE();
 
-            temp_32_2 = dst_32.get_DWORD();
-            temp_32_2 << count.get_BYTE();
-            temp_32_2 |= temp_32_1;
+                    temp_16_2 = dst_16.get_WORD();
+                    temp_16_2 << count.get_BYTE();
+                    temp_16_2 |= temp_16_1;
 
-            dst_32.set_DWORD(temp_32_2);
+                    dst_16.set_WORD(temp_16_2);
 
-            this->store_32(rm.offset, dst_32);
-            this->attach_current_propagation_m_32(rm.offset);
+                    this->store_16(rm.offset, dst_16);
+                    this->attach_current_propagation_m_16(rm.offset);
+                break;
+
+                case MODRM_SIZE_32:
+                    this->restore_32(rm.offset, dst_32);
+                    reg_propagation_cause_m_32(rm.offset);
+
+                    src_32 = this->reg_restore_32(r.offset);
+                    reg_propagation_cause_r_32(r.offset);
+
+                    mask_32 = 0xffffffff;
+                    mask_32 << 0x20 - count.get_BYTE();
+
+                    temp_32_1 = src_32.get_DWORD();
+                    temp_32_1 &= mask_32;
+                    temp_32_1 >> 0x20 - count.get_BYTE();
+
+                    temp_32_2 = dst_32.get_DWORD();
+                    temp_32_2 << count.get_BYTE();
+                    temp_32_2 |= temp_32_1;
+
+                    dst_32.set_DWORD(temp_32_2);
+
+                    this->store_32(rm.offset, dst_32);
+                    this->attach_current_propagation_m_32(rm.offset);
+                break;
+            }
             break;
     }
 
@@ -11742,51 +11819,108 @@ int taint_x86::r_shld_r_rm_16_32_cl(BYTE_t* instr_ptr)
     switch(rm.region)
     {
         case (MODRM_REG):
-            dst_16 = this->reg_restore_16(rm.offset);
-            reg_propagation_cause_r_16(rm.offset);
+            switch(rm.size)
+            {
+                case MODRM_SIZE_16:
+                    dst_16 = this->reg_restore_16(rm.offset);
+                    reg_propagation_cause_r_16(rm.offset);
 
-            src_16 = this->reg_restore_16(r.offset);
-            reg_propagation_cause_r_16(r.offset);
+                    src_16 = this->reg_restore_16(r.offset);
+                    reg_propagation_cause_r_16(r.offset);
 
-            mask_16 = 0xffff;
-            mask_16 << 0x10 - count.get_BYTE();
+                    mask_16 = 0xffff;
+                    mask_16 << 0x10 - count.get_BYTE();
 
-            temp_16_1 = src_16.get_WORD();
-            temp_16_1 &= mask_16;
-            temp_16_1 >> 0x10 - count.get_BYTE();
+                    temp_16_1 = src_16.get_WORD();
+                    temp_16_1 &= mask_16;
+                    temp_16_1 >> 0x10 - count.get_BYTE();
 
-            temp_16_2 = dst_16.get_WORD();
-            temp_16_2 << count.get_BYTE();
-            temp_16_2 |= temp_16_1;
+                    temp_16_2 = dst_16.get_WORD();
+                    temp_16_2 << count.get_BYTE();
+                    temp_16_2 |= temp_16_1;
 
-            dst_16.set_WORD(temp_16_2);
+                    dst_16.set_WORD(temp_16_2);
 
-            this->reg_store_16(rm.offset, dst_16);
-            this->attach_current_propagation_r_16(rm.offset);
+                    this->reg_store_16(rm.offset, dst_16);
+                    this->attach_current_propagation_r_16(rm.offset);
+                    break;
 
+                case MODRM_SIZE_32:
+                    dst_32 = this->reg_restore_32(rm.offset);
+                    reg_propagation_cause_r_32(rm.offset);
+
+                    src_32 = this->reg_restore_32(r.offset);
+                    reg_propagation_cause_r_32(r.offset);
+
+                    mask_32 = 0xffff;
+                    mask_32 << 0x10 - count.get_BYTE();
+
+                    temp_32_1 = src_32.get_DWORD();
+                    temp_32_1 &= mask_32;
+                    temp_32_1 >> 0x10 - count.get_BYTE();
+
+                    temp_32_2 = dst_32.get_DWORD();
+                    temp_32_2 << count.get_BYTE();
+                    temp_32_2 |= temp_32_1;
+
+                    dst_32.set_DWORD(temp_32_2);
+
+                    this->reg_store_32(rm.offset, dst_32);
+                    this->attach_current_propagation_r_32(rm.offset);
+                    break;
+            }
             break;
         case (MODRM_MEM):
-            this->restore_32(rm.offset, dst_32);
-            reg_propagation_cause_m_32(rm.offset);
+            switch(rm.size)
+            {
+                case MODRM_SIZE_16:
+                    this->restore_16(rm.offset, dst_16);
+                    reg_propagation_cause_m_16(rm.offset);
 
-            src_32 = this->reg_restore_32(r.offset);
-            reg_propagation_cause_r_32(r.offset);
+                    src_16 = this->reg_restore_16(r.offset);
+                    reg_propagation_cause_r_16(r.offset);
 
-            mask_32 = 0xffffffff;
-            mask_32 << 0x20 - count.get_BYTE();
+                    mask_16 = 0xffffffff;
+                    mask_16 << 0x20 - count.get_BYTE();
 
-            temp_32_1 = src_32.get_DWORD();
-            temp_32_1 &= mask_32;
-            temp_32_1 >> 0x20 - count.get_BYTE();
+                    temp_16_1 = src_16.get_WORD();
+                    temp_16_1 &= mask_16;
+                    temp_16_1 >> 0x20 - count.get_BYTE();
 
-            temp_32_2 = dst_32.get_DWORD();
-            temp_32_2 << count.get_BYTE();
-            temp_32_2 |= temp_32_1;
+                    temp_16_2 = dst_16.get_WORD();
+                    temp_16_2 << count.get_BYTE();
+                    temp_16_2 |= temp_16_1;
 
-            dst_32.set_DWORD(temp_32_2);
+                    dst_16.set_WORD(temp_16_2);
 
-            this->store_32(rm.offset, dst_32);
-            this->attach_current_propagation_m_32(rm.offset);
+                    this->store_16(rm.offset, dst_16);
+                    this->attach_current_propagation_m_16(rm.offset);
+                    break;
+
+                case MODRM_SIZE_32:
+                    this->restore_32(rm.offset, dst_32);
+                    reg_propagation_cause_m_32(rm.offset);
+
+                    src_32 = this->reg_restore_32(r.offset);
+                    reg_propagation_cause_r_32(r.offset);
+
+                    mask_32 = 0xffffffff;
+                    mask_32 << 0x20 - count.get_BYTE();
+
+                    temp_32_1 = src_32.get_DWORD();
+                    temp_32_1 &= mask_32;
+                    temp_32_1 >> 0x20 - count.get_BYTE();
+
+                    temp_32_2 = dst_32.get_DWORD();
+                    temp_32_2 << count.get_BYTE();
+                    temp_32_2 |= temp_32_1;
+
+                    dst_32.set_DWORD(temp_32_2);
+
+                    this->store_32(rm.offset, dst_32);
+                    this->attach_current_propagation_m_32(rm.offset);
+                    break;
+            }
             break;
     }
 
@@ -11815,52 +11949,109 @@ int taint_x86::r_shrd_r_rm_16_32_imm_8(BYTE_t* instr_ptr)
     switch(rm.region)
     {
         case (MODRM_REG):
-            dst_16 = this->reg_restore_16(rm.offset);
-            reg_propagation_cause_r_16(rm.offset);
+            switch(rm.size)
+            {
+                case MODRM_SIZE_16:
+                    dst_16 = this->reg_restore_16(rm.offset);
+                    reg_propagation_cause_r_16(rm.offset);
 
-            src_16 = this->reg_restore_16(r.offset);
-            reg_propagation_cause_r_16(r.offset);
+                    src_16 = this->reg_restore_16(r.offset);
+                    reg_propagation_cause_r_16(r.offset);
 
-            mask_16 = 0xffff;
-            mask_16 >> 0x10 - count.get_BYTE();
+                    mask_16 = 0xffff;
+                    mask_16 >> 0x10 - count.get_BYTE();
 
-            temp_16_1 = src_16.get_WORD();
-            temp_16_1 &= mask_16;
-            temp_16_1 << 0x10 - count.get_BYTE();
+                    temp_16_1 = src_16.get_WORD();
+                    temp_16_1 &= mask_16;
+                    temp_16_1 << 0x10 - count.get_BYTE();
 
-            temp_16_2 = dst_16.get_WORD();
-            temp_16_2 >> count.get_BYTE();
-            temp_16_2 |= temp_16_1;
+                    temp_16_2 = dst_16.get_WORD();
+                    temp_16_2 >> count.get_BYTE();
+                    temp_16_2 |= temp_16_1;
 
-            dst_16.set_WORD(temp_16_2);
+                    dst_16.set_WORD(temp_16_2);
 
-            this->reg_store_16(rm.offset, dst_16);
-            this->attach_current_propagation_r_16(rm.offset);
+                    this->reg_store_16(rm.offset, dst_16);
+                    this->attach_current_propagation_r_16(rm.offset);
+                break;
 
+                case MODRM_SIZE_32:
+                    dst_32 = this->reg_restore_32(rm.offset);
+                    reg_propagation_cause_r_32(rm.offset);
+
+                    src_32 = this->reg_restore_32(r.offset);
+                    reg_propagation_cause_r_32(r.offset);
+
+                    mask_32 = 0xffff;
+                    mask_32 >> 0x10 - count.get_BYTE();
+
+                    temp_32_1 = src_32.get_DWORD();
+                    temp_32_1 &= mask_32;
+                    temp_32_1 << 0x10 - count.get_BYTE();
+
+                    temp_32_2 = dst_32.get_DWORD();
+                    temp_32_2 >> count.get_BYTE();
+                    temp_32_2 |= temp_32_1;
+
+                    dst_32.set_DWORD(temp_32_2);
+
+                    this->reg_store_32(rm.offset, dst_32);
+                    this->attach_current_propagation_r_32(rm.offset);
+                break;
+            }
             break;
+
         case (MODRM_MEM):
-            this->restore_32(rm.offset, dst_32);
-            reg_propagation_cause_m_32(rm.offset);
+            switch(rm.size)
+            {
+                case MODRM_SIZE_16:
+                    this->restore_16(rm.offset, dst_16);
+                    reg_propagation_cause_m_16(rm.offset);
 
-            src_32 = this->reg_restore_32(r.offset);
-            reg_propagation_cause_r_32(r.offset);
+                    src_16 = this->reg_restore_16(r.offset);
+                    reg_propagation_cause_r_16(r.offset);
 
-            mask_32 = 0xffffffff;
-            mask_32 >> 0x20 - count.get_BYTE();
+                    mask_16 = 0xffffffff;
+                    mask_16 >> 0x20 - count.get_BYTE();
 
-            temp_32_1 = src_32.get_DWORD();
-            temp_32_1 &= mask_32;
-            temp_32_1 << 0x20 - count.get_BYTE();
+                    temp_16_1 = src_16.get_WORD();
+                    temp_16_1 &= mask_16;
+                    temp_16_1 << 0x20 - count.get_BYTE();
 
-            temp_32_2 = dst_32.get_DWORD();
-            temp_32_2 >> count.get_BYTE();
-            temp_32_2 |= temp_32_1;
+                    temp_16_2 = dst_16.get_WORD();
+                    temp_16_2 >> count.get_BYTE();
+                    temp_16_2 |= temp_16_1;
 
-            dst_32.set_DWORD(temp_32_2);
+                    dst_16.set_WORD(temp_16_2);
 
-            this->store_32(rm.offset, dst_32);
-            this->attach_current_propagation_m_32(rm.offset);
+                    this->store_16(rm.offset, dst_16);
+                    this->attach_current_propagation_m_16(rm.offset);
+                    break;
 
+                case MODRM_SIZE_32:
+                    this->restore_32(rm.offset, dst_32);
+                    reg_propagation_cause_m_32(rm.offset);
+
+                    src_32 = this->reg_restore_32(r.offset);
+                    reg_propagation_cause_r_32(r.offset);
+        
+                    mask_32 = 0xffffffff;
+                    mask_32 >> 0x20 - count.get_BYTE();
+        
+                    temp_32_1 = src_32.get_DWORD();
+                    temp_32_1 &= mask_32;
+                    temp_32_1 << 0x20 - count.get_BYTE();
+        
+                    temp_32_2 = dst_32.get_DWORD();
+                    temp_32_2 >> count.get_BYTE();
+                    temp_32_2 |= temp_32_1;
+    
+                    dst_32.set_DWORD(temp_32_2);
+
+                    this->store_32(rm.offset, dst_32);
+                    this->attach_current_propagation_m_32(rm.offset);
+                    break;
+            }
             break;
     }
 
@@ -11889,52 +12080,109 @@ int taint_x86::r_shrd_r_rm_16_32_cl(BYTE_t* instr_ptr)
     switch(rm.region)
     {
         case (MODRM_REG):
-            dst_16 = this->reg_restore_16(rm.offset);
-            reg_propagation_cause_r_16(rm.offset);
+            switch(rm.size)
+            {
+                case MODRM_SIZE_16:
+                    dst_16 = this->reg_restore_16(rm.offset);
+                    reg_propagation_cause_r_16(rm.offset);
 
-            src_16 = this->reg_restore_16(r.offset);
-            reg_propagation_cause_r_16(r.offset);
+                    src_16 = this->reg_restore_16(r.offset);
+                    reg_propagation_cause_r_16(r.offset);
 
-            mask_16 = 0xffff;
-            mask_16 >> 0x10 - count.get_BYTE();
+                    mask_16 = 0xffff;
+                    mask_16 >> 0x10 - count.get_BYTE();
 
-            temp_16_1 = src_16.get_WORD();
-            temp_16_1 &= mask_16;
-            temp_16_1 << 0x10 - count.get_BYTE();
+                    temp_16_1 = src_16.get_WORD();
+                    temp_16_1 &= mask_16;
+                    temp_16_1 << 0x10 - count.get_BYTE();
 
-            temp_16_2 = dst_16.get_WORD();
-            temp_16_2 >> count.get_BYTE();
-            temp_16_2 |= temp_16_1;
+                    temp_16_2 = dst_16.get_WORD();
+                    temp_16_2 >> count.get_BYTE();
+                    temp_16_2 |= temp_16_1;
 
-            dst_16.set_WORD(temp_16_2);
+                    dst_16.set_WORD(temp_16_2);
 
-            this->reg_store_16(rm.offset, dst_16);
-            this->attach_current_propagation_r_16(rm.offset);
+                    this->reg_store_16(rm.offset, dst_16);
+                    this->attach_current_propagation_r_16(rm.offset);
+                    break;
 
+                case MODRM_SIZE_32:
+                    dst_32 = this->reg_restore_32(rm.offset);
+                    reg_propagation_cause_r_32(rm.offset);
+
+                    src_32 = this->reg_restore_32(r.offset);
+                    reg_propagation_cause_r_32(r.offset);
+
+                    mask_32 = 0xffff;
+                    mask_32 >> 0x10 - count.get_BYTE();
+
+                    temp_32_1 = src_32.get_DWORD();
+                    temp_32_1 &= mask_32;
+                    temp_32_1 << 0x10 - count.get_BYTE();
+
+                    temp_32_2 = dst_32.get_DWORD();
+                    temp_32_2 >> count.get_BYTE();
+                    temp_32_2 |= temp_32_1;
+
+                    dst_32.set_DWORD(temp_32_2);
+
+                    this->reg_store_32(rm.offset, dst_32);
+                    this->attach_current_propagation_r_32(rm.offset);
+                    break;
+            }
             break;
         case (MODRM_MEM):
-            this->restore_32(rm.offset, dst_32);
-            reg_propagation_cause_m_32(rm.offset);
+            switch(rm.size)
+            {
+                case MODRM_SIZE_16:
+                    this->restore_16(rm.offset, dst_16);
+                    reg_propagation_cause_m_16(rm.offset);
 
-            src_32 = this->reg_restore_32(r.offset);
-            reg_propagation_cause_r_32(r.offset);
+                    src_16 = this->reg_restore_16(r.offset);
+                    reg_propagation_cause_r_16(r.offset);
 
-            mask_32 = 0xffffffff;
-            mask_32 >> 0x20 - count.get_BYTE();
+                    mask_16 = 0xffffffff;
+                    mask_16 >> 0x20 - count.get_BYTE();
 
-            temp_32_1 = src_32.get_DWORD();
-            temp_32_1 &= mask_32;
-            temp_32_1 << 0x20 - count.get_BYTE();
+                    temp_16_1 = src_16.get_WORD();
+                    temp_16_1 &= mask_16;
+                    temp_16_1 << 0x20 - count.get_BYTE();
 
-            temp_32_2 = dst_32.get_DWORD();
-            temp_32_2 >> count.get_BYTE();
-            temp_32_2 |= temp_32_1;
+                    temp_16_2 = dst_16.get_WORD();
+                    temp_16_2 >> count.get_BYTE();
+                    temp_16_2 |= temp_16_1;
 
-            dst_32.set_DWORD(temp_32_2);
+                    dst_16.set_WORD(temp_16_2);
 
-            this->store_32(rm.offset, dst_32);
-            this->attach_current_propagation_m_32(rm.offset);
+                    this->store_16(rm.offset, dst_16);
+                    this->attach_current_propagation_m_16(rm.offset);
+                break;
 
+                case MODRM_SIZE_32:
+                    this->restore_32(rm.offset, dst_32);
+                    reg_propagation_cause_m_32(rm.offset);
+
+                    src_32 = this->reg_restore_32(r.offset);
+                    reg_propagation_cause_r_32(r.offset);
+
+                    mask_32 = 0xffffffff;
+                    mask_32 >> 0x20 - count.get_BYTE();
+
+                    temp_32_1 = src_32.get_DWORD();
+                    temp_32_1 &= mask_32;
+                    temp_32_1 << 0x20 - count.get_BYTE();
+
+                    temp_32_2 = dst_32.get_DWORD();
+                    temp_32_2 >> count.get_BYTE();
+                    temp_32_2 |= temp_32_1;
+
+                    dst_32.set_DWORD(temp_32_2);
+
+                    this->store_32(rm.offset, dst_32);
+                    this->attach_current_propagation_m_32(rm.offset);
+                break;
+
+            }
             break;
     }
 
