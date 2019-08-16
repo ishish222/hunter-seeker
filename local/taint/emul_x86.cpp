@@ -8286,6 +8286,7 @@ int taint_x86::r_mov_r_rm_16_32(BYTE_t* instr_ptr)
     DWORD_t temp_32;
     WORD_t temp_16;
 
+    this->r_propagation_lock = 0x1;
     this->a_decode_modrm(instr_ptr +1, &r, &rm);
 
     d_print(3, "Got offset: 0x%08x\n", rm.offset);
@@ -10851,6 +10852,8 @@ int taint_x86::r_movzx_r_16_32_rm_8(BYTE_t* addr)
     BYTE_t dst_8;
 
     modrm_byte_ptr = addr +1;
+
+    this->r_propagation_lock = 0x1;
     a_decode_modrm(modrm_byte_ptr, &r, &rm, MODE_32, MODE_8); //TODO: verify
 
     dst_16 = 0; 
@@ -10898,6 +10901,8 @@ int taint_x86::r_movzx_r_32_rm_16(BYTE_t* addr)
     WORD_t dst_16;
 
     modrm_byte_ptr = addr +1;
+
+    this->r_propagation_lock = 0x1;
     a_decode_modrm(modrm_byte_ptr, &r, &rm, MODE_32, MODE_16);
 
     dst_16 = 0; 
@@ -10977,6 +10982,8 @@ int taint_x86::r_bts_rm_16_32_imm_8(BYTE_t* addr)
     BYTE_t count;
 
     modrm_byte_ptr = addr +1;
+
+    this->r_propagation_lock = 0x1;
     a_decode_modrm(modrm_byte_ptr, &r, &rm);
 
     count.from_mem(addr + this->current_instr_length);
@@ -11097,6 +11104,8 @@ int taint_x86::r_btr_rm_16_32_imm_8(BYTE_t* addr)
     BYTE_t count;
 
     modrm_byte_ptr = addr +1;
+
+    this->r_propagation_lock = 0x1;
     a_decode_modrm(modrm_byte_ptr, &r, &rm);
 
     count.from_mem(addr + this->current_instr_length);
@@ -11214,6 +11223,8 @@ int taint_x86::r_bsf_r_rm_16_32(BYTE_t* addr)
     BYTE bit = 0x1;
 
     modrm_byte_ptr = addr +1;
+
+    this->r_propagation_lock = 0x1;
     a_decode_modrm(modrm_byte_ptr, &r, &rm);
 
     switch(rm.region)
@@ -11328,6 +11339,8 @@ int taint_x86::r_movsx_r_16_32_rm_8(BYTE_t* addr)
     WORD temp_16;
 
     modrm_byte_ptr = addr +1;
+
+    this->r_propagation_lock = 0x1;
     a_decode_modrm(modrm_byte_ptr, &r, &rm, MODE_32, MODE_8);
 
     dst_16 = 0; 
@@ -11383,6 +11396,8 @@ int taint_x86::r_movsx_r_32_rm_16(BYTE_t* addr)
     WORD_t dst_16;
 
     modrm_byte_ptr = addr +1;
+
+    this->r_propagation_lock = 0x1;
     a_decode_modrm(modrm_byte_ptr, &r, &rm, MODE_32, MODE_16);
 
     dst_16 = 0; 
