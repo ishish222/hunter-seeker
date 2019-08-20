@@ -645,6 +645,18 @@ int taint_x86::post_execute_instruction(DWORD eip)
         }
     }
 
+    if(this->schedule_extended_causes_increment)
+    {
+        this->current_extended_causes_entry_id ++;
+        this->schedule_extended_causes_increment = 0x0;
+    }
+
+    if(this->schedule_extended_results_increment)
+    {
+        this->current_extended_results_entry_id ++;
+        this->schedule_extended_results_increment = 0x0;
+    }
+
     this->last_eip = this->current_eip;
     cur_ctx->last_eip = this->last_eip;
 
@@ -1848,9 +1860,24 @@ int taint_x86::attach_current_propagation(BYTE_t* byte)
 
     RESULT* new_result;
 
-    new_result = &current_propagation->results[current_propagation->result_count];
-    new_result->affected = byte;
-    new_result->next = 0x0;
+    if(current_propagation->result_count < MAX_RESULTS)
+    { // we can use standard table
+        new_result = &current_propagation->results[current_propagation->result_count];
+        new_result->affected = byte;
+        new_result->next = 0x0;
+    }
+    else
+    { // we need to use extended (e.g. for popa)
+        unsigned current_ext_id;
+        current_ext_id = this->current_extended_results_entry_id;
+
+        new_result = &this->extended_results[current_ext_id][current_propagation->result_count - MAX_RESULTS];
+        new_result->affected = byte;
+        new_result->next = 0x0;
+
+        current_propagation->extended_result_id = current_ext_id;
+        this->schedule_extended_results_increment = 0x1;
+    }
 
     d_print(3, "New result: 0x%08x, affected byte: 0%08x\n", new_result, new_result->affected);
 
@@ -1869,9 +1896,21 @@ int taint_x86::propagate_taint(PROPAGATION* current_propagation)
 
     if(prev_taint)
     {
+        RESULT* cur_result;
+        unsigned extended_id;
+
         for(i=0x0; i<current_propagation->result_count; i++)
         {
-            current_propagation->results[i].affected->set_BYTE_t(prev_taint);
+            if(i < MAX_RESULTS)
+            {
+                cur_result = &current_propagation->results[i];
+            }
+            else
+            {
+                extended_id = current_propagation->extended_result_id;
+                cur_result = &extended_results[extended_id][i - MAX_RESULTS];
+            }
+            cur_result->affected->set_BYTE_t(prev_taint);
         }
     }
 
@@ -2058,11 +2097,21 @@ int taint_x86::find_propagation_result(PROPAGATION* current_propagation, BYTE_t*
 
     unsigned i;
     RESULT* cur_result;
+    unsigned extended_id;
     int found = 0x0;
 
     for(i=0x0; i<current_propagation->result_count; i++)
     {
-        cur_result = &current_propagation->results[i];
+        if(i < MAX_RESULTS)
+        {
+            cur_result = &current_propagation->results[i];
+        }
+        else
+        {
+            extended_id = current_propagation->extended_result_id;
+            cur_result = &extended_results[extended_id][i - MAX_RESULTS];
+        }
+
         if(cur_result->affected == affected)
         {
             found = 1;
@@ -2079,11 +2128,21 @@ int taint_x86::find_propagation_cause(PROPAGATION* current_propagation, unsigned
 
     unsigned i;
     CAUSE* cur_cause;
+    unsigned extended_id;
     int found = 0x0;
 
     for(i=0x0; i<current_propagation->cause_count; i++)
     {
-        cur_cause = &current_propagation->causes[i];
+        if(i < MAX_CAUSES)
+        {
+            cur_cause = &current_propagation->causes[i];
+        }
+        else
+        {
+            extended_id = current_propagation->extended_cause_id;
+            cur_cause = &extended_causes[extended_id][i - MAX_CAUSES];
+        }
+
         if(cur_cause->cause_id == searched_id)
         {
             found = 1;
@@ -2127,8 +2186,22 @@ int taint_x86::reg_propagation_cause(BYTE_t* op)
 
     CAUSE* new_elem;
 
-    new_elem = &current_propagation->causes[current_propagation->cause_count];
-    new_elem->cause_id = byte_cause_id;
+    if(current_propagation->cause_count < MAX_CAUSES)
+    { // we can use basic causes table
+        new_elem = &current_propagation->causes[current_propagation->cause_count];
+        new_elem->cause_id = byte_cause_id;
+    }
+    else
+    { // we need to use extended (e.g. for popa)
+        unsigned current_ext_id;
+        current_ext_id = this->current_extended_causes_entry_id;
+
+        new_elem = &this->extended_causes[current_ext_id][current_propagation->cause_count - MAX_CAUSES];
+        new_elem->cause_id = byte_cause_id;
+
+        current_propagation->extended_cause_id = current_ext_id;
+        this->schedule_extended_causes_increment = 0x1;
+    }
 
     current_propagation->cause_count++;
 

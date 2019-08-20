@@ -28,7 +28,13 @@
 #define MAX_LIST_JXX            0x1000
 #define MAX_LAST_INSTRUCTIONS   0x50
 #define MAX_COMMANDS            0x50
-#define MAX_CAUSES              0x10
+
+#define MAX_CAUSES              0x8
+#define MAX_EXTENDED_CAUSES_ENTRIES  0x100000
+#define MAX_EXTENDED_CAUSES     0x20
+
 #define MAX_RESULTS             0x8
+#define MAX_EXTENDED_RESULTS_ENTRIES 0x100000
+#define MAX_EXTENDED_RESULTS    0x20
 
 #endif

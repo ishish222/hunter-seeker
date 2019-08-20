@@ -303,9 +303,11 @@ typedef struct PROPAGATION_
 
     CAUSE causes[MAX_CAUSES];
     unsigned cause_count;
+    unsigned extended_cause_id;
 
     RESULT results[MAX_RESULTS];
     unsigned result_count;
+    unsigned extended_result_id;
 
     char taint_propagation;
 } PROPAGATION;
@@ -1064,9 +1066,17 @@ class taint_x86
     unsigned current_propagation_count;
     PROPAGATION* propagations;
 
+    unsigned current_extended_causes_entry_id;
+    CAUSE* extended_causes[MAX_EXTENDED_CAUSES_ENTRIES];
+    
+    unsigned current_extended_results_entry_id;
+    RESULT* extended_results[MAX_EXTENDED_RESULTS_ENTRIES];
+
     DWORD last_instructions[MAX_LAST_INSTRUCTIONS];
     unsigned current_last = 0x0;
 
+    char schedule_extended_results_increment;
+    char schedule_extended_causes_increment;
 
     taint_x86()
     {
@@ -1370,6 +1380,31 @@ class taint_x86
             printf("Not enough memory: propagations\n");
             exit(1);
         }
+
+        unsigned i;
+
+        for(i = 0x0; i<MAX_EXTENDED_CAUSES_ENTRIES; i++)
+        {
+            this->extended_causes[i] = (CAUSE*)malloc(sizeof(CAUSE)*MAX_EXTENDED_CAUSES);
+            if(this->extended_causes[i] == 0x0)
+            {
+                printf("Not enough memory: extended_causes\n");
+                exit(1);
+            }
+        }
+        this->current_extended_causes_entry_id = 0x0;
+
+        for(i = 0x0; i<MAX_EXTENDED_RESULTS_ENTRIES; i++)
+        {
+            this->extended_results[i] = (RESULT*)malloc(sizeof(RESULT)*MAX_EXTENDED_RESULTS);
+            if(this->extended_results[i] == 0x0)
+            {
+                printf("Not enough memory: extended_results\n");
+                exit(1);
+            }
+        }
+        this->current_extended_results_entry_id = 0x0;
+
         //memset(this->propagations, 0x0, (sizeof(PROPAGATION)*MAX_PRPAGATIONS_OBSERVED));
 
         this->ctx_info = (CONTEXT_INFO*)malloc(sizeof(CONTEXT_INFO)*MAX_THREADS);

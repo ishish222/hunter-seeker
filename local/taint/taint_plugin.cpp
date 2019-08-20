@@ -109,6 +109,25 @@ int taint_plugin::print_taint_history(BYTE_t* target, unsigned branches)
 
 #include <stdarg.h>
 
+int taint_plugin::d_print_prompt_red(int level, const char* format, ...)
+{
+    va_list argptr;
+
+
+    va_start(argptr, format);
+    if(this->taint_eng->prompt_file)
+        vfprintf(this->taint_eng->prompt_file, format, argptr);
+    va_end(argptr);
+
+    fprintf(stdout, "\033[0;31m");
+    va_start(argptr, format);
+    vfprintf(stdout, format, argptr);
+    va_end(argptr);
+    fprintf(stdout, "\033[0m");
+
+    return 0x0;
+}
+
 int taint_plugin::d_print_prompt(int level, const char* format, ...)
 {
     va_list argptr;
@@ -189,6 +208,12 @@ int taint_plugin::clear_propagations()
 
     err_print("Setting current propagation count to 0x0\n");
     this->taint_eng->current_propagation_count = 0x0;
+
+    err_print("Setting current extended causes count to 0x0\n");
+    this->taint_eng->current_extended_causes_entry_id = 0x0;
+
+    err_print("Setting current extended result count to 0x0\n");
+    this->taint_eng->current_extended_results_entry_id = 0x0;
     return 0x0;
 }
 
@@ -237,18 +262,34 @@ int taint_plugin::print_propagation(unsigned id, unsigned branches)
     
     res = distorm_decode(current_propagation->instruction, (const unsigned char*)buf, 0x20, Decode32Bits, decodedInstructions, 0x1, &decoded);
 
-    d_print_prompt(1, "%d: (%d)0x%08x: \t%s%s%s, ", id, current_propagation->instr_count, current_propagation->instruction, (char*)decodedInstructions[0].mnemonic.p, decodedInstructions[0].operands.length != 0 ? " " : "", (char*)decodedInstructions[0].operands.p);
+    if(current_propagation->taint_propagation != 0x0)
+        d_print_prompt_red(1, "%d: (%d)0x%08x: \t%s%s%s, ", id, current_propagation->instr_count, current_propagation->instruction, (char*)decodedInstructions[0].mnemonic.p, decodedInstructions[0].operands.length != 0 ? " " : "", (char*)decodedInstructions[0].operands.p);
+    else
+        d_print_prompt(1, "%d: (%d)0x%08x: \t%s%s%s, ", id, current_propagation->instr_count, current_propagation->instruction, (char*)decodedInstructions[0].mnemonic.p, decodedInstructions[0].operands.length != 0 ? " " : "", (char*)decodedInstructions[0].operands.p);
 #else
-    d_print_prompt(1, "%d, EIP: 0x%08x, instr byte: 0x%02x, instr no: %d, ", id, current_propagation->instruction, this->taint_eng->memory[current_propagation->instruction].get_BYTE(), current_propagation->instr_count);
+    if(current_propagation->taint_propagation != 0x0)
+        d_print_prompt_red(1, "%d, EIP: 0x%08x, instr byte: 0x%02x, instr no: %d, ", id, current_propagation->instruction, this->taint_eng->memory[current_propagation->instruction].get_BYTE(), current_propagation->instr_count);
+    else
+        d_print_prompt(1, "%d, EIP: 0x%08x, instr byte: 0x%02x, instr no: %d, ", id, current_propagation->instruction, this->taint_eng->memory[current_propagation->instruction].get_BYTE(), current_propagation->instr_count);
 #endif
     d_print_prompt(1, "\tcauses: ");
 
     CAUSE* cur_cause;
+    unsigned extended_id;
 
     for(i=0x0; i < cause_count; i++)
     {
-        cur_cause = &current_propagation->causes[i];
-        d_print_prompt(1, "%d, ", cur_cause->cause_id);
+        if(i < MAX_CAUSES)
+        {
+            cur_cause = &current_propagation->causes[i];
+            d_print_prompt(1, "%d, ", cur_cause->cause_id);
+        }
+        else
+        {
+            extended_id = current_propagation->extended_cause_id;
+            cur_cause = &this->taint_eng->extended_causes[extended_id][i - MAX_CAUSES];
+            d_print_prompt(1, "%d(e), ", cur_cause->cause_id);
+        }
     }
 
     d_print_prompt(1, "\tresults: ");
@@ -257,8 +298,18 @@ int taint_plugin::print_propagation(unsigned id, unsigned branches)
 
     for(i=0x0; i<result_count; i++)
     {
-        cur_result = &current_propagation->results[i];
-        d_print(3, "0x%08x, ", cur_result->affected);
+        if(i < MAX_RESULTS)
+        {
+            cur_result = &current_propagation->results[i];
+            d_print(3, "0x%08x, ", cur_result->affected);
+        }
+        else
+        {
+            extended_id = current_propagation->extended_result_id;
+            cur_result = &this->taint_eng->extended_results[extended_id][i - MAX_RESULTS];
+            d_print(3, "0x%08x(e), ", cur_result->affected);
+        }
+
         char region;
 
         OFFSET offset;
@@ -349,9 +400,15 @@ int taint_plugin::print_taint_history(unsigned id, unsigned branches)
     
     res = distorm_decode(this, (const unsigned char*)buf, 0x20, Decode32Bits, decodedInstructions, 0x1, &decoded);
 
-    d_print_prompt(1, "%d: (%d)0x%08x: %s%s%s\n", id, this->taint_eng->propagations[id].instr_count, this->taint_eng->propagations[id].instruction, (char*)decodedInstructions[0].mnemonic.p, decodedInstructions[0].operands.length != 0 ? " " : "", (char*)decodedInstructions[0].operands.p);
+    if(current_propagation->taint_propagation != 0x0)
+        d_print_prompt_red(1, "%d: (%d)0x%08x: %s%s%s\n", id, this->taint_eng->propagations[id].instr_count, this->taint_eng->propagations[id].instruction, (char*)decodedInstructions[0].mnemonic.p, decodedInstructions[0].operands.length != 0 ? " " : "", (char*)decodedInstructions[0].operands.p);
+    else
+        d_print_prompt(1, "%d: (%d)0x%08x: %s%s%s\n", id, this->taint_eng->propagations[id].instr_count, this->taint_eng->propagations[id].instruction, (char*)decodedInstructions[0].mnemonic.p, decodedInstructions[0].operands.length != 0 ? " " : "", (char*)decodedInstructions[0].operands.p);
 #else
-    d_print_prompt(1, "%d, EIP: 0x%08x, instr byte: 0x%02x, instr no: %d\n", id, this->taint_eng->propagations[id].instruction, this->taint_eng->memory[this->taint_eng->propagations[id].instruction].get_BYTE(), this->taint_eng->propagations[id].instr_count);
+    if(current_propagation->taint_propagation != 0x0)
+        d_print_prompt_red(1, "%d, EIP: 0x%08x, instr byte: 0x%02x, instr no: %d\n", id, this->taint_eng->propagations[id].instruction, this->taint_eng->memory[this->taint_eng->propagations[id].instruction].get_BYTE(), this->taint_eng->propagations[id].instr_count);
+    else
+        d_print_prompt(1, "%d, EIP: 0x%08x, instr byte: 0x%02x, instr no: %d\n", id, this->taint_eng->propagations[id].instruction, this->taint_eng->memory[this->taint_eng->propagations[id].instruction].get_BYTE(), this->taint_eng->propagations[id].instr_count);
 #endif
     this->out_tab--;
     return 0x0;

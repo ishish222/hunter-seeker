@@ -273,3 +273,6 @@ CP - update and check memory
 
     Apply memory update at given offset and size. Check if it's different than the actual content. If so, generate alert.
 
+RN - taint memory region
+    syntax: RN,offset,size
+
