@@ -203,7 +203,7 @@ class BYTE_t
 {
     public:
     DWORD val;
-    unsigned id;
+    unsigned id; //last propagation that touched this BYTE_t
 //    BYTE val;
 //    BYTE val_t;
     //struct PROPAGATION_* last_propagation;
