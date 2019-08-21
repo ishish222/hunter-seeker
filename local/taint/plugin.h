@@ -27,6 +27,7 @@ class Plugin
     virtual int del_thread_srsly_callback(DWORD) = 0;
 
     virtual int handle_exception_callback(EXCEPTION_INFO) = 0;
+    virtual int handle_sigint() = 0;
 
     virtual int parse_option(char*) = 0;
 

@@ -1208,6 +1208,13 @@ int graph_plugin::register_fence(char* line)
     return 0x0;
 }
 
+int graph_plugin::handle_sigint()
+{
+    this->taint_eng->finished = 0x1;
+    this->taint_eng->aborted = 0x1;
+    return 0x0;
+}
+
 int graph_plugin::handle_exception_callback(EXCEPTION_INFO info)
 {
     if(!(this->taint_eng->started))

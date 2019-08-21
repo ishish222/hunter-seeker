@@ -78,6 +78,13 @@ int taint_plugin::del_thread_srsly_callback(DWORD tid)
     return 0x0;
 }
 
+int taint_plugin::handle_sigint()
+{
+    this->prompt_taint();
+
+    return 0x0;
+}
+
 int taint_plugin::handle_exception_callback(EXCEPTION_INFO info)
 {
     this->prompt_taint();
@@ -262,6 +269,7 @@ int taint_plugin::print_propagation(unsigned propagation_id, unsigned branches)
     d_print(2, "Propagations elem count: %d\n", cause_count);
 
     /* identation */
+
     if(this->out_tab > MAX_OUT_TAB)
     {
         return 0x0;
@@ -274,7 +282,7 @@ int taint_plugin::print_propagation(unsigned propagation_id, unsigned branches)
 
     for(j=0x0; j<this->out_tab; j++)
     {
-        d_print_prompt(1, " ");
+        d_print_prompt(1, "\t");
     }
 
 #ifdef USE_DISTORM
@@ -376,7 +384,7 @@ int taint_plugin::print_propagation(unsigned propagation_id, unsigned branches)
     return 0x0;
 }
 
-int taint_plugin::print_taint_history(unsigned propagation_id, unsigned branches)
+int taint_plugin::print_taint_history_end(unsigned propagation_id, unsigned branches)
 {
     if(propagation_id == CAUSE_ID_NONE) return 0x0;
     /* teoretycznie ponizsze nie powinno stanowic problemu, ale stanowi */
@@ -397,19 +405,6 @@ int taint_plugin::print_taint_history(unsigned propagation_id, unsigned branches
 
     PROPAGATION* current_propagation;
     current_propagation = &this->taint_eng->propagations[propagation_id];
-
-    unsigned cause_count;
-    cause_count = current_propagation->cause_count;
-    d_print(2, "Propagations elem count: %d\n", cause_count);
-
-    CAUSE* cur_cause;
-
-    for(i=0x0; i<cause_count; i++)
-    {
-        cur_cause = &current_propagation->causes[i];
-        this->print_taint_history(cur_cause->cause_id, branches);
-    } 
-    
 
     for(j=0x0; j<this->out_tab; j++)
     {
@@ -439,6 +434,81 @@ int taint_plugin::print_taint_history(unsigned propagation_id, unsigned branches
     else
         d_print_prompt(1, "%d, EIP: 0x%08x, instr byte: 0x%02x, instr no: %d\n", propagation_id, this->taint_eng->propagations[propagation_id].instruction, this->taint_eng->memory[this->taint_eng->propagations[propagation_id].instruction].get_BYTE(), this->taint_eng->propagations[propagation_id].instr_count);
 #endif
+    this->out_tab--;
+    return 0x0;
+}
+
+int taint_plugin::print_taint_history(unsigned propagation_id, unsigned branches)
+{
+    if(propagation_id == CAUSE_ID_NONE) return 0x0;
+    /* teoretycznie ponizsze nie powinno stanowic problemu, ale stanowi */
+    if(propagation_id == 0x0) return 0x0;
+
+    unsigned i,j;
+    unsigned count;
+
+    CAUSE* cur_elem;
+    
+    /* identation */
+    if(this->out_tab > MAX_OUT_TAB)
+    {
+        return 0x0;
+    }
+
+    this->out_tab++;
+
+    PROPAGATION* current_propagation;
+    current_propagation = &this->taint_eng->propagations[propagation_id];
+
+    for(j=0x0; j<this->out_tab; j++)
+    {
+        d_print_prompt(1, "\t");
+    }
+#ifdef USE_DISTORM
+    char buf[0x20];
+    int k;
+    for(k=0x0; k<0x20; k++)
+        buf[k] = this->taint_eng->memory[this->taint_eng->propagations[propagation_id].instruction +k].get_BYTE();
+
+    /* decoding */
+
+    unsigned decoded;
+    _DecodeResult res;
+ _DecodedInst decodedInstructions[0x1];
+    
+    res = distorm_decode(this, (const unsigned char*)buf, 0x20, Decode32Bits, decodedInstructions, 0x1, &decoded);
+
+    if(current_propagation->taint_propagation != 0x0)
+        d_print_prompt_red(1, "%d: (%d)0x%08x: %s%s%s\n", propagation_id, this->taint_eng->propagations[propagation_id].instr_count, this->taint_eng->propagations[propagation_id].instruction, (char*)decodedInstructions[0].mnemonic.p, decodedInstructions[0].operands.length != 0 ? " " : "", (char*)decodedInstructions[0].operands.p);
+    else
+        d_print_prompt(1, "%d: (%d)0x%08x: %s%s%s\n", propagation_id, this->taint_eng->propagations[propagation_id].instr_count, this->taint_eng->propagations[propagation_id].instruction, (char*)decodedInstructions[0].mnemonic.p, decodedInstructions[0].operands.length != 0 ? " " : "", (char*)decodedInstructions[0].operands.p);
+#else
+    if(current_propagation->taint_propagation != 0x0)
+        d_print_prompt_red(1, "%d, EIP: 0x%08x, instr byte: 0x%02x, instr no: %d\n", propagation_id, this->taint_eng->propagations[propagation_id].instruction, this->taint_eng->memory[this->taint_eng->propagations[propagation_id].instruction].get_BYTE(), this->taint_eng->propagations[propagation_id].instr_count);
+    else
+        d_print_prompt(1, "%d, EIP: 0x%08x, instr byte: 0x%02x, instr no: %d\n", propagation_id, this->taint_eng->propagations[propagation_id].instruction, this->taint_eng->memory[this->taint_eng->propagations[propagation_id].instruction].get_BYTE(), this->taint_eng->propagations[propagation_id].instr_count);
+#endif
+
+    unsigned cause_count;
+    cause_count = current_propagation->cause_count;
+    d_print(2, "Propagations elem count: %d\n", cause_count);
+
+    CAUSE* cur_cause;
+
+    for(i=0x0; i<cause_count; i++)
+    {
+        cur_cause = &current_propagation->causes[i];
+        this->print_taint_history(cur_cause->cause_id, branches);
+
+/*
+        if(this->taint_eng->propagations[cur_cause->cause_id].taint_propagation)
+            this->print_taint_history(cur_cause->cause_id, branches);
+        else
+            this->print_taint_history_end(cur_cause->cause_id, branches);
+*/
+    } 
+    
+
     this->out_tab--;
     return 0x0;
 }
@@ -795,7 +865,12 @@ int taint_plugin::parse_cmd(char* string)
     }
 
     cur_str = strtok(string, " \n\r"); if(cur_str == 0x0) return 0x0;
-    if(!strncasecmp(cur_str, "reg", 3))
+    if(!strncasecmp(cur_str, "stat", 4))
+    {
+        d_print_prompt(0, "Current instruction: %\n Current eip: 0x%08x\n Current instr_byte: 0x%02x\n", this->taint_eng->current_instr_count, this->taint_eng->reg_restore_32(EIP).get_DWORD(), this->taint_eng->current_instr_byte->get_BYTE() & 0xff);
+
+    }
+    else if(!strncasecmp(cur_str, "reg", 3))
     {
         cur_str = strtok(0x0, " \n\r"); 
         if(cur_str == 0x0)
@@ -1557,12 +1632,22 @@ int taint_plugin::parse_cmd(char* string)
             OFFSET offset;
             BYTE_t* byte;
     
-            offset = strtol(cur_str, 0x0, 0x10);
-            err_print("Tracking mem: 0x%08x\n", offset);
+            if((cur_str[0x0] == '0') && (cur_str[0x1] == 'x'))
+            {
+                offset = strtol(cur_str, 0x0, 0x10);
+                err_print("Tracking mem: 0x%08x\n", offset);
+                byte = &this->taint_eng->memory[offset];
+                print_taint_history(byte, 0x0);
+                err_print("\n");
+            }
+            else
+            {
+                offset = strtol(cur_str, 0x0, 10);
+                err_print("Tracking propagation: %d\n", offset);
+                print_taint_history(offset, 0x0);
+                err_print("\n");
 
-            byte = &this->taint_eng->memory[offset];
-            print_taint_history(byte, 0x0);
-            err_print("\n");
+            }
         }
     
     }

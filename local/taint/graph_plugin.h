@@ -276,6 +276,7 @@ class graph_plugin : Plugin
     virtual int del_thread_srsly_callback(DWORD);
     virtual int parse_option(char*);
     virtual int handle_exception_callback(EXCEPTION_INFO);
+    virtual int handle_sigint();
 
     int r_jxx(BYTE_t*);
     int r_jb_jc_jnae(BYTE_t*);

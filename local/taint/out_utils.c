@@ -315,3 +315,18 @@ int register_trace_watchpoints(char* line, taint_x86* taint_eng)
     return 0x0;
 }
 
+int parse_prompt_file(char* line, taint_x86* taint_eng)
+{
+    char* cmd;
+    char* filepath;
+
+    cmd = strtok(line, ",");
+    filepath = strtok(0x0, "");
+
+    printf("Opening prompt file: %s\n", filepath);
+
+    taint_eng->open_prompt_file(filepath);
+
+    return 0x0;
+}
+

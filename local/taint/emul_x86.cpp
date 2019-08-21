@@ -74,9 +74,13 @@ void taint_x86::handle_sigsegv(int signum)
 
 void taint_x86::handle_sigint(int signum)
 {
-    this->finished = 0x1;
-    this->aborted = 0x1;
-    d_print(1, "Eip: 0x%08x, this->end_addr: 0x%08x, limit: %d, count: %d, finishing\n", this->current_eip, this->end_addr, this->instr_limit, this->current_instr_count);
+    if(this->plugin) this->plugin->handle_sigint();
+    else
+    {
+        this->finished = 0x1;
+        this->aborted = 0x1;
+        d_print(1, "Eip: 0x%08x, this->end_addr: 0x%08x, limit: %d, count: %d, finishing\n", this->current_eip, this->end_addr, this->instr_limit, this->current_instr_count);
+    }
 }
 
 int taint_x86::start()
@@ -1911,6 +1915,19 @@ int taint_x86::propagate_taint(PROPAGATION* current_propagation)
                 cur_result = &extended_results[extended_id][i - MAX_RESULTS];
             }
             cur_result->affected->set_BYTE_t(prev_taint);
+            /* check for key registers */
+            if((cur_result->affected == &this->cur_info->registers[EIP+0x0]) || (cur_result->affected == &this->cur_info->registers[EIP+0x1]) || (cur_result->affected == &this->cur_info->registers[EIP+0x2]) || (cur_result->affected == &this->cur_info->registers[EIP+0x3]))
+            {
+                err_print("EIP has been tainted\n");
+                if(this->plugin)
+                    this->plugin->breakpoint_callback(&this->bps[i]);
+            }
+            if((cur_result->affected == &this->cur_info->registers[EBP+0x0]) || (cur_result->affected == &this->cur_info->registers[EBP+0x1]) || (cur_result->affected == &this->cur_info->registers[EBP+0x2]) || (cur_result->affected == &this->cur_info->registers[EBP+0x3]))
+            {
+                err_print("EBP has been tainted\n");
+                if(this->plugin)
+                    this->plugin->breakpoint_callback(&this->bps[i]);
+            }
         }
     }
 
@@ -2342,43 +2359,27 @@ int taint_x86::a_decode_modrm(BYTE_t* modrm_byte_ptr, modrm_ptr* r, modrm_ptr* r
     {
         case REG_EAX_BASED:
             r->offset = EAX;
-            if((this->options & OPTION_INDEXES_PROPAGATE) && (!this->r_propagation_lock))
-                reg_propagation_cause_r_32(EAX);
             break;
         case REG_ECX_BASED:
             r->offset = ECX;
-            if((this->options & OPTION_INDEXES_PROPAGATE) && (!this->r_propagation_lock))
-                reg_propagation_cause_r_32(ECX);
             break;
         case REG_EDX_BASED:
             r->offset = EDX;
-            if((this->options & OPTION_INDEXES_PROPAGATE) && (!this->r_propagation_lock))
-                reg_propagation_cause_r_32(EDX);
             break;
         case REG_EBX_BASED:
             r->offset = EBX;
-            if((this->options & OPTION_INDEXES_PROPAGATE) && (!this->r_propagation_lock))
-                reg_propagation_cause_r_32(EBX);
             break;
         case REG_ESP_BASED:
             r->offset = ESP;
-            if((this->options & OPTION_INDEXES_PROPAGATE) && (!this->r_propagation_lock))
-                reg_propagation_cause_r_32(ESP);
             break;
         case REG_EBP_BASED:
             r->offset = EBP;
-            if((this->options & OPTION_INDEXES_PROPAGATE) && (!this->r_propagation_lock))
-                reg_propagation_cause_r_32(EBP);
             break;
         case REG_ESI_BASED:
             r->offset = ESI;
-            if((this->options & OPTION_INDEXES_PROPAGATE) && (!this->r_propagation_lock))
-                reg_propagation_cause_r_32(ESI);
             break;
         case REG_EDI_BASED:
             r->offset = EDI;
-            if((this->options & OPTION_INDEXES_PROPAGATE) && (!this->r_propagation_lock))
-                reg_propagation_cause_r_32(EDI);
             break;
     }
     r->region = MODRM_REG;
@@ -2464,7 +2465,6 @@ int taint_x86::a_decode_modrm(BYTE_t* modrm_byte_ptr, modrm_ptr* r, modrm_ptr* r
 
                     rm->offset = this->reg_restore_32(EAX).get_DWORD();
                     disp8.from_mem(modrm_byte_ptr+1);
-                    //rm->offset += disp8.get_BYTE();
                     rm->region = MODRM_MEM;
                     rm->size   = MODRM_SIZE_32;
                     break;
@@ -2474,7 +2474,6 @@ int taint_x86::a_decode_modrm(BYTE_t* modrm_byte_ptr, modrm_ptr* r, modrm_ptr* r
 
                     rm->offset = this->reg_restore_32(ECX).get_DWORD();
                     disp8.from_mem(modrm_byte_ptr+1);
-                    //rm->offset += disp8.get_BYTE();
                     rm->region = MODRM_MEM;
                     rm->size   = MODRM_SIZE_32;
                     break;
@@ -2484,7 +2483,6 @@ int taint_x86::a_decode_modrm(BYTE_t* modrm_byte_ptr, modrm_ptr* r, modrm_ptr* r
 
                     rm->offset = this->reg_restore_32(EDX).get_DWORD();
                     disp8.from_mem(modrm_byte_ptr+1);
-                    //rm->offset += disp8.get_BYTE();
                     rm->region = MODRM_MEM;
                     rm->size   = MODRM_SIZE_32;
                     break;
@@ -2494,7 +2492,6 @@ int taint_x86::a_decode_modrm(BYTE_t* modrm_byte_ptr, modrm_ptr* r, modrm_ptr* r
 
                     rm->offset = this->reg_restore_32(EBX).get_DWORD();
                     disp8.from_mem(modrm_byte_ptr+1);
-                    //rm->offset += disp8.get_BYTE();
                     rm->region = MODRM_MEM;
                     rm->size   = MODRM_SIZE_32;
                     break;
@@ -2511,7 +2508,6 @@ int taint_x86::a_decode_modrm(BYTE_t* modrm_byte_ptr, modrm_ptr* r, modrm_ptr* r
 
                     rm->offset = this->reg_restore_32(EBP).get_DWORD();
                     disp8.from_mem(modrm_byte_ptr+1); 
-                    //rm->offset += disp8.get_BYTE();
                     rm->region = MODRM_MEM;
                     rm->size   = MODRM_SIZE_32;
                     break;
@@ -2521,7 +2517,6 @@ int taint_x86::a_decode_modrm(BYTE_t* modrm_byte_ptr, modrm_ptr* r, modrm_ptr* r
 
                     rm->offset = this->reg_restore_32(ESI).get_DWORD();
                     disp8.from_mem(modrm_byte_ptr+1);
-                    //rm->offset += disp8.get_BYTE();
                     rm->region = MODRM_MEM;
                     rm->size   = MODRM_SIZE_32;
                     break;
@@ -2531,7 +2526,6 @@ int taint_x86::a_decode_modrm(BYTE_t* modrm_byte_ptr, modrm_ptr* r, modrm_ptr* r
 
                     rm->offset = this->reg_restore_32(EDI).get_DWORD();
                     disp8.from_mem(modrm_byte_ptr+1);
-                    //rm->offset += disp8.get_BYTE();
                     rm->region = MODRM_MEM;
                     rm->size   = MODRM_SIZE_32;
                     break;
@@ -2557,7 +2551,6 @@ int taint_x86::a_decode_modrm(BYTE_t* modrm_byte_ptr, modrm_ptr* r, modrm_ptr* r
 
                     rm->offset = this->reg_restore_32(EAX).get_DWORD();
                     disp32.from_mem(modrm_byte_ptr+1);
-                    //rm->offset += disp32.get_DWORD();
                     rm->region = MODRM_MEM;
                     rm->size   = MODRM_SIZE_32;
                     break;
@@ -2567,7 +2560,6 @@ int taint_x86::a_decode_modrm(BYTE_t* modrm_byte_ptr, modrm_ptr* r, modrm_ptr* r
 
                     rm->offset = this->reg_restore_32(ECX).get_DWORD();
                     disp32.from_mem(modrm_byte_ptr+1);
-                    //rm->offset += *disp32p;
                     rm->region = MODRM_MEM;
                     rm->size   = MODRM_SIZE_32;
                     break;
@@ -2577,7 +2569,6 @@ int taint_x86::a_decode_modrm(BYTE_t* modrm_byte_ptr, modrm_ptr* r, modrm_ptr* r
 
                     rm->offset = this->reg_restore_32(EDX).get_DWORD();
                     disp32.from_mem(modrm_byte_ptr+1);
-                    //rm->offset += disp32.get_DWORD();
                     rm->region = MODRM_MEM;
                     rm->size   = MODRM_SIZE_32;
                     break;
@@ -2587,7 +2578,6 @@ int taint_x86::a_decode_modrm(BYTE_t* modrm_byte_ptr, modrm_ptr* r, modrm_ptr* r
 
                     rm->offset = this->reg_restore_32(EBX).get_DWORD();
                     disp32.from_mem(modrm_byte_ptr+1);
-                    //rm->offset += disp32.get_DWORD();
                     rm->region = MODRM_MEM;
                     rm->size   = MODRM_SIZE_32;
                     break;
@@ -2604,7 +2594,6 @@ int taint_x86::a_decode_modrm(BYTE_t* modrm_byte_ptr, modrm_ptr* r, modrm_ptr* r
 
                     rm->offset = this->reg_restore_32(EBP).get_DWORD();
                     disp32.from_mem(modrm_byte_ptr+1);
-                    //rm->offset += disp32.get_DWORD();
                     rm->region = MODRM_MEM;
                     rm->size   = MODRM_SIZE_32;
                     break;
@@ -2614,7 +2603,6 @@ int taint_x86::a_decode_modrm(BYTE_t* modrm_byte_ptr, modrm_ptr* r, modrm_ptr* r
 
                     rm->offset = this->reg_restore_32(ESI).get_DWORD();
                     disp32.from_mem(modrm_byte_ptr+1);
-                    //rm->offset += disp32.get_DWORD();
                     rm->region = MODRM_MEM;
                     rm->size   = MODRM_SIZE_32;
                     break;
@@ -2624,7 +2612,6 @@ int taint_x86::a_decode_modrm(BYTE_t* modrm_byte_ptr, modrm_ptr* r, modrm_ptr* r
 
                     rm->offset = this->reg_restore_32(EDI).get_DWORD();
                     disp32.from_mem(modrm_byte_ptr+1);
-                    //rm->offset += disp32.get_DWORD();
                     rm->region = MODRM_MEM;
                     rm->size   = MODRM_SIZE_32;
                     break;
@@ -2644,65 +2631,41 @@ int taint_x86::a_decode_modrm(BYTE_t* modrm_byte_ptr, modrm_ptr* r, modrm_ptr* r
             switch(modrm_rm_part)
             {
                 case REG_EAX_BASED: 
-                    if(this->options & OPTION_INDEXES_PROPAGATE)
-                        reg_propagation_cause_r_32(EAX);
-
                     rm->offset = EAX;
                     rm->region = MODRM_REG;
                     rm->size   = MODRM_SIZE_32;
                     break;
                 case REG_ECX_BASED: 
-                    if(this->options & OPTION_INDEXES_PROPAGATE)
-                        reg_propagation_cause_r_32(ECX);
-
                     rm->offset = ECX;
                     rm->region = MODRM_REG;
                     rm->size   = MODRM_SIZE_32;
                     break;
                 case REG_EDX_BASED: 
-                    if(this->options & OPTION_INDEXES_PROPAGATE)
-                        reg_propagation_cause_r_32(EDX);
-
                     rm->offset = EDX;
                     rm->region = MODRM_REG;
                     rm->size   = MODRM_SIZE_32;
                     break;
                 case REG_EBX_BASED: 
-                    if(this->options & OPTION_INDEXES_PROPAGATE)
-                        reg_propagation_cause_r_32(EBX);
-
                     rm->offset = EBX;
                     rm->region = MODRM_REG;
                     rm->size   = MODRM_SIZE_32;
                     break;
                 case REG_ESP_BASED: 
-                    if(this->options & OPTION_INDEXES_PROPAGATE)
-                        reg_propagation_cause_r_32(ESP);
-
                     rm->offset = ESP;
                     rm->region = MODRM_REG;
                     rm->size   = MODRM_SIZE_32;
                     break;
                 case REG_EBP_BASED: 
-                    if(this->options & OPTION_INDEXES_PROPAGATE)
-                        reg_propagation_cause_r_32(EBP);
-
                     rm->offset = EBP;
                     rm->region = MODRM_REG;
                     rm->size   = MODRM_SIZE_32;
                     break;
                 case REG_ESI_BASED: 
-                    if(this->options & OPTION_INDEXES_PROPAGATE)
-                        reg_propagation_cause_r_32(ESI);
-
                     rm->offset = ESI;
                     rm->region = MODRM_REG;
                     rm->size   = MODRM_SIZE_32;
                     break;
                 case REG_EDI_BASED: 
-                    if(this->options & OPTION_INDEXES_PROPAGATE)
-                        reg_propagation_cause_r_32(EDI);
-
                     rm->offset = EDI;
                     rm->region = MODRM_REG;
                     rm->size   = MODRM_SIZE_32;
@@ -10159,11 +10122,11 @@ int taint_x86::r_call_rel(BYTE_t* instr_ptr)
     target_2 = ret_addr + *disp32p; //signed displacement & operand size
     a_push_32(ret_addr);
     
-    this->reg_propagation_cause_m_32(target_2.get_DWORD());
+    //this->reg_propagation_cause_m_32(target_2.get_DWORD()); //there is no propagation in relative calls
 
     this->reg_store_32(EIP, target_2);
 
-    this->attach_current_propagation_r_32(EIP);
+    //this->attach_current_propagation_r_32(EIP);
 
     this->current_instr_is_jump = 0x1;
     return 0x0;
@@ -16440,10 +16403,12 @@ int taint_x86::r_call_abs_near(BYTE_t* instr_ptr)
 
     if(rm.region == MODRM_REG)
     {
+            this->reg_propagation_cause_r_32(rm.offset);
             target = this->reg_restore_32(rm.offset);
     }
     else
     {
+            this->reg_propagation_cause_m_32(rm.offset);
             this->restore_32(rm.offset, target);
     }
 

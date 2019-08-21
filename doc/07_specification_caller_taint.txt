@@ -276,3 +276,5 @@ CP - update and check memory
 RN - taint memory region
     syntax: RN,offset,size
 
+PR - open prompt file
+    syntax: PR,file_path

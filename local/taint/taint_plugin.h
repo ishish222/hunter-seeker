@@ -55,6 +55,7 @@ class taint_plugin : Plugin
     virtual int del_thread_callback(DWORD);
     virtual int del_thread_srsly_callback(DWORD);
     virtual int parse_option(char*);
+    virtual int handle_sigint();
     virtual int handle_exception_callback(EXCEPTION_INFO);
 
     int register_taint(char*);
@@ -63,6 +64,7 @@ class taint_plugin : Plugin
     int print_taint_history(BYTE_t*, unsigned);
     int print_taint_history(BYTE_t*);
     int print_taint_history(unsigned, unsigned);
+    int print_taint_history_end(unsigned, unsigned);
     int print_taint_history(BYTE_t*, OFFSET, unsigned);
     int trace_watchpoint_connect(TRACE_WATCHPOINT*);
     int query_history(TRACE_WATCHPOINT);

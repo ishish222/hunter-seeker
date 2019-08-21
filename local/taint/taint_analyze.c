@@ -308,6 +308,9 @@ int main(int argc, char** argv)
             if(line[0] == 'B' && line[1] == 'W')
                 register_trace_watchpoints(line, &taint_eng);
 
+            if(line[0] == 'P' && line[1] == 'R')
+                parse_prompt_file(line, &taint_eng);
+
             /* pass to plugin */
             if(line[0] == 'R' && line[1] == 'L')
                 taint_eng.plugin->parse_option(line);
