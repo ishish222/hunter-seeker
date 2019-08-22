@@ -867,7 +867,8 @@ int taint_plugin::parse_cmd(char* string)
     cur_str = strtok(string, " \n\r"); if(cur_str == 0x0) return 0x0;
     if(!strncasecmp(cur_str, "stat", 4))
     {
-        d_print_prompt(0, "Current instruction: %\n Current eip: 0x%08x\n Current instr_byte: 0x%02x\n", this->taint_eng->current_instr_count, this->taint_eng->reg_restore_32(EIP).get_DWORD(), this->taint_eng->current_instr_byte->get_BYTE() & 0xff);
+        d_print_prompt(0, "Current instruction: %d\nCurrent eip: 0x%08x\nCurrent instr_byte: 0x%02x\n", this->taint_eng->current_instr_count, this->taint_eng->reg_restore_32(EIP).get_DWORD(), this->taint_eng->current_instr_byte->get_BYTE() & 0xff);
+        d_print_prompt(0, "Query thread: 0x%08x\n", this->query_tid);
 
     }
     else if(!strncasecmp(cur_str, "reg", 3))

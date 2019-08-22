@@ -1915,19 +1915,26 @@ int taint_x86::propagate_taint(PROPAGATION* current_propagation)
                 cur_result = &extended_results[extended_id][i - MAX_RESULTS];
             }
             cur_result->affected->set_BYTE_t(prev_taint);
-            /* check for key registers */
-            if((cur_result->affected == &this->cur_info->registers[EIP+0x0]) || (cur_result->affected == &this->cur_info->registers[EIP+0x1]) || (cur_result->affected == &this->cur_info->registers[EIP+0x2]) || (cur_result->affected == &this->cur_info->registers[EIP+0x3]))
-            {
-                err_print("EIP has been tainted\n");
-                if(this->plugin)
-                    this->plugin->breakpoint_callback(&this->bps[i]);
-            }
-            if((cur_result->affected == &this->cur_info->registers[EBP+0x0]) || (cur_result->affected == &this->cur_info->registers[EBP+0x1]) || (cur_result->affected == &this->cur_info->registers[EBP+0x2]) || (cur_result->affected == &this->cur_info->registers[EBP+0x3]))
-            {
-                err_print("EBP has been tainted\n");
-                if(this->plugin)
-                    this->plugin->breakpoint_callback(&this->bps[i]);
-            }
+        }
+
+        /* check for key registers */
+        if((cur_result->affected == &this->cur_info->registers[EIP+0x0]) || (cur_result->affected == &this->cur_info->registers[EIP+0x1]) || (cur_result->affected == &this->cur_info->registers[EIP+0x2]) || (cur_result->affected == &this->cur_info->registers[EIP+0x3]))
+        {
+            err_print("EIP has been tainted\n");
+            if(this->plugin)
+                this->plugin->breakpoint_callback(&this->bps[i]);
+        }
+        if((cur_result->affected == &this->cur_info->registers[EBP+0x0]) || (cur_result->affected == &this->cur_info->registers[EBP+0x1]) || (cur_result->affected == &this->cur_info->registers[EBP+0x2]) || (cur_result->affected == &this->cur_info->registers[EBP+0x3]))
+        {
+            err_print("EBP has been tainted\n");
+            if(this->plugin)
+                this->plugin->breakpoint_callback(&this->bps[i]);
+        }
+        if((cur_result->affected == &this->cur_info->registers[ESP+0x0]) || (cur_result->affected == &this->cur_info->registers[ESP+0x1]) || (cur_result->affected == &this->cur_info->registers[ESP+0x2]) || (cur_result->affected == &this->cur_info->registers[ESP+0x3]))
+        {
+            err_print("ESP has been tainted\n");
+            if(this->plugin)
+                this->plugin->breakpoint_callback(&this->bps[i]);
         }
     }
 
@@ -9810,8 +9817,14 @@ int taint_x86::r_retn(BYTE_t*)
         return -1;
     }
 
+    DWORD_t esp;
+
+    esp = this->reg_restore_32(ESP);
     for(i=0x0; i<count; i++)
-        this->a_pop_32();
+    {
+        esp += 0x4;
+    }
+    this->reg_store_32(ESP, esp);
     
     DWORD_t ret;
     ret = this->a_pop_32();
@@ -10111,6 +10124,7 @@ int taint_x86::r_call_rel(BYTE_t* instr_ptr)
     ret_addr = this->reg_restore_32(EIP);
     ret_addr += this->current_instr_length;
     
+    this->reg_propagation_cause_m_32(instr_ptr + this->current_instr_length);
     target.from_mem(instr_ptr + this->current_instr_length);
 
     ret_addr += 0x4;
@@ -10122,11 +10136,8 @@ int taint_x86::r_call_rel(BYTE_t* instr_ptr)
     target_2 = ret_addr + *disp32p; //signed displacement & operand size
     a_push_32(ret_addr);
     
-    //this->reg_propagation_cause_m_32(target_2.get_DWORD()); //there is no propagation in relative calls
-
     this->reg_store_32(EIP, target_2);
-
-    //this->attach_current_propagation_r_32(EIP);
+    this->attach_current_propagation_r_32(EIP);
 
     this->current_instr_is_jump = 0x1;
     return 0x0;
@@ -10146,12 +10157,19 @@ int taint_x86::r_jmp_rel_8(BYTE_t* instr_ptr)
     ret_addr += this->current_instr_length;
     ret_addr += 0x1;
 
+    this->reg_propagation_cause_m_8(instr_ptr + this->current_instr_length);
     target.from_mem(instr_ptr + this->current_instr_length);
+
     disp8_reint = target.get_BYTE();
     disp8p = (char*)&(disp8_reint);
     target_2 = ret_addr + *disp8p; //signed displacement & operand size
 
+    this->reg_store_32(EIP, target_2);
+    this->attach_current_propagation_r_32(EIP);
+
     d_print(3, "ret_addr: 0x%08x, target: 0x%08x, target2: 0x%08x\n", ret_addr.get_DWORD(), target.get_BYTE(), target_2.get_DWORD());
+
+    this->current_instr_is_jump = 0x1;
 
     return 0x0;
 }
@@ -10164,15 +10182,18 @@ int taint_x86::r_jmp_rel_16_32(BYTE_t* instr_ptr)
     CONTEXT_INFO* cur_ctx;
     cur_ctx = &this->ctx_info[this->tids[this->cur_tid]];
 
+    this->reg_propagation_cause_m_32(instr_ptr + this->current_instr_length);
     target.from_mem(instr_ptr + this->current_instr_length);
+
     ret_addr = this->reg_restore_32(EIP);
     ret_addr += 0x5;
     target += ret_addr;
 
-    //a_push_32(ret_addr); /* skad to qwa? */
-    
     d_print(3, "ret_addr: 0x%08x, target: 0x%08x\n", ret_addr.get_DWORD(), target.get_DWORD());
+
     this->reg_store_32(EIP, target);
+    this->attach_current_propagation_r_32(EIP);
+
     this->current_instr_is_jump = 0x1;
 
     return 0x0;
@@ -10223,12 +10244,6 @@ int taint_x86::r_jmp_rm_16_32(BYTE_t* instr_ptr)
     CONTEXT_INFO* cur_ctx;
     cur_ctx = &this->ctx_info[this->tids[this->cur_tid]];
 
-//    ret_addr = this->reg_restore_32(EIP);
-//    ret_addr += 0x5;
-
-//    a_push_32(ret_addr);
-    
-//    d_print(3, "ret_addr: 0x%08x, target: 0x%08x\n", ret_addr.get_DWORD(), target.get_DWORD());
     this->reg_store_32(EIP, target);
 
     this->attach_current_propagation_r_32(EIP);
@@ -16418,7 +16433,6 @@ int taint_x86::r_call_abs_near(BYTE_t* instr_ptr)
     a_push_32(ret_addr);
     
     this->reg_store_32(EIP, target);
-
     this->attach_current_propagation_r_32(EIP);
 
     this->current_instr_is_jump = 0x1;
@@ -16443,7 +16457,6 @@ int taint_x86::r_call_abs_far(BYTE_t* instr_ptr)
     this->reg_propagation_cause_m_32(target.get_DWORD());
 
     this->reg_store_32(EIP, target);
-
     this->attach_current_propagation_r_32(EIP);
 
     this->current_instr_is_jump = 0x1;
