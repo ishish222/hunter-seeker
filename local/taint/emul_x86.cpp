@@ -9808,16 +9808,23 @@ int taint_x86::r_retn(BYTE_t*)
 
     d_print(3, "offset: 0x%08x, read val: 0x%08x\n", offset, src_16.get_WORD());
 
+    DWORD_t ret;
+    ret = this->a_pop_32();
+    d_print(3, "Will return to: 0x%08x\n", ret.get_DWORD());
+
+    this->reg_store_32(EIP, ret);
+    attach_current_propagation_r_32(EIP);
+
+    DWORD_t esp;
+
     count = src_16.get_WORD();
     count /= 0x4;
 
-    if(count > 0x20)
+    if(count > 0x30)
     {
         d_print(1, "Error, infinite retn\n");
         return -1;
     }
-
-    DWORD_t esp;
 
     esp = this->reg_restore_32(ESP);
     for(i=0x0; i<count; i++)
@@ -9826,13 +9833,6 @@ int taint_x86::r_retn(BYTE_t*)
     }
     this->reg_store_32(ESP, esp);
     
-    DWORD_t ret;
-    ret = this->a_pop_32();
-    d_print(3, "Will return to: 0x%08x\n", ret.get_DWORD());
-
-    this->reg_store_32(EIP, ret);
-    attach_current_propagation_r_32(EIP);
-
     this->current_instr_is_jump = 0x1;
 
     return 0x0;
