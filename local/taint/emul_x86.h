@@ -406,6 +406,7 @@ class taint_x86
     unsigned wpt_t_count;
     int add_watchpoint(WATCHPOINT);
     int add_taint_watchpoint(WATCHPOINT);
+    int init_watchpoint(WATCHPOINT*);
     int check_execution_wps();
 
     /* securing memory areas */

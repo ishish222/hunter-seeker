@@ -613,9 +613,8 @@ int taint_x86::pre_execute_instruction(DWORD eip)
     this->current_prefixes = 0x0;
     this->current_prefix_length = 0x0;
     this->current_eip = eip;
-//    this->reg_store_32(EIP, eip);
+
     /* we want to do it this way in order to preserve taint */
-    
     DWORD_t eip_t;
     eip_t = this->reg_restore_32(EIP);
     eip_t.set_DWORD(eip);
@@ -628,7 +627,10 @@ int taint_x86::pre_execute_instruction(DWORD eip)
 
     /* check if execution breakpoint has been hit */
     if(this->options & OPTION_HANDLE_BREAKPOINTS)
+    {
         this->check_execution_bps();
+        this->check_execution_wps();
+    }
 
     d_print(1, "[pre_execute_instruction ends]\n");
     return 0x0;
@@ -873,6 +875,8 @@ int taint_x86::check_execution_bps()
         }
     }
 
+    /* o co tu chodzi? */
+
     if(this->step_mode)
     {
         this->step_mode = 0x0;
@@ -883,6 +887,47 @@ int taint_x86::check_execution_bps()
 
     return 0x0;
 }
+
+int taint_x86::init_watchpoint(WATCHPOINT* wp)
+{
+    BYTE current_byte;
+
+    current_byte = this->memory[wp->offset].get_BYTE();
+    wp->init_value = current_byte;
+
+    return 0x0;
+}
+
+int taint_x86::check_execution_wps()
+{
+    unsigned i;
+
+    for(i=0x0; i<this->wpt_count; i++)
+    {
+        if(this->wps[i].init_instruction_no == this->current_instr_count)
+        {
+            this->init_watchpoint(&this->wps[i]);
+            d_print(1, "Watchpoint %s initialized\n", this->wps[i].name);
+        }
+        else if(this->wps[i].init_instruction_no < this->current_instr_count)
+        {
+            BYTE current_byte;
+            current_byte = this->memory[this->wps[i].offset].get_BYTE();
+
+            if(current_byte != this->wps[i].init_value)
+            {
+                err_print("Watchpoint %s (active after: @%lld), at 0x%08x triggered on instr.: 0x%08x\n", this->wps[i].name, this->current_instr_count, this->wps[i].offset, this->current_eip);
+
+                if(this->plugin)
+                    this->plugin->breakpoint_callback(0x0);
+            }
+        }
+        
+    }
+
+    return 0x0;
+}
+
 CONTEXT_INFO* taint_x86::get_context_info(DWORD tid)
 {
     unsigned info_pos = this->tids[tid];

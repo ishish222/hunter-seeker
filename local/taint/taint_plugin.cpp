@@ -47,7 +47,10 @@ int taint_plugin::post_execute_instruction_callback(DWORD eip)
 int taint_plugin::breakpoint_callback(BREAKPOINT* bp)
 {
     d_print(1, "taint_plugin::breakpoint_callback\n");
-    d_print(1, "taint Breakpoint %s @%lld, 0x%08x, hit\n", bp->name, this->taint_eng->current_instr_count, this->taint_eng->current_eip);
+    if(bp)
+    {
+        d_print(1, "taint Breakpoint %s @%lld, 0x%08x, hit\n", bp->name, this->taint_eng->current_instr_count, this->taint_eng->current_eip);
+    }
     this->prompt_taint();
 
     return 0x0;
