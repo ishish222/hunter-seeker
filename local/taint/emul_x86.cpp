@@ -115,6 +115,44 @@ int taint_x86::add_breakpoint(BREAKPOINT bp)
     return 0x0;
 }
 
+int taint_x86::add_watchpoint(WATCHPOINT wp)
+{
+    if(this->wpt_count >= MAX_BREAKPOINTS) return -1;
+
+    char mode[0x50];
+    strcpy(mode, "");
+
+    d_print(1, "Adding watchpoint %s: tid: 0x%08x, init_instruction_no: %d, offset: 0x%08x\n", wp.name, wp.tid, wp.init_instruction_no, wp.offset);
+
+    this->wps[this->wpt_count].init_instruction_no = wp.init_instruction_no;
+    this->wps[this->wpt_count].offset = wp.offset;
+    strcpy(this->wps[this->wpt_count].name, wp.name);
+    this->wps[this->wpt_count].tid= wp.tid;
+
+    this->wpt_count++;
+
+    return 0x0;
+}
+
+int taint_x86::add_taint_watchpoint(WATCHPOINT wp)
+{
+    if(this->wpt_count >= MAX_BREAKPOINTS) return -1;
+
+    char mode[0x50];
+    strcpy(mode, "");
+
+    d_print(1, "Adding taint watchpoint %s: tid: 0x%08x, init_instruction_no: %d, offset: 0x%08x\n", wp.name, wp.tid, wp.init_instruction_no, wp.offset);
+
+    this->wps_t[this->wpt_t_count].init_instruction_no = wp.init_instruction_no;
+    this->wps_t[this->wpt_t_count].offset = wp.offset;
+    strcpy(this->wps_t[this->wpt_t_count].name, wp.name);
+    this->wps_t[this->wpt_t_count].tid= wp.tid;
+
+    this->wpt_t_count++;
+
+    return 0x0;
+}
+
 inline int taint_x86::verify_seg_sec(OFFSET off)
 {
     unsigned i;

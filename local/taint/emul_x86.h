@@ -386,10 +386,11 @@ class taint_x86
     char last_inconsistent;
     int check_thread(CONTEXT_OUT);
 
-    /* breakpoints & watchpoints */
+    /* breakpoints */
     char step_mode;
     DWORD bp_hit;
     DWORD rw_bp;
+
     BREAKPOINT bps[MAX_BREAKPOINTS];
     BREAKPOINT bps_t[MAX_BREAKPOINTS];
     unsigned bpt_count;
@@ -397,6 +398,15 @@ class taint_x86
     int add_breakpoint(BREAKPOINT);
     int add_taint_breakpoint(BREAKPOINT);
     int check_execution_bps();
+
+    /* watchpoints */
+    WATCHPOINT wps[MAX_BREAKPOINTS];
+    WATCHPOINT wps_t[MAX_BREAKPOINTS];
+    unsigned wpt_count;
+    unsigned wpt_t_count;
+    int add_watchpoint(WATCHPOINT);
+    int add_taint_watchpoint(WATCHPOINT);
+    int check_execution_wps();
 
     /* securing memory areas */
     REGION  security_layer[MAX_SECURITY_LAYERS];

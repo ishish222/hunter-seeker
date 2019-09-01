@@ -305,6 +305,12 @@ int main(int argc, char** argv)
             if(line[0] == 'B' && line[1] == 'T')
                 register_taint_breakpoints(line, &taint_eng);
 
+            if(line[0] == 'W' && line[1] == 'A')
+                register_memory_watchpoints(line, &taint_eng);
+
+            if(line[0] == 'W' && line[1] == 'T')
+                register_taint_watchpoints(line, &taint_eng);
+
             if(line[0] == 'P' && line[1] == 'R')
                 parse_prompt_file(line, &taint_eng);
 

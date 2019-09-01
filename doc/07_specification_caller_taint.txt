@@ -85,6 +85,16 @@ BR - register memory breakpoint
 
         mode can be: READ,WRITE,EXECUTE
 
+WA - register memory watchpoint
+    The syntax is this:
+        Entries for individual breakpoints are separated with '+'
+        Each entry takes the form: <name>:<tid>,<init_instruction_no>,<address>
+
+WT - register taint watchpoint
+    The syntax is this:
+        Entries for individual breakpoints are separated with '+'
+        Each entry takes the form: <name>:<tid>,<init_instruction_no>,<address>
+
 BN - break now (not implemented yet)
 
 BT - register taint breakpoint
