@@ -407,7 +407,9 @@ class taint_x86
     int add_watchpoint(WATCHPOINT);
     int add_taint_watchpoint(WATCHPOINT);
     int init_watchpoint(WATCHPOINT*);
+    int init_watchpoint_t(WATCHPOINT*);
     int check_execution_wps();
+    int check_execution_wps_t();
 
     /* securing memory areas */
     REGION  security_layer[MAX_SECURITY_LAYERS];

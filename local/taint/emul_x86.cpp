@@ -604,7 +604,7 @@ BYTE_t taint_x86::reg_restore_8(DWORD_t off, int tid)
 
 int taint_x86::pre_execute_instruction(DWORD eip)
 {
-    d_print(1, "[pre_execute_instruction starts]\n");
+    d_print(2, "[pre_execute_instruction starts]\n");
     if(this->plugin) this->plugin->pre_execute_instruction_callback(eip);
 
     this->cur_info = this->get_context_info(this->cur_tid);
@@ -630,16 +630,17 @@ int taint_x86::pre_execute_instruction(DWORD eip)
     {
         this->check_execution_bps();
         this->check_execution_wps();
+        this->check_execution_wps_t();
     }
 
-    d_print(1, "[pre_execute_instruction ends]\n");
+    d_print(2, "[pre_execute_instruction ends]\n");
     return 0x0;
 }
 
 
 int taint_x86::post_execute_instruction(DWORD eip)
 {
-    d_print(1, "[post_execute_instruction starts]\n");
+    d_print(2, "[post_execute_instruction starts]\n");
     if(this->plugin) this->plugin->post_execute_instruction_callback(eip);
 
     CONTEXT_INFO* cur_ctx;
@@ -714,7 +715,7 @@ int taint_x86::post_execute_instruction(DWORD eip)
     eip_t.set_DWORD(calculated_eip);
     this->reg_store_32(EIP, eip_t);
 
-    d_print(1, "[post_execute_instruction ends]\n");
+    d_print(2, "[post_execute_instruction ends]\n");
     return 0x0;
 }
 
@@ -725,7 +726,7 @@ inline int taint_x86::execute_instruction_32(DWORD eip, DWORD tid)
 
     byte = current_instr_byte->get_BYTE();
 
-    d_print(1, "[execute_instruction_32 starts] Current instr byte: 0x%02x\n", byte);
+    d_print(2, "[execute_instruction_32 starts] Current instr byte: 0x%02x\n", byte);
     /* plugin instruction-specific preexecution */
     if(this->plugin)
     {
@@ -735,7 +736,7 @@ inline int taint_x86::execute_instruction_32(DWORD eip, DWORD tid)
         }
     }
 
-    /* instruction preexecution */
+    /* instruction execution */
     ret = (this->*(instructions_32[byte]))(this->current_instr_byte);
 
     /* plugin instruction-specific postexecution */
@@ -747,13 +748,13 @@ inline int taint_x86::execute_instruction_32(DWORD eip, DWORD tid)
         }
     }
 
-    d_print(1, "[execute_instruction_32 ends]\n");
+    d_print(2, "[execute_instruction_32 ends]\n");
     return ret;
 }
 
 inline int taint_x86::execute_instruction_32_extended(DWORD eip, DWORD tid)
 {
-    d_print(1, "[execute_instruction_32_extended starts]\n");
+    d_print(2, "[execute_instruction_32_extended starts]\n");
     int ret;
     DWORD byte;
 
@@ -780,14 +781,14 @@ inline int taint_x86::execute_instruction_32_extended(DWORD eip, DWORD tid)
         }
     }
 
-    d_print(1, "[execute_instruction_32_extended ends]\n");
+    d_print(2, "[execute_instruction_32_extended ends]\n");
     return ret;
 
 }
 
 int taint_x86::execute_instruction(DWORD eip, DWORD tid)
 {
-    d_print(1, "[execute_instruction starts]\n");
+    d_print(2, "[execute_instruction starts]\n");
     int ret = 0x0;
 
     this->cur_tid = tid;
@@ -797,7 +798,7 @@ int taint_x86::execute_instruction(DWORD eip, DWORD tid)
 
     if(this->options & OPTION_COUNT_INSTRUCTIONS)
     {
-        this->current_instr_byte->set_BYTE_t(0xff); // taint executed? this should go to taint preexecution handler
+        this->current_instr_byte->set_BYTE_t(0xff); // taint executed? this should go to handler in coverage analysis plugin
     }
 
     //this->current_propagation->instruction = eip;
@@ -807,7 +808,10 @@ int taint_x86::execute_instruction(DWORD eip, DWORD tid)
     while(a_is_prefix(this->current_instr_byte))
     {
         ret = this->execute_instruction_32(eip, tid);
-        this->current_instr_byte->set_BYTE_t(0xff); // taint executed?
+        if(this->options & OPTION_COUNT_INSTRUCTIONS)
+        {
+            this->current_instr_byte->set_BYTE_t(0xff); // taint executed?
+        }
         this->current_instr_length += 1;
         this->current_prefix_length += 1;
         this->current_instr_byte = &this->memory[eip + this->current_prefix_length];
@@ -825,14 +829,14 @@ int taint_x86::execute_instruction(DWORD eip, DWORD tid)
         ret = this->execute_instruction_32(eip, tid);
     }
 
-    d_print(1, "[execute_instruction ends]\n");
+    d_print(2, "[execute_instruction ends]\n");
     return ret;
 }
 
 int taint_x86::execute_instruction_at_eip(DWORD eip, DWORD tid)
 {
 
-    d_print(1, "==[execute_instruction_at_eip starts]\n");
+    d_print(2, "==[execute_instruction_at_eip starts]\n");
     d_print(3, "[0x%08x] Inst: 0x%08x, count: %d\n", tid, eip, this->current_instr_count);
     //this->propagations[this->current_propagation_count].instruction = eip;
     //this->propagations[this->current_propagation_count].instr_count = this->current_instr_count;
@@ -840,7 +844,7 @@ int taint_x86::execute_instruction_at_eip(DWORD eip, DWORD tid)
     this->pre_execute_instruction(eip);
     this->execute_instruction(eip, tid);
     this->post_execute_instruction(eip);
-    d_print(1, "==[execute_instruction_at_eip ends]\n");
+    d_print(2, "==[execute_instruction_at_eip ends]\n");
 
     return 0x0;
 }
@@ -898,6 +902,16 @@ int taint_x86::init_watchpoint(WATCHPOINT* wp)
     return 0x0;
 }
 
+int taint_x86::init_watchpoint_t(WATCHPOINT* wp)
+{
+    BYTE current_byte;
+
+    current_byte = this->memory[wp->offset].get_BYTE_t();
+    wp->init_value = current_byte;
+
+    return 0x0;
+}
+
 int taint_x86::check_execution_wps()
 {
     unsigned i;
@@ -924,6 +938,40 @@ int taint_x86::check_execution_wps()
 
                 /* reinit */
                 this->init_watchpoint(&this->wps[i]);
+            }
+        }
+        
+    }
+
+    return 0x0;
+}
+
+int taint_x86::check_execution_wps_t()
+{
+    unsigned i;
+
+    for(i=0x0; i<this->wpt_t_count; i++)
+    {
+        if(this->wps_t[i].init_instruction_no == this->current_instr_count)
+        {
+            this->init_watchpoint_t(&this->wps_t[i]);
+            d_print(1, "Taint watchpoint %s initialized to: 0x%02x @ %d\n", this->wps_t[i].name, this->wps_t[i].init_value, this->current_instr_count);
+        }
+        else if(this->wps_t[i].init_instruction_no < this->current_instr_count)
+        {
+            BYTE current_byte;
+            current_byte = this->memory[this->wps_t[i].offset].get_BYTE_t();
+
+            if(current_byte != this->wps_t[i].init_value)
+            {
+                err_print("Taint watchpoint %s (active after: @%lld), at 0x%08x triggered on instr.: 0x%08x(%lld)\n", this->wps_t[i].name, this->wps_t[i].init_value, this->wps_t[i].offset, this->current_eip, this->current_instr_count);
+                err_print("Before: 0x%02x, after: 0x%02x\n", this->wps_t[i].init_value & 0xff, current_byte & 0xff);
+
+                if(this->plugin)
+                    this->plugin->breakpoint_callback(0x0);
+
+                /* reinit */
+                this->init_watchpoint_t(&this->wps_t[i]);
             }
         }
         
