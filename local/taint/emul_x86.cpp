@@ -965,58 +965,6 @@ int taint_x86::mod_thread(CONTEXT_OUT ctx_out)
     return 0x0;
 }
 
-int taint_x86::update_watchpoints(DWORD tid)
-{
-    unsigned i;
-    for(i=0x0; i< this->wpt_count; i++)
-        if(this->wps[i].tid == tid)
-        {
-            if(strstr(this->wps[i].name, "EAX") != 0x0)
-            {
-                this->wps[i].watched = &this->ctx_info[this->tids[this->wps[i].tid]].registers[EAX];
-            }
-            else if(strstr(this->wps[i].name, "EBX") != 0x0)
-            {
-                this->wps[i].watched = &this->ctx_info[this->tids[this->wps[i].tid]].registers[EBX];
-            }
-            else if(strstr(this->wps[i].name, "ECX") != 0x0)
-            {
-                this->wps[i].watched = &this->ctx_info[this->tids[this->wps[i].tid]].registers[ECX];
-            }
-            else if(strstr(this->wps[i].name, "EDX") != 0x0)
-            {
-                this->wps[i].watched = &this->ctx_info[this->tids[this->wps[i].tid]].registers[EDX];
-            }
-            else if(strstr(this->wps[i].name, "ESI") != 0x0)
-            {
-                this->wps[i].watched = &this->ctx_info[this->tids[this->wps[i].tid]].registers[ESI];
-            }
-            else if(strstr(this->wps[i].name, "EDI") != 0x0)
-            {
-                this->wps[i].watched = &this->ctx_info[this->tids[this->wps[i].tid]].registers[EDI];
-            }
-            else if(strstr(this->wps[i].name, "EBP") != 0x0)
-            {
-                this->wps[i].watched = &(this->ctx_info[this->tids[this->wps[i].tid]].registers[EBP]);
-            }
-            else if(strstr(this->wps[i].name, "ESP") != 0x0)
-            {
-                this->wps[i].watched = &this->ctx_info[this->tids[this->wps[i].tid]].registers[ESP];
-            }
-            else if(strstr(this->wps[i].name, "EIP") != 0x0)
-            {
-                this->wps[i].watched = &this->ctx_info[this->tids[this->wps[i].tid]].registers[EIP];
-            }
-            else if(strtol(this->wps[i].name, 0x0, 0x10) != 0x0)
-            {
-                this->wps[i].watched = &this->memory[strtol(this->wps[i].name, 0x0, 0x10)];
-            }
-        
-        }
-
-    return 0x0;
-}
-
 int taint_x86::add_thread(CONTEXT_OUT ctx_out)
 {
     if(this->plugin) this->plugin->add_thread_callback(ctx_out);
@@ -1034,8 +982,6 @@ int taint_x86::add_thread(CONTEXT_OUT ctx_out)
         this->ctx_info[new_tid_pos].tid = new_tid;
         this->tid_count++;
     }
-
-    this->update_watchpoints(new_tid);
 
     this->reg_store_32(EAX, ctx_out.ctx.Eax, new_tid);
     this->reg_store_32(ECX, ctx_out.ctx.Ecx, new_tid);

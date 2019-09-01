@@ -392,15 +392,11 @@ class taint_x86
     DWORD rw_bp;
     BREAKPOINT bps[MAX_BREAKPOINTS];
     BREAKPOINT bps_t[MAX_BREAKPOINTS];
-    TRACE_WATCHPOINT wps[MAX_BREAKPOINTS];   
     unsigned bpt_count;
     unsigned bpt_t_count;
-    unsigned wpt_count;
     int add_breakpoint(BREAKPOINT);
     int add_taint_breakpoint(BREAKPOINT);
-    int add_trace_watchpoint(TRACE_WATCHPOINT);
     int check_execution_bps();
-    int update_watchpoints(DWORD);
 
     /* securing memory areas */
     REGION  security_layer[MAX_SECURITY_LAYERS];

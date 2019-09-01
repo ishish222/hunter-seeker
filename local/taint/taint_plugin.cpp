@@ -649,86 +649,8 @@ int taint_plugin::print_taint_history(BYTE_t* target, OFFSET instr_count, unsign
     else return this->print_taint_history(taint_id, branches);
 }
 
-int taint_plugin::parse_trace_string(char* string, TRACE_WATCHPOINT* twp)
-{
-    DWORD ctx_index;
-    
-    d_print(1, "Parsing: %s\n", string);
-
-    twp->interactive = 0x0;
-    twp->branches = 0x1;
-
-    char* current;
-
-    while(1)
-    {
-        if(string[0] == 'i') 
-        {
-            twp->interactive = 1;
-            string ++;
-            continue;
-        }
-        else if(string[0] == 'f') 
-        {
-            twp->branches = 0;
-            string ++;
-            continue;
-        }
-        else break;
-    }
-
-    current = strtok(string, ",");
-    if(!current)
-    {
-        d_print(1, "Error parsing breakpoint: %s\n", string);
-        return -1;
-    }
-    twp->offset = strtol(current, 0x0, 10);
-    d_print(1, "Instr count: %lld\n", twp->offset);
-
-    current = strtok(0x0, ",");
-    if(!current)
-    {
-        d_print(1, "Error parsing breakpoint: %s\n", string);
-        return -1;
-    }
-    twp->mem_offset = strtol(current, 0x0, 0x10);
-    d_print(1, "Offset: 0x%08x\n", twp->mem_offset);
-
-    current = strtok(0x0, ",");
-    if(!current)
-    {
-        d_print(1, "Error parsing breakpoint: %s\n", string);
-        return -1;
-    }
-    twp->tid = strtol(current, 0x0, 0x10);
-    d_print(1, "TID: 0x%08x\n", twp->tid);
-
-    ctx_index = this->taint_eng->tids[twp->tid];
-
-    current = strtok(0x0, "+");
-    if(!current)
-    {
-        d_print(1, "Error parsing breakpoint: %s\n", string);
-        return -1;
-    }
-    strcpy(twp->name, current);
-    d_print(1, "%s\n", twp->name);
-
-
-    return 0x0;
-}
-
-int taint_plugin::query_history(TRACE_WATCHPOINT twp)
-{
-    d_print_prompt(1, "Printing history for instruction count: %lld\n", twp.offset);
-    return this->print_taint_history(twp.watched, twp.offset, twp.branches);
-}
-
 int taint_plugin::prompt_taint()
 {
-    TRACE_WATCHPOINT twp;
-//    char command[MAX_NAME];
     char* command;
     
     this->query_tid = 0x0;
@@ -774,63 +696,10 @@ int taint_plugin::prompt_taint()
             this->taint_eng->step_mode = 0x1;
             break;
         }
-        //else if(strstr(command, "que"))
 
         this->parse_cmd(command);
         free(command);
-        /*
-        if(this->parse_trace_string(command, &twp) != 0x0) continue;
-        this->trace_watchpoint_connect(&twp);
-        this->query_history(twp);
-        */
     }
-    return 0x0;
-}
-
-int taint_plugin::trace_watchpoint_connect(TRACE_WATCHPOINT* twp)
-{
-    if(strstr(twp->name, "EAX") != 0x0)
-    {
-        twp->watched = &(this->taint_eng->ctx_info[this->taint_eng->tids[twp->tid]].registers[EAX]);
-    }
-    else if(strstr(twp->name, "EBX") != 0x0)
-    {
-        twp->watched = &(this->taint_eng->ctx_info[this->taint_eng->tids[twp->tid]].registers[EBX]);
-    }
-    else if(strstr(twp->name, "ECX") != 0x0)
-    {
-        twp->watched = &(this->taint_eng->ctx_info[this->taint_eng->tids[twp->tid]].registers[ECX]);
-    }
-    else if(strstr(twp->name, "EDX") != 0x0)
-    {
-        twp->watched = &(this->taint_eng->ctx_info[this->taint_eng->tids[twp->tid]].registers[EDX]);
-    }
-    else if(strstr(twp->name, "ESI") != 0x0)
-    {
-        twp->watched = &(this->taint_eng->ctx_info[this->taint_eng->tids[twp->tid]].registers[ESI]);
-    }
-    else if(strstr(twp->name, "EDI") != 0x0)
-    {
-        twp->watched = &(this->taint_eng->ctx_info[this->taint_eng->tids[twp->tid]].registers[EDI]);
-    }
-    else if(strstr(twp->name, "EBP") != 0x0)
-    {
-        twp->watched = &(this->taint_eng->ctx_info[this->taint_eng->tids[twp->tid]].registers[EBP]);
-    }
-    else if(strstr(twp->name, "ESP") != 0x0)
-    {
-        twp->watched = &(this->taint_eng->ctx_info[this->taint_eng->tids[twp->tid]].registers[ESP]);
-    }
-    else if(strstr(twp->name, "EIP") != 0x0)
-    {
-        twp->watched = &(this->taint_eng->ctx_info[this->taint_eng->tids[twp->tid]].registers[EIP]);
-    }
-    else if(strtol(twp->name, 0x0, 0x10) != 0x0)
-    {
-        twp->watched = &(this->taint_eng->memory[strtol(twp->name, 0x0, 0x10)]);
-    }
-
-//    d_err_print("0x%08x\n", twp->watched);
     return 0x0;
 }
 

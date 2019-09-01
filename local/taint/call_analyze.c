@@ -315,9 +315,6 @@ int main(int argc, char** argv)
             if(line[0] == 'B' && line[1] == 'T')
                 register_taint_breakpoints(line, &taint_eng);
 
-            if(line[0] == 'B' && line[1] == 'W')
-                register_trace_watchpoints(line, &taint_eng);
-
 
             /* pass to plugin */
             if(line[0] == 'S' && line[1] == 'Y')

@@ -66,9 +66,6 @@ class taint_plugin : Plugin
     int print_taint_history(unsigned, unsigned);
     int print_taint_history_end(unsigned, unsigned);
     int print_taint_history(BYTE_t*, OFFSET, unsigned);
-    int trace_watchpoint_connect(TRACE_WATCHPOINT*);
-    int query_history(TRACE_WATCHPOINT);
-    int parse_trace_string(char*, TRACE_WATCHPOINT*);
     int prompt_taint();
     int d_print_prompt_red(int, const char*, ...);
     int d_print_prompt(int, const char*, ...);

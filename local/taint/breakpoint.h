@@ -15,19 +15,7 @@ typedef struct BREAKPOINT_
     DWORD tid;
 } BREAKPOINT;
 
-typedef struct TRACE_WATCHPOINT_
-{
-    OFFSET offset;
-    OFFSET mem_offset;
-    BYTE_t* watched;
-    char name[MAX_NAME];
-    DWORD tid;
-    char interactive;
-    char branches;
-} TRACE_WATCHPOINT;
-
 BREAKPOINT parse_breakpoint(char* string);
-TRACE_WATCHPOINT parse_trace_watchpoint(char* string, taint_x86* taint_eng);
 int parse_mem_breakpoints(char* string, taint_x86* taint_eng);
 int parse_taint_breakpoints(char* string, taint_x86* taint_eng);
 int parse_trace_watchpoints(char* string, taint_x86* taint_eng);

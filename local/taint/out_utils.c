@@ -302,19 +302,6 @@ int register_taint_breakpoints(char* line, taint_x86* taint_eng)
     return 0x0;
 }
 
-int register_trace_watchpoints(char* line, taint_x86* taint_eng)
-{
-    char* cmd;
-    char* entry;
-
-    cmd = strtok(line, ",");
-    entry = strtok(0x0, "");
-
-    parse_trace_watchpoints(entry, taint_eng);
-
-    return 0x0;
-}
-
 int parse_prompt_file(char* line, taint_x86* taint_eng)
 {
     char* cmd;
