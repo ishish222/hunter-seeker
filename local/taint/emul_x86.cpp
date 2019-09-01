@@ -907,7 +907,7 @@ int taint_x86::check_execution_wps()
         if(this->wps[i].init_instruction_no == this->current_instr_count)
         {
             this->init_watchpoint(&this->wps[i]);
-            d_print(1, "Watchpoint %s initialized\n", this->wps[i].name);
+            d_print(1, "Watchpoint %s initialized to: 0x%02x @ %d\n", this->wps[i].name, this->wps[i].init_value, this->current_instr_count);
         }
         else if(this->wps[i].init_instruction_no < this->current_instr_count)
         {
@@ -916,10 +916,14 @@ int taint_x86::check_execution_wps()
 
             if(current_byte != this->wps[i].init_value)
             {
-                err_print("Watchpoint %s (active after: @%lld), at 0x%08x triggered on instr.: 0x%08x\n", this->wps[i].name, this->current_instr_count, this->wps[i].offset, this->current_eip);
+                err_print("Watchpoint %s (active after: @%lld), at 0x%08x triggered on instr.: 0x%08x(%lld)\n", this->wps[i].name, this->wps[i].init_value, this->wps[i].offset, this->current_eip, this->current_instr_count);
+                err_print("Before: 0x%02x, after: 0x%02x\n", this->wps[i].init_value & 0xff, current_byte & 0xff);
 
                 if(this->plugin)
                     this->plugin->breakpoint_callback(0x0);
+
+                /* reinit */
+                this->init_watchpoint(&this->wps[i]);
             }
         }
         
