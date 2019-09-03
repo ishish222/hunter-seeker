@@ -321,6 +321,8 @@ prototypes['MLTrainModelStep']          = ml_parts.train_model_step
 prototypes['MLTrainModel']              = ml_parts.train_model
 prototypes['MLSaveSamples']             = ml_parts.save_samples
 prototypes['MLCheckMore']               = ml_parts.check_more
+# new stuff
+prototypes['DumpPhysicalMemory']        = qemu_parts.dump_physical_memory
 
 #keywords
 

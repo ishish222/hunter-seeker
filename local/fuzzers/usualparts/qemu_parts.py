@@ -112,6 +112,23 @@ def qemu_start(args=None):
     read_monitor(globs.state.options.m)
     print("Qemu full boot finished")
 
+def dump_physical_memory(args=None):
+    options = globs.state.options
+
+    from script import write_monitor_2
+
+    if(args == None):
+        #args = '%s/physical.dump' % options.external_paths_final_output
+        args = 'physical.dump'
+
+    print('Dumping physical memory')
+    print('pmemsave 0x0 0xffffffff %s' % args)
+    ret = write_monitor(options.m, 'pmemsave 0x0 0xffffffff %s' % args)
+    read_monitor(options.m)
+    print('Dumping physical memory finished')
+
+    return
+
 def qemu_save(args=None):
     options = globs.state.options
 
