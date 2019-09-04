@@ -978,6 +978,7 @@ class taint_x86
     DWORD_t reg_restore_32(OFFSET);
     DWORD_t reg_restore_32(DWORD_t);
     void reg_store_32(OFFSET, DWORD_t, int);
+    void reg_store_32_correct(OFFSET, DWORD_t, int); /* for correcting in debug mode */
     void reg_store_32(DWORD_t, DWORD_t, int);
     DWORD_t reg_restore_32(OFFSET, int);
     DWORD_t reg_restore_32(DWORD_t, int);

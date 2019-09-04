@@ -270,6 +270,23 @@ void taint_x86::reg_store_32(OFFSET off, DWORD_t v, int tid)
     return;
 }
 
+void taint_x86::reg_store_32_correct(OFFSET off, DWORD_t v, int tid)
+{
+    if(this->options & OPTION_VERIFY_OOB)
+        if(this->verify_oob_offset(off, REG_SIZE) != 0x0) 
+            return;
+
+    CONTEXT_INFO* info;
+    info = this->get_context_info(tid);
+
+    info->registers[off + 0].set_BYTE(v[0].get_BYTE());
+    info->registers[off + 1].set_BYTE(v[1].get_BYTE());
+    info->registers[off + 2].set_BYTE(v[2].get_BYTE());
+    info->registers[off + 3].set_BYTE(v[3].get_BYTE());
+
+    return;
+}
+
 DWORD_t taint_x86::reg_restore_32(OFFSET off, int tid)
 {
     if(this->options & OPTION_VERIFY_OOB)
@@ -1083,15 +1100,15 @@ int taint_x86::mod_thread(CONTEXT_OUT ctx_out)
 
     DWORD_t reg;
 
-    this->reg_store_32(EAX, ctx_out.ctx.Eax, ctx_out.thread_id);
-    this->reg_store_32(ECX, ctx_out.ctx.Ecx, ctx_out.thread_id);
-    this->reg_store_32(EDX, ctx_out.ctx.Edx, ctx_out.thread_id);
-    this->reg_store_32(EBX, ctx_out.ctx.Ebx, ctx_out.thread_id);
-    this->reg_store_32(ESI, ctx_out.ctx.Esi, ctx_out.thread_id);
-    this->reg_store_32(EDI, ctx_out.ctx.Edi, ctx_out.thread_id);
-    this->reg_store_32(ESP, ctx_out.ctx.Esp, ctx_out.thread_id);
-    this->reg_store_32(EBP, ctx_out.ctx.Ebp, ctx_out.thread_id);
-    this->reg_store_32(EFLAGS, ctx_out.ctx.EFlags, ctx_out.thread_id);
+    this->reg_store_32_correct(EAX, ctx_out.ctx.Eax, ctx_out.thread_id);
+    this->reg_store_32_correct(ECX, ctx_out.ctx.Ecx, ctx_out.thread_id);
+    this->reg_store_32_correct(EDX, ctx_out.ctx.Edx, ctx_out.thread_id);
+    this->reg_store_32_correct(EBX, ctx_out.ctx.Ebx, ctx_out.thread_id);
+    this->reg_store_32_correct(ESI, ctx_out.ctx.Esi, ctx_out.thread_id);
+    this->reg_store_32_correct(EDI, ctx_out.ctx.Edi, ctx_out.thread_id);
+    this->reg_store_32_correct(ESP, ctx_out.ctx.Esp, ctx_out.thread_id);
+    this->reg_store_32_correct(EBP, ctx_out.ctx.Ebp, ctx_out.thread_id);
+    this->reg_store_32_correct(EFLAGS, ctx_out.ctx.EFlags, ctx_out.thread_id);
 
     //this->print_context(this->cur_tid);
 
@@ -1118,15 +1135,16 @@ int taint_x86::add_thread(CONTEXT_OUT ctx_out)
         this->tid_count++;
     }
 
-    this->reg_store_32(EAX, ctx_out.ctx.Eax, new_tid);
-    this->reg_store_32(ECX, ctx_out.ctx.Ecx, new_tid);
-    this->reg_store_32(EDX, ctx_out.ctx.Edx, new_tid);
-    this->reg_store_32(EBX, ctx_out.ctx.Ebx, new_tid);
-    this->reg_store_32(ESI, ctx_out.ctx.Esi, new_tid);
-    this->reg_store_32(EDI, ctx_out.ctx.Edi, new_tid);
-    this->reg_store_32(ESP, ctx_out.ctx.Esp, new_tid);
-    this->reg_store_32(EBP, ctx_out.ctx.Ebp, new_tid);
-    this->reg_store_32(EFLAGS, ctx_out.ctx.EFlags, new_tid);
+    this->mod_thread(ctx_out);
+    //this->reg_store_32(EAX, ctx_out.ctx.Eax, new_tid);
+    //this->reg_store_32(ECX, ctx_out.ctx.Ecx, new_tid);
+    //this->reg_store_32(EDX, ctx_out.ctx.Edx, new_tid);
+    //this->reg_store_32(EBX, ctx_out.ctx.Ebx, new_tid);
+    //this->reg_store_32(ESI, ctx_out.ctx.Esi, new_tid);
+    //this->reg_store_32(EDI, ctx_out.ctx.Edi, new_tid);
+    //this->reg_store_32(ESP, ctx_out.ctx.Esp, new_tid);
+    //this->reg_store_32(EBP, ctx_out.ctx.Ebp, new_tid);
+    //this->reg_store_32(EFLAGS, ctx_out.ctx.EFlags, new_tid);
 
     OFFSET addr;
     CONTEXT_INFO* info;
@@ -2014,6 +2032,43 @@ int taint_x86::propagate_taint(PROPAGATION* current_propagation)
         if((cur_result->affected == &this->cur_info->registers[ESP+0x0]) || (cur_result->affected == &this->cur_info->registers[ESP+0x1]) || (cur_result->affected == &this->cur_info->registers[ESP+0x2]) || (cur_result->affected == &this->cur_info->registers[ESP+0x3]))
         {
             err_print("ESP has been tainted\n");
+            if(this->plugin)
+                this->plugin->breakpoint_callback(&this->bps[i]);
+        }
+        /* check for less key registers :) */
+        if((cur_result->affected == &this->cur_info->registers[EAX+0x0]) || (cur_result->affected == &this->cur_info->registers[EAX+0x1]) || (cur_result->affected == &this->cur_info->registers[EAX+0x2]) || (cur_result->affected == &this->cur_info->registers[EAX+0x3]))
+        {
+            err_print("EAX has been tainted\n");
+            if(this->plugin)
+                this->plugin->breakpoint_callback(&this->bps[i]);
+        }
+        if((cur_result->affected == &this->cur_info->registers[EBX+0x0]) || (cur_result->affected == &this->cur_info->registers[EBX+0x1]) || (cur_result->affected == &this->cur_info->registers[EBX+0x2]) || (cur_result->affected == &this->cur_info->registers[EBX+0x3]))
+        {
+            err_print("EBX has been tainted\n");
+            if(this->plugin)
+                this->plugin->breakpoint_callback(&this->bps[i]);
+        }
+        if((cur_result->affected == &this->cur_info->registers[ECX+0x0]) || (cur_result->affected == &this->cur_info->registers[ECX+0x1]) || (cur_result->affected == &this->cur_info->registers[ECX+0x2]) || (cur_result->affected == &this->cur_info->registers[ECX+0x3]))
+        {
+            err_print("ECX has been tainted\n");
+            if(this->plugin)
+                this->plugin->breakpoint_callback(&this->bps[i]);
+        }
+        if((cur_result->affected == &this->cur_info->registers[EDX+0x0]) || (cur_result->affected == &this->cur_info->registers[EDX+0x1]) || (cur_result->affected == &this->cur_info->registers[EDX+0x2]) || (cur_result->affected == &this->cur_info->registers[EDX+0x3]))
+        {
+            err_print("EDX has been tainted\n");
+            if(this->plugin)
+                this->plugin->breakpoint_callback(&this->bps[i]);
+        }
+        if((cur_result->affected == &this->cur_info->registers[ESI+0x0]) || (cur_result->affected == &this->cur_info->registers[ESI+0x1]) || (cur_result->affected == &this->cur_info->registers[ESI+0x2]) || (cur_result->affected == &this->cur_info->registers[ESI+0x3]))
+        {
+            err_print("ESI has been tainted\n");
+            if(this->plugin)
+                this->plugin->breakpoint_callback(&this->bps[i]);
+        }
+        if((cur_result->affected == &this->cur_info->registers[EDI+0x0]) || (cur_result->affected == &this->cur_info->registers[EDI+0x1]) || (cur_result->affected == &this->cur_info->registers[EDI+0x2]) || (cur_result->affected == &this->cur_info->registers[EDI+0x3]))
+        {
+            err_print("EDI has been tainted\n");
             if(this->plugin)
                 this->plugin->breakpoint_callback(&this->bps[i]);
         }
