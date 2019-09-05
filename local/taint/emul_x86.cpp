@@ -2016,63 +2016,63 @@ int taint_x86::propagate_taint(PROPAGATION* current_propagation)
             cur_result->affected->set_BYTE_t(prev_taint);
         }
 
+        char tainted = 0x0;
+
         /* check for key registers */
         if((cur_result->affected == &this->cur_info->registers[EIP+0x0]) || (cur_result->affected == &this->cur_info->registers[EIP+0x1]) || (cur_result->affected == &this->cur_info->registers[EIP+0x2]) || (cur_result->affected == &this->cur_info->registers[EIP+0x3]))
         {
             err_print("EIP has been tainted\n");
-            if(this->plugin)
-                this->plugin->breakpoint_callback(&this->bps[i]);
+            tainted = 0x1;
         }
         if((cur_result->affected == &this->cur_info->registers[EBP+0x0]) || (cur_result->affected == &this->cur_info->registers[EBP+0x1]) || (cur_result->affected == &this->cur_info->registers[EBP+0x2]) || (cur_result->affected == &this->cur_info->registers[EBP+0x3]))
         {
             err_print("EBP has been tainted\n");
-            if(this->plugin)
-                this->plugin->breakpoint_callback(&this->bps[i]);
+            tainted = 0x1;
         }
         if((cur_result->affected == &this->cur_info->registers[ESP+0x0]) || (cur_result->affected == &this->cur_info->registers[ESP+0x1]) || (cur_result->affected == &this->cur_info->registers[ESP+0x2]) || (cur_result->affected == &this->cur_info->registers[ESP+0x3]))
         {
             err_print("ESP has been tainted\n");
-            if(this->plugin)
-                this->plugin->breakpoint_callback(&this->bps[i]);
+            tainted = 0x1;
         }
         /* check for less key registers :) */
+
+        /*
         if((cur_result->affected == &this->cur_info->registers[EAX+0x0]) || (cur_result->affected == &this->cur_info->registers[EAX+0x1]) || (cur_result->affected == &this->cur_info->registers[EAX+0x2]) || (cur_result->affected == &this->cur_info->registers[EAX+0x3]))
         {
             err_print("EAX has been tainted\n");
-            if(this->plugin)
-                this->plugin->breakpoint_callback(&this->bps[i]);
+            tainted = 0x1;
         }
         if((cur_result->affected == &this->cur_info->registers[EBX+0x0]) || (cur_result->affected == &this->cur_info->registers[EBX+0x1]) || (cur_result->affected == &this->cur_info->registers[EBX+0x2]) || (cur_result->affected == &this->cur_info->registers[EBX+0x3]))
         {
             err_print("EBX has been tainted\n");
-            if(this->plugin)
-                this->plugin->breakpoint_callback(&this->bps[i]);
+            tainted = 0x1;
         }
         if((cur_result->affected == &this->cur_info->registers[ECX+0x0]) || (cur_result->affected == &this->cur_info->registers[ECX+0x1]) || (cur_result->affected == &this->cur_info->registers[ECX+0x2]) || (cur_result->affected == &this->cur_info->registers[ECX+0x3]))
         {
             err_print("ECX has been tainted\n");
-            if(this->plugin)
-                this->plugin->breakpoint_callback(&this->bps[i]);
+            tainted = 0x1;
         }
         if((cur_result->affected == &this->cur_info->registers[EDX+0x0]) || (cur_result->affected == &this->cur_info->registers[EDX+0x1]) || (cur_result->affected == &this->cur_info->registers[EDX+0x2]) || (cur_result->affected == &this->cur_info->registers[EDX+0x3]))
         {
             err_print("EDX has been tainted\n");
-            if(this->plugin)
-                this->plugin->breakpoint_callback(&this->bps[i]);
+            tainted = 0x1;
         }
         if((cur_result->affected == &this->cur_info->registers[ESI+0x0]) || (cur_result->affected == &this->cur_info->registers[ESI+0x1]) || (cur_result->affected == &this->cur_info->registers[ESI+0x2]) || (cur_result->affected == &this->cur_info->registers[ESI+0x3]))
         {
             err_print("ESI has been tainted\n");
-            if(this->plugin)
-                this->plugin->breakpoint_callback(&this->bps[i]);
+            tainted = 0x1;
         }
         if((cur_result->affected == &this->cur_info->registers[EDI+0x0]) || (cur_result->affected == &this->cur_info->registers[EDI+0x1]) || (cur_result->affected == &this->cur_info->registers[EDI+0x2]) || (cur_result->affected == &this->cur_info->registers[EDI+0x3]))
         {
             err_print("EDI has been tainted\n");
-            if(this->plugin)
-                this->plugin->breakpoint_callback(&this->bps[i]);
+            tainted = 0x1;
         }
+        */
+        if(tainted)
+            if(this->plugin)
+                this->plugin->breakpoint_callback(0x0);
     }
+
 
     return 0x0;
 }
@@ -10077,7 +10077,7 @@ int taint_x86::r_leave(BYTE_t* addr)
     d_print(3, "ESP: 0x%08x\n", this->reg_restore_32(ESP).get_DWORD());
 
     this->reg_store_32(EBP, ebp);
-    attach_current_propagation_r_32(EIP);
+    attach_current_propagation_r_32(EBP);
 
     return 0x0;
 }
