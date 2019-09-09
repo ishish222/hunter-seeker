@@ -46,6 +46,9 @@ external_qemu_machines = {
     'rzut_1-04': {'disk' : 'rzut_1-04.leaf', 'vnc' : ':4', 'taskset' : '10,11,12',     'monitor' : '/tmp/rzut-1_04-monitor', 'serial' : '/tmp/rzut-1_04-serial'},
     'rzut_1-05': {'disk' : 'rzut_1-05.leaf', 'vnc' : ':5', 'taskset' : '13,14,15',     'monitor' : '/tmp/rzut-1_05-monitor', 'serial' : '/tmp/rzut-1_05-serial'},
     'rzut_1-06': {'disk' : 'rzut_1-06.leaf', 'vnc' : ':6', 'taskset' : '16,17,18',     'monitor' : '/tmp/rzut-1_06-monitor', 'serial' : '/tmp/rzut-1_06-serial'},
+    'rzut_3-01': {'disk' : 'rzut_3-01.leaf', 'vnc' : ':1', 'taskset' : '1,2,3',     'monitor' : '/tmp/rzut-3_01-monitor', 'serial' : '/tmp/rzut-3_01-serial'},
+    'rzut_3-02': {'disk' : 'rzut_3-02.leaf', 'vnc' : ':2', 'taskset' : '4,5,6',     'monitor' : '/tmp/rzut-3_02-monitor', 'serial' : '/tmp/rzut-3_02-serial'},
+    'rzut_3-03': {'disk' : 'rzut_3-03.leaf', 'vnc' : ':3', 'taskset' : '7,8,9',     'monitor' : '/tmp/rzut-3_03-monitor', 'serial' : '/tmp/rzut-3_03-serial'},
     'ORAN1701-01': {'disk' : 'ORAN1701-01.leaf', 'vnc' : ':1', 'taskset' : '1,2,3',     'monitor' : '/tmp/rzut-1_01-monitor', 'serial' : '/tmp/rzut-1_01-serial'},
     'ORAN1701-02': {'disk' : 'ORAN1701-02.leaf', 'vnc' : ':2', 'taskset' : '4,5,6',     'monitor' : '/tmp/rzut-1_02-monitor', 'serial' : '/tmp/rzut-1_02-serial'}
 }

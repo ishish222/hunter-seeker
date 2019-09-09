@@ -31,7 +31,7 @@
 #define MAX_FUNCTIONS 0x500
 #define MAX_THREADS 0x100
 #define MAX_LIBS 0x50
-#define MAX_REGIONS 0x20
+#define MAX_REGIONS 0x100
 
 #define MAX_REACTIONS   0x500
 #define MAX_BREAKPOINTS 0x200

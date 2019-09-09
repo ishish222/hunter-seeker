@@ -6460,6 +6460,8 @@ int parse_region(char* str)
     char* loc_str;
     char* size_str;
 
+    if(my_trace->regions_count >= MAX_REGIONS) return 0x1;
+
     loc_str = strtok(str, ":");
     d_print("loc_str: %s\n", loc_str);
     size_str = strtok(0x0, ":");
@@ -6599,7 +6601,7 @@ int parse_regions(char* str)
     while((current != 0x0) && (strlen(current) > 0x0))
     {
         strcpy(buf, current);
-        parse_region(buf);
+        if(parse_region(buf) == 0x1) return 0x1;
         current = strpbrk(current, ";");
         if(current)
             current++;
@@ -7603,7 +7605,11 @@ int handle_cmd(char* cmd)
 
         strtok(cmd, " ");
         str = strtok(0x0, " ");
-        parse_regions(str);
+        if(parse_regions(str) != 0x0)
+        {
+            sprintf(buffer2, "Error registering regions");
+            strcpy(my_trace->report_buffer, buffer2);
+        }
         send_report();
         
     }

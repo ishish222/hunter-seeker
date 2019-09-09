@@ -14,7 +14,9 @@ options = globs.state.options
 
 class Binner(object):
     def __init__(self):
-        self.left_in_batch = 0
+        state = globs.state
+
+        self.left_in_batch = len(state.samples_list)
         self.current_sample_name = None
         self.current_sample_base = None
         self.current_sample_path = None
@@ -54,8 +56,10 @@ def report(args = None):
     print('Binned %s samples' % globs.state.binner.samples_binned)
     print('Confirmed %s samples' % globs.state.binner.samples_confirmed)
     print('Timout encountered %s times' % globs.state.binner.timeout_count)
-    print('Confirm factor is %s ' % (globs.state.binner.samples_confirmed / globs.state.binner.samples_binned))
-    print('Timout factor is %s ' % (globs.state.binner.timeout_count / globs.state.binner.samples_confirmed))
+    if(globs.state.binner.samples_binned > 0x0):
+        print('Confirm factor is %s ' % (globs.state.binner.samples_confirmed / globs.state.binner.samples_binned))
+    if(globs.state.binner.samples_confirmed > 0x0):
+        print('Timout factor is %s ' % (globs.state.binner.timeout_count / globs.state.binner.samples_confirmed))
     print('Current sample: %s' % globs.state.binner.current_sample_name)
     time_elapsed = datetime.now() - globs.state.binner.start_time
     print('Time elapsed: %s' % time_elapsed)
@@ -162,7 +166,7 @@ def unconfirm_sample(args = None):
 
     output_dir = options.internal_paths_output+'\\unconfirmed'
 
-    host_output_dir = options.external_paths_tmp_output+'/'+args
+    host_output_dir = options.external_paths_tmp_output+'/'+state.binner.current_sample_name
     try:
         os.makedirs(host_output_dir)
     except Exception as e:
