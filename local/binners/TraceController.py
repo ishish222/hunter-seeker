@@ -974,6 +974,21 @@ class TraceController(object):
         self.last_report, self.last_answer = self.recv_report_active()
         return 
 
+    def handle_exceptions(self, regions):
+        self.send_command_active("HE")
+        self.last_report, self.last_answer = self.recv_report_active()
+        return 
+
+    def crash_host(self, regions):
+        self.send_command_active("CH")
+        self.last_report, self.last_answer = self.recv_report_active()
+        return 
+
+    def taint_last_region(self, regions):
+        self.send_command_active("Rs")
+        self.last_report, self.last_answer = self.recv_report_active()
+        return 
+
     def add_scanned_location(self, location):
         self.send_command_active("Cp %s" % location)
         self.last_report, self.last_answer = self.recv_report_active()

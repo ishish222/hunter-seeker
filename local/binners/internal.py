@@ -592,6 +592,36 @@ def execute(cmds, ext_pipe):
             writePipe(ext_pipe, "tracer_check_region "+bcolors.OK_STR)
             ok(ext_pipe)
 
+        elif(cmd == "tracer_handle_exceptions"):
+            trace_controller.handle_exceptions(args)
+            writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
+            writePipe(ext_pipe, "tracer_handle_exceptions"+bcolors.OK_STR)
+            ok(ext_pipe)
+
+        elif(cmd == "tracer_crash_host"):
+            trace_controller.crash_host(args)
+            writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
+            writePipe(ext_pipe, "crash_host"+bcolors.OK_STR)
+            ok(ext_pipe)
+
+        elif(cmd == "tracer_taint_regions"):
+            trace_controller.taint_regions(args)
+            writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
+            writePipe(ext_pipe, "tracer_taint_regions "+bcolors.OK_STR)
+            ok(ext_pipe)
+
+        elif(cmd == "tracer_register_regions"):
+            trace_controller.register_regions(args)
+            writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
+            writePipe(ext_pipe, "tracer_register_regions "+bcolors.OK_STR)
+            ok(ext_pipe)
+
+        elif(cmd == "tracer_taint_last_region"):
+            trace_controller.taint_last_region(args)
+            writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
+            writePipe(ext_pipe, "tracer_taint_last_region "+bcolors.OK_STR)
+            ok(ext_pipe)
+
         elif(cmd == "tracer_taint_regions"):
             trace_controller.taint_regions(args)
             writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))

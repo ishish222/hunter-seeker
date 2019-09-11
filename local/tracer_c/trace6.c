@@ -5,7 +5,7 @@
 
 #define TRACE_CONTROLLER_IP "127.0.0.1"
 #define TRACE_CONTROLLER_PORT 12341
-
+#define CIRC_BUF_SIZE 0x10
 
 #define VERSION_STR "# tracer version 2.0\n"
 //#include <winsock.h>
@@ -16,7 +16,7 @@
 
 /* add_readsign */
 
-char debug_level=0;
+char debug_level=1;
 TRACE_CONFIG* my_trace;
 char instr_count_s[0x20];
 DWORD scan_on;
@@ -84,6 +84,9 @@ char* mod_buffer;
 unsigned mod_buffer_size;
 unsigned mod_buffer_bytes;
 
+char log_last_entries[0x10][MAX_LINE];
+unsigned log_id;
+
 /*
 * various
 */
@@ -103,6 +106,56 @@ int check_for_and_enable_ss()
     {
         set_ss(0x0);
     }
+    return 0x0;
+}
+
+#include <imagehlp.h>
+
+LONG WINAPI VectoredHandler1(struct _EXCEPTION_POINTERS *ExceptionInfo)
+{
+    char buffer[0x10000];
+    char buff_line[MAX_LINE];
+
+    sprintf(buff_line, "Exception code: 0x%08x\n", ExceptionInfo->ExceptionRecord->ExceptionCode);
+    strcpy(buffer, buff_line);
+    sprintf(buff_line, "Exception address: 0x%08x\n", ExceptionInfo->ExceptionRecord->ExceptionAddress);
+    strcat(buffer, buff_line);
+    sprintf(buff_line, "Stdout destination: %s\n", my_trace->stdout_destination_path);
+    strcat(buffer, buff_line);
+
+    /* circular buffer */
+
+    sprintf(buff_line, "\nLast log entries\n");
+    strcat(buffer, buff_line);
+    sprintf(buff_line, "\nLog id: %d\n", log_id);
+    strcat(buffer, buff_line);
+    
+    for(unsigned i = log_id; i!= (log_id-1)% CIRC_BUF_SIZE; i = (i+1) % CIRC_BUF_SIZE)
+    {
+        sprintf(buff_line, "%s", log_last_entries[i]);
+        strcat(buffer, buff_line);
+    }
+
+    if(my_trace != 0x0)
+    {
+        char path[MAX_LINE];
+        //my_trace->stdout_destination = fopen(my_trace->stdout_destination_path, "w");
+        sprintf(path, "%s\\%s.log", my_trace->out_dir, my_trace->out_prefix);
+        my_trace->stdout_destination = fopen(path, "w");
+        fprintf(my_trace->stdout_destination, "%s", buffer);
+        fflush(my_trace->stdout_destination);
+    }
+    MessageBoxA(0x0, buffer, "Exception", 0x0);
+
+    return EXCEPTION_CONTINUE_SEARCH;
+}
+
+int crash_host()
+{
+    char buf[0x10];
+
+    strcpy(buf, "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+    
     return 0x0;
 }
 
@@ -155,6 +208,18 @@ int d_print(const char* format, ...)
     va_list argptr;
     char line[MAX_LINE];
 
+    va_start(argptr, format);
+    vsprintf(line, format, argptr);
+    va_end(argptr);
+
+    strcpy(log_last_entries[log_id], line);
+    log_id = (log_id +1) % CIRC_BUF_SIZE;
+
+    /*
+    sprintf(line, "0x%08x", log_id);
+    MessageBox(0x0, log_last_entries[log_id], line, 0x0);
+    */
+    /*
     if(my_trace != 0x0)
     {
         if(my_trace->stdout_destination != 0x0)
@@ -164,6 +229,17 @@ int d_print(const char* format, ...)
             va_end(argptr);
             fflush(my_trace->stdout_destination);
         }
+        else
+        {
+            if(my_trace->stdout_destination_path != 0x0)
+            {
+                my_trace->stdout_destination = fopen(my_trace->stdout_destination_path, "w");
+                va_start(argptr, format);
+                vfprintf(my_trace->stdout_destination, format, argptr);
+                va_end(argptr);
+                fflush(my_trace->stdout_destination);
+            }
+        }
     }
     else
     {
@@ -172,7 +248,7 @@ int d_print(const char* format, ...)
         va_end(argptr);
         fflush(stdout);
     }
-
+    */
     return 0x0;
 }
 
@@ -6438,6 +6514,16 @@ int taint_region(unsigned i)
     return 0x0;
 }
 
+int taint_last_region()
+{
+    d_print("[taint_last_region]\n");
+
+    taint_region(my_trace->regions_count-1);
+
+    d_print("[taint_last_region finishes]\n");
+    return 0x0;
+}
+
 int taint_regions()
 {
     d_print("[taint_regions]\n");
@@ -7173,6 +7259,13 @@ int handle_cmd(char* cmd)
         taint_regions();
         send_report();   
     }
+    else if(!strncmp(cmd, CMD_TAINT_LAST_REGION, 2))
+    {
+        d_print("Tainting last region\n");
+
+        taint_last_region();
+        send_report();   
+    }
     else if(!strncmp(cmd, CMD_CHECK_REGION, 2))
     {
         char addr_str[MAX_NAME];
@@ -7754,6 +7847,16 @@ int handle_cmd(char* cmd)
     else if(!strncmp(cmd, CMD_REOPEN_IO, 2))
     {
         reopen_stdio();
+        send_report();
+    }
+    else if(!strncmp(cmd, CMD_HANDLE_EXCEPTIONS, 2))
+    {
+        AddVectoredExceptionHandler(0x1, VectoredHandler1);
+        send_report();
+    }
+    else if(!strncmp(cmd, CMD_CRASH_HOST, 2))
+    {
+        crash_host();
         send_report();
     }
     else if(!strncmp(cmd, CMD_ROUTINE_1, 2))
@@ -8563,6 +8666,8 @@ int main(int argc, char** argv)
 
     if(strlen(argv[1]) > MAX_LINE) return -1;
     if(strlen(argv[2]) > MAX_LINE) return -1;
+
+    /* handling crashes */
 
     mod_buffer_size = DEFAULT_MOD_BUFFER_SIZE;
     mod_buffer = (char*)malloc(mod_buffer_size);

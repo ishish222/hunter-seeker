@@ -7,7 +7,7 @@
 #include <stdio.h>
 #include <windows.h>
 #include "WinBase.h"
-#include "DbgHelp.h"
+//#include "DbgHelp.h"
 #include <TlHelp32.h>
 #include "winternl.h"
 
@@ -145,6 +145,7 @@
 #define CMD_CHECK_REGION        "CP"
 #define CMD_CONFIGURE_SCANNED_LOCATION "Cp"
 #define CMD_TAINT_REGIONS       "RN"
+#define CMD_TAINT_LAST_REGION   "Rs"
 #define CMD_WRITE_MEMORY        "WM"
 #define CMD_READ_REGISTER       "RR"
 #define CMD_WRITE_REGISTER      "WR"
@@ -207,6 +208,8 @@
 #define CMD_RESIZE_OUT_BUFF     "rO"
 #define CMD_RESIZE_MOD_BUFF     "rM"
 #define CMD_CHANGE_INTERVAL     "CI"
+#define CMD_CRASH_HOST          "CH"
+#define CMD_HANDLE_EXCEPTIONS   "HE"
 
 #define CMD_ROUTINE_1           "R1"
 #define CMD_ROUTINE_2           "R2"
