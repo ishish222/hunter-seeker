@@ -130,7 +130,7 @@ LONG WINAPI VectoredHandler1(struct _EXCEPTION_POINTERS *ExceptionInfo)
     sprintf(buff_line, "\nLog id: %d\n", log_id);
     strcat(buffer, buff_line);
     
-    for(unsigned i = log_id; i!= (log_id-1)% CIRC_BUF_SIZE; i = (i+1) % CIRC_BUF_SIZE)
+    for(unsigned i = (log_id+1) % CIRC_BUF_SIZE; i!=log_id; i = (i+1) % CIRC_BUF_SIZE)
     {
         sprintf(buff_line, "%s", log_last_entries[i]);
         strcat(buffer, buff_line);
@@ -5691,21 +5691,19 @@ int secure_sections(HANDLE hModule)
     OFFSET size;
 
     dllImageBase = (char*)hModule; //suppose hModule is the handle to the loaded Module (.exe or .dll)
-    d_print("hModule: 0x%08x\n", hModule);
-
     if(!(hModule)) return 0x0;
+    d_print("hModule: 0x%08x\n", hModule);
 
     //get the address of NT Header
     IMAGE_NT_HEADERS *pNtHdr = ImageNtHeader(hModule);
-    d_print("NT header: 0x%08x\n", pNtHdr);
-
     if(!(pNtHdr)) return 0x0;
+    d_print("NT header: 0x%08x\n", pNtHdr);
 
     //after Nt headers comes the table of section, so get the addess of section table
     IMAGE_SECTION_HEADER *pSectionHdr = (IMAGE_SECTION_HEADER *) (pNtHdr + 1);
+    if(!(pSectionHdr)) return 0x0;
     d_print("section header: 0x%08x\n", pSectionHdr);
 
-    if(!(pSectionHdr)) return 0x0;
 
     ImageSectionInfo *pSectionInfo = NULL;
 
