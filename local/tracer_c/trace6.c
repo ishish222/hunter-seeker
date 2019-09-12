@@ -2014,7 +2014,7 @@ int disable_reaction(char* reaction_id)
 
 int add_to_mod_buffer(char* data, unsigned size)
 {
-    d_print2("add_to_mod_buffer: 0x%08x bytes", size);
+    //d_print2("add_to_mod_buffer: 0x%08x bytes", size);
     DWORD written;
     written = 0x0;
     unsigned to_write;
@@ -2335,7 +2335,7 @@ void register_thread_info(DWORD tid, HANDLE handle)
     //print_context(&ctx);
 
     serialize_context(ctx, ldt, line2);
-    d_print2("# RT,0x%08x,%s", tid, line2);
+    //d_print2("# RT,0x%08x,%s", tid, line2);
 
     return;
 }
@@ -3349,7 +3349,7 @@ int page_accessible(MEMORY_BASIC_INFORMATION mbi)
 
 SIZE_T dump_mem2(void* from, SIZE_T len)
 {
-    d_print2("dump_mem2: 0x%08x bytes", len);
+    //d_print2("dump_mem2: 0x%08x bytes", len);
     SIZE_T read, i;
     char mem_buf[buf_size];
     DWORD oldProt;
@@ -3614,12 +3614,12 @@ void dump_memory()
 //        if(mbi.State == MEM_COMMIT && (mbi.Type == MEM_MAPPED || mbi.Type == MEM_PRIVATE) && page_accessible(mbi))
         if(mbi.State == MEM_COMMIT && page_accessible(mbi))
         {
-            d_print2("dumping mem for 0x%08x, size: 0x%08x", mbi.BaseAddress, mbi.RegionSize);
+            //d_print2("dumping mem for 0x%08x, size: 0x%08x", mbi.BaseAddress, mbi.RegionSize);
             read = dump_mem(my_trace->dump, mbi.BaseAddress, mbi.RegionSize);
         }
         else
         {
-            d_print2("dumping 00s for 0x%08x, size: 0x%08x", mbi.BaseAddress, mbi.RegionSize);
+            //d_print2("dumping 00s for 0x%08x, size: 0x%08x", mbi.BaseAddress, mbi.RegionSize);
             read = dump_zeros(my_trace->dump, mbi.RegionSize);
         }
 
@@ -3870,7 +3870,7 @@ int handle_reaction(REACTION* cur_reaction, void* data)
         my_trace->delayed_reaction = cur_reaction;
         /* enable SS for just one breakpoint */
 
-        d_print2("set_ss to all from handle_reaction");
+        //d_print2("set_ss to all from handle_reaction");
         //check_for_and_enable_ss();
         set_ss(0x0);
     }
@@ -4074,7 +4074,7 @@ int paint(char* area, unsigned len)
 //    printf("[2.1.3.1]\n");
     for(i=0; i<len; i++)
     {
-        d_print2("Parsing: %c", area[i]);
+        //d_print2("Parsing: %c", area[i]);
         if(area[i] == '[')
         {
             count++;
@@ -4296,7 +4296,7 @@ LOCATION_DESCRIPTOR* parse_location_desc(char* str)
     {
         d_print("Out of memory\n");
     }
-    d_print2("str is: %s", str);
+    //d_print2("str is: %s", str);
 
     d_print("Creating new descriptor node\n");
 
@@ -5333,7 +5333,7 @@ int out_region(DWORD addr, DWORD size)
     data2 = (char*)malloc(size*0x20);
     memset(data2, 0x0, size*0x20);
 
-    d_print2("out_arg1 @ %d", my_trace->instr_count);
+    //d_print2("out_arg1 @ %d", my_trace->instr_count);
 
     if(data == 0x0)
     {
@@ -5352,7 +5352,7 @@ int out_region(DWORD addr, DWORD size)
     d_print("Trying to read 0x%08x bytes: @ %p, handle: 0x%08x\n", size, addr, my_trace->cpdi.hProcess);
     read_memory(my_trace->cpdi.hProcess, (void*)addr, (void*)data, size, &read);
     
-    d_print2("out_arg2 @ %d", my_trace->instr_count);
+    //d_print2("out_arg2 @ %d", my_trace->instr_count);
 
     if(read > 0x0)
     {
@@ -5811,7 +5811,7 @@ int process_event()
                                 handle_breakpoint((DWORD)my_trace->last_exception.ExceptionAddress, &my_trace->event);
                                 handled = 0x1;
 
-                                d_print2("breakpoint, handling our own, possible REPORT_BREAKPOINT");
+                                //d_print2("breakpoint, handling our own, possible REPORT_BREAKPOINT");
 
                             }
                         }
@@ -5823,7 +5823,7 @@ int process_event()
                         {
                             d_print("This BP is not our, we pass it to the debugee\n");
                             my_trace->report_code = REPORT_EXCEPTION_NH;
-                            d_print2("breakpoint, not our own, REPORT_EXCEPTION_NH");
+                            //d_print2("breakpoint, not our own, REPORT_EXCEPTION_NH");
                         }
 
                         d_print("[BP handling ends]\n");
@@ -5837,7 +5837,7 @@ int process_event()
 //                        ss_callback((void*)&my_trace->event);
                         my_trace->callback_routine((void*)&my_trace->event);
  
-                        d_print2("exception but not breakpoint, reporting to external");
+                        //d_print2("exception but not breakpoint, reporting to external");
                         return REPORT_EXCEPTION;
                         break;
                 }
@@ -5972,7 +5972,7 @@ int handle_continue(DWORD pid, DWORD tid, unsigned status)
         char line[MAX_LINE];
     /* turn on trap again */
     /* TODO: is this necessary? */
-    d_print2("# SS to all from handle_continue");
+    //d_print2("# SS to all from handle_continue");
     check_for_and_enable_ss();
 
     ContinueDebugEvent(pid, tid, status);
@@ -6114,7 +6114,7 @@ int continue_routine(DWORD time, unsigned stat)
 
         ret = WaitForDebugEvent(&(my_trace->event), time);
 
-        d_print2("# Got DEBUG_EVENT");
+        //d_print2("# Got DEBUG_EVENT");
         update_status((void*)&my_trace->event);
 
         if(my_trace->tid != my_trace->last_tid) 

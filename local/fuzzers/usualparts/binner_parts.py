@@ -166,13 +166,13 @@ def unconfirm_sample(args = None):
 
     output_dir = options.internal_paths_output+'\\unconfirmed'
 
-    host_output_dir = options.external_paths_tmp_output+'/'+state.binner.current_sample_name
+    host_output_dir = options.external_paths_tmp_output+'/unconfirmed/'
     try:
         os.makedirs(host_output_dir)
     except Exception as e:
         print(e)
 
-    output = output_dir+state.binner.current_sample_name
+    output = output_dir+'\\'+state.binner.current_sample_name
 
     print('Moving from {} to {}'.format(input_, output))
     cmd = 'copy {} {}'.format(input_, output)

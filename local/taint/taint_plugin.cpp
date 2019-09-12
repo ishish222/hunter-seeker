@@ -915,7 +915,7 @@ int taint_plugin::parse_cmd(char* string)
             {
                 unsigned j;
 
-                d_err_print("Taint no %d: 0x%08x, 0x%08x", i, this->taints[i].off, this->taints[i].size);
+                d_err_print("Taint no %d: \t0x%08x, 0x%08x", i, this->taints[i].off, this->taints[i].size);
                 for(j = 0x0; j<this->taint_contexts[i].current_retaint; j++)
                 {
                     d_err_print(", @%d", this->taint_contexts[i].instruction_count[j]);

@@ -384,6 +384,7 @@ class taint_x86
 
     /* consistency checking */
     char last_inconsistent;
+    int reg_clear_taint(OFFSET, unsigned);
     int check_thread(CONTEXT_OUT);
 
     /* breakpoints */
