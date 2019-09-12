@@ -1025,6 +1025,8 @@ int taint_x86::already_added(DWORD tid)
 
 int taint_x86::check_thread(CONTEXT_OUT ctx_out)
 {
+    if(this->current_instr_count < 0x1) return 0x0;
+
     DWORD tid;
     unsigned i;
     char graph_filename[MAX_NAME];
@@ -1032,14 +1034,64 @@ int taint_x86::check_thread(CONTEXT_OUT ctx_out)
 
     tid = ctx_out.thread_id;
 
-    if(this->reg_restore_32(EAX, tid).get_DWORD() != ctx_out.ctx.Eax) goto error;
-    if(this->reg_restore_32(ECX, tid).get_DWORD() != ctx_out.ctx.Ecx) goto error;
-    if(this->reg_restore_32(EDX, tid).get_DWORD() != ctx_out.ctx.Edx) goto error;
-    if(this->reg_restore_32(EBX, tid).get_DWORD() != ctx_out.ctx.Ebx) goto error;
-    if(this->reg_restore_32(ESI, tid).get_DWORD() != ctx_out.ctx.Esi) goto error;
-    if(this->reg_restore_32(EDI, tid).get_DWORD() != ctx_out.ctx.Edi) goto error;
-    if(this->reg_restore_32(EBP, tid).get_DWORD() != ctx_out.ctx.Ebp) goto error;
-    if(this->reg_restore_32(ESP, tid).get_DWORD() != ctx_out.ctx.Esp) goto error;
+    DWORD_t temp;
+
+    if(this->reg_restore_32(EAX, tid).get_DWORD() != ctx_out.ctx.Eax) 
+    {
+        temp = this->reg_restore_32(EAX, tid);
+        temp.set_DWORD_t(0x0);
+        this->reg_store_32(EAX, temp, tid);
+        goto error;
+    }
+    if(this->reg_restore_32(ECX, tid).get_DWORD() != ctx_out.ctx.Ecx)
+    {
+        temp = this->reg_restore_32(ECX, tid);
+        temp.set_DWORD_t(0x0);
+        this->reg_store_32(ECX, temp, tid);
+        goto error;
+    }
+    if(this->reg_restore_32(EDX, tid).get_DWORD() != ctx_out.ctx.Edx)
+    {
+        temp = this->reg_restore_32(EDX, tid);
+        temp.set_DWORD_t(0x0);
+        this->reg_store_32(EDX, temp, tid);
+        goto error;
+    }
+    if(this->reg_restore_32(EBX, tid).get_DWORD() != ctx_out.ctx.Ebx)
+    {
+        temp = this->reg_restore_32(EBX, tid);
+        temp.set_DWORD_t(0x0);
+        this->reg_store_32(EBX, temp, tid);
+        goto error;
+    }
+    if(this->reg_restore_32(ESI, tid).get_DWORD() != ctx_out.ctx.Esi)
+    {
+        temp = this->reg_restore_32(ESI, tid);
+        temp.set_DWORD_t(0x0);
+        this->reg_store_32(ESI, temp, tid);
+        goto error;
+    }
+    if(this->reg_restore_32(EDI, tid).get_DWORD() != ctx_out.ctx.Edi)
+    {
+        temp = this->reg_restore_32(EDI, tid);
+        temp.set_DWORD_t(0x0);
+        this->reg_store_32(EDI, temp, tid);
+        goto error;
+    }
+    if(this->reg_restore_32(EBP, tid).get_DWORD() != ctx_out.ctx.Ebp)
+    {
+        temp = this->reg_restore_32(EBP, tid);
+        temp.set_DWORD_t(0x0);
+        this->reg_store_32(EBP, temp, tid);
+        goto error;
+    }
+    if(this->reg_restore_32(ESP, tid).get_DWORD() != ctx_out.ctx.Esp)
+    {
+        temp = this->reg_restore_32(ESP, tid);
+        temp.set_DWORD_t(0x0);
+        this->reg_store_32(ESP, temp, tid);
+        goto error;
+    }
     /*if(this->reg_restore_32(EIP, tid).get_DWORD() != ctx_out.ctx.Eip) goto error;*/
     /* eip removed from check for now */
 

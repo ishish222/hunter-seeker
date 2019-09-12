@@ -907,7 +907,7 @@ int taint_plugin::parse_cmd(char* string)
             d_print_prompt(0, "There have been %d taints:\n", this->taint_count);
             for(i = 0x0; i< this->taint_count; i++)
             {
-                d_err_print("Taint no %d: 0x%08x, 0x%08x\n", i, this->taints[i].off, this->taints[i].size);
+                d_err_print("Taint no %d: 0x%08x, 0x%08x @%d\n", i, this->taints[i].off, this->taints[i].size, this->taint_contexts[i].instruction_count);
             }
         }
         else if(!strncasecmp(cur_str, "set", 3))
@@ -1636,6 +1636,9 @@ int taint_plugin::add_taint(OFFSET start, UDWORD length)
 
     this->taints[this->taint_count].off = start;
     this->taints[this->taint_count].size = length;
+
+    this->taint_contexts[this->taint_count].instruction_count = this->taint_eng->current_instr_count;
+
     this->taint_count++;
 
     return 0x0;

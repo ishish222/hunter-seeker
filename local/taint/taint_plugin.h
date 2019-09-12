@@ -31,11 +31,17 @@ typedef struct _LIBRARY
     char blacklisted;
 } LIBRARY;
 
+typedef struct _TAINT_CONTEXT
+{
+    unsigned instruction_count;
+} TAINT_CONTEXT;
+
 class taint_plugin : Plugin
 {
     public:
 
     REGION* taints;
+    TAINT_CONTEXT* taint_contexts;
     unsigned taint_count;
 
 //    PROPAGATION* propagations;
@@ -118,6 +124,7 @@ class taint_plugin : Plugin
 
         this->libs = (LIBRARY*)malloc(sizeof(LIBRARY)*MAX_LIB_COUNT);
         this->taints = (REGION*)malloc(sizeof(REGION)*MAX_TAINTS_OBSERVED);
+        this->taint_contexts = (TAINT_CONTEXT*)malloc(sizeof(TAINT_CONTEXT)*MAX_TAINTS_OBSERVED);
 
     }
 
@@ -138,6 +145,7 @@ class taint_plugin : Plugin
 
         free(this->libs);
         free(this->taints);
+        free(this->taint_contexts);
 
     }
 
