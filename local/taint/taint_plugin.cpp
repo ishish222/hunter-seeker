@@ -496,6 +496,12 @@ int taint_plugin::print_taint_history(unsigned propagation_id, unsigned branches
     cause_count = current_propagation->cause_count;
     d_print(2, "Propagations elem count: %d\n", cause_count);
 
+    if(cause_count == 0x0)
+    {
+        /* check if not directly from taint source */
+        /* but how? */
+    }
+
     CAUSE* cur_cause;
 
     for(i=0x0; i<cause_count; i++)
@@ -907,7 +913,14 @@ int taint_plugin::parse_cmd(char* string)
             d_print_prompt(0, "There have been %d taints:\n", this->taint_count);
             for(i = 0x0; i< this->taint_count; i++)
             {
-                d_err_print("Taint no %d: 0x%08x, 0x%08x @%d\n", i, this->taints[i].off, this->taints[i].size, this->taint_contexts[i].instruction_count);
+                unsigned j;
+
+                d_err_print("Taint no %d: 0x%08x, 0x%08x", i, this->taints[i].off, this->taints[i].size);
+                for(j = 0x0; j<this->taint_contexts[i].current_retaint; j++)
+                {
+                    d_err_print(", @%d", this->taint_contexts[i].instruction_count[j]);
+                }
+                d_err_print("\n");
             }
         }
         else if(!strncasecmp(cur_str, "set", 3))
@@ -1622,6 +1635,25 @@ int taint_plugin::add_taint(OFFSET start, UDWORD length)
 {
     UDWORD i;
 
+    /* try to retaint existing taint */
+    for(i = 0x0; i< this->taint_count; i++)
+    {
+        if((this->taints[i].off == start) && (this->taints[i].size == length))
+        {
+            d_print(1, "Taint request matched existing taint no %d, retainting\n", i);
+            d_print(1, "Tainting: 0x%08x - 0x%08x\n", start, start+length);
+            for(i = 0x0; i< length; i++)
+            {
+                this->taint_eng->memory[start+i].set_BYTE_t(0xff);
+            }
+
+            unsigned current_retaint = this->taint_contexts[this->taint_count].current_retaint;
+            this->taint_contexts[this->taint_count].instruction_count[current_retaint] = this->taint_eng->current_instr_count;
+            this->taint_contexts[this->taint_count].current_retaint = current_retaint+1;
+            return 0x0;
+        }
+    }
+
     if(this->taint_count == MAX_TAINTS_OBSERVED)
     {
         d_print(1, "MAX_TAINTS_OBSERVED reached, unable to register taint\n");
@@ -1637,7 +1669,9 @@ int taint_plugin::add_taint(OFFSET start, UDWORD length)
     this->taints[this->taint_count].off = start;
     this->taints[this->taint_count].size = length;
 
-    this->taint_contexts[this->taint_count].instruction_count = this->taint_eng->current_instr_count;
+    unsigned current_retaint = this->taint_contexts[this->taint_count].current_retaint;
+    this->taint_contexts[this->taint_count].instruction_count[current_retaint] = this->taint_eng->current_instr_count;
+    this->taint_contexts[this->taint_count].current_retaint = current_retaint+1;
 
     this->taint_count++;
 

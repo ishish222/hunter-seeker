@@ -2,6 +2,7 @@
 #define TAINT_PLUGIN_H
 
 #define MAX_TAINTS_OBSERVED 0x400
+#define MAX_TAINTS_RETAINT 0x400
 #define MAX_EXCEPTIONS_COUNT 0x10000
 #define MAX_BREAKPOINTS 0x10
 #define MAX_ 0x10
@@ -33,7 +34,8 @@ typedef struct _LIBRARY
 
 typedef struct _TAINT_CONTEXT
 {
-    unsigned instruction_count;
+    unsigned instruction_count[MAX_TAINTS_RETAINT];
+    unsigned current_retaint;
 } TAINT_CONTEXT;
 
 class taint_plugin : Plugin
