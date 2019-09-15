@@ -227,6 +227,8 @@ Change of endiannes takes place when reading and writing to memory (to_mem, from
 #define OPTION_VERIFY_OOB                       0x400
 #define OPTION_INDEXES_PROPAGATE                0x800
 #define OPTION_TRACE_PROPAGATION                0x1000
+#define OPTION_CLEAR_INVALID_TAINT              0x2000
+#define OPTION_VERIFY_ALL_REGISTERS             0x4000
 
 /* dont options */
 #define OPTION_DONT_ANALYZE_JUMPS                    0xFFFFFFFE
@@ -242,6 +244,8 @@ Change of endiannes takes place when reading and writing to memory (to_mem, from
 #define OPTION_DONT_VERIFY_OOB                       0xFFFFFBFF
 #define OPTION_DONT_INDEXES_PROPAGATE                0xFFFFF7FF
 #define OPTION_DONT_TRACE_PROPAGATION                0xFFFFEFFF
+#define OPTION_DONT_CLEAR_INVALID_TAINT              0xFFFFDFFF
+#define OPTION_DONT_VERIFY_ALL_REGISTERS             0xFFFFBFFF
 
 /* jumping codes */
 
@@ -293,7 +297,7 @@ typedef struct RESULT_
 typedef struct CAUSE_
 {
     unsigned cause_id;
-    struct CAUSE_* next;
+    unsigned taint_no;
 } CAUSE;
 
 typedef struct PROPAGATION_

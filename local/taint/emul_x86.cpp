@@ -1025,6 +1025,7 @@ int taint_x86::already_added(DWORD tid)
 
 int taint_x86::reg_clear_taint(OFFSET reg, unsigned tid)
 {
+    if(!(this->options & OPTION_CLEAR_INVALID_TAINT)) return 0x0;
     DWORD_t temp;
 
     temp = this->reg_restore_32(reg, tid);
@@ -1342,13 +1343,9 @@ int taint_x86::apply_memory(DWORD offset, DWORD size)
 
         }
 
-            //this->propagations[this->current_propagation_count].instruction = this->last_eip;
-            //this->propagations[this->current_propagation_count].instr_count = this->last_instr_count;
-
             this->memory[offset + i].set_BYTE(buffer[i]);
             this->memory[offset + i].set_BYTE_t(0x0);
-
-            //this->attach_current_propagation_m_8(offset + i);
+            this->memory[offset + i].set_BYTE_t_id(0x0);
 
         if(found)
         {
@@ -2094,38 +2091,42 @@ int taint_x86::propagate_taint(PROPAGATION* current_propagation)
         }
         /* check for less key registers :) */
 
-        /*
-        if((cur_result->affected == &this->cur_info->registers[EAX+0x0]) || (cur_result->affected == &this->cur_info->registers[EAX+0x1]) || (cur_result->affected == &this->cur_info->registers[EAX+0x2]) || (cur_result->affected == &this->cur_info->registers[EAX+0x3]))
+        if(this->options & OPTION_VERIFY_ALL_REGISTERS)
         {
-            err_print("EAX has been tainted\n");
-            tainted = 0x1;
+
+            if((cur_result->affected == &this->cur_info->registers[EAX+0x0]) || (cur_result->affected == &this->cur_info->registers[EAX+0x1]) || (cur_result->affected == &this->cur_info->registers[EAX+0x2]) || (cur_result->affected == &this->cur_info->registers[EAX+0x3]))
+            {
+                err_print("EAX has been tainted\n");
+                tainted = 0x1;
+            }
+            if((cur_result->affected == &this->cur_info->registers[EBX+0x0]) || (cur_result->affected == &this->cur_info->registers[EBX+0x1]) || (cur_result->affected == &this->cur_info->registers[EBX+0x2]) || (cur_result->affected == &this->cur_info->registers[EBX+0x3]))
+            {
+                err_print("EBX has been tainted\n");
+                tainted = 0x1;
+            }
+            if((cur_result->affected == &this->cur_info->registers[ECX+0x0]) || (cur_result->affected == &this->cur_info->registers[ECX+0x1]) || (cur_result->affected == &this->cur_info->registers[ECX+0x2]) || (cur_result->affected == &this->cur_info->registers[ECX+0x3]))
+            {
+                err_print("ECX has been tainted\n");
+                tainted = 0x1;
+            }
+            if((cur_result->affected == &this->cur_info->registers[EDX+0x0]) || (cur_result->affected == &this->cur_info->registers[EDX+0x1]) || (cur_result->affected == &this->cur_info->registers[EDX+0x2]) || (cur_result->affected == &this->cur_info->registers[EDX+0x3]))
+            {
+                err_print("EDX has been tainted\n");
+                tainted = 0x1;
+            }
+            if((cur_result->affected == &this->cur_info->registers[ESI+0x0]) || (cur_result->affected == &this->cur_info->registers[ESI+0x1]) || (cur_result->affected == &this->cur_info->registers[ESI+0x2]) || (cur_result->affected == &this->cur_info->registers[ESI+0x3]))
+            {
+                err_print("ESI has been tainted\n");
+                tainted = 0x1;
+            }
+            if((cur_result->affected == &this->cur_info->registers[EDI+0x0]) || (cur_result->affected == &this->cur_info->registers[EDI+0x1]) || (cur_result->affected == &this->cur_info->registers[EDI+0x2]) || (cur_result->affected == &this->cur_info->registers[EDI+0x3]))
+            {
+                err_print("EDI has been tainted\n");
+                tainted = 0x1;
+            }
+    
         }
-        if((cur_result->affected == &this->cur_info->registers[EBX+0x0]) || (cur_result->affected == &this->cur_info->registers[EBX+0x1]) || (cur_result->affected == &this->cur_info->registers[EBX+0x2]) || (cur_result->affected == &this->cur_info->registers[EBX+0x3]))
-        {
-            err_print("EBX has been tainted\n");
-            tainted = 0x1;
-        }
-        if((cur_result->affected == &this->cur_info->registers[ECX+0x0]) || (cur_result->affected == &this->cur_info->registers[ECX+0x1]) || (cur_result->affected == &this->cur_info->registers[ECX+0x2]) || (cur_result->affected == &this->cur_info->registers[ECX+0x3]))
-        {
-            err_print("ECX has been tainted\n");
-            tainted = 0x1;
-        }
-        if((cur_result->affected == &this->cur_info->registers[EDX+0x0]) || (cur_result->affected == &this->cur_info->registers[EDX+0x1]) || (cur_result->affected == &this->cur_info->registers[EDX+0x2]) || (cur_result->affected == &this->cur_info->registers[EDX+0x3]))
-        {
-            err_print("EDX has been tainted\n");
-            tainted = 0x1;
-        }
-        if((cur_result->affected == &this->cur_info->registers[ESI+0x0]) || (cur_result->affected == &this->cur_info->registers[ESI+0x1]) || (cur_result->affected == &this->cur_info->registers[ESI+0x2]) || (cur_result->affected == &this->cur_info->registers[ESI+0x3]))
-        {
-            err_print("ESI has been tainted\n");
-            tainted = 0x1;
-        }
-        if((cur_result->affected == &this->cur_info->registers[EDI+0x0]) || (cur_result->affected == &this->cur_info->registers[EDI+0x1]) || (cur_result->affected == &this->cur_info->registers[EDI+0x2]) || (cur_result->affected == &this->cur_info->registers[EDI+0x3]))
-        {
-            err_print("EDI has been tainted\n");
-            tainted = 0x1;
-        }
-        */
+
         if(tainted)
             if(this->plugin)
                 this->plugin->breakpoint_callback(0x0);
@@ -2385,48 +2386,49 @@ int taint_x86::reg_propagation_cause(BYTE_t* op)
     {
         /* check for taint source? */
         d_print(3, "No prior cause\n");
-        return 0x0;
-    }
-
-    /* after propagation count reset */
-    if(byte_cause_id > this->current_propagation_count) 
-    {
-        d_print(3, "Propagation cause lost, probably due to propagation history reset\n");
-        return 0x0;
-    }
-
-
-    d_print(3, "Registering latest propagation %d resulting in BYTE_t*: 0x%08x as a cause\n", byte_cause_id, op);
-
-    if(this->find_propagation_cause(current_propagation, byte_cause_id))
-    {
-        d_print(3, "Cause already registered\n");
-        return 0x0;
-    }
-
-    CAUSE* new_elem;
-
-    if(current_propagation->cause_count < MAX_CAUSES)
-    { // we can use basic causes table
-        new_elem = &current_propagation->causes[current_propagation->cause_count];
-        new_elem->cause_id = byte_cause_id;
     }
     else
-    { // we need to use extended (e.g. for popa)
-        unsigned current_ext_id;
-        current_ext_id = this->current_extended_causes_entry_id;
+    {
 
-        new_elem = &this->extended_causes[current_ext_id][current_propagation->cause_count - MAX_CAUSES];
-        new_elem->cause_id = byte_cause_id;
+        /* after propagation count reset */
+        if(byte_cause_id > this->current_propagation_count) 
+        {
+            d_print(3, "Propagation cause lost, probably due to propagation history reset\n");
+            return 0x0;
+        }
 
-        current_propagation->extended_cause_id = current_ext_id;
-        this->schedule_extended_causes_increment = 0x1;
+    
+        d_print(3, "Registering latest propagation %d resulting in BYTE_t*: 0x%08x as a cause\n", byte_cause_id, op);
+
+        if(this->find_propagation_cause(current_propagation, byte_cause_id))
+        {
+            d_print(3, "Cause already registered\n");
+            return 0x0;
+        }
+
+        CAUSE* new_elem;
+    
+        if(current_propagation->cause_count < MAX_CAUSES)
+        { // we can use basic causes table
+            new_elem = &current_propagation->causes[current_propagation->cause_count];
+            new_elem->cause_id = byte_cause_id;
+        }
+        else
+        { // we need to use extended (e.g. for popa)
+            unsigned current_ext_id;
+            current_ext_id = this->current_extended_causes_entry_id;
+    
+            new_elem = &this->extended_causes[current_ext_id][current_propagation->cause_count - MAX_CAUSES];
+            new_elem->cause_id = byte_cause_id;
+    
+            current_propagation->extended_cause_id = current_ext_id;
+            this->schedule_extended_causes_increment = 0x1;
+        }
+    
+        current_propagation->cause_count++;
+
+        this->got_cause = 0x1; /* debugging purposes */
     }
-
-    current_propagation->cause_count++;
-
-    this->got_cause = 0x1; /* debugging purposes */
-
     /* relying on registering causes for taint propagation */
 
     char prev_taint;

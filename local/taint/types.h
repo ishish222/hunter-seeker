@@ -12,7 +12,8 @@
 #define QWORD long long int
 #define UQWORD unsigned long long int
 
-#define CAUSE_ID_NONE 0xffffffff
+//#define CAUSE_ID_NONE 0xffffffff
+#define CAUSE_ID_NONE 0x0
 
 /*
 
@@ -245,8 +246,6 @@ class BYTE_t
 
     void set_BYTE_t_id(unsigned a)
     {
-//        this->val &= BYTE_VAL_I_NMASK;
-//        this->val |= (((DWORD)a << BYTE_VAL_I_OFFSET) & BYTE_VAL_I_MASK);
         this->id = a;
     }
 
@@ -290,8 +289,19 @@ class BYTE_t
     BYTE_t operator+(BYTE_t a)
     {
         BYTE_t ret;
+
         ret.set_BYTE(  this->get_BYTE()   + a.get_BYTE());
-        ret.set_BYTE_t(this->get_BYTE_t() + a.get_BYTE_t());
+
+        BYTE t, t1, t2;
+        t1 = this->get_BYTE_t();
+        t2 = a.get_BYTE_t();
+
+        if(t1 < t2)
+            t = t2;
+        else
+            t = t1;
+
+        ret.set_BYTE_t(t);
         return ret;
     }
 
@@ -299,20 +309,50 @@ class BYTE_t
     {
         BYTE_t ret;
         ret.set_BYTE(  this->get_BYTE()   - a.get_BYTE());
-        ret.set_BYTE_t(this->get_BYTE_t() - a.get_BYTE_t());
+
+        BYTE t, t1, t2;
+        t1 = this->get_BYTE_t();
+        t2 = a.get_BYTE_t();
+
+        if(t1 < t2)
+            t = t2;
+        else
+            t = t1;
+
+        ret.set_BYTE_t(t);
         return ret;
     }
 
     BYTE_t operator+=(BYTE_t a)
     {
         this->set_BYTE(  this->get_BYTE()   + a.get_BYTE());
-        this->set_BYTE_t(this->get_BYTE_t() + a.get_BYTE_t());
+
+        BYTE t, t1, t2;
+        t1 = this->get_BYTE_t();
+        t2 = a.get_BYTE_t();
+
+        if(t1 < t2)
+            t = t2;
+        else
+            t = t1;
+
+        this->set_BYTE_t(t);
     }
 
     BYTE_t operator-=(BYTE_t a)
     {
         this->set_BYTE(  this->get_BYTE()   - a.get_BYTE());
-        this->set_BYTE_t(this->get_BYTE_t() - a.get_BYTE_t());
+
+        BYTE t, t1, t2;
+        t1 = this->get_BYTE_t();
+        t2 = a.get_BYTE_t();
+
+        if(t1 < t2)
+            t = t2;
+        else
+            t = t1;
+
+        this->set_BYTE_t(t);
     }
 
     BYTE_t operator*(BYTE a)
@@ -355,7 +395,17 @@ class BYTE_t
     {
         BYTE_t ret;
         ret.set_BYTE(  this->get_BYTE()   * a.get_BYTE());
-        ret.set_BYTE_t(this->get_BYTE_t() * a.get_BYTE_t());
+
+        BYTE t, t1, t2;
+        t1 = this->get_BYTE_t();
+        t2 = a.get_BYTE_t();
+
+        if(t1 < t2)
+            t = t2;
+        else
+            t = t1;
+
+        ret.set_BYTE_t(t);
         return ret;
     }
 
@@ -363,7 +413,17 @@ class BYTE_t
     {
         BYTE_t ret;
         ret.set_BYTE(  (DWORD)(this->get_BYTE()   / a.get_BYTE()));
-        ret.set_BYTE_t((DWORD)(this->get_BYTE_t() / a.get_BYTE_t()));
+
+        BYTE t, t1, t2;
+        t1 = this->get_BYTE_t();
+        t2 = a.get_BYTE_t();
+
+        if(t1 < t2)
+            t = t2;
+        else
+            t = t1;
+
+        ret.set_BYTE_t(t);
         return ret;
     }
 
@@ -371,26 +431,66 @@ class BYTE_t
     {
         BYTE_t ret;
         ret.set_BYTE(  (DWORD)(this->get_BYTE()   % a.get_BYTE()));
-        ret.set_BYTE_t((DWORD)(this->get_BYTE_t() % a.get_BYTE_t()));
+
+        BYTE t, t1, t2;
+        t1 = this->get_BYTE_t();
+        t2 = a.get_BYTE_t();
+
+        if(t1 < t2)
+            t = t2;
+        else
+            t = t1;
+
+        ret.set_BYTE_t(t);
         return ret;
     }
 
     BYTE_t operator*=(BYTE_t a)
     {
         this->set_BYTE(  this->get_BYTE()   * a.get_BYTE());
-        this->set_BYTE_t(this->get_BYTE_t() * a.get_BYTE_t());
+
+        BYTE t, t1, t2;
+        t1 = this->get_BYTE_t();
+        t2 = a.get_BYTE_t();
+
+        if(t1 < t2)
+            t = t2;
+        else
+            t = t1;
+
+        this->set_BYTE_t(t);
     }
 
     BYTE_t operator/=(BYTE_t a)
     {
         this->set_BYTE(  this->get_BYTE()   / a.get_BYTE());
-        this->set_BYTE_t(this->get_BYTE_t() / a.get_BYTE_t());
+
+        BYTE t, t1, t2;
+        t1 = this->get_BYTE_t();
+        t2 = a.get_BYTE_t();
+
+        if(t1 < t2)
+            t = t2;
+        else
+            t = t1;
+
+        this->set_BYTE_t(t);
     }
 
     BYTE_t operator%=(BYTE_t a)
     {
         this->set_BYTE(  this->get_BYTE()   % a.get_BYTE());
-        this->set_BYTE_t(this->get_BYTE_t() % a.get_BYTE_t());
+
+        BYTE t, t1, t2;
+        t1 = this->get_BYTE_t();
+        t2 = a.get_BYTE_t();
+
+        if(t1 < t2)
+            t = t2;
+        else
+            t = t1;
+
+        this->set_BYTE_t(t);
     }
 
     BYTE_t operator=(BYTE a)
@@ -410,7 +510,16 @@ class BYTE_t
         BYTE_t ret;
 
         ret.set_BYTE(  this->get_BYTE()   & a.get_BYTE());
-        ret.set_BYTE_t(this->get_BYTE_t() | a.get_BYTE_t()); // verify
+        BYTE t, t1, t2;
+        t1 = this->get_BYTE_t();
+        t2 = a.get_BYTE_t();
+
+        if(t1 < t2)
+            t = t2;
+        else
+            t = t1;
+
+        ret.set_BYTE_t(t);
         
         return ret;
     }
@@ -420,8 +529,17 @@ class BYTE_t
         BYTE_t ret;
 
         ret.set_BYTE(  this->get_BYTE()   ^ a.get_BYTE());
-        ret.set_BYTE_t(this->get_BYTE_t() | a.get_BYTE_t()); //verify
         
+        BYTE t, t1, t2;
+        t1 = this->get_BYTE_t();
+        t2 = a.get_BYTE_t();
+
+        if(t1 < t2)
+            t = t2;
+        else
+            t = t1;
+
+        ret.set_BYTE_t(t);
         return ret;
     }
 
@@ -430,27 +548,63 @@ class BYTE_t
         BYTE_t ret;
 
         ret.set_BYTE(  this->get_BYTE()   | a.get_BYTE());
-        ret.set_BYTE_t(this->get_BYTE_t() | a.get_BYTE_t()); 
         
+        BYTE t, t1, t2;
+        t1 = this->get_BYTE_t();
+        t2 = a.get_BYTE_t();
+
+        if(t1 < t2)
+            t = t2;
+        else
+            t = t1;
+
+        ret.set_BYTE_t(t);
         return ret;
     }
 
     BYTE_t operator&=(BYTE_t a)
     {
         this->set_BYTE(  this->get_BYTE()   & a.get_BYTE());
-        this->set_BYTE_t(this->get_BYTE_t() | a.get_BYTE_t()); // verify
+        BYTE t, t1, t2;
+        t1 = this->get_BYTE_t();
+        t2 = a.get_BYTE_t();
+
+        if(t1 < t2)
+            t = t2;
+        else
+            t = t1;
+
+        this->set_BYTE_t(t);
     }
 
     BYTE_t operator^=(BYTE_t a)
     {
         this->set_BYTE(  this->get_BYTE()   ^ a.get_BYTE());
-        this->set_BYTE_t(this->get_BYTE_t() | a.get_BYTE_t()); //verify
+        BYTE t, t1, t2;
+        t1 = this->get_BYTE_t();
+        t2 = a.get_BYTE_t();
+
+        if(t1 < t2)
+            t = t2;
+        else
+            t = t1;
+
+        this->set_BYTE_t(t);
     }
 
     BYTE_t operator|=(BYTE_t a)
     {
         this->set_BYTE(  this->get_BYTE()   | a.get_BYTE());
-        this->set_BYTE_t(this->get_BYTE_t() | a.get_BYTE_t()); 
+        BYTE t, t1, t2;
+        t1 = this->get_BYTE_t();
+        t2 = a.get_BYTE_t();
+
+        if(t1 < t2)
+            t = t2;
+        else
+            t = t1;
+
+        this->set_BYTE_t(t);
     }
 
     // shifts & rotates
@@ -459,8 +613,17 @@ class BYTE_t
         BYTE_t ret;
 
         ret.set_BYTE(  ret.get_BYTE()   << a.get_BYTE());
-        ret.set_BYTE_t(ret.get_BYTE_t() << a.get_BYTE());
 
+        BYTE t, t1, t2;
+        t1 = this->get_BYTE_t();
+        t2 = a.get_BYTE_t();
+
+        if(t1 < t2)
+            t = t2;
+        else
+            t = t1;
+
+        ret.set_BYTE_t(t);
         return ret;
     }
 
@@ -469,21 +632,48 @@ class BYTE_t
         BYTE_t ret;
 
         ret.set_BYTE(  ret.get_BYTE()   >> a.get_BYTE());
-        ret.set_BYTE_t(ret.get_BYTE_t() >> a.get_BYTE());
 
+        BYTE t, t1, t2;
+        t1 = this->get_BYTE_t();
+        t2 = a.get_BYTE_t();
+
+        if(t1 < t2)
+            t = t2;
+        else
+            t = t1;
+
+        ret.set_BYTE_t(t);
         return ret;
     }
 
     BYTE_t operator<<=(BYTE_t a)
     {
         this->set_BYTE(  this->get_BYTE()   << a.get_BYTE());
-        this->set_BYTE_t(this->get_BYTE_t() << a.get_BYTE());
+        BYTE t, t1, t2;
+        t1 = this->get_BYTE_t();
+        t2 = a.get_BYTE_t();
+
+        if(t1 < t2)
+            t = t2;
+        else
+            t = t1;
+
+        this->set_BYTE_t(t);
     }
 
     BYTE_t operator>>=(BYTE_t a)
     {
         this->set_BYTE(  this->get_BYTE()   >> a.get_BYTE());
-        this->set_BYTE_t(this->get_BYTE_t() >> a.get_BYTE());
+        BYTE t, t1, t2;
+        t1 = this->get_BYTE_t();
+        t2 = a.get_BYTE_t();
+
+        if(t1 < t2)
+            t = t2;
+        else
+            t = t1;
+
+        this->set_BYTE_t(t);
     }
 
 
@@ -491,7 +681,6 @@ class BYTE_t
     {
         BYTE_t ret;
         ret.set_BYTE(  !this->get_BYTE());
-        ret.set_BYTE_t(!this->get_BYTE_t()); //verify
         return ret;
     }
 
@@ -499,7 +688,6 @@ class BYTE_t
     {
         BYTE_t ret;
         ret.set_BYTE(  ~this->get_BYTE());
-        ret.set_BYTE_t(~this->get_BYTE_t()); //verify
         return ret;
     }
 
@@ -538,7 +726,7 @@ class WORD_t
 
     WORD get_WORD_t()
     {
-        DWORD ret;
+        WORD ret;
 
         char* tmp;
         tmp = (char*)&ret;
@@ -603,13 +791,10 @@ class WORD_t
     {
         WORD_t ret;
         WORD v;
-        WORD t;
 
         v = this->get_WORD() + b;
-        t = this->get_WORD_t();
-        
+
         ret.set_WORD(v);
-        ret.set_WORD_t(t);
 
         return ret;
     }
@@ -618,10 +803,17 @@ class WORD_t
     {
         WORD_t ret;
         WORD v;
-        WORD t;
+        WORD t, t1, t2;
 
         v = this->get_WORD() + b.get_WORD();
-        t = this->get_WORD_t() || b.get_WORD_t();
+
+        t1 = this->get_WORD_t();
+        t2 = b.get_WORD_t();
+
+        if(t1 < t2) 
+            t = t2;
+        else
+            t = t1;
         
         ret.set_WORD(v);
         ret.set_WORD_t(t);
@@ -633,15 +825,11 @@ class WORD_t
     {   
         WORD_t ret;
         WORD v;
-        WORD t;
 
         v = this->get_WORD() + b;
-        t = this->get_WORD_t();
-        
+
         ret.set_WORD(v);
-        ret.set_WORD_t(t);
         this->set_WORD(v);
-        this->set_WORD_t(t);
 
         return ret;
     }
@@ -650,10 +838,17 @@ class WORD_t
     {
         WORD_t ret;
         WORD v;
-        WORD t;
+        WORD t, t1, t2;
 
         v = this->get_WORD() + b.get_WORD();
-        t = this->get_WORD_t() || b.get_WORD_t();
+
+        t1 = this->get_WORD_t();
+        t2 = b.get_WORD_t();
+
+        if(t1 < t2) 
+            t = t2;
+        else
+            t = t1;
         
         ret.set_WORD(v);
         ret.set_WORD_t(t);
@@ -667,13 +862,10 @@ class WORD_t
     {
         WORD_t ret;
         WORD v;
-        WORD t;
 
         v = this->get_WORD() - b;
-        t = this->get_WORD_t();
-        
+
         ret.set_WORD(v);
-        ret.set_WORD_t(t);
 
         return ret;
     }
@@ -682,10 +874,17 @@ class WORD_t
     {
         WORD_t ret;
         WORD v;
-        WORD t;
+        WORD t, t1, t2;
 
         v = this->get_WORD() - b.get_WORD();
-        t = this->get_WORD_t() || b.get_WORD_t();
+
+        t1 = this->get_WORD_t();
+        t2 = b.get_WORD_t();
+
+        if(t1 < t2) 
+            t = t2;
+        else
+            t = t1;
         
         ret.set_WORD(v);
         ret.set_WORD_t(t);
@@ -697,15 +896,11 @@ class WORD_t
     {   
         WORD_t ret;
         WORD v;
-        WORD t;
 
         v = this->get_WORD() - b;
-        t = this->get_WORD_t();
-        
+
         ret.set_WORD(v);
-        ret.set_WORD_t(t);
         this->set_WORD(v);
-        this->set_WORD_t(t);
 
         return ret;
     }
@@ -714,10 +909,17 @@ class WORD_t
     {
         WORD_t ret;
         WORD v;
-        WORD t;
+        WORD t, t1, t2;
 
         v = this->get_WORD() - b.get_WORD();
-        t = this->get_WORD_t() || b.get_WORD_t();
+
+        t1 = this->get_WORD_t();
+        t2 = b.get_WORD_t();
+
+        if(t1 < t2) 
+            t = t2;
+        else
+            t = t1;
         
         ret.set_WORD(v);
         ret.set_WORD_t(t);
@@ -731,13 +933,10 @@ class WORD_t
     {
         WORD_t ret;
         WORD v;
-        WORD t;
 
         v = this->get_WORD() * b;
-        t = this->get_WORD_t();
-        
+
         ret.set_WORD(v);
-        ret.set_WORD_t(t);
 
         return ret;
     }
@@ -746,10 +945,17 @@ class WORD_t
     {
         WORD_t ret;
         WORD v;
-        WORD t;
+        WORD t, t1, t2;
 
         v = this->get_WORD() * b.get_WORD();
-        t = this->get_WORD_t() || b.get_WORD_t();
+
+        t1 = this->get_WORD_t();
+        t2 = b.get_WORD_t();
+
+        if(t1 < t2) 
+            t = t2;
+        else
+            t = t1;
         
         ret.set_WORD(v);
         ret.set_WORD_t(t);
@@ -761,15 +967,11 @@ class WORD_t
     {   
         WORD_t ret;
         WORD v;
-        WORD t;
 
         v = this->get_WORD() * b;
-        t = this->get_WORD_t();
-        
+
         ret.set_WORD(v);
-        ret.set_WORD_t(t);
         this->set_WORD(v);
-        this->set_WORD_t(t);
 
         return ret;
     }
@@ -778,10 +980,17 @@ class WORD_t
     {
         WORD_t ret;
         WORD v;
-        WORD t;
+        WORD t, t1, t2;
 
         v = this->get_WORD() * b.get_WORD();
-        t = this->get_WORD_t() || b.get_WORD_t();
+
+        t1 = this->get_WORD_t();
+        t2 = b.get_WORD_t();
+
+        if(t1 < t2) 
+            t = t2;
+        else
+            t = t1;
         
         ret.set_WORD(v);
         ret.set_WORD_t(t);
@@ -795,13 +1004,10 @@ class WORD_t
     {
         WORD_t ret;
         WORD v;
-        WORD t;
 
         v = this->get_WORD() / b;
-        t = this->get_WORD_t();
-        
+
         ret.set_WORD(v);
-        ret.set_WORD_t(t);
 
         return ret;
     }
@@ -810,10 +1016,17 @@ class WORD_t
     {
         WORD_t ret;
         WORD v;
-        WORD t;
+        WORD t, t1, t2;
 
         v = this->get_WORD() / b.get_WORD();
-        t = this->get_WORD_t() || b.get_WORD_t();
+
+        t1 = this->get_WORD_t();
+        t2 = b.get_WORD_t();
+
+        if(t1 < t2) 
+            t = t2;
+        else
+            t = t1;
         
         ret.set_WORD(v);
         ret.set_WORD_t(t);
@@ -825,15 +1038,11 @@ class WORD_t
     {   
         WORD_t ret;
         WORD v;
-        WORD t;
 
         v = this->get_WORD() / b;
-        t = this->get_WORD_t();
-        
+
         ret.set_WORD(v);
-        ret.set_WORD_t(t);
         this->set_WORD(v);
-        this->set_WORD_t(t);
 
         return ret;
     }
@@ -842,10 +1051,17 @@ class WORD_t
     {
         WORD_t ret;
         WORD v;
-        WORD t;
+        WORD t, t1, t2;
 
         v = this->get_WORD() / b.get_WORD();
-        t = this->get_WORD_t() || b.get_WORD_t();
+
+        t1 = this->get_WORD_t();
+        t2 = b.get_WORD_t();
+
+        if(t1 < t2) 
+            t = t2;
+        else
+            t = t1;
         
         ret.set_WORD(v);
         ret.set_WORD_t(t);
@@ -859,13 +1075,10 @@ class WORD_t
     {
         WORD_t ret;
         WORD v;
-        WORD t;
 
         v = this->get_WORD() % b;
-        t = this->get_WORD_t();
-        
+
         ret.set_WORD(v);
-        ret.set_WORD_t(t);
 
         return ret;
     }
@@ -874,10 +1087,17 @@ class WORD_t
     {
         WORD_t ret;
         WORD v;
-        WORD t;
+        WORD t, t1, t2;
 
         v = this->get_WORD() % b.get_WORD();
-        t = this->get_WORD_t() || b.get_WORD_t();
+
+        t1 = this->get_WORD_t();
+        t2 = b.get_WORD_t();
+
+        if(t1 < t2) 
+            t = t2;
+        else
+            t = t1;
         
         ret.set_WORD(v);
         ret.set_WORD_t(t);
@@ -889,15 +1109,11 @@ class WORD_t
     {   
         WORD_t ret;
         WORD v;
-        WORD t;
 
         v = this->get_WORD() % b;
-        t = this->get_WORD_t();
         
         ret.set_WORD(v);
-        ret.set_WORD_t(t);
         this->set_WORD(v);
-        this->set_WORD_t(t);
 
         return ret;
     }
@@ -906,10 +1122,17 @@ class WORD_t
     {
         WORD_t ret;
         WORD v;
-        WORD t;
+        WORD t, t1, t2;
 
         v = this->get_WORD() % b.get_WORD();
-        t = this->get_WORD_t() || b.get_WORD_t();
+
+        t1 = this->get_WORD_t();
+        t2 = b.get_WORD_t();
+
+        if(t1 < t2) 
+            t = t2;
+        else
+            t = t1;
         
         ret.set_WORD(v);
         ret.set_WORD_t(t);
@@ -925,8 +1148,28 @@ class WORD_t
         ret.val[0].set_BYTE(  this->val[0].get_BYTE()   & a[0].get_BYTE());
         ret.val[1].set_BYTE(  this->val[1].get_BYTE()   & a[1].get_BYTE());
 
-        ret.val[0].set_BYTE_t(this->val[0].get_BYTE_t() | a[0].get_BYTE_t()); // verify
-        ret.val[1].set_BYTE_t(this->val[1].get_BYTE_t() | a[1].get_BYTE_t()); // verify
+        WORD t, t1, t2;
+
+        t1 = this->val[0].get_BYTE_t();
+        t2 = a[0].get_BYTE_t();
+
+        if(t1 < t2)
+            t = t2;
+        else
+            t = t1;
+
+        ret.val[0].set_BYTE_t(t);
+
+        t1 = this->val[1].get_BYTE_t();
+        t2 = a[1].get_BYTE_t();
+
+        if(t1 < t2)
+            t = t2;
+        else
+            t = t1;
+
+        ret.val[1].set_BYTE_t(t);
+
         return ret;
     }
 
@@ -936,8 +1179,28 @@ class WORD_t
         ret.val[0].set_BYTE(  this->val[0].get_BYTE()   ^ a[0].get_BYTE());
         ret.val[1].set_BYTE(  this->val[1].get_BYTE()   ^ a[1].get_BYTE());
 
-        ret.val[0].set_BYTE_t(this->val[0].get_BYTE_t() | a[0].get_BYTE_t()); // verify
-        ret.val[1].set_BYTE_t(this->val[1].get_BYTE_t() | a[1].get_BYTE_t()); // verify
+        WORD t, t1, t2;
+
+        t1 = this->val[0].get_BYTE_t();
+        t2 = a[0].get_BYTE_t();
+
+        if(t1 < t2)
+            t = t2;
+        else
+            t = t1;
+
+        ret.val[0].set_BYTE_t(t);
+
+        t1 = this->val[1].get_BYTE_t();
+        t2 = a[1].get_BYTE_t();
+
+        if(t1 < t2)
+            t = t2;
+        else
+            t = t1;
+
+        ret.val[1].set_BYTE_t(t);
+
         return ret;
     }
 
@@ -947,8 +1210,28 @@ class WORD_t
         ret.val[0].set_BYTE(  this->val[0].get_BYTE()   | a[0].get_BYTE());
         ret.val[1].set_BYTE(  this->val[1].get_BYTE()   | a[1].get_BYTE());
 
-        ret.val[0].set_BYTE_t(this->val[0].get_BYTE_t() | a[0].get_BYTE_t()); // verify
-        ret.val[1].set_BYTE_t(this->val[1].get_BYTE_t() | a[1].get_BYTE_t()); // verify
+        WORD t, t1, t2;
+
+        t1 = this->val[0].get_BYTE_t();
+        t2 = a[0].get_BYTE_t();
+
+        if(t1 < t2)
+            t = t2;
+        else
+            t = t1;
+
+        ret.val[0].set_BYTE_t(t);
+
+        t1 = this->val[1].get_BYTE_t();
+        t2 = a[1].get_BYTE_t();
+
+        if(t1 < t2)
+            t = t2;
+        else
+            t = t1;
+
+        ret.val[1].set_BYTE_t(t);
+
         return ret;
     }
 
@@ -957,8 +1240,27 @@ class WORD_t
         this->val[0].set_BYTE(  this->val[0].get_BYTE()   & a[0].get_BYTE());
         this->val[1].set_BYTE(  this->val[1].get_BYTE()   & a[1].get_BYTE());
 
-        this->val[0].set_BYTE_t(this->val[0].get_BYTE_t() | a[0].get_BYTE_t()); // verify
-        this->val[1].set_BYTE_t(this->val[1].get_BYTE_t() | a[1].get_BYTE_t()); // verify
+        WORD t, t1, t2;
+
+        t1 = this->val[0].get_BYTE_t();
+        t2 = a[0].get_BYTE_t();
+
+        if(t1 < t2)
+            t = t2;
+        else
+            t = t1;
+
+        this->val[0].set_BYTE_t(t);
+
+        t1 = this->val[1].get_BYTE_t();
+        t2 = a[1].get_BYTE_t();
+
+        if(t1 < t2)
+            t = t2;
+        else
+            t = t1;
+
+        this->val[1].set_BYTE_t(t);
     }
 
     WORD_t operator^=(WORD_t a)
@@ -966,9 +1268,27 @@ class WORD_t
         this->val[0].set_BYTE(  this->val[0].get_BYTE()   ^ a[0].get_BYTE());
         this->val[1].set_BYTE(  this->val[1].get_BYTE()   ^ a[1].get_BYTE());
 
+        WORD t, t1, t2;
 
-        this->val[0].set_BYTE_t(this->val[0].get_BYTE_t() | a[0].get_BYTE_t()); // verify
-        this->val[1].set_BYTE_t(this->val[1].get_BYTE_t() | a[1].get_BYTE_t()); // verify
+        t1 = this->val[0].get_BYTE_t();
+        t2 = a[0].get_BYTE_t();
+
+        if(t1 < t2)
+            t = t2;
+        else
+            t = t1;
+
+        this->val[0].set_BYTE_t(t);
+
+        t1 = this->val[1].get_BYTE_t();
+        t2 = a[1].get_BYTE_t();
+
+        if(t1 < t2)
+            t = t2;
+        else
+            t = t1;
+
+        this->val[1].set_BYTE_t(t);
     }
 
     WORD_t operator|=(WORD_t a)
@@ -976,8 +1296,28 @@ class WORD_t
         this->val[0].set_BYTE(  this->val[0].get_BYTE()   | a[0].get_BYTE());
         this->val[1].set_BYTE(  this->val[1].get_BYTE()   | a[1].get_BYTE());
 
-        this->val[0].set_BYTE_t(this->val[0].get_BYTE_t() | a[0].get_BYTE_t()); // verify
-        this->val[1].set_BYTE_t(this->val[1].get_BYTE_t() | a[1].get_BYTE_t()); // verify
+        WORD t, t1, t2;
+
+        t1 = this->val[0].get_BYTE_t();
+        t2 = a[0].get_BYTE_t();
+
+        if(t1 < t2)
+            t = t2;
+        else
+            t = t1;
+
+        this->val[0].set_BYTE_t(t);
+
+        t1 = this->val[1].get_BYTE_t();
+        t2 = a[1].get_BYTE_t();
+
+        if(t1 < t2)
+            t = t2;
+        else
+            t = t1;
+
+        this->val[1].set_BYTE_t(t);
+
     }
 
     // shifts & rotates
@@ -985,14 +1325,21 @@ class WORD_t
     {
         WORD_t ret;
         WORD temp_16;
+        WORD t, t1, t2;
 
         temp_16 = this->get_WORD();
         temp_16 << a.get_BYTE();
         ret.set_WORD(temp_16);
 
-        temp_16 = this->get_WORD_t();
-        temp_16 << a.get_BYTE();
-        ret.set_WORD_t(temp_16);
+        t1 = this->get_WORD_t();
+        t2 = a.get_BYTE_t();
+
+        if(t1 < t2) 
+            t = t2;
+        else
+            t = t1;
+        
+        ret.set_WORD_t(t);
 
         return ret;
     }
@@ -1002,13 +1349,21 @@ class WORD_t
         WORD_t ret;
         WORD temp_16;
 
+        WORD t, t1, t2;
+
         temp_16 = this->get_WORD();
         temp_16 >> a.get_BYTE();
         ret.set_WORD(temp_16);
 
-        temp_16 = this->get_WORD_t();
-        temp_16 >> a.get_BYTE();
-        ret.set_WORD_t(temp_16);
+        t1 = this->get_WORD_t();
+        t2 = a.get_BYTE_t();
+
+        if(t1 < t2) 
+            t = t2;
+        else
+            t = t1;
+        
+        ret.set_WORD_t(t);
 
         return ret;
     }
@@ -1016,27 +1371,41 @@ class WORD_t
     WORD_t operator<<=(BYTE_t a)
     {
         WORD temp_16;
+        WORD t, t1, t2;
 
         temp_16 = this->get_WORD();
         temp_16 <<= a.get_BYTE();
         this->set_WORD(temp_16);
 
-        temp_16 = this->get_WORD_t();
-        temp_16 <<= a.get_BYTE();
-        this->set_WORD_t(temp_16);
+        t1 = this->get_WORD_t();
+        t2 = a.get_BYTE_t();
+
+        if(t1 < t2) 
+            t = t2;
+        else
+            t = t1;
+        
+        this->set_WORD_t(t);
     }
 
     WORD_t operator>>=(BYTE_t a)
     {
         WORD temp_16;
+        WORD t, t1, t2;
 
         temp_16 = this->get_WORD();
         temp_16 >>= a.get_BYTE();
         this->set_WORD(temp_16);
 
-        temp_16 = this->get_WORD_t();
-        temp_16 >>= a.get_BYTE();
-        this->set_WORD_t(temp_16);
+        t1 = this->get_WORD_t();
+        t2 = a.get_BYTE_t();
+
+        if(t1 < t2) 
+            t = t2;
+        else
+            t = t1;
+        
+        this->set_WORD_t(t);
     }
 
     // what about taint?
@@ -1254,10 +1623,17 @@ class DWORD_t
     {
         DWORD_t ret;
         DWORD v;
-        DWORD t;
+        DWORD t, t1, t2;
 
         v = this->get_DWORD() + b.get_DWORD();
-        t = this->get_DWORD_t() || b.get_DWORD_t();
+
+        t1 = this->get_DWORD_t();
+        t2 = b.get_DWORD_t();
+    
+        if(t1 < t2)
+            t = t2;
+        else
+            t = t1;
         
         ret.set_DWORD(v);
         ret.set_DWORD_t(t);
@@ -1286,10 +1662,17 @@ class DWORD_t
     {
         DWORD_t ret;
         DWORD v;
-        DWORD t;
+        DWORD t, t1, t2;
 
         v = this->get_DWORD() + b.get_DWORD();
-        t = this->get_DWORD_t() || b.get_DWORD_t();
+
+        t1 = this->get_DWORD_t();
+        t2 = b.get_DWORD_t();
+    
+        if(t1 < t2)
+            t = t2;
+        else
+            t = t1;
         
         ret.set_DWORD(v);
         ret.set_DWORD_t(t);
@@ -1318,10 +1701,17 @@ class DWORD_t
     {
         DWORD_t ret;
         DWORD v;
-        DWORD t;
+        DWORD t, t1, t2;
 
         v = this->get_DWORD() - b.get_DWORD();
-        t = this->get_DWORD_t() || b.get_DWORD_t();
+
+        t1 = this->get_DWORD_t();
+        t2 = b.get_DWORD_t();
+    
+        if(t1 < t2)
+            t = t2;
+        else
+            t = t1;
         
         ret.set_DWORD(v);
         ret.set_DWORD_t(t);
@@ -1333,7 +1723,7 @@ class DWORD_t
     {   
         DWORD_t ret;
         DWORD v;
-        DWORD t;
+        DWORD t, t1, t2;
 
         v = this->get_DWORD() - b;
         t = this->get_DWORD_t();
@@ -1350,10 +1740,17 @@ class DWORD_t
     {
         DWORD_t ret;
         DWORD v;
-        DWORD t;
+        DWORD t, t1, t2;
 
         v = this->get_DWORD() - b.get_BYTE();
-        t = this->get_DWORD_t() || b.get_BYTE_t();
+
+        t1 = this->get_DWORD_t();
+        t2 = b.get_BYTE_t();
+    
+        if(t1 < t2)
+            t = t2;
+        else
+            t = t1;
         
         ret.set_DWORD(v);
         ret.set_DWORD_t(t);
@@ -1367,7 +1764,7 @@ class DWORD_t
     {   
         DWORD_t ret;
         DWORD v;
-        DWORD t;
+        DWORD t, t1, t2;
 
         v = this->get_DWORD() - b;
         t = this->get_DWORD_t();
@@ -1384,10 +1781,17 @@ class DWORD_t
     {
         DWORD_t ret;
         DWORD v;
-        DWORD t;
+        DWORD t, t1, t2;
 
         v = this->get_DWORD() - b.get_DWORD();
-        t = this->get_DWORD_t() || b.get_DWORD_t();
+
+        t1 = this->get_DWORD_t();
+        t2 = b.get_DWORD_t();
+    
+        if(t1 < t2)
+            t = t2;
+        else
+            t = t1;
         
         ret.set_DWORD(v);
         ret.set_DWORD_t(t);
@@ -1416,10 +1820,17 @@ class DWORD_t
     {
         DWORD_t ret;
         DWORD v;
-        DWORD t;
+        DWORD t, t1, t2;
 
         v = this->get_DWORD() * b.get_DWORD();
-        t = this->get_DWORD_t() || b.get_DWORD_t();
+
+        t1 = this->get_DWORD_t();
+        t2 = b.get_DWORD_t();
+    
+        if(t1 < t2)
+            t = t2;
+        else
+            t = t1;
         
         ret.set_DWORD(v);
         ret.set_DWORD_t(t);
@@ -1448,10 +1859,17 @@ class DWORD_t
     {
         DWORD_t ret;
         DWORD v;
-        DWORD t;
+        DWORD t, t1, t2;
 
         v = this->get_DWORD() * b.get_DWORD();
-        t = this->get_DWORD_t() || b.get_DWORD_t();
+
+        t1 = this->get_DWORD_t();
+        t2 = b.get_DWORD_t();
+    
+        if(t1 < t2)
+            t = t2;
+        else
+            t = t1;
         
         ret.set_DWORD(v);
         ret.set_DWORD_t(t);
@@ -1480,10 +1898,17 @@ class DWORD_t
     {
         DWORD_t ret;
         DWORD v;
-        DWORD t;
+        DWORD t, t1, t2;
 
         v = (DWORD)(this->get_DWORD() / b.get_DWORD());
-        t = this->get_DWORD_t() || b.get_DWORD_t();
+
+        t1 = this->get_DWORD_t();
+        t2 = b.get_DWORD_t();
+    
+        if(t1 < t2)
+            t = t2;
+        else
+            t = t1;
         
         ret.set_DWORD(v);
         ret.set_DWORD_t(t);
@@ -1512,10 +1937,17 @@ class DWORD_t
     {
         DWORD_t ret;
         DWORD v;
-        DWORD t;
+        DWORD t, t1, t2;
 
         v = (DWORD)(this->get_DWORD() / b.get_BYTE());
-        t = this->get_DWORD_t() || b.get_BYTE_t();
+
+        t1 = this->get_DWORD_t();
+        t2 = b.get_BYTE_t();
+    
+        if(t1 < t2)
+            t = t2;
+        else
+            t = t1;
         
         ret.set_DWORD(v);
         ret.set_DWORD_t(t);
@@ -1546,10 +1978,17 @@ class DWORD_t
     {
         DWORD_t ret;
         DWORD v;
-        DWORD t;
+        DWORD t, t1, t2;
 
         v = ((DWORD)(this->get_DWORD()) / (b.get_DWORD()));
-        t = this->get_DWORD_t() || b.get_DWORD_t();
+
+        t1 = this->get_DWORD_t();
+        t2 = b.get_DWORD_t();
+    
+        if(t1 < t2)
+            t = t2;
+        else
+            t = t1;
         
         ret.set_DWORD(v);
         ret.set_DWORD_t(t);
@@ -1578,10 +2017,17 @@ class DWORD_t
     {
         DWORD_t ret;
         DWORD v;
-        DWORD t;
+        DWORD t, t1, t2;
 
         v = (DWORD)(this->get_DWORD() % b.get_DWORD());
-        t = this->get_DWORD_t() || b.get_DWORD_t();
+
+        t1 = this->get_DWORD_t();
+        t2 = b.get_DWORD_t();
+    
+        if(t1 < t2)
+            t = t2;
+        else
+            t = t1;
         
         ret.set_DWORD(v);
         ret.set_DWORD_t(t);
@@ -1610,10 +2056,17 @@ class DWORD_t
     {
         DWORD_t ret;
         DWORD v;
-        DWORD t;
+        DWORD t, t1, t2;
 
         v = (DWORD)(this->get_DWORD() % b.get_BYTE());
-        t = this->get_DWORD_t() || b.get_BYTE_t();
+
+        t1 = this->get_DWORD_t();
+        t2 = b.get_BYTE_t();
+    
+        if(t1 < t2)
+            t = t2;
+        else
+            t = t1;
         
         ret.set_DWORD(v);
         ret.set_DWORD_t(t);
@@ -1644,10 +2097,17 @@ class DWORD_t
     {
         DWORD_t ret;
         DWORD v;
-        DWORD t;
+        DWORD t, t1, t2;
 
         v = (DWORD)(this->get_DWORD() % b.get_DWORD());
-        t = this->get_DWORD_t() || b.get_DWORD_t();
+
+        t1 = this->get_DWORD_t();
+        t2 = b.get_DWORD_t();
+    
+        if(t1 < t2)
+            t = t2;
+        else
+            t = t1;
         
         ret.set_DWORD(v);
         ret.set_DWORD_t(t);
@@ -1665,10 +2125,48 @@ class DWORD_t
         ret.val[2].set_BYTE(this->val[2].get_BYTE() & a[2].get_BYTE());
         ret.val[3].set_BYTE(this->val[3].get_BYTE() & a[3].get_BYTE());
 
-        ret.val[0].set_BYTE_t(this->val[0].get_BYTE_t() | a[0].get_BYTE_t()); // verify
-        ret.val[1].set_BYTE_t(this->val[1].get_BYTE_t() | a[1].get_BYTE_t()); // verify
-        ret.val[2].set_BYTE_t(this->val[2].get_BYTE_t() | a[2].get_BYTE_t()); // verify
-        ret.val[3].set_BYTE_t(this->val[3].get_BYTE_t() | a[3].get_BYTE_t()); // verify
+        BYTE t, t1, t2;        
+
+        t1 = this->val[0].get_BYTE_t();
+        t2 = a[0].get_BYTE_t();
+
+        if(t1 < t2)
+            t = t2;
+        else
+            t = t1;
+
+        ret.val[0].set_BYTE_t(t);
+
+        t1 = this->val[1].get_BYTE_t();
+        t2 = a[1].get_BYTE_t();
+
+        if(t1 < t2)
+            t = t2;
+        else
+            t = t1;
+
+        ret.val[1].set_BYTE_t(t);
+
+        t1 = this->val[2].get_BYTE_t();
+        t2 = a[2].get_BYTE_t();
+
+        if(t1 < t2)
+            t = t2;
+        else
+            t = t1;
+
+        ret.val[2].set_BYTE_t(t);
+
+        t1 = this->val[3].get_BYTE_t();
+        t2 = a[3].get_BYTE_t();
+
+        if(t1 < t2)
+            t = t2;
+        else
+            t = t1;
+
+        ret.val[3].set_BYTE_t(t);
+
         return ret;
     }
 
@@ -1680,10 +2178,48 @@ class DWORD_t
         ret.val[2].set_BYTE(this->val[2].get_BYTE() ^ a[2].get_BYTE());
         ret.val[3].set_BYTE(this->val[3].get_BYTE() ^ a[3].get_BYTE());
 
-        ret.val[0].set_BYTE_t(this->val[0].get_BYTE_t() | a[0].get_BYTE_t()); // verify
-        ret.val[1].set_BYTE_t(this->val[1].get_BYTE_t() | a[1].get_BYTE_t()); // verify
-        ret.val[2].set_BYTE_t(this->val[2].get_BYTE_t() | a[2].get_BYTE_t()); // verify
-        ret.val[3].set_BYTE_t(this->val[3].get_BYTE_t() | a[3].get_BYTE_t()); // verify
+        BYTE t, t1, t2;        
+
+        t1 = this->val[0].get_BYTE_t();
+        t2 = a[0].get_BYTE_t();
+
+        if(t1 < t2)
+            t = t2;
+        else
+            t = t1;
+
+        ret.val[0].set_BYTE_t(t);
+
+        t1 = this->val[1].get_BYTE_t();
+        t2 = a[1].get_BYTE_t();
+
+        if(t1 < t2)
+            t = t2;
+        else
+            t = t1;
+
+        ret.val[1].set_BYTE_t(t);
+
+        t1 = this->val[2].get_BYTE_t();
+        t2 = a[2].get_BYTE_t();
+
+        if(t1 < t2)
+            t = t2;
+        else
+            t = t1;
+
+        ret.val[2].set_BYTE_t(t);
+
+        t1 = this->val[3].get_BYTE_t();
+        t2 = a[3].get_BYTE_t();
+
+        if(t1 < t2)
+            t = t2;
+        else
+            t = t1;
+
+        ret.val[3].set_BYTE_t(t);
+
         return ret;
     }
 
@@ -1695,10 +2231,48 @@ class DWORD_t
         ret.val[2].set_BYTE(this->val[2].get_BYTE() | a[2].get_BYTE());
         ret.val[3].set_BYTE(this->val[3].get_BYTE() | a[3].get_BYTE());
 
-        ret.val[0].set_BYTE_t(this->val[0].get_BYTE_t() | a[0].get_BYTE_t()); // verify
-        ret.val[1].set_BYTE_t(this->val[1].get_BYTE_t() | a[1].get_BYTE_t()); // verify
-        ret.val[2].set_BYTE_t(this->val[2].get_BYTE_t() | a[2].get_BYTE_t()); // verify
-        ret.val[3].set_BYTE_t(this->val[3].get_BYTE_t() | a[3].get_BYTE_t()); // verify
+        BYTE t, t1, t2;        
+
+        t1 = this->val[0].get_BYTE_t();
+        t2 = a[0].get_BYTE_t();
+
+        if(t1 < t2)
+            t = t2;
+        else
+            t = t1;
+
+        ret.val[0].set_BYTE_t(t);
+
+        t1 = this->val[1].get_BYTE_t();
+        t2 = a[1].get_BYTE_t();
+
+        if(t1 < t2)
+            t = t2;
+        else
+            t = t1;
+
+        ret.val[1].set_BYTE_t(t);
+
+        t1 = this->val[2].get_BYTE_t();
+        t2 = a[2].get_BYTE_t();
+
+        if(t1 < t2)
+            t = t2;
+        else
+            t = t1;
+
+        ret.val[2].set_BYTE_t(t);
+
+        t1 = this->val[3].get_BYTE_t();
+        t2 = a[3].get_BYTE_t();
+
+        if(t1 < t2)
+            t = t2;
+        else
+            t = t1;
+
+        ret.val[3].set_BYTE_t(t);
+
         return ret;
     }
 
@@ -1709,10 +2283,48 @@ class DWORD_t
         this->val[2].set_BYTE(this->val[2].get_BYTE() & a[2].get_BYTE());
         this->val[3].set_BYTE(this->val[3].get_BYTE() & a[3].get_BYTE());
 
-        this->val[0].set_BYTE_t(this->val[0].get_BYTE_t() | a[0].get_BYTE_t()); // verify
-        this->val[1].set_BYTE_t(this->val[1].get_BYTE_t() | a[1].get_BYTE_t()); // verify
-        this->val[2].set_BYTE_t(this->val[2].get_BYTE_t() | a[2].get_BYTE_t()); // verify
-        this->val[3].set_BYTE_t(this->val[3].get_BYTE_t() | a[3].get_BYTE_t()); // verify
+        BYTE t, t1, t2;        
+
+        t1 = this->val[0].get_BYTE_t();
+        t2 = a[0].get_BYTE_t();
+
+        if(t1 < t2)
+            t = t2;
+        else
+            t = t1;
+
+        this->val[0].set_BYTE_t(t);
+
+        t1 = this->val[1].get_BYTE_t();
+        t2 = a[1].get_BYTE_t();
+
+        if(t1 < t2)
+            t = t2;
+        else
+            t = t1;
+
+        this->val[1].set_BYTE_t(t);
+
+        t1 = this->val[2].get_BYTE_t();
+        t2 = a[2].get_BYTE_t();
+
+        if(t1 < t2)
+            t = t2;
+        else
+            t = t1;
+
+        this->val[2].set_BYTE_t(t);
+
+        t1 = this->val[3].get_BYTE_t();
+        t2 = a[3].get_BYTE_t();
+
+        if(t1 < t2)
+            t = t2;
+        else
+            t = t1;
+
+        this->val[3].set_BYTE_t(t);
+
     }
 
     DWORD_t operator^=(DWORD_t a)
@@ -1722,11 +2334,48 @@ class DWORD_t
         this->val[2].set_BYTE(this->val[2].get_BYTE() ^ a[2].get_BYTE());
         this->val[3].set_BYTE(this->val[3].get_BYTE() ^ a[3].get_BYTE());
 
+        BYTE t, t1, t2;        
 
-        this->val[0].set_BYTE_t(this->val[0].get_BYTE_t() | a[0].get_BYTE_t()); // verify
-        this->val[1].set_BYTE_t(this->val[1].get_BYTE_t() | a[1].get_BYTE_t()); // verify
-        this->val[2].set_BYTE_t(this->val[2].get_BYTE_t() | a[2].get_BYTE_t()); // verify
-        this->val[3].set_BYTE_t(this->val[3].get_BYTE_t() | a[3].get_BYTE_t()); // verify
+        t1 = this->val[0].get_BYTE_t();
+        t2 = a[0].get_BYTE_t();
+
+        if(t1 < t2)
+            t = t2;
+        else
+            t = t1;
+
+        this->val[0].set_BYTE_t(t);
+
+        t1 = this->val[1].get_BYTE_t();
+        t2 = a[1].get_BYTE_t();
+
+        if(t1 < t2)
+            t = t2;
+        else
+            t = t1;
+
+        this->val[1].set_BYTE_t(t);
+
+        t1 = this->val[2].get_BYTE_t();
+        t2 = a[2].get_BYTE_t();
+
+        if(t1 < t2)
+            t = t2;
+        else
+            t = t1;
+
+        this->val[2].set_BYTE_t(t);
+
+        t1 = this->val[3].get_BYTE_t();
+        t2 = a[3].get_BYTE_t();
+
+        if(t1 < t2)
+            t = t2;
+        else
+            t = t1;
+
+        this->val[3].set_BYTE_t(t);
+
     }
 
     DWORD_t operator|=(DWORD_t a)
@@ -1736,10 +2385,48 @@ class DWORD_t
         this->val[2].set_BYTE(this->val[2].get_BYTE() | a[2].get_BYTE());
         this->val[3].set_BYTE(this->val[3].get_BYTE() | a[3].get_BYTE());
 
-        this->val[0].set_BYTE_t(this->val[0].get_BYTE_t() | a[0].get_BYTE_t()); // verify
-        this->val[1].set_BYTE_t(this->val[1].get_BYTE_t() | a[1].get_BYTE_t()); // verify
-        this->val[2].set_BYTE_t(this->val[2].get_BYTE_t() | a[2].get_BYTE_t()); // verify
-        this->val[3].set_BYTE_t(this->val[3].get_BYTE_t() | a[3].get_BYTE_t()); // verify
+        BYTE t, t1, t2;        
+
+        t1 = this->val[0].get_BYTE_t();
+        t2 = a[0].get_BYTE_t();
+
+        if(t1 < t2)
+            t = t2;
+        else
+            t = t1;
+
+        this->val[0].set_BYTE_t(t);
+
+        t1 = this->val[1].get_BYTE_t();
+        t2 = a[1].get_BYTE_t();
+
+        if(t1 < t2)
+            t = t2;
+        else
+            t = t1;
+
+        this->val[1].set_BYTE_t(t);
+
+        t1 = this->val[2].get_BYTE_t();
+        t2 = a[2].get_BYTE_t();
+
+        if(t1 < t2)
+            t = t2;
+        else
+            t = t1;
+
+        this->val[2].set_BYTE_t(t);
+
+        t1 = this->val[3].get_BYTE_t();
+        t2 = a[3].get_BYTE_t();
+
+        if(t1 < t2)
+            t = t2;
+        else
+            t = t1;
+
+        this->val[3].set_BYTE_t(t);
+
     }
 
     // shifts & rotates
@@ -1752,9 +2439,17 @@ class DWORD_t
         temp_32 << a.get_BYTE();
         ret.set_DWORD(temp_32);
 
-        temp_32 = this->get_DWORD_t();
-        temp_32 << a.get_BYTE();
-        ret.set_DWORD_t(temp_32);
+        DWORD t, t1, t2;
+
+        t1 = this->get_DWORD_t();
+        t2 = a.get_BYTE_t();
+
+        if(t1 < t2)
+            t = t2;
+        else
+            t = t1;
+
+        ret.set_DWORD_t(t);
 
         return ret;
     }
@@ -1768,9 +2463,17 @@ class DWORD_t
         temp_32 >> a.get_BYTE();
         ret.set_DWORD(temp_32);
 
-        temp_32 = this->get_DWORD_t();
-        temp_32 >> a.get_BYTE();
-        ret.set_DWORD_t(temp_32);
+        DWORD t, t1, t2;
+
+        t1 = this->get_DWORD_t();
+        t2 = a.get_BYTE_t();
+
+        if(t1 < t2)
+            t = t2;
+        else
+            t = t1;
+
+        ret.set_DWORD_t(t);
 
         return ret;
     }
@@ -1783,9 +2486,17 @@ class DWORD_t
         temp_32 <<= a.get_BYTE();
         this->set_DWORD(temp_32);
 
-        temp_32 = this->get_DWORD_t();
-        temp_32 <<= a.get_BYTE();
-        this->set_DWORD_t(temp_32);
+        DWORD t, t1, t2;
+
+        t1 = this->get_DWORD_t();
+        t2 = a.get_BYTE_t();
+
+        if(t1 < t2)
+            t = t2;
+        else
+            t = t1;
+
+        this->set_DWORD_t(t);
     }
 
     DWORD_t operator>>=(BYTE_t a)
@@ -1796,9 +2507,17 @@ class DWORD_t
         temp_32 >>= a.get_BYTE();
         this->set_DWORD(temp_32);
 
-        temp_32 = this->get_DWORD_t();
-        temp_32 >>= a.get_BYTE();
-        this->set_DWORD_t(temp_32);
+        DWORD t, t1, t2;
+
+        t1 = this->get_DWORD_t();
+        t2 = a.get_BYTE_t();
+
+        if(t1 < t2)
+            t = t2;
+        else
+            t = t1;
+
+        this->set_DWORD_t(t);
     }
 
     // what about taint?

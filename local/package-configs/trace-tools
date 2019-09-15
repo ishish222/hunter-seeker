@@ -9,3 +9,4 @@ c:taint/compare_cextract
 c:taint/old_call_analyze
 c:taint/call_analyze
 c:taint/taint_analyze
+c:taint/coverage_analyze

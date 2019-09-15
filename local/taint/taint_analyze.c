@@ -232,6 +232,8 @@ int main(int argc, char** argv)
     taint_eng.options |= OPTION_INDEXES_PROPAGATE;
     fprintf(stdout, "Setting default option: OPTION_TRACE_PROPAGATION\n");
     taint_eng.options |= OPTION_TRACE_PROPAGATION; /* we need to turn on this option on program level */
+    fprintf(stdout, "Setting default option: OPTION_CLEAR_INVALID_TAINT\n");
+    taint_eng.options |= OPTION_CLEAR_INVALID_TAINT; /* we need to turn on this option on program level */
 
     /* configuring plugin */
     /* TODO */

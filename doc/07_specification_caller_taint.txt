@@ -78,6 +78,12 @@ OP - set option
     OPTION_INDEXES_PROPAGATE:
         taint_plugin will mark byte as propagation source if it is used as index in transfer
 
+    OPTION_CLEAR_INVALID_TAINT:
+        taint_plugin will clear taint from registers (except EIP) that have been determined to be invalid during DEBUG CONTEXT checking.
+
+    OPTION_VERIFY_ALL_REGISTERS:
+        taint_plugin will verify all registers (instead of just ESP, EBP & EIP) for taint. If found, it will generate a break
+
 BR - register memory breakpoint
     The syntax is this:
         Entries for individual breakpoints are separated with '+'

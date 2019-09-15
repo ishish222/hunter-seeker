@@ -128,6 +128,8 @@ class taint_plugin : Plugin
         this->taints = (REGION*)malloc(sizeof(REGION)*MAX_TAINTS_OBSERVED);
         this->taint_contexts = (TAINT_CONTEXT*)malloc(sizeof(TAINT_CONTEXT)*MAX_TAINTS_OBSERVED);
 
+        this->taint_count = 0x1;
+
     }
 
     ~taint_plugin() 
