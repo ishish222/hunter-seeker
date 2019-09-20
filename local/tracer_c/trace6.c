@@ -2,12 +2,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "winsock2.h"
+#include "psapi.h"
 
 #define TRACE_CONTROLLER_IP "127.0.0.1"
 #define TRACE_CONTROLLER_PORT 12341
 #define CIRC_BUF_SIZE 0x10
 
-#define VERSION_STR "# tracer version 2.0\n"
+#define VERSION_STR "# tracer version 3.0\n"
 //#include <winsock.h>
 
 //#pragma comment(lib,"ws2_32.lib") //Winsock Library
@@ -2598,16 +2599,49 @@ int check_lib_loaded(char* lib_name)
     return -1;
 }
 
+
+unsigned get_pe_mem_size(char* path)
+{
+    d_print("[get_pe_mem_size start]\n");
+    FILE* f;
+    char* buff;
+    size_t result;
+
+    d_print("[get_pe_mem_size 1]\n");
+    d_print("opening: %s\n", path);
+    f = fopen(path, "rb");
+    buff = (char*)malloc(4196);
+    d_print("[get_pe_mem_size 2]\n");
+    
+    result = fread(buff, 1, 4196, f);
+    d_print("[get_pe_mem_size 3]\n");
+    if(result != 4196)
+    {
+        free(buff);
+        return -1;
+    }
+    d_print("[get_pe_mem_size 4]\n");
+
+    PIMAGE_DOS_HEADER dosHeader = (PIMAGE_DOS_HEADER)buff;
+    PIMAGE_NT_HEADERS ntHeader = (PIMAGE_NT_HEADERS)((DWORD)dosHeader + (DWORD)dosHeader->e_lfanew);
+    return ntHeader->OptionalHeader.SizeOfImage;
+    d_print("[get_pe_mem_size end]\n");
+}
+
 void register_lib(LOAD_DLL_DEBUG_INFO info)
 {
+    d_print("[register_lib start]\n");
     char path[MAX_LINE];
     char line[MAX_LINE];
+    DWORD size;
 
 #ifdef LIB_VER_W7
     //d_print("Trying to resolve\n");
     GetFinalPathNameByHandleA(my_trace->event.u.LoadDll.hFile, my_trace->libs[my_trace->lib_count].lib_path, MAX_LINE, VOLUME_NAME_NONE);
     //d_print("Resolved 0x%08x to %s\n", my_trace->event.u.LoadDll.hFile, my_trace->libs[my_trace->lib_count].lib_path);
     strcpy(my_trace->libs[my_trace->lib_count].lib_name, find_file(my_trace->libs[my_trace->lib_count].lib_path));
+    size = get_pe_mem_size(my_trace->libs[my_trace->lib_count].lib_path);
+
 #endif
 #ifdef LIB_VER_WXP
     strcpy(my_trace->libs[my_trace->lib_count].lib_name, "UNKNOWN");
@@ -2619,8 +2653,8 @@ void register_lib(LOAD_DLL_DEBUG_INFO info)
     d_print2("# %s", my_trace->libs[my_trace->lib_count].lib_path);
 
     my_trace->libs[my_trace->lib_count].lib_offset = (DWORD)info.lpBaseOfDll;
-    d_print("RL,0x%08x,%s\n", my_trace->libs[my_trace->lib_count].lib_offset, my_trace->libs[my_trace->lib_count].lib_name);
-    sprintf(line, "RL,0x%08x,%s\n", my_trace->libs[my_trace->lib_count].lib_offset, my_trace->libs[my_trace->lib_count].lib_name);
+    d_print("RL,0x%08x,0x%08x,%s\n", my_trace->libs[my_trace->lib_count].lib_offset, size, my_trace->libs[my_trace->lib_count].lib_name);
+    sprintf(line, "RL,0x%08x,0x%08x,%s\n", my_trace->libs[my_trace->lib_count].lib_offset, size, my_trace->libs[my_trace->lib_count].lib_name);
     add_to_buffer(line);
 
 #ifdef LIB_VER_W70
@@ -2644,6 +2678,7 @@ void register_lib(LOAD_DLL_DEBUG_INFO info)
     my_trace->lib_count++;
 
 
+    d_print("[register_lib end]\n");
     return;
 }
 
@@ -5727,9 +5762,26 @@ int register_self(OFFSET addr)
 {
     char line[MAX_LINE];
     char path[MAX_LINE];
+    DWORD size;
 
-    d_print("RL,0x%08x,self\n", addr);
-    sprintf(line, "RL,0x%08x,self\n", addr);
+    if(strlen(my_trace->in_sample_path) == 0x0)
+    {
+        d_print("Retrieving file for PID: 0x%08x, handle: 0x%08x\n", my_trace->cpdi.hProcess, (HMODULE)my_trace->cpdi.hFile);
+        d_print("Starting name: %s\n", my_trace->in_sample_path);
+        if(!GetModuleFileNameExA(my_trace->cpdi.hProcess, 0x0, my_trace->in_sample_path, MAX_PATH))
+        {
+            d_print("Failed: 0x%08x\n", GetLastError());
+        }
+        d_print("Retrieved name: %s\n", my_trace->in_sample_path);
+    }
+    else
+    {
+        d_print("Got name: %s\n", my_trace->in_sample_path);
+    }
+    size = get_pe_mem_size(my_trace->in_sample_path);
+
+    d_print("RL,0x%08x,0x%08x,self\n", addr, size);
+    sprintf(line, "RL,0x%08x,0x%08x,self\n", addr, size);
     add_to_buffer(line);
 
 

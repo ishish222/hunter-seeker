@@ -4,7 +4,7 @@
 #define MAX_NAME                0x200
 #define MAX_SYMOL_NAME         0x50
 #define MAX_SYMBOL_COUNT        0x1000000
-#define MAX_LIB_COUNT           0x100
+#define MAX_LIB_COUNT           0x200
 #define MAX_THREADS             0x100
 #define MAX_THREAD_NUMBER       0x1000
 #define MAX_CALL_LEVELS         0x200
