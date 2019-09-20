@@ -17,7 +17,7 @@
 
 /* add_readsign */
 
-char debug_level=1;
+char debug_level=0;
 TRACE_CONFIG* my_trace;
 char instr_count_s[0x20];
 DWORD scan_on;

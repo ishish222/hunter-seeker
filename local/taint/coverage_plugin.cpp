@@ -18,6 +18,31 @@ int coverage_plugin::pre_execute_instruction_callback(DWORD eip)
 
 int coverage_plugin::post_execute_instruction_callback(DWORD eip)
 {
+    unsigned i;
+    OFFSET current_offset, current_size;
+    OFFSET relative;
+
+    for(i = 0x0; i < this->libs_count; i++)
+    {
+        current_offset = this->libs[i].offset;
+        current_size = this->libs[i].size;
+
+        if(eip < current_offset)
+        {
+            continue;
+        }
+        if(eip > current_offset + current_size)
+        {
+            continue;
+        }
+
+        relative = eip-current_offset;
+        this->libs[i].content[relative] = 0xff;
+        this->libs[i].instructions_touched++;
+
+        break;
+    }
+
     return 0x0;
 }
 
@@ -63,11 +88,13 @@ int coverage_plugin::handle_exception_callback(EXCEPTION_INFO info)
 
 int coverage_plugin::add_lib(OFFSET off, unsigned size, char* name)
 {
-    LIBRARY new_lib;
+    LIBRARY* new_lib;
     FILE* f;
 
     unsigned i, libs_count;
     libs_count = this->libs_count;
+
+    new_lib = &this->libs[libs_count];
 
     for(i=0x0; i<strlen(name); i++)
     {
@@ -75,23 +102,24 @@ int coverage_plugin::add_lib(OFFSET off, unsigned size, char* name)
         if(name[i] == '\\') name[i]='/';
     }
 
-    //strcpy(new_lib.path, this->lib_dir_path);
-    strcpy(new_lib.path, basename(name));
+    strcpy(new_lib->path, basename(name));
 
-    d_print(1, "Loading lib: %s\n", new_lib.path);
+    d_print(1, "Loading lib: %s\n", new_lib->path);
 
-    strcpy(new_lib.name, basename(name));
+    strcpy(new_lib->name, basename(name));
 
-    d_print(1, "Loading symbols for %s @ 0x%08x\n", new_lib.name, off);
-    new_lib.offset = off;
-    new_lib.size = size;
+    d_print(1, "Loading symbols for %s @ 0x%08x\n", new_lib->name, off);
+    new_lib->offset = off;
+    new_lib->size = size;
 
-    new_lib.loaded = 1;
+    new_lib->loaded = 1;
 
-    this->libs[libs_count] = new_lib;
+    new_lib->content = (char*)malloc(new_lib->size);
+
+    //this->libs[libs_count] = new_lib;
     this->libs_count++;
 
-    d_print(1, "Loaded lib: %s at 0x%08x to 0x%08x\n", new_lib.path, new_lib.offset, new_lib.offset+new_lib.length);
+    d_print(1, "Loaded lib: %s at 0x%08x to 0x%08x\n", new_lib->path, new_lib->offset, new_lib->offset+new_lib->size);
     return 0x0;
 }
 

@@ -2,6 +2,7 @@
 #define COVERAGE_PLUGIN_H
 
 #include <emul_x86.h>
+#include <debug.h>
 
 typedef struct _LIBRARY
 {
@@ -12,6 +13,7 @@ typedef struct _LIBRARY
     DWORD length;
     DWORD loaded;
     char* content;
+    unsigned instructions_touched;
 
     char blacklisted;
 } LIBRARY;
@@ -34,7 +36,7 @@ class coverage_plugin : Plugin
     virtual int handle_exception_callback(EXCEPTION_INFO);
 
     /* libs for localizators */
-    LIBRARY* libs;
+    LIBRARY libs[MAX_LIB_COUNT];
     unsigned libs_count;
     int add_lib(OFFSET, unsigned, char*);
     int del_lib(OFFSET);
@@ -52,7 +54,26 @@ class coverage_plugin : Plugin
 
     ~coverage_plugin() 
     {
+        unsigned i, j;
+        LIBRARY* cur_lib;
+        FILE* f;
+        char fname[MAX_NAME]; 
 
+        for(i=0x0; i < libs_count; i++)
+        {
+            cur_lib = &this->libs[i];
+            err_print("Library: %s, instructions touched: %d\n", cur_lib->name, cur_lib->instructions_touched);
+    
+            sprintf(fname, "%s.cov", cur_lib->name);
+
+            f = fopen(fname, "wb");
+
+            fwrite(cur_lib->content, cur_lib->size, 1, f);
+
+            fclose(f);           
+
+            free(cur_lib->content);
+        }
     }
 
 };
