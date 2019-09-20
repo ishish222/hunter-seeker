@@ -2618,7 +2618,7 @@ unsigned get_pe_mem_size(char* path)
     if(result != 4196)
     {
         free(buff);
-        return -1;
+        return 0x0;
     }
     d_print("[get_pe_mem_size 4]\n");
 
@@ -2640,7 +2640,8 @@ void register_lib(LOAD_DLL_DEBUG_INFO info)
     GetFinalPathNameByHandleA(my_trace->event.u.LoadDll.hFile, my_trace->libs[my_trace->lib_count].lib_path, MAX_LINE, VOLUME_NAME_NONE);
     //d_print("Resolved 0x%08x to %s\n", my_trace->event.u.LoadDll.hFile, my_trace->libs[my_trace->lib_count].lib_path);
     strcpy(my_trace->libs[my_trace->lib_count].lib_name, find_file(my_trace->libs[my_trace->lib_count].lib_path));
-    size = get_pe_mem_size(my_trace->libs[my_trace->lib_count].lib_path);
+    my_trace->libs[my_trace->lib_count].lib_size = get_pe_mem_size(my_trace->libs[my_trace->lib_count].lib_path);
+    size = my_trace->libs[my_trace->lib_count].lib_size;
 
 #endif
 #ifdef LIB_VER_WXP
@@ -5762,7 +5763,6 @@ int register_self(OFFSET addr)
 {
     char line[MAX_LINE];
     char path[MAX_LINE];
-    DWORD size;
 
     if(strlen(my_trace->in_sample_path) == 0x0)
     {
@@ -5778,10 +5778,10 @@ int register_self(OFFSET addr)
     {
         d_print("Got name: %s\n", my_trace->in_sample_path);
     }
-    size = get_pe_mem_size(my_trace->in_sample_path);
+    my_trace->in_image_size = get_pe_mem_size(my_trace->in_sample_path);
 
-    d_print("RL,0x%08x,0x%08x,self\n", addr, size);
-    sprintf(line, "RL,0x%08x,0x%08x,self\n", addr, size);
+    d_print("RL,0x%08x,0x%08x,self\n", addr, my_trace->in_image_size);
+    sprintf(line, "RL,0x%08x,0x%08x,self\n", addr, my_trace->in_image_size);
     add_to_buffer(line);
 
 
@@ -7789,13 +7789,13 @@ int handle_cmd(char* cmd)
         unsigned i;
 
         d_print("= Securing self\n");
-        secure_sections(my_trace->cpdi.lpBaseOfImage);
+        secure_section((OFFSET)my_trace->cpdi.lpBaseOfImage, my_trace->in_image_size);
         d_print("\n");
 
         for(i = 0x0; i< my_trace->lib_count; i++)
         {
             d_print("= Securing %s\n", my_trace->libs[i].lib_name);
-            secure_sections((HANDLE)my_trace->libs[i].lib_offset);
+            secure_section(my_trace->libs[i].lib_offset, my_trace->libs[i].lib_size);
             d_print("\n");
         }
         

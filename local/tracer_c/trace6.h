@@ -315,6 +315,7 @@ typedef struct _LIB_ENTRY
 {
     char loaded;
     DWORD lib_offset;
+    unsigned lib_size;
     char lib_name[MAX_NAME];
     char lib_path[MAX_NAME];
 } LIB_ENTRY;
@@ -434,6 +435,7 @@ typedef struct TRACE_CONFIG_
     char in_research_dir[MAX_LINE];
     char in_sample_path[MAX_LINE];
     unsigned in_sample_pid;
+    unsigned in_image_size;
 
     char out_dir[MAX_LINE];
     char out_prefix[MAX_LINE];
