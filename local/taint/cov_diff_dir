@@ -1,0 +1,3 @@
+#!/bin/bash
+
+cat libs.txt | while read aa; do coverage_diff $1/$aa $2/$aa; done

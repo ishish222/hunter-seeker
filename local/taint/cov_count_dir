@@ -1,0 +1,3 @@
+#!/bin/bash
+
+cat libs.txt | while read aa; do coverage_count $1/$aa; done
