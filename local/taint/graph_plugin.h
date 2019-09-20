@@ -62,6 +62,7 @@ typedef struct _LIBRARY
     char name[MAX_NAME];
     char path[MAX_NAME];
     DWORD length;
+    unsigned size;
     DWORD loaded;
     char* content;
     SYMBOL* symbols;
@@ -234,7 +235,7 @@ class graph_plugin : Plugin
     /* symbols and libraries */
     LIBRARY* libs;
     unsigned libs_count;
-    int add_lib(OFFSET, char*);
+    int add_lib(OFFSET, unsigned, char*);
     int del_lib(OFFSET);
     LIBRARY* get_lib(OFFSET);
 

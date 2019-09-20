@@ -1762,7 +1762,7 @@ int taint_plugin::register_taint2(char* line)
     return 0x0;
 }
 
-int taint_plugin::add_lib(OFFSET off, char* name)
+int taint_plugin::add_lib(OFFSET off, unsigned size, char* name)
 {
     LIBRARY new_lib;
     FILE* f;
@@ -1785,6 +1785,7 @@ int taint_plugin::add_lib(OFFSET off, char* name)
 
     d_print(1, "Loading symbols for %s @ 0x%08x\n", new_lib.name, off);
     new_lib.offset = off;
+    new_lib.size = size;
 
     new_lib.loaded = 1;
 
@@ -2059,12 +2060,11 @@ int taint_plugin::register_lib(char* line)
 
     cmd = strtok(line, ",");
     off = strtoul(strtok(0x0, ","), 0x0, 0x10);
+    size = strtoul(strtok(0x0, ","), 0x0, 0x10);
     name = strtok(0x0, ",");
-    //name[strlen(name)] = 0x0;
-//    size = strtoul(strtok(0x0, ","), 0x0, 0x10);
 
     //printf("Registering lib: %s at 0x%08x\n", name, off);
-    this->add_lib(off, name);
+    this->add_lib(off, size, name);
 
     return 0x0;
 }

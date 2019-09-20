@@ -8,6 +8,7 @@ typedef struct _LIBRARY
     OFFSET offset;
     char name[MAX_NAME];
     char path[MAX_NAME];
+    unsigned size;
     DWORD length;
     DWORD loaded;
     char* content;
@@ -35,7 +36,7 @@ class coverage_plugin : Plugin
     /* libs for localizators */
     LIBRARY* libs;
     unsigned libs_count;
-    int add_lib(OFFSET, char*);
+    int add_lib(OFFSET, unsigned, char*);
     int del_lib(OFFSET);
     LIBRARY* get_lib(OFFSET);
     OFFSET find_lib(char*);

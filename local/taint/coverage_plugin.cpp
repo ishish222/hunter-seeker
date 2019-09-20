@@ -61,7 +61,7 @@ int coverage_plugin::handle_exception_callback(EXCEPTION_INFO info)
     return 0x0;
 }
 
-int coverage_plugin::add_lib(OFFSET off, char* name)
+int coverage_plugin::add_lib(OFFSET off, unsigned size, char* name)
 {
     LIBRARY new_lib;
     FILE* f;
@@ -84,6 +84,7 @@ int coverage_plugin::add_lib(OFFSET off, char* name)
 
     d_print(1, "Loading symbols for %s @ 0x%08x\n", new_lib.name, off);
     new_lib.offset = off;
+    new_lib.size = size;
 
     new_lib.loaded = 1;
 
@@ -160,12 +161,10 @@ int coverage_plugin::register_lib(char* line)
 
     cmd = strtok(line, ",");
     off = strtoul(strtok(0x0, ","), 0x0, 0x10);
+    size = strtoul(strtok(0x0, ","), 0x0, 0x10);
     name = strtok(0x0, ",");
-    //name[strlen(name)] = 0x0;
-//    size = strtoul(strtok(0x0, ","), 0x0, 0x10);
 
-    //printf("Registering lib: %s at 0x%08x\n", name, off);
-    this->add_lib(off, name);
+    this->add_lib(off, size, name);
 
     return 0x0;
 }
