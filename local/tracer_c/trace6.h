@@ -210,6 +210,7 @@
 #define CMD_CHANGE_INTERVAL     "CI"
 #define CMD_CRASH_HOST          "CH"
 #define CMD_HANDLE_EXCEPTIONS   "HE"
+#define CMD_DEBUG_LOG_ENABLE    "DE"
 
 #define CMD_ROUTINE_1           "R1"
 #define CMD_ROUTINE_2           "R2"

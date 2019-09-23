@@ -112,41 +112,73 @@ int check_for_and_enable_ss()
 
 #include <imagehlp.h>
 
+int send_report();
 LONG WINAPI VectoredHandler1(struct _EXCEPTION_POINTERS *ExceptionInfo)
 {
-    char buffer[0x10000];
     char buff_line[MAX_LINE];
 
+    sprintf(buff_line, "\u001b[31mTRACER CRASHED\u001b[0m\n");
+    strcpy(my_trace->report_buffer, buff_line);
     sprintf(buff_line, "Exception code: 0x%08x\n", ExceptionInfo->ExceptionRecord->ExceptionCode);
-    strcpy(buffer, buff_line);
+    strcat(my_trace->report_buffer, buff_line);
     sprintf(buff_line, "Exception address: 0x%08x\n", ExceptionInfo->ExceptionRecord->ExceptionAddress);
-    strcat(buffer, buff_line);
+    strcat(my_trace->report_buffer, buff_line);
     sprintf(buff_line, "Stdout destination: %s\n", my_trace->stdout_destination_path);
-    strcat(buffer, buff_line);
+    strcat(my_trace->report_buffer, buff_line);
+
+    sprintf(buff_line, "\n---------my_trace content----------\n");
+    strcat(my_trace->report_buffer, buff_line);
+
+    sprintf(buff_line, "instr_count: %d\n", my_trace->instr_count);
+    strcat(my_trace->report_buffer, buff_line);
+    sprintf(buff_line, "thread_count: 0x%08x\n", my_trace->thread_count);
+    strcat(my_trace->report_buffer, buff_line);
+    sprintf(buff_line, "lib_count: 0x%08x\n", my_trace->lib_count);
+    strcat(my_trace->report_buffer, buff_line);
+    sprintf(buff_line, "bpt_count: 0x%08x\n", my_trace->bpt_count);
+    strcat(my_trace->report_buffer, buff_line);
+    sprintf(buff_line, "reaction_count: 0x%08x\n", my_trace->reaction_count);
+    strcat(my_trace->report_buffer, buff_line);
+    sprintf(buff_line, "region_sel_count: 0x%08x\n", my_trace->region_sel_count);
+    strcat(my_trace->report_buffer, buff_line);
+    sprintf(buff_line, "regions_count: 0x%08x\n", my_trace->regions_count);
+    strcat(my_trace->report_buffer, buff_line);
+    sprintf(buff_line, "scanned_locations_count: 0x%08x\n", my_trace->scanned_locations_count);
+    strcat(my_trace->report_buffer, buff_line);
+    sprintf(buff_line, "scanned_regions_count: 0x%08x\n", my_trace->scanned_regions_count);
+    strcat(my_trace->report_buffer, buff_line);
+
+    sprintf(buff_line, "\n---------my_trace content ends-----\n");
+    strcat(my_trace->report_buffer, buff_line);
+
+    if(debug_level == 0x0)
+    {
+        sprintf(buff_line, "Debug is disabled. If you want debug logs, \nyou need to enable it with TracerDebugLogEnable\n");
+        strcat(my_trace->report_buffer, buff_line);
+    }
 
     /* circular buffer */
-
-    sprintf(buff_line, "\nLast log entries\n");
-    strcat(buffer, buff_line);
+    sprintf(buff_line, "\n---------Last log entries----------\n");
+    strcat(my_trace->report_buffer, buff_line);
     sprintf(buff_line, "\nLog id: %d\n", log_id);
-    strcat(buffer, buff_line);
+    strcat(my_trace->report_buffer, buff_line);
     
     for(unsigned i = (log_id+1) % CIRC_BUF_SIZE; i!=log_id; i = (i+1) % CIRC_BUF_SIZE)
     {
         sprintf(buff_line, "%s", log_last_entries[i]);
-        strcat(buffer, buff_line);
+        strcat(my_trace->report_buffer, buff_line);
     }
 
-    if(my_trace != 0x0)
-    {
-        char path[MAX_LINE];
-        //my_trace->stdout_destination = fopen(my_trace->stdout_destination_path, "w");
-        sprintf(path, "%s\\%s.log", my_trace->out_dir, my_trace->out_prefix);
-        my_trace->stdout_destination = fopen(path, "w");
-        fprintf(my_trace->stdout_destination, "%s", buffer);
-        fflush(my_trace->stdout_destination);
-    }
-    MessageBoxA(0x0, buffer, "Exception", 0x0);
+    sprintf(buff_line, "\n---------Last log entries end------\n");
+    strcat(my_trace->report_buffer, buff_line);
+    sprintf(buff_line, "\u001b[31mTRACER CRASHED\u001b[0m\n");
+    strcat(my_trace->report_buffer, buff_line);
+
+    char line[MAX_LINE];
+    sprintf(line, "Got 0x%08x bytes", strlen(my_trace->report_buffer));
+
+    my_trace->report_code = REPORT_INFO;
+    send_report();
 
     return EXCEPTION_CONTINUE_SEARCH;
 }
@@ -4641,6 +4673,7 @@ int send_report()
     char rep_chars2[] = "-=OK=-";
     char line2[BUFF_SIZE];
 
+//    MessageBoxA(0x0, "Sending1", "Exception", 0x0);
     switch(my_trace->report_code)
     {
         case REPORT_CONTINUE:
@@ -4680,12 +4713,17 @@ int send_report()
             break;
     }
 
+//    MessageBoxA(0x0, "Sending2", "Exception", 0x0);
     strcpy(line2, rep_chars);
+//    MessageBoxA(0x0, "Sending3", "Exception", 0x0);
     strcat(line2, my_trace->report_buffer);
+//    MessageBoxA(0x0, "Sending4", "Exception", 0x0);
     strcat(line2, rep_chars2);
 
-    d_print("Sending report: %s\n", line2);
+//    MessageBoxA(0x0, "Sending5", "Exception", 0x0);
+    //d_print("Sending report: %s\n", line2);
     send(my_trace->socket, line2, strlen(line2), 0x0);
+//    MessageBoxA(0x0, "Sending6", "Exception", 0x0);
 
     return 0x0;
 }
@@ -7907,6 +7945,11 @@ int handle_cmd(char* cmd)
     else if(!strncmp(cmd, CMD_CRASH_HOST, 2))
     {
         crash_host();
+        send_report();
+    }
+    else if(!strncmp(cmd, CMD_DEBUG_LOG_ENABLE, 2))
+    {
+        debug_level = 0x1;
         send_report();
     }
     else if(!strncmp(cmd, CMD_ROUTINE_1, 2))

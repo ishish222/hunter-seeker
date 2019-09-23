@@ -979,6 +979,11 @@ class TraceController(object):
         self.last_report, self.last_answer = self.recv_report_active()
         return 
 
+    def debug_log_enable(self, regions):
+        self.send_command_active("DE")
+        self.last_report, self.last_answer = self.recv_report_active()
+        return 
+
     def crash_host(self, regions):
         self.send_command_active("CH")
         self.last_report, self.last_answer = self.recv_report_active()

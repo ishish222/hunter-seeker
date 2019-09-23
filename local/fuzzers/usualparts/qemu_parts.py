@@ -140,7 +140,7 @@ def qemu_save(args=None):
     if(len(exploded) > 1):
         last = exploded[1]
         print('Will overwrite snapshot: %s' % last)
-        print('Kill the process in order to abort')
+        print('IF YOU WANT TO ABORT THIS, DON\'T PRESS ANYTHING AND KILL THIS PROCESS FROM A DIFFERENT TERMINAL')
 
         import os
         os.system('read -s -n 1 -p "Press any key to continue..."')

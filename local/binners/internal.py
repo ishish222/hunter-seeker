@@ -598,8 +598,15 @@ def execute(cmds, ext_pipe):
             writePipe(ext_pipe, "tracer_handle_exceptions"+bcolors.OK_STR)
             ok(ext_pipe)
 
+        elif(cmd == "tracer_debug_log_enable"):
+            trace_controller.debug_log_enable(args)
+            writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
+            writePipe(ext_pipe, "crash_host"+bcolors.OK_STR)
+            ok(ext_pipe)
+
         elif(cmd == "tracer_crash_host"):
             trace_controller.crash_host(args)
+            writePipe(ext_pipe, "%s\n" % trace_controller.last_answer)
             writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
             writePipe(ext_pipe, "crash_host"+bcolors.OK_STR)
             ok(ext_pipe)
