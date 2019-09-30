@@ -2403,32 +2403,35 @@ int taint_x86::reg_propagation_cause(BYTE_t* op)
         if(this->find_propagation_cause(current_propagation, byte_cause_id))
         {
             d_print(3, "Cause already registered\n");
-            return 0x0;
-        }
-
-        CAUSE* new_elem;
-    
-        if(current_propagation->cause_count < MAX_CAUSES)
-        { // we can use basic causes table
-            new_elem = &current_propagation->causes[current_propagation->cause_count];
-            new_elem->cause_id = byte_cause_id;
         }
         else
-        { // we need to use extended (e.g. for popa)
-            unsigned current_ext_id;
-            current_ext_id = this->current_extended_causes_entry_id;
-    
-            new_elem = &this->extended_causes[current_ext_id][current_propagation->cause_count - MAX_CAUSES];
-            new_elem->cause_id = byte_cause_id;
-    
-            current_propagation->extended_cause_id = current_ext_id;
-            this->schedule_extended_causes_increment = 0x1;
-        }
-    
-        current_propagation->cause_count++;
+        {
 
-        this->got_cause = 0x1; /* debugging purposes */
+            CAUSE* new_elem;
+    
+            if(current_propagation->cause_count < MAX_CAUSES)
+            { // we can use basic causes table
+                new_elem = &current_propagation->causes[current_propagation->cause_count];
+                new_elem->cause_id = byte_cause_id;
+            }
+            else
+            { // we need to use extended (e.g. for popa)
+                unsigned current_ext_id;
+                current_ext_id = this->current_extended_causes_entry_id;
+        
+                new_elem = &this->extended_causes[current_ext_id][current_propagation->cause_count - MAX_CAUSES];
+                new_elem->cause_id = byte_cause_id;
+    
+                current_propagation->extended_cause_id = current_ext_id;
+                this->schedule_extended_causes_increment = 0x1;
+            }
+        
+            current_propagation->cause_count++;
+
+                this->got_cause = 0x1; /* debugging purposes */
+        }
     }
+
     /* relying on registering causes for taint propagation */
 
     char prev_taint;

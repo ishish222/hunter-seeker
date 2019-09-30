@@ -119,6 +119,8 @@ LONG WINAPI VectoredHandler1(struct _EXCEPTION_POINTERS *ExceptionInfo)
 
     sprintf(buff_line, "\u001b[31mTRACER CRASHED\u001b[0m\n");
     strcpy(my_trace->report_buffer, buff_line);
+    sprintf(buff_line, "Tracer version: %s\n", VERSION);
+    strcat(my_trace->report_buffer, buff_line);
     sprintf(buff_line, "Exception code: 0x%08x\n", ExceptionInfo->ExceptionRecord->ExceptionCode);
     strcat(my_trace->report_buffer, buff_line);
     sprintf(buff_line, "Exception address: 0x%08x\n", ExceptionInfo->ExceptionRecord->ExceptionAddress);
@@ -6805,6 +6807,12 @@ int reload_out_file()
     fclose(my_trace->trace);
     my_trace->trace = fopen(my_trace->out_trace, "w+");
 
+    while(my_trace->trace == 0x0)
+    {
+        my_trace->trace = fopen(my_trace->out_trace, "w+");
+        Sleep(100);
+    }
+
     d_print("Setting out file to: %s\n", my_trace->out_trace);
 
     return 0x0;
@@ -7914,7 +7922,7 @@ int handle_cmd(char* cmd)
 
         current_interval = new_interval;
 
-        sprintf(line, "New interval is: 0x%08x\n", mod_buffer_size);
+        sprintf(line, "New interval is: 0x%08x\n", new_interval);
         strcpy(my_trace->report_buffer, line);
         send_report();
     }
@@ -8755,7 +8763,7 @@ int main(int argc, char** argv)
         return -1;
     }
 
-    d_print("Version 4.0\n");
+    d_print("Version %s\n", VERSION);
 
     if(strlen(argv[1]) > MAX_LINE) return -1;
     if(strlen(argv[2]) > MAX_LINE) return -1;

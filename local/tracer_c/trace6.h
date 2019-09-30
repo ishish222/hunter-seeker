@@ -4,6 +4,8 @@
 #define _WIN32_WINNT 0x0700
 #endif 
 
+#define VERSION "4.7"
+
 #include <stdio.h>
 #include <windows.h>
 #include "WinBase.h"
@@ -27,56 +29,18 @@
 #define MAX_LINE 0x300
 #define MAX_SYSCALL_OUT_ARGS 0x10
 #define MAX_SYSCALL_ENTRIES  0x10000
-#define MAX_HOOKS 0x50
-#define MAX_FUNCTIONS 0x500
-#define MAX_THREADS 0x100
-#define MAX_LIBS 0x50
+#define MAX_THREADS 0x10000
+#define MAX_LIBS 0x10000
 #define MAX_REGIONS 0x100
-
+#define MAX_ROUTINES    0x100
+#define MAX_FUNCTIONS   0x100
 #define MAX_REACTIONS   0x500
 #define MAX_BREAKPOINTS 0x200
-#define MAX_COUPLES     0x20
+#define MAX_COUPLES     0x50
 #define MAX_HANDLERS    0x1000
-#define MAX_ROUTINES    0x100
-
-/* functions offsets in respective libs */
-#define EXIT_PROCESS_OFF 0x52acf
-
-#ifdef LIB_VER_WXP // WINXPSP2
-#define NTDLL_OFF               0x7c900000
-#define NTREADFILE_OFF_1        0xe27c
-#define NTREADFILE_OFF_2        0xe288
-#define NTMAPVIEWOFSECTION_1    0xdc55
-#define NTMAPVIEWOFSECTION_2    0xdc61
-#define NTSYSENTER_OFF          0xeb8b
-#define NTSYSRET_OFF            0xeb94
-#endif
-
-#ifdef LIB_VER_W7 // WIN7
-
-/* ntdll addresses */
-#define NTDLL_OFF               0x7c900000
-#define NTREADFILE_OFF_1        0x45700
-#define NTREADFILE_OFF_2        0x4570c
-#define NTMAPVIEWOFSECTION_1    0x45070
-#define NTMAPVIEWOFSECTION_2    0x4507c
-#define NTSYSENTER_OFF          0x464f0
-#define NTSYSRET_OFF            0x464f4
-
-/* kernelbase addresses */
-#define KERNELBASE_OFF          0xdce0000
-#define ISDEBUGGER_OFF_1        0x21f8f
-#define ISDEBUGGER_OFF_2        0x21f9c
-#define CREATETHREAD_OFF        0x319c7
-//#define CREATETHREAD_OFF        0xbb2f
-#endif
-
-#define STATUS_ANY 0xff00ff00
 
 #define WATCH_LIMIT 0x100
 
-#define REG_DEBUG 1
-#define REG_DEBUG_INTERVAL 4999
 #define DEFAULT_INSTRUCTION_INTERVAL 1000000
 #define INSTRUCTION_SMALL_INTERVAL 10000
 
@@ -90,9 +54,8 @@
 #define LOCATION_MEM            0x5
 #define LOCATION_END            0x6
 
-#define MAX_NAME 0x200
+#define MAX_NAME 0x300
 #define SNAP_SIZE 0x100
-#define MAX_LIBS 0x200
 
 #define STATUS_EMPTY        0x0
 #define STATUS_CONFIGURED   0x1

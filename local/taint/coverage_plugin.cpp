@@ -58,6 +58,24 @@ int coverage_plugin::start_callback()
 
 int coverage_plugin::finish_callback()
 {
+    unsigned i, j;
+    LIBRARY* cur_lib;
+    FILE* f;
+    char fname[MAX_NAME];
+
+    for(i=0x0; i < libs_count; i++)
+    {
+        cur_lib = &this->libs[i];
+        err_print("Library: %s, instructions touched: %d\n", cur_lib->name, cur_lib->instructions_touched);
+
+        sprintf(fname, "%s.cov", cur_lib->name);
+
+        f = fopen(fname, "wb");
+
+        fwrite(cur_lib->content, cur_lib->size, 1, f);
+
+        fclose(f);
+    }
     return 0x0;    
 }
 

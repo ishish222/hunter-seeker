@@ -1,3 +1,3 @@
 #!/bin/bash
 
-cat libs.txt | while read aa; do coverage_diff $1/$aa $2/$aa; done
+cat $1/libs.txt | while read aa; do coverage_diff $1/cov/$aa $2/cov/$aa; done
