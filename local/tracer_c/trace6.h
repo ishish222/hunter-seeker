@@ -4,8 +4,6 @@
 #define _WIN32_WINNT 0x0700
 #endif 
 
-#define VERSION "4.7"
-
 #include <stdio.h>
 #include <windows.h>
 #include "WinBase.h"

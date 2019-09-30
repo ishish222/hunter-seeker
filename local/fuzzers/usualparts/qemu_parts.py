@@ -94,7 +94,23 @@ def qemu_args_kvm(args=None):
 def qemu_args_research_dir(args=None):
     options = globs.state.options
 
-    options.qemu_args += ['-net', 'nic,model=rtl8139', '-net', 'user,smb=%s' % globs.state.research_dir]
+    options.qemu_args += ['-net', 'nic,model=rtl8139', '-net', 'user,smb=%s,restrict' % globs.state.research_dir]
+
+def qemu_start_unrestricted(args=None):
+    options = globs.state.options
+    qemu_commandline = common.get_qemu_cmdline_unrestricted()
+    qemu_prepare_pipes()
+
+    print(" ".join(qemu_commandline))
+
+    m = Popen(qemu_commandline, stdout=PIPE, stdin=PIPE, env=os.environ, preexec_fn=preexec_function)
+    time.sleep(3)
+
+    globs.state.options.m, _ = options.ms.accept()
+    globs.state.options.s, _ = options.ss.accept()
+
+    read_monitor(globs.state.options.m)
+    print("Qemu full boot finished")
 
 def qemu_start(args=None):
     options = globs.state.options

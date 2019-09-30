@@ -76,7 +76,7 @@ def get_options():
 
     globs.state.options.external_paths_final_output = globs.state.options.external_paths_final_all_output + '/' + globs.state.out_folder
 
-def get_qemu_cmdline():
+def get_qemu_cmdline_unrestricted():
     options = globs.state.options
     commandline = []
     machine = options.external_machine
@@ -100,6 +100,49 @@ def get_qemu_cmdline():
     # mount external folder via smb
 
     commandline += ['-net', 'nic,model=rtl8139', '-net', 'user,smb=%s' % options.external_paths_tmp_input_output]
+
+    # monitor and serials
+
+    commandline += ['-monitor', 'unix:%s' % machine['monitor']]
+    commandline += ['-serial', 'unix:%s' % machine['serial']]
+    commandline += ['-serial', 'unix:%s' % machine['serial'] + '-log']
+
+    if(hasattr(options, 'external_qemu_smp')):
+        commandline += ['-smp', '%d' % options.external_qemu_smp]
+
+
+    if(hasattr(options, 'external_qemu_additional_options')):
+        commandline += [options.external_qemu_additional_options]
+
+    if(options.external_qemu_use_vnc):
+        commandline += ['-vnc', machine['vnc']]
+
+    return commandline
+    
+def get_qemu_cmdline():
+    options = globs.state.options
+    commandline = []
+    machine = options.external_machine
+
+    if(options.external_qemu_use_taskset):
+        commandline += ['taskset', '-c', machine['taskset']]
+ 
+    commandline += [options.external_qemu_binary_path]
+
+    commandline += ['-m', options.external_qemu_memory_options]
+
+    drive_path = options.external_paths_machines + '/' + machine['disk']
+
+    if(hasattr(options, 'external_qemu_drive_options')):
+        drive_cmdline = 'file=' + drive_path + ',' + options.external_qemu_drive_options
+    else:
+        drive_cmdline = 'file=' + drive_path 
+        
+    commandline += ['-drive', drive_cmdline]
+
+    # mount external folder via smb
+
+    commandline += ['-net', 'nic,model=rtl8139', '-net', 'user,smb=%s,restrict' % options.external_paths_tmp_input_output]
 
     # monitor and serials
 
