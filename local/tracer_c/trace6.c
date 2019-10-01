@@ -6,7 +6,7 @@
 
 #define TRACE_CONTROLLER_IP "127.0.0.1"
 #define TRACE_CONTROLLER_PORT 12341
-#define CIRC_BUF_SIZE 0x20
+#define CIRC_BUF_SIZE 0x10
 
 #define VERSION_STR "# tracer version 4.11\n"
 //#include <winsock.h>
