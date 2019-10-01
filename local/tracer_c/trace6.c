@@ -6,9 +6,9 @@
 
 #define TRACE_CONTROLLER_IP "127.0.0.1"
 #define TRACE_CONTROLLER_PORT 12341
-#define CIRC_BUF_SIZE 0x10
+#define CIRC_BUF_SIZE 0x20
 
-#define VERSION_STR "# tracer version 4.9\n"
+#define VERSION_STR "# tracer version 4.11\n"
 //#include <winsock.h>
 
 //#pragma comment(lib,"ws2_32.lib") //Winsock Library
@@ -119,7 +119,7 @@ LONG WINAPI VectoredHandler1(struct _EXCEPTION_POINTERS *ExceptionInfo)
 
     sprintf(buff_line, "\u001b[31mTRACER CRASHED\u001b[0m\n");
     strcpy(my_trace->report_buffer, buff_line);
-    sprintf(buff_line, "Tracer version: %s\n", VERSION_STR);
+    sprintf(buff_line, VERSION_STR);
     strcat(my_trace->report_buffer, buff_line);
     sprintf(buff_line, "Exception code: 0x%08x\n", ExceptionInfo->ExceptionRecord->ExceptionCode);
     strcat(my_trace->report_buffer, buff_line);
@@ -2388,7 +2388,7 @@ void register_thread(DWORD tid, HANDLE handle)
 
     DWORD tid_pos;
 
-    d_print("register_thread\n");
+//    d_print("register_thread\n");
 
     if(my_trace->tid2index[tid] == -1)
     {
@@ -2504,6 +2504,7 @@ void register_all_threads_in_trace()
     unsigned i;
     THREAD_ENTRY* current_thread;
 
+    d_print("[register_all_threads_in_trace]\n");
     for(i=0x0; i<my_trace->thread_count; i++)
     {
         current_thread = &my_trace->threads[i]; 
@@ -2890,6 +2891,7 @@ inline void react_sysret_callback(void* data)
     tid_pos = my_trace->tid2index[tid];
 
     /* fix na uciekajace watki */
+    d_print("[sysret callback]\n");
     register_all_threads_in_trace();
 
     /* powtarza sie */
@@ -6981,7 +6983,7 @@ int handle_cmd(char* cmd)
         my_trace->out_postfix = -1;
         reload_out_file();
 
-        sprintf(buffer2, "Tracer version: %s\n", VERSION_STR);
+        sprintf(buffer2, VERSION_STR);
         add_to_buffer(buffer2);
 
         /* dump */ 
@@ -7040,7 +7042,7 @@ int handle_cmd(char* cmd)
         d_print("Tracing enabled\n");
 
         d_print("Starting @ 0x%08x\n", my_trace->eip);
-        sprintf(line2, "Tracer version: %s\n", VERSION_STR);
+        sprintf(line2, VERSION_STR);
         add_to_buffer(line2);
         sprintf(line2, "ST,0x%08x\n", my_trace->eip);
         add_to_buffer(line2);
@@ -7063,7 +7065,7 @@ int handle_cmd(char* cmd)
         d_print("Syscall tracing debugged enabled\n");
 
         d_print("Starting @ 0x%08x\n", my_trace->eip);
-        sprintf(line2, "Tracer version: %s\n", VERSION_STR);
+        sprintf(line2, VERSION_STR);
         add_to_buffer(line2);
         sprintf(line2, "ST,0x%08x\n", my_trace->eip);
         add_to_buffer(line2);
@@ -7084,7 +7086,7 @@ int handle_cmd(char* cmd)
         d_print2("CMD_ENABLE_DBG_LIGHT");
         d_print("Light tracing debugged enabled\n");
 
-        sprintf(line2, "Tracer version: %s\n", VERSION_STR);
+        sprintf(line2, VERSION_STR);
         add_to_buffer(line2);
         d_print("Starting @ 0x%08x\n", my_trace->eip);
         sprintf(line2, "ST,0x%08x\n", my_trace->eip);
@@ -7106,7 +7108,7 @@ int handle_cmd(char* cmd)
 
         d_print("Tracing debugged enabled\n");
 
-        sprintf(line2, "Tracer version: %s\n", VERSION_STR);
+        sprintf(line2, VERSION_STR);
         add_to_buffer(line2);
         d_print("Starting @ 0x%08x\n", my_trace->eip);
         sprintf(line2, "ST,0x%08x\n", my_trace->eip);
@@ -7756,7 +7758,7 @@ int handle_cmd(char* cmd)
         DWORD tid_id;
 
         strtok(cmd, " ");
-        str = strtok(0x0, " ");
+        //str = strtok(0x0, " ");
         tid_id = strtoul(strtok(0x0, " "), 0x0, 0x10);
         set_priority_high(tid_id);
         send_report();
@@ -8771,7 +8773,7 @@ int main(int argc, char** argv)
         return -1;
     }
 
-    d_print("Version %s\n", VERSION_STR);
+    d_print(VERSION_STR);
 
     if(strlen(argv[1]) > MAX_LINE) return -1;
     if(strlen(argv[2]) > MAX_LINE) return -1;

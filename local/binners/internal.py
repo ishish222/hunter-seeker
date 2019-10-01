@@ -482,6 +482,7 @@ def execute(cmds, ext_pipe):
 
         elif(cmd == "tracer_set_priority_high"):
             trace_controller.tracer_set_priority_high(args)
+            writePipe(ext_pipe, "%s" % trace_controller.last_answer)
             writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
             writePipe(ext_pipe, "tracer_priority_high "+bcolors.OK_STR)
             ok(ext_pipe)
