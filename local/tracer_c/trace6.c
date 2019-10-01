@@ -6,9 +6,9 @@
 
 #define TRACE_CONTROLLER_IP "127.0.0.1"
 #define TRACE_CONTROLLER_PORT 12341
-#define CIRC_BUF_SIZE 0x10
+#define CIRC_BUF_SIZE 0x50
 
-#define VERSION_STR "# tracer version 4.11\n"
+#define VERSION_STR "# tracer version 4.12\n"
 //#include <winsock.h>
 
 //#pragma comment(lib,"ws2_32.lib") //Winsock Library
@@ -85,7 +85,7 @@ char* mod_buffer;
 unsigned mod_buffer_size;
 unsigned mod_buffer_bytes;
 
-char log_last_entries[0x10][MAX_LINE];
+char log_last_entries[CIRC_BUF_SIZE][MAX_LINE];
 unsigned log_id;
 
 /*
