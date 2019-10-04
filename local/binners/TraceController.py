@@ -934,6 +934,11 @@ class TraceController(object):
         self.last_report, self.last_answer = self.recv_report_active()
         return 
 
+    def get_exception_chance(self):
+        self.send_command_active("EH")
+        self.last_report, self.last_answer = self.recv_report_active()
+        return 
+
     def get_exception_code(self):
         self.send_command_active("EC")
         self.last_report, self.last_answer = self.recv_report_active()

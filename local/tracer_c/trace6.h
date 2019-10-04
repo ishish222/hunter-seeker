@@ -163,6 +163,7 @@
 #define CMD_SET_BASE            "SB"
 #define CMD_SET_PRIORITY_HIGH   "sp"
 #define CMD_GET_EXCEPTION_CODE  "EC"
+#define CMD_GET_EXCEPTION_CHANCE "EH"
 #define CMD_GET_EXCEPTION_ADDR  "EA"
 #define CMD_REOPEN_IO           "RO"
 #define CMD_FLUSH               "FL"

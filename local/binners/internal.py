@@ -844,6 +844,13 @@ def execute(cmds, ext_pipe):
             writePipe(ext_pipe, "tracer_get_exception_code "+bcolors.OK_STR)
             ok(ext_pipe)
 
+        elif(cmd == "tracer_get_exception_chance"):
+            trace_controller.get_exception_chance()
+            writePipe(ext_pipe, "%s" % trace_controller.last_answer)
+            writePipe(ext_pipe, "[tracer 0x%02x]: %s" % (trace_controller.tracer_active_id , trace_controller.last_report))
+            writePipe(ext_pipe, "tracer_get_exception_chance "+bcolors.OK_STR)
+            ok(ext_pipe)
+
         elif(cmd == "tracer_get_exception_address"):
             trace_controller.get_exception_address()
             writePipe(ext_pipe, "%s" % trace_controller.last_answer)

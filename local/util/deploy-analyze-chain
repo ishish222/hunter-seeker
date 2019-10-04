@@ -1,0 +1,18 @@
+#!/bin/bash
+#
+# usage: $0 PACKAGE MACHINE CHAIN FOLDER
+
+. settings
+
+PACKAGE=$1
+MACHINE=$2
+CHAIN=$3
+FOLDER=$4
+
+exec 4<$WORKSPACE_DIR/$CHAIN
+
+while read -u4 SCRIPT;
+do
+    ./deploy-analyze-sample-close $PACKAGE $MACHINE $SCRIPT $FOLDER
+done
+

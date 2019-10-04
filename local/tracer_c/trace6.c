@@ -6284,20 +6284,6 @@ int continue_routine(DWORD time, unsigned stat)
             break;
         }
 
-        /*
-        // finishing - handling syscall update, etc.
-        if(last_was_syscall(my_trace->tid)) 
-        {
-            react_sysret_callback((void*)&my_trace->event);
-        }
-
-        if(is_syscall(my_trace->eip))
-        {
-            react_sysenter_callback((void*)&my_trace->event);
-        }
-        */
-
-        //ContinueDebugEvent(my_trace->event.dwProcessId, my_trace->event.dwThreadId, status);
         handle_continue(my_trace->event.dwProcessId, my_trace->event.dwThreadId, status);
     }
 
@@ -6935,6 +6921,15 @@ int handle_cmd(char* cmd)
     else if(!strncmp(cmd, CMD_GET_CONFIG, 2))
     {
         get_process_creation_line();
+        send_report();
+    }
+    else if(!strncmp(cmd, CMD_GET_EXCEPTION_CHANCE, 2))
+    {
+        char line[MAX_LINE];
+        my_trace->report_code = REPORT_INFO;
+
+        sprintf(line, "0x%08x\n", my_trace->event.u.Exception.dwFirstChance);
+        strcpy(my_trace->report_buffer, line);
         send_report();
     }
     else if(!strncmp(cmd, CMD_GET_EXCEPTION_CODE, 2))

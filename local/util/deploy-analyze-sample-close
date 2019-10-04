@@ -1,0 +1,25 @@
+#!/bin/bash
+#
+# usage: $0 PACKAGE MACHINE SCRIPT FOLDER
+
+. settings
+
+PACKAGE=$1
+MACHINE=$2
+SCRIPT=$3
+FOLDER=$4
+
+SESSIONNAME="$MACHINE->$(basename $SCRIPT)->$FOLDER"
+
+./deploy $PACKAGE
+
+if [ $PACKAGE_HOST == "local" ];
+then
+    echo "This is local config, will analyze on localhost"
+    sh -c "cd $CURRENT_DEPLOY_PATH/$PACKAGE/client; ./fuzzer.py $MACHINE $SCRIPT $FOLDER"
+else
+    echo "This is remote config, will analyze on remote"
+    ssh -tt $PACKAGE_HOST "cd $CURRENT_DEPLOY_PATH/$PACKAGE/client; ./fuzzer.py $MACHINE $SCRIPT $FOLDER"
+fi
+
+
