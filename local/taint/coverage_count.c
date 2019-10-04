@@ -58,7 +58,7 @@ int main(int argc, char** argv)
         }
     }
 
-    printf("%d instructions more %s touched\n", touched, path1);
+    printf("%d \tinstructions %s touched\n", touched, path1);
 
     return 0x0;
 }

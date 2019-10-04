@@ -3,4 +3,4 @@
 mkdir -p $3/cov
 cp $1/libs.txt $3/libs.txt
 
-cat $1/libs.txt | while read aa; do coverage_sum $1/cov/$aa $2/cov/$aa $3/cov/$aa; done
+cat $1/libs.txt | while read aa; do coverage_sum $1/cov/$aa.cov $2/cov/$aa.cov $3/cov/$aa.cov; done

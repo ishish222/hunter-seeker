@@ -93,7 +93,7 @@ int main(int argc, char** argv)
     }
 
     if(touched_more)
-    printf("%d instructions more %s touched than %s\n", touched_more, path1, path2);
+    printf("%d \tinstructions more %s touched than %s\n", touched_more, path1, path2);
     //fwrite(lib3.content, lib3.size, 0x1, f3);
     //fclose(f3);
 

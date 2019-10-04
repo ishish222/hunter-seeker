@@ -75,12 +75,9 @@ void taint_x86::handle_sigsegv(int signum)
 void taint_x86::handle_sigint(int signum)
 {
     if(this->plugin) this->plugin->handle_sigint();
-    else
-    {
         this->finished = 0x1;
         this->aborted = 0x1;
         d_print(1, "Eip: 0x%08x, this->end_addr: 0x%08x, limit: %d, count: %d, finishing\n", this->current_eip, this->end_addr, this->instr_limit, this->current_instr_count);
-    }
 }
 
 int taint_x86::start()
