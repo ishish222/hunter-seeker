@@ -9,6 +9,11 @@ MACHINE=$2
 SCRIPT=$3
 FOLDER=$4
 
+if [[ ${SCRIPT: -3} != ".sc" ]]; then
+    echo "Wrong file, I need script"
+    exit 0
+fi
+
 SESSIONNAME="$MACHINE->$(basename $SCRIPT)->$FOLDER"
 
 ./deploy $PACKAGE

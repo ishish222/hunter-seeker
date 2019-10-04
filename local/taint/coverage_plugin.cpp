@@ -8,6 +8,9 @@
 #include <plugin.h>
 #include <utils.h>
 #include <out_utils.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 #include <limits.h>
 
@@ -63,12 +66,26 @@ int coverage_plugin::finish_callback()
     FILE* f;
     char fname[MAX_NAME];
 
+    struct stat st = {0};
+    
+    if (stat("./coverage", &st) == -1) {
+        mkdir("./coverage", 0700);
+    }
+    if (stat("./coverage/cov", &st) == -1) {
+        mkdir("./coverage/cov", 0700);
+    }
+
+    FILE* list_file = fopen("./coverage/libs.txt", "w+");
+
     for(i=0x0; i < libs_count; i++)
     {
         cur_lib = &this->libs[i];
         err_print("Library: %s, instructions touched: %d\n", cur_lib->name, cur_lib->instructions_touched);
 
-        sprintf(fname, "%s.cov", cur_lib->name);
+        fwrite(cur_lib->name, strlen(cur_lib->name), 0x1, list_file);
+        fwrite("\n", 0x1, 0x1, list_file);
+
+        sprintf(fname, "./coverage/cov/%s.cov", cur_lib->name);
 
         f = fopen(fname, "wb");
 
@@ -76,6 +93,8 @@ int coverage_plugin::finish_callback()
 
         fclose(f);
     }
+
+    fclose(list_file);
     return 0x0;    
 }
 

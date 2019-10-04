@@ -59,7 +59,10 @@ def host_print(args=None):
 
 def beep(args = None):
     from subprocess import Popen
-    Popen('beeep')
+    if(args is None):
+        Popen('beeep')
+    else:
+        Popen(['beeep', args])
     return
 
 def defined(name):
