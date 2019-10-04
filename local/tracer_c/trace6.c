@@ -6,9 +6,9 @@
 
 #define TRACE_CONTROLLER_IP "127.0.0.1"
 #define TRACE_CONTROLLER_PORT 12341
-#define CIRC_BUF_SIZE 0x50
+#define CIRC_BUF_SIZE 0x100
 
-#define VERSION_STR "# tracer version 4.12\n"
+#define VERSION_STR "# tracer version 4.19\n"
 //#include <winsock.h>
 
 //#pragma comment(lib,"ws2_32.lib") //Winsock Library
@@ -639,7 +639,7 @@ void update_region_old(LOCATION* location)
     size_wrote = dump_mem2((void*)location->off, location->size);
     if(size_wrote == location->size)
     {
-//        d_print("[Updated location: 0x%08x, size: 0x%08x]\n", location->off, location->size);
+        d_print("[Updated location: 0x%08x, size: 0x%08x]\n", location->off, location->size);
         sprintf(line, "UP,0x%08x,0x%08x\n", location->off, location->size);
         add_to_buffer(line);
         //d_print2("# Current mod position: 0x%08x", ftell(my_trace->mods));
@@ -2086,15 +2086,23 @@ int add_to_buffer(char* line)
 
     to_write = strlen(line);    
 
-    if(out_buffer_bytes + to_write >= out_buffer_size)
+    if(out_buffer_bytes == 1)
     {
-        written = fwrite(out_buffer, out_buffer_bytes, 1, my_trace->trace);
+        written = fwrite(line, strlen(line), 1, my_trace->trace);
         fflush(my_trace->trace);
-        out_buffer[0] = '\0';
-        out_buffer_bytes = 0x0;
     }
-    memcpy(out_buffer+out_buffer_bytes, line, to_write);
-    out_buffer_bytes += to_write;
+    else
+    {
+        if(out_buffer_bytes + to_write >= out_buffer_size)
+        {
+            written = fwrite(out_buffer, out_buffer_bytes, 1, my_trace->trace);
+            fflush(my_trace->trace);
+            out_buffer[0] = '\0';
+            out_buffer_bytes = 0x0;
+        }
+        memcpy(out_buffer+out_buffer_bytes, line, to_write);
+        out_buffer_bytes += to_write;
+    }
 
     return to_write;
 }
@@ -2339,7 +2347,7 @@ void register_thread_info(DWORD tid, HANDLE handle)
         my_trace->tid2index[tid] = tid_pos;
         my_trace->thread_count ++;
 
-        d_print2("# Thread count: 0x%08x", my_trace->thread_count);
+        d_print2("Thread count: 0x%08x", my_trace->thread_count);
     }
     else
     {
@@ -2408,7 +2416,7 @@ void register_thread(DWORD tid, HANDLE handle)
         my_trace->tid2index[tid] = tid_pos;
         my_trace->thread_count ++;
 
-        d_print2("# Thread count: 0x%08x", my_trace->thread_count);
+        d_print("Thread count: 0x%08x", my_trace->thread_count);
     }
     else
     {
@@ -2505,6 +2513,7 @@ void register_all_threads_in_trace()
     THREAD_ENTRY* current_thread;
 
     d_print("[register_all_threads_in_trace]\n");
+    d_print("Thread count: 0x%08x\n", my_trace->thread_count);
     for(i=0x0; i<my_trace->thread_count; i++)
     {
         current_thread = &my_trace->threads[i]; 
@@ -2514,6 +2523,7 @@ void register_all_threads_in_trace()
         }
     }
 
+    d_print("[register_all_threads_in_trace finishes]\n");
     return;
 }
 
@@ -2816,6 +2826,7 @@ void react_sysret_callback(void* data);
 
 inline void react_sysenter_callback(void* data)
 {
+    d_print("[sysenter_callback]\n");
     char line[MAX_LINE];
 
     DEBUG_EVENT* de;
@@ -2841,11 +2852,13 @@ inline void react_sysenter_callback(void* data)
     */
 
     sysenter_no = read_register(-1, "EAX");
+    d_print("Handling syscall no: 0x%08x\n", sysenter_no);
     //esp = read_register(-1, "ESP");
     //val = read_dword(esp+0x4);
 
+    d_print("SC,0x%08x,0x%08x\n", my_trace->tid, sysenter_no);
     sprintf(line, "SC,0x%08x,0x%08x\n", my_trace->tid, sysenter_no);
-    //add_to_buffer(line);
+    add_to_buffer(line);
 
     //d_print2("ESP: 0x%08x", esp);
 
@@ -2861,21 +2874,22 @@ inline void react_sysenter_callback(void* data)
         */
         if(my_trace->syscall_out_args[sysenter_no][i].off == 0x0)
         {
-//            d_print2("No more syscalls");
+            d_print("No more syscall args");
             current_syscall_location[i].off = 0x0;
             current_syscall_location[i].size = 0x0;
             break;
         }
-//        d_print2("Arg no; 0x%02x", i);
+        d_print("Arg no: 0x%02x\n", i);
         current_syscall_location[i].off = resolve_loc_desc(my_trace->syscall_out_args[sysenter_no][i].off);
         current_syscall_location[i].size = resolve_loc_desc(my_trace->syscall_out_args[sysenter_no][i].size);
 
-//        d_print2("Resolved location: 0x%08x:0x%08x", current_syscall_location[i].off, current_syscall_location[i].size);
+        d_print("Resolved location: 0x%08x:0x%08x\n", current_syscall_location[i].off, current_syscall_location[i].size);
     }
 
     my_trace->threads[my_trace->tid_pos].last_was_syscall = 0x1;
     my_trace->threads[my_trace->tid_pos].syscall_no = sysenter_no;
-//    d_print2("Setting last_was_syscall for: 0x%08x (0x%08x): 0x%08x", my_trace->tid, my_trace->tid_pos, my_trace->threads[tid_pos].last_was_syscall);
+    d_print("Setting last_was_syscall for: 0x%08x (0x%08x): 0x%08x\n", my_trace->tid, my_trace->tid_pos, my_trace->threads[tid_pos].last_was_syscall);
+    d_print("[sysenter_callback finishes]\n");
 }
 
 inline void react_sysret_callback(void* data)
@@ -2924,7 +2938,7 @@ inline void react_sysret_callback(void* data)
         update_region_old(&current_syscall_location[i]);
 
     }
-
+    d_print("[sysret callback finishes]\n");
 }
 
 
@@ -3270,7 +3284,7 @@ inline int is_syscall(DWORD eip)
     //d_print2("checking syscall: 0x%08x and 0x%08x", dword, 0x0000340f);
     if(dword == 0x0000340f)
     {
-        //d_print2("Is syscall");
+        d_print("Syscall at: 0x%08x\n", eip);
         return 0x1;
     }
 
@@ -3298,6 +3312,7 @@ void handle_syscall()
 
 void syscall_callback(void* data)
 {
+    d_print("[syscall_callback]\n");
     DEBUG_EVENT* de;
     de = (DEBUG_EVENT*)data;
     DWORD eip;
@@ -3329,10 +3344,12 @@ void syscall_callback(void* data)
         add_to_buffer(line);
     }
     return;
+    d_print("[syscall_callback finishes]\n");
 }
 
 void ss_callback(void* data)
 {
+    d_print("[ss_callback]\n");
     DEBUG_EVENT* de;
     de = (DEBUG_EVENT*)data;
     DWORD eip;
@@ -3407,7 +3424,18 @@ void ss_callback(void* data)
         }
     }
 
+        //finishing - handling syscall updates, etc.
+        if(last_was_syscall(my_trace->tid)) 
+        {
+            react_sysret_callback((void*)&my_trace->event);
+        }
 
+        if(is_syscall(my_trace->eip))
+        {
+            react_sysenter_callback((void*)&my_trace->event);
+        }
+
+    d_print("[ss_callback finishes]\n");
     return;
 }
 
@@ -3425,6 +3453,7 @@ int page_accessible(MEMORY_BASIC_INFORMATION mbi)
 
 SIZE_T dump_mem2(void* from, SIZE_T len)
 {
+    d_print("[dump_mem2]\n");
     //d_print2("dump_mem2: 0x%08x bytes", len);
     SIZE_T read, i;
     char mem_buf[buf_size];
@@ -3519,6 +3548,7 @@ SIZE_T dump_mem2(void* from, SIZE_T len)
         }
     }
 
+    d_print("[dump_mem2 finish]\n");
     return wrote_total;
 }
 
@@ -5176,6 +5206,7 @@ int release_all()
 
 int read_context(DWORD tid, CONTEXT* ctx)
 {
+    d_print("[read_context]\n");
     HANDLE myHandle = (HANDLE)-0x1;
     DWORD tid_id;
     char buffer2[MAX_LINE];
@@ -5196,11 +5227,12 @@ int read_context(DWORD tid, CONTEXT* ctx)
     if(GetThreadContext(myHandle, ctx) == 0x0)
     {
         d_print("Failed to get context, error: 0x%08x\n", GetLastError());
-        sprintf(buffer2, "Error: 0x%08x\n", GetLastError());
-        strcpy(my_trace->report_buffer, buffer2);
+        sprintf(buffer2, "# Error: 0x%08x while trying to get context", GetLastError());
+        add_to_buffer(buffer2);
     }
     //CloseHandle(myHandle);
 
+    d_print("[read_context finish]\n");
     return 0x0;
 }
 
@@ -5546,6 +5578,7 @@ int report_dword(DWORD addr)
 
 int write_register(DWORD map_id, char* reg, char* data)
 {
+    d_print("[write_register]\n");
     CONTEXT ctx;
     char buffer2[MAX_LINE];
     DWORD data_d;
@@ -5633,14 +5666,17 @@ int write_register(DWORD map_id, char* reg, char* data)
     sprintf(buffer2, "%s written\n", reg);
     strcpy(my_trace->report_buffer, buffer2);
 
+    d_print("[write_register finish]\n");
     return 0x0;
 }
 
 DWORD read_register(DWORD tid_id, char* reg)
 {
+    d_print("[read_register]\n");
     CONTEXT ctx;
     DWORD tid;
 
+    d_print("tid_id = %d\n", tid_id);
     if(tid_id == -1)
     {
         tid = my_trace->tid;
@@ -5694,6 +5730,7 @@ DWORD read_register(DWORD tid_id, char* reg)
     }
 
     d_print("Error reading register %s\n", reg);
+    d_print("[read_register finish]\n");
     return -1;
 }
 
@@ -5715,6 +5752,7 @@ int report_register(DWORD tid_id, char* reg)
 
 int read_stack(DWORD tid_id, DWORD count)
 {
+    d_print("[read_stack]\n");
     CONTEXT ctx;
     char buffer2[MAX_LINE];
     DWORD esp;
@@ -5741,6 +5779,7 @@ int read_stack(DWORD tid_id, DWORD count)
     }
     d_print("new buffer: %p - %s\n", my_trace->report_buffer, my_trace->report_buffer);
 
+    d_print("[read_stack finish]\n");
     return 0x0;
 }
 
@@ -6086,6 +6125,7 @@ void task_switch()
 
 void update_status(void* data)
 {
+    d_print("[update_status]\n");
     DEBUG_EVENT* de;
     de = (DEBUG_EVENT*)data;
 
@@ -6101,11 +6141,13 @@ void update_status(void* data)
     my_trace->last_tid_pos = my_trace->tid_pos;
     my_trace->tid_pos = my_trace->tid2index[my_trace->last_tid];
 
+    d_print("[update_status finishes]\n");
     return;
 }
 
 int get_pending_events()
 {
+    d_print("[get_pending_events]\n");
     int last_report;
     char buffer2[MAX_LINE];
     char line[MAX_LINE];
@@ -6135,17 +6177,6 @@ int get_pending_events()
         {
             task_switch();
         }
-
-        if(last_was_syscall(my_trace->tid)) 
-        {
-            react_sysret_callback((void*)&my_trace->event);
-        }
-
-        if(is_syscall(my_trace->eip))
-        {
-            react_sysenter_callback((void*)&my_trace->event);
-        }
-
 
         if(my_trace->event.dwDebugEventCode == 0x0) return REPORT_NOTHING;
 
@@ -6177,12 +6208,14 @@ int get_pending_events()
 
     my_trace->report_code = last_report;
 
+    d_print("[get_pending_events finishes]\n");
     return last_report;
 }
 
 /* TODO: continuing for some time */
 int continue_routine(DWORD time, unsigned stat)
 {
+    d_print("[continue_routine]\n");
     int last_report;
     char buffer2[MAX_LINE];
     unsigned status;
@@ -6221,17 +6254,6 @@ int continue_routine(DWORD time, unsigned stat)
             task_switch();
         }
 
-        if(last_was_syscall(my_trace->tid)) 
-        {
-            react_sysret_callback((void*)&my_trace->event);
-        }
-
-        if(is_syscall(my_trace->eip))
-        {
-            react_sysenter_callback((void*)&my_trace->event);
-        }
-
-
         //register_all_threads(); /* przeniesiono do task switch */
 
         if(ret == 0x0) //probably timeout
@@ -6250,7 +6272,6 @@ int continue_routine(DWORD time, unsigned stat)
         if(last_report == REPORT_CONTINUE)
         {
             status = DBG_CONTINUE;
-            d_print2("REPORT_CONTINUE");
         }
         else if(last_report == REPORT_EXCEPTION_NH)
         {
@@ -6263,6 +6284,19 @@ int continue_routine(DWORD time, unsigned stat)
             break;
         }
 
+        /*
+        // finishing - handling syscall update, etc.
+        if(last_was_syscall(my_trace->tid)) 
+        {
+            react_sysret_callback((void*)&my_trace->event);
+        }
+
+        if(is_syscall(my_trace->eip))
+        {
+            react_sysenter_callback((void*)&my_trace->event);
+        }
+        */
+
         //ContinueDebugEvent(my_trace->event.dwProcessId, my_trace->event.dwThreadId, status);
         handle_continue(my_trace->event.dwProcessId, my_trace->event.dwThreadId, status);
     }
@@ -6272,11 +6306,13 @@ int continue_routine(DWORD time, unsigned stat)
 
     my_trace->report_code = last_report;
 
+    d_print("[continue_routine finishes]\n");
     return last_report;
 }
 
 int resolve_region_old(OLD_LOCATION_DESCRIPTOR* selector, LOCATION* location)
 {
+    d_print("[read_region_old]\n");
     d_print("Resolving region\n");
     d_print("Locating buffer\n");
 
@@ -6403,6 +6439,7 @@ int resolve_region_old(OLD_LOCATION_DESCRIPTOR* selector, LOCATION* location)
     size = arg_val;
     d_print("[Resolved location: 0x%08x, size: 0x%08x]\n", off, size);
 
+    d_print("[read_region_old finish]\n");
     return 0x0;
 }
 
