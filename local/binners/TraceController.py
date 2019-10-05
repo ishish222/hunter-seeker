@@ -979,22 +979,27 @@ class TraceController(object):
         self.last_report, self.last_answer = self.recv_report_active()
         return 
 
-    def handle_exceptions(self, regions):
+    def handle_exceptions(self):
         self.send_command_active("HE")
         self.last_report, self.last_answer = self.recv_report_active()
         return 
 
-    def debug_log_enable(self, regions):
+    def read_debug_log(self):
+        self.send_command_active("RD")
+        self.last_report, self.last_answer = self.recv_report_active()
+        return 
+
+    def debug_log_enable(self):
         self.send_command_active("DE")
         self.last_report, self.last_answer = self.recv_report_active()
         return 
 
-    def crash_host(self, regions):
+    def crash_host(self):
         self.send_command_active("CH")
         self.last_report, self.last_answer = self.recv_report_active()
         return 
 
-    def taint_last_region(self, regions):
+    def taint_last_region(self):
         self.send_command_active("Rs")
         self.last_report, self.last_answer = self.recv_report_active()
         return 

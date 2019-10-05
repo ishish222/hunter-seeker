@@ -719,6 +719,18 @@ def tracer_handle_exceptions(args=None):
 
     return
 
+def tracer_read_debug_log(args=None):
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+    
+    write_socket(options.s, "tracer_read_debug_log");
+    response, _, _ = read_socket(options.s)
+
+    globs.state.ret = response
+
+    return
+
 def tracer_debug_log_enable(args=None):
     options = globs.state.options
     state = globs.state

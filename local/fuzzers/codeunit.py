@@ -278,9 +278,11 @@ prototypes['CreateFolderGlob']      = disk_fs_parts.create_shared_folder_glob
 prototypes['HostDeployInputGlob']   = tracing_parts.host_deploy_input_glob
 prototypes['GetCaller']   = tracer_parts.tracer_get_caller
 prototypes['CrashHost']   = tracer_parts.tracer_crash_host
-prototypes['TracerDebugLogEnable']   = tracer_parts.tracer_debug_log_enable
-prototypes['DebugLogEnable']   = tracer_parts.tracer_debug_log_enable
-prototypes['HandleExceptions']   = tracer_parts.tracer_handle_exceptions
+prototypes['TracerDebugLogEnable']  = tracer_parts.tracer_debug_log_enable
+prototypes['TracerReadDebugLog']    = tracer_parts.tracer_read_debug_log
+prototypes['DebugLogEnable']        = tracer_parts.tracer_debug_log_enable
+prototypes['ReadDebugLog']          = tracer_parts.tracer_read_debug_log
+prototypes['HandleExceptions']      = tracer_parts.tracer_handle_exceptions
 #Mutator
 prototypes['MutatorInit']               = mutator_parts.init_mutator
 prototypes['MutatorSelectChanger']      = mutator_parts.select_changer

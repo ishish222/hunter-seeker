@@ -29,7 +29,7 @@
 #define MAX_SYSCALL_ENTRIES  0x10000
 #define MAX_THREADS 0x10000
 #define MAX_LIBS 0x10000
-#define MAX_REGIONS 0x100
+#define MAX_REGION_DESCRIPTORS 0x100
 #define MAX_ROUTINES    0x100
 #define MAX_FUNCTIONS   0x100
 #define MAX_REACTIONS   0x500
@@ -43,14 +43,6 @@
 #define INSTRUCTION_SMALL_INTERVAL 10000
 
 #define OFFSET unsigned int
-
-#define LOCATION_CONST          0x0
-#define LOCATION_STACK          0x1
-#define LOCATION_ADDR_STACK     0x2
-#define LOCATION_ADDR_ADDR_STACK     0x3
-#define LOCATION_REG            0x4
-#define LOCATION_MEM            0x5
-#define LOCATION_END            0x6
 
 #define MAX_NAME 0x300
 #define SNAP_SIZE 0x100
@@ -173,6 +165,7 @@
 #define CMD_CRASH_HOST          "CH"
 #define CMD_HANDLE_EXCEPTIONS   "HE"
 #define CMD_DEBUG_LOG_ENABLE    "DE"
+#define CMD_READ_DEBUG_LOG      "RD"
 
 #define CMD_ROUTINE_1           "R1"
 #define CMD_ROUTINE_2           "R2"
@@ -248,11 +241,11 @@ typedef struct _READ_RECORD
     SIZE_T* read;
 } READ_RECORD;
 
-typedef struct LOCATION_
+typedef struct REGION_
 {
     DWORD off;
     DWORD size;
-} LOCATION;
+} REGION;
 
 typedef struct _THREAD_ENTRY
 {
@@ -269,7 +262,7 @@ typedef struct _THREAD_ENTRY
     /* handling syscalls */
     char last_was_syscall;
     DWORD syscall_no;
-    LOCATION syscall_location[MAX_SYSCALL_OUT_ARGS];
+    REGION syscall_location[MAX_SYSCALL_OUT_ARGS];
 
 } THREAD_ENTRY;
 
@@ -284,21 +277,12 @@ typedef struct _LIB_ENTRY
 } LIB_ENTRY;
 
 /* handling syscalls */
-typedef struct OLD_LOCATION_DESCRIPTOR_
-{
-    DWORD off;
-    DWORD size;
-    char off_location;
-    char size_location;
-    DWORD eax_val_success;
-} OLD_LOCATION_DESCRIPTOR;
-
-typedef struct REGION_
+typedef struct REGION_DESCRIPTOR_
 {
     LOCATION_DESCRIPTOR* off;
     LOCATION_DESCRIPTOR* size;
 }
-REGION;
+REGION_DESCRIPTOR;
 
 typedef struct TRACE_CONFIG_
 {
@@ -428,33 +412,20 @@ typedef struct TRACE_CONFIG_
     unsigned reaction_count;
     reaction_routine routines[MAX_FUNCTIONS];
 
-    /* regions */
-    OLD_LOCATION_DESCRIPTOR region_sel[MAX_REGIONS];
-    unsigned region_sel_count;
-
-    /* regions new */
-    REGION regions[MAX_REGIONS];
-    unsigned regions_count;
-
-    /* scanned locations */
-    LOCATION scanned_locations[MAX_REGIONS];
-    unsigned scanned_locations_count;
+    /* LOCATION & REGION stuff */
+    /* scanned region descriptors */
+    REGION_DESCRIPTOR region_descriptors[MAX_REGION_DESCRIPTORS];
+    unsigned region_descriptors_count;
 
     /* new scanned regions */
-    REGION scanned_regions[MAX_REGIONS];
-    unsigned scanned_regions_count;
+    REGION_DESCRIPTOR scanned_region_descriptors[MAX_REGION_DESCRIPTORS];
+    unsigned scanned_region_descriptors_count;
 
     /* syscall data */
     DWORD sysenter_esp;
     DWORD sysenter_no;
 
-    /* handling syscalls */
-    OLD_LOCATION_DESCRIPTOR last_arg = {0x0, 0x0, LOCATION_END, LOCATION_END, 0x0};
-    LOCATION last_location = {0x0, 0x0};
-    OLD_LOCATION_DESCRIPTOR syscall_out_args_old[MAX_SYSCALL_ENTRIES][MAX_SYSCALL_OUT_ARGS];
-    LOCATION syscall_out_args_old_dump_list[MAX_SYSCALL_OUT_ARGS];
-
-    REGION syscall_out_args[MAX_SYSCALL_ENTRIES][MAX_SYSCALL_OUT_ARGS];
+    REGION_DESCRIPTOR syscall_out_args[MAX_SYSCALL_ENTRIES][MAX_SYSCALL_OUT_ARGS];
 
     /* handling syscalls - new way */
 
