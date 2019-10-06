@@ -58,17 +58,16 @@
 
 /* tracer reports */
 
-#define REPORT_CONTINUE         0x0
+#define REPORT_CONTINUE         0x0 // used internally
 #define REPORT_PROCESS_CREATED  0x1
 #define REPORT_PROCESS_EXIT     0x2
-#define REPORT_ST_BREAKPOINT    0x3
-#define REPORT_END_BREAKPOINT   0x4
+#define REPORT_CRASH            0x3
+#define REPORT_TRACER_ERROR     0x4
 #define REPORT_BREAKPOINT       0x5
 #define REPORT_EXCEPTION        0x6
 #define REPORT_INFO             0x7
 #define REPORT_EXCEPTION_NH     0x8
 #define REPORT_TIMEOUT          0x9
-#define REPORT_NOTHING          0x99
 
 /* tracer commands */
 
@@ -322,7 +321,7 @@ typedef struct TRACE_CONFIG_
     unsigned port;
     char host[MAX_NAME];
     HANDLE pipe;
-    DWORD report_code;
+    DWORD internal_report;
     char report_buffer[BUFF_SIZE];
 
     /* replace this */

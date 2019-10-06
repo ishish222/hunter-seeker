@@ -212,25 +212,8 @@ def read_socket(s):
     reqScript = ""
     data = ""
 
-    while True:
-        data += s.recv(1).decode('utf-8')
-        if(data[-6:] == "-=OK=-"): 
-            lastResponse = data[:-6]
-            break
-
-    # find status
-
-
-    off = data.find("Status: ")
-    if(off != -1):
-        status = data[off+8:off+10]
-        if(status == "SR"):
-            scOff = data.find("Script: ")
-            lineEnd = data[scOff+8:].find("\n")
-            reqScript = data[scOff+8:scOff+8+lineEnd]
-
-#    print("%s %s" % (timestamp(), lastResponse))
-    print(("%s" % (lastResponse)))
+    lastResponse, status, reqScript = read_socket_q(s)
+    print("%s" % (lastResponse))
     return (lastResponse, status, reqScript)
 
 def read_socket_q(s):
@@ -248,43 +231,13 @@ def read_socket_q(s):
             lastResponse = data[:-6]
             break
 
-    # find status
-    off = data.find("Status: ")
-    if(off != -1):
-        status = data[off+8:off+10]
-        if(status == "SR"):
-            scOff = data.find("Script: ")
-            lineEnd = data[scOff+8:].find("\n")
-            reqScript = data[scOff+8:scOff+8+lineEnd]
+    # this is ugly, might cause trouble
+    if(lastResponse[1] == 'R'):
+        status = lastResponse[1:3]
+    else:
+        status = 'RI'
 
-#    print("%s %s" % (timestamp(), lastResponse))
     return (lastResponse, status, reqScript)
-
-def read_socket_q_deprecated(s):
-    options = globs.state.options
-
-    status = ""
-    data = ""
-
-    while True:
-        data += s.recv(options.settings.buffer_size).decode('utf-8')
-        
-        if(data[-6:] == "-=OK=-"): 
-            lastResponse = data[:-6]
-            break
-
-    # find status
-    off = data.find("Status: ")
-    if(off != -1):
-        status = data[off+8:off+10]
-        if(status == "SR"):
-            scOff = data.find("Script: ")
-            lineEnd = data[scOff+8:].find("\n")
-            reqScript = data[scOff+8:scOff+8+lineEnd]
-
-    print((timestamp()))
-    print("OK")
-    return lastResponse
 
 def write_socket(s, data):
     options = globs.state.options

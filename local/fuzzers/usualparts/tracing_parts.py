@@ -704,15 +704,7 @@ def read_last_suspension(args = None):
 def decision(args=None):
     options = globs.state.options
 
-    if('EXCEPTION' in globs.state.ret):
-        print(bcolors.WARNING + bcolors.BOLD + 'EXCEPTION' + bcolors.ENDC)
-        globs.state.ret = ''
-        return 'EXCEPTION'   
-    elif('TIMEOUT' in globs.state.ret):
-        print(bcolors.WARNING + bcolors.BOLD + 'TIMEOUT' + bcolors.ENDC)
-        globs.state.ret = ''
-        return 'TIMEOUT'   
-    elif(globs.state.ret[1:3] == "RB"):
+    if(globs.state.ret[1:3] == "RB"):
         bp = globs.state.ret[3:].split('\n')[0]
         print(bcolors.WARNING + bcolors.BOLD + bp + bcolors.ENDC)
         globs.state.ret = ''
