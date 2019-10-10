@@ -666,8 +666,19 @@ int graph_plugin::pre_execute_instruction_callback(DWORD eip)
         this->cur_graph_context->returning = 0;
     }
 
+    if(cur_graph_context->been_calling)
+    {
+        cur_graph_context->target = eip;
+        d_print(1, "Next call target = 0x%08x\n", eip);
+        handle_call(cur_graph_context);
+        cur_graph_context->been_calling = 0;
+    }
+
     if(this->cur_graph_context->calling)
     {
+        this->cur_graph_context->been_source = this->cur_graph_context->source;
+        this->cur_graph_context->been_target = this->cur_graph_context->target;
+        this->cur_graph_context->been_next = this->cur_graph_context->next;
         this->cur_graph_context->been_calling = 1;
         this->cur_graph_context->calling = 0;
     }
@@ -702,15 +713,8 @@ int graph_plugin::post_execute_instruction_callback(DWORD eip)
 {
     unsigned i;
 
-
-    /*
-    GRAPH_CONTEXT* cur_graph_context;
-    unsigned context_pos = this->get_graph_context(this->taint_eng->cur_tid);
-    cur_graph_context = &this->graph_contexts[context_pos];
-    */
     /* handle waiting rets */
 
-//    if(cur_graph_context->returning > 0x0) cur_graph_context->returning--;
     cur_graph_context = this->cur_graph_context;
 
     if((cur_graph_context->been_returning == 1))
@@ -719,18 +723,10 @@ int graph_plugin::post_execute_instruction_callback(DWORD eip)
         cur_graph_context->been_returning = 0;
     }
 
-    if(cur_graph_context->been_calling)
-    {
-        cur_graph_context->target = eip;
-        d_print(1, "Next call target = 0x%08x\n", eip);
-        handle_call(cur_graph_context);
-        cur_graph_context->been_calling = 0;
-    }
-
     d_print(3, "been_jumping: 0x%02x\n", cur_graph_context->been_jumping);
     if(cur_graph_context->been_jumping)
     {
-        cur_graph_context->target = eip;
+        cur_graph_context->been_target = eip;
         handle_jxx(cur_graph_context);
         cur_graph_context->been_jumping = 0;
     }
@@ -1482,9 +1478,9 @@ int graph_plugin::handle_call(GRAPH_CONTEXT* graph_context)
     char* func_name;
     DWORD_t current;
     DWORD_t waiting;
-    OFFSET source = graph_context->source;
-    OFFSET target = graph_context->target;
-    OFFSET next = graph_context->next;
+    OFFSET source = graph_context->been_source;
+    OFFSET target = graph_context->been_target;
+    OFFSET next = graph_context->been_next;
     CALL_LEVEL* cur_level;
 
     d_print(1, "source: 0x%08x, target: 0x%08x\n", source, target);
@@ -2328,7 +2324,7 @@ int graph_plugin::r_retn(BYTE_t*)
     d_print(2, "retn\n");
 
     if(this->taint_eng->started && !this->taint_eng->finished)
-        this->cur_graph_context->returning = 0x3;
+        this->cur_graph_context->returning = 0x1;
 
     return 0x0;
 
@@ -2339,7 +2335,7 @@ int graph_plugin::r_ret(BYTE_t*)
     d_print(2, "ret\n");
 
     if(this->taint_eng->started && !this->taint_eng->finished)
-        this->cur_graph_context->returning = 0x3;
+        this->cur_graph_context->returning = 0x1;
 
     return 0x0;
 }

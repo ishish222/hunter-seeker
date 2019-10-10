@@ -3,7 +3,7 @@
 
 #include <emul_x86.h>
 
-#define MAX_CALL_LEVELS         0x200
+#define MAX_CALL_LEVELS         0x500
 #define GRAPH_START             100
 #define MAX_LOOP_ADDRS          0x10
 #define MAX_LOOP_FENCES         0x10
@@ -130,6 +130,9 @@ typedef struct _GRAPH_CONTEXT
     OFFSET source;
     OFFSET target;
     OFFSET next;
+    OFFSET been_source;
+    OFFSET been_target;
+    OFFSET been_next;
     OFFSET last_eip;
     DWORD list[MAX_CALL_LEVELS][MAX_LIST_JXX];
     unsigned list_len[MAX_CALL_LEVELS];
