@@ -277,6 +277,9 @@ def tracer_set_priority_high(args = None):
     if(args == None):
         args = globs.state.stack.pop()
 
+    if(type(args) is not int):
+        args = int(args, 0x10)
+
     write_socket(options.s, "tracer_set_priority_high 0x%08x" % args);
     response, _, _ = read_socket(options.s)
 
@@ -319,7 +322,10 @@ def tracer_suspend_thread(args = None):
     state = globs.state
     status = globs.state.status
     
-    val = globs.state.stack.pop()
+    if(args == None):
+        val = globs.state.stack.pop()
+    else:
+        val = args
 
     if(type(val) is not int):
         val = int(val, 0x10)
@@ -336,7 +342,10 @@ def tracer_release_thread(args = None):
     state = globs.state
     status = globs.state.status
     
-    val = globs.state.stack.pop()
+    if(args == None):
+        val = globs.state.stack.pop()
+    else:
+        val = args
 
     if(type(val) is not int):
         val = int(val, 0x10)

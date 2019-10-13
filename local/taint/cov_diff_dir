@@ -1,3 +1,19 @@
 #!/bin/bash
 
-cat $1/libs.txt | while read aa; do coverage_diff $1/cov/$aa.cov $2/cov/$aa.cov; done
+shopt -s lastpipe
+
+COUNT=0
+
+cat $1/libs.txt | 
+while read aa; 
+do 
+    OUTPUT=$(coverage_diff $1/cov/$aa.cov $2/cov/$aa.cov)
+    if [[ ! -z "$OUTPUT" ]]; then
+        CUR_COUNT=$(echo $OUTPUT | cut -d' ' -f1)
+        echo $OUTPUT
+        COUNT=$(($COUNT+$CUR_COUNT))
+#        echo $CUR_COUNT
+#        echo $COUNT
+    fi
+done
+echo "In total: $COUNT more"
