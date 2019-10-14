@@ -120,4 +120,6 @@ class Mutator(io.FileIO):
 
     def readSize(self, path):
         statinfo = os.stat(path)
-        self.areas.append(Area(0, statinfo.st_size))
+        print('Size: %d' % statinfo.st_size)
+        self.areas.append(Area(0, statinfo.st_size-1))
+

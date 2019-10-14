@@ -142,6 +142,7 @@ def original(args = None):
     globs.state.mutator.original_path = globs.state.options.external_paths_tmp_input+ '/' +args
     globs.state.mutator.original_dirname = dirname(globs.state.mutator.original_path)
     globs.state.mutator.original_basename = basename(globs.state.mutator.original_path)
+    globs.state.mutator.original_basename_wo_extension = globs.state.mutator.original_basename.split(".")[0]
     globs.state.mutator.original_extension = globs.state.mutator.original_basename.split(".")[-1]
     print('Mutator original path: %s' % globs.state.mutator.original_path)
     print('Mutator dirname path: %s' % globs.state.mutator.original_dirname)
@@ -187,7 +188,7 @@ def generate_batch(args = None):
 
     for i in range(0, mutator.batch_size):
         # copy original
-        tname = tempfile.mktemp(dir = mutator.deploy_dir)
+        tname = tempfile.mktemp(dir = mutator.deploy_dir, prefix=mutator.original_basename_wo_extension+'_')
         tname = '%s.%s' % (tname, mutator.original_extension)
         L = ["cp", "-r", mutator.original_path, tname]
         spawnv(os.P_WAIT, "/bin/cp", L)
