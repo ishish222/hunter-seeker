@@ -14,8 +14,8 @@ def add_all(line):
 def reopen(file_path):
     try:
         f = open(file_path, 'r', buffering=-1)
-    except Exception, e:
-        print str(e)
+    except Exception as e:
+        print(str(e))
         f = None
     return f
 
@@ -48,7 +48,7 @@ if __name__ == '__main__':
     else:
         interval = int(options.interval, 10)
 
-    print 'Opening: %s' % options.infile
+    print('Opening: %s' % options.infile)
     line_count = 0
 
     infile_path = options.infile
@@ -61,6 +61,9 @@ if __name__ == '__main__':
     while(infile != None):
         try:
             for line in infile:
+                if(len(line) == 0x0):
+                    break
+
                 if(line[0] == "#"):
                     continue
 
@@ -93,6 +96,7 @@ if __name__ == '__main__':
         
                 elif(fields[0] == "LF"):
                     raise TestExc
+                    continue
         
                 elif(fields[0] in ["OU", "SC", "SE"]):
                     pass
@@ -106,17 +110,18 @@ if __name__ == '__main__':
                 line_count = line_count +1
             
                 if((line_count % interval) == 0):
-                    print 'Processed: %s lines' % line_count
+                    print('Processed: %s lines' % line_count)
         
                 if(end > 0):
                     if(line_count >= end):
                         break
+            break
 
         except TestExc:
             infile.close()
             filename = fields[1]
             infile_path = filename.strip()
-            print 'Opening: %s' % infile_path
+            print('Opening: %s' % infile_path)
             infile = reopen(infile_path)
             continue
 
