@@ -168,6 +168,7 @@ def qemu_save(args=None):
     ret = write_monitor_2(options.m, "savevm xxx%sxxx" % args)
     print("Waiting some more")
     time.sleep(options.external_qemu_socket_timeout_step * options.external_qemu_socket_timeout_mult * 2)
+    ret = write_monitor_2(options.m, "cont")
     print(("Saved: %s" % args))
 
     import pickle
@@ -202,6 +203,84 @@ def qemu_save(args=None):
     f.close()
     print('Saved pickled state to: %s' % pickle_path)
 
+def qemu_quick_save(args=None):
+    options = globs.state.options
+
+    from script import write_monitor_2
+
+    args = 'qs'
+
+    # check other save, ask to overwrite
+    ret = write_monitor_2(options.m, "info snapshots")
+    exploded = ret.split('yyy')
+    if(len(exploded) > 1):
+        last = exploded[1]
+        qemu_quick_delete(last)
+
+    ret = write_monitor_2(options.m, "stop") 
+    ret = write_monitor_2(options.m, "savevm yyy%syyy" % args)
+    print("Waiting some more")
+    time.sleep(options.external_qemu_socket_timeout_step * options.external_qemu_socket_timeout_mult * 2)
+    print(("Saved: %s" % args))
+
+    import pickle
+
+    pickle_path = options.external_paths_machines
+    pickle_path += '/'
+    pickle_path += options.external_machine['disk']
+    pickle_path += '.'
+    pickle_path += args
+    pickle_path += '.state'
+
+    current_state = {}
+    #current_state['options'] = globs.state.options
+    current_state['stack'] = globs.state.stack
+    current_state['stack2'] = globs.state.stack2
+    current_state['queue'] = globs.state.queue
+    current_state['queue2'] = globs.state.queue2
+    current_state['ret'] = globs.state.ret
+    current_state['eip'] = globs.state.eip
+    current_state['ep'] = globs.state.ep
+    if(hasattr(globs.state, 'tid')):
+        current_state['tid'] = globs.state.tid
+    if(hasattr(globs.state, 'pid')):
+        current_state['pid'] = globs.state.pid
+    if(hasattr(globs.state, 'tracers')):
+        current_state['tracers'] = globs.state.tracers
+    if(hasattr(globs.state, 'tracers_count')):
+        current_state['tracers_count'] = globs.state.tracers_count
+
+    f = open(pickle_path, 'wb')
+    pickle.dump(current_state, f)
+    f.close()
+    ret = write_monitor_2(options.m, "cont")
+    print('Saved pickled state to: %s' % pickle_path)
+
+def qemu_quick_delete(args=None):
+    options = globs.state.options
+
+    pickle_path = options.external_paths_machines
+    pickle_path += '/'
+    pickle_path += options.external_machine['disk']
+    pickle_path += '.'
+    pickle_path += args
+    pickle_path += '.state'
+
+    import os
+    print('Deleting pickled state in: %s' % pickle_path)
+
+    try:
+        os.remove(pickle_path)
+    except Exception:
+        pass
+    
+    from script import write_monitor_2
+
+    ret = write_monitor_2(options.m, "delvm yyy%syyy" % args)
+    print(ret)
+
+    print(("Deleted: %s" % args))
+
 def qemu_delete(args=None):
     options = globs.state.options
 
@@ -226,6 +305,65 @@ def qemu_delete(args=None):
     print(ret)
 
     print(("Deleted: %s" % args))
+
+def qemu_quick_load(args=None):
+    options = globs.state.options
+
+    from script import write_monitor_2
+
+    args = 'qs'
+
+    # check other save, ask to overwrite
+    ret = write_monitor_2(options.m, "info snapshots")
+    exploded = ret.split('yyy')
+    if(len(exploded) > 1):
+        last = exploded[1]
+        if(last != args):
+            print('Required state %s not found\nAborting' % args)
+            raise Exception
+        else:
+            pass
+    else:
+        print('Required state %s not found\nAborting' % args)
+        raise Exception
+
+    import pickle
+
+    pickle_path = options.external_paths_machines
+    pickle_path += '/'
+    pickle_path += options.external_machine['disk']
+    pickle_path += '.'
+    pickle_path += args
+    pickle_path += '.state'
+
+    print('Loading pickled state from: %s' % pickle_path)
+    f = open(pickle_path, 'rb')
+    current_state = pickle.load(f)
+    f.close()
+
+    #globs.state.options = current_state['options']
+    globs.state.stack = current_state['stack']
+    globs.state.stack2 = current_state['stack2']
+    globs.state.queue = current_state['queue']
+    globs.state.queue2 = current_state['queue2']
+    globs.state.ret = current_state['ret']
+    globs.state.eip = current_state['eip']
+    globs.state.ep = current_state['ep']
+    if('pid' in current_state):
+        globs.state.pid = current_state['pid']
+    if('tid' in current_state):
+        globs.state.tid = current_state['tid']
+    if('tracers' in current_state):
+        globs.state.tracers = current_state['tracers']
+    if('tracers_count' in current_state):
+        globs.state.tracers_count = current_state['tracers_count']
+
+    ret = write_monitor_2(options.m, "loadvm yyy%syyy" % args)
+    ret = write_monitor_2(options.m, "cont")
+    #time.sleep(options.external_qemu_socket_timeout_step * options.external_qemu_socket_timeout_mult)
+    print(ret)
+
+    print(("Loaded: %s" % args))
 
 def qemu_load(args=None):
     options = globs.state.options

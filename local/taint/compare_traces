@@ -26,9 +26,11 @@ class trace(object):
     def fetch(self):
         self.last_line = self.file.readline()
         self.address, self.offset = self.extract()
+        #print('%s:%s-%s' % (self.last_line, self.address, self.offset))
         while(self.address == None):
             self.last_line = self.file.readline()
             self.address, self.offset = self.extract()
+            #print('%s:%s-%s' % (self.last_line, self.address, self.offset))
             
 
     def prepare(self):
@@ -39,7 +41,7 @@ class trace(object):
             self.last_line = self.file.readline()
             address, offset = self.extract()
 
-        print 'Prepared'
+        print('Prepared')
 
     
 if __name__ == '__main__':
@@ -64,17 +66,25 @@ if __name__ == '__main__':
     trace1.prepare()
     trace2.prepare()
 
+    line_count = 0
+
     while(True):
         trace1.fetch()
         trace2.fetch()
-        #print 'Compare %s:%s, %s:%s' % (trace1.offset, trace1.address, trace2.offset, trace2.address)
+        #print('Compare %s:%s, %s:%s' % (trace1.offset, trace1.address, trace2.offset, trace2.address))
 
         if(trace1.address[-4:] != trace2.address[-4:]):
-            print 'Difference at offset1: %s, offset2: %s' % (trace1.offset, trace2.offset)
-            print 'address1: %s, address2: %s' % (trace1.address[-4:], trace2.address[-4:])
+            print('Difference at offset1: %s, offset2: %s' % (trace1.offset, trace2.offset))
+            print('address1: %s, address2: %s' % (trace1.address[-4:], trace2.address[-4:]))
             break
 
-    print 'Finished'
+        line_count = line_count +1
+          
+        if((line_count % interval) == 0):
+            print('Processed: %s lines' % line_count)
+
+
+    print('Finished')
     trace1.finish()
     trace2.finish()
 

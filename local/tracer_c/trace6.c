@@ -6365,7 +6365,7 @@ int handle_cmd(char* cmd)
         d_print("Starting @ 0x%08x\n", my_trace->eip);
         sprintf(line2, VERSION_STR);
         add_to_buffer(line2);
-        sprintf(line2, "ST,0x%08x\n", my_trace->eip);
+        sprintf(line2, "ST,0x%08x,0x%08x\n", my_trace->eip, my_trace->last_tid);
         add_to_buffer(line2);
         register_all_threads_in_trace();
 
@@ -6388,7 +6388,7 @@ int handle_cmd(char* cmd)
         d_print("Starting @ 0x%08x\n", my_trace->eip);
         sprintf(line2, VERSION_STR);
         add_to_buffer(line2);
-        sprintf(line2, "ST,0x%08x\n", my_trace->eip);
+        sprintf(line2, "ST,0x%08x,0x%08x\n", my_trace->eip, my_trace->last_tid);
         add_to_buffer(line2);
         register_all_threads_in_trace();
 
@@ -6410,7 +6410,7 @@ int handle_cmd(char* cmd)
         sprintf(line2, VERSION_STR);
         add_to_buffer(line2);
         d_print("Starting @ 0x%08x\n", my_trace->eip);
-        sprintf(line2, "ST,0x%08x\n", my_trace->eip);
+        sprintf(line2, "ST,0x%08x,0x%08x\n", my_trace->eip, my_trace->last_tid);
         add_to_buffer(line2);
         register_all_threads_in_trace();
 
@@ -6432,7 +6432,7 @@ int handle_cmd(char* cmd)
         sprintf(line2, VERSION_STR);
         add_to_buffer(line2);
         d_print("Starting @ 0x%08x\n", my_trace->eip);
-        sprintf(line2, "ST,0x%08x\n", my_trace->eip);
+        sprintf(line2, "ST,0x%08x,0x%08x\n", my_trace->eip, my_trace->last_tid);
         add_to_buffer(line2);
         register_all_threads_in_trace();
 
