@@ -60,9 +60,9 @@ def host_print(args=None):
 def beep(args = None):
     from subprocess import Popen
     if(args is None):
-        Popen('beeep')
-    else:
-        Popen(['beeep', args])
+        args = globs.state.stack.pop()
+
+    Popen(['beeep', args])
     return
 
 def defined(name):
@@ -217,17 +217,21 @@ def print_queue(args = None):
 
 def enqueue(args = None):
     if(args == None):
-        val = globs.state.ret
+        val = globs.state.stack.pop()
     else:
         val = args
     globs.state.queue.insert(0, val)
+    for item in globs.state.queue:
+        print(item)
 
 def enqueue2(args = None):
     if(args == None):
-        val = globs.state.ret
+        val = globs.state.stack.pop()
     else:
         val = args
     globs.state.queue2.insert(0, val)
+    for item in globs.state.queue2:
+        print(item)
 
 def pop(args = None):
     globs.state.ret = globs.state.stack.pop()
@@ -240,10 +244,14 @@ def pop2(args = None):
 def dequeue(args = None):
     globs.state.ret = globs.state.queue.pop()
     print("Dequeued: %s" % globs.state.ret)
+    for item in globs.state.queue:
+        print(item)
 
 def dequeue2(args = None):
     globs.state.ret = globs.state.queue2.pop()
     print("Dequeued: %s" % globs.state.ret)
+    for item in globs.state.queue2:
+        print(item)
 
 def str_cat(args = None):
     if(args == None):

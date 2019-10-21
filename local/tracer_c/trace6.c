@@ -5956,7 +5956,11 @@ int parse_region_descriptor(char* str)
     char* loc_str;
     char* size_str;
 
-    if(my_trace->region_descriptors_count >= MAX_REGION_DESCRIPTORS) return 0x1;
+    if(my_trace->region_descriptors_count >= MAX_REGION_DESCRIPTORS) 
+    {
+        d_print("my_trace->region_descriptors_count >= MAX_REGION_DESCRIPTORS\n");
+        return 0x1;
+    }
 
     loc_str = strtok(str, ":");
     d_print("loc_str: %s\n", loc_str);
@@ -7308,6 +7312,8 @@ int init_trace(TRACE_CONFIG* trace, char* host, short port)
     /* Initial trace config */
     my_trace->thread_count = 0x0;
     my_trace->reaction_count = 0x0;
+    my_trace->region_descriptors_count = 0x0;
+    my_trace->scanned_region_descriptors_count = 0x0;
 
     strcpy(my_trace->host, host);
     my_trace->port = port;
@@ -7329,6 +7335,8 @@ int init_trace(TRACE_CONFIG* trace, char* host, short port, char* stdout_destina
     /* Initial trace config */
     my_trace->thread_count = 0x0;
     my_trace->reaction_count = 0x0;
+    my_trace->region_descriptors_count = 0x0;
+    my_trace->scanned_region_descriptors_count = 0x0;
 
     strcpy(my_trace->host, host);
     my_trace->port = port;

@@ -54,5 +54,5 @@ class Changer(object):
         for i in range(0, count):
             self.change()
         self.finalize()
-        print('Finished generating sample')
+        #print('Finished generating sample')
 

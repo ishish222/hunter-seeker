@@ -31,7 +31,7 @@
 #define MAX_LIBS 0x10000
 #define MAX_REGION_DESCRIPTORS 0x100
 #define MAX_ROUTINES    0x100
-#define MAX_FUNCTIONS   0x100
+#define MAX_FUNCTIONS   0x500
 #define MAX_REACTIONS   0x500
 #define MAX_BREAKPOINTS 0x200
 #define MAX_COUPLES     0x50
@@ -44,7 +44,7 @@
 
 #define OFFSET unsigned int
 
-#define MAX_NAME 0x300
+#define MAX_NAME MAX_LINE
 #define SNAP_SIZE 0x100
 
 #define STATUS_EMPTY        0x0
