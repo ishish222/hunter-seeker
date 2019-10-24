@@ -108,7 +108,7 @@ def get_qemu_cmdline_unrestricted():
     commandline += ['-serial', 'unix:%s' % machine['serial'] + '-log']
 
     if(hasattr(options, 'external_qemu_smp')):
-        commandline += ['-smp', '%d' % options.external_qemu_smp]
+        commandline += ['-smp', '%s' % options.external_qemu_smp]
 
 
     if(hasattr(options, 'external_qemu_additional_options')):
@@ -151,7 +151,7 @@ def get_qemu_cmdline():
     commandline += ['-serial', 'unix:%s' % machine['serial'] + '-log']
 
     if(hasattr(options, 'external_qemu_smp')):
-        commandline += ['-smp', '%d' % options.external_qemu_smp]
+        commandline += ['-smp', '%s' % options.external_qemu_smp]
 
 
     if(hasattr(options, 'external_qemu_additional_options')):

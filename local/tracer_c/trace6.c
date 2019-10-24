@@ -2924,6 +2924,7 @@ unsigned get_pe_mem_size(char* path)
     d_print("[get_pe_mem_size end]\n");
 }
 
+/*
 int register_self(OFFSET addr)
 {
     char line[MAX_LINE];
@@ -2944,6 +2945,35 @@ int register_self(OFFSET addr)
         d_print("Got name: %s\n", my_trace->in_sample_path);
     }
     my_trace->in_image_size = get_pe_mem_size(my_trace->in_sample_path);
+
+    d_print("RL,0x%08x,0x%08x,self\n", addr, my_trace->in_image_size);
+    sprintf(line, "RL,0x%08x,0x%08x,self\n", addr, my_trace->in_image_size);
+    add_to_buffer(line);
+
+
+    return 0x0;
+}
+*/
+
+int register_self(OFFSET addr)
+{
+    char line[MAX_LINE];
+    char path[MAX_LINE];
+
+    if(strlen(my_trace->process_fname) == 0x0)
+    {
+        d_print("Retrieving file for PID: 0x%08x, handle: 0x%08x\n", my_trace->cpdi.hProcess, (HMODULE)my_trace->cpdi.hFile);
+        if(!GetModuleFileNameExA(my_trace->cpdi.hProcess, 0x0, my_trace->process_fname, MAX_PATH))
+        {
+            d_print("Failed: 0x%08x\n", GetLastError());
+        }
+        d_print("Retrieved name: %s\n", my_trace->process_fname);
+    }
+    else
+    {
+        d_print("Got name: %s\n", my_trace->process_fname);
+    }
+    my_trace->in_image_size = get_pe_mem_size(my_trace->process_fname);
 
     d_print("RL,0x%08x,0x%08x,self\n", addr, my_trace->in_image_size);
     sprintf(line, "RL,0x%08x,0x%08x,self\n", addr, my_trace->in_image_size);
