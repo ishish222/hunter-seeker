@@ -16,3 +16,4 @@ c:taint/coverage_count
 c:taint/cov_count_dir
 c:taint/cov_diff_dir
 c:taint/cov_sum_dir
+c:taint/symbol_export

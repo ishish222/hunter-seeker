@@ -190,8 +190,11 @@ def execute(cmds, ext_pipe):
     global responder
     global mailslot_client
     global mywmi
+    global scheduled_cmd
+    global scheduled_wait
     import wmi
     mywmi = wmi.WMI()
+
 
     cmd = cmds[0]
     args = " ".join(cmds[1:])
@@ -1107,6 +1110,17 @@ def execute(cmds, ext_pipe):
             writePipe(ext_pipe, "run_cmd "+bcolors.OK_STR)
             ok(ext_pipe)
 
+        elif(cmd == "schedule_cmd"):
+            import subprocess
+            scheduled_cmd = args
+            scheduled_wait = 5
+
+            p = ThreadWithExc(None, execute_scheduled_cmd)
+            p.start()
+
+            writePipe(ext_pipe, "schedule_cmd "+bcolors.OK_STR)
+            ok(ext_pipe)
+
         elif(cmd == "get_dns"):
             import socket
 
@@ -1291,6 +1305,19 @@ class ThreadWithExc(threading.Thread):
         """
         _async_raise( self._get_my_tid(), exctype )
 
+def execute_scheduled_cmd():
+    import subprocess
+    import time
+    global scheduled_cmd
+    global scheduled_wait
+
+    time.sleep(scheduled_wait)
+    cmd = "cmd.exe /c %s" % scheduled_cmd
+    print 'CMD: %s\n' % cmd
+    p = subprocess.Popen(cmd.split(), stdout=subprocess.PIPE, stderr = subprocess.PIPE)
+    out, err = p.communicate()
+    return
+
 def executing(cmd_q, ext_pipe):
     while True:
         cmds = cmd_q.get()
@@ -1357,6 +1384,7 @@ Hunter-Seeker
 
     import wmi
     mywmi = wmi.WMI()
+    scheduled_cmd = ''
 
     cmd_q = Queue()
     cmd_q2 = []

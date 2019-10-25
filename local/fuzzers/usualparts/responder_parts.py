@@ -167,4 +167,18 @@ def run_cmd(args=None):
     globs.state.ret = response
     return
 
+def schedule_cmd(args=None):
+    options = globs.state.options
+    state = globs.state
+    status = globs.state.status
+    
+    if(args == None):
+        args = globs.state.ret
+
+    write_socket(options.s, "schedule_cmd %s" % args)
+    response, _, _ = read_socket(options.s)
+
+    globs.state.ret = response
+    return
+
 
