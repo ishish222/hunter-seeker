@@ -341,6 +341,7 @@ void graph_plugin::print_call_open(GRAPH_CONTEXT* cur_ctx, char* line, const cha
     sprintf(working_line, "<node COLOR=\"%s\" CREATED=\"6666666666666\" ID=\"ID_1208439975\" MODIFIED=\"6666666666666\" TEXT=\"%s\">\n", color, line);
 
     strcat(out_line, working_line);
+    d_print(1, "%s", out_line);
     fwrite(out_line, strlen(out_line), 0x1, f);
 }
 
@@ -1467,6 +1468,25 @@ int detox(char* s)
     return 0x0;
 }
 
+int graph_plugin::locate_address(OFFSET long_offset, OFFSET& short_offset_p, LIBRARY*& lib)
+{
+    d_print(1, "Looking for lib for: 0x%08x\n", long_offset);
+    lib = this->get_lib(long_offset);
+    if(lib)
+    {
+        short_offset_p = long_offset - lib->offset;
+        d_print(1, "Found lib: %s base: 0x%08x, offset: 0x%x\n", lib->name, lib->offset, short_offset_p);
+    }
+    else
+    {
+        d_print(1, "Lib not found\n");
+        short_offset_p = long_offset;
+    }
+
+    d_print(1, "0x%08x\n", lib);
+    return 0x0;
+}
+
 /* handling call, diving, surfacing, outputting graph content */
 
 int graph_plugin::handle_call(GRAPH_CONTEXT* graph_context)
@@ -1646,6 +1666,14 @@ int graph_plugin::handle_call(GRAPH_CONTEXT* graph_context)
     if(decision_emit == DECISION_EMIT)
     {
         d_print(2, "Emitting\n");
+        OFFSET source_offset;
+        OFFSET target_offset;
+        LIBRARY* source_lib;
+        LIBRARY* target_lib;
+
+        this->locate_address(source, source_offset, source_lib);
+        d_print(1, "0x%08x\n", source_lib);
+
 
         if(decision_dive == DECISION_DIVE)
         {
@@ -1654,28 +1682,65 @@ int graph_plugin::handle_call(GRAPH_CONTEXT* graph_context)
             if(decision_template == DECISION_LAYOUT_SYMBOL_WANTED)
             {
                 /* we assume we have symbol */
-//                if(this->enumerate) sprintf(out_line, "[x] (%d)0x%08x call %s!%s", this->taint_eng->current_instr_count ,this->taint_eng->current_eip, s->lib_name, s->func_name);
-//                else sprintf(out_line, "[x] 0x%08x call %s!%s", this->taint_eng->current_eip, s->lib_name, s->func_name);
-                if(this->enumerate) sprintf(out_line, "[x] (%d)0x%08x call %s!%s", this->taint_eng->current_instr_count-1 ,source, s->lib_name, s->func_name);
-                else sprintf(out_line, "[x] 0x%08x call %s!%s", source, s->lib_name, s->func_name);
+                if(source_lib)
+                {
+                    d_print(1, "1\n");
+                    if(this->enumerate) sprintf(out_line, "[x] (%d)%s+0x%x call %s!%s", this->taint_eng->current_instr_count-1, source_lib->name, source_offset, s->lib_name, s->func_name);
+                    else sprintf(out_line, "[x] %s+0x%x call %s!%s", source_lib->name, source_offset, s->lib_name, s->func_name);
+                }
+                else
+                {
+                    d_print(1, "2\n");
+                    if(this->enumerate) sprintf(out_line, "[x] (%d)0x%08x call %s!%s", this->taint_eng->current_instr_count-1 ,source, s->lib_name, s->func_name);
+                    else sprintf(out_line, "[x] 0x%08x call %s!%s", source, s->lib_name, s->func_name);
+                }
                 print_call(graph_context, out_line, node_color[CODE_RED]);
             }
             else if(decision_template == DECISION_LAYOUT_SYMBOL)
             {
                 /* we assume we have symbol */
-//                if(this->enumerate) sprintf(out_line, "(%d)0x%08x call %s!%s", this->taint_eng->current_instr_count ,this->taint_eng->current_eip, s->lib_name, s->func_name);
-//                else sprintf(out_line, "0x%08x call %s!%s", this->taint_eng->current_eip, s->lib_name, s->func_name);
-                if(this->enumerate) sprintf(out_line, "(%d)0x%08x call %s!%s", this->taint_eng->current_instr_count-1 ,source, s->lib_name, s->func_name);
-                else sprintf(out_line, "0x%08x call %s!%s", source, s->lib_name, s->func_name);
+                if(source_lib)
+                {
+                    d_print(1, "3\n");
+                    if(this->enumerate) sprintf(out_line, "(%d)%s+0x%x call %s!%s", this->taint_eng->current_instr_count-1, source_lib->name, source_offset, s->lib_name, s->func_name);
+                    else sprintf(out_line, "%s+0x%x call %s!%s", source_lib->name, source_offset, s->lib_name, s->func_name);
+                }
+                else
+                {
+                    d_print(1, "4\n");
+                    if(this->enumerate) sprintf(out_line, "(%d)0x%08x call %s!%s", this->taint_eng->current_instr_count-1 ,source, s->lib_name, s->func_name);
+                    else sprintf(out_line, "0x%08x call %s!%s", source, s->lib_name, s->func_name);
+                }
                 print_call(graph_context, out_line, node_color[CODE_BLUE]);
             }
             else
             {
                 /* regular emission with dive */
-//                if(this->enumerate) sprintf(out_line, "(%d)0x%08x call 0x%08x", this->taint_eng->current_instr_count ,this->taint_eng->current_eip, target);
-//                else sprintf(out_line, "0x%08x call 0x%08x", this->taint_eng->current_eip, target);
-                if(this->enumerate) sprintf(out_line, "(%d)0x%08x call 0x%08x", this->taint_eng->current_instr_count-1 ,source, target);
-                else sprintf(out_line, "0x%08x call 0x%08x", source, target);
+                this->locate_address(target, target_offset, target_lib);
+                if((source_lib) && (target_lib))
+                {
+                    d_print(1, "5\n");
+                    if(this->enumerate) sprintf(out_line, "(%d)%s+0x%x call %s+0x%x", this->taint_eng->current_instr_count-1, source_lib->name, source_offset, target_lib->name, target_offset);
+                    else sprintf(out_line, "%s+0x%x call %s+0x%x", source_lib->name, source_offset, target_lib->name, target_offset);
+                }
+                else if(source_lib)
+                {
+                    d_print(1, "6\n");
+                    if(this->enumerate) sprintf(out_line, "(%d)%s+0x%x call 0x%08x", this->taint_eng->current_instr_count-1, source_lib->name, source_offset, target);
+                    else sprintf(out_line, "%s+0x%x call 0x%08x", source_lib->name, source_offset, target);
+                }
+                else if(target_lib)
+                {
+                    d_print(1, "8\n");
+                    if(this->enumerate) sprintf(out_line, "(%d)0x%08x call %s+0x%x", this->taint_eng->current_instr_count-1, source, target_lib->name, target_offset);
+                    else sprintf(out_line, "0x%08x call %s+0x%x", source, target_lib->name, target_offset);
+                }
+                else
+                {
+                    d_print(1, "9\n");
+                    if(this->enumerate) sprintf(out_line, "(%d)0x%08x call 0x%08x", this->taint_eng->current_instr_count-1, source, target);
+                    else sprintf(out_line, "0x%08x call 0x%08x", source, target);
+                }
                 print_call(graph_context, out_line, node_color[CODE_BLACK]);
             }
         }
@@ -1686,28 +1751,65 @@ int graph_plugin::handle_call(GRAPH_CONTEXT* graph_context)
             if(decision_template == DECISION_LAYOUT_SYMBOL_WANTED)
             {
                 /* we assume we have symbol */
-//                if(this->enumerate) sprintf(out_line, "[x] (%d)0x%08x call %s!%s", this->taint_eng->current_instr_count ,this->taint_eng->current_eip, s->lib_name, s->func_name);
-//                else sprintf(out_line, "[x] 0x%08x call %s!%s", this->taint_eng->current_eip, s->lib_name, s->func_name);
-                if(this->enumerate) sprintf(out_line, "[x] (%d)0x%08x call %s!%s", this->taint_eng->current_instr_count-1 ,source, s->lib_name, s->func_name);
-                else sprintf(out_line, "[x] 0x%08x call %s!%s", source, s->lib_name, s->func_name);
+                if(source_lib)
+                {
+                    d_print(1, "1\n");
+                    if(this->enumerate) sprintf(out_line, "[x] (%d)%s+0x%x call %s!%s", this->taint_eng->current_instr_count-1, source_lib->name, source_offset, s->lib_name, s->func_name);
+                    else sprintf(out_line, "[x] %s+0x%x call %s!%s", source_lib->name, source_offset, s->lib_name, s->func_name);
+                }
+                else
+                {
+                    d_print(1, "2\n");
+                    if(this->enumerate) sprintf(out_line, "[x] (%d)0x%08x call %s!%s", this->taint_eng->current_instr_count-1 ,source, s->lib_name, s->func_name);
+                    else sprintf(out_line, "[x] 0x%08x call %s!%s", source, s->lib_name, s->func_name);
+                }
                 print_call_open(graph_context, out_line, node_color[CODE_RED]);
             }
             else if(decision_template == DECISION_LAYOUT_SYMBOL)
             {
                 /* we assume we have symbol */
-//                if(this->enumerate) sprintf(out_line, "(%d)0x%08x call %s!%s", this->taint_eng->current_instr_count ,this->taint_eng->current_eip, s->lib_name, s->func_name);
-//                else sprintf(out_line, "0x%08x call %s!%s", this->taint_eng->current_eip, s->lib_name, s->func_name);
-                if(this->enumerate) sprintf(out_line, "(%d)0x%08x call %s!%s", this->taint_eng->current_instr_count-1 ,source, s->lib_name, s->func_name);
-                else sprintf(out_line, "0x%08x call %s!%s", source, s->lib_name, s->func_name);
+                if(source_lib)
+                {
+                    d_print(1, "3\n");
+                    if(this->enumerate) sprintf(out_line, "(%d)%s+0x%x call %s!%s", this->taint_eng->current_instr_count-1, source_lib->name, source_offset, s->lib_name, s->func_name);
+                    else sprintf(out_line, "%s+0x%x call %s!%s", source_lib->name, source_offset, s->lib_name, s->func_name);
+                }
+                else
+                {
+                    d_print(1, "4\n");
+                    if(this->enumerate) sprintf(out_line, "(%d)0x%08x call %s!%s", this->taint_eng->current_instr_count-1 ,source, s->lib_name, s->func_name);
+                    else sprintf(out_line, "0x%08x call %s!%s", source, s->lib_name, s->func_name);
+                }
                 print_call_open(graph_context, out_line, node_color[CODE_BLUE]);
             }
             else
             {
                 /* regular emission with dive */
-//                if(this->enumerate) sprintf(out_line, "(%d)0x%08x call 0x%08x", this->taint_eng->current_instr_count ,this->taint_eng->current_eip, target);
-//                else sprintf(out_line, "0x%08x call 0x%08x", this->taint_eng->current_eip, target);
-                if(this->enumerate) sprintf(out_line, "(%d)0x%08x call 0x%08x", this->taint_eng->current_instr_count-1, source, target);
-                else sprintf(out_line, "0x%08x call 0x%08x", source, target);
+                this->locate_address(target, target_offset, target_lib);
+                if((source_lib) && (target_lib))
+                {
+                    d_print(1, "5\n");
+                    if(this->enumerate) sprintf(out_line, "(%d)%s+0x%x call %s+0x%x", this->taint_eng->current_instr_count-1, source_lib->name, source_offset, target_lib->name, target_offset);
+                    else sprintf(out_line, "%s+0x%x call %s+0x%x", source_lib->name, source_offset, target_lib->name, target_offset);
+                }
+                else if(source_lib)
+                {
+                    d_print(1, "6\n");
+                    if(this->enumerate) sprintf(out_line, "(%d)%s+0x%x call 0x%08x", this->taint_eng->current_instr_count-1, source_lib->name, source_offset, target);
+                    else sprintf(out_line, "%s+0x%x call 0x%08x", source_lib->name, source_offset, target);
+                }
+                else if(target_lib)
+                {
+                    d_print(1, "8\n");
+                    if(this->enumerate) sprintf(out_line, "(%d)0x%08x call %s+0x%x", this->taint_eng->current_instr_count-1, source, target_lib->name, target_offset);
+                    else sprintf(out_line, "0x%08x call %s+0x%x", source, target_lib->name, target_offset);
+                }
+                else
+                {
+                    d_print(1, "9\n");
+                    if(this->enumerate) sprintf(out_line, "(%d)0x%08x call 0x%08x", this->taint_eng->current_instr_count-1, source, target);
+                    else sprintf(out_line, "0x%08x call 0x%08x", source, target);
+                }
                 print_call_open(graph_context, out_line, node_color[CODE_BLACK]);
             }
         

@@ -253,6 +253,8 @@ class graph_plugin : Plugin
     char lib_dir_path[MAX_NAME]; //is this necessary?
     int set_lib_dir_path(char*);
 
+    /* dealing with ASLR */
+    int locate_address(OFFSET, OFFSET&, LIBRARY*&);
 
     /* graph stuff - prints */
     void print_call(GRAPH_CONTEXT*, char*, const char*);

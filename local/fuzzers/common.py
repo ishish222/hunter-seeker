@@ -112,7 +112,8 @@ def get_qemu_cmdline_unrestricted():
 
 
     if(hasattr(options, 'external_qemu_additional_options')):
-        commandline += [options.external_qemu_additional_options]
+        for option in options.external_qemu_additional_options:
+            commandline += [option]
 
     if(options.external_qemu_use_vnc):
         commandline += ['-vnc', machine['vnc']]
@@ -155,7 +156,9 @@ def get_qemu_cmdline():
 
 
     if(hasattr(options, 'external_qemu_additional_options')):
-        commandline += [options.external_qemu_additional_options]
+        for option in options.external_qemu_additional_options:
+            commandline += [option]
+
 
     if(options.external_qemu_use_vnc):
         commandline += ['-vnc', machine['vnc']]
