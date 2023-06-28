@@ -30,7 +30,7 @@ The idea is to build upon this foundation but improve on speed. There were sever
 
 The fuzzing / analysis session has the following architecture:
 
-![HS fuzzing architecture](doc/images/hs-fuzzing.png)
+![HS fuzzing architecture](doc/images/hs-architecture.png)
 
 The HS's external controller is being run with qemu machine drive (qcow2 format) and Chakobsa script as parameters. External controlled executes the script and the usual actions are: 
 - Spinning up qemu machine with indicated drive as its main drive (1)
